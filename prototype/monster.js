@@ -6,7 +6,7 @@ const FAMILY = {
   Moko:  {body:[3,[3,5,6,7,7,7,7,6,5,3]], legs:"tentacles", eyes:"cyclops", base:[55,35,40,75,50,45], ability:["Keen Eye","Its accuracy can't be lowered and dodge doesn't work against it"]},
   Pinch:  {body:[5,[5,6,6,6,6,6,6,5]], legs:"twolegs", arms:3, base:[50,55,65,35,50,45], ability:["Shell","Crits can't land on it"]},
   Stilt:  {body:[2,[2,3,3,3,3,3,3,3,2]], legs:"longlegs", base:[55,50,35,50,45,65], ability:["Long Stride","Acts first on the turn it switches in"]},
-  Skit: {body:[8,[5,7,8,8,7]], legs:"spider", base:[45,55,45,45,45,65], ability:["Web","Its basic attack has a 30% chance to drop the target's Speed 1 step"]},
+  Skit: {body:[7,[3,5,6,6,6,6,5]], legs:"spider", eyes:"spider", base:[45,55,45,45,45,65], ability:["Web","Its basic attack has a 30% chance to drop the target's Speed 1 step"]},
   Booly:  {body:[3,[2,3,4,4,5,5,6,6,6,7,7,7]], legs:"ghost", base:[60,35,40,70,55,40], ability:["Slippery","10% chance to dodge any Strike"]},
 };
 const STATS = ["HP","Power","Guard","Mind","Spirit","Speed"];
@@ -57,17 +57,18 @@ function buildGrid(famName, parts){
   if(L==="twolegs"){ for(let r=1;r<=2;r++){set(6,yb+r,2);set(7,yb+r,2);} set(5,yb+3,2);set(6,yb+3,2);set(7,yb+3,2); }
   if(L==="stubby"){ set(5,yb+1,2);set(6,yb+1,2);set(7,yb+1,2);set(5,yb+2,2);set(6,yb+2,2); }
   if(L==="longlegs"){ for(let y=yb+1;y<=18;y++)set(8,y,2); set(7,18,2);set(6,18,5); }
-  if(L==="spider"){ for(let k=0;k<3;k++){const ry=yt+1+k; let x=10-hw(ry)-1; for(let s=0;s<3;s++){set(x-s,ry+s+ (k===0?0:0),s===2?5:2);} } }
+  if(L==="spider"){ for(let k=0;k<3;k++){const x=10-hw(yb)+2*k-1; set(x,yb+1,2); set(x-1,yb+2,2); set(x-1,yb+3,2); set(x-2,yb+4,5);} }
   if(L==="ghost"){ const w=hw(yb); for(let x=10-w;x<10;x++){ if((x+1)%3!==0) put(x,yb+1,1); if((x+1)%3===1) put(x,yb+2,1); } }
   // eyes
   const tall=yb-yt>=9, ey=Math.min(yb-3,yt+Math.max(2,Math.floor((yb-yt)*0.32)));
-  if(F.eyes==="cyclops"){ for(let y=ey-1;y<=ey+1;y++)for(let x=8;x<10;x++)put(x,y,3); put(7,ey,3); put(9,ey,6); put(9,ey+1,6); }
+  if(F.eyes==="spider"){ const x=9-Math.min(3,hw(ey)-2); put(x-1,ey,3);put(x,ey,6);put(x-1,ey-1,3);put(x,ey-1,3); put(x-2,ey-2,6); put(x,ey-2,6); }
+  else if(F.eyes==="cyclops"){ for(let y=ey-1;y<=ey+1;y++)for(let x=8;x<10;x++)put(x,y,3); put(7,ey,3); put(9,ey,6); put(9,ey+1,6); }
   else{
     const room=Math.min(hw(ey),hw(ey-1)||hw(ey))-2, ex=Math.max(1,Math.min(room,parts.eyes===5?4:3)), x=9-ex;
     switch(parts.eyes){
-      case 0: put(x,ey-1,6);put(x,ey,6); break;
+      case 0: put(x,ey-1,3);put(x,ey,6); break;
       case 1: case 5: put(x-1,ey-1,3);put(x,ey-1,3);put(x-1,ey,3);put(x,ey,6); break;
-      case 2: put(x-1,ey,6);put(x,ey,6); break;
+      case 2: put(x-1,ey,3);put(x,ey,6); break;
       case 3: put(x-1,ey,3);put(x,ey,6);put(x-1,ey-1,6);put(x,ey-1,1); break;
       case 4: put(x,ey-1,3);put(x,ey,6); put(x-1,ey,3); break;
       case 6: put(x-1,ey,3);put(x,ey,6); put(9,ey-2,3); put(9,ey-1,6); break;
@@ -109,6 +110,8 @@ function scale2x(G){
   for(let y=0;y<H;y++)for(let x=0;x<W;x++){
     const P=at(x,y),A=at(x,y-1),B=at(x+1,y),C=at(x-1,y),D=at(x,y+1);
     let e0=P,e1=P,e2=P,e3=P;
+    const eye=l=>l===3||l===6;
+    if(eye(P)||eye(A)||eye(B)||eye(C)||eye(D)){O[2*y][2*x]=O[2*y][2*x+1]=O[2*y+1][2*x]=O[2*y+1][2*x+1]=P;continue;}
     if(C===A&&C!==D&&A!==B)e0=A; if(A===B&&A!==C&&B!==D)e1=B; if(D===C&&D!==B&&C!==A)e2=C; if(B===D&&B!==A&&D!==C)e3=D;
     O[2*y][2*x]=e0;O[2*y][2*x+1]=e1;O[2*y+1][2*x]=e2;O[2*y+1][2*x+1]=e3;
   }
@@ -193,6 +196,6 @@ function hatch(res,now=new Date()){
   const hidden=R()<hiddenChance;
   const ability=hidden?EL_ABILITY[el1][1]:(R()<0.5?F.ability:EL_ABILITY[el1][0]);
   const pool=buildPool(el1,el2,res.pool), skills=pool.slice(0,2);
-  const lifespan=Math.round(60+40*bri);
+  const lifespan=Math.round(15+10*bri); // months
   return {pool,name:speciesName(family,el1,el2),family,band,shape,el1,el2,mono:res.mono,parts,grid,pal,stats,talent,pers,ability,hidden,hiddenChance,skills,lifespan};
 }

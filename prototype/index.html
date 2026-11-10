@@ -223,7 +223,7 @@ function render(full){
       <div style="text-align:center"><canvas id="byte" style="width:120px;height:120px;image-rendering:pixelated;background:#24242c;border-radius:10px"></canvas><div style="font-size:11px;opacity:.7">Byte, after evolving</div></div>
       <div style="flex:1;min-width:180px"><h2 style="font-size:22px">${name}</h2><div style="font-size:13px;opacity:.75">${kind}</div>
         <p style="margin-top:2px">${m.hidden?"<b style=\"color:#ffd23f\">Hidden ability!</b> ":""}${m.ability[0]}: ${m.ability[1]}.</p>
-        <p>${m.pers[0]} personality, ${STATS[m.pers[1]]} up and ${STATS[m.pers[2]]} down. Lifespan ${m.lifespan} weeks.</p>
+        <p>${m.pers[0]} personality, ${STATS[m.pers[1]]} up and ${STATS[m.pers[2]]} down. Lifespan ${m.lifespan} months.</p>
         <p>Starts with ${m.skills.join(" and ")}. Skill pool of ${m.pool.length}.</p></div></div>
       <table>${STATS.map((st,i)=>`<tr><td style="width:62px">${st}</td><td><i style="display:inline-block;height:8px;border-radius:4px;width:${Math.min(100,m.stats[i])}%;background:${COL[res.main.g]==="#1b1b1f"?"#8888aa":COL[res.main.g]}"></i></td><td style="width:40px">${m.stats[i]}</td><td style="width:56px;color:#ffd23f">${stars(m.talent[i])}</td></tr>`).join("")}</table>
       <p style="font-size:12px;opacity:.7">${why} The main colour sits ${m.band==="middle"?"in the middle":"toward the "+m.band} and is ${m.shape}, which makes a ${m.family}. Drag the circle to try another spot.</p><div class="brow" style="margin-top:10px"><button class="big" id="raisebtn">Raise it</button><button class="small" id="fightbtn">Fight</button><span style="font-size:12px;opacity:.7">Raise it on the ranch, or pick 2 skills and fight</span></div>`;

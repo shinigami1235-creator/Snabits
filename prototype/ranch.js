@@ -17,9 +17,13 @@ const SNACKS={
   "Bitter root":{c:"#6b4a2b",say:"It shudders, but it's listening now.",fx:s=>{s.fear+=20;s.spoil-=10;s.weight-=5;},react:"shudder"},
   "Slim tea":{c:"#9bd16b",say:"A little lighter on its feet.",fx:s=>{s.weight-=15;s.fatigue+=5;},react:"calm"},
 };
-const MARK=[["Stout","a wider belly"],["Horned","horns"],["Shelled","shoulder plates"],["Sage","antennae"],["Haloed","a glowing crest"],["Winged","small wings"]];
+const MARK=[["Stout","a wider body and a pale belly"],["Horned","horns"],["Shelled","a spiked shell"],["Sage","antennae"],["Haloed","a gold halo"],["Winged","small wings"]];
 const MARK_HINT=["It's been running a lot. I think it'll fill out.","It's been working those muscles. I bet it grows horns.","All that bracing is toughening its shoulders.","It's been thinking hard. Something might sprout up top.","Its spirit's been glowing lately.","It's so quick now. I wonder if it'll grow wings."];
 const SEASON=["Spring","Summer","Autumn","Winter"];
+const EVO_TOTAL={Squib:[90,220],Stilt:[90,220],Skit:[100,240],Antik:[110,250],Chomp:[110,250],Pinch:[120,260],Moko:[130,280],Booly:[130,280]};
+const STAT_SKILLS=[[["Second Wind",30],["Endure",80],["Body Slam",150],["Regrow",240]],[["Haymaker",30],["Pump Up",80],["Crush",150],["Rampage",240]],[["Harden",30],["Shield Bash",80],["Retaliate",150],["Bulwark",240]],[["Concentrate",30],["Mind Spike",80],["Foresight",150],["Brainstorm",240]],[["Calm",30],["Still Water",80],["Spirit Ward",150],["Soul Flare",240]],[["Dart",30],["Agility",80],["Barrage",150],["Afterimage",240]]];
+const CONDITION=[[20,"It's full of energy!"],[50,"It's in good shape."],[70,"It seems a little tired."],[90,"It's really tired. It needs a rest."],[999,"It's exhausted!"]];
+const condition=()=>CONDITION.find(c=>RS.fatigue<c[0])[1];
 const SEASON_COL={ground:["#78c556","#5fb043","#c49a45","#e9eef3"],hill:["#4f9a45","#3f8a38","#9c7a3a","#c5d3de"],leaf:["#58b45a","#3d9a3d","#d9822b",null]};
 const SHAPES=[["Thin",-31,0.86],["Slim",-11,0.93],["Normal",10,1],["Chubby",30,1.08],["Heavy",99,1.16]];
 const shapeOf=w=>SHAPES.find(s=>w<=s[1]);
@@ -43,7 +47,7 @@ function makePuppet(G,big,fam){
     let g="body";
     if(l===3||l===6)g="eye"; else if(l===4||l===7)g="mouth";
     else if(y>yb)g="legs"; else if(y<yt)g="top";
-    else if((l===2||l===5)&&(a<0||x<a||x>b))g="arms";
+    else if((l===2||l===5||l>=10)&&(a<0||x<a||x>b))g="arms";
     px.push({x,y,l,g}); topY=Math.min(topY,y); base=Math.max(base,y);}}
   const order={legs:0,body:1,arms:2,top:3,eye:4,mouth:5};
   px.sort((p,q)=>order[p.g]-order[q.g]);
@@ -94,8 +98,8 @@ function paintFrame(canvas,G,pal,scale,big,flash){
   for(let j=0;j<H;j++)for(let i=0;i<W;i++){
     const l=G[j][i];
     if(!l){ if(filled(i-1,j)||filled(i+1,j)||filled(i,j-1)||filled(i,j+1)) dot(i,j,pal.outline); continue; }
-    let c={1:pal.body,2:pal.parts,3:pal.eye,4:pal.dark,5:pal.accent,6:pal.pupil,7:pal.eye,8:tone(pal.body,0.22,-0.15),9:messCol}[l];
-    if(l===1||l===2){ if(!filled(i,j-1)) c=tone(c,0.12,-0.05); else if(!filled(i,j+1)||(big&&!filled(i,j+2))) c=tone(c,-0.16,0.05); }
+    let c={1:pal.body,2:pal.parts,3:pal.eye,4:pal.dark,5:pal.accent,6:pal.pupil,7:pal.eye,8:tone(pal.body,0.22,-0.15),9:messCol,10:[240,228,196],11:[255,214,74],12:tone(pal.body,0.32,-0.2)}[l];
+    if(l===1||l===2||l===12){ if(!filled(i,j-1)) c=tone(c,0.12,-0.05); else if(!filled(i,j+1)||(big&&!filled(i,j+2))) c=tone(c,-0.16,0.05); }
     dot(i,j,c);
     if(big&&l===6&&G[j-1]&&G[j-1][i]!==6&&G[j][i-1]!==6) dot(i,j,pal.glint);
   }
@@ -105,15 +109,15 @@ function paintFrame(canvas,G,pal,scale,big,flash){
 function addMark(G0,mark){
   const G=G0.map(r=>r.slice()), N=G.length;
   let ty=N,yb=0; for(let y=0;y<N;y++) for(let x=0;x<N;x++) if(G[y][x]===1){ty=Math.min(ty,y);yb=Math.max(yb,y);}
-  const span=y=>{let a=-1;for(let x=0;x<10;x++)if(G[y][x]===1){a=x;break;}return a;};
-  const mid=Math.floor((ty+yb)/2), lx=span(ty);
+  const edge=y=>{for(let x=0;x<10;x++)if(G[y]&&G[y][x]===1)return x;return 9;};
   const set=(x,y,l)=>{if(x>=0&&x<10&&y>=0&&y<N){G[y][x]=l;G[y][19-x]=l;}};
-  if(mark===0){ for(let y=yb-2;y<=yb;y++){ set(9,y,8); set(8,y,8);} const a=span(yb-1); if(a>0){set(a-1,yb-1,1);set(a-1,yb,1);} }
-  if(mark===1){ set(lx+1,ty-1,2); set(lx,ty-2,5); set(lx,ty-1,2); }
-  if(mark===2){ const a=span(mid); for(let y=mid-2;y<=mid;y++) set(span(y)-1,y,2); if(a>0) set(a-2,mid-2,5); }
-  if(mark===3){ set(lx+2,ty-1,2); set(lx+2,ty-2,2); set(lx+1,ty-3,5); }
-  if(mark===4){ set(9,ty-1,5); set(8,ty-2,5); set(9,ty-3,5); const a=span(mid+1); if(a>=0) set(a+1,mid+1,5); }
-  if(mark===5){ const a=span(mid); set(a-1,mid,5); set(a-2,mid-1,5); set(a-2,mid-2,5); set(a-3,mid-2,5); }
+  const lx=edge(ty);
+  if(mark===0){ for(let y=yb-3;y<=yb-1;y++) for(let x=7;x<=9;x++) if(G[y][x]===1) set(x,y,8); }
+  if(mark===1){ set(lx+1,ty-1,10); set(lx,ty-2,10); set(lx,ty-3,10); set(lx+1,ty-4,10); }
+  if(mark===2){ const e0=edge(ty); for(let y=ty;y<=ty+1;y++) for(let x=0;x<10;x++) if(G[y][x]===1) set(x,y,2); for(let x=e0+1;x<=9;x+=2){ set(x,ty-1,10); set(x,ty-2,10); } }
+  if(mark===3){ set(lx,ty-1,12); set(lx,ty-2,12); set(lx-1,ty-3,12); set(lx-1,ty-4,11); set(lx-2,ty-4,11); set(lx-1,ty-5,11); }
+  if(mark===4){ for(let x=6;x<=9;x++) set(x,ty-3,11); set(5,ty-2,11); }
+  if(mark===5){ const e=edge(ty+1); set(e-1,ty,12); set(e-2,ty-1,12); set(e-2,ty,12); set(e-3,ty-1,12); set(e-3,ty-2,10); set(e-4,ty-2,10); set(e-1,ty+1,12); }
   return G;
 }
 
@@ -123,7 +127,7 @@ function newRanch(m){
   const like=Math.floor(r()*6); let dis=Math.floor(r()*5); if(dis>=like) dis++;
   const s={m,grid:m.grid,stage:"Bit",mark:-1,tp:[0,0,0,0,0,0],lastTrained:-1,week:0,used:0,coins:600,
     spoil:15,fear:15,fatigue:0,stress:0,weight:0,like,dis,known:{},mess:0,messKind:"mud",messSpots:[],
-    petWeek:-1,playWeek:-1,snackWeek:-1,mealMonth:-1,strainRun:0,sick:0,bag:{"Cool leaf":2,"Energy nut":2,"Berry":3,"Candy":2,"Honey cake":2,"Bitter root":2,"Slim tea":1},
+    learned:[],injured:false,hinted:false,petWeek:-1,playWeek:-1,snackWeek:-1,mealMonth:-1,strainRun:0,sick:0,bag:{"Cool leaf":2,"Energy nut":2,"Berry":3,"Candy":2,"Honey cake":2,"Bitter root":2,"Slim tea":1},
     x:150,dir:1,pose:"idle",jy:0,bx:0,upside:false,hidden:false,behind:false,flash:0,shake:0,ghosts:false,trail:[],props:[],parts:[],
     busy:false,cur:0,skip:false,noScenes:false,showNums:false,ptrX:null,ptrT:0,rub:null,bbox:null,ready:false,dead:false};
   s.P=makePuppet(m.grid,false,m.family);
@@ -134,7 +138,9 @@ const loyalty=()=>clamp(Math.round((RS.spoil+RS.fear)/2-Math.max(0,Math.abs(RS.s
 const hearts=()=>Math.floor(loyalty()/20);
 const spoiled=()=>RS.spoil-RS.fear>=30, scared=()=>RS.fear-RS.spoil>=30;
 const tpTotal=()=>RS.tp.reduce((a,b)=>a+b,0);
-const evoReady=()=>RS.stage==="Bit"&&hearts()>=2&&tpTotal()>=120;
+const evoTotal=()=>(EVO_TOTAL[RS.m.family]||[110,250])[0];
+const evoReady=()=>RS.stage==="Bit"&&tpTotal()>=evoTotal();
+const lifeWeeks=()=>RS.m.lifespan*4;
 function dateText(){const w=RS.week, y=Math.floor(w/48)+1, mo=Math.floor(w/4)%12, s=Math.floor(mo/3);return `Year ${y}, ${SEASON[s]}, month ${mo%3+1}, week ${w%4+1}`;}
 
 /* ---------- open and close ---------- */
@@ -158,7 +164,7 @@ function injectRanch(){
 #r-canvas{width:100%;display:block;image-rendering:pixelated;border-radius:10px;touch-action:none}
 #r-banner{position:absolute;left:0;right:0;top:10%;text-align:center;font-weight:900;font-size:30px;text-shadow:0 3px 0 #000,0 0 10px #000;pointer-events:none;opacity:0;transition:opacity .2s,transform .2s;transform:scale(.8)}
 #r-banner.on{opacity:1;transform:scale(1)}
-#r-skip{position:absolute;right:6px;bottom:6px;display:none;background:#000a}
+#r-skip{position:absolute;right:6px;bottom:6px;display:none;background:#000c;font-size:15px;font-weight:700;padding:8px 14px}
 #r-say{font-size:14px;min-height:40px;background:#1e1e26;border-radius:10px;padding:8px 10px}#r-say b{color:#9fd4ff}
 #r-stats{display:grid;grid-template-columns:1fr 1fr;gap:3px 12px;font-size:12px}
 .rs{display:grid;grid-template-columns:50px 1fr 64px;gap:6px;align-items:center;position:relative}.rs i{display:block;height:7px;border-radius:4px;background:#5ab0ff;transition:width .6s}.rs .bg{background:#2a2a33;border-radius:4px}
@@ -174,8 +180,8 @@ function injectRanch(){
   const d=document.createElement("div"); d.id="ranch";
   d.innerHTML=`<div id="r-top"><b id="r-name"></b><span id="r-date"></span></div>
 <div id="r-sub"><span class="ht" id="r-hearts"></span><span id="r-shape"></span><span id="r-coins"></span><span id="r-form"></span></div>
-<div id="r-view"><canvas id="r-canvas" width="${RW}" height="${RH}"></canvas><div id="r-banner"></div><button class="small" id="r-skip">Skip</button></div>
-<div id="r-say"></div><div id="r-stats"></div><div id="r-panel"></div><div id="r-nums"></div>
+<div id="r-view"><canvas id="r-canvas" width="${RW}" height="${RH}"></canvas><div id="r-banner"></div><button class="small" id="r-skip">Skip ▸▸</button></div>
+<div id="r-say"></div><div id="r-stats"></div><div id="r-learned" style="font-size:12px;opacity:.8"></div><div id="r-panel"></div><div id="r-nums"></div>
 <div id="r-menu">${["Train","Rest","Feed","Care","Out"].map(n=>`<button class="rb" data-m="${n}">${n}</button>`).join("")}</div>
 <div id="r-foot"><button class="small" id="r-back">Back to scan</button><label><input type="checkbox" id="r-off"> Scenes off</label><label><input type="checkbox" id="r-numsbox"> Show hidden numbers</label></div>`;
   document.body.appendChild(d);
@@ -200,7 +206,8 @@ function drawUI(){
     return `<div class="rs" id="rs${i}"><span>${st} <small style="opacity:.6">${rankOf(fam)}</small></span><span class="bg"><i style="width:${Math.min(100,v/2)}%"></i></span><span>${v}${s.tp[i]?` <small style="opacity:.6">(+${s.tp[i]})</small>`:""}</span></div>`;}).join("");
   el("r-say").innerHTML=`<b>Assistant:</b> ${s.say||""}`;
   const n=el("r-nums"); n.style.display=s.showNums?"block":"none";
-  n.textContent=`Fatigue ${s.fatigue}, stress ${s.stress}, Strain ${s.fatigue+2*s.stress}. Spoil ${s.spoil}, Fear ${s.fear}, loyalty ${loyalty()}. Weight ${s.weight}. Lifespan ${s.m.lifespan-s.used} of ${s.m.lifespan} weeks left. Training points ${tpTotal()} of 120 for Byte.`;
+  n.textContent=`Fatigue ${s.fatigue}, stress ${s.stress}, Strain ${s.fatigue+2*s.stress}. Spoil ${s.spoil}, Fear ${s.fear}, loyalty ${loyalty()}. Weight ${s.weight}. Weeks lived ${s.used} of ${lifeWeeks()} (${s.m.lifespan} months). Earned points ${tpTotal()}${s.stage==="Bit"?` of ${evoTotal()} for Byte`:""}.`;
+  el("r-learned").textContent=s.learned.length?"Stat skills: "+s.learned.join(", "):"";
   el("r-menu").querySelectorAll(".rb").forEach(b=>b.disabled=s.busy||s.dead);
 }
 function shownStat(i){ const s=RS; let v=s.m.stats[i]+s.tp[i]; if(s.stage!=="Bit"&&s.mark===i) v=Math.round(v*1.05); return v; }
@@ -216,11 +223,12 @@ function menu(which){
   s.lastMenu=which;
   if(which==="Train"){
     const heavy=hearts()>=2;
-    panel(DRILLS.map((d,i)=>`<button class="rb" data-d="${i}" ${s.sick?"disabled":""}>${d}<small>${STATS[i]}, rank ${rankOf(FAMILY[s.m.family].base[i])}</small></button>`).join("")+
-      `<div style="flex-basis:100%;font-size:12px;opacity:.7">${s.sick?"It's sick this week, so it can't train. Rest or medicine fixes it.":heavy?"Heavy drills are open at 2 hearts. Their scenes come next in the prototype.":"Heavy drills ("+HEAVY_DRILLS.join(", ")+") open at 2 hearts."}</div>`);
+    const noTrain=s.sick||s.injured;
+    panel(DRILLS.map((d,i)=>`<button class="rb" data-d="${i}" ${noTrain?"disabled":""}>${d}<small>${STATS[i]}, rank ${rankOf(FAMILY[s.m.family].base[i])}</small></button>`).join("")+
+      `<div style="flex-basis:100%;font-size:12px;opacity:.7">${s.injured?"It's hurt. A rest week or medicine fixes it.":s.sick?"It's sick this week, so it can't train. Rest or medicine fixes it.":heavy?"Heavy drills are open at 2 hearts. Their scenes come next in the prototype.":"Heavy drills ("+HEAVY_DRILLS.join(", ")+") open at 2 hearts."}</div>`);
     el("r-panel").querySelectorAll("[data-d]").forEach(b=>b.onclick=()=>runDrill(+b.dataset.d));
   }
-  if(which==="Rest"){ panel(`<button class="rb" id="r-rest">Rest this week<small>Fatigue −35, stress −7. Uses no lifespan.</small></button>`); el("r-rest").onclick=runRest; }
+  if(which==="Rest"){ panel(`<button class="rb" id="r-rest">Rest this week<small>Fatigue −35, stress −7. Uses the week.</small></button><div style="flex-basis:100%;font-size:12px;opacity:.7">${condition()}</div>`); el("r-rest").onclick=runRest; }
   if(which==="Feed"){
     const mo=Math.floor(s.week/4), fed=s.mealMonth===mo, snacked=s.snackWeek===s.week;
     panel(MEALS.map((ml,i)=>`<button class="rb" data-ml="${i}" ${fed||s.coins<ml[1]?"disabled":""}>${ml[0]}${s.known[i]==="like"?" ♥":s.known[i]==="dis"?" ✕":""}<small>${ml[1]} coins</small></button>`).join("")+
@@ -231,12 +239,11 @@ function menu(which){
   }
   if(which==="Care"){
     panel(`<button class="rb" id="r-pet">Pet<small>Or rub it on screen</small></button><button class="rb" id="r-clean" ${s.mess?"":"disabled"}>Clean<small>${s.mess?"Or wipe it on screen":"It's clean"}</small></button><button class="rb" id="r-play">Play<small>Throw the ball</small></button>`+
-      (s.sick?`<button class="rb" id="r-med">Medicine<small>Cures the cold, 80 coins</small></button>`:"")+
-      (evoReady()?`<button class="rb" id="r-evo" style="border-color:#ffd23f">Evolve<small>It's ready</small></button>`:`<div style="flex-basis:100%;font-size:12px;opacity:.7">${s.stage==="Bit"?`Evolving to Byte needs 2 hearts and 120 training points (it has ${hearts()} and ${tpTotal()}).`:"Mega form comes later in the prototype."}</div>`));
+      (s.sick||s.injured?`<button class="rb" id="r-med">Medicine<small>${s.injured?"Heals the injury":"Cures the cold"}, 80 coins</small></button>`:"")+
+      `<div style="flex-basis:100%;font-size:12px;opacity:.7">${s.stage==="Bit"?`A ${s.m.family} evolves on its own at ${evoTotal()} earned points. It has ${tpTotal()}.`:"Mega form comes later in the prototype."}</div>`);
     el("r-pet").onclick=()=>runCare("pet"); el("r-play").onclick=()=>runCare("play");
     if(s.mess) el("r-clean").onclick=()=>runCare("clean");
-    if(el("r-med")) el("r-med").onclick=()=>{ if(s.coins<80){say("We can't afford medicine right now.");return;} s.coins-=80; s.sick=0; say("Medicine's in. It's well enough to train."); drawUI(); menu("Care"); };
-    if(el("r-evo")) el("r-evo").onclick=runEvolve;
+    if(el("r-med")) el("r-med").onclick=()=>{ if(s.coins<80){say("We can't afford medicine right now.");return;} s.coins-=80; s.sick=0; s.injured=false; say("Medicine's in. It's well enough to train."); drawUI(); menu("Care"); };
   }
   if(which==="Out"){
     panel(`<button class="rb" id="r-fight">Practice fight<small>The fight screen, with its scan stats</small></button><button class="rb" disabled>Skill trip<small>Later</small></button><button class="rb" disabled>Mission<small>Later</small></button><button class="rb" disabled>Tournament<small>Later</small></button>`);
@@ -280,7 +287,7 @@ const headY=()=>GROUND-(RS.P.base-RS.P.topY+1)*RS.P.scale-RS.jy;
 function rollDrill(){
   const s=RS, h=hearts();
   if(spoiled()&&Math.random()<0.2+(s.slackBonus||0)) return "slack";
-  const great=10+2*h, fail=Math.max(5,25-5*h)+(s.fatigue>50?15:0)-(s.stress<10&&s.fatigue<30?5:0);
+  const great=10+2*h+(s.fatigue<20?5:0), fail=Math.max(5,25-5*h)+(s.fatigue>50?15:0)-(s.stress<10&&s.fatigue<30?5:0);
   const r=Math.random()*100; return r<great?"great":r<great+fail?"fail":"success";
 }
 async function runDrill(i){
@@ -294,13 +301,16 @@ async function runDrill(i){
     const shp=shapeOf(s.weight)[0], fm=shp==="Thin"?1.25:shp==="Chubby"?1.25:shp==="Heavy"?1.5:1, sm=shp==="Thin"?1.5:shp==="Slim"?1.25:shp==="Chubby"?0.75:shp==="Heavy"?0.5:1;
     s.fatigue+=Math.round((res==="great"||res==="slack"?5:10)*fm); s.stress+=Math.round((res==="great"?9:5)*sm); s.weight-=1;
     s.tp[i]+=pts;
+    const hurtP=s.fatigue>=90?0.3:s.fatigue>=70?0.15:0;
     const col={great:"#ffd23f",success:"#ffffff",fail:"#ff8a8a",slack:"#c9a6ff"}[res];
     banner({great:"Great!",success:"Success",fail:"Fail",slack:"Slacked off"}[res],col);
     if(DRILL_MESS[i]&&res!=="slack"){ s.mess=Math.min(100,s.mess+35); s.messKind=DRILL_MESS[i]; }
     drawUI(); popStat(i,"+"+pts);
     await rwait(900); banner("");
+    for(const [nm,need] of STAT_SKILLS[i]) if(s.tp[i]>=need&&!s.learned.includes(nm)){ s.learned.push(nm); banner("Learned "+nm+"!","#7dff9a"); s.pose="happy"; spark(s.x,headY()-6,"sparkle",8); drawUI(); await rwait(1300); banner(""); s.pose="idle"; }
+    if(Math.random()<hurtP){ s.injured=true; s.used+=2; s.pose="hurt"; spark(s.x,headY()-4,"star",4); say("It pushed too hard and got hurt."); await rwait(1200); s.pose="tired"; }
     await praiseOrScold(res);
-    await endWeek(1, {great:"That was its best yet.",success:"Solid work.",fail:"It'll get it next time.",slack:"It wandered off halfway. It's getting a bit spoiled."}[res]);
+    await endWeek(1, (s.injured?"It pushed too hard and got hurt. That's 2 weeks off its life, and it needs a rest or medicine.":{great:"That was its best yet.",success:"Solid work.",fail:"It'll get it next time.",slack:"It wandered off halfway. It's getting a bit spoiled."}[res]));
   });
 }
 function praiseOrScold(res){
@@ -381,7 +391,7 @@ const SCENE_FN=[
 async function runRest(){
   await scene(async()=>{ const s=RS; say("A quiet week in the hut.");
     await walkTo(26,40); s.hidden=true; for(let k=0;k<4;k++){ spark(30,GROUND-34,"z"); await rwait(450);} s.hidden=false; s.pose="happy"; await rwait(500);
-    s.fatigue-=35; s.stress-=7; s.weight+=1; await endWeek(0,"It looks rested.");
+    s.fatigue-=35; s.stress-=7; s.weight+=1; const wasHurt=s.injured; s.injured=false; await endWeek(1,wasHurt?"The rest healed it up.":"It looks rested.");
   });
 }
 async function runMeal(i){
@@ -431,19 +441,19 @@ async function runCare(kind){
 function petOnce(){ const s=RS; if(s.petWeek!==s.week){ s.petWeek=s.week; s.spoil+=2; s.stress-=2; say(scared()?"It flinched at first, then leaned in.":"It leans right into it."); } else say("It likes that, though it's had its fuss this week."); clampAll(); drawUI(); }
 function clampAll(){ const s=RS; s.fatigue=clamp(s.fatigue,0,100); s.stress=clamp(s.stress,0,100); s.spoil=clamp(s.spoil,0,100); s.fear=clamp(s.fear,0,100); s.weight=clamp(s.weight,-50,50); }
 
-async function runEvolve(){
-  if(!evoReady()) return;
-  await scene(async()=>{ const s=RS;
-    const top=s.tp.indexOf(Math.max(...s.tp)), mark=s.tp.filter(v=>v===s.tp[top]).length>1&&s.tp[s.lastTrained]===s.tp[top]?s.lastTrained:top;
-    say(MARK_HINT[mark]); await rwait(1400);
-    s.pose="idle"; await walkTo(130,40); s.pose="idle";
-    const oldP=s.P, G=scale2x(addMark(s.m.grid,mark)), newP=makePuppet(G,true,s.m.family);
-    for(let k=0;k<10;k++){ s.flash=99; s.P=k%2?newP:oldP; await rwait(Math.max(60,260-k*22)); }
-    s.P=newP; s.flash=0; s.stage="Byte"; s.mark=mark; s.messSpots=s.messSpots.map(p=>({x:p.x*2,y:p.y*2}));
-    spark(s.x,headY()+10,"sparkle",16); s.pose="happy"; await hop(16,450); await rwait(600);
-    say(`It's a ${MARK[mark][0]} Byte now, with ${MARK[mark][1]}. ${STATS[mark]} +5%, and a third skill slot opens.`);
-  });
+async function evolveNow(){
+  const s=RS;
+  const top=s.tp.indexOf(Math.max(...s.tp)), mark=s.tp.filter(v=>v===s.tp[top]).length>1&&s.tp[s.lastTrained]===s.tp[top]?s.lastTrained:top;
+  banner("");
+  say("Something's happening to it!"); s.pose="idle"; await walkTo(130,40); s.pose="idle"; await rwait(600);
+  const oldP=s.P, G=scale2x(addMark(s.m.grid,mark)), newP=makePuppet(G,true,s.m.family);
+  for(let k=0;k<10;k++){ s.flash=99; s.P=k%2?newP:oldP; await rwait(Math.max(60,260-k*22)); }
+  s.P=newP; s.flash=0; s.stage="Byte"; s.mark=mark; s.messSpots=s.messSpots.map(p=>({x:p.x*2,y:p.y*2}));
+  spark(s.x,headY()+10,"sparkle",16); s.pose="happy"; await hop(16,450); await rwait(600);
+  banner(MARK[mark][0]+" Byte!","#ffd23f"); await rwait(1200); banner("");
+  return `It evolved into a ${MARK[mark][0]} Byte, with ${MARK[mark][1]}. ${STATS[mark]} +5%, and a third skill slot opens.`;
 }
+const topMark=()=>{const s=RS, top=s.tp.indexOf(Math.max(...s.tp)); return s.tp.filter(v=>v===s.tp[top]).length>1&&s.tp[s.lastTrained]===s.tp[top]?s.lastTrained:top;};
 
 /* ---------- the end of a week ---------- */
 async function endWeek(weeks,line){
@@ -458,11 +468,25 @@ async function endWeek(weeks,line){
   if(s.week%4===0) notes.push("A new month, so it can have another meal.");
   const findP=(s.m.el1==="Wild"||s.m.el1==="Stone")?0.12:0.06;
   if(!s.sick&&Math.random()<findP){ const coins=Math.round(rnd(30,90)); s.coins+=coins; notes.push(`It dug up ${coins} coins in the yard.`); try{ s.pose="effort"; spark(s.x,GROUND-2,"dust",6); await rwait(500); spark(s.x,GROUND-10,"sparkle",5); }catch(e){} }
+  notes.push(condition());
   if(s.stress>50) notes.push("It seems tense lately, maybe give it a rest.");
-  else if(s.fatigue>60) notes.push("It's worn out. A rest week would help.");
-  if(evoReady()&&!s.toldEvo){ s.toldEvo=true; notes.push("Something's changing in it. Check Care when you're ready."); }
-  if(s.used>=s.m.lifespan){ s.dead=true; notes=[`It's lived a full life of ${s.m.lifespan} weeks and retires to the Archive.`]; }
+  if(s.stage==="Bit"){
+    if(evoReady()){ say(notes.filter(Boolean).join(" ")); drawUI(); await rwait(1400); notes=[await evolveNow()]; }
+    else if(!s.hinted&&tpTotal()>=evoTotal()-10){ s.hinted=true; notes.push(MARK_HINT[topMark()]); }
+  }
+  const past=s.used-lifeWeeks();
+  if(past>=0){
+    let p=0.10+0.05*past; if(hearts()===5&&strain<70) p/=2;
+    if(Math.random()<p){ await dieScene(); return; }
+    if(past===0) notes.push("It's reached its full lifespan. Every week from here is a bonus.");
+  }
   say(notes.filter(Boolean).join(" ")); drawUI();
+}
+async function dieScene(){
+  const s=RS; s.pose="sleep"; banner("");
+  for(let k=0;k<8;k++){ spark(s.x+rnd(-14,14),headY()+rnd(0,24),"sparkle"); await rwait(220); }
+  s.hidden=true; spark(s.x,GROUND-20,"sparkle",14); await rwait(900);
+  s.dead=true; say(`It died peacefully after ${Math.floor(s.used/4)} months. It goes to the Archive with its record.`); drawUI();
 }
 
 /* ---------- ordinary life: what it does on its own ---------- */
@@ -470,7 +494,8 @@ async function idleTick(){
   const s=RS; if(!s||!s.open||s.busy||s.idling||s.rub||s.dead) return;
   s.idling=true; const id=s.cur=++RACT;
   try{
-    if(s.fatigue>75){ s.pose="sleep"; for(let k=0;k<4;k++){ spark(s.x+6,headY(),"z"); await rwait(700,id);} }
+    if(s.injured){ s.pose="tired"; await rwait(2500,id); }
+    else if(s.fatigue>75){ s.pose="sleep"; for(let k=0;k<4;k++){ spark(s.x+6,headY(),"z"); await rwait(700,id);} }
     else if(s.fatigue>50){ s.pose="tired"; await rwait(2500,id); }
     else if(s.stress>45){ for(let k=0;k<2;k++){ await walkTo(clamp(s.x+40,95,215),55,"walk",id); await walkTo(clamp(s.x-40,95,215),55,"walk",id);} }
     else if(scared()){ s.behind=true; await walkTo(40,40,"walk",id); s.pose="idle"; await rwait(3000,id); }
@@ -566,6 +591,7 @@ function drawMonster(c,t){
   if(s.ghosts){ s.trail.push([dx,dy]); if(s.trail.length>4) s.trail.shift(); c.globalAlpha=0.25; for(const [gx,gy] of s.trail.slice(0,-1)) c.drawImage(FC,gx-6,gy); c.globalAlpha=1; } else s.trail=[];
   if(s.upside){ c.save(); const vis=(P.base-P.topY+1)*sc; c.translate(dx+w/2,GROUND-vis/2); c.scale(1,-1); c.drawImage(FC,-w/2,-(P.base+P.pad+1)*sc+vis/2); c.restore(); }
   else c.drawImage(FC,dx,dy);
+  if(s.injured&&!s.upside){ const hx=Math.round(s.x+P.N*sc*0.15), hy=Math.round(dy+(P.topY+P.pad+1)*sc+o.by*0); c.fillStyle="#fff"; c.fillRect(hx-3,hy,7,3); c.fillRect(hx-1,hy-2,3,7); c.fillStyle="#e2483f"; c.fillRect(hx,hy+1,1,1); }
   s.bbox=[dx+P.pad*sc,dy+(P.topY+P.pad)*sc,dx+w-P.pad*sc,dy+baseY];
 }
 function drawYard(c,t){
