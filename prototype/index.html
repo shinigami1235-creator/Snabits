@@ -56,6 +56,16 @@ video,#still{width:100%;height:100%;object-fit:cover}
 .bpop{position:absolute;font-weight:800;font-size:20px;text-shadow:0 2px 3px #000;transition:transform .8s,opacity .8s;transform:translate(-50%,0);pointer-events:none}
 #b-log{font-size:13px;min-height:72px;opacity:.9}#b-log div:last-child{font-weight:600}
 #b-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}#b-btns.busy{opacity:.5;pointer-events:none}
+
+#loadout,#b-fight{flex-direction:column;gap:8px;flex:1;min-height:0}
+#loadout{display:none;overflow:auto}#b-fight{display:none}
+#lo-list{display:flex;flex-direction:column;gap:8px;overflow:auto}
+.lo{background:#1e1e26;color:#fff;border:2px solid #333;border-radius:12px;padding:10px 12px;text-align:left;cursor:pointer;line-height:1.5}
+.lo.on{background:#262634}.lo:disabled{opacity:.4}.lo small{opacity:.75}
+.lvl{background:#22222b;color:#fff;border:1px solid #444;border-radius:999px;padding:6px 12px;cursor:pointer}.lvl.on{background:#fff;color:#111}
+.abl{font-size:11px;opacity:.65;font-weight:400}
+.bpop.ab{font-size:14px;background:#000a;padding:2px 8px;border-radius:8px;white-space:nowrap}
+#lo-go:disabled{opacity:.4}
 .bbtn{background:#22222b;color:#fff;border:2px solid #888;border-radius:12px;padding:10px;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:2px}
 .bbtn b{font-size:15px}.bbtn small{opacity:.7;font-size:12px}.bbtn:disabled{opacity:.35}
 #b-result{display:none;position:absolute;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom) + 12px);background:#1e1e26;border:1px solid #333;border-radius:16px;padding:16px}
@@ -79,6 +89,8 @@ video,#still{width:100%;height:100%;object-fit:cover}
 </div>
 <div id="msg"><div><h1>Snabits</h1><p id="msgtext">Take a photo, drag the circle onto what you want scanned, then tap Scan.</p><label id="takebtn" for="take" style="display:inline-block;background:#fff;color:#111;font-weight:600;border-radius:999px;padding:14px 26px;cursor:pointer">Take a photo</label></div></div>
 <div id="battle">
+<div id="loadout"><div id="lo-head"></div><div id="lo-list"></div><div class="brow"><button class="big" id="lo-go" onclick="startFight()">Start fight</button><button class="small" onclick="closeBattle()">Back to scan</button></div></div>
+<div id="b-fight">
   <div class="bpanel"><div class="nm" id="b-foe-name"></div><div class="hpbar"><i id="b-foe-hp"></i></div><div class="brow2"><span id="b-foe-st"></span><span><span id="b-foe-hpt"></span></span></div><div class="en" id="b-foe-en" style="margin-top:4px"></div></div>
   <div id="arena"><canvas id="b-foe-sprite" class="bsprite"></canvas><div id="b-field"></div><canvas id="b-me-sprite" class="bsprite"></canvas></div>
   <div class="bpanel"><div class="nm" id="b-me-name"></div><div class="hpbar"><i id="b-me-hp"></i></div><div class="brow2"><span id="b-me-st"></span><span id="b-me-hpt"></span></div><div class="en" id="b-me-en" style="margin-top:4px"></div></div>
@@ -86,7 +98,9 @@ video,#still{width:100%;height:100%;object-fit:cover}
   <div id="b-btns"></div>
   <div id="b-result"></div>
 </div>
+</div>
 <canvas id="work" width="160" height="160" style="display:none"></canvas>
+<script src="skills.js"></script>
 <script src="monster.js"></script>
 <script src="battle.js"></script>
 <script src="battle-ui.js"></script>
@@ -209,9 +223,9 @@ function render(full){
       <div style="flex:1;min-width:180px"><h2 style="font-size:22px">${name}</h2><div style="font-size:13px;opacity:.75">${kind}</div>
         <p style="margin-top:2px">${m.hidden?"<b style=\"color:#ffd23f\">Hidden ability!</b> ":""}${m.ability[0]}: ${m.ability[1]}.</p>
         <p>${m.pers[0]} personality, ${STATS[m.pers[1]]} up and ${STATS[m.pers[2]]} down. Lifespan ${m.lifespan} weeks.</p>
-        <p>Starts with ${m.skills.join(" and ")}. Skill pool of ${m.pool}.</p></div></div>
+        <p>Starts with ${m.skills.join(" and ")}. Skill pool of ${m.pool.length}.</p></div></div>
       <table>${STATS.map((st,i)=>`<tr><td style="width:62px">${st}</td><td><i style="display:inline-block;height:8px;border-radius:4px;width:${Math.min(100,m.stats[i])}%;background:${COL[res.main.g]==="#1b1b1f"?"#8888aa":COL[res.main.g]}"></i></td><td style="width:40px">${m.stats[i]}</td><td style="width:56px;color:#ffd23f">${stars(m.talent[i])}</td></tr>`).join("")}</table>
-      <p style="font-size:12px;opacity:.7">${why} The main colour sits ${m.band==="middle"?"in the middle":"toward the "+m.band} and is ${m.shape}, which makes a ${m.family}. Drag the circle to try another spot.</p><div class="brow" style="margin-top:10px"><button class="big" id="fightbtn">Fight</button><span style="font-size:12px;opacity:.7">Level 20 fight against a random monster</span></div>`;
+      <p style="font-size:12px;opacity:.7">${why} The main colour sits ${m.band==="middle"?"in the middle":"toward the "+m.band} and is ${m.shape}, which makes a ${m.family}. Drag the circle to try another spot.</p><div class="brow" style="margin-top:10px"><button class="big" id="fightbtn">Fight</button><span style="font-size:12px;opacity:.7">Pick 2 skills, then fight a random monster</span></div>`;
     paint(document.getElementById("bit"),m.grid,m.pal,1);
     lastMon=m; const fb=document.getElementById("fightbtn"); if(fb) fb.onclick=()=>openBattle(lastMon);
     paint(document.getElementById("byte"),scale2x(m.grid),m.pal,1);

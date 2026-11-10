@@ -1,13 +1,13 @@
 /* Snabits Bit monster generator: label grid, photo colours, stats from the design doc. */
 const FAMILY = {
-  Squib:{body:[3,[3,5,6,6,7,7,7,7]], legs:"tentacles", base:[45,45,40,60,55,55], ability:["Wobble","The first hit it takes each fight deals 30% less"]},
+  Squib:{body:[3,[3,5,6,6,7,7,7,7]], legs:"tentacles", base:[55,40,40,65,50,50], ability:["Wobble","The first hit it takes each fight deals 30% less"]},
   Antik:  {body:[4,[3,5,6,6,6,6,6,5,3]], legs:"twolegs", top:1, base:[50,65,55,35,40,55], ability:["Heavy Lifter","Held item bonuses +50%"]},
-  Chomp:  {body:[3,[4,5,6,6,6,6,6,6,6,6,5]], legs:"stubby", mouth:3, base:[60,70,50,35,40,45], ability:["Big Bite","Strike skills of 50 power or less hit 30% harder"]},
-  Moko:  {body:[3,[3,5,6,7,7,7,7,6,5,3]], legs:"tentacles", eyes:"cyclops", base:[45,35,40,70,60,50], ability:["Keen Eye","Its accuracy can't be lowered and dodge doesn't work against it"]},
-  Pinch:  {body:[5,[5,6,6,6,6,6,6,5]], legs:"twolegs", arms:3, base:[50,55,75,35,50,35], ability:["Shell","Crits can't land on it"]},
-  Stilt:  {body:[2,[2,3,3,3,3,3,3,3,2]], legs:"longlegs", base:[40,50,35,50,45,80], ability:["Long Stride","Acts first on the turn it switches in"]},
+  Chomp:  {body:[3,[4,5,6,6,6,6,6,6,6,6,5]], legs:"stubby", mouth:3, base:[55,60,50,35,40,60], ability:["Big Bite","Strikes of 50 power or less, its basic attack included, hit 20% harder"]},
+  Moko:  {body:[3,[3,5,6,7,7,7,7,6,5,3]], legs:"tentacles", eyes:"cyclops", base:[55,35,40,75,50,45], ability:["Keen Eye","Its accuracy can't be lowered and dodge doesn't work against it"]},
+  Pinch:  {body:[5,[5,6,6,6,6,6,6,5]], legs:"twolegs", arms:3, base:[50,55,65,35,50,45], ability:["Shell","Crits can't land on it"]},
+  Stilt:  {body:[2,[2,3,3,3,3,3,3,3,2]], legs:"longlegs", base:[55,50,35,50,45,65], ability:["Long Stride","Acts first on the turn it switches in"]},
   Skit: {body:[8,[5,7,8,8,7]], legs:"spider", base:[45,55,45,45,45,65], ability:["Web","Its basic attack has a 30% chance to drop the target's Speed 1 step"]},
-  Booly:  {body:[3,[2,3,4,4,5,5,6,6,6,7,7,7]], legs:"ghost", base:[55,35,40,60,70,40], ability:["Slippery","10% chance to dodge any Strike"]},
+  Booly:  {body:[3,[2,3,4,4,5,5,6,6,6,7,7,7]], legs:"ghost", base:[60,35,40,70,55,40], ability:["Slippery","10% chance to dodge any Strike"]},
 };
 const STATS = ["HP","Power","Guard","Mind","Spirit","Speed"];
 const LEAN = {Blaze:[1,2],Brawl:[0,3],Spark:[5,0],Wild:[0,5],Frost:[2,0],Tide:[4,1],Venom:[3,4],Charm:[3,1],Stone:[2,3],Light:[4,2],Steel:[1,5],Shade:[5,4]};
@@ -21,11 +21,10 @@ const EL_ABILITY = {
   Venom:[["Toxic Touch","Its Strike hits have a 20% chance to Poison"],["Corrosion","Its Venom skills hit Steel for normal damage and can Poison it"]],
   Charm:[["Beguile","Drops the opponent's Power 1 step when it switches in"],["Mirror Mind","Copies any stat raise the opponent gets"]],
   Stone:[["Bedrock","Can't be knocked out in one hit from full HP"],["Unbreakable","Its Guard can't be lowered and Crack doesn't affect it"]],
-  Light:[["Halo","Heals 1/8 HP when it switches out"],["Sanctuary","No status can land on it while its HP is full"]],
+  Light:[["Halo","Heals 1/8 HP when it guards or switches out"],["Sanctuary","No status can land on it while its HP is full"]],
   Steel:[["Plated","Takes 10% less from Strike skills"],["Reflect","A Cast skill it resists bounces 30% of the damage back"]],
-  Shade:[["Night-born","Mind +20% under Moonlit, with glowing eyes"],["Haunt","The skill that knocks it out is locked for the rest of the fight"]],
+  Shade:[["Night-born","Mind +20% under Moonlit, with glowing eyes"],["Haunt","When it's knocked out, the attacker loses a quarter of its max HP"]],
 };
-const STARTER = {Blaze:["Ember Bite","Heat Haze"],Brawl:["Jab","Bulk Up"],Spark:["Zap","Charge Up"],Wild:["Vine Lash","Overgrowth"],Frost:["Frost Nip","Blizzard"],Tide:["Splash Fang","Monsoon"],Venom:["Toxic Spit","Toxic Mist"],Charm:["Hypno Ray","Mirror Charm"],Stone:["Rock Slam","Shard Wall"],Light:["Glint","Purify"],Steel:["Iron Ram","Polish"],Shade:["Shadow Bolt","Moonrise"]};
 const PERSONALITY = [["Bold",1,2],["Calm",4,1],["Hasty",5,4],["Careful",2,5],["Cheerful",3,2],["Gloomy",4,5],["Proud",1,4],["Timid",5,1]];
 
 function rng(seed){let a=seed>>>0;return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
@@ -193,7 +192,7 @@ function hatch(res,now=new Date()){
   let hiddenChance=(res.mono?0.12:0.03)*(bri<0.3?2:1);
   const hidden=R()<hiddenChance;
   const ability=hidden?EL_ABILITY[el1][1]:(R()<0.5?F.ability:EL_ABILITY[el1][0]);
-  const skills=[STARTER[el1][0], el2?STARTER[el2][0]:STARTER[el1][1]];
+  const pool=buildPool(el1,el2,res.pool), skills=pool.slice(0,2);
   const lifespan=Math.round(60+40*bri);
-  return {name:speciesName(family,el1,el2),family,band,shape,el1,el2,mono:res.mono,parts,grid,pal,stats,talent,pers,ability,hidden,hiddenChance,skills,lifespan,pool:res.pool};
+  return {pool,name:speciesName(family,el1,el2),family,band,shape,el1,el2,mono:res.mono,parts,grid,pal,stats,talent,pers,ability,hidden,hiddenChance,skills,lifespan};
 }
