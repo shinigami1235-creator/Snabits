@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0e0e12">
+<title>Snabits scan to monster</title>
+<style>
+*{box-sizing:border-box;margin:0}
+html,body{height:100%;background:#0e0e12;color:#f2f0ea;font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden}
+#stage{position:fixed;inset:0;touch-action:none;display:flex;align-items:center;justify-content:center;background:#000}
+video,#still{width:100%;height:100%;object-fit:cover}
+#still{display:none;position:absolute;inset:0}
+#ring{position:absolute;border:3px solid #fff;border-radius:50%;pointer-events:none;box-shadow:0 0 0 2000px rgba(0,0,0,.28)}
+#ring::after{content:"";position:absolute;inset:-9px;border:2px dashed rgba(255,255,255,.45);border-radius:50%}
+#top{position:fixed;left:0;right:0;top:0;padding:calc(env(safe-area-inset-top) + 12px) 14px 10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.chip{padding:6px 12px;border-radius:999px;font-weight:600;font-size:15px;background:#222;color:#fff;border:2px solid rgba(255,255,255,.25)}
+#kind{font-size:13px;opacity:.85;margin-left:2px}
+#bars{position:fixed;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom) + 108px);display:grid;gap:4px}
+.bar{display:grid;grid-template-columns:62px 1fr 38px;align-items:center;gap:8px;font-size:12px;text-shadow:0 1px 2px #000}
+.bar i{display:block;height:8px;border-radius:4px}
+.bar span:last-child{text-align:right;opacity:.85}
+#bottom{position:fixed;left:0;right:0;bottom:0;padding:10px 0 calc(env(safe-area-inset-bottom) + 18px);display:flex;justify-content:center;align-items:center;gap:28px}
+#shutter{width:74px;height:74px;border-radius:50%;border:5px solid #fff;background:rgba(255,255,255,.18);cursor:pointer}
+#shutter:active{transform:scale(.94)}
+.big{background:#fff;color:#111;border:0;border-radius:999px;padding:16px 34px;font-size:17px;font-weight:700;cursor:pointer}
+.small{background:none;border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:10px;padding:8px 12px;font-size:13px;cursor:pointer}
+#top,#bars{pointer-events:none}
+#card{max-height:62vh;overflow:auto}
+#card{position:fixed;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom) + 108px);background:rgba(14,14,18,.94);border:1px solid #333;border-radius:16px;padding:16px;display:none}
+#card h2{font-size:22px;margin-bottom:4px}
+#card p{font-size:14px;opacity:.85;margin-top:6px}
+#card table{width:100%;margin-top:10px;font-size:13px;border-collapse:collapse}
+#card td{padding:3px 0;border-top:1px solid #2a2a30}
+#card td:last-child{text-align:right;opacity:.85}
+#msg{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:30px;text-align:center;background:#0e0e12}
+#msg div{max-width:360px}
+#msg h1{font-size:20px;margin-bottom:10px}
+#msg p{opacity:.8;margin-bottom:16px}
+#pick{display:none}
+#battle{position:fixed;inset:0;background:#14141a;display:none;flex-direction:column;padding:calc(env(safe-area-inset-top) + 10px) 12px calc(env(safe-area-inset-bottom) + 12px);gap:8px;z-index:10;overflow:auto}
+.bpanel{background:#1e1e26;border-radius:12px;padding:8px 12px}
+.bpanel .nm{font-weight:700;font-size:15px}.bpanel small{opacity:.7;font-weight:400}
+.bchip{display:inline-block;font-size:11px;font-weight:700;padding:2px 7px;border-radius:999px;margin-left:4px;color:#fff;vertical-align:middle}
+.hpbar{height:10px;background:#333;border-radius:5px;overflow:hidden;margin:6px 0 3px}.hpbar i{display:block;height:100%;transition:width .35s}
+.brow2{display:flex;justify-content:space-between;align-items:center;font-size:12px}
+.en{display:flex;gap:3px}.en i{width:9px;height:9px;border-radius:2px;background:#333}.en i.on{background:#5ab0ff}
+#arena{position:relative;flex:1;min-height:210px}
+.bsprite{position:absolute;width:132px;height:132px;image-rendering:pixelated;transition:opacity .6s,transform .6s}
+#b-foe-sprite{right:8%;top:4px}#b-me-sprite{left:8%;bottom:4px}
+#b-field{position:absolute;left:0;right:0;top:45%;text-align:center;font-size:12px;opacity:.75}
+.bhit{animation:bh .35s}@keyframes bh{0%,100%{transform:translateX(0);filter:none}25%{transform:translateX(-7px);filter:brightness(2.2)}60%{transform:translateX(6px)}}
+.bguard{animation:bg .4s}@keyframes bg{50%{transform:scale(.92)}}
+.bcast{animation:bc .4s}@keyframes bc{50%{transform:translateY(-10px)}}
+.bko{opacity:0;transform:scale(1.25)}
+.bpop{position:absolute;font-weight:800;font-size:20px;text-shadow:0 2px 3px #000;transition:transform .8s,opacity .8s;transform:translate(-50%,0);pointer-events:none}
+#b-log{font-size:13px;min-height:72px;opacity:.9}#b-log div:last-child{font-weight:600}
+#b-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}#b-btns.busy{opacity:.5;pointer-events:none}
+.bbtn{background:#22222b;color:#fff;border:2px solid #888;border-radius:12px;padding:10px;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:2px}
+.bbtn b{font-size:15px}.bbtn small{opacity:.7;font-size:12px}.bbtn:disabled{opacity:.35}
+#b-result{display:none;position:absolute;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom) + 12px);background:#1e1e26;border:1px solid #333;border-radius:16px;padding:16px}
+#b-result p{opacity:.85;margin:6px 0 12px}.brow{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+</style>
+</head>
+<body>
+<div id="stage"><video id="video" playsinline muted autoplay></video><canvas id="still"></canvas><div id="ring"></div></div>
+<div id="top"><span class="chip" id="main">Point at something</span><span class="chip" id="second" style="display:none"></span><span id="kind"></span></div>
+<div id="bars"></div>
+<div id="card"></div>
+<div id="bottom">
+  <button class="small" id="flip" aria-label="Switch camera">Flip</button>
+  <button id="shutter" aria-label="Scan"></button>
+  <button class="big" id="scanbtn" style="display:none">Scan</button>
+  <label class="small" id="newbtn" for="take" style="display:none">New photo</label>
+  <label class="small" for="pick">From gallery</label>
+  <input type="file" id="pick" accept="image/*">
+  <input type="file" id="take" accept="image/*" capture="environment" style="display:none">
+</div>
+<div id="msg"><div><h1>Snabits</h1><p id="msgtext">Take a photo, drag the circle onto what you want scanned, then tap Scan.</p><label id="takebtn" for="take" style="display:inline-block;background:#fff;color:#111;font-weight:600;border-radius:999px;padding:14px 26px;cursor:pointer">Take a photo</label></div></div>
+<div id="battle">
+  <div class="bpanel"><div class="nm" id="b-foe-name"></div><div class="hpbar"><i id="b-foe-hp"></i></div><div class="brow2"><span id="b-foe-st"></span><span><span id="b-foe-hpt"></span></span></div><div class="en" id="b-foe-en" style="margin-top:4px"></div></div>
+  <div id="arena"><canvas id="b-foe-sprite" class="bsprite"></canvas><div id="b-field"></div><canvas id="b-me-sprite" class="bsprite"></canvas></div>
+  <div class="bpanel"><div class="nm" id="b-me-name"></div><div class="hpbar"><i id="b-me-hp"></i></div><div class="brow2"><span id="b-me-st"></span><span id="b-me-hpt"></span></div><div class="en" id="b-me-en" style="margin-top:4px"></div></div>
+  <div id="b-log"></div>
+  <div id="b-btns"></div>
+  <div id="b-result"></div>
+</div>
+<canvas id="work" width="160" height="160" style="display:none"></canvas>
+<script src="monster.js"></script>
+<script src="battle.js"></script>
+<script src="battle-ui.js"></script>
+<script>
+const GROUPS=["red","orange","yellow","green","cyan","blue","violet","pink","brown","white","silver","black"];
+const EL={red:"Blaze",orange:"Brawl",yellow:"Spark",green:"Wild",cyan:"Frost",blue:"Tide",violet:"Venom",pink:"Charm",brown:"Stone",white:"Light",silver:"Steel",black:"Shade"};
+const COL={red:"#e2483f",orange:"#f08a24",yellow:"#f2cf2b",green:"#4da83c",cyan:"#6fd6d0",blue:"#2f6fd8",violet:"#8a4fe0",pink:"#f07ab4",brown:"#8a5a2b",white:"#f4f4f4",silver:"#a9adb3",black:"#1b1b1f"};
+const TXT={yellow:"#3a2f00",white:"#222",cyan:"#063b38",silver:"#1d1f22"};
+const BASE={red:3.57,orange:8.97,yellow:2.76,green:18.56,cyan:5.48,blue:7.18,violet:0.61,pink:1.09,brown:19.21,white:8.43,silver:16.49,black:7.65};
+const RING=0.25, RING_WEIGHT=3, FLOOR=3, TIE=5, MONO_MAIN=60, MONO_FLOOR=40, DUAL_SECOND=20;
+
+function group(r,g,b){
+  const mx=Math.max(r,g,b), mn=Math.min(r,g,b), d=mx-mn, v=mx, s=mx>0?d/mx:0;
+  if(v<0.15) return "black";
+  if(s<0.18) return v>0.70?"white":(v>=0.25?"silver":"black");
+  let h; if(mx===r) h=((g-b)/d+6)%6; else if(mx===g) h=(b-r)/d+2; else h=(r-g)/d+4; h*=60;
+  if(h>=300&&h<345) return "pink";
+  if(h>=345||h<15) return (s<0.55&&v>0.70)?"pink":(v<0.45?"brown":"red");
+  if(h<45) return v<0.55?"brown":"orange";
+  if(h<70) return (v<0.55||s<0.35)?(h>=55?"green":"brown"):"yellow";
+  if(h<165) return "green";
+  if(h<200) return "cyan";
+  if(h<240) return "blue";
+  return "violet";
+}
+
+function scan(source,sw,sh){
+  const ax=aim.x, ay=aim.y;
+  const W=160, H=Math.max(40,Math.round(160*sh/sw));
+  const c=document.getElementById("work"); c.width=W; c.height=H;
+  const x=c.getContext("2d",{willReadFrequently:true}); x.drawImage(source,0,0,sw,sh,0,0,W,H);
+  const px=x.getImageData(0,0,W,H).data, R=RING*Math.min(W,H);
+  const area={}, dsum={}, cnt={}, rgb={}; let total=0, ssum=0, vsum=0, v2=0;
+  GROUPS.forEach(g=>{area[g]=0;dsum[g]=0;cnt[g]=0;rgb[g]=[0,0,0]});
+  const lab=new Array(W*H), cellRGB=Array.from({length:9},()=>[0,0,0,0]);
+  for(let j=0;j<H;j++)for(let i=0;i<W;i++){
+    const k=(j*W+i)*4, r=px[k]/255, g=px[k+1]/255, b=px[k+2]/255, gname=group(r,g,b);
+    const mx=Math.max(r,g,b), mn=Math.min(r,g,b); ssum+=mx?(mx-mn)/mx:0; vsum+=mx; v2+=mx*mx;
+    const dx=i-W*ax, dy=j-H*ay, inRing=dx*dx+dy*dy<R*R, w=inRing?RING_WEIGHT:1;
+    area[gname]+=w; total+=w; dsum[gname]+=Math.hypot((j-H*ay)/H,(i-W*ax)/W); cnt[gname]++;
+    rgb[gname][0]+=px[k]; rgb[gname][1]+=px[k+1]; rgb[gname][2]+=px[k+2];
+    lab[j*W+i]=gname;
+    const cell=Math.min(2,Math.floor(3*j/H))*3+Math.min(2,Math.floor(3*i/W)); const cr=cellRGB[cell]; cr[0]+=px[k];cr[1]+=px[k+1];cr[2]+=px[k+2];cr[3]++;
+  }
+  const n=W*H, raw={}, wt={}; let wsum=0;
+  GROUPS.forEach(g=>{raw[g]=100*area[g]/total; if(raw[g]>=FLOOR){wt[g]=raw[g]/Math.sqrt(Math.max(BASE[g],1)); wsum+=wt[g];}});
+  const ranked=Object.keys(wt).map(g=>({g,w:100*wt[g]/wsum,raw:raw[g],cd:dsum[g]/cnt[g],rgb:rgb[g].map(v=>v/cnt[g])})).sort((a,b)=>b.w-a.w);
+  let tie=false;
+  if(ranked.length>1&&ranked[0].w-ranked[1].w<=TIE&&ranked[1].cd<ranked[0].cd){[ranked[0],ranked[1]]=[ranked[1],ranked[0]];tie=true;}
+  const main=ranked[0], second=ranked[1];
+  const mono=!second||main.w>=MONO_MAIN||(main.w>=MONO_FLOOR&&second.w<DUAL_SECOND);
+  const colours=Math.max(2,Math.min(8,ranked.length));
+  const cells=Array(9).fill(0);
+  for(let j=0;j<H;j++)for(let i=0;i<W;i++) if(lab[j*W+i]===main.g) cells[Math.min(2,Math.floor(3*j/H))*3+Math.min(2,Math.floor(3*i/W))]++;
+  const vm=vsum/n, photoKey=cellRGB.map(c=>c.slice(0,3).map(v=>Math.round(v/c[3]/32)).join("")).join("-");
+  return {ranked,main,second:mono?null:second,mono,tie,colours,pool:colours+4,cells,sat:ssum/n,bright:vm,contrast:Math.sqrt(Math.max(0,v2/n-vm*vm)),photoKey};
+}
+
+function chip(el,g){el.textContent=EL[g];el.style.background=COL[g];el.style.color=TXT[g]||"#fff";el.style.display="";}
+function show(res){
+  chip(document.getElementById("main"),res.main.g);
+  const s=document.getElementById("second");
+  if(res.second) chip(s,res.second.g); else s.style.display="none";
+  document.getElementById("kind").textContent=res.mono?"Mono":"Dual";
+  document.getElementById("bars").innerHTML=res.ranked.slice(0,5).map(r=>
+    `<div class="bar"><span>${EL[r.g]}</span><i style="width:${Math.max(3,r.w)}%;background:${COL[r.g]}"></i><span>${Math.round(r.w)}%</span></div>`).join("");
+}
+
+const video=document.getElementById("video"), still=document.getElementById("still"), ring=document.getElementById("ring");
+const card=document.getElementById("card"), bars=document.getElementById("bars"), msg=document.getElementById("msg");
+const shutter=document.getElementById("shutter"), scanBtn=document.getElementById("scanbtn"), newBtn=document.getElementById("newbtn");
+let lastMon=null, stream=null, facing="environment", mode="start", timer=null, aim={x:0.5,y:0.5}, frame=null;
+
+function fail(e){card.innerHTML=`<h2>Something broke</h2><p>${(e&&(e.name||""))} ${(e&&e.message)||e}</p><p>Send Claude a screenshot of this.</p>`;card.style.display="block";}
+addEventListener("error",e=>fail(e.error||e.message));
+addEventListener("unhandledrejection",e=>fail(e.reason));
+
+function placeRing(){
+  const s=Math.min(innerWidth,innerHeight)*RING*2;
+  ring.style.width=ring.style.height=s+"px";
+  ring.style.left=(aim.x*innerWidth-s/2)+"px"; ring.style.top=(aim.y*innerHeight-s/2)+"px";
+}
+ring.style.position="absolute"; addEventListener("resize",placeRing); placeRing();
+
+function setMode(m){
+  mode=m;
+  const photo=m==="aim"||m==="photoResult";
+  shutter.style.display=photo?"none":"";
+  scanBtn.style.display=m==="aim"?"":"none";
+  newBtn.style.display=photo?"":"none";
+  document.getElementById("flip").style.display=stream&&!photo?"":"none";
+  card.style.display=(m==="liveResult"||m==="photoResult")?"block":"none";
+  bars.style.display=(m==="live"||m==="aim")?"grid":"none";
+  still.style.display=(m==="liveResult"||photo)?"block":"none";
+  msg.style.display=m==="start"?"flex":"none";
+  document.getElementById("top").style.display=m==="start"?"none":"flex";
+}
+
+function visibleCrop(w,h){
+  const sr=innerWidth/innerHeight, r=w/h;
+  if(r>sr){const cw=h*sr;return [(w-cw)/2,0,cw,h];}
+  const ch=w/sr; return [0,(h-ch)/2,w,ch];
+}
+function grab(src,w,h){
+  const [sx,sy,sw,sh]=visibleCrop(w,h);
+  const c=document.createElement("canvas"); c.width=Math.round(sw); c.height=Math.round(sh);
+  c.getContext("2d").drawImage(src,sx,sy,sw,sh,0,0,c.width,c.height); return c;
+}
+function stars(t){const n=t>=12?3:t>=8?2:t>=4?1:0;return "★".repeat(n)+"<span style=\"opacity:.25\">"+"★".repeat(3-n)+"</span>";}
+function render(full){
+  try{
+    const res=scan(still,still.width,still.height); show(res);
+    if(!full) return;
+    const m=hatch(res);
+    const name=m.name, kind=(m.el2?`${m.el1} / ${m.el2}`:m.el1)+" "+m.family;
+    const why=res.mono?`Mono, since ${res.main.w>=MONO_MAIN?`the main colour reached ${Math.round(res.main.w)}%`:res.ranked[1]?`the main colour reached ${Math.round(res.main.w)}% and the second only ${Math.round(res.ranked[1].w)}%`:"one colour fills the frame"}.`:res.second.w>=DUAL_SECOND?`Dual, since the second colour reached ${Math.round(res.second.w)}%.`:`Dual, since no colour leads the photo and the main one only reached ${Math.round(res.main.w)}%.`;
+    card.innerHTML=`<div style="display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap">
+      <div style="text-align:center"><canvas id="bit" style="width:120px;height:120px;image-rendering:pixelated;background:#24242c;border-radius:10px"></canvas><div style="font-size:11px;opacity:.7">Bit</div></div>
+      <div style="text-align:center"><canvas id="byte" style="width:120px;height:120px;image-rendering:pixelated;background:#24242c;border-radius:10px"></canvas><div style="font-size:11px;opacity:.7">Byte, after evolving</div></div>
+      <div style="flex:1;min-width:180px"><h2 style="font-size:22px">${name}</h2><div style="font-size:13px;opacity:.75">${kind}</div>
+        <p style="margin-top:2px">${m.hidden?"<b style=\"color:#ffd23f\">Hidden ability!</b> ":""}${m.ability[0]}: ${m.ability[1]}.</p>
+        <p>${m.pers[0]} personality, ${STATS[m.pers[1]]} up and ${STATS[m.pers[2]]} down. Lifespan ${m.lifespan} weeks.</p>
+        <p>Starts with ${m.skills.join(" and ")}. Skill pool of ${m.pool}.</p></div></div>
+      <table>${STATS.map((st,i)=>`<tr><td style="width:62px">${st}</td><td><i style="display:inline-block;height:8px;border-radius:4px;width:${Math.min(100,m.stats[i])}%;background:${COL[res.main.g]==="#1b1b1f"?"#8888aa":COL[res.main.g]}"></i></td><td style="width:40px">${m.stats[i]}</td><td style="width:56px;color:#ffd23f">${stars(m.talent[i])}</td></tr>`).join("")}</table>
+      <p style="font-size:12px;opacity:.7">${why} The main colour sits ${m.band==="middle"?"in the middle":"toward the "+m.band} and is ${m.shape}, which makes a ${m.family}. Drag the circle to try another spot.</p><div class="brow" style="margin-top:10px"><button class="big" id="fightbtn">Fight</button><span style="font-size:12px;opacity:.7">Level 20 fight against a random monster</span></div>`;
+    paint(document.getElementById("bit"),m.grid,m.pal,1);
+    lastMon=m; const fb=document.getElementById("fightbtn"); if(fb) fb.onclick=()=>openBattle(lastMon);
+    paint(document.getElementById("byte"),scale2x(m.grid),m.pal,1);
+  }catch(e){fail(e);}
+}
+function liveTick(){
+  if(mode!=="live"||!video.videoWidth) return;
+  try{const c=grab(video,video.videoWidth,video.videoHeight); show(scan(c,c.width,c.height));}catch(e){fail(e);clearInterval(timer);}
+}
+function putStill(c){still.width=c.width; still.height=c.height; still.getContext("2d").drawImage(c,0,0);}
+
+async function startCam(){
+  if(stream) stream.getTracks().forEach(t=>t.stop());
+  try{
+    if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia) throw new Error("no camera API");
+    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:facing,width:{ideal:1280},height:{ideal:1280}},audio:false});
+    video.srcObject=stream; await video.play();
+    aim={x:.5,y:.5}; placeRing(); setMode("live");
+    clearInterval(timer); timer=setInterval(liveTick,250);
+  }catch(e){stream=null; setMode("start");}
+}
+
+shutter.onclick=()=>{
+  if(mode==="live"&&video.videoWidth){putStill(grab(video,video.videoWidth,video.videoHeight)); setMode("liveResult"); render(true);}
+  else if(mode==="liveResult"){aim={x:.5,y:.5}; placeRing(); setMode("live");}
+};
+scanBtn.onclick=()=>{setMode("photoResult"); render(true);};
+document.getElementById("flip").onclick=()=>{facing=facing==="environment"?"user":"environment"; startCam();};
+
+async function decode(file){
+  if(window.createImageBitmap){try{return await createImageBitmap(file);}catch(e){}}
+  const url=await new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=()=>no(r.error);r.readAsDataURL(file);});
+  return await new Promise((ok,no)=>{const im=new Image();im.onload=()=>ok(im);im.onerror=()=>no(new Error("could not open that image"));im.src=url;});
+}
+async function loadPhoto(e){
+  const f=e.target.files&&e.target.files[0]; e.target.value=""; if(!f) return;
+  try{
+    const img=await decode(f);
+    putStill(grab(img,img.width,img.height));
+    aim={x:.5,y:.5}; placeRing(); setMode("aim"); render(false);
+  }catch(err){setMode("photoResult"); fail(err);}
+}
+document.getElementById("pick").onchange=loadPhoto; document.getElementById("take").onchange=loadPhoto;
+
+const stage=document.getElementById("stage"); let dragging=false;
+function moveAim(e){
+  aim={x:Math.min(.9,Math.max(.1,e.clientX/innerWidth)),y:Math.min(.9,Math.max(.1,e.clientY/innerHeight))};
+  placeRing(); render(mode==="photoResult"||mode==="liveResult");
+}
+stage.addEventListener("pointerdown",e=>{if(mode==="live"||mode==="start")return; dragging=true; stage.setPointerCapture(e.pointerId); moveAim(e);});
+stage.addEventListener("pointermove",e=>{if(dragging) moveAim(e);});
+stage.addEventListener("pointerup",()=>dragging=false);
+stage.addEventListener("pointercancel",()=>dragging=false);
+startCam();
+</script>
+</body>
+</html>
