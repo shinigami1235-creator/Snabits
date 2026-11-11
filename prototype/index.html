@@ -9,7 +9,7 @@
 </head>
 <body>
 <div id="stage"><video id="video" playsinline muted autoplay></video><canvas id="still"></canvas><div id="ring"></div></div>
-<div id="top"><span class="chip" id="main">Point at something</span><span class="chip" id="second" style="display:none"></span><span id="kind"></span></div>
+<div id="top"><span class="chip" id="main">Snabscope</span><span class="chip" id="second" style="display:none"></span><span id="kind"></span></div>
 <div id="bars"></div>
 <div id="card"></div>
 <div id="bottom">
@@ -23,7 +23,7 @@
   <input type="file" id="pick" accept="image/*">
   <input type="file" id="take" accept="image/*" capture="environment" style="display:none">
 </div>
-<div id="msg"><div><div class="brand"><canvas id="msgmon" class="mon-tile"></canvas><h1>Snabits</h1><p id="msgtext">Point your camera at anything colourful and a monster hatches out of its colours.</p></div><div class="brow"><label id="takebtn" for="take">Take a photo</label><button id="msgranch" style="display:none" onclick="openRanch()">Ranch</button></div></div></div>
+<div id="msg"><div><div class="brand"><canvas id="msgmon" class="mon-tile"></canvas><h1>Snabits</h1><p id="msgtext">The Snabscope reads the colours of whatever you point it at and draws out the Snabit hiding there.</p></div><div class="brow"><label id="takebtn" for="take">Take a photo</label><label id="msgpick" for="pick">From gallery</label><button id="msgranch" style="display:none" onclick="openRanch()">Ranch</button></div></div></div>
 <div id="battle">
 <div id="loadout"><div id="lo-head"></div><div id="lo-list"></div><div class="lo-foot"><button class="btn2" onclick="closeBattle()">Back</button><button class="big" id="lo-go" onclick="startFight()">Start fight</button></div></div>
 <div id="b-fight">
@@ -55,6 +55,8 @@
 <script src="peer.js"></script>
 <script src="netfight.js"></script>
 <script src="tala.js"></script>
+<script src="onboard.js"></script>
+<script src="team.js"></script>
 <script src="wild.js"></script>
 <script src="music.js"></script>
 <script>if(hasSave()){ document.getElementById("ranchbtn").style.display=""; document.getElementById("msgranch").style.display=""; }</script>
@@ -151,6 +153,7 @@ function setMode(m){
   still.style.display=(m==="liveResult"||photo)?"block":"none";
   msg.style.display=m==="start"?"flex":"none";
   document.getElementById("top").style.display=(m==="start"||m==="liveResult"||m==="photoResult")?"none":"flex";
+  if(typeof obCoach==="function") obCoach();
 }
 
 function visibleCrop(w,h){
@@ -188,6 +191,7 @@ function render(full){
     paint(document.getElementById("bit"),m.grid,m.pal,1);
     lastMon=m; const fb=document.getElementById("fightbtn"); if(fb) fb.onclick=()=>openBattle(lastMon); const rb=document.getElementById("raisebtn"); if(rb) rb.onclick=()=>openRanch(lastMon);
     paint(document.getElementById("byte"),scale2x(m.grid),m.pal,1);
+    if(typeof obSheet==="function") obSheet(m);
   }catch(e){fail(e);}
 }
 function liveTick(){
@@ -205,6 +209,14 @@ async function startCam(){
     aim={x:.5,y:.5}; placeRing(); setMode("live");
     clearInterval(timer); timer=setInterval(liveTick,250);
   }catch(e){stream=null; setMode("start");}
+  if(typeof obCoach==="function") obCoach();
+}
+/* Opens the Snabscope (the camera screen) from anywhere: the ranch, the title or the first-scan tutorial. */
+function openScope(){
+  const r=document.getElementById("ranch"); if(r&&r.style.display!=="none"){ saveGame(); r.style.display="none"; if(RS) RS.open=false; }
+  aim={x:.5,y:.5}; placeRing();
+  if(stream&&video.videoWidth) setMode("live"); else startCam();
+  if(typeof obCoach==="function") obCoach();
 }
 
 shutter.onclick=()=>{
@@ -239,14 +251,14 @@ stage.addEventListener("pointermove",e=>{if(dragging) moveAim(e);});
 stage.addEventListener("pointerup",()=>dragging=false);
 stage.addEventListener("pointercancel",()=>dragging=false);
 function setWildUI(on){
-  document.getElementById("main").textContent=on?"Wild: point at something":"Point at something";
+  document.getElementById("main").textContent=on?"Wild: point at something":"Snabscope";
   document.getElementById("msgtext").textContent=on?"Wild battle. Take a photo of something colourful and a wild Snabit jumps out of its colours.":"Take a photo, drag the circle onto what you want scanned, then tap Scan.";
-  if(on){ if(stream){ aim={x:.5,y:.5}; placeRing(); setMode("live"); } else setMode("start"); }
+  if(on){ if(stream){ aim={x:.5,y:.5}; placeRing(); setMode("live"); } else startCam(); }
   if(typeof musWant==="function") musWant();
 }
 function wildRescan(){ if(stream){ aim={x:.5,y:.5}; placeRing(); setMode("live"); } else setMode(still.width?"aim":"start"); }
 try{ const mm=randomOpponent(Math.random); paint(document.getElementById("msgmon"),mm.grid,mm.pal,1); }catch(e){}
-startCam();
+if(/(^#|&)test(&|$)/.test(location.hash)) startCam(); else showTitle();
 </script>
 </body>
 </html>

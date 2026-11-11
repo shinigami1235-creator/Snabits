@@ -238,6 +238,7 @@ function musWant(){
   if(typeof B!=="undefined"&&B&&shown("battle")) return B.mus||"cup";
   if(typeof WILD!=="undefined"&&WILD) return "wild";
   if(shown("venue")) return "cup";
+  if(shown("ob")) return "town";
   if(typeof RS!=="undefined"&&RS&&shown("ranch")){
     if(RS.inTown) return "town";
     const h=new Date().getHours(); return h<6||h>=19?"night":"day";

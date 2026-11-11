@@ -6,7 +6,7 @@ function vs(a,d){ if(!a||!d) return 1; if((IMMUNE[a]||[]).includes(d)) return 0;
 function effect(el,def){ return el?vs(el,def.el1)*(def.el2?vs(el,def.el2):1):1; }
 const FIELD_FX={Sunlit:{Blaze:1.3,Tide:0.8},Rain:{Tide:1.3,Blaze:0.8},Static:{Spark:1.3},Snow:{Frost:1.3,Blaze:0.8},Moonlit:{Shade:1.3,Void:1.3}};
 let LEVEL=20;
-const GUARD=-2, BASIC=-1, RELEASE=-3;
+const GUARD=-2, BASIC=-1, RELEASE=-3, SWITCH0=-10; // SWITCH0-j sends in team slot j (team fights only)
 const BASIC_SKILL={name:"Attack",el:null,kind:"Strike",power:40,acc:100,basic:true};
 /* The basic attack uses whichever of Power or Mind is higher, so Mind monsters aren't stuck with weak basics. */
 function basicFor(f){ return f.base.mnd>f.base.pow?{...BASIC_SKILL,kind:"Cast"}:BASIC_SKILL; }
@@ -116,6 +116,7 @@ class Fight{
     picks.forEach((id,i)=>{
       const f=this.p[i];
       if(f.charging){ picks[i]=RELEASE; return; }
+      if(id<=SWITCH0) return;
       if(id>=0&&costOf(f,f.skills[id])>f.energy) picks[i]=BASIC;
       if(f.status&&f.status.name==="Daze"&&picks[i]>=0){ const o=this.options(f).filter(x=>x.id!==GUARD); picks[i]=o[Math.floor(this.rand()*o.length)].id; this.say(`${f.name} is dazed and does something else.`); f.status=null; }
       const s=picks[i]>=0?f.skills[picks[i]]:null;
@@ -128,10 +129,11 @@ class Fight{
       if(s&&s.endure&&f.energy>=costOf(f,s)) f.endure=true; });
     const prio=i=>{ const id=picks[i], f=this.p[i], s=id>=0?f.skills[id]:null;
       if(id===GUARD||(s&&(s.protect||s.counter||s.endure))) return 3;
-      let p=s&&s.first?1:0; if(this.turn===1&&f.ability==="Long Stride") p+=1; return p; };
+      let p=s&&s.first?1:0; if((this.turn===1||f.freshIn)&&f.ability==="Long Stride") p+=1; return p; };
     const order=[0,1].sort((x,y)=>prio(y)-prio(x)||this.eff(this.p[y],"spd")-this.eff(this.p[x],"spd")||(this.rand()<0.5?-1:1));
-    if(this.turn===1) order.forEach(i=>{ if(this.p[i].ability==="Long Stride"&&prio(i)>0) this.pop(i,"Long Stride"); });
-    for(const i of order){ if(this.over) break; this.act(i,picks[i]); }
+    order.forEach(i=>{ const f=this.p[i]; if(f.ability==="Long Stride"&&(this.turn===1||f.freshIn)&&picks[i]>SWITCH0&&prio(i)>0) this.pop(i,"Long Stride"); });
+    picks.forEach((id,i)=>{ if(id<=SWITCH0) this.swapIn(i,SWITCH0-id); });
+    for(const i of order){ if(this.over) break; if(picks[i]<=SWITCH0) continue; this.act(i,picks[i]); }
     if(!this.over) this.endTurn();
     return this.events;
   }
@@ -141,6 +143,7 @@ class Fight{
   act(i,id){
     const me=this.p[i], foe=this.p[1-i], R=this.rand;
     if(me.hp<=0) return;
+    me.freshIn=false;
     if(me.sleep){ me.sleep=false; this.say(`${me.name} is fast asleep.`); return; }
     if(me.status&&me.status.name==="Freeze"){ this.say(`${me.name} is frozen solid.`); me.status=null; me.thawed=true; if(me.charging) me.charging=null; return; }
     if(me.status&&me.status.name==="Shock"&&R()<0.25){ this.say(`${me.name} is shocked and can't move.`); return; }

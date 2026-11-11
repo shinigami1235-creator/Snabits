@@ -179,9 +179,9 @@ function injectRanch(){
 <label class="set-row">Music<input type="checkbox" class="sw" id="r-mus" ${typeof MUS==="undefined"||MUS.on?"checked":""}></label>
 <label class="set-row">Skip scenes<input type="checkbox" class="sw" id="r-off"></label>
 <label class="set-row">Show hidden numbers<input type="checkbox" class="sw" id="r-numsbox"></label>
-<button class="btn2" id="r-back">Back to scan</button><span class="ver">Version ${typeof APP_VER!=="undefined"&&APP_VER!=="__VER__"?APP_VER:"dev"}</span></div></div>`;
+<button class="btn2" id="r-back">Open the Snabscope</button><span class="ver">Version ${typeof APP_VER!=="undefined"&&APP_VER!=="__VER__"?APP_VER:"dev"}</span></div></div>`;
   document.body.appendChild(d);
-  el("r-back").onclick=closeRanch;
+  el("r-back").onclick=()=>{ el("r-foot").classList.remove("open"); openScope(); };
   el("r-gear").onclick=()=>el("r-foot").classList.toggle("open");
   el("r-setx").onclick=()=>el("r-foot").classList.remove("open");
   el("r-foot").onclick=e=>{ if(e.target.id==="r-foot") el("r-foot").classList.remove("open"); };
@@ -263,8 +263,8 @@ function menu(which){
   }
   if(which==="Out"){
     if(s.away){ missionStatus(); return; }
-    panel(`<button class="rb full feat" id="r-wild">Wild battle<small>${typeof wildLeft==="function"?wildLeft(s):3} left this week</small></button><button class="rb" id="r-mis">Missions<small>1, 4 or 8 hours</small></button><button class="rb" id="r-cup">Tournaments<small>Grade ${s.grade}</small></button><button class="rb" id="r-lab">Fusion lab<small>Fusion and rebirth</small></button><button class="rb" id="r-town">Town<small>Shops and upgrades</small></button><button class="rb" id="r-frz">Freezer<small>${PLAYER.roster.length-1} frozen</small></button><button class="rb" id="r-ghost">Friend battle<small>Room or ghost code</small></button><button class="rb" id="r-prac">Practice fight<small>Won't shape its habits</small></button><button class="rb" id="r-trip">Skill trip<small>4 weeks in a region</small></button>`);
-    el("r-wild").onclick=startWild; el("r-mis").onclick=openBoard; el("r-cup").onclick=openCups; el("r-lab").onclick=openLab; el("r-frz").onclick=openFreezer; el("r-trip").onclick=()=>{ if(tripsLocked()){ say("Skill trips open at 1 heart."); return; } openTrips(); }; el("r-town").onclick=openTown; el("r-ghost").onclick=()=>openRooms();
+    panel(`<button class="rb full feat" id="r-wild">Wild battle<small>${typeof wildLeft==="function"?wildLeft(s):3} left this week</small></button><button class="rb" id="r-mis">Missions<small>1 to 3 weeks away</small></button><button class="rb" id="r-cup">Tournaments<small>Grade ${s.grade}</small></button><button class="rb" id="r-lab">Fusion lab<small>Fusion and rebirth</small></button><button class="rb" id="r-town">Town<small>Shops and upgrades</small></button><button class="rb" id="r-frz">Freezer<small>${PLAYER.roster.length-1} frozen</small></button><button class="rb" id="r-ghost">Friend battle<small>Room or ghost code</small></button><button class="rb" id="r-prac">Practice fight<small>Won't shape its habits</small></button><button class="rb" id="r-trip">Skill trip<small>4 weeks in a region</small></button><button class="rb full" id="r-team">Team battle<small>6 on 6 · ${typeof teamReady==="function"?Math.min(6,teamReady().length):0} of 6 ready</small></button>`);
+    el("r-wild").onclick=startWild; el("r-mis").onclick=openBoard; el("r-cup").onclick=openCups; el("r-lab").onclick=openLab; el("r-frz").onclick=openFreezer; el("r-trip").onclick=()=>{ if(tripsLocked()){ say("Skill trips open at 1 heart."); return; } openTrips(); }; el("r-town").onclick=openTown; el("r-ghost").onclick=()=>openRooms(); el("r-team").onclick=openTeam;
     el("r-prac").onclick=()=>{ const o=gradedOpponent(s.grade,Math.max(1,s.level+Math.floor(rnd(-1,2))),Math.random); arenaFight({s,foe:o,mode:"control",title:"Practice",learn:true,onEnd:r=>{ if(r.learned.length) say(r.learned.join(" ")); saveGame(); }}); };
   }
 }

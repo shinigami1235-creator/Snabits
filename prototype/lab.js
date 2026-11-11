@@ -23,7 +23,7 @@ function openFreezer(){
     b.textContent=PLAYER.active===e.id?"At the ranch":"Bring out"; b.disabled=PLAYER.active===e.id;
     b.onclick=()=>{ saveGame(); PLAYER.active=e.id; RS=null; openRanch(); };
     row.appendChild(b); box.appendChild(row); });
-  el("f-back").onclick=()=>{ if(RS) menu("Out"); else closeRanch(); };
+  el("f-back").onclick=()=>{ if(RS) menu("Out"); else openScope(); };
 }
 
 /* ---------- Skills page ---------- */
@@ -93,7 +93,7 @@ function openLab(){
   el("l-a").onchange=e=>{LAB.a=e.target.value;openLab();}; el("l-b").onchange=e=>{LAB.b=e.target.value||null;openLab();}; el("l-c").onchange=e=>{LAB.cat=e.target.value||null;};
   el("l-fuse").onclick=()=>doFuse(e1,e2,LAB.cat);
   el("l-reb").onclick=()=>{ if(!elder){ say("Rebirth only works on an Elder, in the last 30% of its lifespan."); return; } rebirthPick(); };
-  el("l-back").onclick=()=>{ if(RS) menu("Out"); else closeRanch(); };
+  el("l-back").onclick=()=>{ if(RS) menu("Out"); else openScope(); };
 }
 const mix=(a,b,t)=>a.map((v,i)=>Math.round(v*(1-t)+b[i]*t));
 function fuseChild(e1,e2,cat,R){

@@ -62,14 +62,14 @@ body[data-mode="aim"] #bars{bottom:calc(var(--safe-b) + 150px)}
 #msg .mon-tile{width:min(72vw,42dvh)!important;height:min(72vw,42dvh)!important;padding:24px;animation:bob 1s steps(2) infinite;border-bottom:4px solid #3c4466}
 @keyframes bob{50%{transform:translateY(-4px)}}
 #msg .brow{margin-top:auto;width:100%;display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:10px}
-#takebtn,#msgranch{text-align:center;height:54px;display:flex;align-items:center;justify-content:center}
+#takebtn,#msgranch,#msgpick{text-align:center;height:54px;display:flex;align-items:center;justify-content:center}
 #msg h1{font-size:44px;color:var(--gold);text-shadow:0 4px 0 #6b4a00;letter-spacing:1px}
 #msg p{color:var(--mute);font-size:15px}
 #msg .brow{justify-content:center}
 #takebtn{all:unset;box-sizing:border-box}
-#takebtn,#msgranch{font-family:var(--pix);font-weight:700;font-size:18px;border-radius:var(--r);padding:13px 24px;cursor:pointer}
+#takebtn,#msgranch,#msgpick{font-family:var(--pix);font-weight:700;font-size:18px;border-radius:var(--r);padding:13px 24px;cursor:pointer}
 #takebtn{background:var(--gold);color:#241a02;box-shadow:0 4px 0 var(--gold-d)}
-#msgranch{background:var(--panel2);color:var(--text);border:2px solid var(--line2);box-shadow:0 4px 0 #0b0c12}
+#msgranch,#msgpick{background:var(--panel2);color:var(--text);border:2px solid var(--line2);box-shadow:0 4px 0 #0b0c12}
 
 /* result sheet: name and the two actions always at the top, details scroll under them */
 #card{position:fixed;left:10px;right:10px;bottom:calc(var(--safe-b) + 84px);max-height:min(66vh,560px);display:none;flex-direction:column;
@@ -307,7 +307,54 @@ table.rr td.pt{color:var(--gold);font-weight:700}
 .trip-row b{font:700 14px var(--pix);color:var(--text);margin-right:4px}
 
 /* ---------- wide screens (laptops): the same game laid out across the width ---------- */
+/* title, intro and the first Snabscope trip */
+#ob{position:fixed;inset:0;z-index:30;display:none;justify-content:center;background:radial-gradient(circle at 50% 25%,#262a40 0,var(--ink) 65%);
+  padding:calc(var(--safe-t) + 18px) 18px calc(var(--safe-b) + 22px);overflow:auto}
+.ob-title,.ob-story{width:100%;max-width:440px;display:flex;flex-direction:column;gap:14px}
+.ob-title{text-align:center}
+.ob-title>.ob-frame{margin-top:auto}
+.ob-frame{width:100%;aspect-ratio:3/2;border:3px solid #3c4466;border-radius:12px;overflow:hidden;background:#0b0c12;box-shadow:0 6px 0 rgba(0,0,0,.45);flex:none}
+.ob-frame canvas{width:100%;height:100%;display:block;image-rendering:pixelated}
+.ob-title h1{font-size:48px;color:var(--gold);text-shadow:0 4px 0 #6b4a00;margin-top:6px}
+.ob-tag{color:var(--mute);font-size:16px;margin-top:-6px}
+.ob-acts{display:grid;gap:10px;margin-top:auto}
+.ob-acts .big,.ob-acts .btn2{height:54px}
+.ob-warn{color:var(--text);background:#3a1d24;border:2px solid var(--coral);border-radius:var(--r);padding:10px 12px;font-size:15px;text-align:left}
+.big.danger{background:var(--coral);color:#2a0606;box-shadow:0 4px 0 #a33}
+.ob-ver{font:500 12px var(--pix);color:var(--dim)}
+.ob-bar{display:flex;justify-content:space-between;align-items:center;font:500 14px var(--pix);color:var(--mute)}
+.ob-text{position:relative;background:var(--panel);border:2px solid var(--sky);border-radius:var(--r);padding:18px 14px 12px;font-size:17px;line-height:1.5;min-height:96px;margin-top:6px}
+.ob-text .tip-who{top:-11px}
+.ob-story>.big{margin-top:auto;height:54px;flex:none}
+.ob-picks{display:grid;gap:10px}
+.ob-pick{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto auto;column-gap:12px;row-gap:2px;align-items:center;text-align:left;
+  background:var(--panel);border:2px solid var(--line2);border-radius:12px;padding:10px;color:var(--text)}
+.ob-pick canvas{grid-row:1/4;width:72px!important;height:72px!important}
+.ob-pick b{font:700 18px var(--pix)}
+.ob-pick small{color:var(--mute);font-size:13px}
+.ob-pick.on{border-color:var(--gold);background:#2c2a20;box-shadow:0 0 0 2px var(--gold) inset}
+#ob-coach{display:none;position:fixed;left:12px;right:12px;top:calc(var(--safe-t) + 52px);z-index:25;max-width:480px;margin:0 auto;font-size:15px}
+body:not([data-mode="live"]):not([data-mode="aim"]) #ob-coach{display:none!important}
+body.ob-tut #ranchbtn,body.ob-tut #msgranch{display:none!important}
+.sheet-actions .ob-note{grid-column:1/-1;font-size:15px;color:var(--text)}
+.sheet-actions .ob-note+.big:last-child{grid-column:1/-1}
+/* team battle */
+.tpips{display:inline-flex;gap:3px;margin-left:auto;align-items:center}
+.tpips i{width:8px;height:8px;border-radius:50%;background:var(--mint)}
+.tpips i.ko{background:#4a4f66}
+.tpips i.cur{outline:2px solid var(--gold);outline-offset:1px}
+.tm-ask{grid-column:1/-1;font:700 15px var(--pix);color:var(--gold)}
+.tm-pick{position:relative;text-align:left}
+.tm-pick.on{border-color:var(--gold);background:#2c2a20}
+.tm-pick .tm-n{position:absolute;top:6px;right:8px;font:700 15px var(--pix);color:var(--gold)}
+.tm-row{text-align:left;cursor:default}
+#r-panel .big.full{grid-column:1/-1}
 @media (min-width:860px) and (min-aspect-ratio:1/1){
+  #ob{align-items:center}
+  .ob-title,.ob-story{max-width:560px}
+  .ob-title>.ob-frame{margin-top:0}
+  .ob-acts,.ob-story>.big{margin-top:10px}
+
   html{font-size:16px}
   /* camera: the sheet and controls sit in a centred column */
   #card,#bars{left:50%;right:auto;width:480px;transform:translateX(-50%)}

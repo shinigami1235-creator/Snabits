@@ -42,9 +42,9 @@ function closeBattle(){ $("battle").style.display="none"; B=null; }
 
 function chips(f){ return `<span class="elc" style="${chipStyle(ELC(f.el1))}">${f.el1}</span>`+(f.el2?`<span class="elc" style="${chipStyle(ELC(f.el2))}">${f.el2}</span>`:""); }
 function drawPanels(){
-  B.fight.p.forEach((f,i)=>{
+  (B.cur||B.fight.p).forEach((f,i)=>{
     const k=i===0?"me":"foe", hp=B.shown[i], pct=Math.max(0,100*hp/f.maxhp);
-    $("b-"+k+"-name").innerHTML=`<div class="nmrow"><span>${f.name} <small>Lv ${f.level}</small></span><span class="hpn">${Math.max(0,Math.round(hp))}/${f.maxhp}</span></div><div class="nmtags">${chips(f)}<span class="abl">${f.ability}</span></div>`;
+    $("b-"+k+"-name").innerHTML=`<div class="nmrow"><span>${f.name} <small>Lv ${f.level}</small></span><span class="hpn">${Math.max(0,Math.round(hp))}/${f.maxhp}</span></div><div class="nmtags">${chips(f)}<span class="abl">${f.ability}</span>${B.team?`<span class="tpips">${B.fight.teams[i].map(x=>`<i class="${x.hp<=0?"ko":""}${x===f?" cur":""}"></i>`).join("")}</span>`:""}</div>`;
     $("b-"+k+"-hp").style.width=pct+"%";
     $("b-"+k+"-hp").style.background=pct>50?"#4dd36a":pct>20?"#f2c12b":"#e2483f";
     $("b-"+k+"-hpt").textContent="";
@@ -73,9 +73,10 @@ function drawButtons(){
       h+=btn(i,s.name,describe(s.name).split(", ").filter(Boolean).map(x=>`<span>${x}</span>`).join("")||s.kind,ELC(s.el),c<=me.energy&&!blocked,arrow,c);
     });
     h+=btn(GUARD,"Guard","Half damage this turn","#888",true,"","+2");
+    if(B.team&&B.fight.bench(0).length) h+=btn("SW","Switch",`${B.fight.bench(0).length} on the bench`,"#5ab0ff",B.fight.canSwitch(0),"");
     $("b-btns").innerHTML=h;
   }
-  $("b-btns").querySelectorAll("button").forEach(b=>b.onclick=()=>pick(+b.dataset.id));
+  $("b-btns").querySelectorAll("button").forEach(b=>b.onclick=()=>b.dataset.id==="SW"?benchMenu(false):pick(+b.dataset.id));
 }
 function logLine(t){ const d=document.createElement("div"); d.textContent=t; $("b-log").appendChild(d); while($("b-log").children.length>4) $("b-log").firstChild.remove(); }
 function popup(who,text,color,big){
@@ -110,13 +111,15 @@ async function playEvents(f,ev){
     if(e.t==="guard"){ bump(e.who,"bguard"); await bw(200); }
     if(e.t==="cast"){ bump(e.who,"bcast"); await bw(250); }
     if(e.t==="status"){ popup(e.who,e.name,STATUS_COL[e.name]); await bw(300); }
+    if(e.t==="switch"&&f.teams){ const nf=f.teams[e.who][e.j]; B.cur[e.who]=nf; B.shown[e.who]=e.hp; teamSprite(e.who,nf); bump(e.who,"bcast"); drawPanels(); await bw(450); }
     if(e.t==="ko"){ $(e.who===0?"b-me-sprite":"b-foe-sprite").classList.add("bko"); await bw(700); }
   }
 }
 function afterTurn(){
   const f=B.fight;
-  B.shown=f.p.map(x=>x.hp); drawPanels(); if(!(B.opts&&B.opts.auto)) drawButtons();
+  B.shown=f.p.map(x=>x.hp); if(B.cur) B.cur=f.p.slice(); drawPanels(); if(!(B.opts&&B.opts.auto)) drawButtons();
   $("b-btns").classList.remove("busy"); B.busy=false;
+  if(B.team){ teamAfter(); return; }
   if(f.over&&B.net){ netEnd(); return; }
   if(B.net){ return; }
   if(f.over&&B.opts){ endArena(); return; }
@@ -124,7 +127,7 @@ function afterTurn(){
   if(f.over){
     const won=f.winner===0, draw=f.winner===null;
     $("b-result").innerHTML=`<h2>${draw?"Draw":won?"You win":"You lose"}</h2><p>${draw?"Both monsters broke into pixels":won?`${f.p[1].name} broke into pixels`:`${f.p[0].name} broke into pixels and rebuilds after the fight`} in ${f.turn} turns.</p>
-      <div class="brow"><button class="big" id="b-again">Rematch</button><button class="small" id="b-new">New opponent</button><button class="small" id="b-skills">Change skills</button><button class="small" id="b-back">Back to scan</button></div>`;
+      <div class="brow"><button class="big" id="b-again">Rematch</button><button class="small" id="b-new">New opponent</button><button class="small" id="b-skills">Change skills</button><button class="small" id="b-back">Snabscope</button></div>`;
     $("b-result").style.display="block"; $("b-fight").classList.add("done");
     $("b-again").onclick=()=>startFight(B.opp);
     $("b-new").onclick=()=>startFight();
