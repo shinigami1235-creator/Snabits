@@ -261,13 +261,19 @@ function chibiHit(e) {
   sfx(tier === 'heavy' ? 'heavy' : tier === 'medium' ? 'hit' : 'tap');
   if (!e.dot && A && A.who !== e.who) elSfx(A.el, 'hit');
 }
-function chibiBump(who, cls) {
+/* which element an ability belongs to, so its effect and sound match: element abilities by their element,
+   family abilities by what they do (Wobble is jelly, so Tide; Shell is Stone; Slippery is Shade, and so on) */
+const FAM_AB_EL = { Wobble: 'Tide', 'Heavy Lifter': 'Steel', 'Big Bite': 'Brawl', 'Keen Eye': 'Light', Shell: 'Stone', 'Long Stride': 'Spark', Web: 'Venom', Slippery: 'Shade', Abyss: 'Void' };
+function abilityEl(name) { if (FAM_AB_EL[name]) return FAM_AB_EL[name];
+  if (typeof EL_ABILITY !== 'undefined') for (const [el, pair] of Object.entries(EL_ABILITY)) if (pair.some(a => a[0] === name)) return el; return null; }
+function chibiBump(who, cls, name) {
   const st = CB.side[who]; if (!st) return;
   if (cls === 'bhit') { if (!st.react || CB.te - st.react.t0 > 30) st.react = { kind: 'hit', t0: CB.te, tier: 'light' }; }
   if (cls === 'miss') { st.react = { kind: 'dodge', t0: CB.te }; sfx('whoosh'); }
   if (cls === 'bguard') st.hold = { pose: 'guard', until: CB.te + 550 };
   if (cls === 'bcast' && !(CB.anim && CB.anim.who === who)) st.hold = { pose: 'cast', until: CB.te + 500 };
-  if (cls === 'ability') { st.hold = { pose: 'cast', until: CB.te + 450 }; st.aura = CB.te; }
+  if (cls === 'ability') { st.hold = { pose: 'cast', until: CB.te + 450 }; st.aura = CB.te; st.auraEl = abilityEl(name);
+    st.auraCol = st.auraEl && typeof ELC === 'function' ? hexRgb(st.auraEl === 'Shade' ? '#7a5bc2' : st.auraEl === 'Light' ? '#f2d36b' : ELC(st.auraEl)) : [255, 214, 90]; elSfx(st.auraEl, 'cast'); }
 }
 function chibiPose(who, pose, ms) {
   const st = CB.side[who]; if (!st) return;
@@ -647,7 +653,9 @@ function chibiBattleFrame(now) {
     const cp = st.cap || {}, d = q => q ? { x: q.x / dpr, y: q.y / dpr } : null;
     placed[who] = { x, y: y - CHIBI.height(st.spec.stage, st.spec.marks, st.spec.family) * u * 0.45, foot: y, lift: S.lift, back: !!st.spec.back, r: CHIBI.width(st.spec.stage, st.spec.family) * u * 0.55,
       eyes: cp.eyes && cp.eyes.map(d), mouth: d(cp.mouth), hands: (cp.hands || []).map(d), top: d(cp.top) || { x, y: y - 50 }, center: d(cp.center) };
-    if (st.aura != null && te - st.aura < 500) { c.save(); c.scale(dpr, dpr); psyAura(c, placed[who], te, 1 - (te - st.aura) / 500, 0, [255, 214, 90]); c.restore(); }
+    if (st.aura != null && te - st.aura < 700) { const P = placed[who], a = 1 - (te - st.aura) / 700; c.save(); c.scale(dpr, dpr); psyAura(c, P, te, a, 0, st.auraCol || [255, 214, 90]);
+      if (st.auraEl && typeof ePart === 'function') for (let i = 0; i < 7; i++) { const ph = ((te - st.aura) / 700 + i / 7) % 1, ang = i * 0.9; c.globalAlpha = a; ePart(c, st.auraEl, P.x + Math.cos(ang) * P.r * 1.1, P.foot - 8 - ph * P.r * 2.4, 1.4, te, i, ''); }
+      c.restore(); }
   }
   c.save(); c.scale(dpr, dpr);
   const A = CB.anim;

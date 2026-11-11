@@ -105,7 +105,7 @@ async function playEvents(f,ev){
   for(const e of ev){
     if(e.t==="use"&&typeof chibiUse==="function"&&!B.fast) await chibiUse(e);
     if(e.t==="log"){ logLine(e.text); await bw(260); }
-    if(e.t==="ability"){ if(typeof chibiBump==="function") chibiBump(e.who,"ability"); popup(e.who,e.name,"#ffd23f",true); await bw(380); }
+    if(e.t==="ability"){ if(typeof chibiBump==="function") chibiBump(e.who,"ability",e.name); popup(e.who,e.name,"#ffd23f",true); await bw(380); }
     if(e.t==="hit"){ B.shown[e.who]=Math.max(0,B.shown[e.who]-e.dmg); if(typeof chibiHit==="function") chibiHit(e); bump(e.who,"bhit"); popup(e.who,`-${e.dmg}${e.eff>1?"!":""}`,e.crit||e.eff>1?"#ffd23f":e.eff<1?"#9aa":"#fff"); drawPanels(); await bw(380); }
     if(e.t==="heal"){ B.shown[e.who]=Math.min(f.p[e.who].maxhp,B.shown[e.who]+e.amt); popup(e.who,`+${e.amt}`,"#4dd36a"); drawPanels(); await bw(300); }
     if(e.t==="miss"){ if(typeof chibiBump==="function") chibiBump(e.who,"miss"); popup(e.who,"miss","#9aa"); await bw(300); }
