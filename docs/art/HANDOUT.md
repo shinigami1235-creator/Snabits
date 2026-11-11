@@ -4,7 +4,7 @@ This is the handout for the Snabits art work. The pixel monsters were replaced w
 
 ## Start here
 
-Errantry, the shop and the lab were finished on 12 Nov 2026, with four new people (see Decided). Nothing from the last handover is left open.
+The overnight build of 12 Nov 2026 added the story, the bestiary, contests, festivals, upgrades, late skills and skill sounds (see Decided). Gid gave the go-ahead to build without showing art first, so all of it is waiting for his review. `story.js`, `dex.js` and `contests.js` are the new files.
 
 Before writing any line a player reads, load the my-writing-style and humanizer skills, then run the string lint before every push:
 
@@ -97,7 +97,7 @@ Gid caught AI slop in the storyboard lines on 12 Nov 2026 because the skills wer
   - After each camp night the route map shows on the black screen, and a marker walks to the next place before the morning comes up there.
   - The teacher at the last place is a big Mega with the Haloed mark in the region's colours, for example the Frost Matron (a Squib) or the Foreman (an Antik). A skill learned that week is taught by the teacher, with a better chance than Kiko's weeks.
 - **The story (12 Nov 2026, built overnight on Gid's go-ahead, to be reviewed)** mixes three threads (`story.js`):
-  - The ranch came with a 30,000 bit loan from the Grand Ranch. Rook, the son of the family that runs it, wants the land back. Prize money pays the loan at the Town Hall in town, any amount at a time.
+  - The ranch came with a 30,000 bit loan from the Grand Ranch. Rook, the son of the family that runs it, wants the land back. Prize money pays the loan at the Town Hall in town, 1,000 or 5,000 or the rest at a time.
   - Each quarter paid has a scene and opens more of the Workshop: home upgrades at a quarter, the first level of each training place at half, the second level at three quarters. Paying it all brings Rook with the deed and a Life fruit.
   - Rook enters the official cups, the Majors and the Legend Cup with the same Snabit (a Shade monster trained up to each grade), waiting in the other half of a knockout. From grade D there's a rival match with him in week 3 of every month. Wins and losses against him are counted.
   - The first time any Snabit reaches a grade, a scene plays: Rook at D, Nena at C (a second held item in the shop each week), Dr. Ines at B (a signal from the Rift), Kiko at A (The Rift opens for trips), Rook at S, Rook again after all four Majors.
@@ -106,7 +106,7 @@ Gid caught AI slop in the storyboard lines on 12 Nov 2026 because the skills wer
   - Out > Goals shows the loan, the next grade step, the record against Rook, the bestiary and contests.
 - **The bestiary** (`dex.js`): the 8 families in the 12 elements, 96 kinds. A kind is seen once it's scanned or fought and raised once it lives on the ranch, with a star per stage reached. Unseen kinds show as dark shapes. Prizes at 10, 25, 40, 60, 80 and 96 seen and 3, 8, 15 and 24 raised.
 - **Contests** (`contests.js`): one in the first week of every month, taking turns between Strength (Power and HP, at the quarry), Speed (Speed and Spirit, on the long road), Smarts (Mind and Speed, in the study room) and Style (loyalty, what it wears and its cups, on the court). Junior for E and D, Senior for C and B, Pro for A and S. Three rounds scored out of 10 against four other entrants. Prizes for the top three, a thing to wear at 1, 3, 6 and 12 wins, and 15 stress off.
-- **Festivals:** the Blossom Festival, Lantern Night, the Harvest Fair and the Snow Fair, one a season in week 2. Each gives a free item and takes 10 stress off. The calendar shows festivals, contests and rival matches.
+- **Festivals:** the Blossom Festival, the Lantern Festival, the Harvest Fair and the Snow Fair, one a season in week 2. Each gives a free item and takes 10 stress off. The calendar shows festivals, contests and rival matches.
 - **Upgrades:** the barn gets a Cozy rug (petting takes 3 more stress off), a Toy chest (playing takes 5 more off) and Potted plants (stress -2 a week), each drawn in the barn. Each of the six training places has two levels, drawn as bunting and then lamps and a scoreboard, giving 15% then 30% more from that drill and more great results.
 - **Late skills:** every element has two more skills at levels 34 and 42 so grade A and S monsters still learn, and Void has seven. Each uses an effect its element didn't have yet, such as Heat Wave as a push, Ion Beam as a beam, Ice Age as falling ice and Event Horizon as a beam.
 - **Sounds for skills and abilities:** each element has its own sound when a skill leaves and when it lands (a crackle for Blaze, a chime for Frost, a splash for Tide, a zap for Spark, a clang for Steel and so on), and beams, lightning, storms, meteors, volleys, pillars and waves have their own on top. Abilities show an aura and particles in their element with the same sound.
@@ -163,6 +163,8 @@ Gid caught AI slop in the storyboard lines on 12 Nov 2026 because the skills wer
 - Cloud save with a short code, built together with the PvP server.
 - Gid's answer on the Bitter root: keep it as discipline or make it a recovery item.
 - Later, for the cozy side: furniture and wall colours to buy and place.
+- Gid to decide why the Grand Ranch wants the land back. The story never says.
+- The intro says Snabits are too small and quick to notice, while Dr. Ines says they only take a shape under a Snaboscope. Gid to pick which one stands.
 
 ## What decides a monster's look
 
