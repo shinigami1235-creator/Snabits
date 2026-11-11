@@ -305,3 +305,54 @@ function talaFace(box, text) {
   if (!cv) { cv = document.createElement('canvas'); cv.className = 'tala-pic'; box.prepend(cv); }
   box.classList.add('has-pic'); talaPortrait(cv, talaMood(text));
 }
+
+/* ---------- ranch props and particles, drawn smooth on the monster layer in yard coordinates ---------- */
+function ranchProps(c, s, t, front) {
+  for (const p of s.props) {
+    const x = p.x, y = p.y;
+    if (!front && p.k === 'boulder') { const r = p.r * 1.4;
+      SC.depth(c, () => { c.beginPath(); c.arc(x, y - r, r, 0, 7); }, '#9a948c', 1.5, 0.3);
+      c.save(); c.translate(x, y - r); c.rotate(p.rot); c.strokeStyle = 'rgba(60,55,50,.4)'; c.lineWidth = 1.2; c.lineCap = 'round';
+      c.beginPath(); c.moveTo(-r * 0.5, -r * 0.2); c.lineTo(0, r * 0.1); c.lineTo(r * 0.4, -r * 0.35); c.moveTo(-r * 0.2, r * 0.5); c.lineTo(r * 0.2, r * 0.35); c.stroke(); c.restore();
+      c.fillStyle = 'rgba(255,255,255,.28)'; c.beginPath(); c.arc(x - r * 0.35, y - r * 1.4, r * 0.28, 0, 7); c.fill(); }
+    if (!front && p.k === 'box') {
+      SC.depth(c, () => { c.beginPath(); c.roundRect(x - 8, y - 13, 16, 13, 2); }, '#c98a4c', 1.2, 0.28);
+      c.fillStyle = 'rgba(0,0,0,.14)'; c.fillRect(x - 1, y - 12, 2, 12);
+      if (p.open) { SC.depth(c, () => { c.beginPath(); c.roundRect(x - 11, y - 22, 4, 10, 1.5); }, '#d9995a', 1, 0.25); }
+      else SC.depth(c, () => { c.beginPath(); c.roundRect(x - 9.5, y - 16, 19, 4, 1.5); }, '#d9995a', 1, 0.25); }
+    if (front && (p.k === 'ball' || p.k === 'snack')) { const r = p.k === 'ball' ? 3.6 : 2.6;
+      SC.depth(c, () => { c.beginPath(); c.arc(x, y, r, 0, 7); }, p.c, 0.8, 0.3);
+      c.fillStyle = 'rgba(255,255,255,.55)'; c.beginPath(); c.arc(x - r * 0.35, y - r * 0.35, r * 0.32, 0, 7); c.fill(); }
+    if (front && p.k === 'ring') { c.strokeStyle = `rgba(255,240,160,${Math.max(0, 1 - p.r / 28)})`; c.lineWidth = 1.6; c.beginPath(); c.ellipse(x, y, p.r * 1.3, p.r * 0.55, 0, 0, 7); c.stroke(); }
+    if (front && p.k === 'bug') { const f = Math.sin(t / 40) * 0.5 + 0.5;
+      c.fillStyle = 'rgba(220,240,255,.85)'; c.beginPath(); c.ellipse(x - 1.6, y - 1.2, 1.8, 1 + f, -0.5, 0, 7); c.ellipse(x + 1.6, y - 1.2, 1.8, 1 + f, 0.5, 0, 7); c.fill();
+      c.fillStyle = '#e8b23a'; c.beginPath(); c.ellipse(x, y, 1.6, 1.1, 0, 0, 7); c.fill(); }
+  }
+}
+function ranchVisitor(c, v, t) {
+  if (typeof chibiSpec !== 'function') return; const sp = chibiSpec(v.m); if (!sp) return;
+  const ppu = sp.cm / 100 * RANCH_PX_M / CHIBI.height(sp.stage, [], sp.family), moving = v.lastX != null && Math.abs(v.x - v.lastX) > 0.01; v.lastX = v.x;
+  c.save(); c.translate(v.x, GROUND); c.scale(-ppu, ppu); c.translate(-100, -188); CHIBI.draw(c, sp, moving ? 'walk' : 'happy', t); c.restore();
+}
+function ranchParticles(c, s) {
+  for (const p of s.parts) {
+    const a = Math.max(0, Math.min(1, (1 - p.life / p.max) * 1.6)), x = p.x, y = p.y; if (!a) continue;
+    c.globalAlpha = a;
+    switch (p.kind) {
+      case 'heart': c.save(); c.translate(x, y); c.scale(0.28, 0.28); c.beginPath(); c.moveTo(0, 9); c.bezierCurveTo(-14, 0, -11, -11, -5, -11); c.bezierCurveTo(-2, -11, 0, -9, 0, -7);
+        c.bezierCurveTo(0, -9, 2, -11, 5, -11); c.bezierCurveTo(11, -11, 14, 0, 0, 9); c.fillStyle = '#ff5d82'; c.fill(); c.restore(); break;
+      case 'z': case 'q': c.font = `800 ${p.kind === 'z' ? 7 : 9}px system-ui`; c.textAlign = 'center'; c.lineWidth = 2; c.strokeStyle = 'rgba(20,24,60,.6)';
+        c.strokeText(p.kind === 'z' ? 'z' : '?', x, y); c.fillStyle = p.kind === 'z' ? '#dfe8ff' : '#ffffff'; c.fillText(p.kind === 'z' ? 'z' : '?', x, y); break;
+      case 'star': c.fillStyle = '#ffd94a'; c.beginPath(); for (let j = 0; j < 10; j++) { const r = j % 2 ? 1.3 : 3, b = j * Math.PI / 5 - Math.PI / 2; c[j ? 'lineTo' : 'moveTo'](x + Math.cos(b) * r, y + Math.sin(b) * r); } c.closePath(); c.fill(); break;
+      case 'bulb': { const g = c.createRadialGradient(x, y, 0.5, x, y, 8); g.addColorStop(0, 'rgba(255,240,120,.6)'); g.addColorStop(1, 'rgba(255,240,120,0)'); c.fillStyle = g; c.fillRect(x - 8, y - 8, 16, 16);
+        c.fillStyle = '#fff27a'; c.beginPath(); c.arc(x, y, 3, 0, 7); c.fill(); c.fillStyle = '#b8b2aa'; c.fillRect(x - 1.5, y + 2.5, 3, 2); break; }
+      case 'sparkle': { const r = 2.4; c.fillStyle = '#ffffff'; c.beginPath(); c.moveTo(x, y - r); c.quadraticCurveTo(x, y, x + r, y); c.quadraticCurveTo(x, y, x, y + r); c.quadraticCurveTo(x, y, x - r, y); c.quadraticCurveTo(x, y, x, y - r); c.fill(); break; }
+      case 'sweat': case 'drip': c.fillStyle = p.kind === 'sweat' ? '#9fd8ff' : '#4aa3ff'; c.beginPath(); c.moveTo(x, y - 2.2); c.quadraticCurveTo(x + 1.6, y, x, y + 1.3); c.quadraticCurveTo(x - 1.6, y, x, y - 2.2); c.fill(); break;
+      case 'zap': c.strokeStyle = '#ffe14d'; c.lineWidth = 1.1; c.beginPath(); c.moveTo(x - 1.5, y - 2.5); c.lineTo(x + 0.5, y - 0.3); c.lineTo(x - 0.5, y + 0.3); c.lineTo(x + 1.5, y + 2.5); c.stroke(); break;
+      case 'leaf': c.fillStyle = '#5fc46a'; c.beginPath(); c.ellipse(x, y, 1.8, 0.9, p.life / 6, 0, 7); c.fill(); break;
+      default: { const col = { dust: 'rgba(217,200,168,.9)', crumb: '#e8c070', smoke: 'rgba(122,122,128,.7)', flake: '#ffffff' }[p.kind] || '#ffffff', r = { dust: 1.6, crumb: 0.9, smoke: 2.4 + p.life / 20, flake: 1.1 }[p.kind] || 1;
+        c.fillStyle = col; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill(); }
+    }
+  }
+  c.globalAlpha = 1;
+}

@@ -76,7 +76,7 @@ async function runTrip(reg){
     s.props=s.props.filter(p=>p.k==="bowl"); await walkTo(RW+30,60,"walk"); s.bg=null; s.tripLabel=null;
     s.stageRegions=s.stageRegions||{}; s.stageRegions[reg.n]=(s.stageRegions[reg.n]||0)+4;
     fixEquip(s); clampAll();
-    s.x=-30; await walkTo(140,55,"walk"); s.pose=learned.length?"happy":"idle"; if(learned.length) spark(s.x,headY()-6,"sparkle",10); await rwait(600);
+    await homeArrive(140); s.pose=learned.length?"happy":"idle"; if(learned.length) spark(s.x,headY()-6,"sparkle",10); await rwait(600);
     await endWeek(4,`Back from ${reg.n}.`);
   });
   panel(`<div class="full lab-head"><b>Trip to ${reg.n}</b><button class="small" id="tr-ok">Done</button></div><div class="full trip-log">`+weeks.map(t=>`<div class="trip-row ${/rough/.test(t)?"no":"ok"}"><i>${/rough/.test(t)?"✕":"✓"}</i><span>${t}</span></div>`).join("")+

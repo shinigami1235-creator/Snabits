@@ -48,18 +48,23 @@ function chibiRanch(s, t) {
   const W = Math.round(r.width * dpr), H = Math.round(r.height * dpr);
   if (o.width !== W) o.width = W; if (o.height !== H) o.height = H;
   const c = o.getContext('2d'); c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, W, H);
-  if (s.hidden) return true;
   const k = W / cv.width, cam = s.cam;
-  let u, x, y, ppu;
-  if (cam) {                                       // the side-scrolling ranch: world camera with zoom, size in cm
-    ppu = spec.cm / 100 * RANCH_PX_M / CHIBI.height(spec.stage, [], spec.family);
-    u = k * cam.Z * ppu; x = (s.x + (s.zx || 0) - cam.L) * cam.Z * k; y = (GROUND + cam.extra - (s.jy || 0) * cam.Z) * k;
-  } else { const room = RW - cv.width, camX = Math.round(clamp(s.camX || 0, 0, room)); ppu = CHIBI_UNIT; u = k * ppu; x = (s.x - camX) * k; y = (GROUND + (s.vExtra || 0) - (s.jy || 0)) * k; }
-  const kx = typeof shapeOf === 'function' ? shapeOf(s.weight)[2] : 1;      // feeding still makes it thinner or rounder
-  c.setTransform(u * kx, 0, 0, u, x - 100 * u * kx, y - 188 * u);
-  CHIBI.draw(c, spec, RANCH_POSE[s.pose] || 'idle', t);
-  const h = CHIBI.height(spec.stage, spec.marks, spec.family) * ppu, w = CHIBI.width(spec.stage, spec.family) * ppu * kx;   // tap box for petting
-  s.bbox = [s.x - w / 2, GROUND - h, s.x + w / 2, GROUND];
+  // world transform for props, particles and visitors (local yard coords plus the zone offset)
+  const world = () => c.setTransform(k * cam.Z, 0, 0, k * cam.Z, (-cam.L + (s.zx || 0)) * cam.Z * k, (GROUND + cam.extra - GROUND * cam.Z) * k);
+  if (cam && typeof ranchProps === 'function') { world(); ranchProps(c, s, t, false); if (s.visitor) ranchVisitor(c, s.visitor, t); }
+  if (!s.hidden) {
+    let u, x, y, ppu;
+    if (cam) {                                     // the side-scrolling ranch: world camera with zoom, size in cm
+      ppu = spec.cm / 100 * RANCH_PX_M / CHIBI.height(spec.stage, [], spec.family);
+      u = k * cam.Z * ppu; x = (s.x + (s.zx || 0) - cam.L) * cam.Z * k; y = (GROUND + cam.extra - (s.jy || 0) * cam.Z) * k;
+    } else { const room = RW - cv.width, camX = Math.round(clamp(s.camX || 0, 0, room)); ppu = CHIBI_UNIT; u = k * ppu; x = (s.x - camX) * k; y = (GROUND + (s.vExtra || 0) - (s.jy || 0)) * k; }
+    const kx = typeof shapeOf === 'function' ? shapeOf(s.weight)[2] : 1;      // feeding still makes it thinner or rounder
+    c.setTransform(u * kx, 0, 0, u, x - 100 * u * kx, y - 188 * u);
+    CHIBI.draw(c, spec, RANCH_POSE[s.pose] || 'idle', t);
+    const h = CHIBI.height(spec.stage, spec.marks, spec.family) * ppu, w = CHIBI.width(spec.stage, spec.family) * ppu * kx;   // tap box for petting
+    s.bbox = [s.x - w / 2, GROUND - h, s.x + w / 2, GROUND];
+  }
+  if (cam && typeof ranchProps === 'function') { world(); ranchProps(c, s, t, true); ranchParticles(c, s); }
   return true;
 }
 

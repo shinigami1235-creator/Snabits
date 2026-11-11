@@ -39,6 +39,8 @@ const rnd=(a,b)=>a+Math.random()*(b-a);
 /* the smooth art draws the ranch as three screens: barn, yard, training ground. Hybrids still use the pixel yard. */
 const smoothRanch=()=>!!(RS&&typeof CHIBI_ART!=="undefined"&&CHIBI_ART&&typeof chibiYard==="function"&&typeof chibiSpec==="function"&&chibiSpec(null,RS));
 const HUTX=()=>smoothRanch()?-RW/2:26;
+/* back from a trip: on the new ranch it walks in along the road past the training ground, on the pixel one from the left */
+async function homeArrive(x){ const s=RS; if(smoothRanch()){ s.x=2*RW-10; s.camJump=true; await walkTo(x,120,"walk"); } else { s.x=-30; await walkTo(x,55,"walk"); } }
 const el=id=>document.getElementById(id);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 
@@ -686,19 +688,20 @@ function rLoop(t){
     if(p.k==="bug"){ p.t+=k; p.x+=Math.sin(p.t/9)*0.6; p.y+=Math.cos(p.t/7)*0.4; } }
   if(s.behind) drawMonster(c,t);
   if(!s.bg&&!smooth) drawHut(c);
-  drawProps(c,t,false);
+  if(!smooth) drawProps(c,t,false);
   if(s.visitor){ const v=s.visitor; if(performance.now()>v.until){ v.x+=0.6; if(v.x>RW+40) s.visitor=null; } else v.x=Math.max(RW-22,v.x-0.6);
-    if(s.visitor){ if(!v.cv){ v.cv=document.createElement("canvas"); paint(v.cv,v.m.grid,v.m.pal,2); } c.drawImage(v.cv,Math.round(v.x-20),GROUND-40+(Math.floor(t/300)%2)); } }
+    if(s.visitor&&!smooth){ if(!v.cv){ v.cv=document.createElement("canvas"); paint(v.cv,v.m.grid,v.m.pal,2); } c.drawImage(v.cv,Math.round(v.x-20),GROUND-40+(Math.floor(t/300)%2)); } }
   if(!s.behind) drawMonster(c,t);
   if(smooth){ c.save(); c.setTransform(1,0,0,1,0,extra); }
   if(s.weather==="Rain"&&!s.bg){ c.fillStyle="rgba(170,200,255,.7)"; for(let i=0;i<40;i++){ const x=(i*29+t/3)%RW, y=(i*47+t/2)%GROUND; c.fillRect(Math.round(x),Math.round(y),1,3);} }
   if(s.weather==="Wind"&&!s.bg){ c.fillStyle="#d9822b"; for(let i=0;i<8;i++){ const x=(i*61+t/8)%RW, y=60+(i*23)%70+Math.sin(t/300+i)*6; c.fillRect(Math.round(x),Math.round(y),2,1);} }
   if(s.weather==="A heatwave"&&!s.bg){ c.fillStyle="rgba(255,180,60,.12)"; c.fillRect(0,0,RW,RH); }
   if(smooth) c.restore();
-  drawProps(c,t,true);
+  if(!smooth) drawProps(c,t,true);
   // particles
   s.parts=s.parts.filter(p=>p.life<p.max);
-  for(const p of s.parts){ p.life+=k; p.x+=p.vx*k; p.y+=p.vy*k; p.vy+=p.g*k; const a=1-p.life/p.max; c.globalAlpha=Math.max(0,Math.min(1,a*1.6));
+  for(const p of s.parts){ p.life+=k; p.x+=p.vx*k; p.y+=p.vy*k; p.vy+=p.g*k; if(p.kind==="z"){p.vx=Math.sin(p.life/8)*0.3;p.vy=-0.4;} if(p.kind==="heart") p.vy=-0.5; if(p.kind==="smoke") p.vy=-0.4; if(smooth) continue;
+    const a=1-p.life/p.max; c.globalAlpha=Math.max(0,Math.min(1,a*1.6));
     if(BMP[p.kind]){ if(p.kind==="z"){p.vx=Math.sin(p.life/8)*0.3;p.vy=-0.4;} if(p.kind==="heart"){p.vy=-0.5;} bmp(c,BMP[p.kind],p.x-2,p.y-2,BMP_COL[p.kind]); }
     else { const col={dust:"#d9c8a8",crumb:"#e8c070",sweat:"#9fd8ff",sparkle:"#ffffff",smoke:"#7a7a80",drip:"#4aa3ff",zap:"#ffe14d",flake:"#ffffff",leaf:"#5fc46a"}[p.kind]||"#fff";
       c.fillStyle=col; const sz=p.kind==="smoke"?3:p.kind==="dust"?2:1; if(p.kind==="smoke"){p.vy=-0.4;} c.fillRect(Math.round(p.x),Math.round(p.y),sz,sz); if(p.kind==="sparkle"&&p.life%8<4){c.fillRect(Math.round(p.x)-1,Math.round(p.y),3,1);c.fillRect(Math.round(p.x),Math.round(p.y)-1,1,3);} }

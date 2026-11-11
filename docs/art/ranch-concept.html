@@ -209,5 +209,67 @@ function crowd(){
     mon('Chomp','Mega','Brawl',X0+120,50+314,110,'idle',{marks:['Horned'],back:true}); mon('Squib','Byte','Frost',X0+420,50+168,82,'idle'); x.restore(); }
 }
 
-const K=location.hash.slice(1)||'ranch'; ({sizes,spread,ranch,crowd})[K]();
+
+/* ---------- inside the barn: the cozy home ---------- */
+function barnInside(X,Y,W,H,night,t){
+  x.save(); x.beginPath(); x.roundRect(X,Y,W,H,12); x.clip(); x.translate(X,Y);
+  const G=H-46, m=W/240;                               // floor line; m = px per ranch pixel (48 per metre)
+  // back wall planks and beams
+  x.fillStyle='#c98f5e'; x.fillRect(0,0,W,G); x.fillStyle='rgba(0,0,0,.06)'; for(let i=0;i<W;i+=18*m) x.fillRect(i,0,1.5,G);
+  x.fillStyle='#8a5a36'; x.fillRect(0,G*0.16,W,9*m); for(const bx of [0.02,0.5,0.98]) x.fillRect(W*bx-6*m,0,12*m,G);
+  // window with curtains
+  const wx=W*0.62, wy=G*0.3, ww=58*m, wh=44*m;
+  x.fillStyle=night?'#1b2352':'#bfe4ff'; x.beginPath(); x.roundRect(wx,wy,ww,wh,4*m); x.fill();
+  if(night){ x.fillStyle='#f4f1d6'; x.beginPath(); x.arc(wx+ww*0.7,wy+wh*0.3,5*m,0,7); x.fill(); x.fillStyle='#fff'; for(let i=0;i<6;i++){ x.fillRect(wx+((i*37)%50)*m,wy+((i*19)%36)*m,1.4,1.4);} }
+  else { x.fillStyle='#86c95f'; x.fillRect(wx,wy+wh*0.7,ww,wh*0.3); SC.cloud(x,wx+ww*0.35,wy+wh*0.3,5*m); }
+  x.strokeStyle='#8a5a36'; x.lineWidth=4*m; x.strokeRect(wx,wy,ww,wh); x.beginPath(); x.moveTo(wx+ww/2,wy); x.lineTo(wx+ww/2,wy+wh); x.stroke();
+  for(const [cx,dir] of [[wx-2*m,1],[wx+ww+2*m,-1]]){ x.fillStyle='#e9707a'; x.beginPath(); x.moveTo(cx,wy-6*m); x.quadraticCurveTo(cx+dir*16*m,wy+wh*0.4,cx+dir*6*m,wy+wh+6*m); x.lineTo(cx,wy+wh+6*m); x.closePath(); x.fill(); }
+  // trophy shelf with cups won
+  x.fillStyle='#8a5a36'; x.fillRect(W*0.1,G*0.42,64*m,4*m);
+  for(const [i,col] of [[0,'#ffd23f'],[1,'#d9dde4'],[2,'#e09a5a']]){ const tx=W*0.1+(10+i*22)*m, ty=G*0.42;
+    SC.depth(x,()=>{ x.beginPath(); x.moveTo(tx-6*m,ty-16*m); x.lineTo(tx+6*m,ty-16*m); x.quadraticCurveTo(tx+5*m,ty-7*m,tx,ty-6*m); x.quadraticCurveTo(tx-5*m,ty-7*m,tx-6*m,ty-16*m); x.closePath(); },col,1.5,0.3);
+    x.fillStyle=col; x.fillRect(tx-1.5*m,ty-6*m,3*m,4*m); x.fillRect(tx-4*m,ty-2*m,8*m,2*m); }
+  // floor
+  x.fillStyle='#a8774a'; x.fillRect(0,G,W,H-G); x.fillStyle='rgba(0,0,0,.08)'; for(let i=0;i<W;i+=26*m) x.fillRect(i,G,1.5,H-G); x.fillStyle='rgba(0,0,0,.18)'; x.fillRect(0,G,W,3);
+  // rug
+  x.fillStyle='#5b8fd8'; x.beginPath(); x.ellipse(W*0.5,G+16*m,70*m,10*m,0,0,7); x.fill(); x.strokeStyle='#f2ead6'; x.lineWidth=2*m; x.beginPath(); x.ellipse(W*0.5,G+16*m,60*m,7*m,0,0,7); x.stroke();
+  // bed: a hay nest with a quilt
+  const bx=W*0.2, by=G+8*m;
+  SC.depth(x,()=>{ x.beginPath(); x.ellipse(bx,by,52*m,14*m,0,0,7); },'#e2bf62',3,0.25);
+  SC.depth(x,()=>{ x.beginPath(); x.ellipse(bx,by-4*m,42*m,9*m,0,0,7); },'#f2b6c8',2,0.25);
+  x.fillStyle='#fff6f8'; x.beginPath(); x.ellipse(bx-30*m,by-8*m,12*m,6*m,-0.2,0,7); x.fill();
+  // toy shelf: balls and a plush
+  const sx=W*0.83, sy=G;
+  SC.depth(x,()=>{ x.beginPath(); x.roundRect(sx-22*m,sy-56*m,44*m,56*m,3*m); },'#8a5a36',2,0.3);
+  x.fillStyle='#6a4428'; x.fillRect(sx-19*m,sy-29*m,38*m,3*m);
+  for(const [dx,dy,col,r] of [[-10,-34,'#ffd23f',6],[4,-33,'#4aa3ff',5],[-8,-6,'#e8453c',6]]){ SC.depth(x,()=>{ x.beginPath(); x.arc(sx+dx*m,sy+dy*m,r*m,0,7); },col,1,0.3); }
+  SC.depth(x,()=>{ x.beginPath(); x.ellipse(sx+8*m,sy-8*m,7*m,7*m,0,0,7); x.ellipse(sx+3*m,sy-15*m,2.5*m,3*m,0,0,7); x.ellipse(sx+13*m,sy-15*m,2.5*m,3*m,0,0,7); },'#c8a2e8',1,0.3);
+  // wardrobe for worn items, with a cap on top
+  const ax=W*0.42; SC.depth(x,()=>{ x.beginPath(); x.roundRect(ax-20*m,G-66*m,40*m,66*m,3*m); },'#b07a4a',2,0.3);
+  x.strokeStyle='rgba(0,0,0,.2)'; x.lineWidth=1.2; x.beginPath(); x.moveTo(ax,G-64*m); x.lineTo(ax,G-2*m); x.stroke();
+  x.fillStyle='#e8c070'; x.beginPath(); x.arc(ax-3*m,G-34*m,1.6*m,0,7); x.arc(ax+3*m,G-34*m,1.6*m,0,7); x.fill();
+  x.fillStyle='#e8453c'; x.beginPath(); x.ellipse(ax,G-68*m,9*m,5*m,0,Math.PI,0); x.fill(); x.fillRect(ax,G-69*m,12*m,2*m);
+  // lamp
+  const lx=W*0.06; x.fillStyle='#6a4428'; x.fillRect(lx-1.5*m,G-40*m,3*m,40*m); x.fillStyle='#ffe3a3'; x.beginPath(); x.moveTo(lx-9*m,G-40*m); x.lineTo(lx+9*m,G-40*m); x.lineTo(lx+6*m,G-52*m); x.lineTo(lx-6*m,G-52*m); x.closePath(); x.fill();
+  if(night){ x.fillStyle='rgba(16,20,60,.38)'; x.fillRect(0,0,W,H);
+    const g=x.createRadialGradient(lx,G-44*m,4,lx,G-44*m,150*m); g.addColorStop(0,'rgba(255,214,120,.5)'); g.addColorStop(1,'rgba(255,214,120,0)'); x.fillStyle=g; x.fillRect(0,0,W,H);
+    x.fillStyle='#ffe3a3'; x.beginPath(); x.moveTo(lx-9*m,G-40*m); x.lineTo(lx+9*m,G-40*m); x.lineTo(lx+6*m,G-52*m); x.lineTo(lx-6*m,G-52*m); x.closePath(); x.fill(); }
+  x.restore();
+}
+function barn2(){
+  const W=1180,H=600; size(W,H); x.fillStyle='#15161f'; x.fillRect(0,0,W,H);
+  label('Inside the barn: the cozy home. One screen, entered through the barn door.',W/2,30,'#e9e4f5','center','600 15px system-ui');
+  const PW=560, PH=360, m=PW/240;
+  barnInside(20,54,PW,PH,false,0); mon('Chomp','Byte','Brawl',20+PW*0.62,54+PH-46+12*m,100*0.48*m,'happy',{marks:['Horned']});
+  x.save(); x.fillStyle='#ffd23f'; x.beginPath(); x.arc(20+PW*0.72,54+PH-46+8*m,5*m,0,7); x.fill(); x.restore();
+  barnInside(600,54,PW,PH,true,0); mon('Chomp','Byte','Brawl',600+PW*0.2,54+PH-46+4*m,100*0.48*m,'sleep',{marks:['Horned']});
+  label('Day: playing with a toy from the shelf',20+PW/2,54+PH+24,'#e9e4f5','center','600 13px system-ui');
+  label('Night: asleep in the hay bed, lamp on',600+PW/2,54+PH+24,'#e9e4f5','center','600 13px system-ui');
+  const notes=['Bed: rest weeks happen here, and tapping it puts the monster down for a nap.','Toy shelf: toys bought in town go here, and tapping one starts a game of fetch on the rug.',
+    'Wardrobe: change its worn items here instead of from a menu.','Trophy shelf: a cup appears for every tournament it wins.',
+    'Town upgrades show up as furniture: the Kitchen becomes a stove corner, Better barn a bigger bed, Training gear a weight rack.','Later: furniture and wall colours to buy and place, just for looks.'];
+  x.font='500 13px system-ui'; x.fillStyle='#c9cce0'; x.textAlign='left'; notes.forEach((n,i)=>x.fillText('• '+n,40,54+PH+60+i*20));
+}
+
+const K=location.hash.slice(1)||'ranch'; ({sizes,spread,ranch,crowd,barn:barn2})[K]();
 </script></body></html>
