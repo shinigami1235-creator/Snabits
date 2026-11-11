@@ -7,6 +7,7 @@ const CONTEST_KINDS = [
   { kind: 'Smarts', judged: 'Mind and Speed', stats: [3, 5], place: 'study', rounds: ['The puzzle box', 'The memory cards', 'The maze'] },
   { kind: 'Style', judged: 'loyalty, what it wears and its cups', stats: null, place: 'court', rounds: ['The walk', 'The pose', 'The trick'] },
 ];
+const CONTEST_WINS = { 1: 'Bow', 3: 'Party hat', 6: 'Top hat', 12: 'Crown' };   // something to wear at each milestone
 const CONTEST_TIER = g => GRADES.indexOf(g) < 2 ? ['Junior', 'E', 400, 'Energy nut'] : GRADES.indexOf(g) < 4 ? ['Senior', 'C', 1500, 'Stat seed'] : ['Pro', 'A', 5000, 'Life seed'];
 function contestOf(w) { const { mo, wk } = weekParts(w); if (wk !== 0) return null; const K = CONTEST_KINDS[mo % 4]; return { ...K, name: `${K.kind} Contest` }; }
 function nextContest() { for (let k = 0; k < 8; k++) { const c = contestOf(PLAYER.week + k); if (c) return [k, c]; } return [null, null]; }
@@ -65,6 +66,7 @@ async function runContest(K) {
     s.stress -= 15; s.fatigue += 8; s.spoil += place === 1 ? 2 : 0; clampAll(); drawUI();
     const lines = [`${nm} finished ${['first', 'second', 'third', 'fourth', 'fifth'][place - 1]} in the ${T[0]} ${K.name} with ${me.sum.toFixed(1)} points. ${order[0].me ? `Second was ${order[1].name} with ${order[1].sum.toFixed(1)}.` : `${order[0].name} won with ${order[0].sum.toFixed(1)}.`}`];
     if (purse) lines.push(`It brings home ${purse.toLocaleString()} bits${place === 1 ? ` and ${/^[AEIOU]/.test(T[3]) ? 'an' : 'a'} ${T[3]}` : ''}.`);
+    const wonNow = place === 1 && CONTEST_WINS[story().contests]; if (wonNow) { addItem(wonNow); lines.push(`That's ${story().contests} contest win${story().contests > 1 ? 's' : ''}, and the judges sent ${/^[AEIOU]/.test(wonNow) ? 'an' : 'a'} ${wonNow} to wear.`); }
     lines.push('Contests are fun for it, so it lost 15 stress.');
     await dayFade('night', backHome);
     await endWeek(1, lines.join(' '));

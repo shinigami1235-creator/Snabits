@@ -20,18 +20,20 @@ const talkMs = t => Math.min(5600, 1500 + t.length * 40);
 async function talk(who, text) { say(text, who === 'tala' ? null : who); await rwait(talkMs(text)); }
 /* someone walks in from the road on the right and stops near the monster */
 async function walkIn(who, o = {}) {
-  const s = RS, to = clamp(s.x + 88, 120, 2 * RW - 40), p = prop({ k: 'npc', who, x: to + 170, y: GROUND, face: 'talk', pose: 'walk', flip: true });
-  const pet = o.mon ? prop({ k: 'foe', x: p.x - 34, y: GROUND, fm: o.mon.fm, pose: 'walk' }) : null;
-  s.dir = 1; while (p.x > to) { p.x -= 1.4 * rk(); if (pet) pet.x = p.x - 34; await rwait(16); }
+  const s = RS, to = s.x + 80, p = prop({ k: 'npc', who, x: to + 170, y: GROUND, face: 'talk', pose: 'walk', flip: true });
+  const pet = o.mon ? prop({ k: 'foe', x: p.x + 42, y: GROUND, fm: o.mon.fm, pose: 'walk' }) : null;
+  // the camera sits between the monster and the visitor, with room for a visitor's Snabit behind them
+  s.panC = s.x + (pet ? 61 : 40); s.panUntil = performance.now() + 1e9;
+  s.dir = 1; while (p.x > to) { p.x -= 1.4 * rk(); if (pet) pet.x = p.x + 42; await rwait(16); }
   p.pose = 'stand'; if (pet) pet.pose = 'idle'; return { p, pet };
 }
 async function walkOut(w) { w.p.flip = false; w.p.pose = 'walk'; if (w.pet) w.pet.pose = 'walk';
-  const end = w.p.x + 200; while (w.p.x < end) { w.p.x += 1.6 * rk(); if (w.pet) w.pet.x = w.p.x - 34; await rwait(16); } unprop(w.p); if (w.pet) unprop(w.pet); }
-async function homeStage() { const s = RS; if (s.room) leaveBarn(); s.bg = null; s.trip = false; s.night = 0; s.dusk = 0; s.props = s.props.filter(p => p.k === 'bowl'); s.x = clamp(s.x, 150, 300); s.camJump = true; s.pose = 'idle'; await rwait(200); }
+  const end = w.p.x + 200; while (w.p.x < end) { w.p.x += 1.6 * rk(); if (w.pet) w.pet.x = w.p.x + 42; await rwait(16); } unprop(w.p); if (w.pet) unprop(w.pet); RS.panUntil = 0; RS.panC = null; }
+async function homeStage() { const s = RS; if (s.room) leaveBarn(); s.bg = null; s.trip = false; s.night = 0; s.dusk = 0; s.props = s.props.filter(p => p.k === 'bowl'); s.x = clamp(s.x, 120, 300); s.camJump = true; s.pose = 'idle'; await rwait(200); }
 /* runs a beat inside the scene that's already playing, or starts a scene for it */
 async function playBeat(id) {
   const B = BEATS[id]; if (!B) return; story().seen[id] = PLAYER.week;
-  const run = async () => { await homeStage(); await B(); saveGame(); };
+  const run = async () => { await homeStage(); try { await B(); } finally { RS.panUntil = 0; RS.panC = null; } saveGame(); };
   if (RS.busy) await run(); else await scene(run);
 }
 

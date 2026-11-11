@@ -819,7 +819,7 @@ function rLoop(t){
   if(smooth){   // the side-scrolling ranch: the camera follows the monster, zooms in on small ones, and can be dragged to look around
     const sp=chibiSpec(null,s), hpx=sp?sp.cm/100*RANCH_PX_M:60, wide=s.bg==='shop'||s.bg==='lab'||s.props.some(p=>p.k==='npc'), Zt=wide?1:clamp(66/hpx,1,s.bg?1.3:1.8);   /* away scenes stay wide so their props show */ s.zoom=s.zoom?s.zoom+(Zt-s.zoom)*0.05:Zt;
     const Z=s.zoom, vw=cv.width/Z, wx=s.x+(s.zx||0), panning=s.pan||(s.panUntil&&performance.now()<s.panUntil);
-    const one=s.room||s.bg, lo=one?0:-RW, hi=Math.max(lo,(one?RW:2*RW)-vw), Lt=clamp(panning?s.panL:wx-vw/2,lo,hi); s.camL=s.camL==null||s.camJump?Lt:s.camL+(Lt-s.camL)*(s.pan?1:0.08); s.camJump=false;
+    const one=s.room||s.bg, lo=one?0:-RW, hi=Math.max(lo,(one?RW:2*RW)-vw), Lt=clamp(panning?(s.panC!=null?s.panC-vw/2:s.panL):wx-vw/2,lo,hi); s.camL=s.camL==null||s.camJump?Lt:s.camL+(Lt-s.camL)*(s.pan?1:0.08); s.camJump=false;
     s.cam={L:s.camL,Z,extra}; }
   const camT=clamp(s.x-cv.width/2,0,room); s.camX=s.camX==null?camT:s.camX+(camT-s.camX)*0.08; const camX=Math.round(clamp(s.camX,0,room));
   c.save(); if(smooth) c.setTransform(s.zoom,0,0,s.zoom,(-s.camL+(s.zx||0))*s.zoom,GROUND+extra-GROUND*s.zoom); else c.translate(-camX,extra); if(s.shake>0){ c.translate(Math.round(rnd(-2,2)),Math.round(rnd(-2,2))); s.shake--; }
