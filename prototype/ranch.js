@@ -209,7 +209,7 @@ function injectRanch(){
   const d=document.createElement("div"); d.id="ranch";
   d.innerHTML=`<div id="r-top"><div class="r-id"><b id="r-name"></b><span id="r-lv"></span></div><div class="r-right"><span id="r-coins"></span><button class="small" id="r-info">Info</button><button class="iconbtn" id="r-gear" aria-label="Settings">☰</button></div></div>
 <div id="r-sub"><span class="ht" id="r-hearts"></span><span id="r-form"></span><span id="r-shape"></span></div>
-<div id="r-view"><div id="r-frame"><canvas id="r-canvas" width="${RW}" height="${RH}"></canvas><span id="r-date"></span><div id="r-banner"></div><button class="small" id="r-skip">Skip ▸▸</button><button class="small" id="r-goout">◂ Outside</button></div></div>
+<div id="r-view"><div id="r-frame"><canvas id="r-canvas" width="${RW}" height="${RH}"></canvas><div id="r-dusk"></div><span id="r-date"></span><div id="r-banner"></div><button class="small" id="r-skip">Skip ▸▸</button><button class="small" id="r-goout">◂ Outside</button></div></div>
 <div id="r-say"></div><div id="r-stats"></div><div id="r-learned"></div><div id="r-panel"></div><div id="r-week"></div><div id="r-nums"></div>
 <div id="r-menu">${["Train","Rest","Feed","Care","Out"].map(n=>`<button class="rb" data-m="${n}">${n}</button>`).join("")}</div>
 <div id="r-foot"><div class="set-card"><div class="lab-head"><b>Settings</b><button class="small" id="r-setx">Close</button></div>
@@ -324,6 +324,7 @@ async function scene(fn,keepRoom){
   panel(""); el("r-menu").querySelectorAll(".rb").forEach(b=>b.classList.remove("on")); drawUI(); el("r-skip").style.display="block";
   try{ await fn(); }catch(e){ if(e!==RSTOP) console.error(e); }
   if(s.zx){ s.x+=s.zx; s.zx=0; }
+  const dk=el("r-dusk"); if(dk){ dk.style.transition="none"; dk.style.backgroundColor="transparent"; } s.dayHour=null;
   s.busy=false; s.skip=false; s.bg=null; s.tripLabel=null; s.props=s.props.filter(p=>p.k==="bowl"); el("r-skip").style.display="none"; s.pose="idle"; s.jy=0; s.bx=0; s.upside=false; s.ghosts=false;
   drawUI(); if(s.lastMenu&&!s.dead) menu(s.lastMenu); saveGame();
 }
@@ -348,6 +349,16 @@ function spark(x,y,kind,n=1){ for(let i=0;i<n;i++){ const p={x,y,kind,life:0,max
   if(kind==="sweat"){p.vx=rnd(-.8,.8);p.vy=-rnd(.5,1);p.g=.06;p.max=30;}
   if(kind==="sparkle"){p.vx=rnd(-.6,.6);p.vy=rnd(-.6,.6);p.max=30;}
   RS.parts.push(p);} }
+/* The ranch keeps its own day: each week starts in the morning and stays bright while you plan it, and night only
+   falls at the end of a training or rest week (dayFade). dayHour is the hour the yard is drawn at while that plays. */
+const ranchHour=()=>RS&&RS.dayHour!=null?RS.dayHour:10;
+async function dayFade(kind){
+  const s=RS, d=el("r-dusk"); if(!d) return;
+  const to=async(col,ms,hold=0)=>{ d.style.transition=`background-color ${Math.round(ms/rk())}ms ease`; d.style.backgroundColor=col; await rwait(ms+hold); };
+  if(kind==="night"){ await to("rgba(170,80,70,.3)",1000); await to("rgba(12,14,38,.85)",800); s.dayHour=21; await to("rgba(12,14,38,.15)",800,1000); }
+  await to("rgba(3,4,9,1)",kind==="sleep"?2200:1000,600);
+  s.dayHour=6; await to("rgba(255,196,130,.42)",1000); s.dayHour=null; await to("rgba(255,196,130,0)",1000);
+}
 const headY=()=>{ const h=RS.cam&&typeof chibiHeadY==="function"?chibiHeadY(RS):null; return h!=null?h:GROUND-(RS.P.base-RS.P.topY+1)*RS.P.scale-RS.jy; };
 
 /* ---------- drills ---------- */
@@ -390,6 +401,7 @@ async function runDrill(i){
     for(const k in gains) for(const [nm,need] of STAT_SKILLS[k]) if(s.tp[k]>=need&&!s.learned.includes(nm)){ s.learned.push(nm); fixEquip(s); banner("Learned "+nm+"!","#7dff9a"); s.pose="happy"; spark(s.x,headY()-6,"sparkle",8); drawUI(); await rwait(1300); banner(""); s.pose="idle"; }
     if(Math.random()<hurtP){ s.injured=true; s.used+=2; s.pose="hurt"; spark(s.x,headY()-4,"star",4); say("It pushed too hard and got hurt."); await rwait(1200); s.pose="tired"; }
     await praiseOrScold(res);
+    await dayFade("night");
     await endWeek(1, tLine+" "+(s.injured?"It pushed too hard and got hurt. That's 2 weeks off its prime, and it needs a rest or medicine.":{great:"That was its best yet.",success:"Solid work.",fail:"It'll get it next time.",slack:"It wandered off halfway. It's getting a bit spoiled."}[res]));
   });
 }
@@ -447,8 +459,10 @@ const SCENE_FN=[
   async r=>{ // Brace
     const s=RS; await walkTo(140,50); s.pose="guard"; await rwait(400);
     for(let k=0;k<4;k++){
-      const ball=prop({k:"ball",x:HELPX+6,y:GROUND-26,vx:3.4,vy:-1.6,g:0.08,c:"#e8453c"});
-      await until(()=>ball.x>=s.x-RS.P.scale*5);
+      // aim each throw at its chest, whatever its size: the arc lands where the body is, not at a fixed height
+      const top=headY(), tall=GROUND-top, tx=s.x-tall*0.32, ty=top+tall*0.42, x0=HELPX+6, y0=GROUND-26, vx=3.4, g=0.08, T=Math.max(8,(tx-x0)/vx);
+      const ball=prop({k:"ball",x:x0,y:y0,vx,vy:(ty-y0-g*T*(T-1)/2)/T,g,c:"#e8453c"});
+      await until(()=>ball.x>=tx);
       if(r==="fail"&&k===2){ unprop(ball); s.upside=true; s.pose="walk"; spark(s.x,GROUND-3,"dust",5); await rwait(1300); s.upside=false; s.pose="dizzy"; await rwait(600); return; }
       ball.vx=-2.2; ball.vy=-2; s.flash=4; if(r==="success") s.x+=3;
       await rwait(380); unprop(ball);
@@ -485,8 +499,8 @@ const SCENE_FN=[
 /* ---------- other week actions ---------- */
 async function runRest(){
   await scene(async()=>{ const s=RS; say(smoothRanch()?"A quiet week in the barn.":"A quiet week in the hut.");
-    if(smoothRanch()){ if(!s.room){ await walkTo(HUTX(),110); s.room="barn"; s.x=24; s.camJump=true; } await walkTo(202,60); s.pose="sleep"; for(let k=0;k<5;k++){ spark(s.x+8,headY(),"z"); await rwait(500);} s.pose="happy"; await rwait(500); }
-    else { await walkTo(HUTX(),40); s.hidden=true; for(let k=0;k<4;k++){ spark(HUTX()+4,GROUND-34,"z"); await rwait(450);} s.hidden=false; s.pose="happy"; await rwait(500); }
+    if(smoothRanch()){ if(!s.room){ await walkTo(HUTX(),110); s.room="barn"; s.x=24; s.camJump=true; } await walkTo(202,60); s.pose="sleep"; for(let k=0;k<3;k++){ spark(s.x+8,headY(),"z"); await rwait(500);} await dayFade("sleep"); s.pose="happy"; await rwait(500); }
+    else { await walkTo(HUTX(),40); s.hidden=true; for(let k=0;k<3;k++){ spark(HUTX()+4,GROUND-34,"z"); await rwait(450);} await dayFade("sleep"); s.hidden=false; s.pose="happy"; await rwait(500); }
     s.fatigue-=has("Better hut")?45:35; s.stress-=7; s.weight+=1; const wasHurt=s.injured; s.injured=false; await endWeek(1,wasHurt?"The rest healed it up.":"It looks rested.");
   },true);
 }
@@ -765,7 +779,7 @@ function rLoop(t){
     else { const col={dust:"#d9c8a8",crumb:"#e8c070",sweat:"#9fd8ff",sparkle:"#ffffff",smoke:"#7a7a80",drip:"#4aa3ff",zap:"#ffe14d",flake:"#ffffff",leaf:"#5fc46a"}[p.kind]||"#fff";
       c.fillStyle=col; const sz=p.kind==="smoke"?3:p.kind==="dust"?2:1; if(p.kind==="smoke"){p.vy=-0.4;} c.fillRect(Math.round(p.x),Math.round(p.y),sz,sz); if(p.kind==="sparkle"&&p.life%8<4){c.fillRect(Math.round(p.x)-1,Math.round(p.y),3,1);c.fillRect(Math.round(p.x),Math.round(p.y)-1,1,3);} }
     c.globalAlpha=1; }
-  const h=new Date().getHours(); if(!smooth&&(h<6||h>=19)){ c.fillStyle="rgba(20,24,70,.28)"; c.fillRect(0,-Math.max(0,extra),RW,RH+Math.max(0,extra)); }
+  const h=ranchHour(); if(!smooth&&(h<6||h>=19)){ c.fillStyle="rgba(20,24,70,.28)"; c.fillRect(0,-Math.max(0,extra),RW,RH+Math.max(0,extra)); }
   c.restore();
   if(extra>0&&!smooth) c.drawImage(cv,0,extra,cv.width,1,0,0,cv.width,extra);
   requestAnimationFrame(rLoop);
@@ -787,7 +801,7 @@ function drawMonster(c,t){
 }
 function drawYard(c,t){
   if(RS.bg&&typeof drawBg==="function"){ drawBg(c,t); return; }
-  const s=RS, season=Math.floor((PLAYER.week%48)/12), h=new Date().getHours();
+  const s=RS, season=Math.floor((PLAYER.week%48)/12), h=ranchHour();
   const night=h<6||h>=19, dusk=h>=17&&h<19;
   const sky=night?["#0f1430","#1a2150","#27306a"]:dusk?["#f08a5d","#f6b07a","#ffd6a5"]:["#6fbbef","#97d0f5","#c4e7ff"];
   for(let i=0;i<3;i++){ c.fillStyle=sky[i]; c.fillRect(0,i*30,RW,i===2?100:30); }

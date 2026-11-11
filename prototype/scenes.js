@@ -140,7 +140,7 @@ function chibiYard(s, t, cv) {
   const r = o.getBoundingClientRect(), dpr = devicePixelRatio || 1, W = Math.round(r.width * dpr), H = Math.round(r.height * dpr);
   if (o.width !== W) o.width = W; if (o.height !== H) o.height = H;
   const c = o.getContext('2d'), k = W / cv.width, { L, Z, extra } = s.cam, vw = cv.width, vh = cv.height;
-  const season = Math.floor((PLAYER.week % 48) / 12), hr = new Date().getHours(), night = hr < 6 || hr >= 19, dusk = hr >= 17 && hr < 19;
+  const season = Math.floor((PLAYER.week % 48) / 12), hr = ranchHour(), night = hr < 6 || hr >= 19, dusk = hr >= 17 && hr < 19;
   const G = GROUND + extra;                                           // the ground line in canvas rows
   if (s.room === 'barn' && !s.bg) { barnRoom(c, s, t, k, night || dusk && hr >= 18); return true; }
   if (s.bg) { const ch = document.getElementById('r-chibi'); if (ch) ch.style.filter = ''; awayScene(c, s, t, k); return true; }
@@ -603,9 +603,12 @@ const OB_SMOOTH = {
   hidden(c, t) { obSkyS(c, ['#6fb3f0', '#b2d8f8', '#d3e9fb'], 46); obSunS(c, 82, 10); SC.cloud(c, 14, 10, 3); SC.cloud(c, 52, 15, 2.4, 0.8);
     SC.hills(c, 96, 44, 48, 2, 10, 2, '#86c174'); obGroundS(c, 46, '#5cae54');
     c.fillStyle = '#6b4226'; c.fillRect(13, 42, 2, 10); SC.depth(c, () => { c.beginPath(); c.roundRect(9.5, 36, 9, 7, [3, 3, 1, 1]); }, '#d8432f', 0.6, 0.3); c.fillStyle = '#f2cf2b'; c.fillRect(17, 33, 0.8, 4); c.fillRect(17, 33, 2.5, 1.5);
-    c.fillStyle = 'rgba(0,0,0,.16)'; for (const [sx, sy, sw] of [[14, 52, 5], [45, 56, 7], [77, 54, 7]]) { c.beginPath(); c.ellipse(sx, sy, sw, 1.3, 0, 0, 7); c.fill(); }
-    c.fillStyle = '#6b4226'; c.beginPath(); c.moveTo(43, 56); c.lineTo(43.6, 38); c.lineTo(46.4, 38); c.lineTo(47, 56); c.closePath(); c.fill();
-    SC.depth(c, () => SC.blob(c, 45, 32, [[0, -3, 7], [-5, 1, 5.5], [5, 1, 5.5]]), '#3f9a46', 0.8, 0.28);
+    c.fillStyle = 'rgba(0,0,0,.16)'; for (const [sx, sy, sw] of [[14, 52, 5], [45, 56, 12], [77, 54, 7]]) { c.beginPath(); c.ellipse(sx, sy, sw, 1.4, 0, 0, 7); c.fill(); }
+    // a broad oak: a short trunk flaring into roots, two branches, and a crown much wider than it is tall
+    c.fillStyle = '#6b4226'; c.beginPath(); c.moveTo(39.5, 56); c.quadraticCurveTo(43, 54.5, 43.2, 49); c.lineTo(43.5, 37); c.lineTo(46.5, 37); c.lineTo(46.8, 49); c.quadraticCurveTo(47, 54.5, 50.5, 56); c.closePath(); c.fill();
+    c.strokeStyle = '#6b4226'; c.lineCap = 'round'; c.lineWidth = 1.6; c.beginPath(); c.moveTo(44, 44); c.quadraticCurveTo(41, 41, 37, 37.5); c.moveTo(46, 43.5); c.quadraticCurveTo(49, 40.5, 53, 37); c.stroke();
+    c.fillStyle = 'rgba(40,24,12,.35)'; c.fillRect(44.6, 45, 0.6, 6);
+    SC.depth(c, () => SC.blob(c, 45, 32, [[0, -4, 6.2], [-7.5, -1.5, 5.6], [7.5, -1.5, 5.6], [-13, 2.5, 4], [13, 2.5, 4], [-5, 3, 5], [5, 3, 5], [0, 4, 4.5]]), '#3f9a46', 0.8, 0.28);
     SC.depth(c, () => SC.blob(c, 77, 50, [[0, -1, 5], [-5, 1, 4], [5, 1, 4]]), '#3f9a46', 0.6, 0.28); c.fillStyle = '#3f9a46'; c.fillRect(72, 50, 10, 4);
     for (const [dx, dy] of [[-4, -1], [1, -4], [5, 0], [-1, 2]]) { c.fillStyle = '#f07ab4'; c.beginPath(); c.arc(77 + dx, 50 + dy, 0.9, 0, 7); c.fill(); }
     obEyesS(c, 11.5, 38, t, 0); obEyesS(c, 42.5, 30, t, 2.5); obEyesS(c, 74.5, 48, t, 5); },

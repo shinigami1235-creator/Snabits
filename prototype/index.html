@@ -193,12 +193,11 @@ function render(full){
         <p class="abil">${m.hidden?"<b class=\"hid\">Hidden ability</b> ":""}<b>${m.ability[0]}</b> ${m.ability[1]}.</p>
         <div class="statgrid">${STATS.map((st,i)=>{const r=rankOf(FAMILY[m.family].base[i]);return `<div class="sg"><span>${st} <small class="gr r${r}">${r}</small></span><b>${m.stats[i]}</b><i><u style="width:${Math.min(100,m.stats[i]/2)}%"></u></i><em></em></div>`;}).join("")}</div>
         <p>${STATS[m.pers[1]]} grows faster, ${STATS[m.pers[2]]} slower. Starts with ${m.skills.join(" and ")}, ${m.pool.length} skills to learn.</p>
-        <div class="evo-peek"><canvas id="byte" class="mon-tile sm"></canvas><p>Its Byte form, once it evolves.</p></div>
+
         <p class="why">Drag the circle to try another spot.</p>
       </div>`;
     paintMon(document.getElementById("bit"),m,{stage:"Bit"});
     lastMon=m; const fb=document.getElementById("fightbtn"); if(fb) fb.onclick=()=>openBattle(lastMon); const rb=document.getElementById("raisebtn"); if(rb) rb.onclick=()=>openRanch(lastMon);
-    paintMon(document.getElementById("byte"),m,{stage:"Byte",grid:scale2x(m.grid)});
     if(typeof obSheet==="function") obSheet(m);
     return m;
   }catch(e){fail(e);}

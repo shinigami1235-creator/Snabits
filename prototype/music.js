@@ -241,7 +241,7 @@ function musWant(){
   if(shown("ob")) return "town";
   if(typeof RS!=="undefined"&&RS&&shown("ranch")){
     if(RS.inTown) return "town";
-    const h=new Date().getHours(); return h<6||h>=19?"night":"day";
+    const h=ranchHour(); return h<6||h>=19?"night":"day";
   }
   return "scan";
 }
