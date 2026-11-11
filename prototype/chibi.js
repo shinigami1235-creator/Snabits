@@ -873,6 +873,27 @@ const CHIBI = (() => {
         c.bezierCurveTo(g.left, g.top + g.bh * 0.4, g.cx - g.bw * 0.36, g.top, g.cx, g.top); c.closePath(); },
       arms: 'stub', armW: st => by(st, 0, 7, 8), handR: st => by(st, 0, 5, 6), shoulderY: 0.62, armK: 0.7, shoulderIn: 0.04,
       glow: st => st === 'Mega',
+      /* three looks on trial to make Booly more than a plain ghost: m.booly = 'wisp', 'yurei' or 'sheet' */
+      inside(c, g, x) { const st = x.m.booly; if (!st) return;
+        if (st === 'yurei') { const gr = c.createLinearGradient(0, g.top + g.bh * 0.45, 0, g.bot + 10); gr.addColorStop(0, rgba(lt(x.body, 0.7), 0)); gr.addColorStop(1, rgba(lt(x.body, 0.85), 0.95));
+          c.fillStyle = gr; c.fillRect(g.left - 40, g.top, g.bw + 80, g.bh + 30);
+          c.strokeStyle = rgba(lt(x.body, 0.9), 0.8); c.lineWidth = 2.5; c.lineCap = 'round'; for (let k = 0; k < 3; k++) { const yy = g.top + g.bh * (0.74 + k * 0.08), ph = x.t / 500 + k;
+            c.beginPath(); c.moveTo(g.left + g.bw * 0.1, yy); c.bezierCurveTo(g.cx - g.bw * 0.15, yy - 5 + Math.sin(ph) * 3, g.cx + g.bw * 0.15, yy + 5, g.left + g.bw * 1.1, yy - 2); c.stroke(); } }
+        if (st === 'sheet') { c.strokeStyle = rgba(dk(x.body, 0.18), 0.7); c.lineWidth = 2.5; c.lineCap = 'round';
+          for (const f of [-0.28, 0.02, 0.3]) { c.beginPath(); c.moveTo(g.cx + f * g.bw, g.top + g.bh * 0.55); c.quadraticCurveTo(g.cx + f * g.bw * 1.15 + 3, g.top + g.bh * 0.8, g.cx + f * g.bw * 1.3, g.bot + 6); c.stroke(); }
+          c.fillStyle = rgb(dk(x.body, 0.3)); for (let k = 0; k < 5; k++) { const xx = g.left + g.bw * (0.12 + k * 0.2); c.beginPath(); c.moveTo(xx - 6, g.bot + 10); c.lineTo(xx, g.bot - 7); c.lineTo(xx + 6, g.bot + 10); c.closePath(); c.fill(); } } },
+      front(c, g, x) { const st = x.m.booly; if (!st) return;
+        if (st === 'wisp') { const a = x.t / 900, wx = g.cx + Math.cos(a) * g.bw * 0.62, wy = g.top + g.bh * 0.12 + Math.sin(a * 2) * 6, s = by(g.stage, 0.8, 1, 1.2), fl = 1 + Math.sin(x.t / 70) * 0.08;
+          c.save(); c.translate(wx, wy); c.scale(s, s * fl); c.shadowColor = 'rgba(140,200,255,.9)'; c.shadowBlur = 14;
+          c.fillStyle = 'rgba(150,205,255,.95)'; c.beginPath(); c.moveTo(0, -16); c.quadraticCurveTo(9, -4, 7, 4); c.arc(0, 4, 7, 0, Math.PI); c.quadraticCurveTo(-9, -4, 0, -16); c.fill();
+          c.shadowBlur = 0; c.fillStyle = '#f2fbff'; c.beginPath(); c.moveTo(0, -7); c.quadraticCurveTo(4, 0, 3, 4); c.arc(0, 4, 3, 0, Math.PI); c.quadraticCurveTo(-4, 0, 0, -7); c.fill(); c.restore(); }
+        if (st === 'yurei') { const hx = g.cx, hy = g.top + g.bh * 0.1, w = g.bw * by(g.stage, 0.13, 0.15, 0.16);
+          c.fillStyle = '#ffffff'; c.strokeStyle = rgb(dk(x.body, 0.25)); c.lineWidth = 2; c.beginPath(); c.moveTo(hx - w, hy - 3); c.lineTo(hx + w, hy - 3); c.lineTo(hx, hy + w * 1.05); c.closePath(); c.fill(); c.stroke();
+          c.strokeStyle = rgb(x.acc); c.lineWidth = 2; c.beginPath(); for (let k = 0; k < 14; k++) { const a = k * 0.55, r = 1 + k * 0.42; k ? c.lineTo(hx + Math.cos(a) * r, hy + w * 0.35 + Math.sin(a) * r) : c.moveTo(hx, hy + w * 0.35); } c.stroke();
+          c.strokeStyle = rgb(dk(x.body, 0.3)); c.lineWidth = 1.5; c.beginPath(); c.moveTo(hx - w - 2, hy - 3); c.quadraticCurveTo(hx - g.bw * 0.4, hy + 2, hx - g.bw * 0.47, hy + 12); c.moveTo(hx + w + 2, hy - 3); c.quadraticCurveTo(hx + g.bw * 0.4, hy + 2, hx + g.bw * 0.47, hy + 12); c.stroke(); }
+        if (st === 'sheet') { const px = g.cx + g.bw * 0.22, py = g.top + g.bh * 0.78, w = by(g.stage, 12, 14, 16);
+          c.save(); c.translate(px, py); c.rotate(0.15); c.fillStyle = rgb(mix(x.acc, [180, 200, 255], 0.4)); roundBox(c, -w / 2, -w / 2, w, w, 2); c.fill();
+          c.strokeStyle = rgb(dk(x.body, 0.45)); c.lineWidth = 1.4; c.setLineDash([2.5, 2.5]); roundBox(c, -w / 2 + 2, -w / 2 + 2, w - 4, w - 4, 1.5); c.stroke(); c.setLineDash([]); c.restore(); } },
       hl: g => [g.cx - g.bw * 0.34, g.top + g.bh * 0.5, g.cx - g.bw * 0.32, g.top + g.bh * 0.16, g.cx - g.bw * 0.06, g.top + g.bh * 0.05],
       face: (c, g, x, look) => faceTwo(c, g, x, look, { ey: 0.47, ex: 0.17, my: 0.66, s: by(g.stage, 0.76, 0.86, 0.94) })
     },
@@ -1023,8 +1044,21 @@ const CHIBI = (() => {
     c.save(); c.translate(0, 4); shape(); c.fillStyle = rgb(dk(x.body, 0.38)); c.fill(); c.restore();
     shape(); c.fillStyle = rgb(lt(x.body, 0.08)); c.fill();
   }
+  /* Squib's legs on another body: a short jelly skirt under the body and tapered tentacles that sway and splay out */
+  function jellyLegs(c, g, x) {
+    const n = by(g.stage, 4, 5, 6), tl = FAM.Squib.tl(g.stage) + 4, w0 = by(g.stage, 9, 10, 11), span = g.bw * 0.78, x0 = g.cx - span / 2;
+    for (let i = 0; i < n; i++) { const f = n === 1 ? 0.5 : i / (n - 1), tx = x0 + f * span, out = (f - 0.5) * 2, sw = Math.sin(x.t / 240 + i * 1.4) * 5 + x.walk * 3;
+      const ex = tx + out * 12 + sw, ey = 183, mx = tx + out * 4 - sw * 0.6, my = g.bot + tl * 0.5, mat = f < 0.5 ? x.L.legL : x.L.legR;
+      for (let k = 0; k < 6; k++) { const u0 = k / 6, u1 = (k + 1) / 6, P = u => { const a = 1 - u; return [a * a * tx + 2 * a * u * mx + u * u * ex, a * a * (g.bot - 6) + 2 * a * u * my + u * u * ey]; };
+        const [ax, ay] = P(u0), [bx, by2] = P(u1); if (u1 < 0.3) continue; c.strokeStyle = rgb(k % 2 ? x.parts : lt(x.parts, 0.08)); c.lineWidth = w0 * (1 - u0 * 0.6); c.lineCap = 'round';
+        c.beginPath(); c.moveTo(ax, ay); c.lineTo(bx, by2); c.stroke(); }
+      c.fillStyle = rgb(lt(x.parts, 0.25)); c.beginPath(); c.arc(ex + out * 2, ey - 1, w0 * 0.32, 0, 7); c.fill(); }
+    const sk = lt(x.body, 0.3), m = by(g.stage, 4, 5, 6), sw2 = g.bw * 0.86 / m, L = g.cx - g.bw * 0.43;
+    c.fillStyle = rgb(dk(sk, 0.18)); c.beginPath(); c.moveTo(L, g.bot - 6); for (let i = 0; i < m; i++) c.quadraticCurveTo(L + (i + 0.5) * sw2, g.bot + 26, L + (i + 1) * sw2, g.bot + 8); c.lineTo(L + g.bw * 0.86, g.bot - 6); c.closePath(); c.fill();
+    c.fillStyle = rgb(sk); c.beginPath(); c.moveTo(L, g.bot - 8); for (let i = 0; i < m; i++) c.quadraticCurveTo(L + (i + 0.5) * sw2, g.bot + 22, L + (i + 1) * sw2, g.bot + 5); c.lineTo(L + g.bw * 0.86, g.bot - 8); c.closePath(); c.fill();
+  }
   const famOf = n => n === 'Chomp' ? CHOMP_F : FAM[n];
-  function legsOf(b) { const B = famOf(b); if (b === 'Booly') return ghostTail; if (b === 'Antik') return (c, g, x) => B.legs(c, g, x); return (c, g, x) => (B.legs || B.behind).call(B, c, g, x); }
+  function legsOf(b) { const B = famOf(b); if (b === 'Booly') return ghostTail; if (b === 'Squib') return jellyLegs; if (b === 'Antik') return (c, g, x) => B.legs(c, g, x); return (c, g, x) => (B.legs || B.behind).call(B, c, g, x); }
   function hybrid(name, a, b) {
     if (FAM[name]) return FAM[name];
     const A = famOf(a), B = famOf(b); if (!A || !B) return null;

@@ -27,14 +27,15 @@ const LOOKS={
    {label:'Wanderer, from Tide',m:{variant:'Wanderer'},pf:p=>({...p,accent:[70,130,220],parts:mx(p.parts,[70,130,220],0.5)})},
    {label:'Feral, Mega, hurt',m:{variant:'Feral'},pose:'hurt'},{label:'Champion, back',m:{variant:'Champion',back:true}}]},
  hybrids:{rows:FAMS.slice(0,8),cols:FAMS.slice(0,8).map(b=>({label:'on '+b+' legs',legs:b,m:{}}))},
+ booly:{rows:['Booly','Booly:Shade','Booly:Tide'],cols:[['Now',null],['Wisp','wisp'],['Yurei','yurei'],['Sheet','sheet']].flatMap(([l,b])=>[{label:l+', Bit',m:{stage:'Bit',booly:b}},{label:l+', Mega',m:{booly:b}},{label:l+', on Pinch legs',legs:'Pinch',m:{stage:'Byte',booly:b}}])},
  new:{rows:['Pinch','Quad','Bipped','Flask','Teep','Lern'],cols:[{label:'Bit',m:{stage:'Bit'}},{label:'Byte',m:{stage:'Byte'}},{label:'Mega',m:{stage:'Mega'}},{label:'Mega happy',m:{stage:'Mega'},pose:'happy'},{label:'Mega walk',m:{stage:'Mega'},pose:'walk'}]}
 };
-const KEY=location.hash.slice(1).replace('-dark',''), DARK=/-dark/.test(location.hash), L=LOOKS[KEY]||LOOKS.new, W=KEY==='poses'||KEY==='battle'||KEY==='bit'||KEY==='back'||KEY==='ouch'||KEY==='hybrids'||KEY==='marks'||KEY==='variants'?132:150, H=W, LX=70, TOP=34, c=document.getElementById('c'), d=2;
+const KEY=location.hash.slice(1).replace('-dark',''), DARK=/-dark/.test(location.hash), L=LOOKS[KEY]||LOOKS.new, W=KEY==='poses'||KEY==='battle'||KEY==='bit'||KEY==='back'||KEY==='ouch'||KEY==='booly'||KEY==='hybrids'||KEY==='marks'||KEY==='variants'?132:150, H=W, LX=70, TOP=34, c=document.getElementById('c'), d=2;
 c.width=(LX+L.cols.length*W)*d; c.height=(TOP+L.rows.length*H)*d; c.style.width=c.width/d+'px';
 const x=c.getContext('2d'); x.scale(d,d); if(DARK){ x.fillStyle='#4f7a45'; x.fillRect(0,0,c.width,c.height); } x.font='600 11px sans-serif'; x.textAlign='center'; x.fillStyle=DARK?'#e8f0e0':'#776';
 L.cols.forEach((col,i)=>{ const words=col.label.split(', '); words.forEach((w,k)=>x.fillText(w,LX+i*W+W/2,12+k*12)); });
 x.textAlign='left';
-L.rows.forEach((fam,j)=>{ x.fillStyle=DARK?'#e8f0e0':'#776'; x.fillText(fam,8,TOP+j*H+H/2);
-  L.cols.forEach((col,i)=>{ const el=col.m.el||HOME[fam]; x.save(); x.translate(LX+i*W,TOP+j*H-16); x.scale(W/200,W/200);
+L.rows.forEach((row,j)=>{ const [fam,rowEl]=row.split(':'); x.fillStyle=DARK?'#e8f0e0':'#776'; x.fillText(row.replace(':',', '),8,TOP+j*H+H/2);
+  L.cols.forEach((col,i)=>{ const el=col.m.el||rowEl||HOME[fam]; x.save(); x.translate(LX+i*W,TOP+j*H-16); x.scale(W/200,W/200);
     const F2=col.legs&&col.legs!==fam?(CHIBI.hybrid(fam+'+'+col.legs,fam,col.legs),fam+'+'+col.legs):fam; CHIBI.draw(x,{family:F2,stage:'Mega',marks:[],worn:{},pal:col.pf?col.pf(pal(el)):pal(el),el,...col.m},col.pose||'idle',300+i*130); x.restore(); }); });
 </script></body></html>
