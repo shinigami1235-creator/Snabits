@@ -556,7 +556,7 @@ function drillArt(c, s, bg, t, off) {
     const pg = c.createLinearGradient(0, GROUND - 12, 0, GROUND + 16); pg.addColorStop(0, '#7fc7c9'); pg.addColorStop(1, '#3f8fa8');
     c.fillStyle = '#6f9a5a'; c.beginPath(); c.ellipse(170, GROUND + 2, 84, 15, 0, 0, 7); c.fill(); c.fillStyle = pg; c.beginPath(); c.ellipse(170, GROUND + 2, 80, 13, 0, 0, 7); c.fill();
     c.save(); c.beginPath(); c.ellipse(170, GROUND + 2, 80, 13, 0, 0, 7); c.clip();
-    for (let i = 0; i < 4; i++) { const a = t / (2200 + i * 300) + i * 1.7, kx = 170 + Math.cos(a) * 62, ky = GROUND + 3 + Math.sin(a) * 8, dir = -Math.sin(a) > 0 ? 1 : -1;
+    const pull = s.koiPull || 0; for (let i = 0; i < 4; i++) { const a = t / (2200 + i * 300) * (1 + pull) + i * 1.7, kx = 170 + 26 * pull + Math.cos(a) * 62 * (1 - 0.55 * pull), ky = GROUND + 3 + Math.sin(a) * 8 * (1 - 0.3 * pull), dir = -Math.sin(a) > 0 ? 1 : -1;
       c.save(); c.translate(kx, ky); c.scale(dir, 1); c.fillStyle = i % 2 ? '#ff8a3d' : '#ffffff'; c.beginPath(); c.ellipse(0, 0, 5, 1.8, 0, 0, 7); c.fill();
       c.beginPath(); c.moveTo(-4.5, 0); c.lineTo(-8, -2); c.lineTo(-8, 2); c.closePath(); c.fill(); if (!(i % 2)) { c.fillStyle = '#ff6a3d'; c.beginPath(); c.arc(1.5, -0.4, 1.3, 0, 7); c.fill(); } c.restore(); }
     c.strokeStyle = 'rgba(255,255,255,.45)'; c.lineWidth = 0.8; for (let i = 0; i < 5; i++) { const x = 110 + i * 26 + Math.sin(t / 900 + i) * 4; c.beginPath(); c.moveTo(x, GROUND - 5 + (i % 2) * 7); c.lineTo(x + 8, GROUND - 5 + (i % 2) * 7); c.stroke(); }
@@ -604,6 +604,13 @@ function drillArt(c, s, bg, t, off) {
 function awayProps(c, p, t, front) {
   const x = p.x, y = p.y;
   switch (p.k) {
+    case 'floatie': if (!front) return; { const w = p.w, h = w * 0.22;          // a swim ring at the waterline
+      c.lineWidth = h * 0.9; for (let i = 0; i < 8; i++) { c.strokeStyle = i % 2 ? '#ffffff' : '#e2483f'; c.beginPath(); c.ellipse(x, y, w, h, 0, i * Math.PI / 4, (i + 1) * Math.PI / 4); c.stroke(); }
+      c.strokeStyle = 'rgba(255,255,255,.5)'; c.lineWidth = 1; c.beginPath(); c.ellipse(x, y - h * 0.2, w * 0.9, h * 0.6, 0, Math.PI * 1.1, Math.PI * 1.5); c.stroke(); } return;
+    case 'frog': if (!front) return;                                             // the pond frog that sits on a sleeping head
+      c.fillStyle = '#4f9a3c'; c.beginPath(); c.ellipse(x, y - 3, 5.5, 3.6, 0, 0, 7); c.fill(); c.fillStyle = '#3f7f2f'; c.beginPath(); c.ellipse(x - 4, y - 0.5, 2.6, 1.4, 0, 0, 7); c.ellipse(x + 4, y - 0.5, 2.6, 1.4, 0, 0, 7); c.fill();
+      for (const sd of [-1, 1]) { c.fillStyle = '#5fb04a'; c.beginPath(); c.arc(x + sd * 2.6, y - 6.2, 1.9, 0, 7); c.fill(); c.fillStyle = '#1d1d26'; c.beginPath(); c.arc(x + sd * 2.6, y - 6.4, 0.9, 0, 7); c.fill(); }
+      c.strokeStyle = '#2f5f22'; c.lineWidth = 0.8; c.beginPath(); c.moveTo(x - 2, y - 2.4); c.quadraticCurveTo(x, y - 1.4, x + 2, y - 2.4); c.stroke(); return;
     case 'ribbon': if (!front) return; c.fillStyle = '#777'; c.fillRect(x - 1, y - 30, 2, 30); c.fillRect(x + 26, y - 30, 2, 30);
       c.strokeStyle = '#e2483f'; c.lineWidth = 2; c.beginPath(); if (!p.broken) { c.moveTo(x, y - 21); c.quadraticCurveTo(x + 13, y - 18, x + 27, y - 21); } else { c.moveTo(x, y - 21); c.quadraticCurveTo(x + 4, y - 14, x + 2, y - 8); c.moveTo(x + 27, y - 21); c.quadraticCurveTo(x + 23, y - 14, x + 25, y - 8); } c.stroke(); return;
     case 'rock': if (front) return; { const r = p.r; c.save(); c.translate(x, y - r); c.scale(p.half ? 0.55 : 1, 1); SC.depth(c, () => { c.beginPath(); c.arc(0, 0, r, 0, 7); }, '#8f8a83', 1.5, 0.3);

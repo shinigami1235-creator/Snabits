@@ -100,6 +100,27 @@ const TRACKS={
       "A5 - - - - - D6 - - - F#6 - - - E6 -",
       "D#6 - - - - - - - F#6 - - - D#6 - B5 -",
       "A5 - - - - - F#5 - - - D#5 - - - . ."]}}},
+  train:{name:"Work It Out",bpm:124,lead:"sqep",lv:0.17,comp:"skank",bassK:"slap",
+    dr:{k:"x...x...x...x...",s:"....x.......x..x",h:"x.xox.xox.xox.xo"},
+    bs:"R.R.O.R.R.R.5.O.",cp:"..C...C...C...C.",form:["A","B","A","B"],
+    sec:{A:{ch:["G","D","Em","C","G","D","C|D","G"],mel:[
+      "D5 - G5 - B5 - - - D6 - - - B5 - G5 -",
+      "A5 - - - F#5 - A5 - D6 - - - . . A5 -",
+      "B5 - - - G5 - E5 - G5 - B5 - E6 - - -",
+      "C6 - - - - - G5 - E5 - - - . . G5 -",
+      "B5 - D6 - G6 - - - F#6 - - - D6 - B5 -",
+      "A5 - - - D6 - - - F#6 - - - E6 - D6 -",
+      "E6 - - - C6 - - - D6 - - - F#6 - - -",
+      "G6 - - - - - - - . . D6 - B5 - G5 -"]},
+      B:{ch:["Em","C","G","D","Em","C","Am|D","D"],mel:[
+      "E5 - - - G5 - - - B5 - - - A5 - G5 -",
+      "E5 - - - - - - - . . C5 - E5 - G5 -",
+      "D5 - - - G5 - - - B5 - - - D6 - B5 -",
+      "A5 - - - - - - - . . F#5 - A5 - D6 -",
+      "E6 - - - D6 - B5 - - - G5 - B5 - E6 -",
+      "G6 - - - E6 - - - C6 - - - E6 - G6 -",
+      "F#6 - - - E6 - - - D6 - - - C6 - A5 -",
+      "D6 - - - - - - - . . A5 - B5 - C6 -"]}}},
   cup:{name:"Ring of Eight",bpm:136,lead:"crystal",lv:0.18,comp:"pad",bassK:"pick",
     dr:{k:"x...x...x...x...",s:"....x.......x...",h:"x.o.x.o.x.o.x.o."},
     bs:"R.R.O.R.R.R.O.5.",cp:"L---------------",ar:"0123212301232123",form:["A","B","A","B"],
@@ -241,15 +262,16 @@ function musWant(){
   if(shown("ob")) return "town";
   if(typeof RS!=="undefined"&&RS&&shown("ranch")){
     if(RS.inTown) return "town";
+    if(RS.training&&ranchHour()<19) return "train";
     const h=ranchHour(); return h<6||h>=19?"night":"day";
   }
   return "scan";
 }
 function musPlay(key){
   const now=AC.currentTime;
-  if(MUS.tr){const o=MUS.tr;o.g.gain.cancelScheduledValues(now);o.g.gain.setValueAtTime(o.g.gain.value,now);o.g.gain.linearRampToValueAtTime(0,now+.9);setTimeout(()=>o.g.disconnect(),1600);}
+  if(MUS.tr){const o=MUS.tr;o.g.gain.cancelScheduledValues(now);o.g.gain.setValueAtTime(o.g.gain.value,now);o.g.gain.linearRampToValueAtTime(0,now+2);MUS.fading=(MUS.fading||[]).concat(o);setTimeout(()=>{o.g.disconnect();MUS.fading=MUS.fading.filter(x=>x!==o);},2600);}
   MUS.cur=key;MUS.tr=null;if(!key||!TRACKS[key])return;
-  const g=AC.createGain();g.gain.setValueAtTime(0,now);g.gain.linearRampToValueAtTime(1,now+.5);g.connect(MUS.bus);
+  const g=AC.createGain();g.gain.setValueAtTime(0,now);g.gain.setValueAtTime(0,now+.4);g.gain.linearRampToValueAtTime(1,now+2.9);g.connect(MUS.bus);
   MUS.tr={def:TRACKS[key],g,n:0,t:now+.1};
 }
 function musTick(){
@@ -257,11 +279,13 @@ function musTick(){
   const want=musWant(); if(want!==MUS.cur) musPlay(want);
   const tgt=MUS.on?MUS.vol:0;
   if(tgt!==MUS.tgt){MUS.tgt=tgt;MUS.bus.gain.setTargetAtTime(tgt,AC.currentTime,.12);}
-  const tr=MUS.tr; if(!tr||!MUS.on) return;
-  const now=AC.currentTime; if(tr.t<now-.1) tr.t=now+.05;
+  const tr=MUS.tr; if(!MUS.on) return;
+  const now=AC.currentTime; if(!tr){ for(const o of MUS.fading||[]){ const sp2=60/o.def.bpm/4; if(o.t<now-.1) o.t=now+.05; while(o.t<now+.16){musStep(o,o.t,sp2,false);o.t+=sp2;o.n++;} } return; }
+  if(tr.t<now-.1) tr.t=now+.05;
   const B0=typeof B!=="undefined"&&B&&B.fight, hot=!!(B0&&!B.fight.over&&B.fight.p[0].hp<B.fight.p[0].maxhp*.25);
   const sp=60/(tr.def.bpm*(hot?1.06:1))/4;
   while(tr.t<now+.16){musStep(tr,tr.t,sp,hot);tr.t+=sp;tr.n++;}
+  for(const o of MUS.fading||[]){ const sp2=60/o.def.bpm/4; if(o.t<now-.1) o.t=now+.05; while(o.t<now+.16){musStep(o,o.t,sp2,false);o.t+=sp2;o.n++;} }   // the outgoing tune keeps playing while it fades
 }
 /* Short stingers: win, loss, and evolving. */
 function musJingle(kind){

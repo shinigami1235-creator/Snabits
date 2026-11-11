@@ -199,7 +199,7 @@ function openRanch(m){
   const e=activeEntry(); if(!e){ el("ranch").style.display="flex"; RS=null; panel(""); openFreezer(); return; }
   if(!RS||RS.id!==e.id){ RS=newRanch(e); RS.say=e.st?"Welcome back.":"This is the ranch. Train it, feed it, and watch how it takes it."; }
   el("ranch").style.display="flex"; RS.open=true;
-  checkReturn(); drawUI(); menu(RS.away?"Out":undefined); saveGame();
+  checkReturn(); { const hungry=hungerCheck(); if(hungry&&!RS.busy) say(hungry); } drawUI(); menu(RS.away?"Out":undefined); saveGame();
   if(!RLOOP){RLOOP=true;requestAnimationFrame(rLoop);}
   if(!RIDLE) RIDLE=setInterval(()=>{ idleTick(); if(RS&&RS.away) checkReturn(); },700);
 }
@@ -293,8 +293,8 @@ function menu(which){
   }
   if(which==="Rest"){ panel(`<button class="rb" id="r-rest">Rest this week<small>Fatigue −35, stress −7. Uses the week.</small></button><div style="flex-basis:100%;font-size:12px;opacity:.7">${condition()}</div>`); el("r-rest").onclick=runRest; }
   if(which==="Feed"){
-    const mo=Math.floor(PLAYER.week/4), fed=s.mealMonth===mo, snacked=s.snackWeek===PLAYER.week;
-    panel(`<div class="full sec">Monthly meal${fed?"<small>Done this month</small>":""}</div>`+MEALS.map((ml,i)=>`<button class="rb" data-ml="${i}" ${fed||PLAYER.bits<ml[1]?"disabled":""}>${ml[0]}${s.known[i]==="like"?" ♥":s.known[i]==="dis"?" ✕":""}<small>${ml[1]} bits · ${itemDesc(ml[0])}</small></button>`).join("")+
+    const fed=fedToday(s), snacked=s.snackWeek===PLAYER.week;
+    panel(`<div class="full sec">Today's meal${fed?"<small>Fed today</small>":"<small>1 a day</small>"}</div>`+MEALS.map((ml,i)=>`<button class="rb" data-ml="${i}" ${fed||PLAYER.bits<ml[1]?"disabled":""}>${ml[0]}${s.known[i]==="like"?" ♥":s.known[i]==="dis"?" ✕":""}<small>${ml[1]} bits · ${itemDesc(ml[0])}</small></button>`).join("")+
       `<div class="full sec">Snacks<small>${snacked?"Had one this week":"1 a week"}</small></div>`+
       Object.keys(SNACKS).map(n=>`<button class="rb" data-sn="${n}" ${snacked||!PLAYER.bag[n]?"disabled":""}>${n}<small>${PLAYER.bag[n]||0} in the bag · ${itemDesc(n)}</small></button>`).join(""));
     el("r-panel").querySelectorAll("[data-ml]").forEach(b=>b.onclick=()=>runMeal(+b.dataset.ml));
@@ -325,7 +325,7 @@ async function scene(fn,keepRoom){
   panel(""); el("r-menu").querySelectorAll(".rb").forEach(b=>b.classList.remove("on")); drawUI(); el("r-skip").style.display="block";
   try{ await fn(); }catch(e){ if(e!==RSTOP) console.error(e); }
   if(s.zx){ s.x+=s.zx; s.zx=0; }
-  const dk=el("r-dusk"); if(dk){ dk.style.transition="none"; dk.style.backgroundColor="transparent"; } s.dayHour=null;
+  const dk=el("r-dusk"); if(dk){ dk.style.transition="none"; dk.style.backgroundColor="transparent"; } s.dayHour=null; if(s.training) backHome();
   s.busy=false; s.skip=false; s.bg=null; s.tripLabel=null; s.props=s.props.filter(p=>p.k==="bowl"); el("r-skip").style.display="none"; s.pose="idle"; s.jy=0; s.bx=0; s.upside=false; s.ghosts=false;
   drawUI(); if(s.lastMenu&&!s.dead) menu(s.lastMenu); saveGame();
 }
@@ -353,11 +353,30 @@ function spark(x,y,kind,n=1){ for(let i=0;i<n;i++){ const p={x,y,kind,life:0,max
 /* The ranch keeps its own day: each week starts in the morning and stays bright while you plan it, and night only
    falls at the end of a training or rest week (dayFade). dayHour is the hour the yard is drawn at while that plays. */
 const ranchHour=()=>RS&&RS.dayHour!=null?RS.dayHour:10;
-async function dayFade(kind){
+/* Where each drill happens: the six everyday drills each have a place near the ranch, and the heavy ones go further out.
+   Picking a drill fades to black and opens on its place; the week then ends there with nightfall, and morning comes up at home. */
+const DRILL_PLACE=["pool","trail","cage","study","pond","court"], HEAVY_PLACE=["road","quarry","gate","library","shrine","course"];
+const PLACE_NAME={pool:"the pool",trail:"the rocky trail",cage:"the batting cage",study:"the study room",pond:"the lotus pond",court:"the court",
+  road:"the long road",quarry:"the quarry",gate:"the old fortress",library:"the library",shrine:"the waterfall shrine",course:"the obstacle course"};
+const PLACE_START={pool:60,trail:60,cage:140,study:110,pond:196,court:100,road:110,quarry:90,gate:150,library:110,shrine:130,course:20};
+async function sceneFade(dark,ms=700){ const d=el("r-dusk"); if(!d) return; d.style.transition=`background-color ${Math.round(ms/rk())}ms ease`; d.style.backgroundColor=dark?"rgba(3,4,9,1)":"rgba(3,4,9,0)"; await rwait(ms); }
+async function goPlace(place){ const s=RS; await sceneFade(true); s.propsHome=s.props; s.props=[]; s.bg=place; s.training=true; s.x=PLACE_START[place]||110; s.jy=0; s.pose="idle"; s.camJump=true; await rwait(300); await sceneFade(false); }
+function backHome(){ const s=RS; s.bg=null; s.training=false; s.waterY=null; s.lotus=false; s.koiPull=0; s.jy=0; s.x=150; s.upside=false; s.parted=false; s.props=s.propsHome||s.props.filter(p=>p.k==="bowl"); s.propsHome=null; s.camJump=true; }
+/* Meals follow the phone's calendar: one a day, and every day it goes without one makes it hungrier. */
+const dayKey=(d=new Date())=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+const daysBetween=(a,b)=>Math.round((new Date(b+"T12:00")-new Date(a+"T12:00"))/864e5);
+const fedToday=(s=RS)=>s.mealDay===dayKey();
+function hungerCheck(){ const s=RS, today=dayKey(); if(!s||s.hungerDay===today) return null;
+  if(!s.mealDay){ s.mealDay=dayKey(new Date(Date.now()-864e5)); s.hungerDay=today; return null; }
+  const missed=Math.min(4,daysBetween(s.mealDay,today)-1); s.hungerDay=today; if(missed<=0) return null;
+  s.stress+=5*missed; s.weight-=3*missed; s.spoil-=missed; clampAll();
+  return missed===1?"It went a whole day without a meal yesterday, and it's cranky about it.":`It went ${missed} days without a meal. It's hungry and thinner.`; }
+async function dayFade(kind,atBlack){
   const s=RS, d=el("r-dusk"); if(!d) return;
   const to=async(col,ms,hold=0)=>{ d.style.transition=`background-color ${Math.round(ms/rk())}ms ease`; d.style.backgroundColor=col; await rwait(ms+hold); };
   if(kind==="night"){ await to("rgba(170,80,70,.3)",1000); await to("rgba(12,14,38,.85)",800); s.dayHour=21; await to("rgba(12,14,38,.15)",800,1000); }
   await to("rgba(3,4,9,1)",kind==="sleep"?2200:1000,600);
+  if(atBlack) atBlack();
   s.dayHour=6; await to("rgba(255,196,130,.42)",1000); s.dayHour=null; await to("rgba(255,196,130,0)",1000);
 }
 const headY=()=>{ const h=RS.cam&&typeof chibiHeadY==="function"?chibiHeadY(RS):null; return h!=null?h:GROUND-(RS.P.base-RS.P.topY+1)*RS.P.scale-RS.jy; };
@@ -375,10 +394,11 @@ async function runDrill(i){
   await scene(async()=>{
     const s=RS, res=rollDrill(), heavy=i>=6, H=heavy?HEAVY[i-6]:null, main=heavy?H[1]:i, name=heavy?H[0]:DRILLS[i];
     s.lastTrained=main; s.weekAct=STATS[main];
-    say(`${name}. Let's see how it does.`);
-    if(!heavy&&smoothRanch()){ await walkTo(RW+30,80,"walk"); s.x-=RW; s.zx=RW; }    // over to the training ground, then the drill runs in its usual spots
+    const place=heavy?HEAVY_PLACE[i-6]:smoothRanch()?DRILL_PLACE[i]:null;
+    say(place?`${name} at ${PLACE_NAME[place]}. Let's see how it does.`:`${name}. Let's see how it does.`);
+    if(place) await goPlace(place);
     if(res==="slack") await SLACK(i); else await (heavy?HEAVY_FN[i-6]:SCENE_FN[i])(res);
-    s.bg=null; s.x=150; s.props=s.props.filter(p=>p.k==="bowl"); s.upside=false; s.parted=false; s.jy=0;
+    if(place){ s.props=[]; s.upside=false; s.parted=false; if(s.waterY==null) s.jy=0; } else { s.bg=null; s.x=150; s.props=s.props.filter(p=>p.k==="bowl"); s.upside=false; s.parted=false; s.jy=0; }
     const age=ageMult(s), vet=age<0.5, base=FAMILY[s.m.family].base;
     const rp=k=>RANK_PTS[rankOf(base[k])], mult=res==="great"?2:res==="slack"?0.5:1;
     const gains={};
@@ -402,7 +422,7 @@ async function runDrill(i){
     for(const k in gains) for(const [nm,need] of STAT_SKILLS[k]) if(s.tp[k]>=need&&!s.learned.includes(nm)){ s.learned.push(nm); fixEquip(s); banner("Learned "+nm+"!","#7dff9a"); s.pose="happy"; spark(s.x,headY()-6,"sparkle",8); drawUI(); await rwait(1300); banner(""); s.pose="idle"; }
     if(Math.random()<hurtP){ s.injured=true; s.used+=2; s.pose="hurt"; spark(s.x,headY()-4,"star",4); say("It pushed too hard and got hurt."); await rwait(1200); s.pose="tired"; }
     await praiseOrScold(res);
-    await dayFade("night");
+    await dayFade("night",place?backHome:null);
     await endWeek(1, tLine+" "+(s.injured?"It pushed too hard and got hurt. That's 2 weeks off its prime, and it needs a rest or medicine.":{great:"That was its best yet.",success:"Solid work.",fail:"It'll get it next time.",slack:"It wandered off halfway. It's getting a bit spoiled."}[res]));
   });
 }
@@ -441,6 +461,19 @@ async function SLACK(i){ const s=RS; s.pose="idle"; await rwait(700); spark(s.x,
 const SCENE_FN=[
   async r=>{ // Laps
     const s=RS, laps=r==="great"?3:2;
+    if(s.bg==="pool"){ const tall=GROUND-headY(), sink=tall*0.6-24, surf=GROUND-24;
+      const swim=async tx=>{ const d=Math.sign(tx-s.x); s.dir=d; s.pose="walk"; while(Math.abs(tx-s.x)>1.5){ s.x+=d*1.5; if(Math.random()<0.18) spark(s.x-d*10,surf-1,"drip"); await rwait(r==="great"?16:22); } };
+      if(r==="great"){ s.x=226; s.jy=30; s.pose="crouch"; await rwait(450); s.pose="jump";
+        for(let f=0;f<=36;f++){ const k=f/36; s.x-=1.2; s.jy=30+Math.sin(k*Math.PI)*24-k*(30+sink); await rwait(18); }
+        s.waterY=surf; spark(s.x,surf-2,"drip",14); s.shake=6; await rwait(300); }
+      else { s.waterY=surf; s.jy=-sink; spark(s.x,surf-2,"drip",6); await rwait(400); }
+      for(let k=0;k<laps;k++){
+        await swim(205);
+        if(r==="fail"&&k===1){ await swim(140); s.pose="tired"; spark(s.x,headY(),"sweat",3); const fl=prop({k:"floatie",x:s.x,y:surf,w:tall*0.55});
+          for(let j=0;j<20;j++){ s.jy=-sink+Math.sin(j/2)*1.5; await rwait(90);} s.pose="sad"; await rwait(700); return; }
+        await swim(45);
+      }
+      s.pose="happy"; spark(s.x,surf-3,"drip",8); if(r==="great") spark(s.x,headY()-4,"heart",3); await rwait(900); return; }
     for(let k=0;k<laps;k++){
       await walkTo(222,95,"run");
       if(r==="fail"&&k===1){ await walkTo(150,95,"run"); s.pose="hurt"; s.upside=true; spark(s.x,GROUND-2,"dust",6); await rwait(600); s.upside=false; s.pose="dizzy"; spark(s.x,headY()-4,"star",4); await rwait(1300); return; }
@@ -478,7 +511,19 @@ const SCENE_FN=[
     b.open=true; s.pose="happy"; spark(b.x,GROUND-12,"sparkle",6); await rwait(r==="great"?1200:800); unprop(b);
   },
   async r=>{ // Meditate
-    const s=RS; await walkTo(196,45); s.pose="sit";
+    const s=RS;
+    if(s.bg==="pond"){ s.x=196; s.jy=5; s.pose="sit"; await rwait(500);
+      const pulses=r==="fail"?1:3;
+      for(let k=0;k<pulses;k++){ s.koiPull=Math.min(1,(k+1)/3); const ring=prop({k:"ring",x:s.x,y:GROUND-1,r:4}); for(let j=0;j<24;j++){ ring.r+=1.4; await rwait(34);} unprop(ring); }
+      if(r==="fail"){ s.pose="sleep"; for(let k=0;k<3;k++){ spark(s.x+6,headY(),"z"); await rwait(420);}
+        const fr=prop({k:"frog",x:s.x+44,y:GROUND+6}); await rwait(400); const hx=s.x, hy=headY()+2;
+        for(let f=0;f<=24;f++){ const k=f/24; fr.x=s.x+44+(hx-s.x-44)*k; fr.y=GROUND+6+(hy-GROUND-6)*k-Math.sin(k*Math.PI)*26; await rwait(22); }
+        fr.on=true; await rwait(500); s.pose="hurt"; spark(s.x,headY()-8,"q"); await rwait(700);
+        for(let f=0;f<=20;f++){ const k=f/20; fr.x=hx-k*60; fr.y=hy+(GROUND+8-hy)*k-Math.sin(k*Math.PI)*20; await rwait(22); } unprop(fr); s.pose="dizzy"; await rwait(700); return; }
+      if(r==="great"){ s.lotus=true; s.pose="float"; for(let k=0;k<14;k++){ s.jy=5+Math.min(10,k); spark(s.x+rnd(-14,14),headY()+rnd(0,20),"sparkle"); await rwait(110);} await rwait(400); s.jy=5; s.pose="sit"; }
+      else { s.pose="happy"; await rwait(600); }
+      return; }
+    await walkTo(196,45); s.pose="sit";
     const pulses=r==="fail"?1:3;
     for(let k=0;k<pulses;k++){ const ring=prop({k:"ring",x:s.x,y:GROUND-18,r:3}); for(let j=0;j<20;j++){ ring.r+=1.2; await rwait(30);} unprop(ring); }
     if(r==="fail"){ s.pose="sleep"; for(let k=0;k<4;k++){ spark(s.x+6,headY(),"z"); await rwait(420);} return; }
@@ -508,7 +553,7 @@ async function runRest(){
 async function runMeal(i){
   const s=RS, ml=MEALS[i]; if(PLAYER.bits<ml[1]) return;
   await scene(async()=>{
-    PLAYER.bits-=ml[1]; s.mealMonth=Math.floor(PLAYER.week/4); drawUI();
+    PLAYER.bits-=ml[1]; s.mealDay=dayKey(); drawUI();
     const bowl=s.props.find(p=>p.k==="bowl")||prop({k:"bowl",x:BOWLX,y:GROUND}); bowl.food=ml[6];
     say(`${ml[0]} in the bowl.`); await walkTo(BOWLX+RS.P.scale*7,40);
     const like=taste("meal",i)||"neutral";
@@ -633,7 +678,6 @@ async function endWeek(weeks,line){
   s.strainRun=strain>=70?s.strainRun+1:0;
   if(s.sick) s.sick--;
   if(s.strainRun>=2&&!s.sick){ s.sick=1; s.strainRun=0; notes.push("It's caught a cold. No training next week unless it gets medicine."); }
-  if(PLAYER.week%4===0) notes.push("A new month, so it can have another meal.");
   for(const it of Object.values(s.worn||{})){ const tz=it&&taste("item",it); if(!tz) continue; s.stress+=tz==="like"?-3:4;
     if(tasteFound(tz)) notes.push(tz==="like"?`It keeps admiring its ${it}. It loves wearing that.`:`It keeps tugging at the ${it}. It doesn't like wearing it.`); }
   const findP=(s.m.el1==="Wild"||s.m.el1==="Stone")?0.12:0.06;

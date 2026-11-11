@@ -100,7 +100,7 @@ const saveSummary=(p,saved)=>`${p.roster.length} Snabit${p.roster.length===1?"":
 
 /* Ranch state fields that persist. Everything else (puppet, particles, props) is rebuilt. */
 const KEEP=["worn","held","weather","weatherBonus","majorInvite","master","stage","mark","mark2","variant","wanderEl","stageRegions","stageCups","neglect","cleanRun","uses","book","grid","tp","lastTrained","used","spoil","fear","fatigue","stress","weight","like","dis","known","mess","messKind","messSpots",
-  "learned","injured","sick","strainRun","petWeek","playWeek","snackWeek","mealMonth","hinted","toldEvo","slackBonus","dead","level","exp","grade",
+  "learned","injured","sick","strainRun","petWeek","playWeek","snackWeek","mealMonth","mealDay","hungerDay","hinted","toldEvo","slackBonus","dead","level","exp","grade",
   "wins","losses","habits","fightNo","equip","skillsKnown","away","fruitUsed","cups","majors","born","likeT","disT","found","log"];
 function packRanch(s){ const o={}; for(const k of KEEP) if(s[k]!==undefined) o[k]=s[k]; return o; }
 

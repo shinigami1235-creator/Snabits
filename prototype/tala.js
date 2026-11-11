@@ -1,6 +1,6 @@
 /* Onboarding: Tala, the ranch assistant, teaches a few buttons at a time and opens the rest as the player goes. Needs ranch.js and game.js. */
 const TIPS=[
-  ["welcome",()=>true,s=>`${PLAYER.onboarded?`Welcome home, ${s.m.name}.`:`I'm Tala, and I help run the ranch. This is ${s.m.name}.`} Train builds its stats, Rest clears tiredness, Feed sets its meals, and Care is for petting, cleaning and its things. Each drill or rest takes one week.`],
+  ["welcome",()=>true,s=>`${PLAYER.onboarded?`Welcome home, ${s.m.name}.`:`I'm Tala, and I help run the ranch. This is ${s.m.name}.`} Train builds its stats, Rest clears tiredness, Feed gives it its meal for the day, and Care is for petting, cleaning and its things. Each drill or rest takes one week.`],
   ["drill",s=>s.tp.some(v=>v>0),()=>"After each drill you can praise or scold it. Praise good work and scold slacking, and it learns what you expect."],
   ["tired",s=>s.fatigue>=50,()=>"It's getting tired. A rest week clears it, and pushing on risks an injury."],
   ["month",()=>PLAYER.week>=4,()=>"The first month's done, so Out is open. Tournaments are how it climbs from grade E, and missions bring back bits and items."],

@@ -49,7 +49,7 @@ function infoStatus(s) {
   const raised = spoiled() ? 'Spoiled' : scared() ? 'Strict' : 'Balanced';
   const fat = s.fatigue < 20 ? 'Fresh' : s.fatigue < 50 ? 'A bit tired' : s.fatigue < 70 ? 'Tired' : s.fatigue < 90 ? 'Worn out' : 'Exhausted';
   const str = s.stress < 15 ? 'Relaxed' : s.stress < 35 ? 'A bit tense' : s.stress < 55 ? 'Stressed' : 'Very stressed';
-  const cond = s.injured ? 'Injured' : s.sick ? 'Has a cold' : 'Healthy';
+  const cond = s.injured ? 'Injured' : s.sick ? 'Has a cold' : typeof fedToday === 'function' && !fedToday(s) ? 'Hungry, no meal yet today' : 'Healthy';
   const looks = [s.stage !== 'Bit' && s.mark >= 0 ? MARK[s.mark][0] : null, s.stage === 'Mega' && s.mark2 != null && s.mark2 >= 0 ? MARK[s.mark2][0] : null, s.variant].filter(Boolean);
   return `<div class="i-hero"><canvas class="i-port" id="i-port"></canvas><div class="i-id">
       <b>${s.stage === 'Bit' ? m.family : `${s.variant && s.variant !== 'Scruffy' ? s.variant + ' ' : ''}${MARK[s.mark][0]} ${m.family}`}</b>
