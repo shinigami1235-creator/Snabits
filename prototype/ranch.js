@@ -211,15 +211,16 @@ function drawUI(){
   el("r-form").textContent=s.stage+" form";
   el("r-stats").innerHTML=STATS.map((st,i)=>{const fam=FAMILY[m.family].base[i], v=shownStat(i);
     return `<div class="rs" id="rs${i}"><span>${st} <small style="opacity:.6">${rankOf(fam)}</small></span><span class="bg"><i style="width:${Math.min(100,v/2)}%"></i></span><span>${v}${s.tp[i]?` <small style="opacity:.6">(+${s.tp[i]})</small>`:""}</span></div>`;}).join("");
-  el("r-say").innerHTML=`<b>Assistant:</b> ${s.say||""}`;
+  el("r-say").innerHTML=`<b>Tala:</b> ${s.say||""}`;
   const n=el("r-nums"); n.style.display=s.showNums?"block":"none";
   n.textContent=`Fatigue ${s.fatigue}, stress ${s.stress}, Strain ${s.fatigue+2*s.stress}. Spoil ${s.spoil}, Fear ${s.fear}, loyalty ${loyalty()}. Weight ${s.weight}. Weeks lived ${s.used} of ${lifeWeeks()} (${s.m.lifespan} months). Earned points ${tpTotal()}${s.stage==="Bit"?` of ${evoTotal()} for Byte`:""}.`;
   el("r-learned").textContent=s.learned.length?"Stat skills: "+s.learned.join(", "):"";
-  el("r-menu").querySelectorAll(".rb").forEach(b=>b.disabled=s.busy||s.dead||(!!s.away&&b.dataset.m!=="Out"));
+  el("r-menu").querySelectorAll(".rb").forEach(b=>{ b.disabled=s.busy||s.dead||(!!s.away&&b.dataset.m!=="Out")||(b.dataset.m==="Out"&&!s.away&&typeof outLocked==="function"&&outLocked()); b.title=b.disabled&&b.dataset.m==="Out"?"Opens after the first month":""; });
+  if(typeof checkTips==="function") checkTips();
 }
 function shownStat(i){ const s=RS; let v=s.m.stats[i]+s.tp[i]; if(s.stage!=="Bit"&&s.mark===i) v=Math.round(v*1.05); return v; }
 function popStat(i,txt,neg){ const r=el("rs"+i); if(!r) return; const p=document.createElement("span"); p.className="pop"+(neg?" neg":""); p.textContent=txt; r.appendChild(p); setTimeout(()=>p.remove(),1500); }
-function say(t){ RS.say=t; el("r-say").innerHTML=`<b>Assistant:</b> ${t}`; }
+function say(t){ RS.say=t; el("r-say").innerHTML=`<b>Tala:</b> ${t}`; }
 function banner(t,col){ const b=el("r-banner"); b.textContent=t; b.style.color=col||"#fff"; b.classList.toggle("on",!!t); }
 function panel(html){ el("r-panel").innerHTML=html; }
 
@@ -245,18 +246,18 @@ function menu(which){
     el("r-panel").querySelectorAll("[data-sn]").forEach(b=>b.onclick=()=>runSnack(b.dataset.sn));
   }
   if(which==="Care"){
-    panel(`<button class="rb" id="r-skills">Skills<small>${s.equip.length} of ${slotsFor(s)} equipped</small></button><button class="rb" id="r-items">Items<small>The bag</small></button><button class="rb" id="r-pet">Pet<small>Or rub it on screen</small></button><button class="rb" id="r-clean" ${s.mess?"":"disabled"}>Clean<small>${s.mess?"Or wipe it on screen":"It's clean"}</small></button><button class="rb" id="r-play">Play<small>Throw the ball</small></button>`+
+    panel(`<button class="rb" id="r-skills">Skills<small>${s.equip.length} of ${slotsFor(s)} equipped</small></button><button class="rb" id="r-items">Items<small>The bag</small></button><button class="rb" id="r-wear">Wear<small>Worn and held items</small></button><button class="rb" id="r-pet">Pet<small>Or rub it on screen</small></button><button class="rb" id="r-clean" ${s.mess?"":"disabled"}>Clean<small>${s.mess?"Or wipe it on screen":"It's clean"}</small></button><button class="rb" id="r-play">Play<small>Throw the ball</small></button>`+
       (s.sick||s.injured?`<button class="rb" id="r-med">Medicine<small>${s.injured?"Heals the injury":"Cures the cold"}, 80 bits</small></button>`:"")+
       `<div style="flex-basis:100%;font-size:12px;opacity:.7">${s.stage==="Bit"?`A ${s.m.family} evolves on its own at ${evoTotal()} earned points. It has ${tpTotal()}.`:"Mega form comes later in the prototype."}</div>`);
-    el("r-skills").onclick=openSkills; el("r-items").onclick=openItems;
+    el("r-skills").onclick=openSkills; el("r-items").onclick=openItems; el("r-wear").onclick=openWear;
     el("r-pet").onclick=()=>runCare("pet"); el("r-play").onclick=()=>runCare("play");
     if(s.mess) el("r-clean").onclick=()=>runCare("clean");
     if(el("r-med")) el("r-med").onclick=()=>{ if(PLAYER.bag.Medicine) PLAYER.bag.Medicine--; else if(PLAYER.bits<80){say("We can't afford medicine right now.");return;} else PLAYER.bits-=80; s.sick=0; s.injured=false; say("Medicine's in. It's well enough to train."); drawUI(); menu("Care"); };
   }
   if(which==="Out"){
     if(s.away){ missionStatus(); return; }
-    panel(`<button class="rb" id="r-mis">Missions<small>1, 4 or 8 hours</small></button><button class="rb" id="r-cup">Tournaments<small>Grade ${s.grade}</small></button><button class="rb" id="r-lab">Fusion lab<small>Fusion and rebirth</small></button><button class="rb" id="r-frz">Freezer<small>${PLAYER.roster.length-1} frozen</small></button><button class="rb" id="r-prac">Practice fight<small>Not saved to habits</small></button><button class="rb" id="r-trip">Skill trip<small>4 weeks in a region</small></button>`);
-    el("r-mis").onclick=openBoard; el("r-cup").onclick=openCups; el("r-lab").onclick=openLab; el("r-frz").onclick=openFreezer; el("r-trip").onclick=openTrips;
+    panel(`<button class="rb" id="r-mis">Missions<small>1, 4 or 8 hours</small></button><button class="rb" id="r-cup">Tournaments<small>Grade ${s.grade}</small></button><button class="rb" id="r-lab">Fusion lab<small>Fusion and rebirth</small></button><button class="rb" id="r-town">Town<small>Shops and upgrades</small></button><button class="rb" id="r-frz">Freezer<small>${PLAYER.roster.length-1} frozen</small></button><button class="rb" id="r-ghost">Friend battle<small>Ghost codes</small></button><button class="rb" id="r-prac">Practice fight<small>Not saved to habits</small></button><button class="rb" id="r-trip">Skill trip<small>4 weeks in a region</small></button>`);
+    el("r-mis").onclick=openBoard; el("r-cup").onclick=openCups; el("r-lab").onclick=openLab; el("r-frz").onclick=openFreezer; el("r-trip").onclick=()=>{ if(tripsLocked()){ say("Skill trips open at 1 heart."); return; } openTrips(); }; el("r-town").onclick=openTown; el("r-ghost").onclick=openGhost;
     el("r-prac").onclick=()=>{ const o=gradedOpponent(s.grade,Math.max(1,s.level+Math.floor(rnd(-1,2))),Math.random); arenaFight({s,foe:o,mode:"control",title:"Practice",learn:true,onEnd:r=>{ if(r.learned.length) say(r.learned.join(" ")); saveGame(); }}); };
   }
 }
@@ -297,7 +298,7 @@ const headY=()=>GROUND-(RS.P.base-RS.P.topY+1)*RS.P.scale-RS.jy;
 function rollDrill(){
   const s=RS, h=hearts();
   if(spoiled()&&Math.random()<0.2+(s.slackBonus||0)) return "slack";
-  const great=10+2*h+(s.fatigue<20?5:0)+(s.weatherBonus?10:0), fail=Math.max(5,25-5*h)+(s.fatigue>50?15:0)-(s.stress<10&&s.fatigue<30?5:0);
+  const great=10+2*h+(s.fatigue<20?5:0)+(s.weatherBonus?10:0)+(has("Training gear")?5:0), fail=Math.max(5,25-5*h)+(s.fatigue>50?15:0)-(s.stress<10&&s.fatigue<30?5:0);
   const r=Math.random()*100; return r<great?"great":r<great+fail?"fail":"success";
 }
 // heavy drills: [name, main stat, minor stat, dropped stat, mess]
@@ -410,7 +411,7 @@ const SCENE_FN=[
 async function runRest(){
   await scene(async()=>{ const s=RS; say("A quiet week in the hut.");
     await walkTo(26,40); s.hidden=true; for(let k=0;k<4;k++){ spark(30,GROUND-34,"z"); await rwait(450);} s.hidden=false; s.pose="happy"; await rwait(500);
-    s.fatigue-=35; s.stress-=7; s.weight+=1; const wasHurt=s.injured; s.injured=false; await endWeek(1,wasHurt?"The rest healed it up.":"It looks rested.");
+    s.fatigue-=has("Better hut")?45:35; s.stress-=7; s.weight+=1; const wasHurt=s.injured; s.injured=false; await endWeek(1,wasHurt?"The rest healed it up.":"It looks rested.");
   });
 }
 async function runMeal(i){
@@ -424,7 +425,7 @@ async function runMeal(i){
     else { s.pose="eat"; for(let k=0;k<(like==="like"?6:8);k++){ spark(BOWLX+6,GROUND-6,"crumb"); await rwait(like==="like"?140:220);} if(like==="like"){ s.pose="happy"; spark(s.x,headY()-4,"heart",3); await hop(14,420); await rwait(500);} else { s.pose="idle"; await rwait(600);} }
     bowl.food=null;
     let [ , , st,sp,fe,wt]=ml; s.stress+=st; s.spoil+=sp; s.fear+=fe; s.weight+=wt;
-    if(like==="like"){ s.stress-=3; s.spoil+=2; } if(like==="dis"){ s.stress+=12; s.spoil-=6; s.fear+=2; }
+    if(like==="like"){ s.stress-=3; s.spoil+=2; if(has("Kitchen")) s.fatigue-=5; } if(like==="dis"){ s.stress+=12; s.spoil-=6; s.fear+=2; }
     const first=!s.known[i]; s.known[i]=like;
     say(like==="like"?(first?"It loves this! I'll mark it with a heart.":"Its favourite, gone in seconds."):like==="dis"?(first?"It hates this one. I'll mark it so we remember.":"It ate it, but it wasn't happy."):"It ate it all. Nothing special.");
     clampAll();
@@ -681,7 +682,7 @@ function drawMonster(c,t){
   const bw=(P.N*0.6)*sc*(o.kx||1); c.fillStyle="rgba(0,0,0,.22)"; c.fillRect(Math.round(s.x-bw/2),GROUND-1,Math.round(bw),3);
   if(s.ghosts){ s.trail.push([dx,dy]); if(s.trail.length>4) s.trail.shift(); c.globalAlpha=0.25; for(const [gx,gy] of s.trail.slice(0,-1)) c.drawImage(FC,gx-6,gy); c.globalAlpha=1; } else s.trail=[];
   if(s.upside){ c.save(); const vis=(P.base-P.topY+1)*sc; c.translate(dx+w/2,GROUND-vis/2); c.scale(1,-1); c.drawImage(FC,-w/2,-(P.base+P.pad+1)*sc+vis/2); c.restore(); }
-  else c.drawImage(FC,dx,dy);
+  else { c.drawImage(FC,dx,dy); if(typeof drawWorn==="function") drawWorn(c,s,dx,dy,o); }
   if(s.injured&&!s.upside){ const hx=Math.round(s.x+P.N*sc*0.15), hy=Math.round(dy+(P.topY+P.pad+1)*sc+o.by*0); c.fillStyle="#fff"; c.fillRect(hx-3,hy,7,3); c.fillRect(hx-1,hy-2,3,7); c.fillStyle="#e2483f"; c.fillRect(hx,hy+1,1,1); }
   s.bbox=[dx+P.pad*sc,dy+(P.topY+P.pad)*sc,dx+w-P.pad*sc,dy+baseY];
 }

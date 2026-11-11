@@ -111,7 +111,7 @@ class Fight{
     if(this.over) return [];
     this.events=[]; this.turn++;
     if(this.turn===1) this.start();
-    else this.p.forEach((f,i)=>{ const gain=this.p[1-i].ability==="Abyss"?1:2; f.energy=Math.min(10,f.energy+gain); });
+    else this.p.forEach((f,i)=>{ const gain=(this.p[1-i].ability==="Abyss"?1:2)+(f.energyBonus||0); f.energy=Math.min(10,f.energy+gain); });
     const picks=[pickA,pickB];
     picks.forEach((id,i)=>{
       const f=this.p[i];
@@ -186,7 +186,7 @@ class Fight{
     if(def.protect&&tgt!==i){ this.say(`${def.name} blocks it.`); this.events.push({t:"miss",who:tgt}); return; }
     const seen=s.kind==="Cast"&&me.foresight&&tgt!==i; if(seen) me.foresight=false;
     if(!s.basic&&!s.sure&&!seen&&tgt!==i){
-      let acc=s.acc/100; if(def.afterimage) acc-=0.3;
+      let acc=s.acc/100+(me.accMod||0); if(def.afterimage) acc-=0.3;
       if(me.status&&me.status.name==="Blind"&&me.ability!=="Keen Eye") acc-=0.2;
       const fs=this.eff(def,"spd"), ms=this.eff(me,"spd");
       if(!s.noDodge&&me.ability!=="Keen Eye"&&fs>ms) acc-=Math.min(0.15,(fs-ms)/ms*0.5);
@@ -225,10 +225,12 @@ class Fight{
       if(def.status&&def.status.name==="Freeze"&&me.ability==="Permafrost") d*=1.2;
       if(def.ability==="Wobble"&&!def.firstHitTaken){ d*=0.7; this.pop(tgt,"Wobble"); }
       def.firstHitTaken=true;
+      if(me.heldEl&&s.el&&s.el===me.heldEl) d*=1.2;
       d=Math.max(1,Math.round(d));
       if(def.endure&&d>=def.hp&&tgt!==i){ d=def.hp-1; this.say(`${def.name} endures the hit.`); }
       if(def.ability==="Bedrock"&&def.hp===def.maxhp&&d>=def.hp){ d=def.hp-1; this.pop(tgt,"Bedrock"); this.say(`${def.name} hangs on.`); }
-      def.hp=Math.max(0,def.hp-d); total+=d; landed++; if(!s.basic&&tgt!==i){ def.hitBy=def.hitBy||{}; def.hitBy[s.name]=1; }
+      def.hp=Math.max(0,def.hp-d); total+=d; landed++;
+      if(def.lifeSeed&&def.hp>0&&def.hp<def.maxhp/2){ def.lifeSeed=false; const h=Math.round(def.maxhp/4); def.hp=Math.min(def.maxhp,def.hp+h); this.say(`${def.name}'s Life seed heals ${h}.`); } if(!s.basic&&tgt!==i){ def.hitBy=def.hitBy||{}; def.hitBy[s.name]=1; }
       if(def.charging) def.hitWhileCharging=true;
       this.events.push({t:"hit",who:tgt,dmg:d,eff:m,crit});
       if(crit) this.say("A critical hit.");

@@ -5,7 +5,7 @@ const GRADES=["E","D","C","B","A","S"];
 const GRADE_INFO={E:{lv:[1,10],earned:[0,40],purse:200},D:{lv:[8,18],earned:[40,120],purse:500},C:{lv:[15,28],earned:[100,220],purse:1200},
   B:{lv:[25,38],earned:[200,320],purse:3000},A:{lv:[35,48],earned:[300,420],purse:7000},S:{lv:[45,60],earned:[400,520],purse:15000}};
 const expNeed=L=>10+6*L;
-const FREEZER_MAX=20;
+const freezerMax=()=>PLAYER&&PLAYER.upgrades&&PLAYER.upgrades["Big Freezer"]?30:20;
 const tierOf=n=>{ const l=SKILLS[n].lv; return l<=8?1:l<=20?2:3; };
 
 /* Items the bag can hold. Snacks are in ranch.js; these are the finds. */
@@ -45,7 +45,7 @@ function saveGame(){
 const hasSave=()=>{ try{ return !!localStorage.getItem(SAVE_KEY); }catch(e){ return false; } };
 
 /* Ranch state fields that persist. Everything else (puppet, particles, props) is rebuilt. */
-const KEEP=["weather","weatherBonus","majorInvite","master","stage","mark","mark2","variant","wanderEl","stageRegions","stageCups","neglect","cleanRun","uses","book","grid","tp","lastTrained","used","spoil","fear","fatigue","stress","weight","like","dis","known","mess","messKind","messSpots",
+const KEEP=["worn","held","weather","weatherBonus","majorInvite","master","stage","mark","mark2","variant","wanderEl","stageRegions","stageCups","neglect","cleanRun","uses","book","grid","tp","lastTrained","used","spoil","fear","fatigue","stress","weight","like","dis","known","mess","messKind","messSpots",
   "learned","injured","sick","strainRun","petWeek","playWeek","snackWeek","mealMonth","hinted","toldEvo","slackBonus","dead","level","exp","grade",
   "wins","losses","habits","fightNo","equip","skillsKnown","away","fruitUsed","cups","majors","born"];
 function packRanch(s){ const o={}; for(const k of KEEP) if(s[k]!==undefined) o[k]=s[k]; return o; }
@@ -53,7 +53,7 @@ function packRanch(s){ const o={}; for(const k of KEEP) if(s[k]!==undefined) o[k
 function addToRoster(m){
   const have=PLAYER.roster.find(r=>r.m.name===m.name&&r.m.stats.join()===m.stats.join());
   if(have) return have;
-  if(PLAYER.roster.length>=FREEZER_MAX+1) return null;
+  if(PLAYER.roster.length>=freezerMax()+1) return null;
   const e={id:"m"+(PLAYER.nextId++),m,st:null};
   PLAYER.roster.push(e); return e;
 }
@@ -85,7 +85,7 @@ function fixEquip(s){
 }
 /* Exp and levels. Returns lines for the report. */
 function giveExp(s,amt){
-  const lines=[]; s.exp=(s.exp||0)+amt;
+  const lines=[]; if(s.worn&&s.worn.head==="Crown") amt=Math.round(amt*1.1); s.exp=(s.exp||0)+amt;
   while(s.exp>=expNeed(s.level)){ s.exp-=expNeed(s.level); s.level++; lines.push(`It reached level ${s.level}.`);
     for(const n of s.m.pool) if(SKILLS[n].lv===s.level) lines.push(`It learned ${n}.`); }
   fixEquip(s); return lines;
@@ -173,7 +173,7 @@ function rollFind(rand,boost=1){
 function addItem(name,n=1){ PLAYER.bag[name]=(PLAYER.bag[name]||0)+n; }
 
 /* A frozen copy of a monster for fights that must replay exactly. */
-function fightSnapshot(s){ return {m:s.m,variant:s.variant,pal:s.pal,mark2:s.mark2,uses:{...(s.uses||{})},tp:s.tp.slice(),stage:s.stage,mark:s.mark,grid:s.grid,level:s.level,equip:s.equip.slice(),habits:s.habits.slice(),lowLoyalty:RS===s&&hearts()<2}; }
+function fightSnapshot(s){ return {worn:{...(s.worn||{})},held:s.held,m:s.m,variant:s.variant,pal:s.pal,mark2:s.mark2,uses:{...(s.uses||{})},tp:s.tp.slice(),stage:s.stage,mark:s.mark,grid:s.grid,level:s.level,equip:s.equip.slice(),habits:s.habits.slice(),lowLoyalty:RS===s&&hearts()<2}; }
 
 /* Skill use counts, mastery, the Skill book and learning a skill by being hit with it. */
 const MASTERY=60, CHAIN_USES=30;
@@ -181,6 +181,7 @@ function playerFighter(s){
   const f=makeFighter(fightMon(s),s.equip,s.level), u=s.uses||{};
   if(s.variant==="Bulky"){ f.maxhp=Math.round(f.maxhp*1.1); f.hp=f.maxhp; }
   if(s.variant==="Feral") f.critBonus=0.05;
+  if(typeof applyGear==="function") applyGear(s,f);
   f.skills=f.skills.map(k=>u[k.name]>=MASTERY&&k.power?{...k,power:Math.round(k.power*1.1),mastered:true}:k);
   return f;
 }

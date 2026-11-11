@@ -26,12 +26,14 @@ function openCups(){
   if(s.sick||s.injured){ say("It isn't fit to fight. Rest it or give it medicine first."); return; }
   const list=cupsThisWeek(s);
   panel(`<div style="flex-basis:100%;font-size:13px">Grade ${s.grade}. ${s.wins} wins, ${s.losses} losses. ${nextCupText()}</div>`+
-    list.map((c,i)=>`<button class="rb" data-c="${i}">${c.name}<small>${c.format==="robin"?`Round robin of ${c.size}`:c.format==="elim"?"Elimination of 8":c.format==="bo3"?"Elimination of 8, best of 3":"One match"}, ${c.small?"small purse":(c.legend?60000:c.major?30000:GRADE_INFO[c.grade].purse)+" bits for first"}${c.official&&c.grade===s.grade&&s.grade!=="S"?", winning moves it up a grade":""}</small></button>`).join("")+
+    list.map((c,i)=>`<button class="rb" data-c="${i}">${c.name}<small>${c.format==="robin"?`Round robin of ${c.size}`:c.format==="elim"?"Elimination of 8":c.format==="bo3"?"Elimination of 8, best of 3":"One match"}, ${c.small?"small purse":(c.legend?60000:c.major?30000:GRADE_INFO[c.grade].purse)+" bits for first"}${c.grade!=="E"&&!c.small?`, ${Math.round((c.legend?60000:c.major?30000:GRADE_INFO[c.grade].purse)/10)} to enter`:""}${c.official&&c.grade===s.grade&&s.grade!=="S"?", winning moves it up a grade":""}</small></button>`).join("")+
     `<button class="rb" id="r-cback">Back</button>`);
   el("r-panel").querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>startCup(list[+b.dataset.c]));
   el("r-cback").onclick=()=>menu("Out");
 }
 function startCup(c){
+  const fee=c.grade!=="E"&&!c.small?Math.round((c.legend?60000:c.major?30000:GRADE_INFO[c.grade].purse)/10):0;
+  if(fee&&PLAYER.bits<fee){ say(`The ${c.name} costs ${fee} bits to enter.`); return; } PLAYER.bits-=fee; drawUI();
   const s=RS, R=rng(hashStr(s.id+"|cup|"+PLAYER.week+"|"+c.name)), G=GRADE_INFO[c.grade];
   const lvl=()=>clamp(s.level+Math.floor(R()*4)-1,G.lv[0],G.lv[1]);
   const field=[{me:true,name:displayName(s)}];

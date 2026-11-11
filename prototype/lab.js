@@ -10,7 +10,7 @@ function entryName(e){ const st=entryState(e); return st.stage&&st.stage!=="Bit"
 function openFreezer(){
   if(RS&&RS.id) saveGame();
   const list=PLAYER.roster;
-  panel(`<div style="flex-basis:100%;font-size:13px">The Freezer holds up to ${FREEZER_MAX} monsters, and a frozen monster uses none of its lifespan.</div><div id="frz" style="flex-basis:100%;display:flex;flex-direction:column;gap:6px"></div><button class="rb" id="f-back">Back</button>`);
+  panel(`<div style="flex-basis:100%;font-size:13px">The Freezer holds up to ${freezerMax()} monsters, and a frozen monster uses none of its lifespan.</div><div id="frz" style="flex-basis:100%;display:flex;flex-direction:column;gap:6px"></div><button class="rb" id="f-back">Back</button>`);
   const box=el("frz");
   if(!list.length) box.innerHTML="<div style='font-size:13px;opacity:.7'>Nothing here yet. Scan a photo and tap Raise it.</div>";
   list.forEach(e=>{ const st=entryState(e), row=document.createElement("div");
@@ -82,7 +82,7 @@ function openLab(){
   const e1=R.find(e=>e.id===LAB.a), e2=R.find(e=>e.id===LAB.b);
   if(e1&&e2){ const m=compat(e1,e2), carry=Math.min(40,10+5*m);
     const fam=e1.m.family===e2.m.family?`${e1.m.family} 100%`:`${e1.m.family} 55%, ${e2.m.family} 30%, a hybrid 15%`;
-    info=`<div style="flex-basis:100%;font-size:13px"><b>Assistant:</b> "${ASSIST[m]}" The child will be ${fam}, and it keeps about ${carry}% of the parents' training. Both parents are used up.</div>`; }
+    info=`<div style="flex-basis:100%;font-size:13px"><b>Assistant:</b> "${ASSIST[m]}" The child will be ${fam}, and it keeps about ${carry}% of the parents' training. Both parents are used up, and it costs 500 bits.</div>`; }
   const st=RS&&RS.id?RS:null, elder=st&&st.used>=lifeWeeks()*0.7;
   panel(`<div style="flex-basis:100%;font-size:13px">First parent counts twice as much as the second.</div>
     <label style="flex-basis:100%;font-size:13px">First parent <select id="l-a">${opt(LAB.a,LAB.b)}</select></label>
@@ -131,7 +131,8 @@ function fuseChild(e1,e2,cat,R){
   return {m,st,hybrid,carry:Math.round(carry*100),inherit};
 }
 async function doFuse(e1,e2,cat){
-  saveGame();
+  if(PLAYER.bits<500){ say("A fusion costs 500 bits."); return; }
+  PLAYER.bits-=500; saveGame();
   const R=rng(hashStr(e1.id+e2.id+PLAYER.week));
   if(cat){ PLAYER.bag[cat]--; if(PLAYER.bag[cat]<=0) delete PLAYER.bag[cat]; }
   const child=fuseChild(e1,e2,cat,R);

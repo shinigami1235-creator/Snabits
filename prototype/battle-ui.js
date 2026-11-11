@@ -91,7 +91,7 @@ const bw=ms=>B&&B.fast?Promise.resolve():wait(ms);
 async function pick(id){
   if(!B||B.busy||B.fight.over) return;
   B.busy=true; if(!(B.opts&&B.opts.auto)) $("b-btns").classList.add("busy");
-  const f=B.fight, ai=f.aiPick(f.p[1],f.p[0]);
+  const f=B.fight, ai=B.opts&&B.opts.foeHabits?habitPick(f,1,B.opts.foeHabits):f.aiPick(f.p[1],f.p[0]);
   if(B.opts&&B.opts.record) recordHabit(B.opts.record,f,id);
   const ev=f.play(id,ai);
   if(B.opts&&!f.over&&f.turn>=B.opts.turnLimit){ judge(f,B.opts.noDraw); ev.push({t:"log",text:f.log[f.log.length-1]}); }
@@ -123,16 +123,17 @@ async function pick(id){
 }
 
 /* Arena fights for the ranch: tournaments, missions and practice. mode "control" gives the player the buttons, "auto" plays on the monster's habits. */
-function arenaFight({s,foe,mode="control",title="",turnLimit=15,noDraw=false,record=false,learn=false,rand=Math.random,onEnd}){
+function arenaFight({s,foe,mode="control",title="",turnLimit=15,noDraw=false,record=false,learn=false,foeHabits=null,rand=Math.random,onEnd}){
   const me=fightMon(s); if(record) s.fightNo=(s.fightNo||0)+1;
-  const fight=new Fight(playerFighter(s),makeFighter(foe.fm,foe.skills,foe.level),rand);
+  const fight=new Fight(playerFighter(s),foe.fighter||makeFighter(foe.fm,foe.skills,foe.level),rand);
   if(foe.boss){ const b=fight.p[1]; b.maxhp=Math.round(b.maxhp*1.25); b.hp=b.maxhp; b.name=foe.boss; }
-  B={fight,mon:me,opp:foe.fm,busy:false,fast:false,shown:fight.p.map(f=>f.hp),opts:{s,turnLimit,noDraw,learn,record:record?s:null,auto:mode==="auto",onEnd}};
+  B={fight,mon:me,opp:foe.fm,busy:false,fast:false,shown:fight.p.map(f=>f.hp),opts:{s,turnLimit,noDraw,learn,foeHabits,record:record?s:null,auto:mode==="auto",onEnd}};
   $("battle").style.display="flex"; $("loadout").style.display="none"; $("b-fight").style.display="flex";
   paint($("b-me-sprite"),me.grid,me.pal,1); paint($("b-foe-sprite"),foe.fm.grid,foe.fm.pal,1);
   ["me","foe"].forEach(k=>{$("b-"+k+"-sprite").className="bsprite";});
   $("b-log").innerHTML=""; $("b-result").style.display="none";
   logLine(`${title?title+". ":""}${fight.p[1].name}, Lv ${foe.level}. Its skills are ${fight.p[1].skills.map(x=>x.name).join(", ")}.`);
+  if(fight.p[0].monocle){ const o=fight.p[1]; logLine(`Monocle: HP ${o.maxhp}, Power ${o.base.pow}, Guard ${o.base.grd}, Mind ${o.base.mnd}, Spirit ${o.base.spr}, Speed ${o.base.spd}.`); }
   drawPanels();
   if(B.opts.auto) autoStep(); else drawButtons();
 }
