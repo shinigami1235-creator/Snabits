@@ -83,11 +83,13 @@ function chibiRanch(s, t) {
    The sprite canvases stay in place, hidden, as the anchors for each side's position and for the damage popups. */
 /* te is the battle's own clock: it stops during hit stop and runs slow during a knockout, so every timeline,
    reaction and particle freezes or slows together. Real time (now) still drives the screen shake and the vibration. */
+/* fights play 10% slower than first built, since Gid found them too fast (12 Nov 2026): effect time, hit stops and the waits between events all stretch by this */
+const BATTLE_PACE = 1.1;
 const CB = { side: [null, null], anim: null, loop: false, now: null, te: 0, last: 0, freezeUntil: 0, slowUntil: 0, trauma: 0, impact: null, parts: [] };
 const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
 function tick(now) {
   const dt = Math.max(0, Math.min(50, now - (CB.last || now))); CB.last = now;
-  CB.te += dt * (now < CB.freezeUntil ? 0 : now < CB.slowUntil ? 0.35 : 1);
+  CB.te += dt / BATTLE_PACE * (now < CB.freezeUntil ? 0 : now < CB.slowUntil ? 0.35 : 1);
   CB.trauma = Math.max(0, CB.trauma - dt / 1000 * 1.6);
   return dt;
 }
@@ -238,7 +240,7 @@ function chibiUse(e) {
     pw: typeof movePower === 'function' ? movePower(e.name) : 1, fromSky: !!st.sky };
   st.sky = false;
   sfx(['bolt', 'beam', 'spear', 'volley', 'lightning', 'pillar', 'shadowclaw', 'lift', 'push', 'tornado', 'firespin', 'web', 'drain', 'mist', 'wave'].includes(kind) ? 'charge' : 'whoosh');
-  return new Promise(r => setTimeout(r, A.C));
+  return new Promise(r => setTimeout(r, A.C * BATTLE_PACE));
 }
 const hexRgb = h => /^#[0-9a-f]{6}$/i.test(h) ? [1, 3, 5].map(k => parseInt(h.slice(k, k + 2), 16)) : [170, 110, 255];
 /* a hit lands: everything here fires within the same instant, scaled by how hard it was */
@@ -251,7 +253,7 @@ function chibiHit(e) {
   const st = CB.side[e.who]; if (!st) return;
   const tier = e.dot ? 'light' : e.crit || e.eff > 1 ? 'heavy' : e.dmg >= 30 ? 'medium' : 'light', T = TIER[tier], now = cbNow();
   st.react = { kind: 'hit', t0: CB.te, tier }; CB.lastHit = { tier, te: CB.te };
-  if (!e.dot) { CB.freezeUntil = Math.max(CB.freezeUntil, now + T.stop); CB.vibrate = { who: e.who, until: now + T.stop + 60 }; }
+  if (!e.dot) { CB.freezeUntil = Math.max(CB.freezeUntil, now + T.stop * BATTLE_PACE); CB.vibrate = { who: e.who, until: now + T.stop * BATTLE_PACE + 60 }; }
   CB.trauma = Math.min(1, CB.trauma + T.trauma * (REDUCED ? 0.35 : 1));
   if (T.impact && !REDUCED) CB.impact = { who: e.who, until: now + 70 };
   const A = CB.anim; if (A && A.who !== e.who && /^(tackle|bite|stomp|punch|claw)$/.test(A.kind) && CB.side[A.who]) CB.side[A.who].recoil = { t0: CB.te, amt: tier === 'heavy' ? 0.06 : 0.035 };
@@ -268,7 +270,7 @@ function chibiBump(who, cls) {
 }
 function chibiPose(who, pose, ms) {
   const st = CB.side[who]; if (!st) return;
-  if (pose === 'ko') { st.ko = CB.te; CB.slowUntil = cbNow() + 650; CB.trauma = Math.min(1, CB.trauma + (REDUCED ? 0.2 : 0.6)); sfx('ko'); return; }
+  if (pose === 'ko') { st.ko = CB.te; CB.slowUntil = cbNow() + 650 * BATTLE_PACE; CB.trauma = Math.min(1, CB.trauma + (REDUCED ? 0.2 : 0.6)); sfx('ko'); return; }
   st.hold = { pose, until: ms ? CB.te + ms : Infinity };
 }
 /* hit sounds built on the game's own synth, so they follow the music on/off switch */

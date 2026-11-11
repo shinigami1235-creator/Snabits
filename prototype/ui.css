@@ -493,3 +493,4 @@ body.ob-tut #ranchbtn,body.ob-tut #msgranch{display:none!important}
 .ob-ask{font-size:15px;color:var(--text);text-align:center;margin:0}
 #r-dusk{position:absolute;inset:2px;border-radius:var(--r);pointer-events:none;z-index:3;background-color:transparent}
 #r-date,#r-banner,#r-skip,#r-goout{z-index:4}
+.rb.blocked small{color:#ffb4a8;opacity:1}

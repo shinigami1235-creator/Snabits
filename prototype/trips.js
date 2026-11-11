@@ -59,7 +59,7 @@ async function runTrip(reg){
       if(w>0) K(["Hit the post again and put your weight behind it.","Faster this time, and don't stop between hits.","This is the last week, so give it everything."][w-1]); else K("Start on the post. Hit it as hard as you can.");
       await rwait(900); banner("");
       await playTask("drill",ok);
-      s.tp[main]+=a; s.tp[second]+=b; gain[0]+=a; gain[1]+=b; s.fatigue+=16; s.stress+=8;
+      s.tp[main]+=a; s.tp[second]+=b; gain[0]+=a; gain[1]+=b; s.fatigue+=18; s.stress+=7;   // MR2's errantry: +18 fatigue and +7 stress every week, so it comes home very tired
       drawUI(); popStat(main,"+"+a); popStat(second,"+"+b);
       let line=`Week ${w+1}: ${STATS[main]} +${a}, ${STATS[second]} +${b}.${ok?"":" It was a rough week."}`;
       await stageResult(ok,ok?`That was a good week. ${STATS[main]} went up by ${a} and ${STATS[second]} by ${b}.`:`That was a rough week, so ${STATS[main]} only went up by ${a} and ${STATS[second]} by ${b}.`,"guide");

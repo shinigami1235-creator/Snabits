@@ -88,7 +88,7 @@ function popup(who,text,color,big){
 }
 function bump(who,cls){ if(typeof chibiBump==="function") chibiBump(who,cls); const s=$(who===0?"b-me-sprite":"b-foe-sprite"); s.classList.remove(cls); void s.offsetWidth; s.classList.add(cls); }
 
-const bw=ms=>B&&B.fast?Promise.resolve():wait(ms);
+const bw=ms=>B&&B.fast?Promise.resolve():wait(ms*(typeof BATTLE_PACE!=="undefined"?BATTLE_PACE:1));
 async function pick(id){
   if(!B||B.busy||B.fight.over) return;
   if(B.net){ netPick(id); return; }
