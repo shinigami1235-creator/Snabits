@@ -58,6 +58,7 @@ function tick(now) {
 const SIDE_ID = ['b-me-sprite', 'b-foe-sprite'];
 const cbNow = () => CB.now != null ? CB.now : performance.now();
 const eo = k => 1 - Math.pow(1 - Math.min(1, Math.max(0, k)), 3), ei = k => Math.pow(Math.min(1, Math.max(0, k)), 3);
+const eb = k => { k = Math.min(1, Math.max(0, k)) - 1; return 1 + 2.70158 * k * k * k + 1.70158 * k * k; };   // overshoots, then settles
 const eio = k => { k = Math.min(1, Math.max(0, k)); return k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2; };
 
 function arenaLayer() {
@@ -100,10 +101,11 @@ const ANIM = {
     atk(t, x) { const top = -x.foeH * 0.55;
       if (t < 150) return { f: 0, pose: 'crouch' };
       if (t < 480) { const k = (t - 150) / 330; return { f: 0.95 * eio(k), arc: top * eio(k) - Math.sin(k * Math.PI) * 80, pose: k < 0.8 ? 'jump' : 'land' }; }
-      if (t < 580) return { f: 0.95, arc: top, pose: 'land' };
-      const k = eio((t - 580) / 300); return { f: 0.95 * (1 - k), arc: top * (1 - k) - Math.sin(k * Math.PI) * 50, pose: k < 0.85 ? 'jump' : 'idle' }; },
-    def: t => t > 480 && t < 640 ? { sx: 1.18, sy: 0.7 } : null,
-    fx(c, t, x) { if (t > 480 && t < 700) dust(c, x.target, (t - 480) / 220); } },
+      if (t < 580) { const a = 1 - eb((t - 480) / 100); return { f: 0.95, arc: top, pose: 'land', sx: 1 + 0.2 * a, sy: 1 - 0.18 * a }; }
+      const k = eio((t - 580) / 300), a = 1 - eb((t - 580) / 170);
+      return { f: 0.95 * (1 - k), arc: top * (1 - k) - Math.sin(k * Math.PI) * 50, pose: k < 0.85 ? 'jump' : 'idle', sx: 1 - 0.25 * a, sy: 1 + 0.35 * a }; },
+    def(t) { if (t < 480 || t > 760) return null; const a = 1 - eb((t - 480) / 280); return { sx: 1 + 0.6 * a, sy: 1 - 0.75 * a }; },
+    fx(c, t, x) { if (t > 480 && t < 700) dust(c, x.target, (t - 480) / 220); if (t > 480 && t < 960) stompStars(c, x.target, (t - 480) / 480); } },
   punch: { C: 470, D: 870,
     atk: t => t < 250 ? { f: 0.6 * eo(t / 250), pose: 'walk' } : t < 380 ? { f: 0.6, pose: 'punchwind' } : t < 470 ? { f: 0.6 + 0.08 * eo((t - 380) / 90), pose: 'punch' }
       : t < 570 ? { f: 0.68, pose: 'punch' } : { f: 0.68 * (1 - eio((t - 570) / 300)), pose: 'idle' } },
@@ -130,7 +132,7 @@ const ANIM = {
   beam: { C: 380, D: 960,
     atk: t => ({ f: 0, pose: t < 200 ? 'cast' : t < 820 ? (x_src === 'eyes' ? 'idle' : 'push') : 'idle' }),
     fx(c, t, x) { if (t < 200) { x.from.forEach(o => missile(c, o, x, t, 0.2 + t / 450)); return; }
-      if (t < 800) { const w = Math.min(1, (t - 200) / 90) * Math.min(1, (800 - t) / 140); x.from.forEach(o => beamFx(c, x, t, w * (x.from.length > 1 ? 0.55 : 1), o)); } } },
+      if (t < 800) { const w = Math.min(1, (t - 200) / 90) * Math.min(1, (800 - t) / 140); x.from.forEach(o => { beamFx(c, x, t, w * (x.from.length > 1 ? 0.55 : 1), o); missile(c, o, x, t, 0.55 * w); }); } } },
   spear: { C: 520, D: 860,
     atk: t => ({ f: 0, pose: t < 200 ? 'slamup' : t < 640 ? 'push' : 'idle' }),
     fx(c, t, x) { for (let i = 0; i < 3; i++) { const o = x.from[i % x.from.length], k = (t - 200 - i * 70) / 320;
@@ -147,7 +149,8 @@ const ANIM = {
     atk: t => ({ f: 0, pose: t < 700 ? 'slamup' : 'idle' }),
     fx(c, t, x) { if (t < 300) { psyAura(c, x.self, t, 0.7, 0, [255, 226, 90]); x.from.forEach(o => { c.save(); c.strokeStyle = '#fff6a0'; c.lineWidth = 2;
         for (let i = 0; i < 3; i++) { const a = t / 40 + i * 2; c.beginPath(); c.moveTo(o.x, o.y); c.lineTo(o.x + Math.cos(a) * 10, o.y + Math.sin(a) * 10 - 4); c.stroke(); } c.restore(); }); return; }
-      if (t < 700 && Math.floor(t / 55) % 3 !== 2) lightningFx(c, x.target, t); } },
+      const sx = { bolts: CB.boltCache = t < 320 ? {} : CB.boltCache || {} };
+      for (const t0 of [300, 520]) if (t >= t0 && t < t0 + 260) { const fl = lightningFx(c, x.target, t - t0, sx); if (fl) CB.screenFlash = fl; } } },
   pillar: { C: 520, D: 1040,
     atk: t => ({ f: 0, pose: t < 220 ? 'slamup' : t < 860 ? 'slam' : 'idle' }),
     fx(c, t, x) { if (t > 220 && t < 520) crack(c, x.self, x.target, (t - 220) / 300, x.col); if (t >= 460 && t < 980) pillarFx(c, x, Math.min(1, (t - 460) / 90) * Math.min(1, (980 - t) / 160), t); } },
@@ -201,7 +204,7 @@ const hexRgb = h => /^#[0-9a-f]{6}$/i.test(h) ? [1, 3, 5].map(k => parseInt(h.sl
 const TIER = {
   light:  { stop: 40,  trauma: 0.18, push: 0.05, sparks: 5,  flash: 50 },
   medium: { stop: 75,  trauma: 0.38, push: 0.09, sparks: 10, flash: 70 },
-  heavy:  { stop: 140, trauma: 0.75, push: 0.15, sparks: 22, flash: 90, impact: 1 }
+  heavy:  { stop: 100, trauma: 0.75, push: 0.15, sparks: 22, flash: 100, impact: 1 }
 };
 function chibiHit(e) {
   const st = CB.side[e.who]; if (!st) return;
@@ -210,6 +213,7 @@ function chibiHit(e) {
   if (!e.dot) { CB.freezeUntil = Math.max(CB.freezeUntil, now + T.stop); CB.vibrate = { who: e.who, until: now + T.stop + 60 }; }
   CB.trauma = Math.min(1, CB.trauma + T.trauma * (REDUCED ? 0.35 : 1));
   if (T.impact && !REDUCED) CB.impact = { who: e.who, until: now + 70 };
+  const A = CB.anim; if (A && A.who !== e.who && /^(tackle|bite|stomp|punch|claw)$/.test(A.kind) && CB.side[A.who]) CB.side[A.who].recoil = { t0: CB.te, amt: tier === 'heavy' ? 0.06 : 0.035 };
   CB.spark = { who: e.who, n: T.sparks, col: CB.anim && CB.anim.who !== e.who ? CB.anim.col : [255, 236, 160], fresh: true };
   sfx(tier === 'heavy' ? 'heavy' : tier === 'medium' ? 'hit' : 'tap');
 }
@@ -264,6 +268,37 @@ function chompMarks(c, p, k) {
     c.beginPath(); c.moveTo(x - 5, y); c.lineTo(x + 5, y); c.lineTo(x, y - sd * 10); c.closePath(); c.fill(); }
   c.restore();
 }
+/* little stars that spin up off a stomped enemy and fade */
+function stompStars(c, p, k) {
+  for (let i = 0; i < 4; i++) { const a = -Math.PI / 2 + (i - 1.5) * 0.6, d = 10 + 34 * eo(k), x = p.x + Math.cos(a) * d, y = p.y - 26 + Math.sin(a) * d;
+    c.save(); c.globalAlpha = k < 0.45 ? 1 : 1 - (k - 0.45) / 0.55; c.translate(x, y); c.rotate(k * Math.PI * 2 + i);
+    c.fillStyle = '#ffd94a'; c.strokeStyle = '#7a4a10'; c.lineWidth = 1.5; c.beginPath();
+    for (let j = 0; j < 10; j++) { const r = j % 2 ? 3.2 : 7.5, b = j * Math.PI / 5 - Math.PI / 2; c[j ? 'lineTo' : 'moveTo'](Math.cos(b) * r, Math.sin(b) * r); }
+    c.closePath(); c.fill(); c.stroke(); c.restore(); }
+}
+/* soft dust and smoke puffs: dash start, skid stop, faint. Ages run on the battle clock, so they hold during hitstop */
+function spawnPuff(x, y, n, dir, spread, speed, size, col, life) {
+  CB.puffs = CB.puffs || [];
+  for (let i = 0; i < n; i++) { const a = dir == null ? Math.random() * Math.PI * 2 : dir + (Math.random() - 0.5) * spread, v = speed * (0.5 + Math.random() * 0.5);
+    CB.puffs.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - (dir == null ? 0.02 : 0.015), t0: CB.te, life: life * (0.8 + Math.random() * 0.4), r: size * (0.6 + Math.random() * 0.4), col }); }
+}
+function drawPuffs(c) {
+  if (!CB.puffs) return; const te = CB.te;
+  CB.puffs = CB.puffs.filter(q => te - q.t0 < q.life);
+  for (const q of CB.puffs) { const k = (te - q.t0) / q.life, d = eo(k) * q.life;
+    c.globalAlpha = 0.75 * (1 - k); c.fillStyle = q.col; c.beginPath(); c.arc(q.x + q.vx * d, q.y + q.vy * d, q.r * (0.6 + 0.8 * k), 0, 7); c.fill(); }
+  c.globalAlpha = 1;
+}
+/* streaks behind a fast move, pointing back the way it came */
+function speedLines(c, p, dir, s, seed) {
+  const bx = -Math.cos(dir), by = -Math.sin(dir), px = -by, py = bx;
+  c.save(); c.strokeStyle = 'rgba(255,255,255,.85)'; c.lineCap = 'round';
+  for (let i = 0; i < 5; i++) { const o = ((i * 37 + seed) % 11 - 5) * 5, back = 18 + (i * 13 + seed) % 14, len = (22 + (i * 7) % 18) * Math.min(1, s * 3);
+    const x0 = p.x + px * o + bx * back, y0 = p.y + py * o + by * back;
+    c.globalAlpha = Math.min(1, s * 2.4) * (0.5 + (i % 2) * 0.4); c.lineWidth = 1.5 + (i % 3);
+    c.beginPath(); c.moveTo(x0, y0); c.lineTo(x0 + bx * len, y0 + by * len); c.stroke(); }
+  c.restore();
+}
 function dust(c, p, k) {
   c.save(); c.globalAlpha = 0.7 * (1 - k); c.fillStyle = '#e8dcc4';
   for (const sd of [-1, 1]) for (let i = 0; i < 3; i++) { c.beginPath(); c.arc(p.x + sd * (20 + i * 12 + k * 26), p.foot - 4 - i * 3 - k * 8, 6 + i * 2 + k * 5, 0, 7); c.fill(); }
@@ -296,8 +331,8 @@ const rgbS = (col, a = 1) => `rgba(${col[0]},${col[1]},${col[2]},${a})`;
 function missile(c, p, x, t, sc = 1, alpha = 1) {
   c.save(); c.translate(p.x, p.y); c.scale(sc, sc); c.globalAlpha = alpha; const col = x.col, el = x.el;
   c.shadowColor = rgbS(col, 0.9); c.shadowBlur = 16;
-  if (el === 'Blaze') { const gr = c.createRadialGradient(0, 0, 1, 0, 0, 14); gr.addColorStop(0, '#fff6b0'); gr.addColorStop(0.45, '#ffb030'); gr.addColorStop(1, 'rgba(230,60,30,0)');
-    c.fillStyle = gr; c.beginPath(); c.arc(0, 0, 14 + Math.sin(t / 40) * 2, 0, 7); c.fill(); }
+  if (el === 'Blaze') { const gr = c.createRadialGradient(0, 0, 1, 0, 0, 19); gr.addColorStop(0, '#fff6b0'); gr.addColorStop(0.45, '#ffb030'); gr.addColorStop(1, 'rgba(230,60,30,0)');
+    c.fillStyle = gr; c.beginPath(); c.arc(0, 0, 19 + Math.sin(t / 40) * 2.5, 0, 7); c.fill(); }
   else if (el === 'Spark') { c.fillStyle = '#fff6a0'; c.beginPath(); c.arc(0, 0, 8, 0, 7); c.fill(); c.strokeStyle = '#ffe14a'; c.lineWidth = 2.5;
     for (let i = 0; i < 5; i++) { const a = i * 1.26 + t / 60; c.beginPath(); c.moveTo(Math.cos(a) * 8, Math.sin(a) * 8); c.lineTo(Math.cos(a + 0.3) * 13, Math.sin(a + 0.3) * 13); c.lineTo(Math.cos(a) * 18, Math.sin(a) * 18); c.stroke(); } }
   else if (el === 'Venom') { c.fillStyle = 'rgb(150,90,210)'; c.beginPath(); for (let i = 0; i <= 12; i++) { const a = i / 12 * Math.PI * 2, r = 11 + Math.sin(a * 3 + t / 60) * 2; c.lineTo(Math.cos(a) * r, Math.sin(a) * r); } c.fill();
@@ -346,12 +381,44 @@ function crescents(c, p, x, k) {
   for (let i = -1; i <= 1; i++) { c.save(); c.translate(-Math.abs(i) * 6, i * 11); c.beginPath(); c.arc(0, 0, 12, -1.2, 1.2); c.arc(-6, 0, 10, 1.1, -1.1, true); c.closePath(); c.fill(); c.restore(); }
   c.restore();
 }
-function lightningFx(c, p, t) {
-  c.save(); c.lineJoin = 'round'; c.lineCap = 'round'; let x0 = p.x + 10, y0 = 0; const pts = [[x0, y0]], seed = Math.floor(t / 55);
-  for (let i = 1; i <= 7; i++) pts.push([p.x + Math.sin(seed * 7 + i * 2.3) * 14 * (1 - i / 8), (p.y + 6) * i / 7]);
-  for (const [w, col] of [[10, 'rgba(255,226,90,.55)'], [4.5, 'rgba(255,248,190,1)'], [1.8, '#ffffff']]) {
-    c.strokeStyle = col; c.lineWidth = w; c.beginPath(); pts.forEach(([a, b], i) => i ? c.lineTo(a, b) : c.moveTo(a, b)); c.stroke(); }
+/* lightning the hand-drawn way (lightning-vfx skill): a jagged line, keep only the strongest corners and push them out,
+   thick at the bends and thin between, sparks off the corners, a broad soft glow, a narrower bright glow, a white core last.
+   One strike is 5 frames at 20 fps: thickest and brightest first, then thinner, then broken apart and fading. */
+function boltShape(a, b, seed) {
+  let r = seed; const rnd = () => (r = (r * 9301 + 49297) % 233280) / 233280;
+  let pts = [a, b];
+  for (let d = 0; d < 5; d++) { const out = [pts[0]];
+    for (let i = 0; i < pts.length - 1; i++) { const p = pts[i], q = pts[i + 1], L = Math.hypot(q.x - p.x, q.y - p.y), g = (rnd() + rnd() + rnd() - 1.5) * 0.65;
+      out.push({ x: (p.x + q.x) / 2 - (q.y - p.y) / L * g * L * 0.32, y: (p.y + q.y) / 2 + (q.x - p.x) / L * g * L * 0.32 }, q); }
+    pts = out; }
+  const turn = i => { const u = [pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y], v = [pts[i + 1].x - pts[i].x, pts[i + 1].y - pts[i].y]; return Math.abs(Math.atan2(u[0] * v[1] - u[1] * v[0], u[0] * v[0] + u[1] * v[1])); };
+  const idx = pts.slice(1, -1).map((p, i) => [turn(i + 1), i + 1]).sort((x, y) => y[0] - x[0]).slice(0, 7).map(z => z[1]).sort((x, y) => x - y);
+  let k = [pts[0], ...idx.map(i => pts[i]), pts[pts.length - 1]];
+  k = k.map((p, i) => i === 0 || i === k.length - 1 ? p : { x: (k[i - 1].x + k[i + 1].x) / 2 + (p.x - (k[i - 1].x + k[i + 1].x) / 2) * 1.6, y: p.y });
+  for (let i = 1; i < k.length; i++) if (k[i].y < k[i - 1].y + 4) k[i].y = k[i - 1].y + 4;     // always moving down the strike
+  const sparks = [2, 4, 6].filter(i => i < k.length - 1).map(i => { const sd = rnd() < 0.5 ? -1 : 1; return [k[i], { x: k[i].x + sd * (14 + rnd() * 10), y: k[i].y + 6 + rnd() * 8 }]; });
+  return { k, sparks };
+}
+function strokeBolt(c, B, w, col, keep) {
+  c.strokeStyle = col; c.lineCap = 'round';
+  for (let i = 0; i < B.k.length - 1; i++) { if (keep && !keep[i]) continue;
+    const p = B.k[i], q = B.k[i + 1], taper = 1 - i / B.k.length * 0.7;
+    c.lineWidth = w * taper * 1.35; c.beginPath(); c.moveTo(p.x, p.y); c.lineTo((p.x + q.x) / 2, (p.y + q.y) / 2); c.stroke();      // thick near the bend
+    c.lineWidth = w * taper * 0.75; c.beginPath(); c.moveTo((p.x + q.x) / 2, (p.y + q.y) / 2); c.lineTo(q.x, q.y); c.stroke(); }   // thin between bends
+  for (const [a, b] of B.sparks) { c.lineWidth = w * 0.45; c.beginPath(); c.moveTo(a.x, a.y); c.quadraticCurveTo((a.x + b.x) / 2, a.y, b.x, b.y); c.stroke(); }
+}
+function lightningFx(c, p, t, x) {
+  const f = Math.floor(t / 50); if (f > 4) return 0;
+  const plan = [[0, 1, 1.25], [1, 0.9, 1], [0, 0.7, 0.75], [2, 0.5, 0.6], [2, 0.25, 0.45]][f];
+  x.bolts = x.bolts || {};
+  const key = plan[0]; if (!x.bolts[key]) x.bolts[key] = boltShape({ x: p.x + 12, y: -10 }, { x: p.x, y: p.y + 6 }, 17 + key * 31 + Math.floor(p.x));
+  const B = x.bolts[key], strength = plan[1], w = 7 * plan[2], keep = f >= 3 ? B.k.map((_, i) => (i * 7 + f) % 3 !== 0) : null;
+  c.save(); c.globalAlpha = strength;
+  c.shadowColor = 'rgba(255,200,60,.9)'; c.shadowBlur = 26; strokeBolt(c, B, w * 3.2, 'rgba(184,134,11,.45)', keep);        // broad soft glow
+  c.shadowBlur = 10; strokeBolt(c, B, w * 1.7, 'rgba(255,224,74,.9)', keep);                                             // narrower bright glow
+  c.shadowBlur = 0; strokeBolt(c, B, w * 0.6, '#ffffff', keep);                                                           // white core last
   c.restore();
+  return [0.6, 0.25, 0, 0, 0][f];        // how strongly the screen flashes on this frame
 }
 function groundRing(c, p, k, col) { c.save(); c.strokeStyle = rgbS(col, 0.8 * (1 - k * 0.3)); c.lineWidth = 3; c.beginPath(); c.ellipse(p.x, p.foot - 2, 18 + k * 18, 6 + k * 6, 0, 0, 7); c.stroke(); c.restore(); }
 function pillarFx(c, x, w, t) {
@@ -361,8 +428,9 @@ function pillarFx(c, x, w, t) {
       c.fillStyle = i % 2 ? 'rgba(190,232,255,.95)' : 'rgba(150,210,250,.95)'; c.beginPath(); c.moveTo(bx - 8, p.foot); c.lineTo(bx, p.foot - h); c.lineTo(bx + 8, p.foot); c.closePath(); c.fill();
       c.fillStyle = 'rgba(255,255,255,.8)'; c.beginPath(); c.moveTo(bx - 2, p.foot - 4); c.lineTo(bx, p.foot - h + 6); c.lineTo(bx + 1, p.foot - 4); c.closePath(); c.fill(); } }
   else { const gr = c.createLinearGradient(0, p.foot, 0, p.foot - H); gr.addColorStop(0, 'rgba(230,60,30,.95)'); gr.addColorStop(0.5, 'rgba(255,150,40,.9)'); gr.addColorStop(1, 'rgba(255,230,120,0)');
-    c.fillStyle = gr; for (let i = -1; i <= 1; i++) { const wd = 34 - Math.abs(i) * 10, fl = Math.sin(t / 50 + i * 2) * 4; c.beginPath(); c.moveTo(p.x + i * 14 - wd / 2, p.foot);
-      c.quadraticCurveTo(p.x + i * 14 - wd / 2 + fl, p.foot - H * 0.6, p.x + i * 10 + fl, p.foot - H * (1 - Math.abs(i) * 0.25)); c.quadraticCurveTo(p.x + i * 14 + wd / 2 - fl, p.foot - H * 0.6, p.x + i * 14 + wd / 2, p.foot); c.fill(); } }
+    c.fillStyle = gr; for (let i = -2; i <= 2; i++) { const wd = 50 - Math.abs(i) * 9, fl = Math.sin(t / 50 + i * 2) * 5, xo = i * 19; c.beginPath(); c.moveTo(p.x + xo - wd / 2, p.foot);
+      c.quadraticCurveTo(p.x + xo - wd / 2 + fl, p.foot - H * 0.6, p.x + i * 13 + fl, p.foot - H * (1 - Math.abs(i) * 0.2)); c.quadraticCurveTo(p.x + xo + wd / 2 - fl, p.foot - H * 0.6, p.x + xo + wd / 2, p.foot); c.fill(); }
+    c.fillStyle = 'rgba(255,90,30,.35)'; c.beginPath(); c.ellipse(p.x, p.foot, 62 * w, 12 * w, 0, 0, 7); c.fill(); }
   c.restore();
 }
 
@@ -404,11 +472,13 @@ function drawSparks(c, dt) {
     c.beginPath(); c.moveTo(q.x, q.y); c.lineTo(q.x - q.vx * 26, q.y - q.vy * 26); c.stroke(); }
 }
 /* origin points for the attack in progress */
-function originOf(p, src) {
+function originOf(p, src, tgt) {
   if (!p) return [];
-  if (src === 'eyes') return p.back || !p.eyes ? [p.top] : p.eyes;
-  if (src === 'mouth') return [p.back || !p.mouth ? p.top : p.mouth];
-  return p.hands && p.hands.length ? p.hands : [p.back || !p.mouth ? p.top : p.mouth];
+  // seen from behind, the face is on the far side: start just past the body's edge, toward the enemy
+  const past = () => { const dx = tgt.x - p.top.x, dy = tgt.y - p.top.y, L = Math.hypot(dx, dy) || 1; return { x: p.top.x + dx / L * p.r, y: p.top.y + dy / L * p.r }; };
+  if (src === 'eyes') return p.back || !p.eyes ? [past()] : p.eyes;
+  if (src === 'mouth') return [p.back || !p.mouth ? past() : p.mouth];
+  return p.hands && p.hands.length ? p.hands : [p.back || !p.mouth ? past() : p.mouth];
 }
 
 /* ---------- one frame ---------- */
@@ -419,6 +489,7 @@ function sideState(who, te, pos) {
     else if (A.who === who) Object.assign(out, K.atk(t, pos));
     else if (K.def) { const d = K.def(t, pos); if (d) Object.assign(out, d); } }
   if (st.hold) { if (te > st.hold.until) st.hold = null; else out.pose = st.hold.pose; }
+  if (st.recoil) { const k = (te - st.recoil.t0) / 170; if (k > 1) st.recoil = null; else out.f -= st.recoil.amt * Math.sin(k * Math.PI); }
   const R = st.react;
   if (R) { const dur = R.kind === 'hit' ? (R.tier === 'heavy' ? 560 : 420) : 380, k = (te - R.t0) / dur;
     if (k > 1) st.react = null;
@@ -426,7 +497,8 @@ function sideState(who, te, pos) {
       out.pose = 'hit'; out.flash = te - R.t0 < 18 ? 2 : te - R.t0 < T.flash ? 1 : 0;
       out.f += -T.push * (k < 0.25 ? eo(k / 0.25) : 1 - eio((k - 0.25) / 0.75)); out.rot += -0.12 * (R.tier === 'heavy' ? 1.6 : 1) * Math.sin(Math.min(1, k * 1.5) * Math.PI) * (who ? -1 : 1); }
     else { const s2 = Math.sin(k * Math.PI); out.pose = 'dodge'; out.off = [pos.perp[0] * 30 * s2, pos.perp[1] * 30 * s2 - 10 * s2]; } }
-  if (st.ko != null) { out.pose = 'ko'; out.alpha = Math.max(0, 1 - (te - st.ko - 350) / 600); }
+  if (st.ko != null) { out.pose = 'ko'; const k = (te - st.ko - 420) / 160;
+    if (k > 0) { out.sx *= 1 + 0.4 * eo(k); out.sy *= 1 + 0.4 * eo(k); out.alpha = Math.max(0, 1 - k); } }
   return out;
 }
 function chibiBattleLoop() {
@@ -463,17 +535,30 @@ function chibiBattleFrame(now) {
     const vib = CB.vibrate && CB.vibrate.who === who && now < CB.vibrate.until ? Math.sin(now / 9) * 4 : 0;     // the target shakes while time is stopped
     const x = h.x + V[0] * S.f + S.shake + S.off[0] + vib, y = h.y + V[1] * S.f + S.arc + S.lift + S.off[1], mir = who === 1 ? -1 : 1;
     const put = (alpha, filter, cap) => { c.save(); c.scale(dpr, dpr); c.globalAlpha = alpha; if (filter) c.filter = filter;
-      c.translate(x, y); c.rotate(S.rot); c.scale(mir * u * S.sx, u * S.sy); c.translate(-100, -188);
+      c.translate(x, y);
+      if (st.str > 0.01) { const a = st.dir || 0; c.translate(0, -bodyMid); c.rotate(a); c.scale(1 + st.str, 1 - st.str * 0.5); c.rotate(-a); c.translate(0, bodyMid); }
+      c.rotate(S.rot); c.scale(mir * u * S.sx, u * S.sy); c.translate(-100, -188);
       CHIBI.draw(c, cap ? { ...st.spec, capture: (st.cap = {}) } : st.spec, P, te, [0.6, who === 0 ? -0.5 : 0.5]); c.restore(); };
     // afterimages behind a fast move
     st.trail = st.trail || []; const last = st.trail[st.trail.length - 1], speed = last ? Math.hypot(x - last.x, y - last.y) : 0;
     st.trail.push({ x, y }); if (st.trail.length > 10) st.trail.shift();
+    if (dte > 0) {                                   // stretch along the move while it's fast, hold it through hitstop
+      const v = speed / dte, want = REDUCED ? 0 : Math.min(0.42, Math.max(0, (v - 0.45) * 0.45));
+      if (last && speed > 0.5) st.dir = Math.atan2(y - last.y, x - last.x);
+      st.str = (st.str || 0) * 0.55 + want * 0.45;
+      const moving = want > 0.08;
+      if (moving !== !!st.moving && st.ko == null) spawnPuff(x, y - 2, moving ? 7 : 9, (st.dir || 0) + Math.PI, 1.2, moving ? 0.09 : 0.12, 6 * u / 0.9, 'rgba(235,228,214,1)', 340);
+      st.moving = moving; }
+    if (st.ko != null && te - st.ko > 420 && !st.koPuff) { st.koPuff = true; spawnPuff(x, y - CHIBI.height(st.spec.stage, st.spec.marks, st.spec.family) * u * 0.4, 16, null, 0, 0.11, 11 * u / 0.9, 'rgba(240,236,250,1)', 520); sfx('whoosh'); }
+    if (st.ko == null) st.koPuff = false;
+    const bodyMid = CHIBI.height(st.spec.stage, st.spec.marks, st.spec.family) * u * 0.45;
+    if (st.str > 0.12 && !REDUCED && !imp) { c.save(); c.scale(dpr, dpr); speedLines(c, { x, y: y - bodyMid }, st.dir || 0, st.str, Math.floor(te / 40) % 7); c.restore(); }
     if (speed > 5 && st.trail.length > 6 && !imp) for (const [i, a] of [[st.trail.length - 7, 0.14], [st.trail.length - 4, 0.24]]) {
       const g = st.trail[i]; c.save(); c.translate((g.x - x) * dpr, (g.y - y) * dpr); put(a * S.alpha, 'saturate(0.4) brightness(1.4)', false); c.restore(); }
     const white = imp && imp.who === who;
     put(S.alpha, white || S.flash === 2 ? 'brightness(0) invert(1)' : S.flash ? 'brightness(1.5)' : '', true);
     const cp = st.cap || {}, d = q => q ? { x: q.x / dpr, y: q.y / dpr } : null;
-    placed[who] = { x, y: y - CHIBI.height(st.spec.stage, st.spec.marks, st.spec.family) * u * 0.45, foot: y, lift: S.lift, back: !!st.spec.back,
+    placed[who] = { x, y: y - CHIBI.height(st.spec.stage, st.spec.marks, st.spec.family) * u * 0.45, foot: y, lift: S.lift, back: !!st.spec.back, r: CHIBI.width(st.spec.stage, st.spec.family) * u * 0.55,
       eyes: cp.eyes && cp.eyes.map(d), mouth: d(cp.mouth), hands: (cp.hands || []).map(d), top: d(cp.top) || { x, y: y - 50 }, center: d(cp.center) };
     if (st.aura != null && te - st.aura < 500) { c.save(); c.scale(dpr, dpr); psyAura(c, placed[who], te, 1 - (te - st.aura) / 500, 0, [255, 214, 90]); c.restore(); }
   }
@@ -481,11 +566,14 @@ function chibiBattleFrame(now) {
   const A = CB.anim;
   if (A && ANIM[A.kind].fx && placed[A.who]) { const T0 = placed[1 - A.who] || { x: homes[1 - A.who].x, y: homes[1 - A.who].y - 40, foot: homes[1 - A.who].y };
     const tgt = { ...T0, x: T0.center ? T0.center.x : T0.x, y: T0.center ? T0.center.y : T0.y };
-    ANIM[A.kind].fx(c, te - A.t0, { self: placed[A.who], target: tgt, targetLift: tgt.lift || 0, col: A.col || [255, 214, 90], el: A.el, name: A.name || '', from: originOf(placed[A.who], A.src) }); }
+    ANIM[A.kind].fx(c, te - A.t0, { self: placed[A.who], target: tgt, targetLift: tgt.lift || 0, col: A.col || [255, 214, 90], el: A.el, name: A.name || '', from: originOf(placed[A.who], A.src, tgt) }); }
   if (CB.spark && CB.spark.fresh && placed[CB.spark.who]) { const p = placed[CB.spark.who], src = placed[1 - CB.spark.who] || homes[1 - CB.spark.who];
     const c0 = p.center || p; spawnSparks(c0, Math.atan2(c0.y - src.y, c0.x - src.x), CB.spark.n, CB.spark.col); CB.spark.fresh = false; CB.burstAt = { who: CB.spark.who, t0: te, col: CB.spark.col }; }
   if (CB.burstAt && placed[CB.burstAt.who] && te - CB.burstAt.t0 < 260) { const p = placed[CB.burstAt.who]; burst(c, p.center || p, (te - CB.burstAt.t0) / 260, CB.burstAt.col); }
-  drawSparks(c, dte);
+  drawSparks(c, dte); drawPuffs(c);
+  if (CB.screenFlash > 0.01) {                       // lightning: the whole arena flashes white, then drops off fast
+    c.fillStyle = `rgba(255,255,250,${(CB.screenFlash * (REDUCED ? 0.3 : 1)).toFixed(3)})`; c.fillRect(0, 0, r.width, r.height);
+    CB.screenFlash *= dte > 0 ? Math.pow(0.5, dte / 40) : 1; }
   c.restore();
 }
 /* ---------- tiles and the stadium ---------- */
