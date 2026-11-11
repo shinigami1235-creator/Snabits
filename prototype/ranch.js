@@ -39,6 +39,23 @@ const rnd=(a,b)=>a+Math.random()*(b-a);
 /* the smooth art draws the ranch as three screens: barn, yard, training ground. Hybrids still use the pixel yard. */
 const smoothRanch=()=>!!(RS&&typeof CHIBI_ART!=="undefined"&&CHIBI_ART&&typeof chibiYard==="function"&&typeof chibiSpec==="function"&&chibiSpec(null,RS));
 const HUTX=()=>smoothRanch()?-RW/2:26;
+/* the barn: tap its door to go in, tap the doorway inside to come out. Inside is one screen (barnRoom in scenes.js). */
+const inBarn=()=>!!(RS&&RS.room==="barn"&&smoothRanch());
+async function enterBarn(id){ const s=RS; s.idling=true;   // idling blocks the idle wander from taking over mid-walk
+  try{ await walkTo(HUTX(),110,"walk",id); s.room="barn"; s.x=24; s.camJump=true; await walkTo(96,60,"walk",id); s.pose="happy"; } finally { s.idling=false; } }
+function leaveBarn(){ const s=RS; s.room=null; s.x=HUTX(); s.camJump=true; s.pose="idle"; }
+function barnTap(x,y){   // a tap that wasn't on the monster, in yard coords; true if it hit something
+  const s=RS; if(s.busy) return false; const S=BARN_SPOTS, inX=r=>x>=r[0]&&x<=r[1];
+  if(!s.room){ if(Math.abs(x-HUTX())<40&&y>GROUND-104&&y<GROUND+4){ const id=s.cur=++RACT; enterBarn(id).then(()=>say("Its room in the barn. Tap the toys, the bed or the wardrobe.")).catch(()=>{}); return true; } return false; }
+  const id=s.cur=++RACT; s.idling=false;
+  if(inX(S.door)&&y>GROUND-104){ leaveBarn(); return true; }
+  if(inX(S.trophies)&&y>GROUND-108&&y<GROUND-86){ const c=s.cups||[]; say(c.length?`${c.length} cup${c.length>1?"s":""} on the shelf: ${c.join(", ")}.`:"The shelf's empty. Its first tournament win goes here."); return true; }
+  if(inX(S.shelf)&&y>GROUND-50){ runCare("play"); return true; }
+  if(inX(S.stove)&&y>GROUND-40&&has("Kitchen")){ menu("Feed"); return true; }
+  if(inX(S.wardrobe)&&y>GROUND-60){ openWear(); return true; }
+  if(inX(S.bed)&&y>GROUND-24){ s.idling=true; (async()=>{ try{ await walkTo(202,50,"walk",id); s.pose="sleep"; for(let k=0;k<4;k++){ spark(s.x+8,headY(),"z"); await rwait(600,id);} s.pose="happy"; }catch(e){} s.idling=false; })(); return true; }
+  return false;
+}
 /* back from a trip: on the new ranch it walks in along the road past the training ground, on the pixel one from the left */
 async function homeArrive(x){ const s=RS; if(smoothRanch()){ s.x=2*RW-10; s.camJump=true; await walkTo(x,120,"walk"); } else { s.x=-30; await walkTo(x,55,"walk"); } }
 const el=id=>document.getElementById(id);
@@ -177,7 +194,7 @@ function injectRanch(){
   const d=document.createElement("div"); d.id="ranch";
   d.innerHTML=`<div id="r-top"><div class="r-id"><b id="r-name"></b><span id="r-lv"></span></div><div class="r-right"><span id="r-coins"></span><button class="iconbtn" id="r-gear" aria-label="Settings">☰</button></div></div>
 <div id="r-sub"><span class="ht" id="r-hearts"></span><span id="r-form"></span><span id="r-shape"></span></div>
-<div id="r-view"><div id="r-frame"><canvas id="r-canvas" width="${RW}" height="${RH}"></canvas><span id="r-date"></span><div id="r-banner"></div><button class="small" id="r-skip">Skip ▸▸</button></div></div>
+<div id="r-view"><div id="r-frame"><canvas id="r-canvas" width="${RW}" height="${RH}"></canvas><span id="r-date"></span><div id="r-banner"></div><button class="small" id="r-skip">Skip ▸▸</button><button class="small" id="r-goout">◂ Outside</button></div></div>
 <div id="r-say"></div><div id="r-stats"></div><div id="r-learned"></div><div id="r-panel"></div><div id="r-week"></div><div id="r-nums"></div>
 <div id="r-menu">${["Train","Rest","Feed","Care","Out"].map(n=>`<button class="rb" data-m="${n}">${n}</button>`).join("")}</div>
 <div id="r-foot"><div class="set-card"><div class="lab-head"><b>Settings</b><button class="small" id="r-setx">Close</button></div>
@@ -192,6 +209,7 @@ function injectRanch(){
   el("r-foot").onclick=e=>{ if(e.target.id==="r-foot") el("r-foot").classList.remove("open"); };
   el("r-mus").onchange=()=>{ if(typeof musToggle==="function") musToggle(); };
   el("r-skip").onclick=()=>{RS.skip=true;};
+  el("r-goout").onclick=()=>{ if(RS&&!RS.busy){ RS.cur=++RACT; RS.idling=false; leaveBarn(); } };
   el("r-off").onchange=e=>{RS.noScenes=e.target.checked;};
   el("r-numsbox").onchange=e=>{RS.showNums=e.target.checked;drawUI();};
   d.querySelectorAll("#r-menu .rb").forEach(b=>b.onclick=()=>menu(b.dataset.m));
@@ -275,8 +293,9 @@ function menu(which){
 }
 
 /* ---------- a scene runs as the one owner of the monster ---------- */
-async function scene(fn){
+async function scene(fn,keepRoom){
   const s=RS; if(s.busy||s.dead) return;
+  if(s.room&&!keepRoom) leaveBarn();
   s.busy=true; s.cur=++RACT; s.skip=s.noScenes; s.behind=false; s.hidden=false; s.upside=false; s.rub=null;
   panel(""); el("r-menu").querySelectorAll(".rb").forEach(b=>b.classList.remove("on")); drawUI(); el("r-skip").style.display="block";
   try{ await fn(); }catch(e){ if(e!==RSTOP) console.error(e); }
@@ -439,9 +458,10 @@ const SCENE_FN=[
 /* ---------- other week actions ---------- */
 async function runRest(){
   await scene(async()=>{ const s=RS; say(smoothRanch()?"A quiet week in the barn.":"A quiet week in the hut.");
-    await walkTo(HUTX(),smoothRanch()?90:40); s.hidden=true; for(let k=0;k<4;k++){ spark(HUTX()+4,GROUND-(smoothRanch()?80:34),"z"); await rwait(450);} s.hidden=false; s.pose="happy"; await rwait(500);
+    if(smoothRanch()){ if(!s.room){ await walkTo(HUTX(),110); s.room="barn"; s.x=24; s.camJump=true; } await walkTo(202,60); s.pose="sleep"; for(let k=0;k<5;k++){ spark(s.x+8,headY(),"z"); await rwait(500);} s.pose="happy"; await rwait(500); }
+    else { await walkTo(HUTX(),40); s.hidden=true; for(let k=0;k<4;k++){ spark(HUTX()+4,GROUND-34,"z"); await rwait(450);} s.hidden=false; s.pose="happy"; await rwait(500); }
     s.fatigue-=has("Better hut")?45:35; s.stress-=7; s.weight+=1; const wasHurt=s.injured; s.injured=false; await endWeek(1,wasHurt?"The rest healed it up.":"It looks rested.");
-  });
+  },true);
 }
 async function runMeal(i){
   const s=RS, ml=MEALS[i]; if(PLAYER.bits<ml[1]) return;
@@ -485,7 +505,7 @@ async function runCare(kind){
       if(s.playWeek!==PLAYER.week){ s.playWeek=PLAYER.week; s.stress-=5; say("That took the edge off."); } else say("It had fun, though it's played enough for this week.");
     }
     clampAll();
-  });
+  },true);
 }
 function petOnce(){ const s=RS; if(s.petWeek!==PLAYER.week){ s.petWeek=PLAYER.week; s.spoil+=2; s.stress-=2; say(scared()?"It flinched at first, then leaned in.":"It leans right into it."); } else say("It likes that, though it's had its fuss this week."); clampAll(); drawUI(); }
 function clampAll(){ const s=RS; s.fatigue=clamp(s.fatigue,0,100); s.stress=clamp(s.stress,0,100); s.spoil=clamp(s.spoil,0,100); s.fear=clamp(s.fear,0,100); s.weight=clamp(s.weight,-50,50); }
@@ -599,8 +619,13 @@ async function idleTick(){
     else if(s.fatigue>75){ s.pose="sleep"; for(let k=0;k<4;k++){ spark(s.x+6,headY(),"z"); await rwait(700,id);} }
     else if(s.fatigue>50){ s.pose="tired"; await rwait(2500,id); }
     else if(s.stress>45){ for(let k=0;k<2;k++){ await walkTo(clamp(s.x+40,95,215),55,"walk",id); await walkTo(clamp(s.x-40,95,215),55,"walk",id);} }
-    else if(scared()){ s.behind=true; await walkTo(smoothRanch()?HUTX()+70:40,40,"walk",id); s.pose="idle"; await rwait(3000,id); }
+    else if(scared()&&!inBarn()){ s.behind=true; await walkTo(smoothRanch()?HUTX()+70:40,40,"walk",id); s.pose="idle"; await rwait(3000,id); }
     else if(spoiled()&&s.ptrX!=null&&performance.now()-s.ptrT<4000){ await walkTo(clamp(s.ptrX,90,220),60,"walk",id); s.pose="happy"; await rwait(600,id); }
+    else if(inBarn()){ const r=Math.random();
+      if(r<0.4){ await walkTo(rnd(90,160),35,"walk",id); s.pose="idle"; await rwait(rnd(1500,3000),id); }
+      else if(r<0.6){ await walkTo(118,35,"walk",id); s.pose="sit"; await rwait(2500,id); }
+      else if(r<0.8){ await walkTo(84,40,"walk",id); s.pose="happy"; await hop(12,360,id); await rwait(600,id); }
+      else { await walkTo(202,35,"walk",id); s.pose="sleep"; for(let k=0;k<3;k++){ spark(s.x+8,headY(),"z"); await rwait(700,id);} } }
     else { s.behind=false; const r=Math.random();
       if(r<0.45){ await walkTo(rnd(70,185),35,"walk",id); s.pose="idle"; await rwait(rnd(1500,3000),id); }
       else if(r<0.6){ await walkTo(BOWLX+RS.P.scale*7,35,"walk",id); s.pose="sit"; await rwait(2200,id); }
@@ -619,17 +644,18 @@ function RS_bindPointer(cv){
     const camX=Math.round(clamp(RS.camX||0,0,RW-cv.width)); return [sx+camX,sy-(cv.height-RH)]; };
   cv.addEventListener("pointerdown",e=>{ const s=RS; if(!s) return; const [x,y]=pos(e); s.ptrX=x; s.ptrT=performance.now();
     const b=s.bbox, onMon=!s.busy&&b&&x>=b[0]&&x<=b[2]&&y>=b[1]&&y<=b[3];
-    if(!onMon&&s.cam){ s.pan={x0:raw(e)[0],L0:s.camL}; s.panL=s.camL; cv.setPointerCapture(e.pointerId); return; }
+    if(!onMon&&s.cam){ s.pan={x0:raw(e)[0],L0:s.camL,x,y,moved:0}; s.panL=s.camL; cv.setPointerCapture(e.pointerId); return; }
     if(!onMon) return;
     s.cur=++RACT; s.idling=false; s.rub={x,y,d:0,beats:0}; s.pose=scared()?"hurt":"lean"; cv.setPointerCapture(e.pointerId); });
   cv.addEventListener("pointermove",e=>{ const s=RS; if(!s) return;
-    if(s.pan&&s.cam){ s.panL=s.pan.L0-(raw(e)[0]-s.pan.x0)/s.cam.Z; return; }
+    if(s.pan&&s.cam){ const dx=raw(e)[0]-s.pan.x0; s.pan.moved=Math.max(s.pan.moved,Math.abs(dx)); s.panL=s.pan.L0-dx/s.cam.Z; return; }
     const [x,y]=pos(e); s.ptrX=x; s.ptrT=performance.now(); if(!s.rub) return;
     s.rub.d+=Math.hypot(x-s.rub.x,y-s.rub.y); s.rub.x=x; s.rub.y=y; s.pose="lean";
     while(s.rub.d>28){ s.rub.d-=28; s.rub.beats++;
       if(s.mess>0){ s.mess=Math.max(0,s.mess-12); spark(x,y,"sparkle"); if(!s.mess){ say("Squeaky clean."); drawUI(); } }
       else { spark(x,y-4,"heart"); if(s.rub.beats===5) petOnce(); } } });
-  const up=()=>{ const s=RS; if(s&&s.pan){ s.pan=null; s.panUntil=performance.now()+2500; } if(s&&s.rub){ s.rub=null; s.pose="idle"; } };
+  const up=()=>{ const s=RS; if(s&&s.pan){ const P=s.pan; s.pan=null;
+      if(P.moved<4&&typeof barnTap==="function"&&smoothRanch()&&barnTap(P.x,P.y)) s.panUntil=0; else s.panUntil=performance.now()+2500; } if(s&&s.rub){ s.rub=null; s.pose="idle"; } };
   cv.addEventListener("pointerup",up); cv.addEventListener("pointercancel",up);
 }
 
@@ -674,10 +700,11 @@ function rLoop(t){
   // with the smooth art on, the yard draws on its own layer underneath and this canvas only carries props and effects
   const smooth=!s.bg&&smoothRanch(); if(smooth) c.clearRect(0,0,cv.width,cv.height);
   else { s.cam=null; const sc=el("r-scene"); if(sc) sc.style.display="none"; const ch=el("r-chibi"); if(ch) ch.style.filter=""; }
+  { const go=el("r-goout"); if(go){ const on=smooth&&s.room==="barn"&&!s.busy; if(go.style.display!==(on?"block":"none")) go.style.display=on?"block":"none"; } }
   if(smooth){   // the side-scrolling ranch: the camera follows the monster, zooms in on small ones, and can be dragged to look around
     const sp=chibiSpec(null,s), hpx=sp?sp.cm/100*RANCH_PX_M:60, Zt=clamp(66/hpx,1,1.8); s.zoom=s.zoom?s.zoom+(Zt-s.zoom)*0.05:Zt;
     const Z=s.zoom, vw=cv.width/Z, wx=s.x+(s.zx||0), panning=s.pan||(s.panUntil&&performance.now()<s.panUntil);
-    const Lt=clamp(panning?s.panL:wx-vw/2,-RW,2*RW-vw); s.camL=s.camL==null||s.camJump?Lt:s.camL+(Lt-s.camL)*(s.pan?1:0.08); s.camJump=false;
+    const lo=s.room?0:-RW, hi=Math.max(lo,(s.room?RW:2*RW)-vw), Lt=clamp(panning?s.panL:wx-vw/2,lo,hi); s.camL=s.camL==null||s.camJump?Lt:s.camL+(Lt-s.camL)*(s.pan?1:0.08); s.camJump=false;
     s.cam={L:s.camL,Z,extra}; }
   const camT=clamp(s.x-cv.width/2,0,room); s.camX=s.camX==null?camT:s.camX+(camT-s.camX)*0.08; const camX=Math.round(clamp(s.camX,0,room));
   c.save(); if(smooth) c.setTransform(s.zoom,0,0,s.zoom,(-s.camL+(s.zx||0))*s.zoom,GROUND+extra-GROUND*s.zoom); else c.translate(-camX,extra); if(s.shake>0){ c.translate(Math.round(rnd(-2,2)),Math.round(rnd(-2,2))); s.shake--; }
@@ -692,7 +719,7 @@ function rLoop(t){
   if(s.visitor){ const v=s.visitor; if(performance.now()>v.until){ v.x+=0.6; if(v.x>RW+40) s.visitor=null; } else v.x=Math.max(RW-22,v.x-0.6);
     if(s.visitor&&!smooth){ if(!v.cv){ v.cv=document.createElement("canvas"); paint(v.cv,v.m.grid,v.m.pal,2); } c.drawImage(v.cv,Math.round(v.x-20),GROUND-40+(Math.floor(t/300)%2)); } }
   if(!s.behind) drawMonster(c,t);
-  if(smooth){ c.save(); c.setTransform(1,0,0,1,0,extra); }
+  if(smooth){ c.save(); c.setTransform(1,0,0,1,0,extra); if(s.room) c.globalAlpha=0; }
   if(s.weather==="Rain"&&!s.bg){ c.fillStyle="rgba(170,200,255,.7)"; for(let i=0;i<40;i++){ const x=(i*29+t/3)%RW, y=(i*47+t/2)%GROUND; c.fillRect(Math.round(x),Math.round(y),1,3);} }
   if(s.weather==="Wind"&&!s.bg){ c.fillStyle="#d9822b"; for(let i=0;i<8;i++){ const x=(i*61+t/8)%RW, y=60+(i*23)%70+Math.sin(t/300+i)*6; c.fillRect(Math.round(x),Math.round(y),2,1);} }
   if(s.weather==="A heatwave"&&!s.bg){ c.fillStyle="rgba(255,180,60,.12)"; c.fillRect(0,0,RW,RH); }

@@ -140,6 +140,7 @@ function chibiYard(s, t, cv) {
   const c = o.getContext('2d'), k = W / cv.width, { L, Z, extra } = s.cam, vw = cv.width, vh = cv.height;
   const season = Math.floor((PLAYER.week % 48) / 12), hr = new Date().getHours(), night = hr < 6 || hr >= 19, dusk = hr >= 17 && hr < 19;
   const G = GROUND + extra;                                           // the ground line in canvas rows
+  if (s.room === 'barn') { barnRoom(c, s, t, k, night || dusk && hr >= 18); return true; }
   // sky and everything far away is drawn in canvas pixels, with parallax
   c.setTransform(k, 0, 0, k, 0, 0);
   const sky = night ? ['#0e1330', '#1b2352', '#2b3570'] : dusk ? ['#e9845f', '#f5ad7c', '#ffd8a8'] : ['#6cb8ee', '#9fd3f6', '#d2edff'];
@@ -355,4 +356,69 @@ function ranchParticles(c, s) {
     }
   }
   c.globalAlpha = 1;
+}
+
+/* ---------- inside the barn: the cozy home, one screen of 240 ranch pixels (5 m) ----------
+   Spots, in yard x: door 4-40 (out), toy shelf 48-92, stove 98-122 (with the Kitchen), wardrobe 126-158,
+   bed 165-238, trophy shelf on the wall above 60-130, window over the bed. BARN_SPOTS is what ranch.js taps against. */
+const BARN_SPOTS = { door: [4, 40], shelf: [48, 92], stove: [98, 122], wardrobe: [126, 158], bed: [165, 238], trophies: [60, 130] };
+function barnRoom(c, s, t, k, night) {
+  const { L, Z, extra } = s.cam, G = GROUND + extra, cv = document.getElementById('r-canvas');
+  c.setTransform(k, 0, 0, k, 0, 0); c.fillStyle = '#b98252'; c.fillRect(0, 0, cv.width, cv.height);
+  c.setTransform(k * Z, 0, 0, k * Z, -L * Z * k, (G - GROUND * Z) * k);
+  const top = GROUND - 200, F = GROUND;
+  // plank wall, beams
+  c.fillStyle = '#c98f5e'; c.fillRect(-10, top, RW + 20, F - top);
+  c.fillStyle = 'rgba(0,0,0,.06)'; for (let x = 0; x < RW; x += 12) c.fillRect(x, top, 1, F - top);
+  c.fillStyle = '#8a5a36'; c.fillRect(-10, F - 128, RW + 20, 7); for (const bx of [0, 120, RW]) c.fillRect(bx - 4, top, 8, F - top);
+  // window over the bed
+  const wx = 176, wy = F - 112, ww = 44, wh = 34;
+  c.fillStyle = night ? '#1b2352' : '#bfe4ff'; c.beginPath(); c.roundRect(wx, wy, ww, wh, 3); c.fill();
+  if (night) { c.fillStyle = '#f4f1d6'; c.beginPath(); c.arc(wx + ww * 0.72, wy + 9, 3.6, 0, 7); c.fill(); c.fillStyle = '#ffffff'; for (let i = 0; i < 6; i++) c.fillRect(wx + (i * 37) % 40 + 2, wy + (i * 19) % 28 + 2, 0.8, 0.8); }
+  else { c.fillStyle = '#86c95f'; c.fillRect(wx, wy + wh * 0.7, ww, wh * 0.3); SC.cloud(c, wx + 14, wy + 11, 3.5); }
+  c.strokeStyle = '#8a5a36'; c.lineWidth = 2.6; c.strokeRect(wx, wy, ww, wh); c.beginPath(); c.moveTo(wx + ww / 2, wy); c.lineTo(wx + ww / 2, wy + wh); c.stroke();
+  for (const [cx, dir] of [[wx - 1.5, 1], [wx + ww + 1.5, -1]]) { c.fillStyle = '#e9707a'; c.beginPath(); c.moveTo(cx, wy - 4); c.quadraticCurveTo(cx + dir * 11, wy + wh * 0.4, cx + dir * 4, wy + wh + 4); c.lineTo(cx, wy + wh + 4); c.closePath(); c.fill(); }
+  // the way out: an open doorway on the left showing the yard
+  c.fillStyle = '#86c95f'; c.beginPath(); c.roundRect(6, F - 100, 32, 100, [4, 4, 0, 0]); c.fill();
+  c.fillStyle = '#bfe4ff'; c.fillRect(6, F - 96, 32, 60); c.fillStyle = '#8a5a36'; c.lineWidth = 3; c.strokeStyle = '#8a5a36'; c.strokeRect(6, F - 100, 32, 100);
+  c.fillStyle = 'rgba(255,255,255,.85)'; c.font = '700 7px system-ui'; c.textAlign = 'center'; c.fillText('Out', 22, F - 104);
+  // trophy shelf: a cup for every tournament won
+  const cups = (s.cups || []).length;
+  c.fillStyle = '#8a5a36'; c.fillRect(60, F - 92, 70, 3);
+  for (let i = 0; i < Math.min(6, cups); i++) { const tx = 66 + i * 11.5, ty = F - 92, col = i === 0 ? '#ffd23f' : i % 2 ? '#d9dde4' : '#e09a5a';
+    SC.depth(c, () => { c.beginPath(); c.moveTo(tx - 4, ty - 11); c.lineTo(tx + 4, ty - 11); c.quadraticCurveTo(tx + 3.5, ty - 5, tx, ty - 4.5); c.quadraticCurveTo(tx - 3.5, ty - 5, tx - 4, ty - 11); c.closePath(); }, col, 1, 0.3);
+    c.fillStyle = col; c.fillRect(tx - 1, ty - 4.5, 2, 3); c.fillRect(tx - 2.6, ty - 1.6, 5.2, 1.6); }
+  if (!cups) { c.fillStyle = 'rgba(80,50,30,.35)'; c.font = '600 6px system-ui'; c.textAlign = 'center'; c.fillText('Cups go here', 95, F - 96); }
+  // floor and rug
+  c.fillStyle = '#a8774a'; c.fillRect(-10, F, RW + 20, 60); c.fillStyle = 'rgba(0,0,0,.08)'; for (let x = 0; x < RW; x += 18) c.fillRect(x, F, 1, 60); c.fillStyle = 'rgba(0,0,0,.18)'; c.fillRect(-10, F, RW + 20, 1.5);
+  c.fillStyle = '#5b8fd8'; c.beginPath(); c.ellipse(118, F + 6, 52, 7, 0, 0, 7); c.fill(); c.strokeStyle = '#f2ead6'; c.lineWidth = 1.2; c.beginPath(); c.ellipse(118, F + 6, 44, 5, 0, 0, 7); c.stroke();
+  // toy shelf with balls and a plush
+  const sx = 70;
+  SC.depth(c, () => { c.beginPath(); c.roundRect(sx - 21, F - 46, 42, 46, 2.5); }, '#8a5a36', 1.5, 0.3);
+  c.fillStyle = '#6a4428'; c.fillRect(sx - 18, F - 24, 36, 2.5);
+  for (const [dx, dy, col, r] of [[-9, -29, '#ffd23f', 4.6], [3, -28, '#4aa3ff', 3.8], [-8, -5, '#e8453c', 4.6]]) SC.depth(c, () => { c.beginPath(); c.arc(sx + dx, F + dy, r, 0, 7); }, col, 0.8, 0.3);
+  SC.depth(c, () => { c.beginPath(); c.ellipse(sx + 8, F - 6, 5.5, 5.5, 0, 0, 7); c.ellipse(sx + 4, F - 12, 2, 2.4, 0, 0, 7); c.ellipse(sx + 12, F - 12, 2, 2.4, 0, 0, 7); }, '#c8a2e8', 0.8, 0.3);
+  // stove corner, once the Kitchen is built
+  if (typeof has === 'function' && has('Kitchen')) { const kx = 110;
+    SC.depth(c, () => { c.beginPath(); c.roundRect(kx - 11, F - 28, 22, 28, 2); }, '#d9dde4', 1.5, 0.3);
+    c.fillStyle = '#3a3f4f'; c.beginPath(); c.roundRect(kx - 8, F - 16, 16, 12, 2); c.fill(); c.fillStyle = '#ff8a3d'; c.globalAlpha = 0.6 + 0.3 * Math.sin(t / 200); c.fillRect(kx - 6, F - 8, 12, 2); c.globalAlpha = 1;
+    c.fillStyle = '#5a5f6f'; c.beginPath(); c.ellipse(kx - 4, F - 29, 4, 1.4, 0, 0, 7); c.fill(); c.fillStyle = '#c94a3a'; c.beginPath(); c.roundRect(kx - 8, F - 36, 9, 6, 2); c.fill(); }
+  // wardrobe, with whatever it wears hanging on a peg
+  const ax = 142; SC.depth(c, () => { c.beginPath(); c.roundRect(ax - 16, F - 56, 32, 56, 2.5); }, '#b07a4a', 1.5, 0.3);
+  c.strokeStyle = 'rgba(0,0,0,.2)'; c.lineWidth = 0.8; c.beginPath(); c.moveTo(ax, F - 54); c.lineTo(ax, F - 2); c.stroke();
+  c.fillStyle = '#e8c070'; c.beginPath(); c.arc(ax - 2.5, F - 28, 1.2, 0, 7); c.arc(ax + 2.5, F - 28, 1.2, 0, 7); c.fill();
+  c.fillStyle = '#e8453c'; c.beginPath(); c.ellipse(ax, F - 57, 7, 4, 0, Math.PI, 0); c.fill(); c.fillRect(ax, F - 58, 9, 1.6);
+  // bed: a hay nest with a quilt, bigger once the barn is upgraded
+  const big = typeof has === 'function' && has('Better hut'), bx = 202, bw = big ? 40 : 34;
+  SC.depth(c, () => { c.beginPath(); c.ellipse(bx, F - 4, bw, 9, 0, 0, 7); }, '#e2bf62', 2, 0.25);
+  SC.depth(c, () => { c.beginPath(); c.ellipse(bx, F - 7, bw - 7, 6, 0, 0, 7); }, big ? '#9fc8f2' : '#f2b6c8', 1.5, 0.25);
+  if (big) { c.fillStyle = 'rgba(255,255,255,.5)'; for (let i = -3; i <= 3; i++) { c.beginPath(); c.arc(bx + i * 8, F - 7, 1.2, 0, 7); c.fill(); } }
+  c.fillStyle = '#fff6f8'; c.beginPath(); c.ellipse(bx - bw + 10, F - 10, 8, 4, -0.2, 0, 7); c.fill();
+  // lamp on the wall
+  const lx = 166; c.fillStyle = '#6a4428'; c.fillRect(lx - 1, F - 86, 2, 8); c.fillStyle = '#ffe3a3'; c.beginPath(); c.moveTo(lx - 6, F - 78); c.lineTo(lx + 6, F - 78); c.lineTo(lx + 4, F - 86); c.lineTo(lx - 4, F - 86); c.closePath(); c.fill();
+  if (night) { c.setTransform(k, 0, 0, k, 0, 0); c.fillStyle = 'rgba(16,20,60,.36)'; c.fillRect(0, 0, cv.width, cv.height);
+    c.setTransform(k * Z, 0, 0, k * Z, -L * Z * k, (G - GROUND * Z) * k);
+    const g = c.createRadialGradient(lx, F - 80, 2, lx, F - 80, 110); g.addColorStop(0, 'rgba(255,214,120,.5)'); g.addColorStop(1, 'rgba(255,214,120,0)'); c.fillStyle = g; c.fillRect(lx - 110, F - 190, 220, 220);
+    c.fillStyle = '#ffe3a3'; c.beginPath(); c.moveTo(lx - 6, F - 78); c.lineTo(lx + 6, F - 78); c.lineTo(lx + 4, F - 86); c.lineTo(lx - 4, F - 86); c.closePath(); c.fill(); }
+  const ch = document.getElementById('r-chibi'); if (ch) ch.style.filter = night ? 'brightness(.92)' : '';
 }
