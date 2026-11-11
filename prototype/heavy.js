@@ -1,6 +1,7 @@
 /* Heavy drill scenes. Each one swaps the yard for its own place, set by RS.bg, and uses its own props. Needs ranch.js. */
 function drawBg(c,t){
   const s=RS, bg=s.bg, off=s.bgOff||0;
+  if(bg&&bg.startsWith("reg:")&&typeof drawRegion==="function"){ drawRegion(c,t,bg.slice(4)); return; }
   const sky=bg==="library"?["#3a2a22","#3a2a22","#3a2a22"]:bg==="quarry"?["#9fb6c8","#b9cbd8","#d3dee6"]:["#6fbbef","#97d0f5","#c4e7ff"];
   for(let i=0;i<3;i++){ c.fillStyle=sky[i]; c.fillRect(0,i*30,RW,i===2?100:30); }
   if(bg==="road"){
@@ -40,6 +41,7 @@ function drawBg(c,t){
   }
 }
 function drawProp2(c,p,t,front){
+  if(typeof drawProp3==="function"&&drawProp3(c,p,t,front)) return true;
   const X=Math.round(p.x), Y=Math.round(p.y);
   if(p.k==="ribbon"){ if(!front) return true; c.fillStyle="#666"; c.fillRect(X-1,Y-30,2,30); c.fillRect(X+26,Y-30,2,30); if(!p.broken){ c.fillStyle="#e2483f"; c.fillRect(X,Y-22,27,2);} else { c.fillStyle="#e2483f"; c.fillRect(X,Y-22,4,6); c.fillRect(X+23,Y-22,4,6);} return true; }
   if(p.k==="rock"){ if(front) return true; const r=p.r; for(let j=-r;j<=r;j++){ const w=Math.round(Math.sqrt(r*r-j*j)*(p.half?0.5:1)); c.fillStyle=j<-r/3?"#a8a29a":"#7f7a73"; c.fillRect(X-w,Y-r+j,w*2,1);} return true; }

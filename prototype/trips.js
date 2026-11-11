@@ -45,31 +45,42 @@ async function runTrip(reg){
   const s=RS, [main,second]=TRIP_STATS[reg.n], weeks=[], learned=[];
   const max=hearts()>=4?2:1, base=FAMILY[s.m.family].base, rp=k=>RANK_PTS[rankOf(base[k])];
   await scene(async()=>{
-    say(`Off to ${reg.n} for 4 weeks.`); s.pose="happy"; await hop(12,380); await walkTo(-30,60,"walk"); s.hidden=true; await rwait(500);
+    say(`Off to ${reg.n} for 4 weeks.`); s.pose="happy"; await hop(12,380); await walkTo(RW+30,60,"walk");
+    s.bg="reg:"+reg.el; s.x=-30;
+    await stageCard(reg.n,`Four weeks of training here. ${STATS[main]} first, ${STATS[second]} second.`);
     for(let w=0;w<4;w++){
       const age=ageMult(s);
       const ok=Math.random()*100<Math.min(95,60+8*hearts()-(s.fatigue>50?15:0));
-      const a=Math.max(1,Math.round(rp(main)*age)), b=Math.max(1,Math.round(rp(second)/2*age));
+      const a=Math.max(1,Math.round(rp(main)*age*(ok?1:0.5))), b=Math.max(1,Math.round(rp(second)/2*age*(ok?1:0.5)));
+      s.tripLabel=`${reg.n} · Week ${w+1} of 4`; drawUI(); banner(`Week ${w+1}`,"#fff"); await rwait(700); banner("");
+      await playTask("drill",ok);
       s.tp[main]+=a; s.tp[second]+=b; s.fatigue+=16; s.stress+=8;
-      let line=`Week ${w+1}: ${STATS[main]} +${a}, ${STATS[second]} +${b}.`;
+      drawUI(); popStat(main,"+"+a); popStat(second,"+"+b);
+      let line=`Week ${w+1}: ${STATS[main]} +${a}, ${STATS[second]} +${b}.${ok?"":" A rough week."}`;
+      await stageResult(ok,line);
       if(ok){
         s.uses=s.uses||{}; for(const n of knownSkills(s)) if(SKILLS[n].el===reg.el) s.uses[n]=(s.uses[n]||0)+5;
         if(learned.length<max){
           const opts=tripOptions(s,reg).filter(x=>x.chainOk&&x.score>=x.need);
-          if(opts.length){ const x=opts[Math.floor(Math.random()*opts.length)], p=Math.min(50,25+Math.floor((x.score-x.need)/4));
-            if(Math.random()*100<p){ learned.push(x.n); s.skillsKnown=(s.skillsKnown||[]).concat(x.n); bookMark(s,x.n,"learned"); line+=` It learned ${x.n}!`; } }
+          if(opts.length){ const x=opts[Math.floor(Math.random()*opts.length)], p=Math.min(50,25+Math.floor((x.score-x.need)/4)), got=Math.random()*100<p;
+            banner("Special training","#ffd23f"); say(`It's trying ${x.n}.`); await rwait(800); banner("");
+            for(let k=0;k<3;k++){ s.pose="effort"; await hop(8,240); spark(s.x+14,headY()+6,k===2&&got?"sparkle":"dust",k===2&&got?8:3); s.pose="idle"; await rwait(260); }
+            if(got){ learned.push(x.n); s.skillsKnown=(s.skillsKnown||[]).concat(x.n); bookMark(s,x.n,"learned"); line+=` It learned ${x.n}!`; banner(`Learned ${x.n}!`,"#7dff9a"); s.pose="happy"; await rwait(1300); banner(""); }
+            else { line+=` It tried ${x.n} but didn't get it yet.`; banner("Not yet","#ff8a8a"); s.pose="sad"; await rwait(1000); banner(""); }
+          }
         }
-      } else line+=" A rough week, nothing new.";
+      }
       weeks.push(line);
       for(const k of [main,second]) for(const [nm,need] of STAT_SKILLS[k]) if(s.tp[k]>=need&&!s.learned.includes(nm)){ s.learned.push(nm); weeks.push(`It learned the stat skill ${nm}.`); }
     }
+    s.props=s.props.filter(p=>p.k==="bowl"); await walkTo(RW+30,60,"walk"); s.bg=null; s.tripLabel=null;
     s.stageRegions=s.stageRegions||{}; s.stageRegions[reg.n]=(s.stageRegions[reg.n]||0)+4;
     fixEquip(s); clampAll();
-    s.x=-30; s.hidden=false; await walkTo(140,55,"walk"); s.pose=learned.length?"happy":"idle"; if(learned.length) spark(s.x,headY()-6,"sparkle",10); await rwait(600);
+    s.x=-30; await walkTo(140,55,"walk"); s.pose=learned.length?"happy":"idle"; if(learned.length) spark(s.x,headY()-6,"sparkle",10); await rwait(600);
     await endWeek(4,`Back from ${reg.n}.`);
   });
-  panel(`<div style="flex-basis:100%;font-weight:700">Trip to ${reg.n}</div>`+weeks.map(t=>`<div style="flex-basis:100%;font-size:13px">${t}</div>`).join("")+
-    `<div style="flex-basis:100%;font-size:13px;opacity:.85">${learned.length?"It learned "+learned.join(" and ")+".":"It didn't learn a new skill this time."}</div><button class="rb" id="tr-ok">Done</button>`);
+  panel(`<div class="full lab-head"><b>Trip to ${reg.n}</b><button class="small" id="tr-ok">Done</button></div><div class="full trip-log">`+weeks.map(t=>`<div class="trip-row ${/rough/.test(t)?"no":"ok"}"><i>${/rough/.test(t)?"✕":"✓"}</i><span>${t}</span></div>`).join("")+
+    `</div><div class="full lab-info">${learned.length?"It learned "+learned.join(" and ")+".":"No new skill this time."}</div>`);
   el("tr-ok").onclick=()=>menu("Out"); saveGame();
 }
 

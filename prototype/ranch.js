@@ -197,7 +197,7 @@ function injectRanch(){
 function drawUI(){
   const s=RS, m=s.m;
   el("r-name").textContent=displayName(s);
-  el("r-date").textContent=dateShort();
+  el("r-date").textContent=s.tripLabel||dateShort();
   const h=hearts(); el("r-hearts").textContent="♥".repeat(h)+"♡".repeat(5-h);
   el("r-shape").textContent=shapeOf(s.weight)[0];
   el("r-coins").textContent=PLAYER.bits+" bits";
@@ -275,7 +275,7 @@ async function scene(fn){
   s.busy=true; s.cur=++RACT; s.skip=s.noScenes; s.behind=false; s.hidden=false; s.upside=false; s.rub=null;
   panel(""); el("r-menu").querySelectorAll(".rb").forEach(b=>b.classList.remove("on")); drawUI(); el("r-skip").style.display="block";
   try{ await fn(); }catch(e){ if(e!==RSTOP) console.error(e); }
-  s.busy=false; s.skip=false; s.bg=null; s.props=s.props.filter(p=>p.k==="bowl"); el("r-skip").style.display="none"; s.pose="idle"; s.jy=0; s.bx=0; s.upside=false; s.ghosts=false;
+  s.busy=false; s.skip=false; s.bg=null; s.tripLabel=null; s.props=s.props.filter(p=>p.k==="bowl"); el("r-skip").style.display="none"; s.pose="idle"; s.jy=0; s.bx=0; s.upside=false; s.ghosts=false;
   drawUI(); if(s.lastMenu&&!s.dead) menu(s.lastMenu); saveGame();
 }
 function walkTo(x,speed=45,pose="walk",id=RS.cur){
@@ -340,18 +340,33 @@ async function runDrill(i){
     await endWeek(1, (s.injured?"It pushed too hard and got hurt. That's 2 weeks off its prime, and it needs a rest or medicine.":{great:"That was its best yet.",success:"Solid work.",fail:"It'll get it next time.",slack:"It wandered off halfway. It's getting a bit spoiled."}[res]));
   });
 }
+/* How you react after a drill, the Monster Rancher 2 way: praise is for a great result, scolding is for when it ignored
+   the drill, and after a fail you can console it or leave it. An ordinary success gets no prompt.
+   Numbers follow MR2: praising a great builds affection and eases stress; holding back hurts it. Scolding a slacker builds
+   respect and it slacks less; letting it go spoils it and it slacks more. Consoling a fail eases stress. */
+const REACT={
+  great:{q:"A great result. Praise it?",yes:["Praise","spoil",3,"fear",2,"stress",-5],no:["Say nothing","spoil",-7,"fear",3,"stress",3]},
+  slack:{q:"It ignored the drill. Scold it?",yes:["Scold","fear",5,"spoil",-2,"stress",3],no:["Let it go","spoil",3,"fear",-2,"stress",0]},
+  fail:{q:"It failed. Console it?",yes:["Console","spoil",3,"fear",0,"stress",-2],no:["Leave it","spoil",0,"fear",1,"stress",1]},
+};
 function praiseOrScold(res){
+  const R=REACT[res]; if(!R) return Promise.resolve();
   return new Promise(done=>{
-    panel(`<div style="flex-basis:100%;font-size:13px">How do you react?</div><button class="rb" id="r-pr">Praise</button><button class="rb" id="r-sc">Scold</button>`);
+    panel(`<div class="full sec">${R.q}</div><button class="rb" id="r-pr">${R.yes[0]}</button><button class="rb" id="r-sc">${R.no[0]}</button>`);
     el("r-skip").style.display="none";
-    const go=async praise=>{ panel(""); const s=RS; s.skip=s.noScenes; el("r-skip").style.display="block";
-      const T={great:[[3,0,0],[0,6,8]],success:[[2,0,0],[0,3,4]],fail:[[3,0,-3],[0,4,5]],slack:[[3,0,0],[-2,5,3]]}[res][praise?0:1];
-      s.spoil+=T[0]; s.fear+=T[1]; s.stress+=T[2]; if(res==="slack"&&praise) s.slackBonus=(s.slackBonus||0)+0.05;
+    const go=async yes=>{ panel(""); const s=RS; s.skip=s.noScenes; el("r-skip").style.display="block";
+      const T=yes?R.yes:R.no; for(let k=1;k<T.length;k+=2) s[T[k]]+=T[k+1];
+      if(res==="slack") s.slackBonus=Math.max(-0.1,(s.slackBonus||0)+(yes?-0.05:0.05));
       try{
-        if(praise){ s.pose="happy"; spark(s.x,headY()-4,"heart",2); await rwait(900); }
-        else{ s.pose="sad"; await rwait(1000); }
+        if(res==="great"&&yes){ s.pose="happy"; spark(s.x,headY()-4,"heart",3); await hop(10,300); say("It beams. It knows that was good work."); }
+        else if(res==="great"){ s.pose="sad"; say("It looks up at you, waiting for something."); }
+        else if(res==="slack"&&yes){ s.pose="sad"; spark(s.x,headY()-6,"sweat",2); say("It hangs its head. It'll think twice next time."); }
+        else if(res==="slack"){ s.pose="happy"; say("It trots off, pleased with itself."); }
+        else if(yes){ s.pose="happy"; spark(s.x,headY()-4,"heart",1); say("It perks up a little."); }
+        else { s.pose="tired"; say("It sits with it for a while."); }
+        await rwait(1100);
       }catch(e){}
-      s.pose="idle"; done(); };
+      clampAll(); s.pose="idle"; done(); };
     el("r-pr").onclick=()=>go(true); el("r-sc").onclick=()=>go(false);
   });
 }
@@ -639,7 +654,7 @@ function rLoop(t){
   // the scene keeps its width and gets taller or shorter with the room it has: extra height is sky, less height trims the sky
   // the scene fills its box: a short box trims sky, a tall box zooms in and follows the monster
   const vr=el("r-view").getBoundingClientRect(), asp=vr.width>0&&vr.height>0?vr.width/vr.height:RW/RH;
-  const wantH=Math.max(100,Math.min(RH+40,Math.round(RW/asp))), wantW=RW;
+  const tall=RW/asp>RH+40, wantH=tall?RH+24:Math.max(100,Math.round(RW/asp)), wantW=tall?Math.min(RW,Math.round(wantH*asp)):RW;
   if(cv.height!==wantH) cv.height=wantH; if(cv.width!==wantW) cv.width=wantW;
   const c=cv.getContext("2d"); c.imageSmoothingEnabled=false;
   const k=rk(), extra=cv.height-RH, room=RW-cv.width; s.vExtra=extra;

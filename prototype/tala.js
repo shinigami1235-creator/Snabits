@@ -14,7 +14,8 @@ const tutDone=()=>!!(PLAYER&&PLAYER.tutorialDone);
 const outLocked=()=>!tutDone()&&PLAYER.week<4;
 const tripsLocked=()=>!tutDone()&&hearts()<1;
 function checkTips(){
-  const s=RS; if(!s||!s.id||tutDone()||s.busy) return;
+  const s=RS; if(!s||!s.id) return;
+  if(s.busy||tutDone()){ const b=el("r-tip"); if(b) b.style.display="none"; el("r-say").style.display=""; return; }
   PLAYER.tips=PLAYER.tips||{};
   const t=TIPS.find(([id,cond])=>!PLAYER.tips[id]&&cond(s));
   let box=el("r-tip");

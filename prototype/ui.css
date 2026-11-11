@@ -299,3 +299,45 @@ table.rr td.pt{color:var(--gold);font-weight:700}
 .v-podium i{font-style:normal;font-weight:700;color:var(--gold)}
 .v-podium em{font-style:normal;color:var(--gold)}
 .v-up{font:700 20px var(--pix);color:var(--gold);text-align:center;padding:6px 0}
+
+/* trip log */
+.trip-log{display:flex;flex-direction:column;gap:6px}
+.trip-row{display:grid;grid-template-columns:22px 1fr;gap:8px;align-items:start;background:var(--ink);border-radius:6px;padding:7px 10px;font-size:14px;color:#d6d2c4}
+.trip-row i{font:700 15px var(--pix);font-style:normal;text-align:center}.trip-row.ok i{color:var(--mint)}.trip-row.no i{color:var(--coral)}
+.trip-row b{font:700 14px var(--pix);color:var(--text);margin-right:4px}
+
+/* ---------- wide screens (laptops): the same game laid out across the width ---------- */
+@media (min-width:860px) and (min-aspect-ratio:1/1){
+  html{font-size:16px}
+  /* camera: the sheet and controls sit in a centred column */
+  #card,#bars{left:50%;right:auto;width:480px;transform:translateX(-50%)}
+  #bottom{left:50%;right:auto;width:480px;transform:translateX(-50%)}
+  /* ranch: scene on the left, everything you act on to the right */
+  #ranch{display:none;grid-template-columns:minmax(0,1.5fr) minmax(380px,1fr);grid-template-rows:auto auto auto minmax(0,1fr) auto auto;
+    grid-template-areas:"top top" "view sub" "view stats" "view side" "say menu" "nums nums";column-gap:18px;row-gap:10px;padding:18px 22px 18px;max-width:1500px;margin:0 auto}
+  #ranch[style*="flex"]{display:grid!important}
+  #r-top{grid-area:top}#r-sub{grid-area:sub}#r-stats{grid-area:stats}#r-nums{grid-area:nums}
+  #ranch>#r-view,#ranch.menu-open>#r-view{grid-area:view;height:auto;max-height:none;min-height:0}
+  #r-say,.tipbox{grid-area:say;margin-top:0}
+  #r-panel,#r-week{grid-area:side;align-self:start;max-height:100%}
+  #ranch.menu-open #r-say{display:block}
+  #r-learned{display:none}
+  #r-menu{grid-area:menu;margin:0;padding:0;border-top:0;background:none}
+  #r-frame canvas{border-radius:12px}
+  /* stadium: stage on the left, the card on the right */
+  #venue{flex-direction:row}
+  #v-stage{flex:1 1 auto;min-height:0;border-bottom:0;border-right:3px solid #0b0c12}
+  #v-body{flex:0 0 440px;height:100%;padding:18px}
+  /* battle: the fight on the left, log and moves on the right */
+  #battle{padding:18px 22px}
+  #b-fight{display:none;grid-template-columns:minmax(0,1.5fr) minmax(360px,1fr);grid-template-rows:auto minmax(0,1fr) auto;
+    grid-template-areas:"foe log" "arena btns" "me btns";gap:12px;max-width:1500px;margin:0 auto;width:100%}
+  #b-fight[style*="flex"]{display:grid!important}
+  #b-fight>:nth-child(1){grid-area:foe}#arena{grid-area:arena;height:auto!important;min-height:300px}
+  #b-fight>:nth-child(3){grid-area:me}
+  #b-log{grid-area:log;max-height:none}#b-btns{grid-area:btns;align-content:start;grid-auto-rows:minmax(84px,auto)}#b-result{grid-area:btns;align-self:start}
+  #b-fight.done #b-log{max-height:none}
+  #loadout{max-width:640px;width:100%;margin:0 auto}
+  /* start screen */
+  #msg>div{max-width:420px}
+}

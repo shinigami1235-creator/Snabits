@@ -1,5 +1,6 @@
-/* Missions: a board of 3 a week, real-time trips through a region, stops on the way, finds, bosses and an auto-fight at the end.
-   Needs game.js, ranch.js and battle-ui.js. */
+/* Missions: a board of 3 a week. You watch the trip the way Monster Rancher 2 shows errantry: stop by stop, the monster
+   tries a task and succeeds or fails, then a wild monster or the region's boss waits at the end and it fights on its habits.
+   The trip costs game weeks. Needs game.js, ranch.js, battle-ui.js and errantry.js. */
 const REGIONS=[
   {n:"Cinder Peak",el:"Blaze",st:1,boss:"Ember Warden"},{n:"Saffron Dojo",el:"Brawl",st:0,boss:"Old Master"},
   {n:"Static Plains",el:"Spark",st:5,boss:"Storm Herder"},{n:"Tanglewood",el:"Wild",st:0,boss:"Briar King"},
@@ -20,52 +21,42 @@ function board(s){
 function openBoard(){
   const s=RS;
   if(s.sick||s.injured){ say("It isn't well enough to go out. Rest it or give it medicine first."); return; }
-  panel(`<div class="full lab-head"><b>Missions</b><button class="small" id="r-bback">Back</button></div><div class="full lab-info">They run in real time. The weeks pass when your monster returns.</div>`+
+  panel(`<div class="full lab-head"><b>Missions</b><button class="small" id="r-bback">Back</button></div><div class="full lab-info">You watch each stop. The weeks pass when your monster gets home.</div>`+
     board(s).map((b,i)=>{ const K=KINDS[b.kind], reg=REGIONS.find(x=>x.n===b.reg);
-      return `<button class="rb mis" data-b="${i}"><span class="mis-t">${b.kind}<span class="elc" style="${chipStyle(ELC(reg.el))}">${reg.el}</span></span><span class="mis-r">${b.reg}</span><small>${K.h}h · ${K.weeks} wk · Lv ${b.level}</small></button>`; }).join(""));
+      return `<button class="rb mis" data-b="${i}"><span class="mis-t">${b.kind}<span class="elc" style="${chipStyle(ELC(reg.el))}">${reg.el}</span></span><span class="mis-r">${b.reg}</span><small>${K.stops} stops · ${K.weeks} wk · Lv ${b.level}</small></button>`; }).join(""));
   const bs=board(s);
   el("r-panel").querySelectorAll("[data-b]").forEach(x=>x.onclick=()=>depart(bs[+x.dataset.b]));
   el("r-bback").onclick=()=>menu("Out");
 }
-async function depart(b){
-  await scene(async()=>{ const s=RS, K=KINDS[b.kind];
-    say(`Off to ${b.reg} for a ${b.kind}.`); s.pose="happy"; await hop(12,380);
-    await walkTo(-30,60,"walk"); s.hidden=true;
-    s.away={...b,start:Date.now(),ms:K.h*3600e3};
-  });
-  s_after();
-}
-function s_after(){ RS.x=150; drawUI(); menu("Out"); saveGame(); }
-function missionStatus(){
-  const s=RS, a=s.away, left=Math.max(0,a.start+a.ms-Date.now());
-  const mins=Math.ceil(left/60000), txt=mins>=60?`${Math.floor(mins/60)} h ${mins%60} min`:`${mins} min`;
-  panel(`<div style="flex-basis:100%;font-size:13px">Out on a ${a.kind} at ${a.reg}. Back in ${txt}.</div><button class="rb" id="r-now">Bring it back now<small>Prototype only, to test without waiting</small></button>`);
-  el("r-now").onclick=()=>{ a.ms=0; checkReturn(true); };
-}
-function checkReturn(force){
-  const s=RS; if(!s||!s.away) { if(s) s.hidden=false; return; }
-  s.hidden=true;
-  if(!force&&Date.now()<s.away.start+s.away.ms) return;
-  if(s.busy) return;
-  returnFromMission();
-}
+function depart(b){ runMission(b); }
+function missionStatus(){ menu("Out"); }
+function checkReturn(){ const s=RS; if(s&&s.away){ s.away=null; s.hidden=false; } }
 
 /* Works out the whole trip from the mission's seed, so the end fight can be watched again exactly. */
 function resolveMission(s,a){
   const R=rng(a.seed), K=KINDS[a.kind], reg=REGIONS.find(x=>x.n===a.reg), grade=s.grade;
   const stops=[], finds=[], learnt=[]; let fat=0, bits=0, exp=0, injured=false;
-  const boost=a.kind==="Hunt"?2:1;
+  const boost=a.kind==="Hunt"?2:1, gap=a.level-s.level;
   for(let i=0;i<K.stops;i++){
-    const r=R()*100;
-    if(r<40){ const f=rollFind(R,boost); if(f.bits){ bits+=f.bits; stops.push(`Found ${f.bits} bits.`); } else { finds.push(f.item); stops.push(`Found ${/^[AEIOU]/.test(f.item)?"an":"a"} ${f.item}.`); } }
-    else if(r<60){ const o=gradedOpponent(grade,Math.max(1,a.level-1),R,reg.el), me=fightMon(s);
+    const r=R()*100, task=r<24?"forage":r<36?"climb":r<48?"river":r<58?"tracks":r<66?"haul":r<84?"fight":r<91?"rest":"drill";
+    const st={task,ok:true,text:""};
+    if(task==="fight"){
+      const o=gradedOpponent(grade,Math.max(1,a.level-1),R,reg.el);
       const f=simFight(playerFighter(s),makeFighter(o.fm,o.skills,o.level),R,s); learnt.push(...afterFight(s,f.p[0],true));
-      if(f.winner===0){ const e=2+o.level; exp+=e; let t=`Beat a wild ${o.m.name}.`; if(R()<0.3){ const fd=rollFind(R,boost); if(fd.item){ finds.push(fd.item); t+=` It dropped ${/^[AEIOU]/.test(fd.item)?"an":"a"} ${fd.item}.`; } else bits+=fd.bits; } stops.push(t); }
-      else { fat+=10; stops.push(`Lost to a wild ${o.m.name} and limped on.`); } }
-    else if(r<75){ s.tp[reg.st]+=2; stops.push(`Trained at a quiet spot. ${STATS[reg.st]} +2.`); }
-    else if(r<85){ fat-=5; stops.push("Rested by a stream."); }
-    else if(r<95){ fat+=10; if(R()*100<K.inj){ injured=true; stops.push("Took a bad fall and got hurt."); } else stops.push("Got lost for a while."); }
-    else stops.push(R()<0.5?"Saw strange tracks. Something rare lives around here.":"Heard about a photo that hatches something special at dusk.");
+      st.ok=f.winner===0; st.foe=o;
+      if(st.ok){ const e=2+o.level; exp+=e; st.text=`Beat a wild ${o.m.name}. ${e} exp.`; if(R()<0.3){ const fd=rollFind(R,boost); if(fd.item){ finds.push(fd.item); st.text+=` It dropped ${/^[AEIOU]/.test(fd.item)?"an":"a"} ${fd.item}.`; } else { bits+=fd.bits; st.text+=` It dropped ${fd.bits} bits.`; } } }
+      else { fat+=10; st.text=`Lost to a wild ${o.m.name} and limped on.`; }
+    } else if(task==="rest"){ fat-=6; st.text="Rested by the fire."; }
+    else if(task==="drill"){ st.ok=R()<taskChance(s,reg.st,gap); const g=st.ok?2:1; s.tp[reg.st]+=g; st.text=`Trained on its own. ${STATS[reg.st]} +${g}.`; }
+    else {
+      st.ok=R()<taskChance(s,TASKS[task].stat,gap);
+      if(task==="forage"){ if(st.ok){ const fd=rollFind(R,boost); if(fd.item){ finds.push(fd.item); st.text=`Found ${/^[AEIOU]/.test(fd.item)?"an":"a"} ${fd.item}.`; } else { bits+=fd.bits; st.text=`Found ${fd.bits} bits.`; } } else st.text="Searched the bushes and came up empty."; }
+      if(task==="climb"){ if(st.ok){ exp+=3; s.tp[1]+=1; st.text="Climbed the ledge. Power +1, 3 exp."; } else { fat+=8; if(R()*100<K.inj*2){ injured=true; st.text="Slipped off the ledge and got hurt."; } else st.text="Slipped off the ledge."; } }
+      if(task==="river"){ if(st.ok){ fat-=3; st.text="Hopped the stones across. A shortcut."; } else { fat+=8; st.text="Fell in and got washed back."; } }
+      if(task==="tracks"){ if(st.ok){ s.tp[reg.st]+=2; st.text=`Followed the tracks to a quiet training spot. ${STATS[reg.st]} +2.`; } else { fat+=5; st.text="Lost the trail."; } }
+      if(task==="haul"){ if(st.ok){ const b2=Math.round(10+R()*30); bits+=b2; st.text=`Hauled a crate for a trader. ${b2} bits.`; } else { fat+=6; st.text="Couldn't shift the crate."; } }
+    }
+    stops.push(st);
   }
   const boss=R()<K.boss;
   const endLv=a.level+(boss?2:K.up), endSeed=Math.floor(R()*1e9);
@@ -79,39 +70,57 @@ function endFoe(s,res){
     o.fm={...o.fm,grid:scale2x(G),name:res.boss}; }
   return o;
 }
-async function returnFromMission(){
-  const s=RS, a=s.away, K=KINDS[a.kind];
-  const res=resolveMission(s,a), foe=endFoe(s,res), snap=fightSnapshot(s);
-  const me=fightMon(snap), fr=rng(res.endSeed+1);
-  const f=new Fight(playerFighter(snap),makeFighter(foe.fm,foe.skills,foe.level),fr);
-  if(foe.boss){ const b=f.p[1]; b.maxhp=Math.round(b.maxhp*1.25); b.hp=b.maxhp; b.name=foe.boss; }
+async function runMission(b){
+  const s=RS, K=KINDS[b.kind], reg=REGIONS.find(x=>x.n===b.reg);
+  if(s.busy) return;
+  const res=resolveMission(s,b), foe=endFoe(s,res), snap=fightSnapshot(s);
+  // the end fight, worked out now so the scene can show it and it can be watched again
+  const f=new Fight(playerFighter(snap),makeFighter(foe.fm,foe.skills,foe.level),rng(res.endSeed+1));
+  if(foe.boss){ const bb=f.p[1]; bb.maxhp=Math.round(bb.maxhp*1.25); bb.hp=bb.maxhp; bb.name=foe.boss; }
   while(!f.over&&f.turn<15) f.play(habitPick(f,0,snap),f.aiPick(f.p[1],f.p[0]));
   if(!f.over) judge(f,true);
   const won=f.winner===0;
   res.learnt.push(...afterFight(s,f.p[0],true));
-  if(won){ const e=4+2*foe.level; res.exp+=e;
+  if(won){ res.exp+=4+2*foe.level;
     if(foe.boss){ const R=rng(res.endSeed+2); let fd=rollFind(R,10); while(!fd.item) fd=rollFind(R,10); res.finds.push(fd.item);
       if(R()<0.05){ const vr=VERY_RARE[Math.floor(R()*2)]; res.finds.push(vr); } } }
   else res.fat+=10;
   res.exp+=K.exp[0]+K.exp[1]*s.level; res.bits+=Math.round(K.bits*(1+s.level/10));
-  s.away=null; s.hidden=false; s.stageRegions=s.stageRegions||{}; s.stageRegions[a.reg]=(s.stageRegions[a.reg]||0)+K.weeks;
-  // apply
+  res.snap=snap;
+  await scene(async()=>{
+    say(`Off to ${b.reg} for a ${b.kind}.`); s.pose="happy"; await hop(12,380); await walkTo(RW+30,60,"walk");
+    s.bg="reg:"+reg.el; s.x=-30;
+    await stageCard(b.reg,`${b.kind}: ${K.stops} stops, then the way home.`);
+    for(let i=0;i<res.stops.length;i++){
+      const st=res.stops[i]; s.tripLabel=`${b.reg} · Stop ${i+1} of ${res.stops.length}`; drawUI();
+      banner(`Stop ${i+1} of ${res.stops.length} · ${TASKS[st.task].name}`,"#fff"); await rwait(700); banner("");
+      await playTask(st.task,st.ok,{foe:st.foe});
+      if(st.task==="rest") { say(st.text); await rwait(900); } else await stageResult(st.ok,st.text);
+      if(st.task!=="rest") drawUI();
+    }
+    s.props=s.props.filter(p=>p.k==="bowl"); s.x=60; s.pose="idle"; s.tripLabel=`${b.reg} · The way home`; drawUI();
+    const fp=prop({k:"foe",x:196,y:GROUND,grid:foe.fm.grid,pal:foe.fm.pal});
+    banner(foe.boss?foe.boss:"On the way home","#ffd23f"); say(foe.boss?`The boss of ${b.reg} blocks the way.`:`A wild ${foe.m.name} blocks the way home.`); await rwait(1400); banner(""); unprop(fp);
+  });
+  // the end fight, played out on its habits
+  await new Promise(done=>arenaFight({s:snap,foe,mode:"auto",title:foe.boss?"Boss":"Wild",noDraw:true,rand:rng(res.endSeed+1),onEnd:done}));
+  s.stageRegions=s.stageRegions||{}; s.stageRegions[b.reg]=(s.stageRegions[b.reg]||0)+K.weeks;
   PLAYER.bits+=res.bits; res.finds.forEach(x=>addItem(x));
   s.fatigue+=Math.max(0,res.fat)+12*K.weeks; s.stress+=3*K.weeks; if(res.injured){ s.injured=true; s.used+=2; }
   const lv=giveExp(s,res.exp);
-  res.snap=snap;
   await scene(async()=>{
-    s.x=-30; s.hidden=false; await walkTo(130,55,"walk"); s.pose=won?"happy":"tired"; await rwait(600);
-    await endWeek(K.weeks,`Back from ${a.reg}.`);
+    s.bg="reg:"+reg.el; s.x=60; s.pose=won?"happy":"tired"; if(won){ spark(s.x,headY()-6,"sparkle",8); await hop(14,360); } await rwait(700);
+    await walkTo(RW+30,60,"walk"); s.bg=null; s.tripLabel=null; s.x=-30; await walkTo(130,55,"walk"); s.pose=won?"happy":"tired"; await rwait(500);
+    await endWeek(K.weeks,`Back from ${b.reg}.`);
   });
-  showReport(s,a,res,foe,won,lv);
+  showReport(s,b,res,foe,won,lv);
 }
 function showReport(s,a,res,foe,won,lv){
-  const rows=res.stops.map((t,i)=>`<div style="flex-basis:100%;font-size:13px">${i+1}. ${t}</div>`).join("");
-  const end=`${res.stops.length+1}. ${foe.boss?`The boss, ${foe.boss}, was waiting at the end.`:`A wild ${foe.m.name} blocked the way home.`} ${won?"It won.":"It lost."}`;
-  panel(`<div style="flex-basis:100%;font-weight:700">${a.kind} at ${a.reg}</div>${rows}<div style="flex-basis:100%;font-size:13px">${end}</div>
-    <div style="flex-basis:100%;font-size:13px;opacity:.85">${res.bits} bits, ${res.exp} exp${res.finds.length?", "+res.finds.join(", "):""}. ${res.learnt.concat(lv).join(" ")}</div>
-    <button class="rb" id="r-watch">Watch the last fight<small>As it happened</small></button><button class="rb" id="r-rok">Done</button>`);
+  const rows=res.stops.map((t,i)=>`<div class="trip-row ${t.ok?"ok":"no"}"><i>${t.task==="rest"?"·":t.ok?"✓":"✕"}</i><span><b>${TASKS[t.task].name}</b> ${t.text}</span></div>`).join("");
+  const end=`<div class="trip-row ${won?"ok":"no"}"><i>${won?"✓":"✕"}</i><span><b>${foe.boss||"Way home"}</b> ${foe.boss?"The boss":"A wild "+foe.m.name} ${won?"lost to it.":"beat it."}</span></div>`;
+  panel(`<div class="full lab-head"><b>${a.kind} at ${a.reg}</b><button class="small" id="r-rok">Done</button></div><div class="full trip-log">${rows}${end}</div>
+    <div class="full lab-info">${res.bits} bits, ${res.exp} exp${res.finds.length?", "+res.finds.join(", "):""}. ${res.learnt.concat(lv).join(" ")}</div>
+    <button class="rb full" id="r-watch">Watch the last fight again<small>As it happened</small></button>`);
   el("r-watch").onclick=()=>arenaFight({s:res.snap,foe,mode:"auto",title:foe.boss?"Boss":"Wild",noDraw:true,rand:rng(res.endSeed+1),onEnd:()=>showReport(s,a,res,foe,won,lv)});
   el("r-rok").onclick=()=>menu("Out");
   saveGame();
