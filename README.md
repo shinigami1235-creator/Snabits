@@ -8,7 +8,7 @@ The full design lives in the [Snabits design doc](https://claude.ai/artifact/PMV
 
 Live: https://shinigami1235-creator.github.io/Snabits/prototype/
 
-It opens on a title screen. A new player sees a short intro, meets Tala in town, gets the Snabscope (the phone's camera), scans 3 things, keeps 1 and walks it to the ranch. A returning player taps Continue and goes straight back to the ranch, since the save lives in the browser's local storage.
+It opens on a title screen. A new player sees a short intro, meets Tala in town, gets the Snaboscope (the phone's camera), scans 3 things, keeps 1 and walks it to the ranch. A returning player taps Continue and goes straight back to the ranch, since the save lives in the browser's local storage.
 
 From there it plays like Monster Rancher 2: weekly drills and rests, feeding and care, praise and scolding, evolution from Bit to Byte to Mega, missions and skill trips played out on screen, MR2-style cups in a stadium, wild battles, the fusion lab, the town shops, friend battles in live rooms or by ghost code, and Team battle, a 6 on 6 mode for fully trained monsters.
 
@@ -18,7 +18,7 @@ The camera needs a phone browser with camera permission. "From gallery" loads a 
 
 | File | What it holds |
 |---|---|
-| `prototype/index.html` | Camera, colour scan rules, the result sheet and the Snabscope screen |
+| `prototype/index.html` | Camera, colour scan rules, the result sheet and the Snaboscope screen |
 | `prototype/ui.css` | Every screen's styles, including the laptop layout at the end |
 | `prototype/onboard.js` | Title screen, intro scenes, the first-scan tutorial (scan 3, keep 1) and the walk to the ranch |
 | `prototype/skills.js` | All skills, skill pools and the one-line skill descriptions |

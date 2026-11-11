@@ -179,7 +179,7 @@ function injectRanch(){
 <label class="set-row">Music<input type="checkbox" class="sw" id="r-mus" ${typeof MUS==="undefined"||MUS.on?"checked":""}></label>
 <label class="set-row">Skip scenes<input type="checkbox" class="sw" id="r-off"></label>
 <label class="set-row">Show hidden numbers<input type="checkbox" class="sw" id="r-numsbox"></label>
-<button class="btn2" id="r-back">Open the Snabscope</button><span class="ver">Version ${typeof APP_VER!=="undefined"&&APP_VER!=="__VER__"?APP_VER:"dev"}</span></div></div>`;
+<button class="btn2" id="r-back">Open the Snaboscope</button><span class="ver">Version ${typeof APP_VER!=="undefined"&&APP_VER!=="__VER__"?APP_VER:"dev"}</span></div></div>`;
   document.body.appendChild(d);
   el("r-back").onclick=()=>{ el("r-foot").classList.remove("open"); openScope(); };
   el("r-gear").onclick=()=>el("r-foot").classList.toggle("open");

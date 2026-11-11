@@ -15,7 +15,7 @@ This is the handout for the chat that settles how Snabits monsters look. The pla
 
 Snabits is a phone web game in plain JavaScript with no build step. A camera photo's colours hatch a monster, which you raise Monster Rancher 2 style. The latest push (commit `9b0bab5`, 11 Nov 2026) added:
 - a title screen with Continue and New game;
-- a 4-panel intro where Tala gives the player the Snabscope, which is the phone's camera;
+- a 4-panel intro where Tala gives the player the Snaboscope, which is the phone's camera;
 - a first scan where the player scans 3 things and keeps 1, then walks it to the ranch;
 - Team battle, a 6 on 6 mode for monsters that are Mega or past their prime.
 

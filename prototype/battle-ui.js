@@ -128,7 +128,7 @@ function afterTurn(){
   if(f.over){
     const won=f.winner===0, draw=f.winner===null;
     $("b-result").innerHTML=`<h2>${draw?"Draw":won?"You win":"You lose"}</h2><p>${draw?"Both monsters fainted":won?`${f.p[1].name} fainted`:`${f.p[0].name} fainted`} in ${f.turn} turns.</p>
-      <div class="brow"><button class="big" id="b-again">Rematch</button><button class="small" id="b-new">New opponent</button><button class="small" id="b-skills">Change skills</button><button class="small" id="b-back">Snabscope</button></div>`;
+      <div class="brow"><button class="big" id="b-again">Rematch</button><button class="small" id="b-new">New opponent</button><button class="small" id="b-skills">Change skills</button><button class="small" id="b-back">Snaboscope</button></div>`;
     $("b-result").style.display="block"; $("b-fight").classList.add("done");
     $("b-again").onclick=()=>startFight(B.opp);
     $("b-new").onclick=()=>startFight();

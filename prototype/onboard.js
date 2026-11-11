@@ -1,4 +1,4 @@
-/* Title screen, intro and the first Snabscope trip: Tala hands over the Snabscope in town, the player scans 3 things,
+/* Title screen, intro and the first Snaboscope trip: Tala hands over the Snaboscope in town, the player scans 3 things,
    keeps 1 and walks it to the ranch. A returning player taps Continue and lands back at the ranch.
    Needs monster.js, battle.js, game.js and ranch.js, plus the scan code in index.html. */
 let ONB=null;
@@ -107,9 +107,9 @@ function obConfirmNew(){
 
 const OB_INTRO=[
   ["hidden",null,"Every colour hides a Snabit. They live in red mailboxes, green leaves and blue sky, too small and too quick for anyone to notice."],
-  ["scope",null,"A Snabscope can see them. It reads the colours of whatever it's pointed at and draws out the Snabit living there."],
+  ["scope",null,"A Snaboscope can see them. It reads the colours of whatever it's pointed at and draws out the Snabit living there."],
   ["town","Tala","You must be the new rancher. I'm Tala, and I help run the ranch up the hill. It's yours now and it's empty, so we need to find your first Snabit."],
-  ["handover","Tala","Your phone is the Snabscope. Scan three things, see what comes out of each, and bring your favourite home."],
+  ["handover","Tala","Your phone is the Snaboscope. Scan three things, see what comes out of each, and bring your favourite home."],
 ];
 function obIntro(){
   if(!PLAYER) PLAYER=newPlayer();
@@ -129,11 +129,11 @@ function obDrawStep(){
   document.getElementById("ob-who").textContent=who||""; document.getElementById("ob-who").style.display=who?"":"none";
   document.getElementById("ob-line").textContent=line;
   document.getElementById("ob-count").textContent=`${ONB.step+1} of ${OB_INTRO.length}`;
-  document.getElementById("ob-next").textContent=ONB.step===OB_INTRO.length-1?"Open the Snabscope":"Next";
+  document.getElementById("ob-next").textContent=ONB.step===OB_INTRO.length-1?"Open the Snaboscope":"Next";
 }
 function obNext(){ if(ONB.step<OB_INTRO.length-1){ ONB.step++; obDrawStep(); } else obStartScope(); }
 
-/* ---------- the first Snabscope trip ---------- */
+/* ---------- the first Snaboscope trip ---------- */
 const OB_SCANS=3;
 function obStartScope(){
   ONB.scene=null; ONB.tut=true; ONB.picks=[]; obShow(false);
@@ -144,7 +144,7 @@ const obLeft=()=>OB_SCANS-ONB.picks.length;
 function obCoachText(){
   if(!ONB||!ONB.tut) return "";
   if(mode==="aim") return "Drag the circle onto what you want scanned, then tap Scan.";
-  if(!stream) return "The Snabscope needs your camera. Allow it when your browser asks, or use a photo from your gallery.";
+  if(!stream) return "The Snaboscope needs your camera. Allow it when your browser asks, or use a photo from your gallery.";
   if(ONB.picks.length===0) return "Point it at something with strong colour, like a toy, a fruit or a shirt. The circle looks hardest at what's inside it. Tap the round button to scan.";
   if(obLeft()===1) return "Last scan. After this you choose one of the three to take home.";
   return `Scan ${ONB.picks.length+1} of ${OB_SCANS}. Try something a different colour, since the main colour decides its element.`;

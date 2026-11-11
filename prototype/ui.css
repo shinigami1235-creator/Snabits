@@ -307,7 +307,7 @@ table.rr td.pt{color:var(--gold);font-weight:700}
 .trip-row b{font:700 14px var(--pix);color:var(--text);margin-right:4px}
 
 /* ---------- wide screens (laptops): the same game laid out across the width ---------- */
-/* title, intro and the first Snabscope trip */
+/* title, intro and the first Snaboscope trip */
 #ob{position:fixed;inset:0;z-index:30;display:none;justify-content:center;background:radial-gradient(circle at 50% 25%,#262a40 0,var(--ink) 65%);
   padding:calc(var(--safe-t) + 18px) 18px calc(var(--safe-b) + 22px);overflow:auto}
 .ob-title,.ob-story{width:100%;max-width:440px;display:flex;flex-direction:column;gap:14px}
