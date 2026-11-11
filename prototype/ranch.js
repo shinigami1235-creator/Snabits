@@ -253,7 +253,7 @@ function drawUI(){
   el("r-form").textContent=conditionShort()+" · "+agePhase(s)[2];
   el("r-stats").innerHTML=STATS.map((st,i)=>{const fam=FAMILY[m.family].base[i], v=shownStat(i);
     return `<div class="rs" id="rs${i}"><span>${st} <small class="gr r${rankOf(fam)}">${rankOf(fam)}</small></span><span class="bg"><i style="width:${Math.min(100,v/2)}%"></i></span><span>${v}${s.tp[i]?` <small style="opacity:.6">(+${s.tp[i]})</small>`:""}</span></div>`;}).join("");
-  el("r-say").innerHTML=`<span class="who">Tala</span>${s.say||""}`; if(typeof talaFace==="function") talaFace(el("r-say"),s.say);
+  sayBox(s.say,s.sayWho);
   const n=el("r-nums"); n.style.display=s.showNums?"block":"none";
   n.textContent=`Fatigue ${s.fatigue}, stress ${s.stress}, Strain ${s.fatigue+2*s.stress}. Spoil ${s.spoil}, Fear ${s.fear}, loyalty ${loyalty()}. Weight ${s.weight}. Weeks lived ${s.used} of ${lifeWeeks()} (${s.m.lifespan} months). Earned points ${tpTotal()}${s.stage==="Bit"?` of ${evoTotal()} for Byte`:""}.`;
   el("r-learned").textContent=s.learned.length?"Stat skills: "+s.learned.join(", "):"";
@@ -263,7 +263,11 @@ function drawUI(){
 }
 function shownStat(i){ const s=RS; let v=s.m.stats[i]+s.tp[i]; if(s.stage!=="Bit"&&s.mark===i) v=Math.round(v*1.05); return v; }
 function popStat(i,txt,neg){ const r=el("rs"+i); if(!r) return; const p=document.createElement("span"); p.className="pop"+(neg?" neg":""); p.textContent=txt; r.appendChild(p); setTimeout(()=>p.remove(),1500); }
-function say(t){ RS.say=t; el("r-say").innerHTML=`<span class="who">Tala</span>${t}`; if(typeof talaFace==="function") talaFace(el("r-say"),t); }
+/* the speech box: Tala by default, or one of the other people (npcs.js) when who is given */
+function sayBox(t,who){ const b=el("r-say"), N=who&&typeof NPC!=="undefined"&&NPC[who];
+  b.innerHTML=`<span class="who"${N?` style="background:${N.tag}"`:""}>${N?N.name:"Tala"}</span>${t||""}`;
+  if(N){ if(typeof npcFace==="function") npcFace(b,who,t); } else if(typeof talaFace==="function") talaFace(b,t); }
+function say(t,who){ RS.say=t; RS.sayWho=who||null; sayBox(t,who); }
 function banner(t,col){ const b=el("r-banner"); b.textContent=t; b.style.color=col||"#fff"; b.classList.toggle("on",!!t); }
 function panel(html){ el("r-panel").innerHTML=html; el("ranch").classList.toggle("menu-open",!!html); if(!html&&RS&&RS.id) weekCard(); }
 /* With no menu open, the space under the stats shows what's coming up. */
@@ -793,7 +797,7 @@ function rLoop(t){
   else { s.cam=null; const sc=el("r-scene"); if(sc) sc.style.display="none"; const ch=el("r-chibi"); if(ch) ch.style.filter=""; }
   { const go=el("r-goout"); if(go){ const on=smooth&&s.room==="barn"&&!s.busy; if(go.style.display!==(on?"block":"none")) go.style.display=on?"block":"none"; } }
   if(smooth){   // the side-scrolling ranch: the camera follows the monster, zooms in on small ones, and can be dragged to look around
-    const sp=chibiSpec(null,s), hpx=sp?sp.cm/100*RANCH_PX_M:60, Zt=clamp(66/hpx,1,s.bg?1.3:1.8);   /* away scenes stay wide so their props show */ s.zoom=s.zoom?s.zoom+(Zt-s.zoom)*0.05:Zt;
+    const sp=chibiSpec(null,s), hpx=sp?sp.cm/100*RANCH_PX_M:60, wide=s.bg==='shop'||s.bg==='lab'||s.props.some(p=>p.k==='npc'), Zt=wide?1:clamp(66/hpx,1,s.bg?1.3:1.8);   /* away scenes stay wide so their props show */ s.zoom=s.zoom?s.zoom+(Zt-s.zoom)*0.05:Zt;
     const Z=s.zoom, vw=cv.width/Z, wx=s.x+(s.zx||0), panning=s.pan||(s.panUntil&&performance.now()<s.panUntil);
     const one=s.room||s.bg, lo=one?0:-RW, hi=Math.max(lo,(one?RW:2*RW)-vw), Lt=clamp(panning?s.panL:wx-vw/2,lo,hi); s.camL=s.camL==null||s.camJump?Lt:s.camL+(Lt-s.camL)*(s.pan?1:0.08); s.camJump=false;
     s.cam={L:s.camL,Z,extra}; }

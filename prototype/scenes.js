@@ -438,7 +438,8 @@ function awayScene(c, s, t, k) {
   c.setTransform(k, 0, 0, k, 0, 0); const g = c.createLinearGradient(0, 0, 0, G); skyCols.forEach((col, i) => g.addColorStop(i / 2, col)); c.fillStyle = g; c.fillRect(0, 0, vw, vh);
   const world = () => c.setTransform(k * Z, 0, 0, k * Z, -L * Z * k, (G - GROUND * Z) * k);
   world();
-  if (reg) regionArt(c, reg, t, off);
+  if (reg) { regionArt(c, reg, t, off); if ((s.night || s.dusk) && typeof regionNight === 'function') { c.setTransform(k, 0, 0, k, 0, 0); regionNight(c, s, t, vw, vh, G); world(); } }
+  else if (typeof npcPlaceArt === 'function' && npcPlaceArt(c, s, bg, t)) { /* the shop or the lab */ }
   else drillArt(c, s, bg, t, off);
 }
 function regionArt(c, A, t, off) {
@@ -604,6 +605,9 @@ function drillArt(c, s, bg, t, off) {
 function awayProps(c, p, t, front) {
   const x = p.x, y = p.y;
   switch (p.k) {
+    case 'npc': if (front) return; npcFull(c, p.who, x, y, npcPx(p.who), p.face || 'happy', p.pose || 'stand', t, !!p.flip); return;
+    case 'tent': if (front) return; tentProp(c, x, y); return;
+    case 'counter': if (front) return; shopCounter(c); return;
     case 'floatie': if (!front) return; { const w = p.w, h = w * 0.22;          // a swim ring at the waterline
       c.lineWidth = h * 0.9; for (let i = 0; i < 8; i++) { c.strokeStyle = i % 2 ? '#ffffff' : '#e2483f'; c.beginPath(); c.ellipse(x, y, w, h, 0, i * Math.PI / 4, (i + 1) * Math.PI / 4); c.stroke(); }
       c.strokeStyle = 'rgba(255,255,255,.5)'; c.lineWidth = 1; c.beginPath(); c.ellipse(x, y - h * 0.2, w * 0.9, h * 0.6, 0, Math.PI * 1.1, Math.PI * 1.5); c.stroke(); } return;

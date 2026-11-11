@@ -74,7 +74,7 @@ function chibiRanch(s, t) {
     const h = CHIBI.height(spec.stage, spec.marks, spec.family) * ppu, w = CHIBI.width(spec.stage, spec.family) * ppu * kx;   // tap box for petting
     s.bbox = [s.x - w / 2, GROUND - h, s.x + w / 2, GROUND];
   }
-  if (cam && typeof ranchProps === 'function') { world(); ranchProps(c, s, t, true); ranchParticles(c, s); }
+  if (cam && typeof ranchProps === 'function') { world(); ranchProps(c, s, t, true); ranchParticles(c, s); if ((s.night || s.dusk) && typeof npcNightPass === 'function') npcNightPass(c, s, t, W, H, world); }
   return true;
 }
 
