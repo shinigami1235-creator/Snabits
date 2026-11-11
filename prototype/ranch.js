@@ -323,7 +323,7 @@ function menu(which){
     const ill=s.sick?"It has a cold. Rest it or give it medicine first.":s.injured?"It's hurt. Rest it or give it medicine first.":null;
     const block=(id,why)=>{ const bt=el(id); if(!why||!bt) return; bt.disabled=true; bt.classList.add("blocked"); const sm=bt.querySelector("small"); if(sm) sm.textContent=why; };
     block("r-wild",typeof wildBlock==="function"?wildBlock(s):null); block("r-mis",ill); block("r-cup",ill); block("r-ct",ill); block("r-trip",ill||(tripsLocked()?"Opens at 1 heart.":null));
-    el("r-wild").onclick=startWild; el("r-mis").onclick=openBoard; el("r-cup").onclick=openCups; el("r-lab").onclick=openLab; el("r-frz").onclick=openFreezer; el("r-trip").onclick=()=>{ if(tripsLocked()){ say("Skill trips open at 1 heart."); return; } openTrips(); }; el("r-town").onclick=openTown; el("r-goals").onclick=openGoals; el("r-ct").onclick=openContests; el("r-dex").onclick=()=>openDex(); el("r-ghost").onclick=()=>openRooms(); el("r-team").onclick=openTeam;
+    el("r-wild").onclick=startWild; el("r-mis").onclick=openBoard; el("r-cup").onclick=openCups; el("r-lab").onclick=()=>openLab(); el("r-frz").onclick=openFreezer; el("r-trip").onclick=()=>{ if(tripsLocked()){ say("Skill trips open at 1 heart."); return; } openTrips(); }; el("r-town").onclick=openTown; el("r-goals").onclick=openGoals; el("r-ct").onclick=openContests; el("r-dex").onclick=()=>openDex(); el("r-ghost").onclick=()=>openRooms(); el("r-team").onclick=openTeam;
     el("r-prac").onclick=()=>{ const o=gradedOpponent(s.grade,Math.max(1,s.level+Math.floor(rnd(-1,2))),Math.random); arenaFight({s,foe:o,mode:"control",title:"Practice",learn:true,onEnd:r=>{ if(r.learned.length) say(r.learned.join(" ")); saveGame(); }}); };
   }
 }
