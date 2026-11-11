@@ -93,10 +93,16 @@ function showTitle(){
   obRoot().innerHTML=`<div class="ob-title"><div class="ob-frame"><canvas id="ob-cv"></canvas></div><h1>Snabits</h1>
     <p class="ob-tag">Monsters hide in colour. Your phone can find them.</p>
     <div class="ob-acts">${save?`<button class="big" id="ob-cont">Continue</button>`:""}<button class="${save?"btn2":"big"}" id="ob-new">New game</button></div>
+    <label class="ob-load" for="ob-file">Load a save file</label><input type="file" id="ob-file" accept=".json,application/json" hidden>
     <div class="ob-ver">Version ${ver}</div></div>`;
   obShow(true); obScene("title");
   if(save) document.getElementById("ob-cont").onclick=obContinue;
   document.getElementById("ob-new").onclick=()=>save?obConfirmNew():obIntro();
+  document.getElementById("ob-file").onchange=async e=>{ const f=e.target.files[0]; e.target.value=""; if(!f) return; const acts=obRoot().querySelector(".ob-acts");
+    try{ const {p,saved}=await readSaveFile(f);
+      acts.innerHTML=`<p class="${save?"ob-warn":"ob-ask"}">Load ${saveSummary(p,saved)}?${save?" It replaces the game on this device.":""}</p><button class="btn2" id="ob-fileno">Cancel</button><button class="big" id="ob-fileyes">Load it</button>`;
+      document.getElementById("ob-fileno").onclick=showTitle; document.getElementById("ob-fileyes").onclick=()=>applySave(p);
+    }catch(err){ acts.insertAdjacentHTML("afterbegin",`<p class="ob-warn">${err.message}</p>`); } };
 }
 function obContinue(){
   ONB=null; obShow(false);

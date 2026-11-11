@@ -41,8 +41,28 @@ function saveGame(){
   if(!PLAYER) return;
   if(RS&&RS.id){ const e=PLAYER.roster.find(r=>r.id===RS.id); if(e) e.st=packRanch(RS); }
   try{ localStorage.setItem(SAVE_KEY,JSON.stringify(PLAYER)); }catch(e){}
+  askPersist();
 }
 const hasSave=()=>{ try{ return !!localStorage.getItem(SAVE_KEY); }catch(e){ return false; } };
+/* The save file. The game lives in this browser's storage, which survives refreshes and closing the tab but not
+   "Clear site data", so the player can keep a copy as a .json file and load it back on any phone or computer. */
+let PERSIST_ASKED=false;
+function askPersist(){ if(PERSIST_ASKED) return; PERSIST_ASKED=true; try{ if(navigator.storage&&navigator.storage.persist) navigator.storage.persist(); }catch(e){} }
+function exportSave(){
+  saveGame(); const d=new Date(), day=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+  PLAYER.lastExport=d.toISOString(); saveGame();
+  const blob=new Blob([JSON.stringify({game:"snabits",v:1,saved:d.toISOString(),save:PLAYER})],{type:"application/json"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=`snabits-save-${day}.json`; document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },2000);
+}
+async function readSaveFile(file){
+  let o; try{ o=JSON.parse(await file.text()); }catch(e){ throw new Error("That file isn't a Snabits save."); }
+  const p=o&&o.game==="snabits"?o.save:o;
+  if(!p||!Array.isArray(p.roster)||typeof p.week!=="number") throw new Error("That file isn't a Snabits save.");
+  return {p,saved:o.saved?new Date(o.saved):null};
+}
+function applySave(p){ localStorage.setItem(SAVE_KEY,JSON.stringify(p)); location.hash=location.hash.replace(/(^#|&)test(&|$)/,"$1"); location.reload(); }
+const saveSummary=(p,saved)=>`${p.roster.length} Snabit${p.roster.length===1?"":"s"} and ${p.bits} bits${saved?`, saved ${saved.toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"})}`:""}`;
 
 /* Ranch state fields that persist. Everything else (puppet, particles, props) is rebuilt. */
 const KEEP=["worn","held","weather","weatherBonus","majorInvite","master","stage","mark","mark2","variant","wanderEl","stageRegions","stageCups","neglect","cleanRun","uses","book","grid","tp","lastTrained","used","spoil","fear","fatigue","stress","weight","like","dis","known","mess","messKind","messSpots",

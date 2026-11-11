@@ -216,10 +216,18 @@ function injectRanch(){
 <label class="set-row">Music<input type="checkbox" class="sw" id="r-mus" ${typeof MUS==="undefined"||MUS.on?"checked":""}></label>
 <label class="set-row">Skip scenes<input type="checkbox" class="sw" id="r-off"></label>
 <label class="set-row">Show hidden numbers<input type="checkbox" class="sw" id="r-numsbox"></label>
+<div class="set-file"><span id="r-filewhen"></span><div class="brow"><button class="small" id="r-export">Save to a file</button><label class="small" for="r-import">Load a save file</label><input type="file" id="r-import" accept=".json,application/json" hidden></div><div id="r-fileask"></div></div>
 <button class="btn2" id="r-back">Open the Snaboscope</button><span class="ver">Version ${typeof APP_VER!=="undefined"&&APP_VER!=="__VER__"?APP_VER:"dev"}</span></div></div>`;
   document.body.appendChild(d);
   el("r-back").onclick=()=>{ el("r-foot").classList.remove("open"); openScope(); };
-  el("r-gear").onclick=()=>el("r-foot").classList.toggle("open");
+  const fileWhen=()=>{ el("r-filewhen").textContent=PLAYER.lastExport?`Last saved to a file on ${new Date(PLAYER.lastExport).toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"})}.`:"Clearing this site's data in the browser deletes the game, so keep a save file."; };
+  el("r-gear").onclick=()=>{ fileWhen(); el("r-fileask").innerHTML=""; el("r-foot").classList.toggle("open"); };
+  el("r-export").onclick=()=>{ exportSave(); fileWhen(); };
+  el("r-import").onchange=async e=>{ const f=e.target.files[0]; e.target.value=""; if(!f) return; const box=el("r-fileask");
+    try{ const {p,saved}=await readSaveFile(f);
+      box.innerHTML=`<p>Load ${saveSummary(p,saved)}? It replaces the game on this device.</p><div class="brow"><button class="small" id="r-fileno">Cancel</button><button class="small danger" id="r-fileyes">Load it</button></div>`;
+      el("r-fileno").onclick=()=>box.innerHTML=""; el("r-fileyes").onclick=()=>applySave(p);
+    }catch(err){ box.innerHTML=`<p>${err.message}</p>`; } };
   el("r-info").onclick=()=>openInfo("status"); el("r-name").onclick=()=>openInfo("status");
   el("r-setx").onclick=()=>el("r-foot").classList.remove("open");
   el("r-foot").onclick=e=>{ if(e.target.id==="r-foot") el("r-foot").classList.remove("open"); };

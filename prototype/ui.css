@@ -473,3 +473,8 @@ body.ob-tut #ranchbtn,body.ob-tut #msgranch{display:none!important}
 .i-log span{display:block;font:700 12px var(--pix);border-radius:6px;padding:12px 0}
 .i-log small{font-size:10.5px;color:var(--dim)}
 #r-top .r-right{gap:6px}
+.set-file{display:flex;flex-direction:column;gap:8px;padding:12px 0 2px;font-size:13px;color:var(--mute)}
+.set-file p{margin:0;color:var(--text)}
+.ob-load{font:500 14px var(--pix);color:var(--mute);text-align:center;text-decoration:underline;padding:8px;cursor:pointer}
+.small.danger{border-color:var(--coral);color:#ffb3b3}
+.ob-ask{font-size:15px;color:var(--text);text-align:center;margin:0}
