@@ -1,7 +1,7 @@
 <!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="../../prototype/ui.css">
 <style>html,body{overflow:auto;height:auto;background:#15161f;margin:0}canvas{display:block}</style></head><body><canvas id="c"></canvas>
 <script>const RW=240,RH=180,GROUND=150,HELPX=52,BOWLX=64;</script>
-<script src="../../prototype/chibi.js"></script><script src="../../prototype/scenes.js"></script><script src="../../prototype/npcs.js"></script>
+<script src="../../prototype/chibi.js"></script><script src="../../prototype/scenes.js"></script><script src="../../prototype/npcs.js"></script><script src="../../prototype/errantry.js"></script><script src="../../prototype/areas.js"></script>
 <script>
 /* Concept sheet for the new people: Kiko the trip guide, Nena at the shop, Dr. Ines and Benji at the lab. Open with #people. */
 const c=document.getElementById('c'), d=2, x=c.getContext('2d');
@@ -28,7 +28,25 @@ function people(){
   npcFull(x,'doc',gx+410,gy,H(168),'talk','stand'); label('Dr. Ines',gx+410,gy+24,NPC.doc.tag);
   npcFull(x,'aide',gx+530,gy,H(172),'happy','stand'); label('Benji',gx+530,gy+24,NPC.aide.tag);
 }
-const views={people};
+
+/* moods on the ranch: the face and stance tell how it feels before you open the info page */
+const PAL={Brawl:[[232,140,52],[128,68,30],[255,236,214]],Wild:[[118,190,92],[64,120,58],[250,220,110]],Venom:[[150,96,206],[72,48,110],[170,240,120]],
+ Frost:[[120,214,224],[70,130,200],[240,252,255]],Charm:[[244,150,190],[150,92,190],[255,240,250]],Blaze:[[226,76,62],[150,40,40],[255,214,90]],Tide:[[70,130,220],[36,70,156],[200,240,255]],Steel:[[170,178,192],[88,96,112],[120,210,240]]};
+function moods(T=1200){
+  const rows=[['Chomp','Bit','Brawl'],['Moko','Byte','Wild'],['Pinch','Bit','Blaze'],['Squib','Byte','Tide'],['Antik','Mega','Steel']];
+  const cols=[['tired','Worn out','fatigue over 50'],['droopy','Droopy','fatigue 30 to 50, or stressed'],['idle','Normal',''],['fresh','Fresh','fatigue under 20, stress under 15'],['determined','Determined','some weeks in top shape']];
+  size(1180,90+rows.length*170); x.fillStyle='#15161f'; x.fillRect(0,0,1180,90+rows.length*170);
+  label('Moods on the ranch',24,34,'#ffc93c','left','800 22px system-ui');
+  cols.forEach(([p,n,w],j)=>{ label(n,250+j*190,66,'#e9e4f5','center','700 15px system-ui'); label(w,250+j*190,82,'#8a88a0','center','12px system-ui'); });
+  rows.forEach(([fam,stage,el],i)=>{ const Y=90+i*170; label(`${fam} ${stage}`,24,Y+90,'#a6a4b8','left','600 14px system-ui');
+    cols.forEach(([p],j)=>{ const px=150, h=CHIBI.height(stage,[],fam), k=px/h; x.fillStyle='#1e2030'; x.beginPath(); x.roundRect(165+j*190,Y+6,170,158,12); x.fill();
+      x.save(); x.translate(250+j*190,Y+156); x.scale(k*0.82,k*0.82); x.translate(-100,-188);
+      CHIBI.draw(x,{family:fam,stage,marks:[],pal:{body:PAL[el][0],parts:PAL[el][1],accent:PAL[el][2]},el,worn:{}},p,T+j*137,[0,0]); x.restore(); }); });
+}
+function map(){ size(980,330); x.fillStyle='#15161f'; x.fillRect(0,0,980,330);
+  label('Between weeks the route map shows the next stop',24,30,'#ffc93c','left','800 18px system-ui');
+  [0,1,2,3].forEach(i=>{ x.save(); x.translate(10+i*240,44); routeMap(x,230,270,'Frost',i,800); x.restore(); }); }
+const views={people,moods,map};
 (views[location.hash.slice(1)]||people)();
 document.title='ready';
 </script></body></html>

@@ -433,12 +433,14 @@ function barnRoom(c, s, t, k, night) {
    walkTo and prop position in errantry.js, missions.js, trips.js and heavy.js still lands in the right spot. */
 function awayScene(c, s, t, k) {
   const { L, Z, extra } = s.cam, G = GROUND + extra, cv = document.getElementById('r-canvas'), vw = cv.width, vh = cv.height, bg = s.bg, off = s.bgOff || 0;
-  const reg = bg.startsWith('reg:') ? (typeof REGION_ART !== 'undefined' && REGION_ART[bg.slice(4)] || null) : null;
+  const area = bg.startsWith('area:') ? bg.split(':') : null;   // area:<element>:<key>, one of the four places on a trip
+  const reg = bg.startsWith('reg:') ? (typeof REGION_ART !== 'undefined' && REGION_ART[bg.slice(4)] || null) : area ? REGION_ART[area[1]] : null;
   const skyCols = reg ? reg.sky : bg === 'study' ? ['#e9d6b4', '#e3cca6', '#dcc39a'] : bg === 'court' ? ['#d9c7a3', '#d3bf98', '#ccb68c'] : bg === 'pond' ? ['#f2b8a8', '#f8d4b4', '#fdecd2'] : bg === 'library' ? ['#3a2a22', '#4a3428', '#5a3e2e'] : bg === 'quarry' ? ['#9fb6c8', '#b9cbd8', '#d3dee6'] : bg === 'shrine' ? ['#7d8f9a', '#94a6b0', '#b3c3cb'] : ['#6cb8ee', '#9fd3f6', '#d2edff'];
   c.setTransform(k, 0, 0, k, 0, 0); const g = c.createLinearGradient(0, 0, 0, G); skyCols.forEach((col, i) => g.addColorStop(i / 2, col)); c.fillStyle = g; c.fillRect(0, 0, vw, vh);
   const world = () => c.setTransform(k * Z, 0, 0, k * Z, -L * Z * k, (G - GROUND * Z) * k);
   world();
-  if (reg) { regionArt(c, reg, t, off); if ((s.night || s.dusk) && typeof regionNight === 'function') { c.setTransform(k, 0, 0, k, 0, 0); regionNight(c, s, t, vw, vh, G); world(); } }
+  if (area && typeof areaArt === 'function' && areaArt(c, area[1], area[2], t)) { if (s.night || s.dusk) { c.setTransform(k, 0, 0, k, 0, 0); regionNight(c, s, t, vw, vh, G); world(); } }
+  else if (reg) { regionArt(c, reg, t, off); if ((s.night || s.dusk) && typeof regionNight === 'function') { c.setTransform(k, 0, 0, k, 0, 0); regionNight(c, s, t, vw, vh, G); world(); } }
   else if (typeof npcPlaceArt === 'function' && npcPlaceArt(c, s, bg, t)) { /* the shop or the lab */ }
   else drillArt(c, s, bg, t, off);
 }

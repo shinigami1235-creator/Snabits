@@ -37,6 +37,10 @@ const CHIBI = (() => {
     run:    { arm: [[14, 2, 22, 6], [14, 2, 22, 6]], feet: [0, 0, 0, 0], eyes: 'fierce', open: 0.4, walk: 2, tilt: 6, lean: 4 },
     happy:  { arm: [UP, UP], feet: [-3, 0, 3, 0], eyes: 'happy', open: 0.75, lift: -12, extra: 'heart' },
     sad:    { arm: [DROOP, DROOP], feet: [0, 0, 0, 0], eyes: 'sad', open: 0, frown: 1, sy: 0.96, extra: 'tear' },
+    // moods for the ranch idle: worn down, fresh, and fired up on a great day
+    droopy: { arm: [DROOP, DROOP], feet: [-2, 0, 2, 0], eyes: 'droopy', open: 0, sy: 0.95, sx: 1.03, tilt: -2, extra: 'sigh' },
+    fresh:  { arm: [[14, -2, 20, 10], [14, -2, 20, 10]], feet: [-3, 0, 3, 0], eyes: 'open', open: 0.35, lift: -4, extra: 'shine' },
+    determined: { arm: [[12, -6, 4, -20], [12, -6, 4, -20]], feet: [-6, 0, 6, 0], eyes: 'fierce', open: 0.18, sy: 1.04, sx: 1.02, extra: 'glint' },
     tired:  { arm: [DROOP, DROOP], feet: [-2, 0, 2, 0], eyes: 'tired', open: 0.15, sy: 0.93, sx: 1.04, tilt: -3 },
     eat:    { arm: [[8, 16, -8, 24], [8, 16, -8, 24]], feet: [0, 0, 0, 0], eyes: 'happy', open: 0.5, chew: 1, front: 1, extra: 'crumbs' },
     sleep:  { arm: [[10, 10, 12, 16], [10, 10, 12, 16]], feet: [-4, 0, 4, 0], eyes: 'shut', open: 0, sx: 1.07, sy: 0.86, extra: 'zz' },
@@ -173,7 +177,14 @@ const CHIBI = (() => {
       c.lineWidth = 3 * s; c.beginPath(); c.moveTo(-8 * s * side, -15 * s); c.lineTo(7 * s * side, -11.5 * s); c.stroke(); }
     else {
       const lx = look[0] * 2.5 * s, ly = look[1] * 2 * s;
-      if (EYE === 'moon') {          // Moonlit: silver eyes with a dark rim
+      if (type === 'droopy') {       // tired but awake: a heavy top lid that sags at the outer corner
+        c.fillStyle = rgb(INK); c.beginPath(); c.ellipse(lx, ly + 1 * s, 8.6 * s, 9.4 * s, 0, 0, 7); c.fill();
+        c.fillStyle = '#fff'; c.beginPath(); c.arc(lx + 2.6 * s, ly + 3 * s, 2.4 * s, 0, 7); c.fill();
+        const o = side === 0 ? 0 : side || 1, lidY = k => -1 * s + k * 3.2 * s * o;   // lower toward the outer corner
+        c.save(); c.beginPath(); c.ellipse(lx, ly + 1 * s, 9.4 * s, 10.2 * s, 0, 0, 7); c.clip();
+        c.fillStyle = LIDC; c.beginPath(); c.moveTo(-14 * s, -14 * s); c.lineTo(14 * s, -14 * s); c.lineTo(14 * s, lidY(1)); c.lineTo(-14 * s, lidY(-1)); c.closePath(); c.fill(); c.restore();
+        c.lineWidth = 3.2 * s; c.beginPath(); c.moveTo(-9.4 * s, lidY(-1) - 0.6 * s); c.lineTo(9.4 * s, lidY(1) - 0.6 * s); c.stroke();
+      } else if (EYE === 'moon') {          // Moonlit: silver eyes with a dark rim
         const gr = c.createLinearGradient(0, ly - 10 * s, 0, ly + 10 * s); gr.addColorStop(0, '#eef1ff'); gr.addColorStop(1, '#9aa6cf');
         c.fillStyle = gr; c.beginPath(); c.ellipse(lx, ly, 8.6 * s, 10.2 * s, 0, 0, 7); c.fill();
         c.lineWidth = 2 * s; c.strokeStyle = rgb(INK); c.stroke();
@@ -286,7 +297,7 @@ const CHIBI = (() => {
     c.fillStyle = rgba(BLUSH, 0.7);
     for (const side of [-1, 1]) { c.beginPath(); c.ellipse(g.cx + side * g.bw * 0.31, ey + 13 * s, 7.5 * s, 4.5 * s, 0, 0, 7); c.fill(); }
     const eyes = P.eyes === 'open' && (m.stage === 'Mega' || VAR === 'Feral') ? 'fierce' : P.eyes;
-    eye(c, g.cx - ex, ey, s, eyes, -1, look); eye(c, g.cx + ex, ey, s, eyes, 1, look);
+    LIDC = rgb(body); eye(c, g.cx - ex, ey, s, eyes, -1, look); eye(c, g.cx + ex, ey, s, eyes, 1, look);
     capFace(c, g.cx, ey, ex, my, false);
     if (eyes === 'fierce') {        // a slanted top lid in body colour makes the Mega look ready to fight
       c.fillStyle = rgb(mix(lt(body, 0.05), body, 0.5));
@@ -313,6 +324,7 @@ const CHIBI = (() => {
     if (P.extra === 'tear') { const ph = (t / 900) % 1; c.fillStyle = `rgba(156,212,245,${1 - ph * 0.6})`; drop(c, g.cx - g.bw * 0.2, top + g.bh * 0.5 + ph * 14, 0.8); c.fill(); }
     if (P.extra === 'stars') for (let k = 0; k < 3; k++) { const a = t / 400 + k * 2.1;
       star(c, g.cx + Math.cos(a) * g.bw * 0.4, top + 4 + Math.sin(a) * 6, 0.55, k % 2 ? '#ffd23f' : rgb(lt(acc, 0.3))); }
+    moodExtra(c, P, g, top, t, acc);
     if (P.extra === 'crumbs') { c.fillStyle = rgb(lt(parts, 0.4)); for (let k = 0; k < 4; k++) { const ph = (t / 400 + k / 4) % 1;
       c.beginPath(); c.arc(g.cx - 12 + k * 8, my + lift + ph * 22, 2, 0, 7); c.fill(); } }
   }
@@ -477,7 +489,7 @@ const CHIBI = (() => {
   }
   /* ---------- evolution marks and care variants, drawn on any family ----------
      head is the family's head anchor [x, y, w]. VAR holds the variant of the monster being drawn. */
-  let VAR = null, EYE = null;
+  let VAR = null, EYE = null, LIDC = '#999';
   const VAR_W = { Bulky: 1.12, Lean: 0.88, Pampered: 1.05 }, VAR_H = { Lean: 1.07, Pampered: 0.97, Bulky: 0.98 };
   function horns(c, head, col) {
     const [hx, hy, w] = head, k = Math.max(0.8, Math.min(1.2, w / 52));
@@ -698,7 +710,7 @@ const CHIBI = (() => {
     c.fillStyle = rgba(BLUSH, 0.7);
     for (const side of [-1, 1]) { c.beginPath(); c.ellipse(g.cx + side * (ex + 9 * s), ey + 12 * s, 7 * s, 4.2 * s, 0, 0, 7); c.fill(); }
     const eyes = x.P.eyes === 'open' && (x.stage === 'Mega' || VAR === 'Feral') ? 'fierce' : x.P.eyes;
-    eye(c, g.cx - ex, ey, s, eyes, -1, look); eye(c, g.cx + ex, ey, s, eyes, 1, look);
+    LIDC = rgb(o.lidCol || x.body); eye(c, g.cx - ex, ey, s, eyes, -1, look); eye(c, g.cx + ex, ey, s, eyes, 1, look);
     capFace(c, g.cx, ey, ex, my, false);
     if (eyes === 'fierce') for (const side of [-1, 1]) lid(c, g.cx + side * ex, ey, s, side, look, rgb(o.lidCol || x.body));
     if (o.extraEyes) for (const side of [-1, 1]) eye(c, g.cx + side * g.bw * o.extraEyes, ey - 7 * s, s * 0.45, eyes === 'fierce' ? 'open' : eyes, side, look);
@@ -791,7 +803,7 @@ const CHIBI = (() => {
           c.fillStyle = '#fff'; c.beginPath(); c.arc(g.cx + lx + 2.6 * s, ey + ly - 2.8 * s, 2.2 * s, 0, 7); c.fill(); c.beginPath(); c.arc(g.cx + lx - 2.4 * s, ey + ly + 2.6 * s, 1 * s, 0, 7); c.fill();
           c.save(); c.beginPath(); c.ellipse(g.cx, ey, 10.5 * s, 11.5 * s, 0, 0, 7); c.clip(); c.fillStyle = rgb(x.body); c.fillRect(g.cx - 12 * s, ey - 13 * s, 24 * s, 5 * s); c.restore();
         } else if (e === 'hurt') { eye(c, g.cx - 7 * s * 0.55, ey, s * 0.6, 'hurt', -1, look); eye(c, g.cx + 7 * s * 0.55, ey, s * 0.6, 'hurt', 1, look); }
-        else eye(c, g.cx, ey, s, e, 1, look);
+        else { LIDC = rgb(x.body); eye(c, g.cx, ey, s, e, e === 'droopy' ? 0 : 1, look); }
         smallMouth(c, g.cx, my, by(g.stage, 0.85, 0.95, 1), x.open, x.P.ouch ? 'ouch' : g.stage === 'Mega', x.P.frown);
         return { my, ey, ex: 0, s: s * 0.55, one: true, cx: g.cx };
       }
@@ -1017,7 +1029,7 @@ const CHIBI = (() => {
       const ey = g.top + g.bh * 0.34, ex = g.bw * 0.19, my = g.top + g.bh * 0.62, mw = g.bw * S.mw;
       c.fillStyle = rgba(BLUSH, 0.7); for (const side of [-1, 1]) { c.beginPath(); c.ellipse(g.cx + side * g.bw * 0.31, ey + 13 * s, 7.5 * s, 4.5 * s, 0, 0, 7); c.fill(); }
       const eyes = x.P.eyes === 'open' && (g.stage === 'Mega' || VAR === 'Feral') ? 'fierce' : x.P.eyes;
-      eye(c, g.cx - ex, ey, s, eyes, -1, look); eye(c, g.cx + ex, ey, s, eyes, 1, look); capFace(c, g.cx, ey, ex, my, false);
+      LIDC = rgb(x.body); eye(c, g.cx - ex, ey, s, eyes, -1, look); eye(c, g.cx + ex, ey, s, eyes, 1, look); capFace(c, g.cx, ey, ex, my, false);
       if (eyes === 'fierce') for (const side of [-1, 1]) lid(c, g.cx + side * ex, ey, s, side, look, rgb(x.body));
       if (x.P.frown || x.P.ouch) { c.save(); c.translate(0, my * 2 + mw * 0.2); c.scale(1, -1); mouth(c, g.cx, my, mw * 0.7, 0, S, x.body); c.restore(); } else mouth(c, g.cx, my, mw, x.open, S, x.body);
       return { my, ey, ex, s, cx: g.cx }; }
@@ -1143,10 +1155,23 @@ const CHIBI = (() => {
     if (P.extra === 'tear') { const ph = (t / 900) % 1; c.fillStyle = `rgba(156,212,245,${1 - ph * 0.6})`; drop(c, g.cx - g.bw * 0.2, top + g.bh * 0.5 + ph * 14, 0.8); c.fill(); }
     if (P.extra === 'stars') for (let k2 = 0; k2 < 3; k2++) { const a = t / 400 + k2 * 2.1;
       star(c, g.cx + Math.cos(a) * g.bw * 0.4, top + 4 + Math.sin(a) * 6, 0.55, k2 % 2 ? '#ffd23f' : rgb(lt(acc, 0.3))); }
+    moodExtra(c, P, g, top, t, acc);
     if (P.extra === 'crumbs' && my) { c.fillStyle = rgb(lt(parts, 0.4)); for (let k2 = 0; k2 < 4; k2++) { const ph = (t / 400 + k2 / 4) % 1;
       c.beginPath(); c.arc(g.cx - 12 + k2 * 8, my + lift + ph * 22, 2, 0, 7); c.fill(); } }
   }
 
+  /* the mood extras on the ranch: a sigh puff when worn down, twinkles when fresh, a gleam and fired-up lines on a great day */
+  function moodExtra(c, P, g, top, t, acc) {
+    if (P.extra === 'sigh') { const ph = (t / 1800) % 1, x0 = g.cx + g.bw * 0.42 + ph * 14, y0 = top + g.bh * 0.55 - ph * 10;
+      c.fillStyle = `rgba(235,240,250,${0.75 * (1 - ph)})`; c.beginPath(); c.arc(x0, y0, 4 + ph * 4, 0, 7); c.arc(x0 + 6 + ph * 3, y0 - 2, 3 + ph * 3, 0, 7); c.fill(); }
+    if (P.extra === 'shine') for (let k = 0; k < 2; k++) { const tw = 0.5 + 0.5 * Math.sin(t / 260 + k * 2.4);
+      star(c, g.cx + (k ? -1 : 1) * g.bw * (0.42 + k * 0.06), top - 2 + k * 10, 0.35 + 0.3 * tw, k ? '#fff6c4' : '#ffffff'); }
+    if (P.extra === 'glint') { const tw = (t / 900) % 1;
+      if (tw < 0.35) star(c, g.cx + g.bw * 0.2, top + g.bh * 0.22, 0.4 + Math.sin(tw / 0.35 * Math.PI) * 0.5, '#ffffff');
+      c.strokeStyle = rgb(lt(acc, 0.2)); c.lineWidth = 3; c.lineCap = 'round';
+      for (let k = -1; k <= 1; k++) { const yy = top - 8 - ((t / 22 + k * 7) % 14), xx = g.cx + k * g.bw * 0.22;
+        c.globalAlpha = 0.8; c.beginPath(); c.moveTo(xx, yy); c.lineTo(xx + k * 2, yy - 7); c.stroke(); } c.globalAlpha = 1; }
+  }
   /* blend two poses for the spring between them (numbers only; the face swaps halfway) */
   function blend(a, b, k) {
     const A = POSE[a] || POSE.idle, B = POSE[b] || POSE.idle, n = (x, y) => lerp(x || 0, y || 0, k), o = (x, y) => lerp(x ?? 1, y ?? 1, k);
@@ -1158,7 +1183,7 @@ const CHIBI = (() => {
   const chompHeight = (stage, marks = []) => (STAGE[stage] || STAGE.Bit).bh + 18 + (marks.includes('Horned') && stage !== 'Bit' ? 28 : 0);
   const draw = (c, m, p, t = 0, look = [0, 0]) => {
     CAP = m.capture || null; if (CAP) { CAP.hands = []; CAP.eyes = null; CAP.mouth = null; }
-    VAR = m.variant || null; EYE = VAR === 'Moonlit' ? 'moon' : VAR === 'Pampered' ? 'spark' : null;
+    VAR = m.variant || null; EYE = VAR === 'Moonlit' ? 'moon' : VAR === 'Pampered' ? 'spark' : null; LIDC = m.pal && m.pal.body ? rgb(m.pal.body) : '#999';
     const r = FAM[m.family] ? drawFamily(c, m, p, t, look, FAM[m.family]) : drawChomp(c, m, p, t, look);
     CAP = null; VAR = null; EYE = null; return r;
   };
