@@ -30,7 +30,7 @@ const wornText=k=>{ const w=WORN[k], p=[];
 function weekStock(){
   const R=rng(hashStr("stock|"+PLAYER.week)), wk=Object.keys(WORN), hd=Object.keys(HELD), worn=[];
   while(worn.length<4){ const k=wk[Math.floor(R()*wk.length)]; if(!worn.includes(k)) worn.push(k); }
-  const chips=Object.entries(SKILLS).filter(([n,s])=>s.el&&s.el!=="Void"&&s.lv<=8&&s.fromStat===undefined).map(([n])=>n), ch=[];
+  const chips=Object.entries(SKILLS).filter(([n,s])=>(s.el&&s.el!=="Void"&&s.lv<=8||s.chip)&&s.fromStat===undefined&&!s.sig).map(([n])=>n), ch=[];
   while(ch.length<3){ const n=chips[Math.floor(R()*chips.length)]; if(!ch.includes(n)) ch.push(n); }
   return {worn,held:hd[Math.floor(R()*hd.length)],chips:ch};
 }
@@ -80,9 +80,9 @@ function openWear(){
     `<div style="flex-basis:100%;font-size:13px"><b>Held:</b> ${s.held?`${s.held} (${HELD[s.held].desc}) <button class="small" data-off="held">Take off</button>`:"nothing"}</div>`+
     owned.map(k=>`<button class="rb" data-w="${k}">${k} ×${bag[k]}<small>${WORN[k].slot}: ${wornText(k)}</small></button>`).join("")+
     heldOwned.map(k=>`<button class="rb" data-h="${k}">${k} ×${bag[k]}<small>Hold: ${HELD[k].desc}</small></button>`).join("")+`<button class="rb" id="wr-back">Back</button>`);
-  el("r-panel").querySelectorAll("[data-w]").forEach(b=>b.onclick=()=>{ const k=b.dataset.w, sl=WORN[k].slot; if(s.worn[sl]) addItem(s.worn[sl]); bag[k]--; if(bag[k]<=0) delete bag[k]; s.worn[sl]=k; saveGame(); openWear(); });
+  el("r-panel").querySelectorAll("[data-w]").forEach(b=>b.onclick=()=>{ const k=b.dataset.w, sl=WORN[k].slot; if(s.worn[sl]) addItem(s.worn[sl]); bag[k]--; if(bag[k]<=0) delete bag[k]; s.worn[sl]=k; fixEquip(s); saveGame(); openWear(); });
   el("r-panel").querySelectorAll("[data-h]").forEach(b=>b.onclick=()=>{ const k=b.dataset.h; if(s.held) addItem(s.held); bag[k]--; if(bag[k]<=0) delete bag[k]; s.held=k; saveGame(); openWear(); });
-  el("r-panel").querySelectorAll("[data-off]").forEach(b=>b.onclick=()=>{ const sl=b.dataset.off; if(sl==="held"){ addItem(s.held); s.held=null; } else { addItem(s.worn[sl]); delete s.worn[sl]; } saveGame(); openWear(); });
+  el("r-panel").querySelectorAll("[data-off]").forEach(b=>b.onclick=()=>{ const sl=b.dataset.off; if(sl==="held"){ addItem(s.held); s.held=null; } else { addItem(s.worn[sl]); delete s.worn[sl]; } fixEquip(s); saveGame(); openWear(); });
   el("wr-back").onclick=()=>menu("Care");
 }
 /* Worn items drawn over the sprite, placed from the puppet's eyes, mouth, top and feet. */

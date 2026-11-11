@@ -156,9 +156,9 @@ class Fight{
       me.hitWhileCharging=false; this.hit(i,s); return; }
     const s=me.skills[id], c=costOf(me,s);
     me.energy-=c; me.lastSkill=s.name;
-    if(s.charge&&!(s.sunInstant&&this.field&&this.field.name==="Sunlit")){ me.charging=s; me.hitWhileCharging=false; this.say(`${me.name} gathers power for ${s.name}.`); this.events.push({t:"cast",who:i,el:s.el}); return; }
+    if(s.charge&&!(s.sunInstant&&this.field&&this.field.name==="Sunlit")){ me.charging=s; me.hitWhileCharging=false; this.say(`${me.name} gathers power for ${s.name}.`); this.events.push({t:"cast",who:i,el:s.el,name:s.name,charge:true}); return; }
     if(s.power){ this.hit(i,s); return; }
-    this.events.push({t:"cast",who:i,el:s.el});
+    this.events.push({t:"cast",who:i,el:s.el,name:s.name});
     this.say(`${me.name} uses ${s.name}.`); if(!s.basic){ me.used=me.used||{}; me.used[s.name]=(me.used[s.name]||0)+1; this.p[1-i].seen=this.p[1-i].seen||{}; this.p[1-i].seen[s.name]=1; }
     if(s.protect){ if(me.usedProtect) this.say(`${me.name} braces for anything.`); else this.say("It fails, since it was used last turn."); }
     if(s.counter) this.say(`${me.name} waits to counter.`);

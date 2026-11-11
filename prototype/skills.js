@@ -12,6 +12,7 @@ const SKILLS={
   "Flame Pillar":{el:"Blaze",kind:"Cast",cost:5,power:90,acc:90,lv:14},
   "Flare Charge":{el:"Blaze",kind:"Cast",cost:6,power:130,acc:100,lv:20,charge:true},
   "Inferno":{el:"Blaze",kind:"Strike",cost:7,power:120,acc:85,lv:28,recoil:0.25},
+  "Fire Spin":{el:"Blaze",kind:"Cast",cost:4,power:25,hits:3,acc:90,lv:12,status:["Burn",20]},
   // Brawl
   "Jab":{el:"Brawl",kind:"Strike",cost:2,power:55,acc:100,lv:1},
   "Bulk Up":{el:"Brawl",kind:"Support",cost:3,lv:1,raise:{pow:1,grd:1}},
@@ -89,6 +90,7 @@ const SKILLS={
   "Night Claw":{el:"Shade",kind:"Strike",cost:4,power:70,acc:95,lv:14,crit:0.25},
   "Soul Sap":{el:"Shade",kind:"Cast",cost:4,power:50,acc:100,lv:20,steal:2},
   "Nightmare":{el:"Shade",kind:"Cast",cost:6,power:110,acc:90,lv:28,ifStatus:true},
+  "Shadow Strike":{el:"Shade",kind:"Strike",cost:5,power:85,acc:100,lv:16,noDodge:true,crit:0.2},
   // Void
   "Abyss Gaze":{el:"Void",kind:"Cast",cost:4,power:70,acc:100,lv:1,status:["Dread",20]},
   "Erase":{el:"Void",kind:"Support",cost:5,lv:1,erase:true},
@@ -99,7 +101,31 @@ const SKILLS={
   "Protect":{el:null,kind:"Support",cost:2,lv:12,protect:true},
   "Rest":{el:null,kind:"Support",cost:3,lv:16,heal:0.5,rest:true},
   "Taunt":{el:null,kind:"Support",cost:2,lv:22,taunt:3},
+  // Wind: neutral, taught by skill chips
+  "Gust":{el:null,kind:"Cast",cost:2,power:40,acc:100,lv:4,chip:true,first:true},
+  "Tornado":{el:null,kind:"Cast",cost:6,power:90,acc:80,lv:24,chip:true,lower:{spd:1},lowerChance:30},
 };
+/* Signature skills: a family's own move, learned at level 5, and Fly from worn wings. Never in a scan pool, a shop or a trip.
+   Skit spins a web in its own element, so a Blaze Skit gets Fire Web and a Frost Skit Ice Web. */
+const WEB_BY_EL={Blaze:["Fire Web","Burn"],Frost:["Ice Web","Freeze"],Tide:["Water Web","Soak"],Venom:["Venom Web","Poison"],Spark:["Spark Web","Shock"],Wild:["Vine Web","Root"],
+  Stone:["Stone Web","Crack"],Light:["Light Web","Blind"],Shade:["Shadow Web","Curse"],Charm:["Silk Web","Daze"],Steel:["Wire Web",null],Brawl:["Sticky Web",null],Void:["Rift Web","Dread"]};
+const SIG_SKILLS={
+  "Bunker Down":{el:null,kind:"Support",cost:3,raise:{grd:2,spr:1}},
+  "Crunch":{el:null,kind:"Strike",cost:4,power:80,acc:100,lower:{grd:1},lowerChance:30},
+  "Ink Jet":{el:null,kind:"Cast",cost:3,power:40,acc:100,status:["Blind",40]},
+  "Static Screen":{el:null,kind:"Cast",cost:3,power:45,acc:100,status:["Daze",30]},
+  "Glare":{el:null,kind:"Support",cost:2,acc:100,lower:{pow:1,spd:1}},
+  "High Kick":{el:null,kind:"Strike",cost:5,power:90,acc:90},
+  "Phase Shift":{el:null,kind:"Support",cost:3,afterimage:true},
+  "Fly":{el:null,kind:"Strike",cost:5,power:90,acc:95,charge:true},
+};
+for(const [el,[n,st]] of Object.entries(WEB_BY_EL)) SIG_SKILLS[n]={el,kind:"Cast",cost:3,power:40,acc:95,lower:{spd:1},lowerChance:100,...(st?{status:[st,30]}:{})};
+const FAMILY_SIG={Pinch:"Bunker Down",Chomp:"Crunch",Squib:"Ink Jet",Antik:"Static Screen",Moko:"Glare",Stilt:"High Kick",Booly:"Phase Shift"};
+function sigSkills(s){
+  const out=[], fam=s.m.family; if((s.level||1)>=5){ if(fam==="Skit") out.push(WEB_BY_EL[s.m.el1][0]); else if(FAMILY_SIG[fam]) out.push(FAMILY_SIG[fam]); }
+  const w=s.worn||{}; if(w.back==="Bat wings"||w.back==="Angel wings") out.push("Fly");
+  return out;
+}
 const POOLS={};
 for(const [n,s] of Object.entries(SKILLS)){ const k=s.el||"Neutral"; (POOLS[k]=POOLS[k]||[]).push(n); }
 
@@ -131,6 +157,7 @@ const STAT_SKILL_DATA={
   "Afterimage":{kind:"Support",cost:3,afterimage:true,fromStat:5},
 };
 for(const [n,d] of Object.entries(STAT_SKILL_DATA)) SKILLS[n]={el:null,lv:0,...d};
+for(const [n,d] of Object.entries(SIG_SKILLS)) SKILLS[n]={lv:0,sig:true,...d};
 
 /* Pool order: the scan's pool size (6 to 12) takes skills from the front of this list. */
 function buildPool(el1,el2,size){

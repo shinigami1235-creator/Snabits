@@ -260,13 +260,15 @@ function ranchTraining(c, X, season) {
 /* her head, about 70 units across, centred on (0,0); faces: happy, talk, worried, surprised */
 function talaHead(x, face = 'talk') {
   const hair = '#5a3420', hairD = '#3e2214';
-  SC.depth(x, () => { x.beginPath(); x.ellipse(30, 6, 11, 21, -0.35, 0, 7); }, hair, 3, 0.3);
-  x.fillStyle = '#d24f43'; x.beginPath(); x.roundRect(22, -14, 10, 6, 3); x.fill();
-  SC.depth(x, () => { x.beginPath(); x.ellipse(0, 4, 31, 30, 0, 0, 7); }, '#f8d3a3', 3, 0.22);
-  x.fillStyle = hair; x.beginPath(); x.moveTo(-33, 10); x.bezierCurveTo(-36, -30, -14, -36, 0, -35); x.bezierCurveTo(16, -36, 36, -30, 33, 10);
-  x.quadraticCurveTo(30, -6, 22, -12); x.quadraticCurveTo(16, -2, 8, -6); x.quadraticCurveTo(2, -14, -4, -6); x.quadraticCurveTo(-12, 0, -16, -10); x.quadraticCurveTo(-26, -4, -33, 10); x.fill();
-  x.fillStyle = 'rgba(255,255,255,.22)'; x.beginPath(); x.ellipse(-12, -24, 10, 3.5, -0.35, 0, 7); x.fill();
-  x.fillStyle = hairD; x.beginPath(); x.ellipse(-30, 14, 4, 10, 0.1, 0, 7); x.ellipse(30, 14, 4, 10, -0.1, 0, 7); x.fill();
+  // a bob: the back of the hair frames the face down to the jaw on both sides
+  SC.depth(x, () => { x.beginPath(); x.moveTo(-36, 22); x.bezierCurveTo(-40, -36, 40, -36, 36, 22); x.quadraticCurveTo(34, 30, 24, 28); x.lineTo(-24, 28); x.quadraticCurveTo(-34, 30, -36, 22); x.closePath(); }, hair, 2.5, 0.3);
+  SC.depth(x, () => { x.beginPath(); x.ellipse(0, 4, 29, 29, 0, 0, 7); }, '#f8d3a3', 2.5, 0.22);
+  // fringe across the forehead
+  x.fillStyle = hair; x.beginPath(); x.moveTo(-31, 6); x.bezierCurveTo(-36, -40, 36, -40, 31, 6);
+  x.quadraticCurveTo(27, -6, 20, -9); x.quadraticCurveTo(14, -3, 8, -8); x.quadraticCurveTo(2, -2, -4, -8); x.quadraticCurveTo(-11, -3, -17, -9); x.quadraticCurveTo(-26, -6, -31, 6); x.fill();
+  x.fillStyle = 'rgba(255,255,255,.22)'; x.beginPath(); x.ellipse(-10, -24, 11, 3.5, -0.3, 0, 7); x.fill();
+  x.fillStyle = hair; for (const sd of [-1, 1]) { x.beginPath(); x.moveTo(sd * 31, -2); x.quadraticCurveTo(sd * 24, 12, sd * 26, 27); x.lineTo(sd * 33, 25); x.quadraticCurveTo(sd * 35, 10, sd * 31, -2); x.fill(); }
+  x.fillStyle = '#d24f43'; x.beginPath(); x.roundRect(14, -17, 11, 5, 2.5); x.fill();          // hair clip
   const ey = 8, ex = 12;
   if (face === 'happy') { x.strokeStyle = '#2a1e2e'; x.lineWidth = 3.2; x.lineCap = 'round'; for (const s2 of [-1, 1]) { x.beginPath(); x.arc(s2 * ex, ey + 3, 6, Math.PI * 1.15, Math.PI * 1.85); x.stroke(); } }
   else { const ry = face === 'surprised' ? 8.5 : 7.5;
@@ -289,7 +291,7 @@ function talaPortrait(cv, face) {
   x.fillStyle = '#cfe7f6'; x.fillRect(0, 0, S, S); x.fillStyle = '#bfe0a8'; x.fillRect(0, S * 0.74, S, S);
   const u = S / 120; x.translate(S / 2, S * 0.5); x.scale(u, u);
   x.fillStyle = '#f2c68c'; x.fillRect(-8, 24, 16, 16);                         // neck, joining head to shoulders
-  SC.depth(x, () => { x.beginPath(); x.roundRect(-38, 34, 76, 60, 22); }, '#4a86d8', 3, 0.3);
+  SC.depth(x, () => { x.beginPath(); x.roundRect(-30, 34, 60, 60, 14); }, '#4a86d8', 3, 0.3);
   x.fillStyle = '#e9e2d0'; x.beginPath(); x.moveTo(-14, 34); x.lineTo(0, 52); x.lineTo(14, 34); x.closePath(); x.fill();
   x.fillStyle = '#d24f43'; x.beginPath(); x.moveTo(-12, 36); x.lineTo(0, 52); x.lineTo(12, 36); x.lineTo(0, 44); x.closePath(); x.fill();
   x.translate(0, -6); x.scale(1.05, 1.05); talaHead(x, face);
@@ -553,15 +555,16 @@ function awayProps(c, p, t, front) {
 function talaFull(c, x, y, h, face = 'happy', phone = false, t = 0) {
   const u = h / 100; c.save(); c.translate(x, y); c.scale(u, u);
   c.fillStyle = 'rgba(0,0,0,.18)'; c.beginPath(); c.ellipse(0, 0, 18, 4, 0, 0, 7); c.fill();
-  c.strokeStyle = '#3a3048'; c.lineCap = 'round'; c.lineWidth = 7; c.beginPath(); c.moveTo(-6, -26); c.lineTo(-7, -3); c.moveTo(6, -26); c.lineTo(7, -3); c.stroke();
-  c.fillStyle = '#6b4a32'; for (const s of [-1, 1]) { c.beginPath(); c.ellipse(s * 8, -3, 7, 4, 0, 0, 7); c.fill(); }
-  SC.depth(c, () => { c.beginPath(); c.roundRect(-15, -55, 30, 32, 10); }, '#4a86d8', 3, 0.3);
+  c.strokeStyle = '#3a3048'; c.lineCap = 'round'; c.lineWidth = 6; c.beginPath(); c.moveTo(-4.5, -28); c.lineTo(-5, -3); c.moveTo(4.5, -28); c.lineTo(5, -3); c.stroke();
+  c.fillStyle = '#6b4a32'; for (const s of [-1, 1]) { c.beginPath(); c.ellipse(s * 6, -3, 6, 3.6, 0, 0, 7); c.fill(); }
+  SC.depth(c, () => { c.beginPath(); c.moveTo(-10, -55); c.lineTo(10, -55); c.quadraticCurveTo(12, -55, 12, -52); c.lineTo(11, -28); c.lineTo(-11, -28); c.lineTo(-12, -52); c.quadraticCurveTo(-12, -55, -10, -55); c.closePath(); }, '#4a86d8', 2.5, 0.3);
+  c.fillStyle = '#3a6fc0'; c.fillRect(-11, -32, 22, 4);
   c.fillStyle = '#e9e2d0'; c.beginPath(); c.moveTo(-7, -55); c.lineTo(0, -46); c.lineTo(7, -55); c.closePath(); c.fill();
   c.fillStyle = '#d24f43'; c.beginPath(); c.moveTo(-6, -54); c.lineTo(0, -47); c.lineTo(6, -54); c.lineTo(0, -50); c.closePath(); c.fill();
-  c.strokeStyle = '#f2c68c'; c.lineWidth = 6.5; c.beginPath(); c.moveTo(-14, -50); c.quadraticCurveTo(-21, -40, -19, -30);
-  if (phone) { c.moveTo(14, -50); c.quadraticCurveTo(24, -56, 24, -66); } else { c.moveTo(14, -50); c.quadraticCurveTo(21, -40, 19, -30); } c.stroke();
-  if (phone) { c.fillStyle = '#1d1f2a'; c.beginPath(); c.roundRect(19, -86, 13, 22, 3); c.fill();
-    c.fillStyle = Math.floor(t / 500) % 2 ? '#ffc93c' : '#5ab0ff'; c.beginPath(); c.roundRect(21, -83, 9, 15, 2); c.fill(); }
+  c.strokeStyle = '#f2c68c'; c.lineWidth = 5.5; c.beginPath(); c.moveTo(-11, -51); c.quadraticCurveTo(-17, -41, -15, -31);
+  if (phone) { c.moveTo(11, -51); c.quadraticCurveTo(20, -56, 20, -66); } else { c.moveTo(11, -51); c.quadraticCurveTo(17, -41, 15, -31); } c.stroke();
+  if (phone) { c.fillStyle = '#1d1f2a'; c.beginPath(); c.roundRect(15, -86, 13, 22, 3); c.fill();
+    c.fillStyle = Math.floor(t / 500) % 2 ? '#ffc93c' : '#5ab0ff'; c.beginPath(); c.roundRect(17, -83, 9, 15, 2); c.fill(); }
   c.fillStyle = '#f2c68c'; c.fillRect(-4.5, -64, 9, 11);
   c.translate(0, -76); c.scale(0.62, 0.62); talaHead(c, face); c.restore();
 }
@@ -600,8 +603,10 @@ const OB_SMOOTH = {
   hidden(c, t) { obSkyS(c, ['#6fb3f0', '#b2d8f8', '#d3e9fb'], 46); obSunS(c, 82, 10); SC.cloud(c, 14, 10, 3); SC.cloud(c, 52, 15, 2.4, 0.8);
     SC.hills(c, 96, 44, 48, 2, 10, 2, '#86c174'); obGroundS(c, 46, '#5cae54');
     c.fillStyle = '#6b4226'; c.fillRect(13, 42, 2, 10); SC.depth(c, () => { c.beginPath(); c.roundRect(9.5, 36, 9, 7, [3, 3, 1, 1]); }, '#d8432f', 0.6, 0.3); c.fillStyle = '#f2cf2b'; c.fillRect(17, 33, 0.8, 4); c.fillRect(17, 33, 2.5, 1.5);
-    c.fillStyle = '#6b4226'; c.fillRect(43.5, 40, 3, 12); SC.depth(c, () => SC.blob(c, 45, 32, [[0, -3, 7], [-5, 1, 5.5], [5, 1, 5.5]]), '#3f9a46', 0.8, 0.28);
-    SC.depth(c, () => SC.blob(c, 77, 50, [[0, -1, 5], [-5, 1, 4], [5, 1, 4]]), '#3f9a46', 0.6, 0.28);
+    c.fillStyle = 'rgba(0,0,0,.16)'; for (const [sx, sy, sw] of [[14, 52, 5], [45, 56, 7], [77, 54, 7]]) { c.beginPath(); c.ellipse(sx, sy, sw, 1.3, 0, 0, 7); c.fill(); }
+    c.fillStyle = '#6b4226'; c.beginPath(); c.moveTo(43, 56); c.lineTo(43.6, 38); c.lineTo(46.4, 38); c.lineTo(47, 56); c.closePath(); c.fill();
+    SC.depth(c, () => SC.blob(c, 45, 32, [[0, -3, 7], [-5, 1, 5.5], [5, 1, 5.5]]), '#3f9a46', 0.8, 0.28);
+    SC.depth(c, () => SC.blob(c, 77, 50, [[0, -1, 5], [-5, 1, 4], [5, 1, 4]]), '#3f9a46', 0.6, 0.28); c.fillStyle = '#3f9a46'; c.fillRect(72, 50, 10, 4);
     for (const [dx, dy] of [[-4, -1], [1, -4], [5, 0], [-1, 2]]) { c.fillStyle = '#f07ab4'; c.beginPath(); c.arc(77 + dx, 50 + dy, 0.9, 0, 7); c.fill(); }
     obEyesS(c, 11.5, 38, t, 0); obEyesS(c, 42.5, 30, t, 2.5); obEyesS(c, 74.5, 48, t, 5); },
   scope(c, t, mons) { const g = c.createRadialGradient(48, 30, 4, 48, 30, 60); g.addColorStop(0, '#3b4268'); g.addColorStop(1, '#22263f'); c.fillStyle = g; c.fillRect(0, 0, 96, 64);

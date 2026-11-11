@@ -76,6 +76,7 @@ function knownSkills(s){
   const k=new Set(s.skillsKnown||[]);
   for(const n of s.m.pool) if(SKILLS[n].lv<=s.level) k.add(n);
   for(const n of s.learned||[]) k.add(n);
+  if(typeof sigSkills==="function") for(const n of sigSkills(s)) k.add(n);
   return [...k];
 }
 function fixEquip(s){
@@ -188,7 +189,7 @@ function playerFighter(s){
 function bookMark(s,name,how){ s.book=s.book||{}; const rank={seen:1,hit:2,learned:3}; if(!s.book[name]||rank[how]>rank[s.book[name]]) s.book[name]=how; }
 function canLearnOutside(s,n,route){ // route: "trip" | "chip" | "hit"
   const sk=SKILLS[n], own=!sk.el||sk.el===s.m.el1||sk.el===s.m.el2, t=tierOf(n);
-  if(sk.fromStat!==undefined) return false;
+  if(sk.fromStat!==undefined||sk.sig) return false;
   if(t===1) return true;
   if(own) return t===2||route==="trip";
   return t===2&&route==="trip";

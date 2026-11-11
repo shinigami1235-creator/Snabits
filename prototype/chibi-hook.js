@@ -211,6 +211,7 @@ function sourceFor(e, spec) {
 }
 function animFor(e, spec) {
   const n = e.name || '', fam = spec.family, bit = spec.stage === 'Bit', arms = !['Squib', 'Skit'].includes(fam) && !bit;
+  if (typeof moveAnim === 'function') { const k = moveAnim(e, spec); if (k && ANIM[k]) return k; }      // moves.js knows every skill by name
   for (const [re, kind] of PROJECTILE) if (re.test(n)) return kind;
   if (e.kind === 'Cast') return /Nightmare|Abyss|Soul Sap|Sap Drain|Plague/.test(n) ? 'lift' : /Thunderclap|Radiance|Maelstrom|Overload/.test(n) ? 'push' : 'bolt';
   if (/Bite|Fang|Maw|Grind/.test(n)) return 'bite';
@@ -223,8 +224,10 @@ function animFor(e, spec) {
 function chibiUse(e) {
   const st = CB.side[e.who]; if (!st) return Promise.resolve();
   const kind = animFor(e, st.spec), A = ANIM[kind];
-  CB.anim = { who: e.who, kind, t0: CB.te, el: e.el, name: e.name, src: sourceFor(e, st.spec), col: e.el ? hexRgb(typeof ELC === 'function' ? ELC(e.el) : '#a070ff') : [255, 214, 90] };
-  sfx(['bolt', 'beam', 'spear', 'volley', 'lightning', 'pillar', 'shadowclaw', 'lift', 'push'].includes(kind) ? 'charge' : 'whoosh');
+  CB.anim = { who: e.who, kind, t0: CB.te, el: e.el, name: e.name, src: sourceFor(e, st.spec), col: e.el ? hexRgb(typeof ELC === 'function' ? ELC(e.el) : '#a070ff') : [255, 214, 90],
+    pw: typeof movePower === 'function' ? movePower(e.name) : 1, fromSky: !!st.sky };
+  st.sky = false;
+  sfx(['bolt', 'beam', 'spear', 'volley', 'lightning', 'pillar', 'shadowclaw', 'lift', 'push', 'tornado', 'firespin', 'web', 'drain', 'mist', 'wave'].includes(kind) ? 'charge' : 'whoosh');
   return new Promise(r => setTimeout(r, A.C));
 }
 const hexRgb = h => /^#[0-9a-f]{6}$/i.test(h) ? [1, 3, 5].map(k => parseInt(h.slice(k, k + 2), 16)) : [170, 110, 255];
@@ -525,6 +528,7 @@ function sideState(who, te, pos) {
       out.pose = 'hit'; const dt = te - R.t0; out.flash = T.white ? (dt < 18 ? 2 : dt < T.flash ? 1 : 0) : dt < T.flash ? 3 : 0;
       out.f += -T.push * (k < 0.25 ? eo(k / 0.25) : 1 - eio((k - 0.25) / 0.75)); out.rot += -0.12 * (R.tier === 'heavy' ? 1.6 : 1) * Math.sin(Math.min(1, k * 1.5) * Math.PI) * (who ? -1 : 1); }
     else { const s2 = Math.sin(k * Math.PI); out.pose = 'dodge'; out.off = [pos.perp[0] * 30 * s2, pos.perp[1] * 30 * s2 - 10 * s2]; } }
+  if (st.sky && !(A && A.who === who)) { out.lift = -280; out.alpha = 0; }      // up out of sight between Fly's two turns
   if (st.ko != null) { out.pose = 'ko'; const k = (te - st.ko - 420) / 160;
     if (k > 0) { out.sx *= 1 + 0.4 * eo(k); out.sy *= 1 + 0.4 * eo(k); out.alpha = Math.max(0, 1 - k); } }
   return out;
@@ -595,7 +599,7 @@ function chibiBattleFrame(now) {
   const A = CB.anim;
   if (A && ANIM[A.kind].fx && placed[A.who]) { const T0 = placed[1 - A.who] || { x: homes[1 - A.who].x, y: homes[1 - A.who].y - 40, foot: homes[1 - A.who].y };
     const tgt = { ...T0, x: T0.center ? T0.center.x : T0.x, y: T0.center ? T0.center.y : T0.y };
-    ANIM[A.kind].fx(c, te - A.t0, { self: placed[A.who], target: tgt, targetLift: tgt.lift || 0, col: A.col || [255, 214, 90], el: A.el, name: A.name || '', from: originOf(placed[A.who], A.src, tgt) }); }
+    ANIM[A.kind].fx(c, te - A.t0, { self: placed[A.who], target: tgt, targetLift: tgt.lift || 0, col: A.col || [255, 214, 90], el: A.el, name: A.name || '', from: originOf(placed[A.who], A.src, tgt), pw: A.pw || 1, W: r.width, H: r.height }); }
   if (CB.spark && CB.spark.fresh && placed[CB.spark.who]) { const p = placed[CB.spark.who], src = placed[1 - CB.spark.who] || homes[1 - CB.spark.who];
     const c0 = p.center || p; spawnSparks(c0, Math.atan2(c0.y - src.y, c0.x - src.x), CB.spark.n, CB.spark.col); CB.spark.fresh = false; CB.burstAt = { who: CB.spark.who, t0: te, col: CB.spark.col }; }
   if (CB.burstAt && placed[CB.burstAt.who] && te - CB.burstAt.t0 < 260) { const p = placed[CB.burstAt.who]; burst(c, p.center || p, (te - CB.burstAt.t0) / 260, CB.burstAt.col); }

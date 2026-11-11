@@ -110,7 +110,7 @@ async function playEvents(f,ev){
     if(e.t==="heal"){ B.shown[e.who]=Math.min(f.p[e.who].maxhp,B.shown[e.who]+e.amt); popup(e.who,`+${e.amt}`,"#4dd36a"); drawPanels(); await bw(300); }
     if(e.t==="miss"){ if(typeof chibiBump==="function") chibiBump(e.who,"miss"); popup(e.who,"miss","#9aa"); await bw(300); }
     if(e.t==="guard"){ bump(e.who,"bguard"); await bw(200); }
-    if(e.t==="cast"){ bump(e.who,"bcast"); await bw(250); }
+    if(e.t==="cast"){ const w=typeof chibiSupport==="function"&&!B.fast?chibiSupport(e):0; if(w) await bw(w); else { bump(e.who,"bcast"); await bw(250); } }
     if(e.t==="status"){ popup(e.who,e.name,STATUS_COL[e.name]); await bw(300); }
     if(e.t==="switch"&&f.teams){ const nf=f.teams[e.who][e.j]; B.cur[e.who]=nf; B.shown[e.who]=e.hp; teamSprite(e.who,nf); bump(e.who,"bcast"); drawPanels(); await bw(450); }
     if(e.t==="ko"){ if(typeof chibiPose==="function") chibiPose(e.who,"ko"); $(e.who===0?"b-me-sprite":"b-foe-sprite").classList.add("bko"); await bw(700); }
