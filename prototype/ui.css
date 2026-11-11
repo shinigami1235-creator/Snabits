@@ -505,3 +505,23 @@ body.ob-tut #ranchbtn,body.ob-tut #msgranch{display:none!important}
 .v-cal .cu.no{opacity:.55}.v-cal .none{font-size:13px;color:var(--mute)}
 .v-calnav{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .v-cal .g{font:700 13px var(--pix);min-width:24px;text-align:center;border-radius:5px;padding:3px 0;color:#1a1300}
+/* goals and the Town Hall */
+.goal-list{display:flex;flex-direction:column;gap:8px}
+.goal{display:flex;gap:10px;align-items:flex-start;font:500 14px var(--pix)}
+.goal i{font-style:normal;width:18px;text-align:center;color:var(--mute)}
+.goal.done i{color:#7dff9a}
+.goal b{display:block}.goal small{display:block;color:var(--mute);font-size:12px;margin-top:2px}
+.goal-bar{position:relative;height:14px;border-radius:7px;background:rgba(255,255,255,.08);overflow:hidden;flex-basis:100%}
+.goal-bar i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,#ffb04a,#ffd23f)}
+.goal-bar span{position:relative;display:block;text-align:center;font:600 10px/14px var(--pix);color:#fff;text-shadow:0 1px 1px rgba(0,0,0,.6)}
+.v-cal .cu.ev{opacity:.95;border-left:3px solid #ffb04a}
+/* the bestiary */
+.dex-tabs{display:flex;flex-wrap:wrap;gap:4px}
+.dex-tabs button{font-size:12px;padding:4px 8px}.dex-tabs button.on{background:var(--acc,#ffd23f);color:#10131c}
+.dex-tabs i{font-style:normal;opacity:.6;margin-left:4px;font-size:10px}
+.dex-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:6px}
+.dex-t{display:flex;flex-direction:column;align-items:center;background:rgba(255,255,255,.05);border-radius:10px;padding:4px 2px 6px;text-align:center}
+.dex-t canvas{width:64px;height:64px}
+.dex-t b{font:600 11px var(--pix)}.dex-t small{font-size:10px;color:var(--mute)}
+.dex-t.unk b{color:var(--mute)}
+.goal-list .goal-bar{flex:0 0 14px;width:100%}

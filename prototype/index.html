@@ -64,7 +64,7 @@
 <script src="wild.js"></script>
 <script src="music.js"></script>
 <script src="chibi.js"></script>
-<script src="chibi-hook.js"></script><script src="scenes.js"></script><script src="npcs.js"></script><script src="areas.js"></script><script src="moves.js"></script><script src="summon.js"></script>
+<script src="chibi-hook.js"></script><script src="scenes.js"></script><script src="npcs.js"></script><script src="areas.js"></script><script src="story.js"></script><script src="dex.js"></script><script src="contests.js"></script><script src="moves.js"></script><script src="summon.js"></script>
 <script>if(hasSave()){ document.getElementById("ranchbtn").style.display=""; document.getElementById("msgranch").style.display=""; }</script>
 <script>
 const GROUPS=["red","orange","yellow","green","cyan","blue","violet","pink","brown","white","silver","black"];
@@ -205,6 +205,7 @@ function render(full){
 }
 /* the summon plays over the result, then the card slides up */
 async function summonCard(m){
+  if(m&&typeof dexSee==="function"&&typeof PLAYER!=="undefined"&&PLAYER) dexSee(m);
   if(!m||typeof SUMMON==="undefined") return;
   card.classList.add("held");
   await SUMMON.run(cv=>SUMMON.summon(cv,{photo:still,spec:SUMMON.specFor(m,null,"Bit"),pal:m.pal,name:m.name}));

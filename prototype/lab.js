@@ -143,7 +143,7 @@ function rebirthPick(){
   npcPanel(npcBox("doc","It goes back to a Bit at level 1 with its full lifespan. It keeps 20% of its training, gets +1 talent on every stat and keeps one skill. Which skill should it keep?")+
     known.map(k=>`<button class="rb" data-r="${k}">${k}</button>`).join("")+`<button class="rb" id="rb-back">Back</button>`);
   el("r-panel").querySelectorAll("[data-r]").forEach(b=>b.onclick=()=>doRebirth(b.dataset.r));
-  el("rb-back").onclick=openLab;
+  el("rb-back").onclick=()=>openLab();
 }
 async function doRebirth(keep){
   const s=RS;

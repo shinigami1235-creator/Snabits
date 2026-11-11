@@ -239,7 +239,7 @@ function chibiUse(e) {
   CB.anim = { who: e.who, kind, t0: CB.te, el: e.el, name: e.name, src: sourceFor(e, st.spec), col: e.el ? hexRgb(typeof ELC === 'function' ? ELC(e.el) : '#a070ff') : [255, 214, 90],
     pw: typeof movePower === 'function' ? movePower(e.name) : 1, fromSky: !!st.sky };
   st.sky = false;
-  sfx(['bolt', 'beam', 'spear', 'volley', 'lightning', 'pillar', 'shadowclaw', 'lift', 'push', 'tornado', 'firespin', 'web', 'drain', 'mist', 'wave'].includes(kind) ? 'charge' : 'whoosh');
+  sfx(['bolt', 'beam', 'spear', 'volley', 'lightning', 'pillar', 'shadowclaw', 'lift', 'push', 'tornado', 'firespin', 'web', 'drain', 'mist', 'wave'].includes(kind) ? 'charge' : 'whoosh'); elSfx(e.el, 'cast'); kindSfx(kind);
   return new Promise(r => setTimeout(r, A.C * BATTLE_PACE));
 }
 const hexRgb = h => /^#[0-9a-f]{6}$/i.test(h) ? [1, 3, 5].map(k => parseInt(h.slice(k, k + 2), 16)) : [170, 110, 255];
@@ -259,14 +259,21 @@ function chibiHit(e) {
   const A = CB.anim; if (A && A.who !== e.who && /^(tackle|bite|stomp|punch|claw)$/.test(A.kind) && CB.side[A.who]) CB.side[A.who].recoil = { t0: CB.te, amt: tier === 'heavy' ? 0.06 : 0.035 };
   CB.spark = { who: e.who, n: T.sparks, col: CB.anim && CB.anim.who !== e.who ? CB.anim.col : [255, 236, 160], fresh: true };
   sfx(tier === 'heavy' ? 'heavy' : tier === 'medium' ? 'hit' : 'tap');
+  if (!e.dot && A && A.who !== e.who) elSfx(A.el, 'hit');
 }
-function chibiBump(who, cls) {
+/* which element an ability belongs to, so its effect and sound match: element abilities by their element,
+   family abilities by what they do (Wobble is jelly, so Tide; Shell is Stone; Slippery is Shade, and so on) */
+const FAM_AB_EL = { Wobble: 'Tide', 'Heavy Lifter': 'Steel', 'Big Bite': 'Brawl', 'Keen Eye': 'Light', Shell: 'Stone', 'Long Stride': 'Spark', Web: 'Venom', Slippery: 'Shade', Abyss: 'Void' };
+function abilityEl(name) { if (FAM_AB_EL[name]) return FAM_AB_EL[name];
+  if (typeof EL_ABILITY !== 'undefined') for (const [el, pair] of Object.entries(EL_ABILITY)) if (pair.some(a => a[0] === name)) return el; return null; }
+function chibiBump(who, cls, name) {
   const st = CB.side[who]; if (!st) return;
   if (cls === 'bhit') { if (!st.react || CB.te - st.react.t0 > 30) st.react = { kind: 'hit', t0: CB.te, tier: 'light' }; }
   if (cls === 'miss') { st.react = { kind: 'dodge', t0: CB.te }; sfx('whoosh'); }
   if (cls === 'bguard') st.hold = { pose: 'guard', until: CB.te + 550 };
   if (cls === 'bcast' && !(CB.anim && CB.anim.who === who)) st.hold = { pose: 'cast', until: CB.te + 500 };
-  if (cls === 'ability') { st.hold = { pose: 'cast', until: CB.te + 450 }; st.aura = CB.te; }
+  if (cls === 'ability') { st.hold = { pose: 'cast', until: CB.te + 450 }; st.aura = CB.te; st.auraEl = abilityEl(name);
+    st.auraCol = st.auraEl && typeof ELC === 'function' ? hexRgb(st.auraEl === 'Shade' ? '#7a5bc2' : st.auraEl === 'Light' ? '#f2d36b' : ELC(st.auraEl)) : [255, 214, 90]; elSfx(st.auraEl, 'cast'); }
 }
 function chibiPose(who, pose, ms) {
   const st = CB.side[who]; if (!st) return;
@@ -287,6 +294,47 @@ function sfx(kind) {
     if (kind === 'whoosh') dNoise(d, t, 0.16, 0.18, 'bandpass', 900, 0.7);
     if (kind === 'charge') { const o = AC.createOscillator(), g = AC.createGain(); o.type = 'triangle'; o.frequency.setValueAtTime(300, t); o.frequency.exponentialRampToValueAtTime(900, t + 0.22);
       g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.12, t + 0.05); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.26); o.connect(g); g.connect(d); o.start(t); o.stop(t + 0.28); }
+  } catch (err) {}
+}
+
+/* each element has its own sound over the whoosh or the hit: a crackle for Blaze, a chime for Frost, a splash for Tide,
+   a zap for Spark, rustling for Wild, bubbles for Venom, a sparkle run for Charm, a rumble for Stone, a bell for Light,
+   a clang for Steel, a low growl for Shade and a warble for Void. phase is 'cast' when it leaves and 'hit' when it lands */
+function sfxBus() {
+  if (typeof AC === 'undefined' || !AC || typeof MUS === 'undefined' || !MUS.on || !MUS.nb || CB.now != null) return null;
+  if (!SFXBUS) { SFXBUS = AC.createGain(); SFXBUS.gain.value = 0.55; SFXBUS.connect(AC.destination); } return SFXBUS;
+}
+function sTone(d, t, type, f0, f1, dur, v) { const o = mo(type, f0, t), g = MC.createGain(); if (f1) o.frequency.exponentialRampToValueAtTime(f1, t + dur);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(v, t + 0.015); g.gain.exponentialRampToValueAtTime(0.0001, t + dur); o.connect(g); g.connect(d); o.start(t); o.stop(t + dur + 0.02); }
+function elSfx(el, phase) {
+  try { const d = sfxBus(); if (!d || !el) return; const t = AC.currentTime + 0.01, h = phase === 'hit', R = Math.random;
+    switch (el) {
+      case 'Blaze': for (let i = 0; i < 5; i++) dNoise(d, t + i * 0.03 + R() * 0.02, 0.05, h ? 0.22 : 0.14, 'bandpass', 1800 + R() * 1500, 2); dNoise(d, t, 0.3, 0.12, 'lowpass', 600); break;
+      case 'Frost': [1568, 2093, 2637].forEach((f, i) => sTone(d, t + i * 0.04, 'sine', f, 0, 0.35, h ? 0.07 : 0.05)); break;
+      case 'Tide': dNoise(d, t, 0.28, h ? 0.3 : 0.18, 'lowpass', h ? 900 : 1400); sTone(d, t, 'sine', 500, 180, 0.18, 0.08); break;
+      case 'Spark': sTone(d, t, 'square', 1800, 120, 0.12, 0.06); dNoise(d, t, 0.08, 0.2, 'highpass', 5000); break;
+      case 'Wild': for (let i = 0; i < 4; i++) dNoise(d, t + i * 0.045, 0.05, 0.12, 'highpass', 3000, 0.8); break;
+      case 'Venom': [0, 1, 2].forEach(i => sTone(d, t + i * 0.06, 'sine', 300 + i * 120, 520 + i * 120, 0.08, 0.07)); break;
+      case 'Charm': [880, 1109, 1319, 1760].forEach((f, i) => sTone(d, t + i * 0.05, 'triangle', f, 0, 0.22, 0.05)); break;
+      case 'Stone': dKick(d, t, h ? 0.9 : 0.5); dNoise(d, t, 0.35, 0.25, 'lowpass', 400); break;
+      case 'Light': [1046, 1318, 1568].forEach(f => sTone(d, t, 'triangle', f, 0, 0.5, 0.045)); break;
+      case 'Steel': [523, 1407, 2391].forEach(f => sTone(d, t, 'square', f, f * 0.98, h ? 0.25 : 0.15, 0.03)); break;
+      case 'Shade': sTone(d, t, 'sawtooth', 220, 90, 0.3, 0.05); dNoise(d, t, 0.3, 0.1, 'lowpass', 500); break;
+      case 'Void': { const o = mo('sine', 140, t), lfo = mo('sine', 9, t), lg = MC.createGain(), g = MC.createGain(); lg.gain.value = 40; lfo.connect(lg); lg.connect(o.frequency);
+        g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.12, t + 0.05); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.5); o.connect(g); g.connect(d); o.start(t); lfo.start(t); o.stop(t + 0.55); lfo.stop(t + 0.55); break; }
+      case 'Brawl': dNoise(d, t, 0.1, 0.2, 'bandpass', 600, 1); break;
+    } } catch (err) {}
+}
+/* and the bigger effects get their own shape of sound: a hum for beams, a crack for lightning, wind for storms */
+function kindSfx(kind) {
+  try { const d = sfxBus(); if (!d) return; const t = AC.currentTime + 0.02;
+    if (kind === 'beam') { sTone(d, t, 'sawtooth', 180, 140, 0.55, 0.04); sTone(d, t, 'sine', 360, 300, 0.55, 0.05); }
+    else if (kind === 'lightning') { dNoise(d, t + 0.18, 0.12, 0.45, 'highpass', 2500); dNoise(d, t + 0.2, 0.6, 0.25, 'lowpass', 300); }
+    else if (kind === 'tornado') { for (let i = 0; i < 6; i++) dNoise(d, t + i * 0.09, 0.2, 0.08 + i * 0.015, 'bandpass', 500 + i * 180, 3); }
+    else if (kind === 'meteor' || kind === 'icefall') { dNoise(d, t, 0.6, 0.1, 'bandpass', 1500, 1.5); dKick(d, t + 0.55, 0.9); dNoise(d, t + 0.55, 0.4, 0.3, 'lowpass', 500); }
+    else if (kind === 'volley') { for (let i = 0; i < 4; i++) dNoise(d, t + i * 0.07, 0.04, 0.16, 'bandpass', 2600, 2); }
+    else if (kind === 'pillar') { sTone(d, t, 'sawtooth', 80, 320, 0.5, 0.05); dNoise(d, t, 0.5, 0.15, 'lowpass', 900); }
+    else if (kind === 'wave') { dNoise(d, t, 0.7, 0.25, 'lowpass', 700); dNoise(d, t + 0.3, 0.4, 0.15, 'highpass', 3000); }
   } catch (err) {}
 }
 
@@ -605,7 +653,9 @@ function chibiBattleFrame(now) {
     const cp = st.cap || {}, d = q => q ? { x: q.x / dpr, y: q.y / dpr } : null;
     placed[who] = { x, y: y - CHIBI.height(st.spec.stage, st.spec.marks, st.spec.family) * u * 0.45, foot: y, lift: S.lift, back: !!st.spec.back, r: CHIBI.width(st.spec.stage, st.spec.family) * u * 0.55,
       eyes: cp.eyes && cp.eyes.map(d), mouth: d(cp.mouth), hands: (cp.hands || []).map(d), top: d(cp.top) || { x, y: y - 50 }, center: d(cp.center) };
-    if (st.aura != null && te - st.aura < 500) { c.save(); c.scale(dpr, dpr); psyAura(c, placed[who], te, 1 - (te - st.aura) / 500, 0, [255, 214, 90]); c.restore(); }
+    if (st.aura != null && te - st.aura < 700) { const P = placed[who], a = 1 - (te - st.aura) / 700; c.save(); c.scale(dpr, dpr); psyAura(c, P, te, a, 0, st.auraCol || [255, 214, 90]);
+      if (st.auraEl && typeof ePart === 'function') for (let i = 0; i < 7; i++) { const ph = ((te - st.aura) / 700 + i / 7) % 1, ang = i * 0.9; c.globalAlpha = a; ePart(c, st.auraEl, P.x + Math.cos(ang) * P.r * 1.1, P.foot - 8 - ph * P.r * 2.4, 1.4, te, i, ''); }
+      c.restore(); }
   }
   c.save(); c.scale(dpr, dpr);
   const A = CB.anim;

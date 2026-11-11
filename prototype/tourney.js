@@ -37,13 +37,14 @@ function cupBlock(c,s){
 function cupsThisWeek(s){
   const out=cupsOfWeek(PLAYER.week).filter(c=>!cupBlock(c,s));
   out.push({grade:s.grade,name:"Friendly match",format:"single",size:2,official:false,small:true});
+  if(weekParts(PLAYER.week).wk===2&&typeof story==="function"&&story().seen.gradeD) out.push({grade:s.grade,name:"Rival match: Rook",format:"single",size:2,official:false,small:true,rival:true});
   return out;
 }
 function nextCupText(){
   const w=PLAYER.week; for(let k=1;k<16;k++){ const x=w+k, {mo,wk}=weekParts(x); if(wk===3&&mo%3===2) return `The next official cup is in ${k} week${k>1?"s":""}.`; }
   return "";
 }
-function cupPurse(c){ return c.legend?60000:c.major?30000:c.open?400:c.small?Math.round(GRADE_INFO[c.grade].purse/10):c.exhibition?Math.round(GRADE_INFO[c.grade].purse*1.5):GRADE_INFO[c.grade].purse; }
+function cupPurse(c){ if(c.rival) return Math.round(GRADE_INFO[c.grade].purse/4); return c.legend?60000:c.major?30000:c.open?400:c.small?Math.round(GRADE_INFO[c.grade].purse/10):c.exhibition?Math.round(GRADE_INFO[c.grade].purse*1.5):GRADE_INFO[c.grade].purse; }
 function cupFee(c){ return c.exhibition?2000:c.grade!=="E"&&!c.small&&!c.open?Math.round(cupPurse(c)/10):0; }
 function cupFormat(c){ return c.format==="team5"?"Team exhibition, 5 bouts":c.format==="robin"?`Round robin, ${c.size} monsters`:c.format==="elim"?"Knockout, 8 monsters":c.format==="bo3"?"Knockout of 8, best of 3":"One match"; }
 function openCups(){
@@ -61,6 +62,7 @@ function startCup(c){
   const field=[{me:true,name:displayName(s)}];
   const big=c.major||c.legend, bigLv=()=>clamp(s.level+Math.floor(R()*5)-1,50,70);
   while(field.length<c.size){ const o=big?gradedOpponent("S",bigLv(),R,null,Math.round(c.legend?560+R()*80:480+R()*120)):gradedOpponent(cg,lvl(),R); field.push({o,name:o.stage==="Bit"?o.m.name:`${o.m.name}, ${MARK[o.mark][0]} Byte`,breeder:BREEDERS[Math.floor(R()*BREEDERS.length)]}); }
+  if(typeof rookEntrant==="function"&&story().seen.intro&&(c.official||c.major||c.legend||c.rival)) field[c.format==="single"?1:field.length-1]=rookEntrant(big?"S":cg);   // in a knockout he waits in the other half, for the final
   CUP={c,field,R,pts:field.map(()=>0),hp:field.map(()=>0),res:field.map(()=>field.map(()=>null)),log:[],round:0,alive:field.map((_,i)=>i),done:false,myWins:0,fights:0,out:false};
   CUP.hist=[CUP.alive.slice()];
   if(c.format==="robin"){ // circle method, 4 entrants, 3 rounds
@@ -109,6 +111,7 @@ function afterMatch(opp,res){
   const won=res.winner===0;
   if(res.learned&&res.learned.length) (CUP.learned=CUP.learned||[]).push(...res.learned);
   if(won){ CUP.myWins++; s.wins++; } else if(res.winner===1) s.losses++;
+  if(CUP.field[opp].rook&&!res.forfeit&&typeof rookResult==="function"){ rookResult(won); CUP.rookLine=won?`${displayName(s)} beat ${CUP.field[opp].name}. That makes ${story().rookW} win${story().rookW===1?"":"s"} against Rook.`:`${CUP.field[opp].name} beat ${displayName(s)}. That makes ${story().rookL} loss${story().rookL===1?"":"es"} to Rook.`; }
   const on=CUP.field[opp].name;
   CUP.ann=res.forfeit?`${displayName(s)} withdrew from the match with ${on}.`:won?`${displayName(s)} beats ${on}${res.judged?" on the judges' call":""}!`:res.winner===null?`${displayName(s)} and ${on} fight to a draw.`:`${on} takes it${res.judged?" on the judges' call":""}.`;
   if(won) CUP.expGain=(CUP.expGain||0)+4+2*CUP.field[opp].o.level;
@@ -151,9 +154,10 @@ function finishCup(){
     if(c.official&&c.grade==="S"&&!s.majorInvite){ s.majorInvite=true; lines.push("It's been invited to the Major 4, one big cup each season."); }
     if(c.major){ s.majors=[...new Set((s.majors||[]).concat(c.season))]; lines.push(`That's ${s.majors.length} of the Major 4.`);
       if(s.majors.length===4&&!s.master){ s.master=true; lines.push("It's won all four. It's a Master now, and the Legend Cup opens in the first month of each Summer."); } }
-    if(c.legend) lines.push("A Legend Cup champion. Its name goes on the wall in town.");
+    if(c.legend){ lines.push("A Legend Cup champion. Its name goes on the wall in town."); story().legendWon=true; }
     if((c.grade==="A"||c.grade==="S")&&CUP.R()<0.3){ addItem("Rebirth seed"); lines.push("The prize table had a Rebirth seed."); }
     if(c.grade==="A"&&c.official){ addItem("Life fruit"); lines.push("It also won a Life fruit."); } }
+  if(CUP.rookLine) lines.push(CUP.rookLine);
   if(CUP.learned) lines.push(...CUP.learned);
   const lv=giveExp(s,(CUP.expGain||0)+(place===1?10:3));
   CUP.done=true; CUP.place=place; CUP.prize=prize; CUP.lines=lines.concat(lv);

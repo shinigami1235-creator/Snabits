@@ -198,6 +198,7 @@ function openRanch(m){
   if(m){ if(RS&&RS.id) saveGame(); const e=addToRoster(m); if(!e){ alert("The Freezer is full."); return; } PLAYER.active=e.id; }
   const e=activeEntry(); if(!e){ el("ranch").style.display="flex"; RS=null; panel(""); openFreezer(); return; }
   if(!RS||RS.id!==e.id){ RS=newRanch(e); RS.say=e.st?"Welcome back.":"This is the ranch. Train it, feed it, and watch how it takes it."; }
+  if(typeof dexRaise==="function"){ dexBackfill(); dexRaise(RS.m,RS.stage); }
   el("ranch").style.display="flex"; RS.open=true;
   checkReturn(); { const hungry=hungerCheck(); if(hungry&&!RS.busy) say(hungry); } drawUI(); menu(RS.away?"Out":undefined); saveGame();
   if(!RLOOP){RLOOP=true;requestAnimationFrame(rLoop);}
@@ -316,12 +317,13 @@ function menu(which){
   }
   if(which==="Out"){
     if(s.away){ missionStatus(); return; }
-    panel(`<button class="rb full feat" id="r-wild">Wild battle<small>${typeof wildLeft==="function"?wildLeft(s):3} left this week</small></button><button class="rb" id="r-mis">Missions<small>1 to 3 weeks away</small></button><button class="rb" id="r-cup">Tournaments<small>Grade ${s.grade}</small></button><button class="rb" id="r-lab">Fusion lab<small>Fusion and rebirth</small></button><button class="rb" id="r-town">Town<small>Shops and upgrades</small></button><button class="rb" id="r-frz">Freezer<small>${PLAYER.roster.length-1} frozen</small></button><button class="rb" id="r-ghost">Friend battle<small>Room or ghost code</small></button><button class="rb" id="r-prac">Practice fight<small>Won't shape its habits</small></button><button class="rb" id="r-trip">Skill trip<small>4 weeks in a region</small></button><button class="rb full" id="r-team">Team battle<small>6 on 6 · ${typeof teamReady==="function"?Math.min(6,teamReady().length):0} of 6 ready</small></button>`);
+    panel(`<button class="rb full feat" id="r-wild">Wild battle<small>${typeof wildLeft==="function"?wildLeft(s):3} left this week</small></button><button class="rb" id="r-mis">Missions<small>1 to 3 weeks away</small></button><button class="rb" id="r-cup">Tournaments<small>Grade ${s.grade}</small></button><button class="rb" id="r-lab">Fusion lab<small>Fusion and rebirth</small></button><button class="rb" id="r-town">Town<small>Shops, Town Hall and upgrades</small></button><button class="rb" id="r-ct">Contests<small>${typeof contestOf==="function"&&contestOf(PLAYER.week)?"One is on this week":"First week of each month"}</small></button><button class="rb" id="r-goals">Goals<small>The loan, grades and what's next</small></button><button class="rb" id="r-dex">Bestiary<small>Every Snabit kind you've seen</small></button><button class="rb" id="r-frz">Freezer<small>${PLAYER.roster.length-1} frozen</small></button><button class="rb" id="r-ghost">Friend battle<small>Room or ghost code</small></button><button class="rb" id="r-prac">Practice fight<small>Won't shape its habits</small></button><button class="rb" id="r-trip">Skill trip<small>4 weeks in a region</small></button><button class="rb full" id="r-team">Team battle<small>6 on 6 · ${typeof teamReady==="function"?Math.min(6,teamReady().length):0} of 6 ready</small></button>`);
+    { const P=el("r-panel"); ["r-wild","r-mis","r-trip","r-cup","r-ct","r-town","r-lab","r-frz","r-goals","r-dex","r-ghost","r-prac","r-team"].forEach(id=>{ const b=el(id); if(b) P.appendChild(b); }); }   // going out, then town, then records, then friends
     // anything that can't go ahead says why on the button itself, since the speech box is hidden behind this panel on a phone
     const ill=s.sick?"It has a cold. Rest it or give it medicine first.":s.injured?"It's hurt. Rest it or give it medicine first.":null;
     const block=(id,why)=>{ const bt=el(id); if(!why||!bt) return; bt.disabled=true; bt.classList.add("blocked"); const sm=bt.querySelector("small"); if(sm) sm.textContent=why; };
-    block("r-wild",typeof wildBlock==="function"?wildBlock(s):null); block("r-mis",ill); block("r-cup",ill); block("r-trip",ill||(tripsLocked()?"Opens at 1 heart.":null));
-    el("r-wild").onclick=startWild; el("r-mis").onclick=openBoard; el("r-cup").onclick=openCups; el("r-lab").onclick=openLab; el("r-frz").onclick=openFreezer; el("r-trip").onclick=()=>{ if(tripsLocked()){ say("Skill trips open at 1 heart."); return; } openTrips(); }; el("r-town").onclick=openTown; el("r-ghost").onclick=()=>openRooms(); el("r-team").onclick=openTeam;
+    block("r-wild",typeof wildBlock==="function"?wildBlock(s):null); block("r-mis",ill); block("r-cup",ill); block("r-ct",ill); block("r-trip",ill||(tripsLocked()?"Opens at 1 heart.":null));
+    el("r-wild").onclick=startWild; el("r-mis").onclick=openBoard; el("r-cup").onclick=openCups; el("r-lab").onclick=()=>openLab(); el("r-frz").onclick=openFreezer; el("r-trip").onclick=()=>{ if(tripsLocked()){ say("Skill trips open at 1 heart."); return; } openTrips(); }; el("r-town").onclick=openTown; el("r-goals").onclick=openGoals; el("r-ct").onclick=openContests; el("r-dex").onclick=()=>openDex(); el("r-ghost").onclick=()=>openRooms(); el("r-team").onclick=openTeam;
     el("r-prac").onclick=()=>{ const o=gradedOpponent(s.grade,Math.max(1,s.level+Math.floor(rnd(-1,2))),Math.random); arenaFight({s,foe:o,mode:"control",title:"Practice",learn:true,onEnd:r=>{ if(r.learned.length) say(r.learned.join(" ")); saveGame(); }}); };
   }
 }
@@ -395,13 +397,15 @@ const headY=()=>{ const h=RS.cam&&typeof chibiHeadY==="function"?chibiHeadY(RS):
 function rollDrill(){
   const s=RS, h=hearts();
   if(spoiled()&&Math.random()<0.2+(s.slackBonus||0)) return "slack";
-  const great=10+2*h+(s.fatigue<20?5:0)+(s.weatherBonus?10:0)+(has("Training gear")?5:0), fail=Math.max(5,25-5*h)+(s.fatigue>50?15:0)-(s.stress<10&&s.fatigue<30?5:0);
+  const pl=typeof placeLv==="function"&&s.drillPlace?placeLv(s.drillPlace):0;
+  const great=10+2*h+(s.fatigue<20?5:0)+(s.weatherBonus?10:0)+(has("Training gear")?5:0)+4*pl, fail=Math.max(5,25-5*h)+(s.fatigue>50?15:0)-(s.stress<10&&s.fatigue<30?5:0);
   const r=Math.random()*100; return r<great?"great":r<great+fail?"fail":"success";
 }
 // heavy drills: [name, main stat, minor stat, dropped stat, mess]
 const HEAVY=[["Marathon",0,5,1,"mud"],["Quarry",1,0,5,"dust"],["Fortress",2,1,3,"dust"],["Library",3,4,2,"ink"],["Shrine",4,2,0,null],["Obstacle course",5,3,4,"mud"]];
 async function runDrill(i){
   await scene(async()=>{
+    RS.drillPlace=i<6?DRILL_PLACE[i]:null;
     const s=RS, res=rollDrill(), heavy=i>=6, H=heavy?HEAVY[i-6]:null, main=heavy?H[1]:i, name=heavy?H[0]:DRILLS[i];
     s.lastTrained=main; s.weekAct=STATS[main];
     const place=heavy?HEAVY_PLACE[i-6]:smoothRanch()?DRILL_PLACE[i]:null;
@@ -413,7 +417,7 @@ async function runDrill(i){
     const rp=k=>RANK_PTS[rankOf(base[k])], mult=res==="great"?2:res==="slack"?0.5:1;
     const gains={};
     if(res==="fail") gains[main]=1;
-    else { gains[main]=Math.max(vet?0:1,Math.round(rp(main)*(heavy?1.5:1)*mult*age)); if(heavy) gains[H[2]]=Math.max(vet?0:1,Math.round(rp(H[2])/2*mult*age)); }
+    else { gains[main]=Math.max(vet?0:1,Math.round(rp(main)*(heavy?1.5:1)*mult*age*(1+0.15*(!heavy&&typeof placeLv==="function"?placeLv(DRILL_PLACE[i]):0)))); if(heavy) gains[H[2]]=Math.max(vet?0:1,Math.round(rp(H[2])/2*mult*age)); }
     if(heavy) gains[H[3]]=(gains[H[3]]||0)-2;
     const shp=shapeOf(s.weight)[0], fm=shp==="Thin"?1.25:shp==="Chubby"?1.25:shp==="Heavy"?1.5:1, sm=shp==="Thin"?1.5:shp==="Slim"?1.25:shp==="Chubby"?0.75:shp==="Heavy"?0.5:1, hv=heavy?2:1;
     s.fatigue+=Math.round((res==="great"||res==="slack"?5:10)*fm*hv); s.stress+=Math.round(((res==="great"?9:5)*hv)*sm*(s.variant==="Pampered"?0.75:1)); s.weight-=hv;
@@ -601,12 +605,12 @@ async function runCare(kind){
     if(kind==="play"){
       for(let k=0;k<2;k++){ const tx=rnd(110,215), b=prop({k:"ball",x:HELPX+6,y:GROUND-26,vx:(tx-HELPX)/50,vy:-2.6,g:0.1,c:"#ffd23f",bounce:true});
         await walkTo(tx,85,"run"); await until(()=>Math.abs(b.x-s.x)<6&&b.y>GROUND-12,1200); unprop(b); s.pose="happy"; await hop(16,380); }
-      if(s.playWeek!==PLAYER.week){ s.playWeek=PLAYER.week; s.stress-=5; say("That took the edge off."); } else say("It had fun, though it's played enough for this week.");
+      if(s.playWeek!==PLAYER.week){ s.playWeek=PLAYER.week; s.stress-=has("Toy chest")?10:5; say("That took the edge off."); } else say("It had fun, though it's played enough for this week.");
     }
     clampAll();
   },true);
 }
-function petOnce(){ const s=RS; if(s.petWeek!==PLAYER.week){ s.petWeek=PLAYER.week; s.spoil+=2; s.stress-=2; say(scared()?"It flinched at first, then leaned in.":"It leans right into it."); } else say("It likes that, though it's had its fuss this week."); clampAll(); drawUI(); }
+function petOnce(){ const s=RS; if(s.petWeek!==PLAYER.week){ s.petWeek=PLAYER.week; s.spoil+=2; s.stress-=has("Cozy rug")?5:2; say(scared()?"It flinched at first, then leaned in.":"It leans right into it."); } else say("It likes that, though it's had its fuss this week."); clampAll(); drawUI(); }
 function clampAll(){ const s=RS; s.fatigue=clamp(s.fatigue,0,100); s.stress=clamp(s.stress,0,100); s.spoil=clamp(s.spoil,0,100); s.fear=clamp(s.fear,0,100); s.weight=clamp(s.weight,-50,50); }
 
 function moonFull(){ const d=(Date.now()-Date.UTC(2000,0,6,18,14))/864e5, ph=((d%29.530589)+29.530589)%29.530589; return Math.abs(ph-14.77)<1.1; }
@@ -670,6 +674,7 @@ async function evolveNow(){
   for(let k=0;k<10;k++){ s.flash=99; s.P=k%2?newP:oldP; await rwait(Math.max(60,260-k*22)); }
   s.P=newP; s.flash=0; fixEquip(s); s.messSpots=s.messSpots.map(p=>({x:Math.min(39,p.x*(old.stage==="Bit"?2:1)),y:Math.min(39,p.y*(old.stage==="Bit"?2:1))}));
   s.stageRegions={}; s.stageCups=0; s.neglect=0; s.hinted=false;
+  if(typeof dexRaise==="function") dexRaise(s.m,s.stage);
   spark(s.x,headY()+10,"sparkle",16); s.pose="happy"; await hop(16,450); await rwait(600);
   banner(`${MARK[s.mark][0]} ${to}!`,"#ffd23f"); await rwait(1200); banner("");
   const markLine=to==="Byte"?`with ${MARK[s.mark][1]}. ${STATS[s.mark]} +5%.`:`adding ${MARK[s.mark2][1]}. ${STATS[s.mark]} +10% and ${STATS[s.mark2]} +5%.`;
@@ -690,6 +695,7 @@ async function endWeek(weeks,line){
   if(s.strainRun>=2&&!s.sick){ s.sick=1; s.strainRun=0; notes.push("It's caught a cold. No training next week unless it gets medicine."); }
   for(const it of Object.values(s.worn||{})){ const tz=it&&taste("item",it); if(!tz) continue; s.stress+=tz==="like"?-3:4;
     if(tasteFound(tz)) notes.push(tz==="like"?`It keeps admiring its ${it}. It loves wearing that.`:`It keeps tugging at the ${it}. It doesn't like wearing it.`); }
+  if(has("Potted plants")) s.stress-=2;
   const findP=(s.m.el1==="Wild"||s.m.el1==="Stone")?0.12:0.06;
   if(!s.sick&&Math.random()<findP){ const coins=Math.round(rnd(30,90)); PLAYER.bits+=coins; notes.push(`It dug up ${coins} bits in the yard.`); try{ s.pose="effort"; spark(s.x,GROUND-2,"dust",6); await rwait(500); spark(s.x,GROUND-10,"sparkle",5); }catch(e){} }
   // the week's events
@@ -698,7 +704,8 @@ async function endWeek(weeks,line){
   if(s.weatherBonus) notes.push(`${W[0]} is coming, and ${s.m.el1} monsters love it, so drills will go better next week.`);
   if(Math.random()<0.05){ const v=randomOpponent(Math.random); s.visitor={m:v,x:RW+20,until:performance.now()+9000}; s.stress-=10; notes.push(`A wild ${v.name} wandered in, and they played until sundown.`); }
   if(PLAYER.week>s.born&&(PLAYER.week-s.born)%52===0){ const g=COMMON_FINDS[Math.floor(Math.random()*COMMON_FINDS.length)]; addItem(g); s.spoil+=5; notes.push(`It's its birthday! There was cake, and a ${g} as a present.`); }
-  { const mo=Math.floor(PLAYER.week/4)%12, wk=PLAYER.week%4; if(mo%3===2&&wk===2){ const r=gradedOpponent(s.grade,s.level+1,Math.random); notes.push(`Your rival dropped by with a ${r.m.name} to show off before the official cup. It's a ${r.m.el1} monster, so plan for that.`); } }
+  { const mo=Math.floor(PLAYER.week/4)%12, wk=PLAYER.week%4; if(mo%3===2&&wk===2&&typeof rookMon==="function"&&story().seen.intro){ const r=rookMon(s.grade); notes.push(`Rook dropped by with ${r.m.name} to show off before the official cup. It's a ${r.m.el1} ${r.m.family}, so plan for that.`); } }
+  { const fest=typeof festivalOf==="function"&&festivalOf(PLAYER.week); if(fest){ addItem(fest[1]); s.stress-=10; notes.push(`The ${fest[0]} is on in town this week. Nena gave every ranch ${/^[AEIOU]/.test(fest[1])?"an":"a"} ${fest[1]}, and the music took 10 stress off.`); } }
   notes.push(condition());
   if(s.stress>50) notes.push("It seems tense lately, maybe give it a rest.");
   if(s.petWeek!==PLAYER.week-1&&s.playWeek!==PLAYER.week-1) s.neglect=(s.neglect||0)+1;
@@ -710,6 +717,7 @@ async function endWeek(weeks,line){
   const past=s.used-lifeWeeks();
   if(past>=0&&past<weeks) notes.push("It's reached the end of its lifespan. It's a veteran now. It still fights as hard as ever, but training barely changes it.");
   say(notes.filter(Boolean).join(" ")); drawUI(); saveGame();
+  if(typeof storyAfterWeek==="function") await storyAfterWeek();
 }
 /* ---------- ordinary life: what it does on its own ---------- */
 /* how it feels shows on its face and stance: worn out, droopy, normal, fresh, or fired up on some weeks in top shape */
@@ -812,7 +820,7 @@ function rLoop(t){
   if(smooth){   // the side-scrolling ranch: the camera follows the monster, zooms in on small ones, and can be dragged to look around
     const sp=chibiSpec(null,s), hpx=sp?sp.cm/100*RANCH_PX_M:60, wide=s.bg==='shop'||s.bg==='lab'||s.props.some(p=>p.k==='npc'), Zt=wide?1:clamp(66/hpx,1,s.bg?1.3:1.8);   /* away scenes stay wide so their props show */ s.zoom=s.zoom?s.zoom+(Zt-s.zoom)*0.05:Zt;
     const Z=s.zoom, vw=cv.width/Z, wx=s.x+(s.zx||0), panning=s.pan||(s.panUntil&&performance.now()<s.panUntil);
-    const one=s.room||s.bg, lo=one?0:-RW, hi=Math.max(lo,(one?RW:2*RW)-vw), Lt=clamp(panning?s.panL:wx-vw/2,lo,hi); s.camL=s.camL==null||s.camJump?Lt:s.camL+(Lt-s.camL)*(s.pan?1:0.08); s.camJump=false;
+    const one=s.room||s.bg, lo=one?0:-RW, hi=Math.max(lo,(one?RW:2*RW)-vw), Lt=clamp(panning?(s.panC!=null?s.panC-vw/2:s.panL):wx-vw/2,lo,hi); s.camL=s.camL==null||s.camJump?Lt:s.camL+(Lt-s.camL)*(s.pan?1:0.08); s.camJump=false;
     s.cam={L:s.camL,Z,extra}; }
   const camT=clamp(s.x-cv.width/2,0,room); s.camX=s.camX==null?camT:s.camX+(camT-s.camX)*0.08; const camX=Math.round(clamp(s.camX,0,room));
   c.save(); if(smooth) c.setTransform(s.zoom,0,0,s.zoom,(-s.camL+(s.zx||0))*s.zoom,GROUND+extra-GROUND*s.zoom); else c.translate(-camX,extra); if(s.shake>0){ c.translate(Math.round(rnd(-2,2)),Math.round(rnd(-2,2))); s.shake--; }
