@@ -84,7 +84,10 @@ const SUMMON = (() => {
     const sparks = Array.from({ length: 24 }, () => ({ x: (r() - 0.5) * cw * 0.3, d: r() * 900, v: 0.25 + r() * 0.3, s: 1.5 + r() * 2.5 }));
     const hM = Math.min(W, H) * 0.42, feet = cy + hM * 0.5, fam = famOf(o.spec), E = ENTER[fam] || ENTER.pop;
     const spin = t => { const x = seg(t, 1250, 3000); return x * x * 14 + t / 1000 * 0.4; };
-    function render(t) {
+    /* the build-up (shutter to burst) plays SLOW times longer than its numbers below; the entrance keeps its own pace */
+    const SLOW = 1.35, BURST = 3500, toScene = t => t < BURST * SLOW ? t / SLOW : t - BURST * (SLOW - 1);
+    function render(tReal) {
+      const t = toScene(tReal);
       c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, W, H);
       // the room darkens around the photo
       const dark = seg(t, 320, 700); c.fillStyle = `rgba(12,13,20,${0.97 * dark})`; c.fillRect(0, 0, W, H);
@@ -152,7 +155,7 @@ const SUMMON = (() => {
       const fl = t < 280 ? Math.pow(1 - t / 280, 2) * 0.95 : t >= 3500 ? Math.pow(1 - seg(t, 3500, 3850), 2) * 0.85 : 0;
       if (fl > 0.01) { c.fillStyle = `rgba(255,255,255,${fl})`; c.fillRect(0, 0, W, H); }
     }
-    return { render, duration: 5100, cues: [[0, 'tap'], [1250, 'whoosh'], [2300, 'charge'], [3500, 'heavy'], [3650, 'whoosh']] };
+    return { render, duration: 5100 + BURST * (SLOW - 1), cues: [[0, 'tap'], [1250 * SLOW, 'whoosh'], [2300 * SLOW, 'charge'], [BURST * SLOW, 'heavy'], [BURST * SLOW + 150, 'whoosh']] };
   }
 
   /* ---------- fusion ---------- */
