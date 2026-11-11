@@ -6,7 +6,7 @@ const FAMILY = {
   Moko:  {body:[3,[3,5,6,7,7,7,7,6,5,3]], legs:"tentacles", eyes:"cyclops", base:[55,35,40,75,50,45], ability:["Keen Eye","Its accuracy can't be lowered and dodge doesn't work against it"]},
   Pinch:  {body:[5,[5,6,6,6,6,6,6,5]], legs:"twolegs", arms:3, base:[50,55,65,35,50,45], ability:["Shell","Crits can't land on it"]},
   Stilt:  {body:[2,[2,3,3,3,3,3,3,3,2]], legs:"longlegs", base:[55,50,35,50,45,65], ability:["Long Stride","Acts first on the turn it switches in"]},
-  Skit: {body:[7,[3,5,6,6,6,6,5]], legs:"spider", eyes:"spider", base:[45,55,45,45,45,65], ability:["Web","Its basic attack has a 30% chance to drop the target's Speed 1 step"]},
+  Skit: {body:[7,[3,5,6,6,6,6,5]], legs:"spider", eyes:"spider", arms:0, base:[45,55,45,45,45,65], ability:["Web","Its basic attack has a 30% chance to drop the target's Speed 1 step"]},
   Booly:  {body:[3,[2,3,4,4,5,5,6,6,6,7,7,7]], legs:"ghost", base:[60,35,40,70,55,40], ability:["Slippery","10% chance to dodge any Strike"]},
 };
 const STATS = ["HP","Power","Guard","Mind","Spirit","Speed"];
@@ -51,13 +51,19 @@ function buildGrid(famName, parts){
   const set=(x,y,l)=>{if(x>=0&&x<10&&y>=0&&y<N&&(l!==2&&l!==5||G[y][x]===0||G[y][x]===2))G[y][x]=l;};
   const put=(x,y,l)=>{if(x>=0&&x<10&&y>=0&&y<N)G[y][x]=l;};
   for(let y=yt;y<=yb;y++) for(let x=10-hw(y);x<10;x++) G[y][x]=1;
-  // legs
+  // legs: each leg is a list of points drawn in parts colour with an accent tip, on the left half only, then mirrored
+  const legLine=pts=>pts.forEach(([x,y],i)=>set(x,y,i===pts.length-1?5:2));
   const L=F.legs;
   if(L==="tentacles"){ for(let k=0;k<3;k++){const x0=10-hw(yb)+1+k*2; if(x0>9)break; for(let r=1;r<=5-k%2;r++){const x=x0+((Math.floor(r/2)+k)%2?-1:0); set(x,yb+r,r===5-k%2?5:2);} } }
   if(L==="twolegs"){ for(let r=1;r<=2;r++){set(6,yb+r,2);set(7,yb+r,2);} set(5,yb+3,2);set(6,yb+3,2);set(7,yb+3,2); }
   if(L==="stubby"){ set(5,yb+1,2);set(6,yb+1,2);set(7,yb+1,2);set(5,yb+2,2);set(6,yb+2,2); }
   if(L==="longlegs"){ for(let y=yb+1;y<=18;y++)set(8,y,2); set(7,18,2);set(6,18,5); }
-  if(L==="spider"){ for(let k=0;k<3;k++){const x=10-hw(yb)+2*k-1; set(x,yb+1,2); set(x-1,yb+2,2); set(x-1,yb+3,2); set(x-2,yb+4,5);} }
+  if(L==="spider"){ // three jointed legs a side: one arching off the shoulder, one off the flank, one under the body
+    const rA=yt+2, eA=10-hw(rA), rB=yb-2, eB=10-hw(rB), eC=10-hw(yb);
+    legLine([[eA-1,rA],[eA-2,rA-1],[eA-3,rA-1],[eA-4,rA],[eA-4,rA+1]]);
+    legLine([[eB-1,rB],[eB-2,rB],[eB-3,rB+1],[eB-3,rB+2],[eB-3,rB+3]]);
+    legLine([[eC+1,yb+1],[eC,yb+2],[eC,yb+3],[eC-1,yb+4]]);
+  }
   if(L==="ghost"){ const w=hw(yb); for(let x=10-w;x<10;x++){ if((x+1)%3!==0) put(x,yb+1,1); if((x+1)%3===1) put(x,yb+2,1); } }
   // eyes
   const tall=yb-yt>=9, ey=Math.min(yb-3,yt+Math.max(2,Math.floor((yb-yt)*0.32)));
@@ -91,14 +97,17 @@ function buildGrid(famName, parts){
   if(top===4){ set(9,yt-1,2);set(9,yt-2,2);set(8,yt-3,5); }
   // arms
   const arms=F.arms??parts.arms, ay=Math.min(yb-1,Math.floor((yt+yb)/2)+1), ax=10-hw(ay)-1;
-  if(arms===1||arms===4){ set(ax,ay,2);set(ax-1,ay-1,2);set(ax-1,ay-2,5); }
-  if(arms===2){ set(ax,ay,2);set(ax-1,ay+1,2);set(ax-1,ay+2,5); }
-  if(arms===3){ set(ax,ay,2);set(ax-1,ay-1,2);set(ax-2,ay-2,5);set(ax-1,ay-3,5);set(ax-2,ay-3,0); }
+  const armPts=[], under={};
+  const arm=(x,y,l)=>{ if(x<0||x>=10||y<0||y>=N) return; under[x+","+y]=G[y][x]; set(x,y,l); if(G[y][x]===l) armPts.push([x,y]); };
+  if(arms===1||arms===4){ arm(ax,ay,2);arm(ax-1,ay-1,2);arm(ax-1,ay-2,5); }
+  if(arms===2){ arm(ax,ay,2);arm(ax-1,ay+1,2);arm(ax-1,ay+2,5); }
+  if(arms===3){ arm(ax,ay,2);arm(ax-1,ay-1,2);arm(ax-2,ay-2,5);arm(ax-1,ay-3,5); }
   // mirror
   for(let y=0;y<N;y++) for(let x=0;x<10;x++) G[y][19-x]=G[y][x];
-  if(arms===4){ // wave: right arm hangs down instead
-    for(let y=0;y<N;y++) for(let x=10;x<N;x++) if(G[y][x]===2||G[y][x]===5){ if(x>=10+hw(y)) G[y][x]=0; }
-    const bx=19-ax; G[ay][bx]=2; if(ay+1<N)G[ay+1][bx+1]=2; if(ay+2<N)G[ay+2][bx+1]=5;
+  if(arms===4){ // wave: only the right arm's own pixels go, then it hangs down instead, so legs and top pieces are never touched
+    for(const [x,y] of armPts) G[y][19-x]=under[x+","+y]||0;
+    const bx=19-ax, put2=(x,y,l)=>{ if(x<N&&y<N&&(G[y][x]===0||G[y][x]===2)) G[y][x]=l; };
+    put2(bx,ay,2); put2(bx+1,ay+1,2); put2(bx+1,ay+2,5);
   }
   return G;
 }
