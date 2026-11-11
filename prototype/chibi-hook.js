@@ -11,7 +11,7 @@ function chibiSpec(m, s) {
   const stage = src.stage || 'Bit', marks = [];
   if (stage !== 'Bit' && src.mark != null && MARK[src.mark]) marks.push(MARK[src.mark][0]);
   if (stage === 'Mega' && src.mark2 != null && MARK[src.mark2]) marks.push(MARK[src.mark2][0]);
-  return { stage, marks, pal: src.pal || (s ? s.m.pal : m.pal), el: (s ? s.m : m).el1, worn: src.worn || {} };
+  return { family: fam, stage, marks, pal: src.pal || (s ? s.m.pal : m.pal), el: (s ? s.m : m).el1, worn: src.worn || {} };
 }
 
 /* ranch: the scene canvas is 240 wide and stretched, so the monster draws on a full-resolution layer over it */
@@ -37,7 +37,7 @@ function chibiRanch(s, t) {
   const x = (s.x - camX) * k, y = (GROUND + (s.vExtra || 0) - (s.jy || 0)) * k;
   c.setTransform(u, 0, 0, u, x - 100 * u, y - 188 * u);
   CHIBI.draw(c, spec, RANCH_POSE[s.pose] || 'idle', t);
-  const h = CHIBI.height(spec.stage, spec.marks) * CHIBI_UNIT, w = CHIBI.STAGE[spec.stage].bw * CHIBI_UNIT;   // tap box for petting
+  const h = CHIBI.height(spec.stage, spec.marks, spec.family) * CHIBI_UNIT, w = CHIBI.width(spec.stage, spec.family) * CHIBI_UNIT;   // tap box for petting
   s.bbox = [s.x - w / 2, GROUND - h, s.x + w / 2, GROUND];
   return true;
 }
@@ -57,7 +57,7 @@ function chibiBattleFrame(id, t) {
   const dpr = devicePixelRatio || 1, S = Math.round(132 * dpr);
   if (cv.width !== S) { cv.width = S; cv.height = S; }
   const c = cv.getContext('2d'); c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, S, S);
-  const fit = Math.min(1.25, 190 / (CHIBI.height(st.spec.stage, st.spec.marks) + 30)), u = S / 228 * fit;   // small stages draw bigger in the box
+  const fit = Math.min(1.25, 190 / (CHIBI.height(st.spec.stage, st.spec.marks, st.spec.family) + 30)), u = S / 228 * fit;   // small stages draw bigger in the box
   c.setTransform(u, 0, 0, u, S / 2 - 100 * u, S - 8 * dpr - 188 * u);
   CHIBI.draw(c, st.spec, st.pose, t);
 }
