@@ -137,6 +137,8 @@ function vLoop(){
   const sr=el("v-stage").getBoundingClientRect(), wantH=sr.width>0?Math.max(105,Math.round(195*sr.height/sr.width)):119;
   if(cv.height!==wantH) cv.height=wantH;
   const x=cv.getContext("2d"), W=cv.width, H=cv.height, extra=H-119, fy=0, big=false; x.imageSmoothingEnabled=false;
+  const smooth=typeof CHIBI_ART!=="undefined"&&CHIBI_ART&&typeof chibiVenueScene==="function";   // smooth art: the stage draws on its own layer underneath
+  if(smooth){ x.clearRect(0,0,W,H); chibiVenueScene(cv,VEN.show||{},performance.now()); } else {
   const g=x.createLinearGradient(0,0,0,52); g.addColorStop(0,"#241a3f"); g.addColorStop(1,"#5b3d6e"); x.fillStyle=g; x.fillRect(0,0,W,66);
   // stands with a bobbing crowd
   if(!VEN.crowd){ const R=rng(7); VEN.crowd=[]; for(let r=0;r<4;r++) for(let c2=0;c2<W/5;c2++) VEN.crowd.push([c2*5+(r%2?2:0)+R()*2,30+r*7,STAND_COLS[Math.floor(R()*STAND_COLS.length)],R()*6.28]); }
@@ -146,7 +148,7 @@ function vLoop(){
   for(let k=0;k<6;k++){ const bx=8+k*(W-16)/6; x.fillStyle=BANNER_COLS[k]; x.fillRect(bx,58,(W-16)/6-3,7); x.fillStyle="rgba(0,0,0,.25)"; x.fillRect(bx,63,(W-16)/6-3,2); }
   // arena floor, deeper on a taller stage
   x.fillStyle="#c79a5c"; x.fillRect(0,66,W,H-66); x.fillStyle="#b48647"; for(let k=0;k<W;k+=6) for(let r=0;r<H-70;r+=31) x.fillRect(k+(r%2)*3,70+r+((k*7)%30)%Math.max(1,H-72-r),2,1);
-  x.strokeStyle="#e9c98f"; x.lineWidth=1; x.beginPath(); x.ellipse(W/2,94+fy,big?86:70,big?20:16,0,0,6.29); x.stroke();
+  x.strokeStyle="#e9c98f"; x.lineWidth=1; x.beginPath(); x.ellipse(W/2,94+fy,big?86:70,big?20:16,0,0,6.29); x.stroke(); }
   const show=VEN.show||{};
   // feet sit on the ground line, whatever the sprite's height
   const footRow=grid=>{ for(let r=grid.length-1;r>=0;r--) if(grid[r].some(v=>v)) return r+1; return grid.length; };
@@ -155,7 +157,7 @@ function vLoop(){
     if(!onPod){ x.fillStyle="rgba(0,0,0,.3)"; x.beginPath(); x.ellipse(cx,base,big?26:14,big?4:2.5,0,0,6.29); x.fill(); }
     x.save(); if(flip){ x.translate(cx*2,0); x.scale(-1,1); } x.drawImage(c,cx-sz/2,Math.round(base-feet+1-Math.max(0,by)),sz,sz); x.restore(); };
   const gap=big?52:40, ground=102, podTop=Math.min(H-16,104);
-  if(show.podium!=null){ x.fillStyle="#e9e4d4"; x.fillRect(W/2-22,podTop,44,14); x.fillStyle="#bdb6a0"; x.fillRect(W/2-22,podTop+10,44,4); x.fillStyle="#7a5a1a"; x.fillRect(W/2-1,podTop+3,2,6);
+  if(show.podium!=null&&!smooth){ x.fillStyle="#e9e4d4"; x.fillRect(W/2-22,podTop,44,14); x.fillStyle="#bdb6a0"; x.fillRect(W/2-22,podTop+10,44,4); x.fillStyle="#7a5a1a"; x.fillRect(W/2-1,podTop+3,2,6);
     for(let k=0;k<16;k++){ x.fillStyle=BANNER_COLS[k%6]; x.fillRect((k*37+VEN.t*(1+k%3))%W,(k*23+VEN.t*1.5)%H,2,3); } }
   const s=RS;
   if(show.champ) drawMon(show.champ.fm.grid,show.champ.fm.pal,W/2,false,podTop,true,show.champ.fm);

@@ -5,7 +5,10 @@ let ONB=null;
 const OB_W=96, OB_H=64;
 
 /* ---------- small pixel scene kit ---------- */
-function obCtx(cv){ cv.width=OB_W; cv.height=OB_H; const c=cv.getContext("2d"); c.imageSmoothingEnabled=false; return c; }
+const obSmooth=()=>typeof CHIBI_ART!=="undefined"&&CHIBI_ART&&typeof OB_SMOOTH!=="undefined";
+function obCtx(cv){
+  if(obSmooth()){ const d=devicePixelRatio||1, w=Math.round((cv.clientWidth||288)*d); cv.width=w; cv.height=Math.round(w*OB_H/OB_W); cv.style.imageRendering="auto"; return cv.getContext("2d"); }
+  cv.width=OB_W; cv.height=OB_H; const c=cv.getContext("2d"); c.imageSmoothingEnabled=false; return c; }
 const obR=(c,x,y,w,h,col)=>{ c.fillStyle=col; c.fillRect(Math.round(x),Math.round(y),w,h); };
 function obSky(c,cols,ground){ const band=Math.ceil(ground/cols.length); cols.forEach((k,i)=>obR(c,0,i*band,OB_W,band,k)); }
 function obGround(c,y,col,dots){ obR(c,0,y,OB_W,OB_H-y,col); for(let i=0;i<40;i++){ const x=(i*37)%OB_W, yy=y+2+((i*13)%(OB_H-y-2)); obR(c,x,yy,1,1,dots); } }
@@ -73,7 +76,9 @@ let OB_LOOP=false;
 function obLoop(){
   const cv=document.getElementById("ob-cv");
   if(!ONB||!ONB.scene||!cv||!shownOb()){ OB_LOOP=false; return; }
-  const c=cv.getContext("2d"); c.clearRect(0,0,OB_W,OB_H); OB_SCENES[ONB.scene](c,performance.now(),ONB.mons||[]);
+  if(obSmooth()&&OB_SMOOTH[ONB.scene]){ const d=devicePixelRatio||1; if(Math.abs(cv.width-Math.round(cv.clientWidth*d))>2) obCtx(cv);
+    const c=cv.getContext("2d"), u=cv.width/OB_W; c.setTransform(u,0,0,u,0,0); c.clearRect(0,0,OB_W,OB_H); OB_SMOOTH[ONB.scene](c,performance.now(),ONB.mons||[]); }
+  else { const c=cv.getContext("2d"); c.clearRect(0,0,OB_W,OB_H); OB_SCENES[ONB.scene](c,performance.now(),ONB.mons||[]); }
   requestAnimationFrame(obLoop);
 }
 const shownOb=()=>{ const d=document.getElementById("ob"); return !!d&&d.style.display!=="none"; };

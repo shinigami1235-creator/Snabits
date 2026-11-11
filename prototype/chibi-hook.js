@@ -632,8 +632,9 @@ function chibiVenueFlush(cv) {
   const dpr = devicePixelRatio || 1, W = Math.round(cv.offsetWidth * dpr), H = Math.round(cv.offsetHeight * dpr);
   if (o.width !== W) o.width = W; if (o.height !== H) o.height = H;
   const c = o.getContext('2d'); c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, W, H);
-  const k = W / cv.width, u = k * 0.3, now = performance.now();
+  const k = W / cv.width, now = performance.now();
   for (const q of VQ.splice(0)) {
+    const u = k * Math.min(50, Math.max(20, 36 * Math.sqrt((q.spec.cm || 170) / 170))) / CHIBI.height(q.spec.stage, [], q.spec.family);   // sized by height, squeezed like battle
     c.setTransform(u * (q.flip ? -1 : 1), 0, 0, u, q.cx * k - 100 * u * (q.flip ? -1 : 1), (q.base + 6) * (H / cv.height) - 188 * u);
     CHIBI.draw(c, q.spec, 'idle', now, [q.flip ? 0.5 : -0.5, 0]);
   }
