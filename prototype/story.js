@@ -134,7 +134,8 @@ function openHall(msg) {
   el('th-back').onclick = openTown;
   el('r-panel').querySelectorAll('[data-pay]').forEach(b => b.onclick = async () => {
     const a = +b.dataset.pay; if (PLAYER.bits < a) return; PLAYER.bits -= a; St.paid += a; drawUI(); saveGame();
-    const id = dueBeat(); if (id && id.startsWith('loan')) { await playBeat(id); openHall(); return; }
+    const due = () => { const k = [['loan25', 0.25], ['loan50', 0.5], ['loan75', 0.75], ['loan100', 1]].find(([k, f]) => !St.seen[k] && St.paid >= LOAN * f); return k ? k[0] : null; };
+    if (due()) { await scene(async () => { await homeStage(); for (let id; (id = due());) { story().seen[id] = PLAYER.week; await BEATS[id](); } RS.panUntil = 0; RS.panC = null; }); openHall(); return; }
     openHall(`Paid ${a.toLocaleString()} bits.`);
   });
 }
