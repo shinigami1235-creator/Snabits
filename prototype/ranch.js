@@ -63,7 +63,7 @@ function barnTap(x,y){   // a tap that wasn't on the monster, in yard coords; tr
   if(!s.room){ if(Math.abs(x-HUTX())<40&&y>GROUND-104&&y<GROUND+4){ const id=s.cur=++RACT; enterBarn(id).then(()=>say("Its room in the barn. Tap the toys, the bed or the wardrobe.")).catch(()=>{}); return true; } return false; }
   const id=s.cur=++RACT; s.idling=false;
   if(inX(S.door)&&y>GROUND-104){ leaveBarn(); return true; }
-  if(inX(S.trophies)&&y>GROUND-108&&y<GROUND-86){ const c=s.cups||[]; say(c.length?`${c.length} cup${c.length>1?"s":""} on the shelf: ${c.join(", ")}.`:"The shelf's empty. Its first tournament win goes here."); return true; }
+  if(inX(S.trophies)&&y>GROUND-108&&y<GROUND-86){ const c=s.cups||[]; say(c.length?`${c.length} cup${c.length>1?"s":""} on the shelf: ${c.join(", ")}.`:"The shelf is empty until it wins its first tournament."); return true; }
   if(inX(S.shelf)&&y>GROUND-50){ runCare("play"); return true; }
   if(inX(S.stove)&&y>GROUND-40&&has("Kitchen")){ menu("Feed"); return true; }
   if(inX(S.wardrobe)&&y>GROUND-60){ openWear(); return true; }
@@ -284,6 +284,7 @@ function weekCard(){
 
 function menu(which){
   if(RS) RS.inTown=false;
+  if(RS&&RS.visit&&typeof leaveVisit==="function") leaveVisit();
   const s=RS; if(s.busy) return;
   el("r-menu").querySelectorAll(".rb").forEach(b=>b.classList.toggle("on",b.dataset.m===which));
   if(!which){ panel(""); return; }
@@ -330,6 +331,7 @@ async function scene(fn,keepRoom){
   try{ await fn(); }catch(e){ if(e!==RSTOP) console.error(e); }
   if(s.zx){ s.x+=s.zx; s.zx=0; }
   const dk=el("r-dusk"); if(dk){ dk.style.transition="none"; dk.style.backgroundColor="transparent"; } s.dayHour=null; if(s.training) backHome();
+  if(s.visit){ s.props=s.propsHome||s.props; s.propsHome=null; s.visit=null; } s.trip=false; s.night=0; s.dusk=0; s.guide=null;
   s.busy=false; s.skip=false; s.bg=null; s.tripLabel=null; s.props=s.props.filter(p=>p.k==="bowl"); el("r-skip").style.display="none"; s.pose="idle"; s.jy=0; s.bx=0; s.upside=false; s.ghosts=false;
   drawUI(); if(s.lastMenu&&!s.dead) menu(s.lastMenu); saveGame();
 }
@@ -448,7 +450,7 @@ function praiseOrScold(res){
       const T=yes?R.yes:R.no; for(let k=1;k<T.length;k+=2) s[T[k]]+=T[k+1];
       if(res==="slack") s.slackBonus=Math.max(-0.1,(s.slackBonus||0)+(yes?-0.05:0.05));
       try{
-        if(res==="great"&&yes){ s.pose="happy"; spark(s.x,headY()-4,"heart",3); await hop(10,300); say("It beams. It knows that was good work."); }
+        if(res==="great"&&yes){ s.pose="happy"; spark(s.x,headY()-4,"heart",3); await hop(10,300); say("It's beaming since it knows it did well."); }
         else if(res==="great"){ s.pose="sad"; say("It looks up at you, waiting for something."); }
         else if(res==="slack"&&yes){ s.pose="sad"; spark(s.x,headY()-6,"sweat",2); say("It hangs its head. It'll think twice next time."); }
         else if(res==="slack"){ s.pose="happy"; say("It trots off, pleased with itself."); }
@@ -567,7 +569,7 @@ async function runMeal(i){
     let [ , , st,sp,fe,wt]=ml; s.stress+=st; s.spoil+=sp; s.fear+=fe; s.weight+=wt;
     if(like==="like"){ s.stress-=3; s.spoil+=2; if(has("Kitchen")) s.fatigue-=5; } if(like==="dis"){ s.stress+=12; s.spoil-=6; s.fear+=2; }
     const first=!s.known[i]; s.known[i]=like; if(like!=="neutral") tasteFound(like);
-    say(like==="like"?(first?"It loves this! I'll mark it with a heart.":"Its favourite, gone in seconds."):like==="dis"?(first?"It hates this one. I'll mark it so we remember.":"It ate it, but it wasn't happy."):"It ate it all. Nothing special.");
+    say(like==="like"?(first?"It loves this! I'll mark it with a heart.":"It loves this and finished it in seconds."):like==="dis"?(first?"It hates this one. I'll mark it so we remember.":"It ate it, but it wasn't happy."):"It ate all of it.");
     clampAll();
   });
 }
@@ -702,12 +704,12 @@ async function endWeek(weeks,line){
     else if(!s.hinted&&tpTotal()>=evoTotal()-10){ s.hinted=true; notes.push(MARK_HINT[s.stage==="Bit"?topMark():s.tp.map((v,i)=>[v,i]).filter(x=>x[1]!==s.mark).sort((a,b)=>b[0]-a[0])[0][1]]); }
   }
   const past=s.used-lifeWeeks();
-  if(past>=0&&past<weeks) notes.push("It's reached the end of its lifespan. It's a veteran now: it still fights as hard as ever, but training barely changes it.");
+  if(past>=0&&past<weeks) notes.push("It's reached the end of its lifespan. It's a veteran now. It still fights as hard as ever, but training barely changes it.");
   say(notes.filter(Boolean).join(" ")); drawUI(); saveGame();
 }
 /* ---------- ordinary life: what it does on its own ---------- */
 async function idleTick(){
-  const s=RS; if(!s||!s.open||s.busy||s.idling||s.rub||s.dead||s.away) return;
+  const s=RS; if(!s||!s.open||s.busy||s.idling||s.rub||s.dead||s.away||s.visit) return;
   s.idling=true; const id=s.cur=++RACT;
   try{
     if(s.injured){ s.pose="tired"; await rwait(2500,id); }

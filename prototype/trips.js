@@ -26,61 +26,68 @@ function tripOptions(s,reg){
 }
 function tutorLine(s,reg){
   const o=tripOptions(s,reg);
-  if(o.some(x=>x.chainOk&&x.score>=x.need)) return "\"It's ready to learn.\"";
-  if(o.some(x=>!x.chainOk&&x.score>=x.need)) return "\"There's a technique it can't reach yet.\"";
-  if(o.some(x=>x.chainOk&&x.score>=x.need-20)) return "\"Hard work might earn it something.\"";
-  return "\"It isn't ready for anything new here.\"";
+  if(o.some(x=>x.chainOk&&x.score>=x.need)) return "Kiko: \"It's ready to learn a skill here.\"";
+  if(o.some(x=>!x.chainOk&&x.score>=x.need)) return "Kiko: \"There's a skill here it can't reach until it masters an easier one.\"";
+  if(o.some(x=>x.chainOk&&x.score>=x.need-20)) return "Kiko: \"It could learn something here if it trains hard.\"";
+  return "Kiko: \"It isn't ready to learn anything new here.\"";
 }
 function openTrips(){
   const s=RS;
   if(s.sick||s.injured){ say("It isn't well enough to travel. Rest it or give it medicine first."); return; }
   const regs=TRIP_REGIONS().filter(r=>r.n!=="The Rift"||s.grade==="A"||s.grade==="S");
-  panel(`<div style="flex-basis:100%;font-size:13px">A trip takes 4 game weeks and trains two stats each week. The tutor's line says what it might learn.</div>`+
+  panel(`<div style="flex-basis:100%;font-size:13px">Kiko takes it to one region for 4 weeks and trains two stats each week. Under each region he says whether it can learn a skill there.</div>`+
     regs.map((r,i)=>{ const [a,b]=TRIP_STATS[r.n]; return `<button class="rb" data-t="${i}">${r.n}<small>${r.el}, ${STATS[a]} and ${STATS[b]}. ${tutorLine(s,r)}</small></button>`; }).join("")+
     `<button class="rb" id="tr-back">Back</button>`);
   el("r-panel").querySelectorAll("[data-t]").forEach(b=>b.onclick=()=>runTrip(regs[+b.dataset.t]));
   el("tr-back").onclick=()=>menu("Out");
 }
+const NIGHT_LINES=["{n} is fast asleep. We'll start training again in the morning.","{n} fell asleep by the fire. We start again at sunrise.","{n} is tired out from today. Tomorrow starts the last week."];
 async function runTrip(reg){
   const s=RS, [main,second]=TRIP_STATS[reg.n], weeks=[], learned=[];
-  const max=hearts()>=4?2:1, base=FAMILY[s.m.family].base, rp=k=>RANK_PTS[rankOf(base[k])];
+  const max=hearts()>=4?2:1, base=FAMILY[s.m.family].base, rp=k=>RANK_PTS[rankOf(base[k])], gain=[0,0];
   await scene(async()=>{
-    say(`Off to ${reg.n} for 4 weeks.`); s.pose="happy"; await hop(12,380); await walkTo(RW+30,60,"walk");
-    s.bg="reg:"+reg.el; s.x=-30;
-    await stageCard(reg.n,`Four weeks of training here. ${STATS[main]} first, ${STATS[second]} second.`);
+    const nm=s.m.name, K=n=>say(n,"guide");
+    await tripLeave(`Kiko is here to take ${nm} to ${reg.n}. They'll train there for four weeks.`);
+    await tripArrive(reg.el);
+    s.tripLabel=`${reg.n} · Week 1 of 4`; drawUI();
+    await stageCard(reg.n,`We'll train ${STATS[main]} the most here, and ${STATS[second]} a little too.`,"guide");
     for(let w=0;w<4;w++){
       const age=ageMult(s);
       const ok=Math.random()*100<Math.min(95,60+8*hearts()-(s.fatigue>50?15:0));
       const a=Math.max(1,Math.round(rp(main)*age*(ok?1:0.5))), b=Math.max(1,Math.round(rp(second)/2*age*(ok?1:0.5)));
-      s.tripLabel=`${reg.n} · Week ${w+1} of 4`; drawUI(); banner(`Week ${w+1}`,"#fff"); await rwait(700); banner("");
+      s.tripLabel=`${reg.n} · Week ${w+1} of 4`; drawUI(); banner(`Week ${w+1}`,"#fff");
+      if(w>0) K(["Hit the post again and put your weight behind it.","Faster this time, and don't stop between hits.","This is the last week, so give it everything."][w-1]); else K("Start on the post. Hit it as hard as you can.");
+      await rwait(900); banner("");
       await playTask("drill",ok);
-      s.tp[main]+=a; s.tp[second]+=b; s.fatigue+=16; s.stress+=8;
+      s.tp[main]+=a; s.tp[second]+=b; gain[0]+=a; gain[1]+=b; s.fatigue+=16; s.stress+=8;
       drawUI(); popStat(main,"+"+a); popStat(second,"+"+b);
-      let line=`Week ${w+1}: ${STATS[main]} +${a}, ${STATS[second]} +${b}.${ok?"":" A rough week."}`;
-      await stageResult(ok,line);
+      let line=`Week ${w+1}: ${STATS[main]} +${a}, ${STATS[second]} +${b}.${ok?"":" It was a rough week."}`;
+      await stageResult(ok,ok?`That was a good week. ${STATS[main]} went up by ${a} and ${STATS[second]} by ${b}.`:`That was a rough week, so ${STATS[main]} only went up by ${a} and ${STATS[second]} by ${b}.`,"guide");
       if(ok){
         s.uses=s.uses||{}; for(const n of knownSkills(s)) if(SKILLS[n].el===reg.el) s.uses[n]=(s.uses[n]||0)+5;
         if(learned.length<max){
           const opts=tripOptions(s,reg).filter(x=>x.chainOk&&x.score>=x.need);
           if(opts.length){ const x=opts[Math.floor(Math.random()*opts.length)], p=Math.min(50,25+Math.floor((x.score-x.need)/4)), got=Math.random()*100<p;
-            banner("Special training","#ffd23f"); say(`It's trying ${x.n}.`); await rwait(800); banner("");
+            banner("Special training","#ffd23f"); K(`Let's try ${x.n} this week.`); if(s.guide) s.guide.pose="point"; await rwait(900); banner("");
             for(let k=0;k<3;k++){ s.pose="effort"; await hop(8,240); spark(s.x+14,headY()+6,k===2&&got?"sparkle":"dust",k===2&&got?8:3); s.pose="idle"; await rwait(260); }
-            if(got){ learned.push(x.n); s.skillsKnown=(s.skillsKnown||[]).concat(x.n); bookMark(s,x.n,"learned"); line+=` It learned ${x.n}!`; banner(`Learned ${x.n}!`,"#7dff9a"); s.pose="happy"; await rwait(1300); banner(""); }
-            else { line+=` It tried ${x.n} but didn't get it yet.`; banner("Not yet","#ff8a8a"); s.pose="sad"; await rwait(1000); banner(""); }
+            if(s.guide) s.guide.pose="stand";
+            if(got){ learned.push(x.n); s.skillsKnown=(s.skillsKnown||[]).concat(x.n); bookMark(s,x.n,"learned"); line+=` It learned ${x.n}.`; banner(`Learned ${x.n}!`,"#7dff9a"); if(s.guide) s.guide.face="surprised"; K(`Well done! ${nm} has learned ${x.n}.`); s.pose="happy"; await rwait(1500); banner(""); if(s.guide) s.guide.face="talk"; }
+            else { line+=` It tried ${x.n} and couldn't get it yet.`; banner("Not yet","#ff8a8a"); K(`${nm} couldn't get ${x.n} this time.`); s.pose="sad"; await rwait(1200); banner(""); }
           }
         }
       }
       weeks.push(line);
-      for(const k of [main,second]) for(const [nm,need] of STAT_SKILLS[k]) if(s.tp[k]>=need&&!s.learned.includes(nm)){ s.learned.push(nm); weeks.push(`It learned the stat skill ${nm}.`); }
+      for(const k of [main,second]) for(const [nm2,need] of STAT_SKILLS[k]) if(s.tp[k]>=need&&!s.learned.includes(nm2)){ s.learned.push(nm2); weeks.push(`It learned the stat skill ${nm2}.`); }
+      if(w<3) await campNight(`${reg.n} · Night ${w+1}`,NIGHT_LINES[w].replace("{n}",nm));
     }
-    s.props=s.props.filter(p=>p.k==="bowl"); await walkTo(RW+30,60,"walk"); s.bg=null; s.tripLabel=null;
     s.stageRegions=s.stageRegions||{}; s.stageRegions[reg.n]=(s.stageRegions[reg.n]||0)+4;
     fixEquip(s); clampAll();
-    await homeArrive(140); s.pose=learned.length?"happy":"idle"; if(learned.length) spark(s.x,headY()-6,"sparkle",10); await rwait(600);
-    RS.weekAct="Trip"; await endWeek(4,`Back from ${reg.n}.`);
+    await tripHome(`That's the end of the four weeks. Time to take ${nm} home.`,`We're back at the ranch. ${nm} worked hard, so give it a good rest.`,learned.length?"happy":"idle");
+    if(learned.length) spark(s.x,headY()-6,"sparkle",10); await rwait(400);
+    RS.weekAct="Trip"; await endWeek(4,`Welcome back, ${nm}! Its ${STATS[main]} went up by ${gain[0]} and its ${STATS[second]} by ${gain[1]}${learned.length?`, and it learned ${learned.join(" and ")}`:""}.`);
   });
   panel(`<div class="full lab-head"><b>Trip to ${reg.n}</b><button class="small" id="tr-ok">Done</button></div><div class="full trip-log">`+weeks.map(t=>`<div class="trip-row ${/rough/.test(t)?"no":"ok"}"><i>${/rough/.test(t)?"✕":"✓"}</i><span>${t}</span></div>`).join("")+
-    `</div><div class="full lab-info">${learned.length?"It learned "+learned.join(" and ")+".":"No new skill this time."}</div>`);
+    `</div><div class="full lab-info">${learned.length?"It learned "+learned.join(" and ")+".":"It didn't learn a new skill this time."}</div>`);
   el("tr-ok").onclick=()=>menu("Out"); saveGame();
 }
 

@@ -35,40 +35,52 @@ function weekStock(){
   while(ch.length<3){ const n=chips[Math.floor(R()*chips.length)]; if(!ch.includes(n)) ch.push(n); }
   return {worn,held:hd[Math.floor(R()*hd.length)],chips:ch};
 }
+/* Nena's shop: the Market, the week's things to wear and hold, skill chips and selling, all from her counter.
+   With the smooth art it's a place you walk into; she talks in the box at the top of the panel. */
+let SHOP_SAY=null;
 function buy(k,price,then){
-  if(PLAYER.bits<price){ say("We can't afford that yet."); return; }
-  PLAYER.bits-=price;
-  if(WORN[k]||HELD[k]) addItem(k); else if(k.startsWith("Skill chip: ")) addItem(k); else addItem(k);
-  say(`Bought ${/^[AEIOU]/.test(k)?"an":"a"} ${k} for ${price} bits.`); drawUI(); saveGame(); if(then) then();
+  if(PLAYER.bits<price){ SHOP_SAY="You don't have enough bits for that one."; if(then) then(); return; }
+  PLAYER.bits-=price; addItem(k);
+  SHOP_SAY=`Here's your ${k}. Thank you!`; drawUI(); saveGame(); if(then) then();
 }
 function openTown(){
   if(RS) RS.inTown=true;
-  panel(`<div class="full lab-head"><b>Town</b><button class="small" id="tw-back">Back</button></div><div class="full lab-info">The Item shop and Skill shop restock every week.</div>
-    <button class="rb" id="tw-m">Market<small>Snacks, medicine, toys</small></button><button class="rb" id="tw-i">Item shop<small>Hats, charms, gear</small></button>
-    <button class="rb" id="tw-s">Skill shop<small>Tier 1 chips</small></button><button class="rb" id="tw-w">Workshop<small>Ranch upgrades</small></button>
-    <button class="rb" id="tw-sell">Sell<small>Half price back</small></button>`);
-  el("tw-m").onclick=openMarket; el("tw-i").onclick=openItemShop; el("tw-s").onclick=openSkillShop; el("tw-w").onclick=openWorkshop; el("tw-sell").onclick=openSell; el("tw-back").onclick=()=>menu("Out");
+  if(RS&&RS.visit==="shop"){ leaveVisit().then(openTown); return; }
+  panel(`<div class="full lab-head"><b>Town</b><button class="small" id="tw-back">Back</button></div><div class="full lab-info">Nena's things to wear and her skill chips change every week.</div>
+    <button class="rb" id="tw-shop">Nena's shop<small>Snacks, medicine, things to wear, skill chips</small></button><button class="rb" id="tw-w">Workshop<small>Ranch upgrades</small></button>`);
+  el("tw-shop").onclick=()=>openShop(); el("tw-w").onclick=openWorkshop; el("tw-back").onclick=()=>menu("Out");
 }
-function shopList(title,rows,back){
-  panel(`<div style="flex-basis:100%;font-size:13px">${title} ${PLAYER.bits} bits.</div>`+rows.map((r,i)=>`<button class="rb" data-s="${i}" ${PLAYER.bits<r.price||r.off?"disabled":""}>${r.name} · ${r.price}<small>${r.desc}</small></button>`).join("")+`<button class="rb" id="sh-back">Back</button>`);
+async function openShop(line){
+  if(RS&&RS.visit!=="shop") await visitPlace("shop");
+  if(RS) RS.inTown=true;
+  const say0=SHOP_SAY||line||"Welcome! Feel free to look around. The skill chips are in the glass case."; SHOP_SAY=null;
+  npcPanel(npcBox("shop",say0)+`<button class="rb" id="sh-m">Snacks and medicine<small>Food, medicine and toys</small></button><button class="rb" id="sh-i">Things to wear<small>New every week</small></button>
+    <button class="rb" id="sh-s">Skill chips<small>New every week</small></button><button class="rb" id="sh-sell">Sell<small>Half price back</small></button><button class="rb full" id="sh-out">Leave the shop</button>`);
+  el("sh-m").onclick=openMarket; el("sh-i").onclick=openItemShop; el("sh-s").onclick=openSkillShop; el("sh-sell").onclick=openSell;
+  el("sh-out").onclick=async()=>{ await leaveVisit(); openTown(); };
+}
+function shopList(line,rows,back,exit=()=>openShop("Anything else?")){
+  const say0=SHOP_SAY||line; SHOP_SAY=null;
+  npcPanel(npcBox("shop",say0)+`<div class="full lab-info">You have ${PLAYER.bits} bits.</div>`+rows.map((r,i)=>`<button class="rb" data-s="${i}" ${PLAYER.bits<r.price||r.off?"disabled":""}>${r.name} · ${r.price}<small>${r.desc}</small></button>`).join("")+`<button class="rb" id="sh-back">Back</button>`);
   el("r-panel").querySelectorAll("[data-s]").forEach(b=>b.onclick=()=>{ const r=rows[+b.dataset.s]; r.buy?r.buy():buy(r.name,r.price,back); });
-  el("sh-back").onclick=openTown;
+  el("sh-back").onclick=exit;
 }
-function openMarket(){ shopList("Market.",Object.entries(MARKET).map(([k,p])=>({name:k,price:p,desc:`${itemDesc(k)} You have ${PLAYER.bag[k]||0}.`})),openMarket); }
+function openMarket(){ shopList("Snacks, medicine and toys are on these shelves.",Object.entries(MARKET).map(([k,p])=>({name:k,price:p,desc:`${itemDesc(k)} You have ${PLAYER.bag[k]||0}.`})),openMarket); }
 function openItemShop(){ const st=weekStock();
-  shopList("Item shop, this week.",st.worn.map(k=>({name:k,price:WORN[k].price,desc:`Worn on the ${WORN[k].slot}. ${itemDesc(k)}`})).concat([{name:st.held,price:HELD[st.held].price,desc:"Held. "+itemDesc(st.held)}]),openItemShop); }
+  shopList("These are the things to wear this week. I get new ones every week.",st.worn.map(k=>({name:k,price:WORN[k].price,desc:`Worn on the ${WORN[k].slot}. ${itemDesc(k)}`})).concat([{name:st.held,price:HELD[st.held].price,desc:"Held. "+itemDesc(st.held)}]),openItemShop); }
 function openSkillShop(){ const st=weekStock();
-  shopList("Skill shop, this week.",st.chips.map(n=>({name:"Skill chip: "+n,price:300,desc:`${SKILLS[n].el} ${SKILLS[n].kind}. ${describe(n)}`})),openSkillShop); }
+  shopList("These chips are in the case this week. Each one teaches a skill.",st.chips.map(n=>({name:"Skill chip: "+n,price:300,desc:`${SKILLS[n].el} ${SKILLS[n].kind}. ${describe(n)}`})),openSkillShop); }
 function openWorkshop(){
   PLAYER.upgrades=PLAYER.upgrades||{};
-  shopList("Workshop. Each upgrade is bought once.",Object.entries(UPGRADES).map(([k,[p,d]])=>({name:UP_NAME[k]||k,price:p,desc:has(k)?"Built":d,off:has(k),
-    buy:()=>{ if(PLAYER.bits<p) return; PLAYER.bits-=p; PLAYER.upgrades[k]=true; say(`The ${UP_NAME[k]||k} is built.`); drawUI(); saveGame(); openWorkshop(); }})),openWorkshop);
+  panel(`<div style="flex-basis:100%;font-size:13px">The Workshop builds each upgrade once. You have ${PLAYER.bits} bits.</div>`+Object.entries(UPGRADES).map(([k,[p,d]],i)=>`<button class="rb" data-u="${k}" ${PLAYER.bits<p||has(k)?"disabled":""}>${UP_NAME[k]||k} · ${p}<small>${has(k)?"Built":d}</small></button>`).join("")+`<button class="rb" id="ws-back">Back</button>`);
+  el("r-panel").querySelectorAll("[data-u]").forEach(b=>b.onclick=()=>{ const k=b.dataset.u, p=UPGRADES[k][0]; if(PLAYER.bits<p) return; PLAYER.bits-=p; PLAYER.upgrades[k]=true; say(`The ${UP_NAME[k]||k} is built.`); drawUI(); saveGame(); openWorkshop(); });
+  el("ws-back").onclick=openTown;
 }
 function openSell(){
-  const bag=PLAYER.bag, names=Object.keys(bag).filter(k=>bag[k]>0&&priceOf(k)>0);
-  panel(`<div style="flex-basis:100%;font-size:13px">Sell for half price. ${PLAYER.bits} bits.</div>`+names.map(k=>`<button class="rb" data-x="${k}">${k} ×${bag[k]}<small>${Math.floor(priceOf(k)/2)} bits</small></button>`).join("")+`<button class="rb" id="sl-back">Back</button>`);
-  el("r-panel").querySelectorAll("[data-x]").forEach(b=>b.onclick=()=>{ const k=b.dataset.x; bag[k]--; if(bag[k]<=0) delete bag[k]; PLAYER.bits+=Math.floor(priceOf(k)/2); drawUI(); saveGame(); openSell(); });
-  el("sl-back").onclick=openTown;
+  const bag=PLAYER.bag, names=Object.keys(bag).filter(k=>bag[k]>0&&priceOf(k)>0), say0=SHOP_SAY||"I'll buy anything back for half what it cost."; SHOP_SAY=null;
+  npcPanel(npcBox("shop",say0)+`<div class="full lab-info">You have ${PLAYER.bits} bits.</div>`+names.map(k=>`<button class="rb" data-x="${k}">${k} ×${bag[k]}<small>${Math.floor(priceOf(k)/2)} bits</small></button>`).join("")+`<button class="rb" id="sl-back">Back</button>`);
+  el("r-panel").querySelectorAll("[data-x]").forEach(b=>b.onclick=()=>{ const k=b.dataset.x, got=Math.floor(priceOf(k)/2); bag[k]--; if(bag[k]<=0) delete bag[k]; PLAYER.bits+=got; SHOP_SAY=`Thanks! Here's ${got} bits for the ${k}.`; drawUI(); saveGame(); openSell(); });
+  el("sl-back").onclick=()=>openShop("Anything else?");
 }
 
 /* ---------- wearing and holding ---------- */

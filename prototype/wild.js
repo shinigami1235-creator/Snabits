@@ -89,7 +89,7 @@ function wildFight(){
       PLAYER.bits+=bits; lines.push(`It beat the wild ${o.fm.name}. ${exp} exp and ${bits} bits.`);
       const lv=giveExp(s,exp); lines.push(...lv);
       if(Math.random()<0.4){ const fd=rollFind(Math.random,o.shiny?2:1); if(fd.item){ addItem(fd.item); lines.push(`It dropped ${/^[AEIOU]/.test(fd.item)?"an":"a"} ${fd.item}.`); } else if(fd.bits){ PLAYER.bits+=fd.bits; lines.push(`It dropped ${fd.bits} more bits.`); } }
-    } else lines.push(r.winner===null?"A draw. The wild one wandered off.":"The wild one won and ran off. No harm done, just tired.");
+    } else lines.push(r.winner===null?"It was a draw, and the wild one wandered off.":"The wild one won and ran off. Your Snabit is tired but not hurt.");
     if(r.learned.length) lines.push(...r.learned);
     WILD.foe=null; endWild(); openRanch(); say(lines.join(" ")); saveGame();
   }});

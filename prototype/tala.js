@@ -5,8 +5,8 @@ const TIPS=[
   ["tired",s=>s.fatigue>=50,()=>"It's getting tired. A rest week clears it, and pushing on risks an injury."],
   ["month",()=>PLAYER.week>=4,()=>"The first month's done, so Out is open. Tournaments are how it climbs from grade E, and missions bring back bits and items."],
   ["cup",s=>s.wins+s.losses>0,()=>"The fights you play by hand teach it how to fight. In missions and Auto fights it copies what you did."],
-  ["heart1",()=>hearts()>=1,()=>"One heart. Skill trips are open now: 4 weeks in a region to learn its skills."],
-  ["heart2",()=>hearts()>=2,()=>"Two hearts. Heavy drills are open. They're hard work, and they push a stat much faster."],
+  ["heart1",()=>hearts()>=1,()=>"It has one heart now, so skill trips are open. A trip spends 4 weeks in one region learning its skills."],
+  ["heart2",()=>hearts()>=2,()=>"It has two hearts now, so heavy drills are open. They're hard work and push a stat much faster."],
   ["second",()=>PLAYER.roster.length>=2,()=>"You've got two monsters now. The one not at the ranch waits in the Freezer without aging, and two can be fused in the lab."],
   ["evo",s=>s.stage!=="Mega"&&tpTotal()>=evoTotal()-10,()=>"It's close to changing. Whatever it trains next decides how it looks."],
 ];

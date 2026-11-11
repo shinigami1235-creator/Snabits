@@ -13,6 +13,27 @@ function parseMel(bars){return bars.map(str=>{const tk=str.trim().split(/\s+/),e
 function holdLen(p,i){let l=1;while(i+l<p.length&&p[i+l]==="-")l++;return l;}
 
 const TRACKS={
+  travel:{name:"The Long Road",bpm:112,lead:"whistle",lv:0.16,comp:"ep",bassK:"pick",
+    dr:{k:"x.......x.......",s:"....x.......x...",h:"x.x.x.x.x.x.x.x."},
+    bs:"R...5...R.R.5...",cp:"L---..C...C...C.",form:["A","B","A","B"],
+    sec:{A:{ch:["F","C","Dm","Bb","F","C","Bb|C","F"],mel:[
+      "C5 - F5 - A5 - - - C6 - - - A5 - F5 -",
+      "G5 - - - - - E5 - C5 - - - E5 - G5 -",
+      "A5 - - - F5 - D5 - F5 - A5 - D6 - - -",
+      "D6 - - - C6 - - - Bb5 - - - A5 - - -",
+      "F5 - A5 - C6 - - - F6 - - - E6 - C6 -",
+      "D6 - - - C6 - - - G5 - - - E5 - G5 -",
+      "Bb5 - - - A5 - G5 - C6 - - - E6 - - -",
+      "F6 - - - - - - - . . C6 - A5 - F5 -"]},
+      B:{ch:["Dm","Bb","F","C","Dm","Bb","Gm7|C","C"],mel:[
+      "D6 - - - - - A5 - F5 - - - A5 - D6 -",
+      "D6 - - - C6 - Bb5 - - - F5 - G5 - Bb5 -",
+      "A5 - - - - - C6 - F6 - - - E6 - C6 -",
+      "G5 - - - - - - - . . E5 - F5 - G5 -",
+      "A5 - - - D6 - - - F6 - - - E6 - D6 -",
+      "D6 - - - - - Bb5 - F5 - - - G5 - Bb5 -",
+      "Bb5 - - - G5 - - - C6 - - - E6 - G6 -",
+      "E6 - - - - - - - . . . . C6 - - -"]}}},
   scan:{name:"Shutter Song",bpm:110,lead:"bell",lv:0.19,comp:"ep",bassK:"slap",calm:true,
     dr:{k:"x......x..x.....",s:"....x.......x...",h:"x.x.x.x.x.x.x.x."},
     bs:"R..R..O.R.5.O..R",cp:"L-------..C..C..",form:["A","A"],
@@ -261,7 +282,8 @@ function musWant(){
   if(shown("venue")) return "cup";
   if(shown("ob")) return "town";
   if(typeof RS!=="undefined"&&RS&&shown("ranch")){
-    if(RS.inTown) return "town";
+    if(RS.trip) return RS.night?"night":"travel";
+    if(RS.inTown||RS.visit) return "town";
     if(RS.training&&ranchHour()<19) return "train";
     const h=ranchHour(); return h<6||h>=19?"night":"day";
   }

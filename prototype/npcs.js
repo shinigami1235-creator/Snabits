@@ -359,3 +359,74 @@ function npcNightPass(c, s, t, W, H, world) {
   c.fillRect(0, 0, W, H); c.restore();
   if (fire) { world(); awayProps(c, fire, t, false); }
 }
+
+/* ---------- errantry with Kiko: he picks the Snabit up at the road, stands by while it works, camps with it
+   between weeks and walks it home. Smooth art only; the pixel ranch keeps the old walk off and walk back. ---------- */
+const kikoOn = () => typeof smoothRanch === 'function' && smoothRanch();
+const asName = t => t.replace(/^It /, RS.m.name + ' ').replace(/^Its /, RS.m.name + "'s ");
+function guideAt(x, o = {}) { return prop({ k: 'npc', who: 'guide', x, y: GROUND, face: 'happy', pose: 'stand', flip: false, ...o }); }
+/* Kiko waits at the road to town, the monster walks over, and the yard fades out */
+async function tripLeave(line) {
+  const s = RS; say(line);
+  if (!kikoOn()) { s.pose = 'happy'; await hop(12, 380); await walkTo(RW + 30, 60, 'walk'); return; }
+  if (s.room) leaveBarn();
+  const g = guideAt(2 * RW - 24, { pose: 'wave', flip: true }); s.camJump = true;
+  s.pose = 'happy'; await hop(10, 360); await walkTo(2 * RW - 62, 70, 'walk'); g.pose = 'stand'; s.pose = 'idle'; await rwait(900);
+  s.trip = true; await sceneFade(true, 800); unprop(g);
+}
+/* the region opens with Kiko standing at the left, watching */
+async function tripArrive(el) {
+  const s = RS; s.bg = 'reg:' + el; s.trip = true; s.night = 0; s.dusk = 0;
+  if (!kikoOn()) { s.x = -30; return; }
+  s.props = []; s.x = 60; s.pose = 'idle'; s.camJump = true; s.guide = guideAt(18, { face: 'talk' }); await rwait(250); await sceneFade(false, 800);
+}
+/* tasks clear the props; Kiko stays */
+function keepGuide() { const s = RS; if (s.guide && !s.props.includes(s.guide)) s.props.unshift(s.guide); }
+/* a short night at camp between weeks, then morning in the same place */
+async function campNight(label, line) {
+  const s = RS; if (!kikoOn()) return;
+  await sceneFade(true, 600);
+  const keep = s.props; s.props = [{ k: 'tent', x: 52, y: GROUND }, { k: 'npc', who: 'guide', x: 100, y: GROUND, face: 'happy', pose: 'sit' }, { k: 'fire', x: 128, y: GROUND }];
+  s.x = 164; s.pose = 'sleep'; s.night = 1; s.tripLabel = label; drawUI(); say(line, 'guide');
+  await sceneFade(false, 700);
+  for (let k = 0; k < 3; k++) { spark(s.x + 8, headY(), 'z'); await rwait(550); }
+  await dayFade('camp', () => { s.night = 0; s.props = keep; keepGuide(); s.x = 60; s.pose = 'idle'; });
+}
+/* sunset in the region, the walk into the ranch at night, then black and morning at home */
+async function tripHome(duskLine, homeLine, mood) {
+  const s = RS;
+  if (!kikoOn()) { s.props = s.props.filter(p => p.k === 'bowl'); await walkTo(RW + 30, 60, 'walk'); s.bg = null; s.tripLabel = null; s.trip = false; await homeArrive(140); s.pose = mood; return; }
+  s.props = []; s.guide = guideAt(172, { pose: 'wave', flip: true }); s.x = 110; s.pose = mood; s.camJump = true;
+  say(duskLine, 'guide'); for (let k = 1; k <= 12; k++) { s.dusk = k / 12; await rwait(90); } s.guide.pose = 'stand'; await rwait(1500);
+  await sceneFade(true, 900);
+  s.dusk = 0; s.bg = null; s.tripLabel = null; s.trip = false; s.dayHour = 21; s.props = [];
+  const g = guideAt(2 * RW + 14, { pose: 'walk', flip: true }); s.guide = null; s.x = 2 * RW - 14; s.camJump = true; drawUI();
+  await sceneFade(false, 700); say(homeLine, 'guide');
+  await Promise.all([walkTo(300, 60, 'walk'), (async () => { while (g.x > 344) { g.x -= 60 * rk() / 60; await rwait(16); } g.pose = 'stand'; })()]);
+  s.pose = mood; await rwait(1200);
+  await dayFade('home', () => { unprop(g); s.x = 150; s.camJump = true; s.pose = mood; });
+}
+
+/* ---------- visits: Nena's shop and the lab. No week passes, and the panel carries who is talking ---------- */
+function npcBox(who, text) { const N = NPC[who]; return `<div class="tipbox npcbox full" data-who="${who}"><div class="tip-who" style="background:${N.tag}">${N.name}</div><div>${text}</div></div>`; }
+function npcPanel(html) { panel(html); document.querySelectorAll('#r-panel .npcbox').forEach(b => npcFace(b, b.dataset.who, b.textContent)); }
+async function visitPlace(place) {
+  const s = RS; if (!s || s.busy) return;
+  if (s.visit === place || !kikoOn()) return;
+  if (s.room) leaveBarn();
+  s.idling = false; s.cur = ++RACT;
+  if (s.visit) { s.props = s.propsHome || []; s.propsHome = null; }
+  try { await sceneFade(true, 500); } catch (e) {}
+  s.visit = place; s.propsHome = s.props; s.bg = place; s.jy = 0; s.pose = 'idle'; s.camJump = true;
+  s.props = place === 'shop' ? [{ k: 'npc', who: 'shop', x: 210, y: GROUND - 10, face: 'happy', pose: 'wave', flip: true }, { k: 'counter', x: 0, y: GROUND }]
+    : [{ k: 'npc', who: 'aide', x: 94, y: GROUND, face: 'talk', pose: 'stand' }, { k: 'npc', who: 'doc', x: 168, y: GROUND, face: 'happy', pose: 'stand', flip: true }];
+  s.x = place === 'shop' ? 80 : 128;
+  try { await sceneFade(false, 500); } catch (e) {}
+  const p = s.props.find(q => q.pose === 'wave'); if (p) setTimeout(() => { p.pose = 'stand'; }, 1600);
+}
+async function leaveVisit(fade = true) {
+  const s = RS; if (!s || !s.visit) return;
+  if (fade) try { await sceneFade(true, 450); } catch (e) {}
+  s.visit = null; s.bg = null; s.props = s.propsHome || s.props.filter(p => p.k === 'bowl'); s.propsHome = null; s.x = 150; s.camJump = true;
+  if (fade) try { await sceneFade(false, 450); } catch (e) {}
+}

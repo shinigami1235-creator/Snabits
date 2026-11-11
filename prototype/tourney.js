@@ -27,7 +27,9 @@ function cupFormat(c){ return c.format==="robin"?`Round robin, ${c.size} monster
 function openCups(){
   const s=RS;
   if(s.sick||s.injured){ say("It isn't fit to fight. Rest it or give it medicine first."); return; }
-  CUP=null; openVenue(); venueLobby();
+  CUP=null;
+  const go=()=>{ openVenue(); venueLobby(); const d=el("r-dusk"); if(d){ d.style.transition="none"; d.style.backgroundColor="transparent"; } };
+  if(typeof smoothRanch==="function"&&smoothRanch()&&!s.busy) sceneFade(true,500).then(go,go); else go();
 }
 function startCup(c){
   const fee=cupFee(c);
@@ -118,9 +120,14 @@ function finishCup(){
       if(s.majors.length===4&&!s.master){ s.master=true; lines.push("It's won all four. It's a Master now, and the Legend Cup is open at the end of each year."); } }
     if(c.legend) lines.push("A Legend Cup champion. Its name goes on the wall in town.");
     if((c.grade==="A"||c.grade==="S")&&CUP.R()<0.3){ addItem("Rebirth seed"); lines.push("The prize table had a Rebirth seed."); }
-    if(c.grade==="A"&&c.official){ addItem("Life fruit"); lines.push("And a Life fruit."); } }
+    if(c.grade==="A"&&c.official){ addItem("Life fruit"); lines.push("It also won a Life fruit."); } }
   if(CUP.learned) lines.push(...CUP.learned);
   const lv=giveExp(s,(CUP.expGain||0)+(place===1?10:3));
   CUP.done=true; CUP.place=place; CUP.prize=prize; CUP.lines=lines.concat(lv);
-  venueCeremony(()=>{ closeVenue(); scene(async()=>{ s.pose=place===1?"happy":"idle"; if(place===1){ spark(s.x,headY()-6,"sparkle",12); await hop(16,420); } await rwait(500); RS.weekAct="Cup"; await endWeek(1,CUP.lines.join(" ")); }); });
+  venueCeremony(()=>{ closeVenue(); scene(async()=>{ const mood=place===1?"happy":"idle";
+    if(smoothRanch()){ const d=el("r-dusk"); if(d){ d.style.transition="none"; d.style.backgroundColor="rgba(3,4,9,1)"; } if(s.room) leaveBarn(); say(`${s.m.name} is home from the stadium.`); s.dayHour=21; s.x=2*RW-14; s.camJump=true; await sceneFade(false,700);
+      await walkTo(300,60,"walk"); s.pose=mood; if(place===1){ spark(s.x,headY()-6,"sparkle",12); await hop(16,420); } await rwait(900);
+      await dayFade("home",()=>{ s.x=150; s.camJump=true; s.pose=mood; }); }
+    else { s.pose=mood; if(place===1){ spark(s.x,headY()-6,"sparkle",12); await hop(16,420); } await rwait(500); }
+    RS.weekAct="Cup"; await endWeek(1,CUP.lines.join(" ")); }); });
 }

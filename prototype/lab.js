@@ -1,18 +1,18 @@
 /* The Freezer, the fusion lab, rebirth and the bag. Needs game.js and ranch.js. */
 const CATALYSTS=["Stat seed","Element stone","Lucky bit","Life fruit"];
-const ASSIST=["It's all up to you.","This doesn't look so good.","I'm not sure about this one.","This should be fine.","This looks good.","This looks good.","These two look great together."];
+const ASSIST=["I can't tell how this pair will turn out.","These two don't match well.","I'm not sure about this pair.","This pair should be fine.","These two match well.","These two match well.","These two are a great match. The fusion should turn out well."];
 
 function sprite(m,grid,size=56,st){ const c=document.createElement("canvas"); paintMon(c,m,{grid:grid||m.grid,s:st,size}); c.style.cssText=`width:${size}px;height:${size}px;image-rendering:${c.style.imageRendering||"pixelated"};background:#24242c;border-radius:8px`; return c; }
 function entryState(e){ if(RS&&RS.id===e.id) return RS; return e.st||{stage:"Bit",tp:[0,0,0,0,0,0],level:1,grade:"E",used:0}; }
 function entryName(e){ const st=entryState(e); return st.stage&&st.stage!=="Bit"?`${e.m.name}, ${MARK[st.mark][0]} ${st.stage}`:e.m.name; }
 
 /* ---------- Freezer ---------- */
-function openFreezer(){
-  if(RS&&RS.id) saveGame();
+async function openFreezer(){
+  if(RS&&RS.id){ saveGame(); if(RS.visit!=="lab") await visitPlace("lab"); }
   const list=PLAYER.roster;
-  panel(`<div style="flex-basis:100%;font-size:13px">The Freezer holds up to ${freezerMax()} monsters, and a frozen monster uses none of its lifespan.</div><div id="frz" style="flex-basis:100%;display:flex;flex-direction:column;gap:6px"></div><button class="rb" id="f-back">Back</button>`);
+  npcPanel((RS?npcBox("aide",`I look after the Freezer. Snabits stored in it don't age, and it holds up to ${freezerMax()}.`):`<div style="flex-basis:100%;font-size:13px">The Freezer holds up to ${freezerMax()} Snabits, and they don't age while they're in it.</div>`)+`<div id="frz" style="flex-basis:100%;display:flex;flex-direction:column;gap:6px"></div><button class="rb" id="f-back">Back</button>`);
   const box=el("frz");
-  if(!list.length) box.innerHTML="<div style='font-size:13px;opacity:.7'>Nothing here yet. Scan a photo and tap Raise it.</div>";
+  if(!list.length) box.innerHTML="<div style='font-size:13px;opacity:.7'>The Freezer is empty. Scan a photo and tap Raise it.</div>";
   list.forEach(e=>{ const st=entryState(e), row=document.createElement("div");
     row.style.cssText="display:flex;gap:10px;align-items:center;background:#1e1e26;border-radius:10px;padding:6px 8px";
     row.appendChild(sprite(e.m,st.grid,48,st));
@@ -23,7 +23,7 @@ function openFreezer(){
     b.textContent=PLAYER.active===e.id?"At the ranch":"Bring out"; b.disabled=PLAYER.active===e.id;
     b.onclick=()=>{ saveGame(); PLAYER.active=e.id; RS=null; openRanch(); };
     row.appendChild(b); box.appendChild(row); });
-  el("f-back").onclick=()=>{ if(RS) menu("Out"); else openScope(); };
+  el("f-back").onclick=()=>{ if(RS) openLab(); else openScope(); };
 }
 
 /* The skills page moved to the info page (info.js). */
@@ -62,8 +62,8 @@ function compat(e1,e2){
   if(e1.m.family===e2.m.family) match=0;
   return match;
 }
-function openLab(){
-  if(RS&&RS.id) saveGame();
+async function openLab(line){
+  if(RS&&RS.id){ saveGame(); if(RS.visit!=="lab") await visitPlace("lab"); }
   const R=PLAYER.roster;
   if(!LAB.a||!R.find(e=>e.id===LAB.a)) LAB.a=PLAYER.active;
   if(LAB.b&&!R.find(e=>e.id===LAB.b)) LAB.b=null;
@@ -73,17 +73,19 @@ function openLab(){
   const e1=R.find(e=>e.id===LAB.a), e2=R.find(e=>e.id===LAB.b);
   if(e1&&e2){ const m=compat(e1,e2), carry=Math.min(40,10+5*m);
     const fam=e1.m.family===e2.m.family?`${e1.m.family} 100%`:`${e1.m.family} 55%, ${e2.m.family} 30%, a hybrid 15%`;
-    info=`<div style="flex-basis:100%;font-size:13px"><b>Assistant:</b> "${ASSIST[m]}" The child will be ${fam}, and it keeps about ${carry}% of the parents' training. Both parents are used up, and it costs 500 bits.</div>`; }
+    info=npcBox("aide",ASSIST[m])+`<div class="full lab-info">The child will be ${fam}, and it keeps about ${carry}% of the parents' training. Both parents are used up, and it costs 500 bits.</div>`; }
   const st=RS&&RS.id?RS:null, elder=st&&st.used>=lifeWeeks()*0.7;
-  panel(`<div class="full lab-head"><b>Fusion lab</b><button class="small" id="l-back">Back</button></div>
+  npcPanel(npcBox("doc",line||"Welcome to the lab. Put two Snabits on the pads and I can fuse them for 500 bits.")+`
     <label class="fld">First parent<select id="l-a">${opt(LAB.a,LAB.b)}</select><small>Counts twice as much</small></label>
     <label class="fld">Second parent<select id="l-b"><option value="">Pick one</option>${opt(LAB.b,LAB.a)}</select></label>
     <label class="fld full">Catalyst<select id="l-c"><option value="">None</option>${cats.map(c=>`<option ${c===LAB.cat?"selected":""}>${c}</option>`).join("")}</select></label>
-    ${info.replace('style="flex-basis:100%;font-size:13px"','class="full lab-info"')}<button class="big full" id="l-fuse" ${e1&&e2?"":"disabled"}>Fuse · 500 bits</button>
-    <button class="rb full" id="l-reb" ${PLAYER.bag["Rebirth seed"]&&st?"":"disabled"}>Rebirth ${st?displayName(st):""}<small>${PLAYER.bag["Rebirth seed"]?(elder?"Uses the Rebirth seed":"Only an Elder or Veteran can be reborn"):"Needs a Rebirth seed"}</small></button>`);
-  el("l-a").onchange=e=>{LAB.a=e.target.value;openLab();}; el("l-b").onchange=e=>{LAB.b=e.target.value||null;openLab();}; el("l-c").onchange=e=>{LAB.cat=e.target.value||null;};
+    ${info}<button class="big full" id="l-fuse" ${e1&&e2?"":"disabled"}>Fuse · 500 bits</button>
+    <button class="rb full" id="l-reb" ${PLAYER.bag["Rebirth seed"]&&st?"":"disabled"}>Rebirth ${st?displayName(st):""}<small>${PLAYER.bag["Rebirth seed"]?(elder?"Uses the Rebirth seed":"Only an Elder or Veteran can be reborn"):"Needs a Rebirth seed"}</small></button>
+    ${RS?`<button class="rb" id="l-frz">Freezer<small>Benji looks after it</small></button><button class="rb" id="l-back">Leave the lab</button>`:`<button class="rb full" id="l-back">Back</button>`}`);
+  el("l-a").onchange=e=>{LAB.a=e.target.value;openLab(line);}; el("l-b").onchange=e=>{LAB.b=e.target.value||null;openLab(line);}; el("l-c").onchange=e=>{LAB.cat=e.target.value||null;};
   el("l-fuse").onclick=()=>doFuse(e1,e2,LAB.cat);
-  el("l-reb").onclick=()=>{ if(!elder){ say("Rebirth only works on an Elder, in the last 30% of its lifespan."); return; } rebirthPick(); };
+  el("l-reb").onclick=()=>{ if(!elder){ openLab("Rebirth only works on an Elder, in the last 30% of its lifespan."); return; } rebirthPick(); };
+  if(el("l-frz")) el("l-frz").onclick=openFreezer;
   el("l-back").onclick=()=>{ if(RS) menu("Out"); else openScope(); };
 }
 const mix=(a,b,t)=>a.map((v,i)=>Math.round(v*(1-t)+b[i]*t));
@@ -121,7 +123,7 @@ function fuseChild(e1,e2,cat,R){
   return {m,st,hybrid,carry:Math.round(carry*100),inherit};
 }
 async function doFuse(e1,e2,cat){
-  if(PLAYER.bits<500){ say("A fusion costs 500 bits."); return; }
+  if(PLAYER.bits<500){ openLab("A fusion costs 500 bits, and you don't have enough yet."); return; }
   PLAYER.bits-=500; saveGame();
   const R=rng(hashStr(e1.id+e2.id+PLAYER.week));
   if(cat){ PLAYER.bag[cat]--; if(PLAYER.bag[cat]<=0) delete PLAYER.bag[cat]; }
@@ -138,7 +140,7 @@ async function doFuse(e1,e2,cat){
 /* ---------- Rebirth ---------- */
 function rebirthPick(){
   const s=RS, known=knownSkills(s);
-  panel(`<div style="flex-basis:100%;font-size:13px">It goes back to a Bit at level 1 with its full lifespan, keeps 20% of its training and +1 talent on every stat, and keeps one skill. Which one?</div>`+
+  npcPanel(npcBox("doc","It goes back to a Bit at level 1 with its full lifespan. It keeps 20% of its training, gets +1 talent on every stat and keeps one skill. Which skill should it keep?")+
     known.map(k=>`<button class="rb" data-r="${k}">${k}</button>`).join("")+`<button class="rb" id="rb-back">Back</button>`);
   el("r-panel").querySelectorAll("[data-r]").forEach(b=>b.onclick=()=>doRebirth(b.dataset.r));
   el("rb-back").onclick=openLab;
@@ -147,7 +149,7 @@ async function doRebirth(keep){
   const s=RS;
   PLAYER.bag["Rebirth seed"]--; if(PLAYER.bag["Rebirth seed"]<=0) delete PLAYER.bag["Rebirth seed"];
   await scene(async()=>{
-    say("The seed takes root..."); s.pose="sleep"; await rwait(800);
+    say("The seed is taking root...","doc"); s.pose="sleep"; await rwait(800);
     for(let k=0;k<10;k++){ s.flash=99; await rwait(Math.max(60,240-k*20)); s.flash=0; await rwait(60); }
     s.stage="Bit"; s.mark=-1; s.mark2=undefined; s.variant=null; s.pal=null; s.grid=s.m.grid; s.P=makePuppet(s.m.grid,false,s.m.family); s.stageRegions={}; s.stageCups=0; s.neglect=0;
     s.messSpots=s.messSpots.map(p=>({x:Math.floor(p.x/2),y:Math.floor(p.y/2)}));
@@ -155,6 +157,6 @@ async function doRebirth(keep){
     s.level=1; s.exp=0; s.used=0; s.grade="E"; s.fatigue=0; s.stress=0; s.hinted=false; s.toldEvo=false; s.fruitUsed=false;
     s.learned=(s.learned||[]).filter(n=>n===keep); s.skillsKnown=s.m.skills.concat(keep); s.equip=s.m.skills.slice(); fixEquip(s);
     spark(s.x,headY()+10,"sparkle",16); s.pose="happy"; await hop(14,420);
-    say(`Reborn as a fresh Bit. It kept ${keep}, 20% of its training and a little more talent.`);
+    say(`It's a Bit again. It kept ${keep}, 20% of its training and a little more talent.`,"doc");
   });
 }

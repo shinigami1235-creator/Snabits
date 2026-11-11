@@ -21,7 +21,7 @@ function board(s){
 function openBoard(){
   const s=RS;
   if(s.sick||s.injured){ say("It isn't well enough to go out. Rest it or give it medicine first."); return; }
-  panel(`<div class="full lab-head"><b>Missions</b><button class="small" id="r-bback">Back</button></div><div class="full lab-info">You watch each stop. The weeks pass when your monster gets home.</div>`+
+  panel(`<div class="full lab-head"><b>Missions</b><button class="small" id="r-bback">Back</button></div><div class="full lab-info">Kiko takes it out, and you watch each stop. The weeks pass once it's home.</div>`+
     board(s).map((b,i)=>{ const K=KINDS[b.kind], reg=REGIONS.find(x=>x.n===b.reg);
       return `<button class="rb mis" data-b="${i}"><span class="mis-t">${b.kind}<span class="elc" style="${chipStyle(ELC(reg.el))}">${reg.el}</span></span><span class="mis-r">${b.reg}</span><small>${K.stops} stops · ${K.weeks} wk · Lv ${b.level}</small></button>`; }).join(""));
   const bs=board(s);
@@ -44,17 +44,17 @@ function resolveMission(s,a){
       const o=gradedOpponent(grade,Math.max(1,a.level-1),R,reg.el);
       const f=simFight(playerFighter(s),makeFighter(o.fm,o.skills,o.level),R,s); learnt.push(...afterFight(s,f.p[0],true));
       st.ok=f.winner===0; st.foe=o;
-      if(st.ok){ const e=2+o.level; exp+=e; st.text=`Beat a wild ${o.m.name}. ${e} exp.`; if(R()<0.3){ const fd=rollFind(R,boost); if(fd.item){ finds.push(fd.item); st.text+=` It dropped ${/^[AEIOU]/.test(fd.item)?"an":"a"} ${fd.item}.`; } else { bits+=fd.bits; st.text+=` It dropped ${fd.bits} bits.`; } } }
-      else { fat+=10; st.text=`Lost to a wild ${o.m.name} and limped on.`; }
-    } else if(task==="rest"){ fat-=6; st.text="Rested by the fire."; }
-    else if(task==="drill"){ st.ok=R()<taskChance(s,reg.st,gap); const g=st.ok?2:1; s.tp[reg.st]+=g; st.text=`Trained on its own. ${STATS[reg.st]} +${g}.`; }
+      if(st.ok){ const e=2+o.level; exp+=e; st.text=`It beat a wild ${o.m.name} and earned ${e} exp.`; if(R()<0.3){ const fd=rollFind(R,boost); if(fd.item){ finds.push(fd.item); st.text+=` The wild one dropped ${/^[AEIOU]/.test(fd.item)?"an":"a"} ${fd.item}.`; } else { bits+=fd.bits; st.text+=` The wild one dropped ${fd.bits} bits.`; } } }
+      else { fat+=10; st.text=`It lost to a wild ${o.m.name} and limped on.`; }
+    } else if(task==="rest"){ fat-=6; st.text="It rested by the fire."; }
+    else if(task==="drill"){ st.ok=R()<taskChance(s,reg.st,gap); const g=st.ok?2:1; s.tp[reg.st]+=g; st.text=`It trained on its own, and its ${STATS[reg.st]} went up by ${g}.`; }
     else {
       st.ok=R()<taskChance(s,TASKS[task].stat,gap);
-      if(task==="forage"){ if(st.ok){ const fd=rollFind(R,boost); if(fd.item){ finds.push(fd.item); st.text=`Found ${/^[AEIOU]/.test(fd.item)?"an":"a"} ${fd.item}.`; } else { bits+=fd.bits; st.text=`Found ${fd.bits} bits.`; } } else st.text="Searched the bushes and came up empty."; }
-      if(task==="climb"){ if(st.ok){ exp+=3; s.tp[1]+=1; st.text="Climbed the ledge. Power +1, 3 exp."; } else { fat+=8; if(R()*100<K.inj*2){ injured=true; st.text="Slipped off the ledge and got hurt."; } else st.text="Slipped off the ledge."; } }
-      if(task==="river"){ if(st.ok){ fat-=3; st.text="Hopped the stones across. A shortcut."; } else { fat+=8; st.text="Fell in and got washed back."; } }
-      if(task==="tracks"){ if(st.ok){ s.tp[reg.st]+=2; st.text=`Followed the tracks to a quiet training spot. ${STATS[reg.st]} +2.`; } else { fat+=5; st.text="Lost the trail."; } }
-      if(task==="haul"){ if(st.ok){ const b2=Math.round(10+R()*30); bits+=b2; st.text=`Hauled a crate for a trader. ${b2} bits.`; } else { fat+=6; st.text="Couldn't shift the crate."; } }
+      if(task==="forage"){ if(st.ok){ const fd=rollFind(R,boost); if(fd.item){ finds.push(fd.item); st.text=`It found ${/^[AEIOU]/.test(fd.item)?"an":"a"} ${fd.item}.`; } else { bits+=fd.bits; st.text=`It found ${fd.bits} bits.`; } } else st.text="It searched the bushes and found nothing."; }
+      if(task==="climb"){ if(st.ok){ exp+=3; s.tp[1]+=1; st.text="It climbed the ledge. Its Power went up by 1, and it earned 3 exp."; } else { fat+=8; if(R()*100<K.inj*2){ injured=true; st.text="It slipped off the ledge and got hurt."; } else st.text="It slipped off the ledge."; } }
+      if(task==="river"){ if(st.ok){ fat-=3; st.text="It hopped across the stones and took a shortcut."; } else { fat+=8; st.text="It fell in and got washed back."; } }
+      if(task==="tracks"){ if(st.ok){ s.tp[reg.st]+=2; st.text=`It followed the tracks to a quiet training spot, and its ${STATS[reg.st]} went up by 2.`; } else { fat+=5; st.text="It lost the trail."; } }
+      if(task==="haul"){ if(st.ok){ const b2=Math.round(10+R()*30); bits+=b2; st.text=`It hauled a crate for a trader and earned ${b2} bits.`; } else { fat+=6; st.text="It couldn't move the crate."; } }
     }
     stops.push(st);
   }
@@ -87,37 +87,44 @@ async function runMission(b){
   else res.fat+=10;
   res.exp+=K.exp[0]+K.exp[1]*s.level; res.bits+=Math.round(K.bits*(1+s.level/10));
   res.snap=snap;
+  let lv=[];
+  const nm=s.m.name, per=Math.ceil(res.stops.length/K.weeks), kindW={Scout:"a scouting",Gather:"a gathering",Hunt:"a hunting"}[b.kind];
   await scene(async()=>{
-    say(`Off to ${b.reg} for a ${b.kind}.`); s.pose="happy"; await hop(12,380); await walkTo(RW+30,60,"walk");
-    s.bg="reg:"+reg.el; s.x=-30;
-    await stageCard(b.reg,`${b.kind}: ${K.stops} stops, then the way home.`);
+    await tripLeave(`Kiko is here to take ${nm} on ${kindW} mission in ${b.reg}. They'll be gone ${K.weeks} week${K.weeks>1?"s":""}.`);
+    await tripArrive(reg.el);
+    s.tripLabel=`${b.reg} · Stop 1 of ${res.stops.length}`; drawUI();
+    await stageCard(b.reg,`We'll make ${res.stops.length} stops here, then head home.`,"guide");
     for(let i=0;i<res.stops.length;i++){
       const st=res.stops[i]; s.tripLabel=`${b.reg} · Stop ${i+1} of ${res.stops.length}`; drawUI();
       banner(`Stop ${i+1} of ${res.stops.length} · ${TASKS[st.task].name}`,"#fff"); await rwait(700); banner("");
       await playTask(st.task,st.ok,{foe:st.foe});
-      if(st.task==="rest") { say(st.text); await rwait(900); } else await stageResult(st.ok,st.text);
+      const who=kikoOn()?"guide":null, txt=who?asName(st.text):st.text;
+      if(st.task==="rest"){ say(txt,who); await rwait(900); } else await stageResult(st.ok,txt,who);
       if(st.task!=="rest") drawUI();
+      if((i+1)%per===0&&i<res.stops.length-1) await campNight(`${b.reg} · Night ${(i+1)/per}`,`${nm} is fast asleep. We'll head out again in the morning.`);
     }
-    s.props=s.props.filter(p=>p.k==="bowl"); s.x=60; s.pose="idle"; s.tripLabel=`${b.reg} · The way home`; drawUI();
+    s.props=s.props.filter(p=>p.k==="bowl"||p===s.guide); s.x=60; s.pose="idle"; s.tripLabel=`${b.reg} · The way home`; drawUI();
     const fp=prop({k:"foe",x:196,y:GROUND,grid:foe.fm.grid,pal:foe.fm.pal,fm:foe.fm});
-    banner(foe.boss?foe.boss:"On the way home","#ffd23f"); say(foe.boss?`The boss of ${b.reg} blocks the way.`:`A wild ${foe.m.name} blocks the way home.`); await rwait(1400); banner(""); unprop(fp);
-  });
-  // the end fight, played out on its habits
-  await new Promise(done=>arenaFight({s:snap,foe,mode:"auto",title:foe.boss?"Boss":"Wild",noDraw:true,rand:rng(res.endSeed+1),onEnd:done}));
-  s.stageRegions=s.stageRegions||{}; s.stageRegions[b.reg]=(s.stageRegions[b.reg]||0)+K.weeks;
-  PLAYER.bits+=res.bits; res.finds.forEach(x=>addItem(x));
-  s.fatigue+=Math.max(0,res.fat)+12*K.weeks; s.stress+=3*K.weeks; if(res.injured){ s.injured=true; s.used+=2; }
-  const lv=giveExp(s,res.exp);
-  await scene(async()=>{
-    s.bg="reg:"+reg.el; s.x=60; s.pose=won?"happy":"tired"; if(won){ spark(s.x,headY()-6,"sparkle",8); await hop(14,360); } await rwait(700);
-    await walkTo(RW+30,60,"walk"); s.bg=null; s.tripLabel=null; await homeArrive(130); s.pose=won?"happy":"tired"; await rwait(500);
-    RS.weekAct="Mission"; await endWeek(K.weeks,`Back from ${b.reg}.`);
+    banner(foe.boss?foe.boss:"On the way home","#ffd23f"); say(foe.boss?`That's ${foe.boss}, the boss of ${b.reg}. ${nm} has to get past it.`:`A wild ${foe.m.name} is in the way. ${nm} has to get past it.`,kikoOn()?"guide":null); await rwait(1600); banner(""); unprop(fp);
+    // the end fight, played out on its habits
+    await sceneFade(true,400);
+    await new Promise(done=>arenaFight({s:snap,foe,mode:"auto",title:foe.boss?"Boss":"Wild",noDraw:true,rand:rng(res.endSeed+1),onEnd:done}));
+    s.stageRegions=s.stageRegions||{}; s.stageRegions[b.reg]=(s.stageRegions[b.reg]||0)+K.weeks;
+    PLAYER.bits+=res.bits; res.finds.forEach(x=>addItem(x));
+    s.fatigue+=Math.max(0,res.fat)+12*K.weeks; s.stress+=3*K.weeks; if(res.injured){ s.injured=true; s.used+=2; }
+    lv=giveExp(s,res.exp); drawUI();
+    s.trip=true; s.x=60; s.pose=won?"happy":"tired"; s.camJump=true; await sceneFade(false,500);
+    if(won){ spark(s.x,headY()-6,"sparkle",8); await hop(14,360); } await rwait(500);
+    await tripHome(won?`${nm} won! We've reached the last stop, so let's go home.`:`${nm} lost that one. We've reached the last stop, so let's go home.`,
+      `We're back at the ranch. ${nm} ${won?"worked hard":"is worn out"}, so give it a good rest.`,won?"happy":"tired");
+    const got=[`${res.bits} bits`].concat(res.finds.map(x=>`${/^[AEIOU]/.test(x)?"an":"a"} ${x}`));
+    RS.weekAct="Mission"; await endWeek(K.weeks,`Welcome back, ${nm}! It brought home ${got.length>1?got.slice(0,-1).join(", ")+" and "+got[got.length-1]:got[0]}.`);
   });
   showReport(s,b,res,foe,won,lv);
 }
 function showReport(s,a,res,foe,won,lv){
   const rows=res.stops.map((t,i)=>`<div class="trip-row ${t.ok?"ok":"no"}"><i>${t.task==="rest"?"·":t.ok?"✓":"✕"}</i><span><b>${TASKS[t.task].name}</b> ${t.text}</span></div>`).join("");
-  const end=`<div class="trip-row ${won?"ok":"no"}"><i>${won?"✓":"✕"}</i><span><b>${foe.boss||"Way home"}</b> ${foe.boss?"The boss":"A wild "+foe.m.name} ${won?"lost to it.":"beat it."}</span></div>`;
+  const end=`<div class="trip-row ${won?"ok":"no"}"><i>${won?"✓":"✕"}</i><span><b>${foe.boss||"Way home"}</b> It ${won?"beat":"lost to"} ${foe.boss?"the boss":"a wild "+foe.m.name}.</span></div>`;
   panel(`<div class="full lab-head"><b>${a.kind} at ${a.reg}</b><button class="small" id="r-rok">Done</button></div><div class="full trip-log">${rows}${end}</div>
     <div class="full lab-info">${res.bits} bits, ${res.exp} exp${res.finds.length?", "+res.finds.join(", "):""}. ${res.learnt.concat(lv).join(" ")}</div>
     <button class="rb full" id="r-watch">Watch the last fight again<small>As it happened</small></button>`);

@@ -72,7 +72,7 @@ const TASKS={
 
 /* Plays one task. ok is decided before; the scene shows it. */
 async function playTask(k,ok,extra={}){
-  const s=RS; s.props=s.props.filter(p=>p.k==="bowl"); s.x=40; s.hidden=false; s.pose="walk";
+  const s=RS; s.props=s.props.filter(p=>p.k==="bowl"||p===s.guide); s.x=40; s.hidden=false; s.pose="walk";
   if(k==="forage"){ const b=prop({k:"bush",x:175,y:GROUND}); await walkTo(140,40); s.pose="effort"; b.shake=true; await rwait(900); b.shake=false;
     if(ok){ b.picked=true; const it=prop({k:"item",x:160,y:GROUND-16}); s.pose="happy"; await hop(10,300); await rwait(300); unprop(it); }
     else { spark(160,GROUND-14,"leaf",5); s.pose="sad"; await rwait(700); } }
@@ -100,5 +100,5 @@ async function playTask(k,ok,extra={}){
 }
 
 /* A trip header and result shown on the scene. */
-async function stageCard(title,sub){ banner(title,"#fff"); if(sub) say(sub); await rwait(900); banner(""); }
-async function stageResult(ok,line){ banner(ok?"Success":"Failed",ok?"#7dff9a":"#ff8a8a"); say(line); await rwait(1300); banner(""); }
+async function stageCard(title,sub,who){ banner(title,"#fff"); if(sub) say(sub,who); await rwait(900); banner(""); }
+async function stageResult(ok,line,who){ banner(ok?"Success":"Failed",ok?"#7dff9a":"#ff8a8a"); say(line,who); await rwait(1300); banner(""); }
