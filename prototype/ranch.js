@@ -17,6 +17,7 @@ const SNACKS={
   "Bitter root":{c:"#6b4a2b",say:"It shudders, but it's listening now.",fx:s=>{s.fear+=20;s.spoil-=10;s.weight-=5;},react:"shudder"},
   "Slim tea":{c:"#9bd16b",say:"A little lighter on its feet.",fx:s=>{s.weight-=15;s.fatigue+=5;},react:"calm"},
 };
+const SNACK_FX={"Cool leaf":"stress halved","Energy nut":"fatigue -25","Berry":"fatigue -10","Candy":"weight +5, stress -2","Honey cake":"spoil +10, fear -5, weight +5","Bitter root":"fear +20, spoil -10, weight -5","Slim tea":"weight -15, fatigue +5"};
 const MARK=[["Stout","a wider body and a pale belly"],["Horned","horns"],["Shelled","a spiked shell"],["Sage","antennae"],["Haloed","a gold halo"],["Winged","small wings"]];
 const MARK_HINT=["It's been running a lot. I think it'll fill out.","It's been working those muscles. I bet it grows horns.","All that bracing is toughening its shoulders.","It's been thinking hard. Something might sprout up top.","Its spirit's been glowing lately.","It's so quick now. I wonder if it'll grow wings."];
 const SEASON=["Spring","Summer","Autumn","Winter"];
@@ -293,9 +294,9 @@ function menu(which){
   if(which==="Rest"){ panel(`<button class="rb" id="r-rest">Rest this week<small>Fatigue −35, stress −7. Uses the week.</small></button><div style="flex-basis:100%;font-size:12px;opacity:.7">${condition()}</div>`); el("r-rest").onclick=runRest; }
   if(which==="Feed"){
     const mo=Math.floor(PLAYER.week/4), fed=s.mealMonth===mo, snacked=s.snackWeek===PLAYER.week;
-    panel(`<div class="full sec">Monthly meal${fed?"<small>Done this month</small>":""}</div>`+MEALS.map((ml,i)=>`<button class="rb" data-ml="${i}" ${fed||PLAYER.bits<ml[1]?"disabled":""}>${ml[0]}${s.known[i]==="like"?" ♥":s.known[i]==="dis"?" ✕":""}<small>${ml[1]} bits</small></button>`).join("")+
+    panel(`<div class="full sec">Monthly meal${fed?"<small>Done this month</small>":""}</div>`+MEALS.map((ml,i)=>`<button class="rb" data-ml="${i}" ${fed||PLAYER.bits<ml[1]?"disabled":""}>${ml[0]}${s.known[i]==="like"?" ♥":s.known[i]==="dis"?" ✕":""}<small>${ml[1]} bits · ${itemDesc(ml[0])}</small></button>`).join("")+
       `<div class="full sec">Snacks<small>${snacked?"Had one this week":"1 a week"}</small></div>`+
-      Object.keys(SNACKS).map(n=>`<button class="rb" data-sn="${n}" ${snacked||!PLAYER.bag[n]?"disabled":""}>${n}<small>${PLAYER.bag[n]||0} in the bag</small></button>`).join(""));
+      Object.keys(SNACKS).map(n=>`<button class="rb" data-sn="${n}" ${snacked||!PLAYER.bag[n]?"disabled":""}>${n}<small>${PLAYER.bag[n]||0} in the bag · ${itemDesc(n)}</small></button>`).join(""));
     el("r-panel").querySelectorAll("[data-ml]").forEach(b=>b.onclick=()=>runMeal(+b.dataset.ml));
     el("r-panel").querySelectorAll("[data-sn]").forEach(b=>b.onclick=()=>runSnack(b.dataset.sn));
   }

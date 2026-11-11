@@ -31,7 +31,7 @@ function openFreezer(){
 /* ---------- The bag ---------- */
 function openItems(){
   const s=RS, bag=PLAYER.bag, names=Object.keys(bag).filter(k=>bag[k]>0);
-  const what=k=>k.startsWith("Skill chip: ")?"Teaches "+k.slice(12):SNACKS[k]?"Snack, use it from Feed":ITEMS[k]?ITEMS[k].desc:"";
+  const what=k=>itemDesc(k)+(SNACKS[k]?" Give it from Feed.":"");
   panel(names.map(k=>`<button class="rb" data-i="${k}">${k} ×${bag[k]}<small>${what(k)}</small></button>`).join("")+`<button class="rb" id="i-back">Back</button>`);
   el("r-panel").querySelectorAll("[data-i]").forEach(b=>b.onclick=()=>useItem(b.dataset.i));
   el("i-back").onclick=()=>menu("Care");

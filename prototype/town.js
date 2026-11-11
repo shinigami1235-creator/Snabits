@@ -54,9 +54,9 @@ function shopList(title,rows,back){
   el("r-panel").querySelectorAll("[data-s]").forEach(b=>b.onclick=()=>{ const r=rows[+b.dataset.s]; r.buy?r.buy():buy(r.name,r.price,back); });
   el("sh-back").onclick=openTown;
 }
-function openMarket(){ shopList("Market.",Object.entries(MARKET).map(([k,p])=>({name:k,price:p,desc:`You have ${PLAYER.bag[k]||0}`})),openMarket); }
+function openMarket(){ shopList("Market.",Object.entries(MARKET).map(([k,p])=>({name:k,price:p,desc:`${itemDesc(k)} You have ${PLAYER.bag[k]||0}.`})),openMarket); }
 function openItemShop(){ const st=weekStock();
-  shopList("Item shop, this week.",st.worn.map(k=>({name:k,price:WORN[k].price,desc:`${WORN[k].slot}: ${wornText(k)}`})).concat([{name:st.held,price:HELD[st.held].price,desc:"Held: "+HELD[st.held].desc}]),openItemShop); }
+  shopList("Item shop, this week.",st.worn.map(k=>({name:k,price:WORN[k].price,desc:`Worn on the ${WORN[k].slot}. ${itemDesc(k)}`})).concat([{name:st.held,price:HELD[st.held].price,desc:"Held. "+itemDesc(st.held)}]),openItemShop); }
 function openSkillShop(){ const st=weekStock();
   shopList("Skill shop, this week.",st.chips.map(n=>({name:"Skill chip: "+n,price:300,desc:`${SKILLS[n].el} ${SKILLS[n].kind}. ${describe(n)}`})),openSkillShop); }
 function openWorkshop(){
@@ -76,11 +76,11 @@ function openWear(){
   const s=RS; s.worn=s.worn||{}; const bag=PLAYER.bag;
   const slots=["head","face","mouth","back","feet"];
   const owned=Object.keys(WORN).filter(k=>bag[k]>0), heldOwned=Object.keys(HELD).filter(k=>bag[k]>0);
-  panel(`<div style="flex-basis:100%;font-size:13px">Worn items show on it and change two stats. One per socket, plus one held item for fights.</div>`+
-    slots.map(sl=>`<div style="flex-basis:100%;font-size:13px"><b>${sl[0].toUpperCase()+sl.slice(1)}:</b> ${s.worn[sl]?`${s.worn[sl]} (${wornText(s.worn[sl])}) <button class="small" data-off="${sl}">Take off</button>`:"empty"}</div>`).join("")+
-    `<div style="flex-basis:100%;font-size:13px"><b>Held:</b> ${s.held?`${s.held} (${HELD[s.held].desc}) <button class="small" data-off="held">Take off</button>`:"nothing"}</div>`+
-    owned.map(k=>`<button class="rb" data-w="${k}">${k} ×${bag[k]}<small>${WORN[k].slot}: ${wornText(k)}</small></button>`).join("")+
-    heldOwned.map(k=>`<button class="rb" data-h="${k}">${k} ×${bag[k]}<small>Hold: ${HELD[k].desc}</small></button>`).join("")+`<button class="rb" id="wr-back">Back</button>`);
+  panel(`<div style="flex-basis:100%;font-size:13px">Worn items show on it and change how it grows. One per spot, plus one held item for fights.</div>`+
+    slots.map(sl=>`<div style="flex-basis:100%;font-size:13px"><b>${sl[0].toUpperCase()+sl.slice(1)}:</b> ${s.worn[sl]?`${s.worn[sl]}. ${itemDesc(s.worn[sl])} <button class="small" data-off="${sl}">Take off</button>`:"empty"}</div>`).join("")+
+    `<div style="flex-basis:100%;font-size:13px"><b>Held:</b> ${s.held?`${s.held}. ${itemDesc(s.held)} <button class="small" data-off="held">Take off</button>`:"nothing"}</div>`+
+    owned.map(k=>`<button class="rb" data-w="${k}">${k} ×${bag[k]}<small>${WORN[k].slot[0].toUpperCase()+WORN[k].slot.slice(1)}. ${itemDesc(k)}</small></button>`).join("")+
+    heldOwned.map(k=>`<button class="rb" data-h="${k}">${k} ×${bag[k]}<small>Held. ${itemDesc(k)}</small></button>`).join("")+`<button class="rb" id="wr-back">Back</button>`);
   el("r-panel").querySelectorAll("[data-w]").forEach(b=>b.onclick=()=>{ const k=b.dataset.w, sl=WORN[k].slot; if(s.worn[sl]) addItem(s.worn[sl]); bag[k]--; if(bag[k]<=0) delete bag[k]; s.worn[sl]=k; fixEquip(s); saveGame(); openWear(); });
   el("r-panel").querySelectorAll("[data-h]").forEach(b=>b.onclick=()=>{ const k=b.dataset.h; if(s.held) addItem(s.held); bag[k]--; if(bag[k]<=0) delete bag[k]; s.held=k; saveGame(); openWear(); });
   el("r-panel").querySelectorAll("[data-off]").forEach(b=>b.onclick=()=>{ const sl=b.dataset.off; if(sl==="held"){ addItem(s.held); s.held=null; } else { addItem(s.worn[sl]); delete s.worn[sl]; } fixEquip(s); saveGame(); openWear(); });

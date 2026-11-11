@@ -18,6 +18,27 @@ const ITEMS={
   "Life fruit":{rarity:3,desc:"+3 months of lifespan, once per monster"},
   "Rebirth seed":{rarity:3,desc:"Rebirths an old monster as a fresh Bit"},
 };
+/* What the bag and the shops say about each thing: a hint at what it does, never the numbers.
+   The exact effect shows after it when Show hidden numbers is on. */
+const DESC={
+  "Rice ball":"Plain and filling. It won't thank you for it.","Milk":"Warm and gentle on the tummy.","Fish":"Fresh from the market. A solid meal.",
+  "Jelly":"Light and wobbly. Good for trimming down.","Meat":"Rich and hearty. Fattening.","Vitamin pack":"Tastes like medicine, but melts stress away.",
+  "Cool leaf":"A minty leaf that relieves stress.","Energy nut":"A crunchy nut that perks up a tired body.","Berry":"Sweet and juicy. A small pick-me-up.",
+  "Candy":"Sugary. Not something to have too often.","Honey cake":"Sweet and fattening. It'll love you for it.","Bitter root":"Tastes awful. It listens better afterwards.",
+  "Slim tea":"A grassy tea for slimming down. Tiring, though.",
+  "Medicine":"Bitter syrup for colds and sprains.","Ball":"A bouncy toy for playtime.","Stat seed":"A seed packed with strength, for fusion.",
+  "Element stone":"A stone that hums with one element. For fusion, or to hold in battle.","Lucky bit":"A shiny charm. Luck seems to follow it.",
+  "Life fruit":"A rare fruit said to add to a life.","Rebirth seed":"Lets an old Snabit start over.",
+  "Energy cell":"A buzzing battery. More energy in a fight, a bit less body.","Life seed":"Sprouts when a fight starts going badly.",
+  "Cap":"A sporty cap that lifts its spirits.","Top hat":"Very distinguished. Wise, if a little slow.","Crown":"Fit for a champion. It learns quicker, but gets proud.",
+  "Party hat":"Gets the fun started early in a fight.","Bow":"A cute bow. Cheerful rather than fierce.","Sunglasses":"Looks cool. Hits harder when it lands, misses a little more.",
+  "Monocle":"For studying the opponent up close.","Mustache":"A strongman's mustache.","Bat wings":"Light and quick, but flimsy. It might learn to fly.",
+  "Angel wings":"Soft feathers that lift the spirit. It might learn to fly.","Boots":"Sturdy boots. Steady footing, heavy steps."
+};
+const itemDesc=k=>{ if(k.startsWith("Skill chip: ")) return "Teaches "+k.slice(12); const d=DESC[k]||"";
+  if(!(typeof RS!=="undefined"&&RS&&RS.showNums)) return d;
+  const exact=typeof SNACK_FX!=="undefined"&&SNACK_FX[k]||ITEMS[k]&&ITEMS[k].desc||typeof HELD!=="undefined"&&HELD[k]&&HELD[k].desc||typeof WORN!=="undefined"&&WORN[k]&&wornText(k)||"";
+  return exact?`${d} (${exact})`:d; };
 const COMMON_FINDS=["Berry","Cool leaf","Candy","Energy nut"];
 const UNCOMMON_FINDS=["Medicine","Ball","Honey cake","Bitter root","Slim tea","chip1"];
 const RARE_FINDS=["Stat seed","Element stone","Lucky bit","chip2"];
