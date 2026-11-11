@@ -182,6 +182,7 @@ class Fight{
   }
   hit(i,s){
     const me=this.p[i], R=this.rand;
+    this.events.push({t:"use",who:i,name:s.name,kind:s.kind,el:s.el});
     let tgt=1-i, power=s.power;
     if(s.kind==="Cast"&&this.p[tgt].mirror){ this.p[tgt].mirror=false; this.say(`${this.p[tgt].name}'s Mirror Charm bounces ${s.name} back.`); tgt=i; power/=2; }
     const def=this.p[tgt];

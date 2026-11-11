@@ -86,7 +86,7 @@ function popup(who,text,color,big){
   requestAnimationFrame(()=>{p.style.transform="translate(-50%,-40px)";p.style.opacity="0";});
   setTimeout(()=>p.remove(),1000);
 }
-function bump(who,cls){ if(typeof chibiPose==="function") chibiPose(who,{bhit:"hit",bcast:"attack",bguard:"hurt"}[cls]||"idle",450); const s=$(who===0?"b-me-sprite":"b-foe-sprite"); s.classList.remove(cls); void s.offsetWidth; s.classList.add(cls); }
+function bump(who,cls){ if(typeof chibiBump==="function") chibiBump(who,cls); const s=$(who===0?"b-me-sprite":"b-foe-sprite"); s.classList.remove(cls); void s.offsetWidth; s.classList.add(cls); }
 
 const bw=ms=>B&&B.fast?Promise.resolve():wait(ms);
 async function pick(id){
@@ -103,11 +103,12 @@ async function pick(id){
 /* Plays a turn's events on screen. Live friend rooms call this with the events the host sent. */
 async function playEvents(f,ev){
   for(const e of ev){
+    if(e.t==="use"&&typeof chibiUse==="function"&&!B.fast) await chibiUse(e);
     if(e.t==="log"){ logLine(e.text); await bw(260); }
     if(e.t==="ability"){ popup(e.who,e.name,"#ffd23f",true); await bw(380); }
     if(e.t==="hit"){ B.shown[e.who]=Math.max(0,B.shown[e.who]-e.dmg); bump(e.who,"bhit"); popup(e.who,`-${e.dmg}${e.eff>1?"!":""}`,e.crit||e.eff>1?"#ffd23f":e.eff<1?"#9aa":"#fff"); drawPanels(); await bw(380); }
     if(e.t==="heal"){ B.shown[e.who]=Math.min(f.p[e.who].maxhp,B.shown[e.who]+e.amt); popup(e.who,`+${e.amt}`,"#4dd36a"); drawPanels(); await bw(300); }
-    if(e.t==="miss"){ popup(e.who,"miss","#9aa"); await bw(300); }
+    if(e.t==="miss"){ if(typeof chibiBump==="function") chibiBump(e.who,"miss"); popup(e.who,"miss","#9aa"); await bw(300); }
     if(e.t==="guard"){ bump(e.who,"bguard"); await bw(200); }
     if(e.t==="cast"){ bump(e.who,"bcast"); await bw(250); }
     if(e.t==="status"){ popup(e.who,e.name,STATUS_COL[e.name]); await bw(300); }

@@ -20,13 +20,42 @@ const CHIBI = (() => {
 
   /* Arms are [elbow out, elbow y, hand out, hand y] from the shoulder, where "out" points away from the body,
      so every pose blends into every other. Feet are [left dx, left lift, right dx, right lift]. */
+  /* Arms are [elbow out, elbow y, hand out, hand y] from the shoulder, where "out" points away from the body,
+     so every pose blends into every other. The first arm is the left one; in battle the right arm faces the enemy.
+     Feet are [left dx, left lift, right dx, right lift]. */
+  const REST = [12, 8, 16, 22], UP = [16, -10, 14, -28], DROOP = [8, 14, 6, 26];
   const POSE = {
-    idle:   { arm: [[12, 8, 16, 22], [12, 8, 16, 22]], feet: [0, 0, 0, 0], eyes: 'open', open: 0 },
-    walk:   { arm: [[12, 8, 16, 22], [12, 8, 16, 22]], feet: [0, 0, 0, 0], eyes: 'open', open: 0.1, walk: 1 },
-    happy:  { arm: [[16, -10, 14, -28], [16, -10, 14, -28]], feet: [-3, 0, 3, 0], eyes: 'happy', open: 0.75, lift: -12, extra: 'heart' },
+    // ranch
+    idle:   { arm: [REST, REST], feet: [0, 0, 0, 0], eyes: 'open', open: 0 },
+    walk:   { arm: [REST, REST], feet: [0, 0, 0, 0], eyes: 'open', open: 0.1, walk: 1 },
+    run:    { arm: [[14, 2, 22, 6], [14, 2, 22, 6]], feet: [0, 0, 0, 0], eyes: 'fierce', open: 0.4, walk: 2, tilt: 6, lean: 4 },
+    happy:  { arm: [UP, UP], feet: [-3, 0, 3, 0], eyes: 'happy', open: 0.75, lift: -12, extra: 'heart' },
+    sad:    { arm: [DROOP, DROOP], feet: [0, 0, 0, 0], eyes: 'sad', open: 0, frown: 1, sy: 0.96, extra: 'tear' },
+    tired:  { arm: [DROOP, DROOP], feet: [-2, 0, 2, 0], eyes: 'tired', open: 0.15, sy: 0.93, sx: 1.04, tilt: -3 },
     eat:    { arm: [[8, 16, -8, 24], [8, 16, -8, 24]], feet: [0, 0, 0, 0], eyes: 'happy', open: 0.5, chew: 1, front: 1, extra: 'crumbs' },
-    hurt:   { arm: [[8, 2, 2, -12], [8, 2, 2, -12]], feet: [-2, 0, 2, 0], eyes: 'hurt', open: 0.15, tilt: -5, sx: 1.04, sy: 0.95, front: 1, extra: 'sweat' },
     sleep:  { arm: [[10, 10, 12, 16], [10, 10, 12, 16]], feet: [-4, 0, 4, 0], eyes: 'shut', open: 0, sx: 1.07, sy: 0.86, extra: 'zz' },
+    sit:    { arm: [[10, 12, 14, 18], [10, 12, 14, 18]], feet: [-7, -3, 7, -3], eyes: 'open', open: 0, sx: 1.05, sy: 0.9 },
+    dizzy:  { arm: [[14, 4, 20, 14], [14, 4, 20, 14]], feet: [-3, 0, 3, 0], eyes: 'dizzy', open: 0.25, wobble: 1, extra: 'stars' },
+    effort: { arm: [[12, 4, 8, 12], [12, 4, 8, 12]], feet: [-5, 0, 5, 0], eyes: 'hurt', open: 0.15, sx: 1.08, sy: 0.9, extra: 'sweat' },
+    lean:   { arm: [REST, [10, 10, 4, 18]], feet: [-2, 0, 2, 0], eyes: 'open', open: 0, tilt: -9, lean: -3 },
+    hover:  { arm: [[16, -2, 24, -4], [16, -2, 24, -4]], feet: [-2, -6, 2, -6], eyes: 'happy', open: 0.3, lift: -14 },
+    hurt:   { arm: [[8, 2, 2, -12], [8, 2, 2, -12]], feet: [-2, 0, 2, 0], eyes: 'hurt', open: 0.15, tilt: -5, sx: 1.04, sy: 0.95, front: 1, extra: 'sweat' },
+    // battle
+    guard:  { arm: [[8, 4, -16, -2], [8, 4, -16, 4]], feet: [-4, 0, 4, 0], eyes: 'fierce', open: 0, sy: 0.95, front: 1 },
+    crouch: { arm: [[10, 10, 14, 16], [10, 10, 14, 16]], feet: [-5, 0, 5, 0], eyes: 'fierce', open: 0.2, sx: 1.1, sy: 0.84, lean: -5, tilt: -4 },
+    tackle: { arm: [[6, 4, -2, 14], [6, 4, -4, 10]], feet: [-6, -4, 6, -6], eyes: 'fierce', open: 0.3, sx: 1.08, sy: 0.9, tilt: 18, lean: 8 },
+    bitewide: { arm: [[14, 2, 22, 6], [14, 2, 22, 6]], feet: [-4, -3, 4, -5], eyes: 'fierce', open: 1, tilt: 10, lean: 8 },
+    chomp:  { arm: [[12, 6, 18, 12], [12, 6, 18, 12]], feet: [-4, 0, 4, 0], eyes: 'fierce', open: 0, sx: 1.06, sy: 0.95, tilt: 6, lean: 6 },
+    jump:   { arm: [[14, -12, 16, -26], [14, -12, 16, -26]], feet: [-3, -6, 3, -6], eyes: 'fierce', open: 0.45, sx: 0.9, sy: 1.12 },
+    land:   { arm: [[16, 4, 24, 8], [16, 4, 24, 8]], feet: [-7, 0, 7, 0], eyes: 'fierce', open: 0.55, sx: 1.16, sy: 0.78 },
+    punchwind: { arm: [[10, 8, 12, 18], [6, 4, -8, 2]], feet: [-5, 0, 5, 0], eyes: 'fierce', open: 0.2, lean: -5, tilt: -6 },
+    punch:  { arm: [[8, 10, 4, 16], [26, -6, 46, -10]], feet: [-6, 0, 6, -3], eyes: 'fierce', open: 0.6, lean: 10, tilt: 10, front: 1 },
+    swipeup: { arm: [[10, -16, 4, -32], [10, -16, 4, -32]], feet: [-4, 0, 4, 0], eyes: 'fierce', open: 0.4, tilt: -7, lean: -3 },
+    swipedown: { arm: [[18, 4, 30, 16], [18, 4, 30, 16]], feet: [-5, 0, 5, -3], eyes: 'fierce', open: 0.75, tilt: 11, lean: 8, front: 1 },
+    cast:   { arm: [[14, -14, 22, -24], [14, -14, 22, -24]], feet: [-3, 0, 3, 0], eyes: 'shut', open: 0, lift: -6 },
+    push:   { arm: [[18, -4, 34, -6], [18, -4, 34, -6]], feet: [-6, 0, 6, 0], eyes: 'fierce', open: 0.35, lean: 7, tilt: 5, front: 1 },
+    float:  { arm: [[14, -10, 20, -22], [14, -10, 20, -22]], feet: [-4, 6, 4, 6], eyes: 'hurt', open: 0.5, extra: 'sweat' },
+    dodge:  { arm: [[14, -6, 20, -14], REST], feet: [-6, -3, 2, 0], eyes: 'open', open: 0.3, tilt: -14, lean: -6 },
     attack: { arm: [[18, -2, 30, -6], [18, -2, 30, -6]], feet: [-5, 0, 5, -3], eyes: 'fierce', open: 1, tilt: 7, lean: 8, front: 1 },
     hit:    { arm: [[16, -8, 24, -18], [16, -8, 24, -18]], feet: [-3, -4, 3, 0], eyes: 'hurt', open: 0.3, tilt: -9, lean: -6, sx: 0.94, sy: 1.04, extra: 'sweat' },
     ko:     { arm: [[14, 14, 22, 18], [14, 14, 22, 18]], feet: [-6, 0, 6, 0], eyes: 'ko', open: 0.2, tilt: 9, sx: 1.1, sy: 0.74, extra: 'stars' }
@@ -128,6 +157,12 @@ const CHIBI = (() => {
     else if (type === 'shut') { c.beginPath(); c.moveTo(-8 * s, -1 * s); c.quadraticCurveTo(0, 6 * s, 8 * s, -1 * s); c.stroke(); }
     else if (type === 'hurt') { const d = side; c.beginPath(); c.moveTo(-6 * s * d, -6 * s); c.lineTo(6 * s * d, 0); c.lineTo(-6 * s * d, 6 * s); c.stroke(); }
     else if (type === 'ko') { c.beginPath(); c.moveTo(-6 * s, -6 * s); c.lineTo(6 * s, 6 * s); c.moveTo(6 * s, -6 * s); c.lineTo(-6 * s, 6 * s); c.stroke(); }
+    else if (type === 'dizzy') { c.lineWidth = 2.6 * s; c.beginPath(); for (let a = 0; a < 15; a++) { const r = a * 0.62 * s, an = a * 0.9 * side; a ? c.lineTo(Math.cos(an) * r, Math.sin(an) * r) : c.moveTo(0, 0); } c.stroke(); }
+    else if (type === 'tired') { c.fillStyle = rgb(INK); c.beginPath(); c.ellipse(0, 1 * s, 8.6 * s, 9 * s, 0, 0, Math.PI); c.fill();
+      c.beginPath(); c.moveTo(-9.5 * s, 1 * s); c.lineTo(9.5 * s, 1 * s); c.stroke(); c.fillStyle = '#fff'; c.beginPath(); c.arc(3 * s, 4 * s, 2.2 * s, 0, 7); c.fill(); }
+    else if (type === 'sad') { c.fillStyle = rgb(INK); c.beginPath(); c.ellipse(0, 1 * s, 7.6 * s, 9 * s, 0, 0, 7); c.fill();
+      c.fillStyle = '#fff'; c.beginPath(); c.arc(2.6 * s, -2.4 * s, 3 * s, 0, 7); c.fill(); c.beginPath(); c.arc(-2.4 * s, 4 * s, 1.5 * s, 0, 7); c.fill();
+      c.lineWidth = 3 * s; c.beginPath(); c.moveTo(-8 * s * side, -15 * s); c.lineTo(7 * s * side, -11.5 * s); c.stroke(); }
     else {
       const lx = look[0] * 2.5 * s, ly = look[1] * 2 * s;
       c.fillStyle = rgb(INK); c.beginPath(); c.ellipse(lx, ly, 8.6 * s, 10.2 * s, 0, 0, 7); c.fill();
@@ -182,7 +217,7 @@ const CHIBI = (() => {
     const st = { ...S, bw: S.bw + (stout ? 14 : 0) };
     const pal = m.pal, body = pal.body, parts = pal.parts, acc = pal.accent;
     const rim = dk(body, 0.38), handCol = lt(parts, 0.22);
-    const walk = P.walk ? Math.sin(t / 130) : 0, chew = P.chew ? (Math.sin(t / 110) + 1) / 2 : 0;
+    const walk = P.walk ? Math.sin(t / (P.walk > 1 ? 75 : 130)) : 0, chew = P.chew ? (Math.sin(t / 110) + 1) / 2 : 0;
     const bob = P.walk ? -Math.abs(walk) * 4 : Math.sin(t / 600) * 1.2;
     const lift = (P.lift || 0) + bob, open = Math.max(0, Math.min(1, (P.open || 0) + chew * 0.5 - (P.chew ? 0.25 : 0)));
     const sx = (P.sx || 1) * (1 + Math.sin(t / 600) * 0.008), sy = (P.sy || 1) * (1 - Math.sin(t / 600) * 0.008);
@@ -193,7 +228,7 @@ const CHIBI = (() => {
     c.beginPath(); c.ellipse(100 + (P.lean || 0) * 0.5, 189, g.bw * 0.44 * (1 + lift * 0.008), 6, 0, 0, 7); c.fill();
     c.save();
     c.translate(P.lean || 0, lift);
-    c.translate(100, 176); c.rotate((P.tilt || 0) * Math.PI / 180); c.scale(sx, sy); c.translate(-100, -176);
+    c.translate(100, 176); c.rotate(((P.tilt || 0) + (P.wobble ? Math.sin(t / 160) * 8 : 0)) * Math.PI / 180); c.scale(sx, sy); c.translate(-100, -176);
     if (m.fx) fxBehind(c, m.fx, () => roundBox(c, left, g.top, g.bw, g.bh, st.r), g, body, t);
     const W = m.worn || {}, feetAt = [];
     if (W.back) wings(c, g, W.back, t);
@@ -241,7 +276,7 @@ const CHIBI = (() => {
         c.save(); c.beginPath(); c.ellipse(x + look[0] * 2.5 * s, ey + look[1] * 2 * s, 9.2 * s, 10.8 * s, 0, 0, 7); c.clip();
         c.beginPath(); c.moveTo(x - 12 * s * side, ey - 14 * s); c.lineTo(x + 12 * s * side, ey - 14 * s); c.lineTo(x + 12 * s * side, ey - 10 * s); c.lineTo(x - 12 * s * side, ey - 4 * s); c.closePath(); c.fill(); c.restore(); }
     }
-    mouth(c, g.cx, my, mw, open, st, body);
+    if (P.frown) { c.save(); c.translate(0, my * 2 + mw * 0.2); c.scale(1, -1); mouth(c, g.cx, my, mw * 0.7, 0, st, body); c.restore(); } else mouth(c, g.cx, my, mw, open, st, body);
     wornFront(c, { head: [g.cx, g.top + 3, g.bw * 0.46], eyes: { cx: g.cx, y: ey, ex, s }, mouth: [g.cx, my, s] }, W, t);
     if (!armBehind && st.arm) arms();
     if (m.fx) fxFront(c, m.fx, () => roundBox(c, left, g.top, g.bw, g.bh, st.r), g, t);
@@ -254,6 +289,7 @@ const CHIBI = (() => {
     if (P.extra === 'sweat') { c.fillStyle = '#9CD4F5'; const x = g.cx + g.bw / 2 - 4, y = top + 6;
       c.beginPath(); c.moveTo(x, y); c.quadraticCurveTo(x + 8, y + 12, x, y + 15); c.quadraticCurveTo(x - 8, y + 12, x, y); c.fill(); }
     if (P.extra === 'heart') heart(c, g.cx + g.bw / 2 + 6, top - 4 + Math.sin(t / 200) * 2, 0.7, rgb(BLUSH));
+    if (P.extra === 'tear') { const ph = (t / 900) % 1; c.fillStyle = `rgba(156,212,245,${1 - ph * 0.6})`; drop(c, g.cx - g.bw * 0.2, top + g.bh * 0.5 + ph * 14, 0.8); c.fill(); }
     if (P.extra === 'stars') for (let k = 0; k < 3; k++) { const a = t / 400 + k * 2.1;
       star(c, g.cx + Math.cos(a) * g.bw * 0.4, top + 4 + Math.sin(a) * 6, 0.55, k % 2 ? '#ffd23f' : rgb(lt(acc, 0.3))); }
     if (P.extra === 'crumbs') { c.fillStyle = rgb(lt(parts, 0.4)); for (let k = 0; k < 4; k++) { const ph = (t / 400 + k / 4) % 1;
@@ -496,8 +532,9 @@ const CHIBI = (() => {
     c.fillStyle = col; c.beginPath(); c.moveTo(x - 12 * s * side, ey - 14 * s); c.lineTo(x + 12 * s * side, ey - 14 * s);
     c.lineTo(x + 12 * s * side, ey - 10 * s); c.lineTo(x - 12 * s * side, ey - 4 * s); c.closePath(); c.fill(); c.restore();
   }
-  function smallMouth(c, cx, my, s, open, fang) {
+  function smallMouth(c, cx, my, s, open, fang, frown) {
     c.strokeStyle = rgb(INK); c.fillStyle = rgb(INK); c.lineCap = 'round'; c.lineWidth = 3.6 * s;
+    if (frown) { c.beginPath(); c.moveTo(cx - 6 * s, my + 4 * s); c.quadraticCurveTo(cx, my - 2 * s, cx + 6 * s, my + 4 * s); c.stroke(); return; }
     if (open < 0.2) { c.beginPath(); c.moveTo(cx - 7 * s, my); c.quadraticCurveTo(cx, my + 7 * s, cx + 7 * s, my); c.stroke();
       if (fang) { c.fillStyle = '#fff'; c.beginPath(); c.moveTo(cx + 1.5 * s, my + 2.6 * s); c.lineTo(cx + 6 * s, my + 1.2 * s); c.lineTo(cx + 4.4 * s, my + 6.5 * s); c.closePath(); c.fill(); }
       return; }
@@ -516,7 +553,7 @@ const CHIBI = (() => {
     eye(c, g.cx - ex, ey, s, eyes, -1, look); eye(c, g.cx + ex, ey, s, eyes, 1, look);
     if (eyes === 'fierce') for (const side of [-1, 1]) lid(c, g.cx + side * ex, ey, s, side, look, rgb(o.lidCol || x.body));
     if (o.extraEyes) for (const side of [-1, 1]) eye(c, g.cx + side * g.bw * o.extraEyes, ey - 7 * s, s * 0.45, eyes === 'fierce' ? 'open' : eyes, side, look);
-    smallMouth(c, g.cx, my, s, x.open, x.stage === 'Mega' || o.fang);
+    smallMouth(c, g.cx, my, s, x.open, x.stage === 'Mega' || o.fang, x.P.frown);
     if (o.chelicerae) { c.fillStyle = rgb(lt(x.parts, 0.6)); for (const side of [-1, 1]) { c.beginPath(); c.moveTo(g.cx + side * 3 * s, my + 5 * s); c.lineTo(g.cx + side * 8 * s, my + 5 * s); c.lineTo(g.cx + side * 5 * s, my + 11 * s); c.closePath(); c.fill(); } }
     return { my, ey, ex, s, cx: g.cx };
   }
@@ -588,7 +625,7 @@ const CHIBI = (() => {
       face(c, g, x, look) {
         const s = by(g.stage, 1.45, 1.75, 2.0), ey = g.top + g.bh * 0.42, my = g.top + g.bh * 0.72, e = x.P.eyes;
         c.fillStyle = rgba(BLUSH, 0.7); for (const side of [-1, 1]) { c.beginPath(); c.ellipse(g.cx + side * g.bw * 0.3, ey + 15 * s * 0.55, 7.5, 4.5, 0, 0, 7); c.fill(); }
-        if (e === 'open' && g.stage === 'Mega') {          // the Mega's eye gets a coloured iris and a slanted lid
+        if ((e === 'open' && g.stage === 'Mega') || e === 'fierce') {          // the Mega's eye gets a coloured iris and a slanted lid
           const lx = look[0] * 4, ly = look[1] * 3;
           c.fillStyle = '#fff'; c.beginPath(); c.ellipse(g.cx, ey, 10.5 * s, 11.5 * s, 0, 0, 7); c.fill(); c.strokeStyle = rgb(INK); c.lineWidth = 3; c.stroke();
           c.fillStyle = rgb(mix(x.acc, x.body, 0.35)); c.beginPath(); c.arc(g.cx + lx, ey + ly, 7.2 * s, 0, 7); c.fill();
@@ -596,7 +633,7 @@ const CHIBI = (() => {
           c.fillStyle = '#fff'; c.beginPath(); c.arc(g.cx + lx + 2.6 * s, ey + ly - 2.8 * s, 2.2 * s, 0, 7); c.fill(); c.beginPath(); c.arc(g.cx + lx - 2.4 * s, ey + ly + 2.6 * s, 1 * s, 0, 7); c.fill();
           c.save(); c.beginPath(); c.ellipse(g.cx, ey, 10.5 * s, 11.5 * s, 0, 0, 7); c.clip(); c.fillStyle = rgb(x.body); c.fillRect(g.cx - 12 * s, ey - 13 * s, 24 * s, 5 * s); c.restore();
         } else eye(c, g.cx, ey, s, e === 'hurt' ? 'shut' : e, 1, look);
-        smallMouth(c, g.cx, my, by(g.stage, 0.85, 0.95, 1), x.open, g.stage === 'Mega');
+        smallMouth(c, g.cx, my, by(g.stage, 0.85, 0.95, 1), x.open, g.stage === 'Mega', x.P.frown);
         return { my, ey, ex: 0, s: s * 0.55, one: true, cx: g.cx };
       }
     },
@@ -794,7 +831,7 @@ const CHIBI = (() => {
   function drawFamily(c, m, p, t, look, F) {
     const P = typeof p === 'string' ? POSE[p] || POSE.idle : p, stage = F.dims[m.stage] ? m.stage : 'Bit';
     const [bw, bh] = F.dims[stage], pal = m.pal, body = pal.body, parts = pal.parts, acc = pal.accent, L = m.limbs || {};
-    const walk = P.walk ? Math.sin(t / 130) : 0, chew = P.chew ? (Math.sin(t / 110) + 1) / 2 : 0;
+    const walk = P.walk ? Math.sin(t / (P.walk > 1 ? 75 : 130)) : 0, chew = P.chew ? (Math.sin(t / 110) + 1) / 2 : 0;
     const fl = F.float ? Math.sin(t / 420) * 4 - 2 : 0, bob = P.walk ? -Math.abs(walk) * 4 : Math.sin(t / 600) * 1.2;
     const lift = (P.lift || 0) + bob + fl, open = Math.max(0, Math.min(1, (P.open || 0) + chew * 0.5 - (P.chew ? 0.25 : 0)));
     const bot = F.bottom(stage), g = { cx: 100, bw, bh, bot, top: bot - bh, left: 100 - bw / 2, stage };
@@ -803,7 +840,7 @@ const CHIBI = (() => {
     c.beginPath(); c.ellipse(100 + (P.lean || 0) * 0.5, 189, Math.max(bw * 0.44, 24) * (F.float ? 0.75 : 1) * (1 + lift * 0.008), 6, 0, 0, 7); c.fill();
     c.save();
     c.translate(P.lean || 0, lift);
-    c.translate(100, 176); c.rotate((P.tilt || 0) * Math.PI / 180); c.scale(P.sx || 1, P.sy || 1); c.translate(-100, -176);
+    c.translate(100, 176); c.rotate(((P.tilt || 0) + (P.wobble ? Math.sin(t / 160) * 8 : 0)) * Math.PI / 180); c.scale(P.sx || 1, P.sy || 1); c.translate(-100, -176);
     if (m.fx) fxBehind(c, m.fx, () => F.path.call(F, c, g, x), g, body, t);
     if (F.behind) F.behind.call(F, c, g, x);
     if (W.back) wings(c, g, W.back, t, F.wingY);
@@ -856,6 +893,7 @@ const CHIBI = (() => {
     if (P.extra === 'sweat') { c.fillStyle = '#9CD4F5'; const sx2 = g.cx + g.bw / 2 - 4, sy2 = top + 6;
       c.beginPath(); c.moveTo(sx2, sy2); c.quadraticCurveTo(sx2 + 8, sy2 + 12, sx2, sy2 + 15); c.quadraticCurveTo(sx2 - 8, sy2 + 12, sx2, sy2); c.fill(); }
     if (P.extra === 'heart') heart(c, g.cx + g.bw / 2 + 6, top - 4 + Math.sin(t / 200) * 2, 0.7, rgb(BLUSH));
+    if (P.extra === 'tear') { const ph = (t / 900) % 1; c.fillStyle = `rgba(156,212,245,${1 - ph * 0.6})`; drop(c, g.cx - g.bw * 0.2, top + g.bh * 0.5 + ph * 14, 0.8); c.fill(); }
     if (P.extra === 'stars') for (let k2 = 0; k2 < 3; k2++) { const a = t / 400 + k2 * 2.1;
       star(c, g.cx + Math.cos(a) * g.bw * 0.4, top + 4 + Math.sin(a) * 6, 0.55, k2 % 2 ? '#ffd23f' : rgb(lt(acc, 0.3))); }
     if (P.extra === 'crumbs' && my) { c.fillStyle = rgb(lt(parts, 0.4)); for (let k2 = 0; k2 < 4; k2++) { const ph = (t / 400 + k2 / 4) % 1;
