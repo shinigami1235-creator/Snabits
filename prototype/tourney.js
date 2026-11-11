@@ -111,7 +111,7 @@ function afterMatch(opp,res){
   const won=res.winner===0;
   if(res.learned&&res.learned.length) (CUP.learned=CUP.learned||[]).push(...res.learned);
   if(won){ CUP.myWins++; s.wins++; } else if(res.winner===1) s.losses++;
-  if(CUP.field[opp].rook&&!res.forfeit&&typeof rookResult==="function"){ rookResult(won); CUP.rookLine=won?`${displayName(s)} beat ${CUP.field[opp].name}. That makes ${story().rookW} win${story().rookW===1?"":"s"} against Rook.`:`${CUP.field[opp].name} beat ${displayName(s)}, so Rook is ${story().rookL} up against us.`; }
+  if(CUP.field[opp].rook&&!res.forfeit&&typeof rookResult==="function"){ rookResult(won); CUP.rookLine=won?`${displayName(s)} beat ${CUP.field[opp].name}. That makes ${story().rookW} win${story().rookW===1?"":"s"} against Rook.`:`${CUP.field[opp].name} beat ${displayName(s)}. That makes ${story().rookL} loss${story().rookL===1?"":"es"} to Rook.`; }
   const on=CUP.field[opp].name;
   CUP.ann=res.forfeit?`${displayName(s)} withdrew from the match with ${on}.`:won?`${displayName(s)} beats ${on}${res.judged?" on the judges' call":""}!`:res.winner===null?`${displayName(s)} and ${on} fight to a draw.`:`${on} takes it${res.judged?" on the judges' call":""}.`;
   if(won) CUP.expGain=(CUP.expGain||0)+4+2*CUP.field[opp].o.level;

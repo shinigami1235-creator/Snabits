@@ -41,7 +41,8 @@ async function runContest(K) {
   await scene(async () => {
     s.weekAct = 'Contest'; say(`${nm} is entered in the ${T[0]} ${K.name}. It has three rounds, and the judges score each one out of 10.`);
     await goPlace(K.place);
-    rivals.slice(0, 2).forEach((r, i) => prop({ k: 'foe', x: s.x + 58 + i * 30, y: GROUND, fm: r.o.fm }));
+    if (K.kind === 'Strength') prop({ k: 'crate', x: s.x + 24, y: GROUND });
+    rivals.slice(0, 2).forEach((r, i) => prop({ k: 'foe', x: s.x - 50 - i * 30, y: GROUND, fm: r.o.fm, grid: r.o.fm.grid, pal: r.o.fm.pal }));
     for (let r = 0; r < 3; r++) {
       banner(`Round ${r + 1}: ${K.rounds[r]}`, '#fff'); await rwait(1100); banner('');
       for (const e of all) e.last = e.me ? (K.stats ? contestScore(e.f, K, T[1], R) : styleScore(s, R)) : (K.stats ? contestScore(e.f, K, T[1], R) : clamp(3.5 + R() * 5.5, 1, 9.9));
@@ -67,7 +68,7 @@ async function runContest(K) {
     const lines = [`${nm} finished ${['first', 'second', 'third', 'fourth', 'fifth'][place - 1]} in the ${T[0]} ${K.name} with ${me.sum.toFixed(1)} points. ${order[0].me ? `Second was ${order[1].name} with ${order[1].sum.toFixed(1)}.` : `${order[0].name} won with ${order[0].sum.toFixed(1)}.`}`];
     if (purse) lines.push(`It brings home ${purse.toLocaleString()} bits${place === 1 ? ` and ${/^[AEIOU]/.test(T[3]) ? 'an' : 'a'} ${T[3]}` : ''}.`);
     const wonNow = place === 1 && CONTEST_WINS[story().contests]; if (wonNow) { addItem(wonNow); lines.push(`That's ${story().contests} contest win${story().contests > 1 ? 's' : ''}, and the judges sent ${/^[AEIOU]/.test(wonNow) ? 'an' : 'a'} ${wonNow} to wear.`); }
-    lines.push('Contests are fun for it, so it lost 15 stress.');
+    lines.push('It lost 15 stress and gained 8 fatigue.');
     await dayFade('night', backHome);
     await endWeek(1, lines.join(' '));
   });

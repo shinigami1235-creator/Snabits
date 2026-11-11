@@ -223,7 +223,7 @@ function npcFull(c, who, X, Y, h, face = 'happy', pose = 'stand', t = 0, flip = 
     c.fillStyle = '#f4f6f8'; c.beginPath(); c.moveTo(-5, -57); c.lineTo(0, -42); c.lineTo(5, -57); c.closePath(); c.fill();
     c.strokeStyle = '#e8c35a'; c.lineWidth = 1.6; c.beginPath(); c.moveTo(-5, -57); c.lineTo(-3, -27); c.moveTo(5, -57); c.lineTo(3, -27); c.stroke();
     c.fillStyle = '#e8c35a'; c.beginPath(); c.arc(-8, -48, 2.2, 0, 7); c.fill();   // the Grand Ranch pin
-    SC.depth(c, () => { c.beginPath(); c.ellipse(0, -57, 10, 3.6, 0, 0, 7); c.moveTo(4, -56); c.lineTo(10, -42); c.lineTo(5, -42); c.closePath(); }, '#d6453a', 1.2, 0.3);
+    SC.depth(c, () => { c.beginPath(); c.ellipse(0, -57, 12, 5, 0, 0, 7); c.moveTo(4, -55); c.lineTo(12, -39); c.lineTo(6, -39); c.closePath(); }, '#d6453a', 1.2, 0.3);
   } else {
     // lab coats: long, open at the front
     const coatLen = who === 'doc' ? -12 : -16;

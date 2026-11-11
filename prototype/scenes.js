@@ -410,9 +410,9 @@ function barnRoom(c, s, t, k, night) {
     c.fillStyle = '#e8c35a'; c.fillRect(tx - 10, F - 9, 20, 2); c.save(); c.translate(tx - 10, F - 14); c.rotate(-0.5); c.fillStyle = '#a8612f'; c.fillRect(0, -5, 20, 5); c.restore();
     for (const [dx, col] of [[-5, '#4aa3ff'], [1, '#ff7aa2'], [6, '#7dd36a']]) { c.fillStyle = col; c.beginPath(); c.arc(tx + dx, F - 15, 3, 0, 7); c.fill(); } }
   // potted plants hanging from the beam and on the wardrobe
-  if (up('Potted plants')) { for (const px of [52, 104]) { c.strokeStyle = '#6a4428'; c.lineWidth = 0.8; c.beginPath(); c.moveTo(px - 4, F - 121); c.lineTo(px, F - 106); c.lineTo(px + 4, F - 121); c.stroke();
-      SC.depth(c, () => { c.beginPath(); c.roundRect(px - 5, F - 108, 10, 7, [1, 1, 3, 3]); }, '#d9714a', 0.8, 0.3);
-      c.fillStyle = '#4f9a45'; for (let k = 0; k < 5; k++) { c.beginPath(); c.ellipse(px - 6 + k * 3, F - 104 + (k % 2) * 6 + k, 1.8, 5, (k - 2) * 0.4, 0, 7); c.fill(); } } }
+  if (up('Potted plants')) { for (const px of [52, 104]) { c.strokeStyle = '#6a4428'; c.lineWidth = 0.8; c.beginPath(); c.moveTo(px - 4, F - 121); c.lineTo(px, F - 92); c.lineTo(px + 4, F - 121); c.stroke();
+      SC.depth(c, () => { c.beginPath(); c.roundRect(px - 5, F - 94, 10, 7, [1, 1, 3, 3]); }, '#d9714a', 0.8, 0.3);
+      c.fillStyle = '#4f9a45'; for (let k = 0; k < 5; k++) { c.beginPath(); c.ellipse(px - 6 + k * 3, F - 90 + (k % 2) * 6 + k, 1.8, 5, (k - 2) * 0.4, 0, 7); c.fill(); } } }
   // stove corner, once the Kitchen is built
   if (typeof has === 'function' && has('Kitchen')) { const kx = 110;
     SC.depth(c, () => { c.beginPath(); c.roundRect(kx - 11, F - 28, 22, 28, 2); }, '#d9dde4', 1.5, 0.3);
@@ -458,7 +458,7 @@ function awayScene(c, s, t, k) {
 /* a training place's upgrades: bunting at level 1, then lamps and a scoreboard at level 2 */
 function placeDeco(c, bg, t) {
   const lv = typeof placeLv === 'function' ? placeLv(bg) : 0; if (!lv) return;
-  const y = GROUND - 128; c.strokeStyle = 'rgba(80,60,40,.6)'; c.lineWidth = 0.8; c.beginPath(); c.moveTo(-10, y); c.quadraticCurveTo(RW / 2, y + 14, RW + 10, y); c.stroke();
+  const y = GROUND - 112; c.strokeStyle = 'rgba(80,60,40,.6)'; c.lineWidth = 0.8; c.beginPath(); c.moveTo(-10, y); c.quadraticCurveTo(RW / 2, y + 14, RW + 10, y); c.stroke();
   for (let i = 0; i < 16; i++) { const x = -4 + i * 16, yy = y + Math.sin((i / 15) * Math.PI) * 7 + 0.5; c.fillStyle = ['#e2483f', '#ffd23f', '#3b8fd0', '#5fae4a'][i % 4];
     c.beginPath(); c.moveTo(x - 4, yy); c.lineTo(x + 4, yy); c.lineTo(x + Math.sin(t / 400 + i) * 0.8, yy + 8); c.closePath(); c.fill(); }
   if (lv < 2) return;

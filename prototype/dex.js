@@ -17,16 +17,16 @@ const dexRaise = (m, stage) => dexMark(m, DEX_STAGE[stage] || 2);
 function dexCount() {
   const D = dex(), v = Object.values(D), seen = v.length, raised = v.filter(b => b & 14).length, total = DEX_FAMS.length * DEX_ELS.length;
   const ns = DEX_SEEN_PRIZE.find(p => p[0] > seen), nr = DEX_RAISE_PRIZE.find(p => p[0] > raised);
-  const pz = p => p[1] === 'bits' ? `${p[2]} bits` : `a ${p[1]}`;
+  const pz = p => p[1] === 'bits' ? `${p[2]} bits` : `${/^[AEIOU]/.test(p[1]) ? 'an' : 'a'} ${p[1]}`;
   return { seen, raised, total, next: ns ? `${ns[0] - seen} more seen gets ${pz(ns)}.` : nr ? `${nr[0] - raised} more raised gets ${pz(nr)}.` : '' };
 }
 /* prizes are handed out once each, with a line in the speech box */
 function dexPrizes() {
   const D = dex(), got = PLAYER.dexGot = PLAYER.dexGot || {}, { seen, raised } = dexCount(), lines = [];
   const give = (key, p, what) => { if (got[key]) return; got[key] = 1; if (p[1] === 'bits') PLAYER.bits += p[2]; else addItem(p[1]);
-    lines.push(`The bestiary has ${p[0]} ${what}, and the Snaboscope club sent ${p[1] === 'bits' ? p[2] + ' bits' : (/^[AEIOU]/.test(p[1]) ? 'an ' : 'a ') + p[1]}.`); };
-  for (const p of DEX_SEEN_PRIZE) if (seen >= p[0]) give('s' + p[0], p, 'kinds seen');
-  for (const p of DEX_RAISE_PRIZE) if (raised >= p[0]) give('r' + p[0], p, 'kinds raised');
+    lines.push(`${p[0]} kinds ${what} in the bestiary, so Dr. Ines sent ${p[1] === 'bits' ? p[2] + ' bits' : (/^[AEIOU]/.test(p[1]) ? 'an ' : 'a ') + p[1]}.`); };
+  for (const p of DEX_SEEN_PRIZE) if (seen >= p[0]) give('s' + p[0], p, 'seen');
+  for (const p of DEX_RAISE_PRIZE) if (raised >= p[0]) give('r' + p[0], p, 'raised');
   if (lines.length && typeof RS !== 'undefined' && RS && typeof say === 'function') { PLAYER.dexNote = lines.join(' '); setTimeout(() => { if (PLAYER.dexNote && RS && !RS.busy) { say(PLAYER.dexNote); PLAYER.dexNote = null; } }, 400); }
 }
 /* everything already on the ranch counts, for saves from before the bestiary */
