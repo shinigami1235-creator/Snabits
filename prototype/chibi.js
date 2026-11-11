@@ -186,7 +186,7 @@ const CHIBI = (() => {
     const bob = P.walk ? -Math.abs(walk) * 4 : Math.sin(t / 600) * 1.2;
     const lift = (P.lift || 0) + bob, open = Math.max(0, Math.min(1, (P.open || 0) + chew * 0.5 - (P.chew ? 0.25 : 0)));
     const sx = (P.sx || 1) * (1 + Math.sin(t / 600) * 0.008), sy = (P.sy || 1) * (1 - Math.sin(t / 600) * 0.008);
-    const g = { cx: 100, bw: st.bw, bh: st.bh, bot: 174, top: 174 - st.bh }, left = g.cx - g.bw / 2;
+    const g = { cx: 100, bw: st.bw, bh: st.bh, bot: 174, top: 174 - st.bh, left: 100 - st.bw / 2 }, left = g.left;
     const fy = 183, fx = g.bw * 0.24;
     // shadow stays on the ground and shrinks as the body lifts
     c.fillStyle = rgba(INK, 0.14 + lift * 0.004);
@@ -223,6 +223,7 @@ const CHIBI = (() => {
     if (m.stage === 'Mega' && E) E.pattern(c, g, body);
     const my = g.top + g.bh * 0.62, mw = g.bw * st.mw;
     if (stout) { c.fillStyle = rgb(lt(body, 0.6)); c.beginPath(); c.ellipse(g.cx, my + g.bh * 0.17, g.bw * 0.36, g.bh * 0.28, 0, 0, 7); c.fill(); }
+    if (m.fx) fxOnBody(c, m.fx, () => roundBox(c, left, g.top, g.bw, g.bh, st.r), g, body, t);
     c.restore();
     // one white highlight arc on the upper left
     c.strokeStyle = 'rgba(255,255,255,.55)'; c.lineWidth = m.stage === 'Bit' ? 4.5 : 5.5; c.lineCap = 'round';
@@ -243,7 +244,7 @@ const CHIBI = (() => {
     mouth(c, g.cx, my, mw, open, st, body);
     wornFront(c, { head: [g.cx, g.top + 3, g.bw * 0.46], eyes: { cx: g.cx, y: ey, ex, s }, mouth: [g.cx, my, s] }, W, t);
     if (!armBehind && st.arm) arms();
-    if (m.fx) fxFront(c, m.fx, g, t);
+    if (m.fx) fxFront(c, m.fx, () => roundBox(c, left, g.top, g.bw, g.bh, st.r), g, t);
     c.restore();
     // extras float above and do not tilt with the body
     const top = g.top + lift;
@@ -388,8 +389,8 @@ const CHIBI = (() => {
     for (const sd of [-1, 1]) { c.beginPath(); c.moveTo(x, yy); c.bezierCurveTo(x + sd * 6 * s, yy - 6 * s, x + sd * 14 * s, yy - 3 * s, x + sd * 16 * s, yy - 7 * s);
       c.bezierCurveTo(x + sd * 17 * s, yy + 2 * s, x + sd * 8 * s, yy + 4 * s, x, yy + 1.5 * s); c.closePath(); c.fill(); } }
   /* wings hang behind the body from its shoulders */
-  function wings(c, g, item, t) {
-    const y = g.top + g.bh * 0.42, flap = Math.sin(t / 180) * 0.12;
+  function wings(c, g, item, t, wy = 0.42) {
+    const y = g.top + g.bh * wy, flap = Math.sin(t / 180) * 0.12;
     for (const sd of [-1, 1]) {
       c.save(); c.translate(g.cx + sd * g.bw * 0.36, y); c.scale(sd, 1); c.rotate(-0.25 + flap); const W = Math.max(34, g.bw * 0.42);
       if (item === 'Bat wings') {
@@ -417,32 +418,76 @@ const CHIBI = (() => {
     if (worn.face) faceItem(c, A, worn.face);
     if (worn.head) hat(c, A, worn.head, t);
   }
-  /* effects: glow, flame, shadow sit behind the body; sparkle and frost drift in front */
-  function fxBehind(c, fx, pathFn, g, body, t) {
-    if (fx === 'glow') { c.save(); c.shadowColor = rgba(lt(body, 0.6), 0.95); c.shadowBlur = 28; pathFn(); c.fillStyle = rgb(body); c.fill(); c.fill(); c.restore(); }
-    if (fx === 'flame') {                      // five round flames licking up behind the body, tallest in the middle
-      for (const k of [-1, -0.5, 0, 0.5, 1]) {
-        const x = g.cx + k * g.bw * 0.46, w = g.bw * (0.34 - Math.abs(k) * 0.06), hgt = (g.bh * 0.7 + 30 - Math.abs(k) * 18) * (1 + 0.12 * Math.sin(t / 110 + k * 5));
-        const gr = c.createLinearGradient(0, g.bot, 0, g.bot - g.bh - hgt * 0.35);
-        gr.addColorStop(0, 'rgba(240,80,40,.9)'); gr.addColorStop(0.6, 'rgba(255,140,40,.9)'); gr.addColorStop(1, 'rgba(255,220,90,.95)');
-        c.fillStyle = gr; flame(c, x + Math.sin(t / 160 + k * 3) * 2, g.bot, w, g.bh * 0.55 + hgt); c.fill();
-      }
-    }
-    if (fx === 'shadow') {                     // dark smoke puffs rising off the body
-      for (let k = 0; k < 9; k++) { const ph = ((t / 2400) + k / 9) % 1, side = k % 2 ? 1 : -1, r = 9 + (k % 3) * 4;
-        const x = g.cx + side * (g.bw * 0.3 + (k % 4) * 6) + Math.sin(ph * 5 + k) * 6, y = g.bot - ph * (g.bh + 50);
-        c.fillStyle = rgba(mix(SHADOW, [90, 60, 140], ph * 0.5), 0.85 * (1 - ph * 0.8)); c.beginPath(); c.arc(x, y, r * (0.7 + ph * 0.6), 0, 7); c.fill(); }
-      c.save(); c.shadowColor = 'rgba(34,22,56,.8)'; c.shadowBlur = 18; pathFn(); c.fillStyle = 'rgba(34,22,56,.6)'; c.fill(); c.restore();
-    }
+  /* ---------- effects ----------
+     Each effect works on the body itself: an aura around the outline (behind), a tint on the body (on), and pieces that
+     cling to or leave the body (front). pathFn rebuilds the body outline. */
+  const vivid = col => { const m = Math.max(...col) || 1, v = col.map(c2 => Math.round(c2 * 255 / m)); return Math.min(...col) > 190 ? [255, 196, 70] : mix(v, [255, 255, 255], 0.15); };
+  /* the body's top or bottom edge at x, found by testing points against the outline */
+  function edgeY(c, pathFn, g, x, fromTop) {
+    pathFn(); const M = c.getTransform();
+    for (let i = 0; i <= 90; i++) { const y = fromTop ? g.top - 50 + i * 2.5 : g.bot + 30 - i * 2.5, p = M.transformPoint({ x, y }); if (c.isPointInPath(p.x, p.y)) return y; }
+    return null;
   }
-  function fxFront(c, fx, g, t) {
+  function edgeX(c, pathFn, g, y, side) {
+    pathFn(); const M = c.getTransform();
+    for (let i = 0; i <= 80; i++) { const x = g.cx + side * (g.bw / 2 + 30 - i * 2.5), p = M.transformPoint({ x, y }); if (c.isPointInPath(p.x, p.y)) return x; }
+    return g.cx + side * g.bw / 2;
+  }
+  const aura = (c, pathFn, col, a, w, blur) => { c.save(); c.shadowColor = rgba(col, 0.95); c.shadowBlur = blur; c.strokeStyle = rgba(col, a); c.lineWidth = w; c.lineJoin = 'round'; pathFn(); c.stroke(); c.restore(); };
+  function fxBehind(c, fx, pathFn, g, body, t) {
+    const pulse = 0.8 + 0.2 * Math.sin(t / 380);
+    if (fx === 'glow') { const hc = vivid(body); aura(c, pathFn, hc, 0.55 * pulse, 18, 34); aura(c, pathFn, hc, 0.5 * pulse, 8, 14); }
+    if (fx === 'flame') {
+      aura(c, pathFn, [255, 110, 30], 0.55, 14, 26);
+      for (let k = 0; k < 7; k++) { const x = g.left + g.bw * (0.12 + k * 0.127), top = edgeY(c, pathFn, g, x, true); if (top == null) continue;
+        const h = (16 + (k % 3) * 7) * (1 + 0.25 * Math.sin(t / 90 + k * 2.3)), w = 15 + (k % 2) * 5;
+        const gr = c.createLinearGradient(0, top + 8, 0, top - h); gr.addColorStop(0, 'rgba(235,70,30,.95)'); gr.addColorStop(0.55, 'rgba(255,150,40,.95)'); gr.addColorStop(1, 'rgba(255,226,100,.95)');
+        c.fillStyle = gr; flame(c, x + Math.sin(t / 130 + k) * 1.5, top + 10, w, h + 10); c.fill(); }
+    }
+    if (fx === 'shadow') {
+      aura(c, pathFn, [40, 20, 70], 0.6, 16, 26);
+      c.save(); c.lineCap = 'round'; c.shadowColor = 'rgba(30,14,54,.9)'; c.shadowBlur = 10;
+      for (let k = 0; k < 5; k++) {           // smoke curls off the outline, fading as it rises
+        const x0 = g.left + g.bw * (0.12 + k * 0.19), top = edgeY(c, pathFn, g, x0, true); if (top == null) continue;
+        const ph = (t / 1800 + k / 5) % 1, len = 18 + ph * 22, sw = Math.sin(t / 380 + k * 1.9) * 6, dir = k % 2 ? 1 : -1;
+        c.strokeStyle = rgba([40, 20, 70], 0.55 * (1 - ph)); c.lineWidth = 11 - ph * 6;
+        c.beginPath(); c.moveTo(x0, top + 6); c.bezierCurveTo(x0 + dir * 10 + sw, top - len * 0.3, x0 - dir * 8 - sw, top - len * 0.65, x0 + dir * 6 + sw, top - len); c.stroke();
+      }
+      c.restore();
+    }
+    if (fx === 'frost') aura(c, pathFn, [150, 215, 255], 0.75, 12, 22);
+  }
+  /* called with the body outline already clipped */
+  function fxOnBody(c, fx, pathFn, g, body, t) {
+    if (fx === 'glow') { c.strokeStyle = rgba(lt(vivid(body), 0.45), 0.75); c.lineWidth = 10; pathFn(); c.stroke(); }
+    if (fx === 'flame') { const gr = c.createLinearGradient(0, g.bot, 0, g.top + g.bh * 0.35); gr.addColorStop(0, 'rgba(255,110,30,.5)'); gr.addColorStop(1, 'rgba(255,110,30,0)'); c.fillStyle = gr; c.fillRect(g.left - 20, g.top - 60, g.bw + 40, g.bh + 90); }
+    if (fx === 'shadow') { const gr = c.createLinearGradient(0, g.bot, 0, g.top + g.bh * 0.3); gr.addColorStop(0, 'rgba(26,12,46,.6)'); gr.addColorStop(1, 'rgba(26,12,46,0)'); c.fillStyle = gr; c.fillRect(g.left - 20, g.top - 60, g.bw + 40, g.bh + 90);
+      c.strokeStyle = 'rgba(26,12,46,.35)'; c.lineWidth = 8; pathFn(); c.stroke(); }
+    if (fx === 'frost') { const gr = c.createLinearGradient(0, g.top, 0, g.bot); gr.addColorStop(0, 'rgba(225,245,255,.55)'); gr.addColorStop(0.45, 'rgba(190,230,255,.12)'); gr.addColorStop(1, 'rgba(160,215,255,.45)');
+      c.fillStyle = gr; c.fillRect(g.left - 20, g.top - 60, g.bw + 40, g.bh + 90); c.strokeStyle = 'rgba(235,250,255,.85)'; c.lineWidth = 7; pathFn(); c.stroke();
+      c.strokeStyle = 'rgba(255,255,255,.7)'; c.lineWidth = 1.6;      // frost crystals on the sides
+      for (const [fx2, fy] of [[0.12, 0.62], [0.88, 0.56], [0.2, 0.85], [0.8, 0.82]]) { const x = g.left + g.bw * fx2, y = g.top + g.bh * fy;
+        for (let a = 0; a < 3; a++) { const an = a * Math.PI / 3; c.beginPath(); c.moveTo(x - Math.cos(an) * 6, y - Math.sin(an) * 6); c.lineTo(x + Math.cos(an) * 6, y + Math.sin(an) * 6); c.stroke(); } } }
+  }
+  function fxFront(c, fx, pathFn, g, t) {
     if (fx === 'sparkle') for (let k = 0; k < 7; k++) { const a = k * 0.9 + 0.3, tw = (Math.sin(t / 240 + k * 1.7) + 1) / 2;
       star(c, g.cx + Math.cos(a) * g.bw * 0.62, g.top + g.bh * 0.45 + Math.sin(a) * g.bh * 0.66, 0.35 + tw * 0.55, k % 2 ? '#ffd23f' : '#ffe98a'); }
-    if (fx === 'frost') { c.fillStyle = 'rgba(170,215,255,.28)'; c.beginPath(); c.ellipse(g.cx, 186, g.bw * 0.62, 7, 0, 0, 7); c.fill();
+    if (fx === 'flame') {
+      for (const side of [-1, 1]) { const y = g.top + g.bh * 0.62, x = edgeX(c, pathFn, g, y, side), h = 20 * (1 + 0.25 * Math.sin(t / 80 + side));   // licks up the sides, in front
+        const gr = c.createLinearGradient(0, y + 6, 0, y - h); gr.addColorStop(0, 'rgba(240,80,30,.95)'); gr.addColorStop(1, 'rgba(255,214,90,.95)');
+        c.fillStyle = gr; c.save(); c.translate(x, y); c.rotate(side * 0.35); flame(c, 0, 6, 13, h); c.fill(); c.restore(); }
+      for (let k = 0; k < 8; k++) { const ph = (t / 1500 + k / 8) % 1, x = g.cx + Math.sin(k * 2.4) * g.bw * 0.5 + Math.sin(ph * 7 + k) * 5, y = g.top + g.bh * 0.3 - ph * 60;
+        c.fillStyle = `rgba(255,${150 + (k % 3) * 35},60,${1 - ph})`; c.beginPath(); c.arc(x, y, 2.2 * (1 - ph * 0.5), 0, 7); c.fill(); }
+    }
+    if (fx === 'shadow') for (let k = 0; k < 5; k++) { const ph = (t / 2000 + k / 5) % 1, x = g.cx + Math.sin(k * 2.1) * g.bw * 0.45, y = g.top + g.bh * 0.4 - ph * 70;
+      c.fillStyle = `rgba(60,30,100,${0.8 * (1 - ph)})`; c.save(); c.translate(x + Math.sin(ph * 6 + k) * 6, y); c.rotate(ph * 3); c.fillRect(-2.5, -2.5, 5, 5); c.restore(); }
+    if (fx === 'frost') {
+      for (let k = 0; k < 5; k++) { const x = g.left + g.bw * (0.2 + k * 0.15), bot = edgeY(c, pathFn, g, x, false); if (bot == null) continue;   // icicles under the bottom edge
+        const len = 8 + (k % 2) * 6; c.fillStyle = 'rgba(190,230,255,.95)'; c.beginPath(); c.moveTo(x - 4, bot - 2); c.lineTo(x + 4, bot - 2); c.lineTo(x, bot + len); c.closePath(); c.fill();
+        c.fillStyle = 'rgba(255,255,255,.9)'; c.fillRect(x - 1.5, bot - 1, 1.5, len * 0.6); }
       for (let k = 0; k < 8; k++) { const ph = ((t / 2600) + k / 8) % 1, x = g.cx - g.bw * 0.65 + (k * 37 % 100) / 100 * g.bw * 1.3 + Math.sin(ph * 6 + k) * 4, y = g.top - 24 + ph * (g.bh + 40);
-        star(c, x, y, 0.5, 'rgba(120,180,235,.95)'); star(c, x, y, 0.3, '#ffffff'); }
-      c.strokeStyle = 'rgba(200,235,255,.9)'; c.lineWidth = 3; c.lineCap = 'round';      // frost along the top edge
-      c.beginPath(); for (let i = 0; i <= 8; i++) { const xx = g.left + g.bw * (0.15 + i * 0.0875), yy = g.top + 3 + (i % 2) * 3; i ? c.lineTo(xx, yy) : c.moveTo(xx, yy); } c.stroke(); }
+        star(c, x, y, 0.7, 'rgba(80,150,225,.95)'); star(c, x, y, 0.38, '#ffffff'); }
+    }
   }
 
   /* ---------- the other families: one body path each, plus what hangs off it ---------- */
@@ -598,7 +643,7 @@ const CHIBI = (() => {
     },
     /* a flat body slung between spider legs, four eyes at Mega and no arms */
     Skit: {
-      dims: { Bit: [80, 40], Byte: [104, 50], Mega: [126, 58] }, slots: { feet: false },
+      dims: { Bit: [80, 40], Byte: [104, 50], Mega: [126, 58] }, slots: { feet: false }, wingY: 0.05,
       bottom(st) { return by(st, 168, 166, 164); }, height(st) { return 184 - (this.bottom(st) - this.dims[st][1]) + 6; },
       path(c, g) { roundBox(c, g.left, g.top, g.bw, g.bh, g.bh * 0.5); },
       behind(c, g, x) { const n = by(g.stage, 2, 3, 4), lw = by(g.stage, 5, 5, 5.5);
@@ -650,7 +695,7 @@ const CHIBI = (() => {
       face: (c, g, x, look) => faceTwo(c, g, x, look, { ey: 0.38, ex: 0.17, my: 0.62, s: by(g.stage, 0.8, 0.92, 1) })
     },
     /* upright: a big round head on a small body, with arms and legs */
-    Biped: {
+    Bipped: {
       dims: { Bit: [64, 74], Byte: [74, 98], Mega: [82, 118] }, ll: st => by(st, 8, 12, 16),
       bottom(st) { return 183 - this.ll(st); }, height(st) { return this.dims[st][1] + this.ll(st) + 6; },
       torso(g) { const th = g.bh - g.bw + 8, tw = g.bw * by(g.stage, 0.56, 0.6, 0.64); return { th, tw, tx: g.cx - tw / 2, ty: g.bot - th }; },
@@ -698,7 +743,7 @@ const CHIBI = (() => {
       face: (c, g, x, look) => faceTwo(c, g, x, look, { ey: 0.54, ex: 0.18, my: 0.74, s: by(g.stage, 0.78, 0.88, 0.94) })
     },
     /* a teapot: the spout and handle are its signature parts, and the lid is where a hat sits */
-    Teapot: {
+    Teep: {
       dims: { Bit: [72, 52], Byte: [94, 66], Mega: [110, 78] }, lr: st => by(st, 8, 10, 12),
       bottom() { return 176; }, height(st) { return this.dims[st][1] + this.lr(st) + 18; },
       path(c, g) { const L = g.left, R = L + g.bw, T = g.top, B = g.bot, w = g.bw, h = g.bh;
@@ -723,7 +768,7 @@ const CHIBI = (() => {
       face: (c, g, x, look) => faceTwo(c, g, x, look, { ey: 0.42, ex: 0.17, my: 0.66, s: by(g.stage, 0.8, 0.92, 0.98) })
     },
     /* a paper lantern glowing from inside, with caps, a carry loop and a tassel at Mega */
-    Lantern: {
+    Lern: {
       dims: { Bit: [58, 62], Byte: [74, 80], Mega: [86, 96] },
       bottom() { return 171; }, height(st) { return this.dims[st][1] + 34; },
       path(c, g) { roundBox(c, g.left, g.top, g.bw, g.bh, g.bw * 0.42); },
@@ -760,8 +805,8 @@ const CHIBI = (() => {
     c.translate(P.lean || 0, lift);
     c.translate(100, 176); c.rotate((P.tilt || 0) * Math.PI / 180); c.scale(P.sx || 1, P.sy || 1); c.translate(-100, -176);
     if (m.fx) fxBehind(c, m.fx, () => F.path.call(F, c, g, x), g, body, t);
-    if (W.back) wings(c, g, W.back, t);
     if (F.behind) F.behind.call(F, c, g, x);
+    if (W.back) wings(c, g, W.back, t, F.wingY);
     let booted = 0; const putBoots = () => { if (bootsOn) boots(c, x.feet.slice(booted)); booted = x.feet.length; };
     putBoots();
     const sh = F.shoulder ? F.shoulder.call(F, g) : null;
@@ -791,6 +836,7 @@ const CHIBI = (() => {
     if (stage === 'Mega' && E && !F.patternAfter) E.pattern(c, g, body);
     if (F.inside) F.inside.call(F, c, g, x);
     if (stage === 'Mega' && E && F.patternAfter) E.pattern(c, g, body);
+    if (m.fx) fxOnBody(c, m.fx, () => F.path.call(F, c, g, x), g, body, t);
     c.restore();
     const h = F.hl ? F.hl(g) : [g.left + g.bw * 0.13, g.top + g.bh * 0.42, g.left + g.bw * 0.12, g.top + g.bh * 0.12, g.left + g.bw * 0.4, g.top + g.bh * 0.08];
     c.strokeStyle = 'rgba(255,255,255,.55)'; c.lineWidth = stage === 'Bit' ? 4.5 : 5.5; c.lineCap = 'round';
@@ -801,7 +847,7 @@ const CHIBI = (() => {
     putBoots();
     wornFront(c, { head: F.head ? F.head.call(F, g) : [g.cx, g.top + 2, g.bw * 0.5], eyes: { cx: fi.cx, y: fi.ey, ex: fi.ex, s: fi.s, one: fi.one }, mouth: [fi.cx, my, fi.s] }, W, t);
     if (P.front) arms();
-    if (m.fx) fxFront(c, m.fx, g, t);
+    if (m.fx) fxFront(c, m.fx, () => F.path.call(F, c, g, x), g, t);
     c.restore();
     const top = g.top + lift;
     if (P.extra === 'zz') { c.strokeStyle = rgb(lt(INK, 0.4)); c.lineWidth = 3; c.lineCap = 'round'; c.lineJoin = 'round';

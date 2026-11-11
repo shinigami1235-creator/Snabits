@@ -1,27 +1,27 @@
 <!doctype html><html><body style="margin:0;background:#f6f3ec"><canvas id="c"></canvas>
 <script src="../../prototype/chibi.js"></script><script>
-/* Art review sheets. Open with #elements, #worn, #effects or #new at the end of the address. */
+/* Art review sheets. Open with #elements, #worn, #effects or #new at the end of the address; add -dark for a grass background. */
 const PAL={Blaze:[[226,76,62],[150,40,40],[255,214,90]],Brawl:[[232,140,52],[128,68,30],[255,236,214]],Spark:[[246,206,60],[196,120,34],[255,250,225]],
  Wild:[[118,190,92],[64,120,58],[250,220,110]],Frost:[[120,214,224],[70,130,200],[240,252,255]],Tide:[[70,130,220],[36,70,156],[200,240,255]],
  Venom:[[150,96,206],[72,48,110],[170,240,120]],Charm:[[244,150,190],[150,92,190],[255,240,250]],Stone:[[160,122,86],[96,72,54],[226,206,176]],
  Light:[[244,240,226],[214,180,100],[255,206,90]],Steel:[[170,178,192],[88,96,112],[120,210,240]],Shade:[[78,70,104],[38,34,56],[255,214,74]]};
 const EL=Object.keys(PAL), pal=e=>({body:PAL[e][0],parts:PAL[e][1],accent:PAL[e][2]});
-const FAMS=['Chomp','Squib','Antik','Moko','Pinch','Stilt','Skit','Booly','Quad','Biped','Flask','Teapot','Lantern'];
-const HOME={Chomp:'Brawl',Squib:'Frost',Antik:'Steel',Moko:'Charm',Pinch:'Blaze',Stilt:'Wild',Skit:'Venom',Booly:'Light',Quad:'Stone',Biped:'Tide',Flask:'Venom',Teapot:'Spark',Lantern:'Blaze'};
+const FAMS=['Chomp','Squib','Antik','Moko','Pinch','Stilt','Skit','Booly','Quad','Bipped','Flask','Teep','Lern'];
+const HOME={Chomp:'Brawl',Squib:'Frost',Antik:'Steel',Moko:'Charm',Pinch:'Blaze',Stilt:'Wild',Skit:'Venom',Booly:'Light',Quad:'Stone',Bipped:'Tide',Flask:'Venom',Teep:'Spark',Lern:'Blaze'};
 const LOOKS={
  elements:{rows:['Squib','Pinch','Booly'],cols:EL.map(e=>({label:e,m:{stage:'Mega',el:e}}))},
  worn:{rows:FAMS,cols:[{label:'Plain',m:{}},{label:'Cap, sunglasses, boots',m:{worn:{head:'Cap',face:'Sunglasses',feet:'Boots'}}},
    {label:'Top hat, monocle, mustache',m:{worn:{head:'Top hat',face:'Monocle',mouth:'Mustache'}}},{label:'Crown, angel wings',m:{worn:{head:'Crown',back:'Angel wings'}}},
    {label:'Party hat, bat wings',m:{worn:{head:'Party hat',back:'Bat wings'}}},{label:'Bow, boots',m:{worn:{head:'Bow',feet:'Boots'}}}]},
- effects:{rows:['Chomp','Squib','Booly','Biped','Lantern'],cols:['glow','flame','shadow','frost','sparkle'].map(f=>({label:f,m:{fx:f}}))},
- new:{rows:['Pinch','Quad','Biped','Flask','Teapot','Lantern'],cols:[{label:'Bit',m:{stage:'Bit'}},{label:'Byte',m:{stage:'Byte'}},{label:'Mega',m:{stage:'Mega'}},{label:'Mega happy',m:{stage:'Mega'},pose:'happy'},{label:'Mega walk',m:{stage:'Mega'},pose:'walk'}]}
+ effects:{rows:['Chomp','Squib','Pinch','Booly','Bipped','Lern'],cols:['glow','flame','shadow','frost','sparkle'].map(f=>({label:f,m:{fx:f}}))},
+ new:{rows:['Pinch','Quad','Bipped','Flask','Teep','Lern'],cols:[{label:'Bit',m:{stage:'Bit'}},{label:'Byte',m:{stage:'Byte'}},{label:'Mega',m:{stage:'Mega'}},{label:'Mega happy',m:{stage:'Mega'},pose:'happy'},{label:'Mega walk',m:{stage:'Mega'},pose:'walk'}]}
 };
-const L=LOOKS[location.hash.slice(1)]||LOOKS.new, W=150, H=150, LX=70, TOP=34, c=document.getElementById('c'), d=2;
+const KEY=location.hash.slice(1).replace('-dark',''), DARK=/-dark/.test(location.hash), L=LOOKS[KEY]||LOOKS.new, W=150, H=150, LX=70, TOP=34, c=document.getElementById('c'), d=2;
 c.width=(LX+L.cols.length*W)*d; c.height=(TOP+L.rows.length*H)*d; c.style.width=c.width/d+'px';
-const x=c.getContext('2d'); x.scale(d,d); x.font='600 11px sans-serif'; x.textAlign='center'; x.fillStyle='#776';
+const x=c.getContext('2d'); x.scale(d,d); if(DARK){ x.fillStyle='#4f7a45'; x.fillRect(0,0,c.width,c.height); } x.font='600 11px sans-serif'; x.textAlign='center'; x.fillStyle=DARK?'#e8f0e0':'#776';
 L.cols.forEach((col,i)=>{ const words=col.label.split(', '); words.forEach((w,k)=>x.fillText(w,LX+i*W+W/2,12+k*12)); });
 x.textAlign='left';
-L.rows.forEach((fam,j)=>{ x.fillStyle='#776'; x.fillText(fam,8,TOP+j*H+H/2);
+L.rows.forEach((fam,j)=>{ x.fillStyle=DARK?'#e8f0e0':'#776'; x.fillText(fam,8,TOP+j*H+H/2);
   L.cols.forEach((col,i)=>{ const el=col.m.el||HOME[fam]; x.save(); x.translate(LX+i*W,TOP+j*H-16); x.scale(W/200,W/200);
     CHIBI.draw(x,{family:fam,stage:'Mega',marks:[],worn:{},pal:pal(el),el,...col.m},col.pose||'idle',300+i*130); x.restore(); }); });
 </script></body></html>
