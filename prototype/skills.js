@@ -211,3 +211,16 @@ function describe(n){
   return p.join(", ");
 }
 const STAT_NAME={pow:"Power",grd:"Guard",mnd:"Mind",spr:"Spirit",spd:"Speed"};
+
+/* Arm skills on a form with no arms keep their numbers and take a body name, since a Bit with no arms can't jab.
+   The punch name and animation come back once it grows arms. */
+const ARMLESS_NAME={"Jab":"Headbutt","Iron Palm":"Shoulder Ram","Focus Punch":"Focus Ram","Haymaker":"Big Headbutt"};
+function hasArms(fam,stage){
+  const of=typeof FAMILY!=="undefined"&&FAMILY[fam]&&FAMILY[fam].of;
+  if(of){ if(of.includes("Squib")||of[1]==="Skit") return false; fam=of[1]; }
+  if(fam==="Squib"||fam==="Skit") return false;
+  if(fam==="Pinch"||fam==="Bipped") return true;
+  return !!stage&&stage!=="Bit";
+}
+function skillLabel(n,fam,stage){ return ARMLESS_NAME[n]&&!hasArms(fam,stage)?ARMLESS_NAME[n]:n; }
+const skillLabelOf=(s,n)=>s&&s.m?skillLabel(n,s.m.family,s.stage):n;

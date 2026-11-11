@@ -494,3 +494,14 @@ body.ob-tut #ranchbtn,body.ob-tut #msgranch{display:none!important}
 #r-dusk{position:absolute;inset:2px;border-radius:var(--r);pointer-events:none;z-index:3;background-color:transparent}
 #r-date,#r-banner,#r-skip,#r-goout{z-index:4}
 .rb.blocked small{color:#ffb4a8;opacity:1}
+.team5{display:flex;flex-direction:column;gap:6px;font:500 12px var(--pix)}
+.t5row{display:grid;grid-template-columns:1fr 26px 1fr;gap:6px;align-items:center}
+.t5row span{background:var(--ink2);border-radius:4px;padding:5px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--mute)}
+.t5row span:last-child{text-align:right}.t5row i{text-align:center;color:var(--gold);font-style:normal}
+.t5row span.self{color:var(--sky)}.t5row span.win{background:#2c4a33;color:#bff2c8}.t5row span.out{opacity:.5}
+.v-cal{display:flex;flex-direction:column;gap:8px}.v-cal .wk{background:var(--ink2);border-radius:8px;padding:8px}
+.v-cal .wk.now{outline:2px solid var(--gold)}.v-cal .wk h4{font:700 13px var(--pix);color:var(--gold);margin-bottom:4px}
+.v-cal .cu{display:flex;gap:6px;align-items:center;font-size:13px;padding:3px 0}.v-cal .cu small{color:var(--mute);margin-left:auto;text-align:right}
+.v-cal .cu.no{opacity:.55}.v-cal .none{font-size:13px;color:var(--mute)}
+.v-calnav{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.v-cal .g{font:700 13px var(--pix);min-width:24px;text-align:center;border-radius:5px;padding:3px 0;color:#1a1300}

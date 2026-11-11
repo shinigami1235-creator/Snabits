@@ -108,7 +108,7 @@ function openBook(filter){
   panel(`<div style="flex-basis:100%;font-size:13px">Skill book: ${got} of ${total} found. <select id="bk-f">${els.map(e=>`<option ${e===f?"selected":""}>${e}</option>`).join("")}</select></div>`+
     list.map(n=>{ const st=book[n], u=(s.uses||{})[n]||0;
       if(!st) return `<div class="rb" style="text-align:left;opacity:.7"><b>???</b><small>${bookHint(n)}</small></div>`;
-      return `<div class="rb" style="text-align:left"><b>${n}${u>=MASTERY?" ★":""}</b><small>${st==="learned"?`Learned. Used ${u} times${u>=MASTERY?", mastered":""}.`:st==="hit"?"It's been hit by this.":"It's seen this used."} ${describe(n)}</small></div>`; }).join("")+
+      return `<div class="rb" style="text-align:left"><b>${skillLabelOf(s,n)}${u>=MASTERY?" ★":""}</b><small>${st==="learned"?`Learned. Used ${u} times${u>=MASTERY?", mastered":""}.`:st==="hit"?"It's been hit by this.":"It's seen this used."} ${describe(n)}</small></div>`; }).join("")+
     `<button class="rb" id="bk-back">Back</button>`);
   el("bk-f").onchange=e=>openBook(e.target.value);
   el("bk-back").onclick=()=>{ panel(""); openInfo("skills"); };

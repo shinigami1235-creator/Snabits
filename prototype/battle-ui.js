@@ -35,7 +35,7 @@ function startFight(opp){
   ["me","foe"].forEach(k=>{$("b-"+k+"-sprite").className="bsprite";});
   $("b-log").innerHTML=""; $("b-result").style.display="none";
   $("loadout").style.display="none"; $("b-fight").style.display="flex"; $("b-fight").classList.remove("done");
-  logLine(`A wild ${opp.name} appears. Its skills are ${fight.p[1].skills.map(s=>s.name).join(" and ")}.`);
+  logLine(`A wild ${opp.name} appears. Its skills are ${fight.p[1].skills.map(s=>s.label||s.name).join(" and ")}.`);
   drawPanels(); drawButtons();
 }
 function closeBattle(){ $("battle").style.display="none"; B=null; }
@@ -62,7 +62,7 @@ function drawButtons(){
   const me=B.fight.p[0], foe=B.fight.p[1];
   const btn=(id,label,sub,color,ok,arrow,cost)=>`<button class="bbtn" data-id="${id}" ${ok?"":"disabled"} style="--c:${color}">${cost!=null?`<span class="cost ${String(cost)[0]==="+"?"gain":""}"><i></i>${cost}</span>`:""}<b>${label}</b><small>${arrow}${sub}</small></button>`;
   let h;
-  if(me.charging){ h=btn(RELEASE,`Release ${me.charging.name}`,"It fires this turn","#5ab0ff",true,""); $("b-btns").innerHTML=h; }
+  if(me.charging){ h=btn(RELEASE,`Release ${me.charging.label||me.charging.name}`,"It fires this turn","#5ab0ff",true,""); $("b-btns").innerHTML=h; }
   else{
     const bk=basicFor(me);
     h=btn(BASIC,"Attack",`Free · uses ${bk.kind==="Cast"?"Mind":"Power"}`,"#888",true,"","+1");
@@ -70,7 +70,7 @@ function drawButtons(){
       const c=costOf(me,s), m=s.power?effect(s.el,foe):1;
       const arrow=!s.power?"":m===0?' <span class="tag bad">No effect</span>':m>1?' <span class="tag good">Strong</span>':m<1?' <span class="tag weak">Weak</span>':"";
       const blocked=(me.taunt&&(s.kind==="Support"||s.kind==="Field"))||(s.protect&&me.protectLast);
-      h+=btn(i,s.name,describe(s.name).split(", ").filter(Boolean).map(x=>`<span>${x}</span>`).join("")||s.kind,ELC(s.el),c<=me.energy&&!blocked,arrow,c);
+      h+=btn(i,s.label||s.name,describe(s.name).split(", ").filter(Boolean).map(x=>`<span>${x}</span>`).join("")||s.kind,ELC(s.el),c<=me.energy&&!blocked,arrow,c);
     });
     h+=btn(GUARD,"Guard","Half damage this turn","#888",true,"","+2");
     if(B.team&&B.fight.bench(0).length) h+=btn("SW","Switch",`${B.fight.bench(0).length} on the bench`,"#5ab0ff",B.fight.canSwitch(0),"");
@@ -149,7 +149,7 @@ function arenaFight({s,foe,mode="control",title="",turnLimit=15,noDraw=false,rec
   paintSprite($("b-me-sprite"),me,s); paintSprite($("b-foe-sprite"),foe.fm);
   ["me","foe"].forEach(k=>{$("b-"+k+"-sprite").className="bsprite";});
   $("b-log").innerHTML=""; $("b-result").style.display="none";
-  logLine(`${title?title+". ":""}${fight.p[1].name}, Lv ${foe.level}. Its skills are ${fight.p[1].skills.map(x=>x.name).join(", ")}.`);
+  logLine(`${title?title+". ":""}${fight.p[1].name}, Lv ${foe.level}. Its skills are ${fight.p[1].skills.map(x=>x.label||x.name).join(", ")}.`);
   if(fight.p[0].monocle){ const o=fight.p[1]; logLine(`Monocle: HP ${o.maxhp}, Power ${o.base.pow}, Guard ${o.base.grd}, Mind ${o.base.mnd}, Spirit ${o.base.spr}, Speed ${o.base.spd}.`); }
   drawPanels();
   if(B.opts.auto) autoStep(); else drawButtons();

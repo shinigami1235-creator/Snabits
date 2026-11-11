@@ -34,11 +34,12 @@ function venueLobby(){
   const next=list.some(c=>c.official)?"This is official cup week.":nextCupText();
   vBody(`<div class="v-card v-ann" id="v-ann"></div>
     <div class="v-card"><h3>This week</h3><div class="v-list">${list.map((c,i)=>`<button class="v-cup" data-c="${i}">${gradeTag(c.major||c.legend?"S":c.small?"F":c.grade)}
-      <span><b>${c.name.replace(/ \([A-S]\)$/,"")}</b><small>${cupFormat(c)}${c.official&&c.grade===s.grade&&s.grade!=="S"?". Winning moves it up a grade":""}</small></span>
+      <span><b>${c.name.replace(/ \([A-S]\)$/,"")}</b><small>${cupFormat(c)}${c.official&&c.grade===s.grade&&s.grade!=="S"?". Winning moves it up a grade":""}${c.prize?`. Prize: ${c.prize}`:""}</small></span>
       <span class="pr">${cupPurse(c).toLocaleString()} bits${cupFee(c)?`<small>${cupFee(c)} to enter</small>`:""}</span></button>`).join("")}</div></div>
     <div class="v-card"><h3>${displayName(s)}</h3><div style="font:500 14px var(--pix);color:var(--mute)">Grade ${s.grade} · ${s.wins} wins · ${s.losses} losses${(s.cups||[]).length?` · ${(s.cups||[]).length} cups`:""}</div></div>
-    <button class="btn2 v-end" id="v-home">Back to the ranch</button>`);
-  venueSay(`Grade ${s.grade} cups are open this week. ${next}`);
+    <div class="v-row"><button class="btn2" id="v-cal">Calendar</button><button class="btn2" id="v-home">Back to the ranch</button></div>`);
+  venueSay(`These are the cups ${displayName(s)} can enter this week. ${next}`);
+  el("v-cal").onclick=()=>venueCalendar(0);
   el("v-body").querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>venueEntry(list[+b.dataset.c]));
   el("v-home").onclick=closeVenue;
 }
@@ -47,13 +48,25 @@ function venueEntry(c){
   el("v-name").textContent=c.name.replace(/ \([A-S]\)$/,""); el("v-sub").textContent=`Grade ${c.major||c.legend?"S":c.grade} · ${cupFormat(c)}`;
   vBody(`<div class="v-card v-ann" id="v-ann"></div>
     <div class="v-card"><h3>Prizes</h3><div class="v-podium">
-      <div><i>1st</i><span></span><em>${purse.toLocaleString()} bits</em></div>
-      ${c.small?"":`<div><i>2nd</i><span></span><em>${Math.round(purse/2).toLocaleString()} bits</em></div><div><i>3rd</i><span></span><em>${Math.round(purse/4).toLocaleString()} bits</em></div>`}
+      <div><i>${c.format==="team5"?"Team win":"1st"}</i><span></span><em>${purse.toLocaleString()} bits${c.prize?` and ${/^[AEIOU]/.test(c.prize)?"an":"a"} ${c.prize}`:""}</em></div>
+      ${c.format==="team5"?`<div><i>Own bout</i><span></span><em>${Math.round(purse/2).toLocaleString()} bits more</em></div>`:c.small?"":`<div><i>2nd</i><span></span><em>${Math.round(purse/2).toLocaleString()} bits</em></div><div><i>3rd</i><span></span><em>${Math.round(purse/4).toLocaleString()} bits</em></div>`}
     </div></div>
     <div class="v-row"><button class="btn2" id="v-back">Back</button><button class="big" id="v-enter">Enter${fee?` · ${fee} bits`:""}</button></div>`);
   venueSay(`${c.official?"An official cup. ":""}${c.official&&c.grade===s.grade&&s.grade!=="S"?`Win it and ${displayName(s)} moves up to grade ${GRADES[GRADES.indexOf(s.grade)+1]}. `:""}The cup takes the week.${fee&&PLAYER.bits<fee?` We have ${PLAYER.bits} bits, short of the ${fee} entry.`:""}`);
   el("v-enter").onclick=()=>startCup(c);
   el("v-back").onclick=venueLobby;
+}
+
+/* ---------- the calendar: a month of cups, week by week. Only this week's can be entered ---------- */
+function venueCalendar(off){
+  const s=RS, start=Math.floor(PLAYER.week/4)*4+off*4, mo=Math.floor(start/4)%12;
+  el("v-name").textContent="Calendar"; el("v-sub").textContent=`${SEASON[Math.floor(mo/3)]} · Month ${mo%3+1}`;
+  const weeks=[0,1,2,3].map(k=>{ const w=start+k, list=cupsOfWeek(w), now=w===PLAYER.week, past=w<PLAYER.week;
+    return `<div class="wk ${now?"now":""}"><h4>Week ${k+1}${now?" · this week":past?" · done":""}</h4>${list.length?list.map(c=>{ const why=cupBlock(c,s);
+      return `<div class="cu ${why?"no":""}">${gradeTag(c.major||c.legend?"S":c.grade)}<span><b>${c.name.replace(/ \([A-SF]\)$/,"")}</b><br><small style="margin:0">${cupFormat(c)}${c.prize?` · ${c.prize}`:""}</small></span><small>${cupPurse(c).toLocaleString()} bits${why?`<br>${why}`:""}</small></div>`; }).join(""):'<div class="none">No cups this week.</div>'}</div>`; }).join("");
+  vBody(`<div class="v-card"><div class="v-calnav"><button class="btn2" id="c-prev" ${off<=0?"disabled":""}>◂ Month</button><b>${SEASON[Math.floor(mo/3)]} · Month ${mo%3+1}</b><button class="btn2" id="c-next" ${off>=11?"disabled":""}>Month ▸</button></div></div>
+    <div class="v-card v-cal">${weeks}</div><button class="btn2 v-end" id="c-back">Back</button>`);
+  el("c-prev").onclick=()=>venueCalendar(off-1); el("c-next").onclick=()=>venueCalendar(off+1); el("c-back").onclick=venueLobby;
 }
 
 /* ---------- the board ---------- */
@@ -65,12 +78,14 @@ function boardHtml(){
       ${F.map((e,i)=>`<tr><td class="nm ${e.me?"self":""}"><span class="sd">${i+1}</span>${e.name}</td>${F.map((e2,j)=>i===j?'<td class="x"></td>':`<td class="${mark(CUP.res[i][j])[0]}">${mark(CUP.res[i][j])[1]}</td>`).join("")}<td class="pt">${CUP.pts[i]}</td></tr>`).join("")}</table>`;
   }
   if(c.format==="single") return "";
+  if(c.format==="team5") return `<div class="team5">${CUP.bouts.map((b,k)=>`<div class="t5row"><span class="${F[b.a].me?"self":""} ${b.res==="w"?"win":b.res==="l"?"out":""}">${F[b.a].name}</span><i>${b.res?b.res==="w"?"◀":"▶":"vs"}</i><span class="${b.res==="l"?"win":b.res==="w"?"out":""}">${F[b.b].name}</span></div>`).join("")}</div>
+    <div style="margin-top:6px;font-size:13px;color:var(--mute)">${CUP.teams[0]} on the left, ${CUP.teams[1]} on the right.</div>`;
   const H=CUP.hist, cols=[H[0]||[],H[1]||[],H[2]||[]], champ=H[3]&&H[3][0];
   const slot=(i,r)=>{ const won=H[r+1]&&H[r+1].includes(i), lost=H[r+1]&&!won; return `<div class="slot ${F[i].me?"self":""} ${won?"win":""} ${lost?"out":""}">${F[i].name}</div>`; };
   return `<div class="bracket">${cols.map((col,r)=>`<div class="col">${col.length?col.map(i=>slot(i,r)).join(""):Array.from({length:[8,4,2][r]},()=>'<div class="slot">&nbsp;</div>').join("")}</div>`).join("")}</div>
     ${champ!=null?`<div style="margin-top:8px;font:700 14px var(--pix);color:var(--gold)">Champion: ${F[champ].name}</div>`:""}`;
 }
-const roundName=()=>{ const c=CUP.c; return (c.format==="robin"?`Round ${CUP.round+1} of ${CUP.rounds.length}`:c.format==="single"?"The match":["Quarter-final","Semi-final","Final"][CUP.round]||"Final")+(c.format==="bo3"&&CUP.series&&CUP.series.opp!=null?`, game ${CUP.series.me+CUP.series.them+1} (${CUP.series.me}-${CUP.series.them})`:""); };
+const roundName=()=>{ const c=CUP.c; return (c.format==="robin"?`Round ${CUP.round+1} of ${CUP.rounds.length}`:c.format==="single"?"The match":c.format==="team5"?"Bout 1 of 5":["Quarter-final","Semi-final","Final"][CUP.round]||"Final")+(c.format==="bo3"&&CUP.series&&CUP.series.opp!=null?`, game ${CUP.series.me+CUP.series.them+1} (${CUP.series.me}-${CUP.series.them})`:""); };
 
 /* ---------- match card ---------- */
 function venueMatch(){
@@ -88,7 +103,7 @@ function venueMatch(){
     <div class="v-acts"><button class="big" id="t-fight">Fight</button><button class="btn2" id="t-auto">Auto</button><button class="btn2" id="t-info">Info</button></div>
     <div class="v-card" id="v-info" style="display:none"><h3>${e.name}</h3><div class="statgrid">${STATS.map((n,i)=>`<div class="sg"><span>${n}</span><b>${st[i]}</b><i><u style="width:${Math.min(100,st[i]/2)}%;background:${ELC(o.m.el1)}"></u></i><em></em></div>`).join("")}</div>
       <p style="margin-top:8px;font-size:13px;color:var(--mute)">${o.m.ability[0]}: ${o.m.ability[1]}. Skills: ${o.skills.join(", ")}.</p></div>
-    ${c.format==="single"?"":`<div class="v-card"><h3>${c.format==="robin"?"Standings":"Bracket"}</h3>${boardHtml()}</div>`}
+    ${c.format==="single"?"":`<div class="v-card"><h3>${c.format==="robin"?"Standings":c.format==="team5"?"Bouts":"Bracket"}</h3>${boardHtml()}</div>`}
     <div class="v-quit"><button class="btn2" id="t-forfeit">Forfeit match</button><button class="btn2" id="t-drop">Leave cup</button></div>`);
   venueSay(CUP.ann||`${roundName()}: ${displayName(s)} against ${e.name}, raised by ${e.breeder}.`); CUP.ann=null;
   const go=mode=>arenaFight({s,foe:o,mode,title:c.name,noDraw:c.format!=="robin",record:mode==="control",learn:true,rand:CUP.R,onEnd:res=>afterMatch(opp,res)});
@@ -106,10 +121,11 @@ function venueCeremony(done){
   let order;
   if(c.format==="robin") order=F.map((e,i)=>i).sort((x,y)=>CUP.pts[y]-CUP.pts[x]||CUP.hp[y]-CUP.hp[x]);
   else if(c.format==="single") order=CUP.singleWon?[0,1]:[1,0];
+  else if(c.format==="team5") order=CUP.place===1?[0,5]:[5,0];
   else { const H=CUP.hist, last=H[H.length-1]||[], fin=H[H.length-2]||[], semi=H[H.length-3]||[]; order=[...last,...fin.filter(i=>!last.includes(i)),...semi.filter(i=>!fin.includes(i))]; }
   if(CUP.place==null) order=order.filter(i=>!F[i].me).concat(order.filter(i=>F[i].me));
   VEN.show={podium:1,me:true,champ:F[order[0]].me?null:F[order[0]].o};
-  const prizeOf=k=>k===0?purse:k===1&&!c.small?Math.round(purse/2):k===2&&!c.small?Math.round(purse/4):0;
+  const prizeOf=k=>c.format==="team5"?(k===0?CUP.prize:0):k===0?purse:k===1&&!c.small?Math.round(purse/2):k===2&&!c.small?Math.round(purse/4):0;
   const up=CUP.lines.find(l=>/moves up to grade|invited|Master now/.test(l));
   vBody(`<div class="v-card v-ann" id="v-ann"></div>
     ${up?`<div class="v-card v-up">${up}</div>`:""}

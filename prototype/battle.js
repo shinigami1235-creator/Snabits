@@ -19,7 +19,7 @@ function makeFighter(m,loadout,level=LEVEL){
     base:{pow:st(1),grd:st(2),mnd:st(3),spr:st(4),spd:st(5)},stage:{pow:0,grd:0,mnd:0,spr:0,spd:0},
     status:null,guard:false,protect:false,protectLast:false,counter:false,charging:null,hitWhileCharging:false,
     regen:0,mirror:false,sleep:false,taunt:0,lastSkill:null,thawed:false,firstHitTaken:false,lastStand:false,unseen:false,
-    skills:names.map(n=>({name:n,...SKILLS[n]}))};
+    skills:names.map(n=>({name:n,...SKILLS[n],label:typeof skillLabel==="function"?skillLabel(n,m.family,m.stage):n}))};
 }
 function stageMul(n){ return n>=0?1+0.25*n:[1,0.8,0.67,0.57][-n]; }
 function costOf(f,sk){ return sk.cost+(f.status&&f.status.name==="Curse"?1:0); }
@@ -41,7 +41,7 @@ class Fight{
   }
   options(f){
     const o=[{id:BASIC,label:"Attack"},{id:GUARD,label:"Guard"}];
-    f.skills.forEach((s,i)=>{ if(costOf(f,s)<=f.energy) o.push({id:i,label:s.name}); });
+    f.skills.forEach((s,i)=>{ if(costOf(f,s)<=f.energy) o.push({id:i,label:s.label||s.name}); });
     return o;
   }
   /* stat stages with Defiant, Unbreakable and Mirror Mind */
@@ -121,7 +121,7 @@ class Fight{
       if(f.status&&f.status.name==="Daze"&&picks[i]>=0){ const o=this.options(f).filter(x=>x.id!==GUARD); picks[i]=o[Math.floor(this.rand()*o.length)].id; this.say(`${f.name} is dazed and does something else.`); f.status=null; }
       const s=picks[i]>=0?f.skills[picks[i]]:null;
       if(s&&f.taunt&&(s.kind==="Support"||s.kind==="Field")){ this.say(`${f.name} is taunted and attacks instead.`); picks[i]=BASIC; }
-      if(s&&f.status&&f.status.name==="Dread"&&f.lastSkill===s.name){ this.say(`${f.name} can't use ${s.name} twice in a row.`); picks[i]=BASIC; }
+      if(s&&f.status&&f.status.name==="Dread"&&f.lastSkill===s.name){ this.say(`${f.name} can't use ${s.label||s.name} twice in a row.`); picks[i]=BASIC; }
     });
     picks.forEach((id,i)=>{ const f=this.p[i], s=id>=0?f.skills[id]:null; f.guard=id===GUARD; f.usedProtect=false;
       if(s&&s.protect&&!f.protectLast&&f.energy>=costOf(f,s)) { f.protect=true; f.usedProtect=true; }
@@ -152,14 +152,14 @@ class Fight{
       return; }
     if(id===BASIC){ this.hit(i,basicFor(me)); me.energy=Math.min(10,me.energy+1); return; }
     if(id===RELEASE){ const s=me.charging; me.charging=null;
-      if(s.focus&&me.hitWhileCharging){ this.say(`${me.name} lost its focus. ${s.name} fails.`); me.hitWhileCharging=false; return; }
+      if(s.focus&&me.hitWhileCharging){ this.say(`${me.name} lost its focus. ${s.label||s.name} fails.`); me.hitWhileCharging=false; return; }
       me.hitWhileCharging=false; this.hit(i,s); return; }
     const s=me.skills[id], c=costOf(me,s);
     me.energy-=c; me.lastSkill=s.name;
-    if(s.charge&&!(s.sunInstant&&this.field&&this.field.name==="Sunlit")){ me.charging=s; me.hitWhileCharging=false; this.say(`${me.name} gathers power for ${s.name}.`); this.events.push({t:"cast",who:i,el:s.el,name:s.name,charge:true}); return; }
+    if(s.charge&&!(s.sunInstant&&this.field&&this.field.name==="Sunlit")){ me.charging=s; me.hitWhileCharging=false; this.say(`${me.name} gathers power for ${s.label||s.name}.`); this.events.push({t:"cast",who:i,el:s.el,name:s.name,charge:true}); return; }
     if(s.power){ this.hit(i,s); return; }
     this.events.push({t:"cast",who:i,el:s.el,name:s.name});
-    this.say(`${me.name} uses ${s.name}.`); if(!s.basic){ me.used=me.used||{}; me.used[s.name]=(me.used[s.name]||0)+1; this.p[1-i].seen=this.p[1-i].seen||{}; this.p[1-i].seen[s.name]=1; }
+    this.say(`${me.name} uses ${s.label||s.name}.`); if(!s.basic){ me.used=me.used||{}; me.used[s.name]=(me.used[s.name]||0)+1; this.p[1-i].seen=this.p[1-i].seen||{}; this.p[1-i].seen[s.name]=1; }
     if(s.protect){ if(me.usedProtect) this.say(`${me.name} braces for anything.`); else this.say("It fails, since it was used last turn."); }
     if(s.counter) this.say(`${me.name} waits to counter.`);
     if(s.field){ this.field={name:s.field,turns:5}; this.say(`The field turns ${s.field}.`); this.events.push({t:"field"}); }
@@ -184,9 +184,9 @@ class Fight{
     const me=this.p[i], R=this.rand;
     this.events.push({t:"use",who:i,name:s.name,kind:s.kind,el:s.el});
     let tgt=1-i, power=s.power;
-    if(s.kind==="Cast"&&this.p[tgt].mirror){ this.p[tgt].mirror=false; this.say(`${this.p[tgt].name}'s Mirror Charm bounces ${s.name} back.`); tgt=i; power/=2; }
+    if(s.kind==="Cast"&&this.p[tgt].mirror){ this.p[tgt].mirror=false; this.say(`${this.p[tgt].name}'s Mirror Charm bounces ${s.label||s.name} back.`); tgt=i; power/=2; }
     const def=this.p[tgt];
-    this.say(`${me.name} uses ${s.name}.`); if(!s.basic){ me.used=me.used||{}; me.used[s.name]=(me.used[s.name]||0)+1; this.p[1-i].seen=this.p[1-i].seen||{}; this.p[1-i].seen[s.name]=1; }
+    this.say(`${me.name} uses ${s.label||s.name}.`); if(!s.basic){ me.used=me.used||{}; me.used[s.name]=(me.used[s.name]||0)+1; this.p[1-i].seen=this.p[1-i].seen||{}; this.p[1-i].seen[s.name]=1; }
     if(def.protect&&tgt!==i){ this.say(`${def.name} blocks it.`); this.events.push({t:"miss",who:tgt}); return; }
     const seen=s.kind==="Cast"&&me.foresight&&tgt!==i; if(seen) me.foresight=false;
     if(!s.basic&&!s.sure&&!seen&&tgt!==i){

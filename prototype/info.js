@@ -128,12 +128,12 @@ function infoSkills(s) {
     if (!n) return `<button class="i-slot empty ${INFO.slot === i ? 'sel' : ''}" data-s="${i}"><span class="no">${i + 1}</span>Empty</button>`;
     const sk = SKILLS[n], [tag, bg, fg] = skillTag(n, sk);
     return `<button class="i-slot ${INFO.slot === i ? 'sel' : ''}" data-s="${i}"><span class="no">${i + 1}</span><span class="i-kind" style="background:${bg};color:${fg}">${tag}</span>
-      <b>${n}${(uses[n] || 0) >= MASTERY ? ' ★' : ''}</b><small>${skillBits(sk)}</small><small>${skillNote(sk) || '&nbsp;'}</small></button>`; }).join('');
+      <b>${skillLabelOf(s, n)}${(uses[n] || 0) >= MASTERY ? ' ★' : ''}</b><small>${skillBits(sk)}</small><small>${skillNote(sk) || '&nbsp;'}</small></button>`; }).join('');
   const kinds = ['All', 'Strike', 'Cast', 'Support'];
   const list = known.filter(n => INFO.filter === 'All' || SKILLS[n].kind === INFO.filter || (INFO.filter === 'Support' && SKILLS[n].kind === 'Field'))
     .sort((a, b) => (eq.includes(b) - eq.includes(a)) || (SKILLS[b].sig ? 1 : 0) - (SKILLS[a].sig ? 1 : 0) || (SKILLS[b].power || 0) - (SKILLS[a].power || 0));
   const rows = list.map(n => { const sk = SKILLS[n], [, bg] = skillTag(n, sk), on = eq.includes(n);
-    return `<button class="i-sk ${on ? 'eq' : ''}" data-k="${n}"><span class="dot" style="background:${bg}"></span><span><b>${n}${(uses[n] || 0) >= MASTERY ? ' ★' : ''}</b>${on ? `<em>slot ${eq.indexOf(n) + 1}</em>` : ''}<small>${skillTag(n, sk)[0]} · ${[skillNote(sk), skillWhere(s, n)].filter(Boolean).join(' · ')}</small></span>
+    return `<button class="i-sk ${on ? 'eq' : ''}" data-k="${n}"><span class="dot" style="background:${bg}"></span><span><b>${skillLabelOf(s, n)}${(uses[n] || 0) >= MASTERY ? ' ★' : ''}</b>${on ? `<em>slot ${eq.indexOf(n) + 1}</em>` : ''}<small>${skillTag(n, sk)[0]} · ${[skillNote(sk), skillWhere(s, n)].filter(Boolean).join(' · ')}</small></span>
       <span class="pw">${sk.power ? (sk.hits ? sk.power + '×' + sk.hits : sk.power) : '–'}<small>${sk.cost} en</small></span></button>`; }).join('');
   return `<div class="i-slots">${slots}</div>
     <div class="i-talk"><span class="who">Tala</span>${eq[INFO.slot] ? `Slot ${INFO.slot + 1} is picked. Tap a skill below to put it there.` : `Slot ${INFO.slot + 1} is empty. Tap a skill below to fill it.`}</div>

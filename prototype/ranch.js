@@ -336,7 +336,7 @@ async function scene(fn,keepRoom){
   if(s.zx){ s.x+=s.zx; s.zx=0; }
   const dk=el("r-dusk"); if(dk){ dk.style.transition="none"; dk.style.backgroundColor="transparent"; } s.dayHour=null; if(s.training) backHome();
   if(s.visit){ s.props=s.propsHome||s.props; s.propsHome=null; s.visit=null; } s.trip=false; s.night=0; s.dusk=0; s.guide=null;
-  s.busy=false; s.skip=false; s.bg=null; s.tripLabel=null; s.props=s.props.filter(p=>p.k==="bowl"); el("r-skip").style.display="none"; s.pose="idle"; s.jy=0; s.bx=0; s.upside=false; s.ghosts=false;
+  s.busy=false; s.skip=false; s.bg=null; s.tripLabel=null; s.props=s.props.filter(p=>p.k==="bowl"); el("r-skip").style.display="none"; s.pose=moodPose(); s.jy=0; s.bx=0; s.upside=false; s.ghosts=false;
   drawUI(); if(s.lastMenu&&!s.dead) menu(s.lastMenu); saveGame();
 }
 function walkTo(x,speed=45,pose="walk",id=RS.cur){
@@ -712,6 +712,12 @@ async function endWeek(weeks,line){
   say(notes.filter(Boolean).join(" ")); drawUI(); saveGame();
 }
 /* ---------- ordinary life: what it does on its own ---------- */
+/* how it feels shows on its face and stance: worn out, droopy, normal, fresh, or fired up on some weeks in top shape */
+function moodPose(){ const s=RS; if(!s||!smoothRanch()) return "idle";
+  if(s.fatigue>50||s.injured) return "tired";
+  if(s.fatigue>=30||s.stress>=35||s.sick) return "droopy";
+  if(s.fatigue<20&&s.stress<15) return rng(hashStr(s.id+"|great|"+PLAYER.week))()<0.4?"determined":"fresh";
+  return "idle"; }
 async function idleTick(){
   const s=RS; if(!s||!s.open||s.busy||s.idling||s.rub||s.dead||s.away||s.visit) return;
   s.idling=true; const id=s.cur=++RACT;
@@ -719,21 +725,22 @@ async function idleTick(){
     if(s.injured){ s.pose="tired"; await rwait(2500,id); }
     else if(s.fatigue>75){ s.pose="sleep"; for(let k=0;k<4;k++){ spark(s.x+6,headY(),"z"); await rwait(700,id);} }
     else if(s.fatigue>50){ s.pose="tired"; await rwait(2500,id); }
+    else if(moodPose()==="droopy"&&Math.random()<0.5){ s.pose="droopy"; await rwait(2600,id); }
     else if(s.stress>45){ for(let k=0;k<2;k++){ await walkTo(clamp(s.x+40,95,215),55,"walk",id); await walkTo(clamp(s.x-40,95,215),55,"walk",id);} }
-    else if(scared()&&!inBarn()){ s.behind=true; await walkTo(smoothRanch()?HUTX()+70:40,40,"walk",id); s.pose="idle"; await rwait(3000,id); }
+    else if(scared()&&!inBarn()){ s.behind=true; await walkTo(smoothRanch()?HUTX()+70:40,40,"walk",id); s.pose=moodPose(); await rwait(3000,id); }
     else if(spoiled()&&s.ptrX!=null&&performance.now()-s.ptrT<4000){ await walkTo(clamp(s.ptrX,90,220),60,"walk",id); s.pose="happy"; await rwait(600,id); }
     else if(inBarn()){ const r=Math.random();
-      if(r<0.4){ await walkTo(rnd(90,160),35,"walk",id); s.pose="idle"; await rwait(rnd(1500,3000),id); }
+      if(r<0.4){ await walkTo(rnd(90,160),35,"walk",id); s.pose=moodPose(); await rwait(rnd(1500,3000),id); }
       else if(r<0.6){ await walkTo(118,35,"walk",id); s.pose="sit"; await rwait(2500,id); }
       else if(r<0.8){ await walkTo(84,40,"walk",id); s.pose="happy"; await hop(12,360,id); await rwait(600,id); }
       else { await walkTo(202,35,"walk",id); s.pose="sleep"; for(let k=0;k<3;k++){ spark(s.x+8,headY(),"z"); await rwait(700,id);} } }
     else { s.behind=false; const r=Math.random();
-      if(r<0.45){ await walkTo(rnd(70,185),35,"walk",id); s.pose="idle"; await rwait(rnd(1500,3000),id); }
+      if(r<0.45){ await walkTo(rnd(70,185),35,"walk",id); s.pose=moodPose(); await rwait(rnd(1500,3000),id); }
       else if(r<0.6){ await walkTo(BOWLX+RS.P.scale*7,35,"walk",id); s.pose="sit"; await rwait(2200,id); }
       else if(r<0.8){ const bug={k:"bug",x:rnd(110,210),y:GROUND-rnd(14,26),t:0}; prop(bug); await walkTo(bug.x,70,"run",id); s.pose="happy"; await hop(14,380,id); unprop(bug); await rwait(500,id); }
-      else { s.pose="effort"; for(let k=0;k<5;k++){ spark(s.x+s.dir*6,GROUND-1,"dust"); await rwait(200,id);} s.pose="idle"; await rwait(800,id); }
+      else { s.pose="effort"; for(let k=0;k<5;k++){ spark(s.x+s.dir*6,GROUND-1,"dust"); await rwait(200,id);} s.pose=moodPose(); await rwait(800,id); }
     }
-    if(id===RACT) s.pose="idle";
+    if(id===RACT) s.pose=moodPose();
   }catch(e){ s.props=s.props.filter(p=>p.k!=="bug"); }
   s.idling=false;
 }
