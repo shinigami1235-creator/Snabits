@@ -36,6 +36,9 @@ const rk=()=>RS&&RS.skip?(RS.noScenes?25:5):1;
 const rsleep=ms=>new Promise(r=>setTimeout(r,ms));
 async function rwait(ms,id=RS.cur){ await rsleep(ms/rk()); if(id!==RACT) throw RSTOP; }
 const rnd=(a,b)=>a+Math.random()*(b-a);
+/* the smooth art draws the ranch as three screens: barn, yard, training ground. Hybrids still use the pixel yard. */
+const smoothRanch=()=>!!(RS&&typeof CHIBI_ART!=="undefined"&&CHIBI_ART&&typeof chibiYard==="function"&&typeof chibiSpec==="function"&&chibiSpec(null,RS));
+const HUTX=()=>smoothRanch()?-RW/2:26;
 const el=id=>document.getElementById(id);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 
@@ -199,13 +202,13 @@ function drawUI(){
   el("r-name").textContent=displayName(s);
   el("r-date").textContent=s.tripLabel||dateShort();
   const h=hearts(); el("r-hearts").textContent="♥".repeat(h)+"♡".repeat(5-h);
-  el("r-shape").textContent=shapeOf(s.weight)[0];
+  el("r-shape").textContent=shapeOf(s.weight)[0]+(smoothRanch()&&typeof heightCm==="function"?" · "+heightText(heightCm(s.m,s.stage)):"");
   el("r-coins").textContent=PLAYER.bits+" bits";
   el("r-lv").textContent=`${s.stage} · Lv ${s.level} · Grade ${s.grade}`;
   el("r-form").textContent=conditionShort()+" · "+agePhase(s)[2];
   el("r-stats").innerHTML=STATS.map((st,i)=>{const fam=FAMILY[m.family].base[i], v=shownStat(i);
     return `<div class="rs" id="rs${i}"><span>${st} <small class="gr r${rankOf(fam)}">${rankOf(fam)}</small></span><span class="bg"><i style="width:${Math.min(100,v/2)}%"></i></span><span>${v}${s.tp[i]?` <small style="opacity:.6">(+${s.tp[i]})</small>`:""}</span></div>`;}).join("");
-  el("r-say").innerHTML=`<span class="who">Tala</span>${s.say||""}`;
+  el("r-say").innerHTML=`<span class="who">Tala</span>${s.say||""}`; if(typeof talaFace==="function") talaFace(el("r-say"),s.say);
   const n=el("r-nums"); n.style.display=s.showNums?"block":"none";
   n.textContent=`Fatigue ${s.fatigue}, stress ${s.stress}, Strain ${s.fatigue+2*s.stress}. Spoil ${s.spoil}, Fear ${s.fear}, loyalty ${loyalty()}. Weight ${s.weight}. Weeks lived ${s.used} of ${lifeWeeks()} (${s.m.lifespan} months). Earned points ${tpTotal()}${s.stage==="Bit"?` of ${evoTotal()} for Byte`:""}.`;
   el("r-learned").textContent=s.learned.length?"Stat skills: "+s.learned.join(", "):"";
@@ -215,7 +218,7 @@ function drawUI(){
 }
 function shownStat(i){ const s=RS; let v=s.m.stats[i]+s.tp[i]; if(s.stage!=="Bit"&&s.mark===i) v=Math.round(v*1.05); return v; }
 function popStat(i,txt,neg){ const r=el("rs"+i); if(!r) return; const p=document.createElement("span"); p.className="pop"+(neg?" neg":""); p.textContent=txt; r.appendChild(p); setTimeout(()=>p.remove(),1500); }
-function say(t){ RS.say=t; el("r-say").innerHTML=`<span class="who">Tala</span>${t}`; }
+function say(t){ RS.say=t; el("r-say").innerHTML=`<span class="who">Tala</span>${t}`; if(typeof talaFace==="function") talaFace(el("r-say"),t); }
 function banner(t,col){ const b=el("r-banner"); b.textContent=t; b.style.color=col||"#fff"; b.classList.toggle("on",!!t); }
 function panel(html){ el("r-panel").innerHTML=html; el("ranch").classList.toggle("menu-open",!!html); if(!html&&RS&&RS.id) weekCard(); }
 /* With no menu open, the space under the stats shows what's coming up. */
@@ -275,6 +278,7 @@ async function scene(fn){
   s.busy=true; s.cur=++RACT; s.skip=s.noScenes; s.behind=false; s.hidden=false; s.upside=false; s.rub=null;
   panel(""); el("r-menu").querySelectorAll(".rb").forEach(b=>b.classList.remove("on")); drawUI(); el("r-skip").style.display="block";
   try{ await fn(); }catch(e){ if(e!==RSTOP) console.error(e); }
+  if(s.zx){ s.x+=s.zx; s.zx=0; }
   s.busy=false; s.skip=false; s.bg=null; s.tripLabel=null; s.props=s.props.filter(p=>p.k==="bowl"); el("r-skip").style.display="none"; s.pose="idle"; s.jy=0; s.bx=0; s.upside=false; s.ghosts=false;
   drawUI(); if(s.lastMenu&&!s.dead) menu(s.lastMenu); saveGame();
 }
@@ -299,7 +303,7 @@ function spark(x,y,kind,n=1){ for(let i=0;i<n;i++){ const p={x,y,kind,life:0,max
   if(kind==="sweat"){p.vx=rnd(-.8,.8);p.vy=-rnd(.5,1);p.g=.06;p.max=30;}
   if(kind==="sparkle"){p.vx=rnd(-.6,.6);p.vy=rnd(-.6,.6);p.max=30;}
   RS.parts.push(p);} }
-const headY=()=>GROUND-(RS.P.base-RS.P.topY+1)*RS.P.scale-RS.jy;
+const headY=()=>{ const h=RS.cam&&typeof chibiHeadY==="function"?chibiHeadY(RS):null; return h!=null?h:GROUND-(RS.P.base-RS.P.topY+1)*RS.P.scale-RS.jy; };
 
 /* ---------- drills ---------- */
 function rollDrill(){
@@ -315,6 +319,7 @@ async function runDrill(i){
     const s=RS, res=rollDrill(), heavy=i>=6, H=heavy?HEAVY[i-6]:null, main=heavy?H[1]:i, name=heavy?H[0]:DRILLS[i];
     s.lastTrained=main;
     say(`${name}. Let's see how it does.`);
+    if(!heavy&&smoothRanch()){ await walkTo(RW+30,80,"walk"); s.x-=RW; s.zx=RW; }    // over to the training ground, then the drill runs in its usual spots
     if(res==="slack") await SLACK(i); else await (heavy?HEAVY_FN[i-6]:SCENE_FN[i])(res);
     s.bg=null; s.x=150; s.props=s.props.filter(p=>p.k==="bowl"); s.upside=false; s.parted=false; s.jy=0;
     const age=ageMult(s), vet=age<0.5, base=FAMILY[s.m.family].base;
@@ -431,8 +436,8 @@ const SCENE_FN=[
 
 /* ---------- other week actions ---------- */
 async function runRest(){
-  await scene(async()=>{ const s=RS; say("A quiet week in the hut.");
-    await walkTo(26,40); s.hidden=true; for(let k=0;k<4;k++){ spark(30,GROUND-34,"z"); await rwait(450);} s.hidden=false; s.pose="happy"; await rwait(500);
+  await scene(async()=>{ const s=RS; say(smoothRanch()?"A quiet week in the barn.":"A quiet week in the hut.");
+    await walkTo(HUTX(),smoothRanch()?90:40); s.hidden=true; for(let k=0;k<4;k++){ spark(HUTX()+4,GROUND-(smoothRanch()?80:34),"z"); await rwait(450);} s.hidden=false; s.pose="happy"; await rwait(500);
     s.fatigue-=has("Better hut")?45:35; s.stress-=7; s.weight+=1; const wasHurt=s.injured; s.injured=false; await endWeek(1,wasHurt?"The rest healed it up.":"It looks rested.");
   });
 }
@@ -592,7 +597,7 @@ async function idleTick(){
     else if(s.fatigue>75){ s.pose="sleep"; for(let k=0;k<4;k++){ spark(s.x+6,headY(),"z"); await rwait(700,id);} }
     else if(s.fatigue>50){ s.pose="tired"; await rwait(2500,id); }
     else if(s.stress>45){ for(let k=0;k<2;k++){ await walkTo(clamp(s.x+40,95,215),55,"walk",id); await walkTo(clamp(s.x-40,95,215),55,"walk",id);} }
-    else if(scared()){ s.behind=true; await walkTo(40,40,"walk",id); s.pose="idle"; await rwait(3000,id); }
+    else if(scared()){ s.behind=true; await walkTo(smoothRanch()?HUTX()+70:40,40,"walk",id); s.pose="idle"; await rwait(3000,id); }
     else if(spoiled()&&s.ptrX!=null&&performance.now()-s.ptrT<4000){ await walkTo(clamp(s.ptrX,90,220),60,"walk",id); s.pose="happy"; await rwait(600,id); }
     else { s.behind=false; const r=Math.random();
       if(r<0.45){ await walkTo(rnd(70,185),35,"walk",id); s.pose="idle"; await rwait(rnd(1500,3000),id); }
@@ -607,16 +612,22 @@ async function idleTick(){
 
 /* ---------- touch: rub to pet, wipe to clean, and a Spoiled monster follows the finger ---------- */
 function RS_bindPointer(cv){
-  const pos=e=>{const r=cv.getBoundingClientRect(), camX=Math.round(clamp(RS.camX||0,0,RW-cv.width));return [(e.clientX-r.left)*cv.width/r.width+camX,(e.clientY-r.top)*cv.height/r.height-(cv.height-RH)];};
+  const raw=e=>{const r=cv.getBoundingClientRect(); return [(e.clientX-r.left)*cv.width/r.width,(e.clientY-r.top)*cv.height/r.height];};
+  const pos=e=>{ const [sx,sy]=raw(e); if(RS.cam){ const {L,Z,extra}=RS.cam; return [sx/Z+L-(RS.zx||0),(sy-GROUND-extra)/Z+GROUND]; }
+    const camX=Math.round(clamp(RS.camX||0,0,RW-cv.width)); return [sx+camX,sy-(cv.height-RH)]; };
   cv.addEventListener("pointerdown",e=>{ const s=RS; if(!s) return; const [x,y]=pos(e); s.ptrX=x; s.ptrT=performance.now();
-    if(s.busy||!s.bbox) return; const b=s.bbox; if(x<b[0]||x>b[2]||y<b[1]||y>b[3]) return;
+    const b=s.bbox, onMon=!s.busy&&b&&x>=b[0]&&x<=b[2]&&y>=b[1]&&y<=b[3];
+    if(!onMon&&s.cam){ s.pan={x0:raw(e)[0],L0:s.camL}; s.panL=s.camL; cv.setPointerCapture(e.pointerId); return; }
+    if(!onMon) return;
     s.cur=++RACT; s.idling=false; s.rub={x,y,d:0,beats:0}; s.pose=scared()?"hurt":"lean"; cv.setPointerCapture(e.pointerId); });
-  cv.addEventListener("pointermove",e=>{ const s=RS; if(!s) return; const [x,y]=pos(e); s.ptrX=x; s.ptrT=performance.now(); if(!s.rub) return;
+  cv.addEventListener("pointermove",e=>{ const s=RS; if(!s) return;
+    if(s.pan&&s.cam){ s.panL=s.pan.L0-(raw(e)[0]-s.pan.x0)/s.cam.Z; return; }
+    const [x,y]=pos(e); s.ptrX=x; s.ptrT=performance.now(); if(!s.rub) return;
     s.rub.d+=Math.hypot(x-s.rub.x,y-s.rub.y); s.rub.x=x; s.rub.y=y; s.pose="lean";
     while(s.rub.d>28){ s.rub.d-=28; s.rub.beats++;
       if(s.mess>0){ s.mess=Math.max(0,s.mess-12); spark(x,y,"sparkle"); if(!s.mess){ say("Squeaky clean."); drawUI(); } }
       else { spark(x,y-4,"heart"); if(s.rub.beats===5) petOnce(); } } });
-  const up=()=>{ const s=RS; if(s&&s.rub){ s.rub=null; s.pose="idle"; } };
+  const up=()=>{ const s=RS; if(s&&s.pan){ s.pan=null; s.panUntil=performance.now()+2500; } if(s&&s.rub){ s.rub=null; s.pose="idle"; } };
   cv.addEventListener("pointerup",up); cv.addEventListener("pointercancel",up);
 }
 
@@ -659,10 +670,15 @@ function rLoop(t){
   const c=cv.getContext("2d"); c.imageSmoothingEnabled=false;
   const k=rk(), extra=cv.height-RH, room=RW-cv.width; s.vExtra=extra;
   // with the smooth art on, the yard draws on its own layer underneath and this canvas only carries props and effects
-  const smooth=!s.bg&&typeof CHIBI_ART!=="undefined"&&CHIBI_ART&&typeof chibiYard==="function"; if(smooth) c.clearRect(0,0,cv.width,cv.height);
-  else { const sc=el("r-scene"); if(sc) sc.style.display="none"; const ch=el("r-chibi"); if(ch) ch.style.filter=""; }
+  const smooth=!s.bg&&smoothRanch(); if(smooth) c.clearRect(0,0,cv.width,cv.height);
+  else { s.cam=null; const sc=el("r-scene"); if(sc) sc.style.display="none"; const ch=el("r-chibi"); if(ch) ch.style.filter=""; }
+  if(smooth){   // the side-scrolling ranch: the camera follows the monster, zooms in on small ones, and can be dragged to look around
+    const sp=chibiSpec(null,s), hpx=sp?sp.cm/100*RANCH_PX_M:60, Zt=clamp(66/hpx,1,1.8); s.zoom=s.zoom?s.zoom+(Zt-s.zoom)*0.05:Zt;
+    const Z=s.zoom, vw=cv.width/Z, wx=s.x+(s.zx||0), panning=s.pan||(s.panUntil&&performance.now()<s.panUntil);
+    const Lt=clamp(panning?s.panL:wx-vw/2,-RW,2*RW-vw); s.camL=s.camL==null||s.camJump?Lt:s.camL+(Lt-s.camL)*(s.pan?1:0.08); s.camJump=false;
+    s.cam={L:s.camL,Z,extra}; }
   const camT=clamp(s.x-cv.width/2,0,room); s.camX=s.camX==null?camT:s.camX+(camT-s.camX)*0.08; const camX=Math.round(clamp(s.camX,0,room));
-  c.save(); c.translate(-camX,extra); if(s.shake>0){ c.translate(Math.round(rnd(-2,2)),Math.round(rnd(-2,2))); s.shake--; }
+  c.save(); if(smooth) c.setTransform(s.zoom,0,0,s.zoom,(-s.camL+(s.zx||0))*s.zoom,GROUND+extra-GROUND*s.zoom); else c.translate(-camX,extra); if(s.shake>0){ c.translate(Math.round(rnd(-2,2)),Math.round(rnd(-2,2))); s.shake--; }
   if(!(smooth&&chibiYard(s,t,cv))) drawYard(c,t);
   // props physics
   for(const p of s.props){ if(p.vx!==undefined){ p.x+=p.vx*k; p.y+=(p.vy||0)*k; p.vy=(p.vy||0)+(p.g||0)*k;
@@ -674,9 +690,11 @@ function rLoop(t){
   if(s.visitor){ const v=s.visitor; if(performance.now()>v.until){ v.x+=0.6; if(v.x>RW+40) s.visitor=null; } else v.x=Math.max(RW-22,v.x-0.6);
     if(s.visitor){ if(!v.cv){ v.cv=document.createElement("canvas"); paint(v.cv,v.m.grid,v.m.pal,2); } c.drawImage(v.cv,Math.round(v.x-20),GROUND-40+(Math.floor(t/300)%2)); } }
   if(!s.behind) drawMonster(c,t);
+  if(smooth){ c.save(); c.setTransform(1,0,0,1,0,extra); }
   if(s.weather==="Rain"&&!s.bg){ c.fillStyle="rgba(170,200,255,.7)"; for(let i=0;i<40;i++){ const x=(i*29+t/3)%RW, y=(i*47+t/2)%GROUND; c.fillRect(Math.round(x),Math.round(y),1,3);} }
   if(s.weather==="Wind"&&!s.bg){ c.fillStyle="#d9822b"; for(let i=0;i<8;i++){ const x=(i*61+t/8)%RW, y=60+(i*23)%70+Math.sin(t/300+i)*6; c.fillRect(Math.round(x),Math.round(y),2,1);} }
   if(s.weather==="A heatwave"&&!s.bg){ c.fillStyle="rgba(255,180,60,.12)"; c.fillRect(0,0,RW,RH); }
+  if(smooth) c.restore();
   drawProps(c,t,true);
   // particles
   s.parts=s.parts.filter(p=>p.life<p.max);

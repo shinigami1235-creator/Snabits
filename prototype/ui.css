@@ -204,6 +204,9 @@ body[data-mode="aim"] #bars{bottom:calc(var(--safe-b) + 150px)}
 #r-skip{position:absolute;right:8px;bottom:8px;display:none;font:700 15px var(--pix);background:#000c;padding:8px 14px}
 #r-say,.tipbox{position:relative;font-size:15px;min-height:46px;background:var(--panel);border:2px solid var(--line);border-radius:var(--r);padding:16px 12px 10px;margin-top:8px;line-height:1.45}
 #r-say .who,.tip-who{position:absolute;top:-11px;left:10px;font:700 13px var(--pix);background:var(--sky);color:#06213a;border-radius:4px;padding:1px 8px}
+/* Tala's portrait sits at the left of her speech box, the way Monster Rancher shows Colt */
+#r-say.has-pic,.tipbox.has-pic{padding-left:86px;min-height:88px}#r-say.has-pic .who,.tipbox.has-pic .tip-who{left:86px}
+.tala-pic{position:absolute;left:10px;top:10px;width:64px;height:64px;border-radius:10px;border:2px solid #0d0e14}
 .tipbox{border-color:var(--sky);background:#1b2740}
 .tip-acts{display:flex;gap:10px;margin-top:10px}.tip-acts>*{flex:1;height:46px;padding:0 10px;font-size:15px}
 #r-stats{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;background:var(--ink2);border-radius:var(--r);padding:8px 10px}

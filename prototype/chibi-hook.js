@@ -11,13 +11,29 @@ function chibiSpec(m, s) {
   const stage = src.stage || 'Bit', marks = [];
   if (stage !== 'Bit' && src.mark != null && MARK[src.mark]) marks.push(MARK[src.mark][0]);
   if (stage === 'Mega' && src.mark2 != null && MARK[src.mark2]) marks.push(MARK[src.mark2][0]);
-  return { family: fam, stage, marks, pal: src.pal || base.pal, el: base.el1, worn: src.worn || {} };
+  return { family: fam, stage, marks, pal: src.pal || base.pal, el: base.el1, worn: src.worn || {}, cm: heightCm(base, stage) };
 }
+
+/* ---------- size ----------
+   How tall each family stands at Bit, Byte and Mega, in cm. A person is about 160 cm. Each monster is 85% to 115% of
+   that from its photo, so two monsters of the same kind still differ, and it keeps its size for life. */
+const SIZE_CM = { Chomp: [50, 100, 170], Squib: [40, 85, 150], Antik: [60, 120, 200], Moko: [50, 95, 160], Pinch: [45, 90, 150],
+  Stilt: [70, 140, 240], Skit: [35, 70, 110], Booly: [55, 110, 190], Quad: [50, 100, 170], Bipped: [60, 120, 190], Flask: [45, 90, 150], Teep: [40, 80, 140], Lern: [45, 90, 160] };
+function sizeK(m) {
+  if (!m) return 1; if (m.sizeK) return m.sizeK;
+  const t = JSON.stringify([m.pal, m.stats, m.lifespan, m.family]); let h = 2166136261;
+  for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return 0.85 + ((h >>> 0) % 1000) / 1000 * 0.3;
+}
+function heightCm(m, stage) { const a = SIZE_CM[m && m.family] || [50, 100, 170]; return a[Math.max(0, ['Bit', 'Byte', 'Mega'].indexOf(stage || 'Bit'))] * sizeK(m); }
+const heightText = cm => cm >= 100 ? (cm / 100).toFixed(2) + ' m' : Math.round(cm) + ' cm';
 
 /* ranch: the scene canvas is 240 wide and stretched, so the monster draws on a full-resolution layer over it */
 const RANCH_POSE = { idle: 'idle', walk: 'walk', run: 'run', happy: 'happy', eat: 'eat', hurt: 'hurt', sleep: 'sleep',
   sad: 'sad', dizzy: 'dizzy', effort: 'effort', tired: 'tired', sit: 'sit', lean: 'lean', guard: 'guard', float: 'hover' };
-const CHIBI_UNIT = 0.5;                 // game pixels per drawing unit: a Bit stands about as tall as the pixel Bit did
+const CHIBI_UNIT = 0.5;
+const RANCH_PX_M = 48;                  // ranch pixels per metre: the fence is 1 m, the barn door 2.3 m
+const chibiHeadY = s => { const sp = chibiSpec(null, s); return sp ? GROUND - sp.cm / 100 * RANCH_PX_M * 0.95 - (s.jy || 0) : null; };                 // game pixels per drawing unit: a Bit stands about as tall as the pixel Bit did
 function chibiLayer() {
   let o = document.getElementById('r-chibi');
   if (!o) { o = document.createElement('canvas'); o.id = 'r-chibi';
@@ -33,11 +49,16 @@ function chibiRanch(s, t) {
   if (o.width !== W) o.width = W; if (o.height !== H) o.height = H;
   const c = o.getContext('2d'); c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, W, H);
   if (s.hidden) return true;
-  const k = W / cv.width, room = RW - cv.width, camX = Math.round(clamp(s.camX || 0, 0, room)), u = k * CHIBI_UNIT;
-  const x = (s.x - camX) * k, y = (GROUND + (s.vExtra || 0) - (s.jy || 0)) * k;
-  c.setTransform(u, 0, 0, u, x - 100 * u, y - 188 * u);
+  const k = W / cv.width, cam = s.cam;
+  let u, x, y, ppu;
+  if (cam) {                                       // the side-scrolling ranch: world camera with zoom, size in cm
+    ppu = spec.cm / 100 * RANCH_PX_M / CHIBI.height(spec.stage, [], spec.family);
+    u = k * cam.Z * ppu; x = (s.x + (s.zx || 0) - cam.L) * cam.Z * k; y = (GROUND + cam.extra - (s.jy || 0) * cam.Z) * k;
+  } else { const room = RW - cv.width, camX = Math.round(clamp(s.camX || 0, 0, room)); ppu = CHIBI_UNIT; u = k * ppu; x = (s.x - camX) * k; y = (GROUND + (s.vExtra || 0) - (s.jy || 0)) * k; }
+  const kx = typeof shapeOf === 'function' ? shapeOf(s.weight)[2] : 1;      // feeding still makes it thinner or rounder
+  c.setTransform(u * kx, 0, 0, u, x - 100 * u * kx, y - 188 * u);
   CHIBI.draw(c, spec, RANCH_POSE[s.pose] || 'idle', t);
-  const h = CHIBI.height(spec.stage, spec.marks, spec.family) * CHIBI_UNIT, w = CHIBI.width(spec.stage, spec.family) * CHIBI_UNIT;   // tap box for petting
+  const h = CHIBI.height(spec.stage, spec.marks, spec.family) * ppu, w = CHIBI.width(spec.stage, spec.family) * ppu * kx;   // tap box for petting
   s.bbox = [s.x - w / 2, GROUND - h, s.x + w / 2, GROUND];
   return true;
 }
@@ -83,7 +104,9 @@ function home(who) {
   const r = document.getElementById(SIDE_ID[who]).getBoundingClientRect(), a = document.getElementById('arena').getBoundingClientRect();
   return { x: r.left - a.left + r.width / 2, y: r.top - a.top + r.height - 6, size: r.width };
 }
-const unitOf = (st, h) => h.size / 228 * Math.min(1.25, 190 / (CHIBI.height(st.spec.stage, st.spec.marks, st.spec.family) + 30));
+/* in battle the size difference shows but is squeezed, so a Bit facing a Mega looks small without becoming a speck */
+const unitOf = (st, h) => { const px = h.size * Math.min(0.86, Math.max(0.4, 0.62 * Math.sqrt((st.spec.cm || 170) / 170)));
+  return px / CHIBI.height(st.spec.stage, [], st.spec.family); };
 
 /* ---------- attacks ----------
    Each attack is a timeline in milliseconds. atk() moves the attacker along the line to the enemy (f = 0 at home,

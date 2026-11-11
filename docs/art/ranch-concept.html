@@ -24,7 +24,8 @@ function talaBody(X,Y,h,face='happy',t=0){
   x.fillStyle='#e9e2d0'; x.beginPath(); x.moveTo(-7,-55); x.lineTo(0,-46); x.lineTo(7,-55); x.closePath(); x.fill();
   x.fillStyle='#d24f43'; x.beginPath(); x.moveTo(-6,-54); x.lineTo(0,-47); x.lineTo(6,-54); x.lineTo(0,-50); x.closePath(); x.fill();
   x.strokeStyle='#f2c68c'; x.lineWidth=6.5; x.beginPath(); x.moveTo(-14,-50); x.quadraticCurveTo(-21,-40,-19,-30); x.moveTo(14,-50); x.quadraticCurveTo(21,-40,19,-30); x.stroke();
-  x.translate(0,-80); talaHead(face,t,0.62); x.restore();
+  x.fillStyle='#f2c68c'; x.fillRect(-4.5,-64,9,11);          // neck
+  x.translate(0,-76); talaHead(face,t,0.62); x.restore();
 }
 /* her head at about 50 units across, centred on (0,0) */
 function talaHead(face='happy',t=0,s=1){

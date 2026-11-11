@@ -34,6 +34,24 @@ const SC = {
 /* ---------- battle arena ---------- */
 const STAND_SOFT = ['#ff9b9b', '#ffd77a', '#9ad9ff', '#bff29a', '#e3b2ff', '#ffbf96', '#f6f1e4'];
 const BANNER_SOFT = ['#9ad28a', '#7cc7e8', '#c9a7f2', '#f2b36b', '#ff8f8f', '#ffc93c'];
+const SPEC_KINDS = ['person', 'person', 'box', 'round', 'tall'];
+/* one spectator at (X,Y) feet, k its size: a person or a little monster; wave puts its arms up */
+function spectator(x, X, Y, k, kind, col, wave) {
+  x.save(); x.translate(X, Y); x.scale(k, k);
+  const arms = wave ? -1 : 0.2;
+  x.strokeStyle = SC.dark(col, 0.15); x.lineWidth = 3; x.lineCap = 'round';
+  if (kind === 'person') { x.beginPath(); x.moveTo(-6, -10); x.lineTo(-11, -10 + arms * 12); x.moveTo(6, -10); x.lineTo(11, -10 + arms * 12); x.stroke();
+    SC.depth(x, () => { x.beginPath(); x.roundRect(-7, -14, 14, 14, 5); }, col, 1.5, 0.35); SC.depth(x, () => { x.beginPath(); x.arc(0, -21, 7, 0, 7); }, '#f6cf98', 1.2, 0.2);
+    x.fillStyle = ['#5a3420', '#2a2230', '#c98a3a', '#7a3a2a'][Math.floor(Math.abs(X * 7 + Y)) % 4]; x.beginPath(); x.arc(0, -23, 7.3, Math.PI, 0); x.fill(); }
+  else if (kind === 'box') { x.beginPath(); x.moveTo(-9, -8); x.lineTo(-14, -8 + arms * 10); x.moveTo(9, -8); x.lineTo(14, -8 + arms * 10); x.stroke();
+    SC.depth(x, () => { x.beginPath(); x.roundRect(-10, -20, 20, 18, 6); }, col, 1.5, 0.3); }
+  else if (kind === 'round') { SC.depth(x, () => { x.beginPath(); x.ellipse(0, -11, 10, 11, 0, 0, 7); }, col, 1.5, 0.3);
+    if (wave) { x.beginPath(); x.moveTo(-9, -12); x.lineTo(-13, -20); x.moveTo(9, -12); x.lineTo(13, -20); x.stroke(); } }
+  else { SC.depth(x, () => { x.beginPath(); x.roundRect(-7, -30, 14, 22, 7); }, col, 1.5, 0.3); x.beginPath(); x.moveTo(-3, -9); x.lineTo(-4, 0); x.moveTo(3, -9); x.lineTo(4, 0); x.stroke(); }
+  const ey = kind === 'person' ? -21 : kind === 'tall' ? -23 : -12;
+  x.fillStyle = '#2a1e2e'; x.beginPath(); x.ellipse(-3, ey, 1.5, 1.9, 0, 0, 7); x.ellipse(3, ey, 1.5, 1.9, 0, 0, 7); x.fill();
+  x.restore();
+}
 function arenaScene(c, W, H, cup, homes, now, cheer) {
   const hz = H * 0.3;                      // horizon: the CSS layout puts the far monster's feet just under half way
   if (cup) {
@@ -43,15 +61,15 @@ function arenaScene(c, W, H, cup, homes, now, cheer) {
       rg.addColorStop(0, 'rgba(255,240,190,.55)'); rg.addColorStop(1, 'rgba(255,240,190,0)'); c.fillStyle = rg; c.fillRect(0, 0, W, hz);
       SC.depth(c, () => { c.beginPath(); c.roundRect(lx - 14, hz * 0.04, 28, 9, 4); }, '#fff3c4', 2, 0.35); }
     c.globalAlpha = 1;
-    // crowd rows: round heads that hop when they cheer
-    const rows = 4, top = hz * 0.26, rowH = (hz * 0.74 - 14) / rows, R = SC.rng(7), hr = Math.max(3, rowH * 0.3);
+    // the crowd: people and little monsters in three rows, a few waving, all of them on their feet after a big hit
+    const rows = 3, top = hz * 0.2, rowH = (hz * 0.8 - 12) / rows, R = SC.rng(21);
     for (let r = 0; r < rows; r++) {
-      const y = top + r * rowH + rowH * 0.62;
-      c.fillStyle = r % 2 ? '#2b2149' : '#30254f'; c.fillRect(0, y - rowH * 0.15, W, rowH * 0.62);
-      for (let x = (r % 2 ? hr * 1.3 : 0) + hr; x < W + hr; x += hr * 2.6) {
-        const col = STAND_SOFT[Math.floor(R() * STAND_SOFT.length)], ph = R() * 6.28, hop = (Math.sin(now / 180 + ph) > (cheer ? -0.2 : 0.85) ? 1 : 0) * hr * (cheer ? 0.9 : 0.45);
-        c.fillStyle = SC.dark(col, 0.45); c.beginPath(); c.ellipse(x, y + hr * 0.9 - hop, hr * 1.05, hr * 0.7, 0, Math.PI, 0); c.fill();
-        c.fillStyle = col; c.beginPath(); c.arc(x, y - hop, hr * 0.78, 0, 7); c.fill(); }
+      const y = top + (r + 1) * rowH, k = hz / 120 * (0.62 + r * 0.14);
+      c.fillStyle = r % 2 ? '#2b2149' : '#33285a'; c.fillRect(0, y - 3 * k, W, 6 * k);
+      for (let x = 6 + (r % 2) * 10 * k; x < W + 10; x += 22 * k + R() * 6 * k) {
+        const kind = SPEC_KINDS[Math.floor(R() * SPEC_KINDS.length)], kk = k * (0.8 + R() * 0.45), ph = R() * 6.28, col = STAND_SOFT[Math.floor(R() * STAND_SOFT.length)];
+        const wave = cheer ? R() > 0.15 : Math.sin(now / 900 + ph) > 0.82, hop = cheer && Math.sin(now / 120 + ph) > 0 ? 2.5 * kk : 0;
+        spectator(c, x, y - hop, kk, kind, col, wave); }
     }
     // banners along the wall
     const bw = (W - 16) / 6;
@@ -102,96 +120,188 @@ function chibiArenaScene(now, homes) {
   arenaScene(c, r.width, r.height, cup, homes, now, cheer);
 }
 
-/* ---------- ranch yard ---------- */
+/* ---------- the ranch: three screens side by side ----------
+   World x runs from -RW to 2*RW in ranch pixels: the barn on the left screen, the yard (the old 0..RW) in the middle,
+   the training ground on the right. 48 px is a metre, so the fence is 1 m and the barn door 2.3 m.
+   s.cam = { L: world x at the left edge, Z: zoom, extra: canvas rows above the old 180-row yard } comes from ranch.js. */
 const YARD = {
   ground: ['#86c95f', '#69b64c', '#c9a050', '#e8eef4'], hill: ['#5fa653', '#4c9845', '#a7843f', '#c7d4e0'], far: ['#9fd08c', '#8cc87e', '#d4b06c', '#dbe5ee'],
   leaf: ['#62bb5f', '#47a346', '#e08a34', null],
 };
+const RANCH_W0 = () => -RW, RANCH_W1 = () => 2 * RW;
 function chibiYard(s, t, cv) {
-  const fr = document.getElementById('r-frame'); if (!fr) return false;
+  const fr = document.getElementById('r-frame'); if (!fr || !s.cam) return false;
   let o = document.getElementById('r-scene');
   if (!o) { o = document.createElement('canvas'); o.id = 'r-scene';
     Object.assign(o.style, { position: 'absolute', inset: '2px', width: 'calc(100% - 4px)', height: 'calc(100% - 4px)', pointerEvents: 'none', borderRadius: 'var(--r)' }); fr.prepend(o); }
   o.style.display = '';
   const r = o.getBoundingClientRect(), dpr = devicePixelRatio || 1, W = Math.round(r.width * dpr), H = Math.round(r.height * dpr);
   if (o.width !== W) o.width = W; if (o.height !== H) o.height = H;
-  const c = o.getContext('2d'), k = W / cv.width, room = RW - cv.width, camX = Math.round(clamp(s.camX || 0, 0, room)), extra = s.vExtra || 0;
-  c.setTransform(1, 0, 0, 1, 0, 0);
+  const c = o.getContext('2d'), k = W / cv.width, { L, Z, extra } = s.cam, vw = cv.width, vh = cv.height;
   const season = Math.floor((PLAYER.week % 48) / 12), hr = new Date().getHours(), night = hr < 6 || hr >= 19, dusk = hr >= 17 && hr < 19;
-  // sky over the whole layer, including any extra height above the yard
+  const G = GROUND + extra;                                           // the ground line in canvas rows
+  // sky and everything far away is drawn in canvas pixels, with parallax
+  c.setTransform(k, 0, 0, k, 0, 0);
   const sky = night ? ['#0e1330', '#1b2352', '#2b3570'] : dusk ? ['#e9845f', '#f5ad7c', '#ffd8a8'] : ['#6cb8ee', '#9fd3f6', '#d2edff'];
-  const g = c.createLinearGradient(0, 0, 0, H * 0.75); sky.forEach((col, i) => g.addColorStop(i / 2, col)); c.fillStyle = g; c.fillRect(0, 0, W, H);
-  c.setTransform(k, 0, 0, k, -camX * k, extra * k);       // from here on, game pixels: the yard is RW x RH with the ground at GROUND
-  const top = -extra;
+  const g = c.createLinearGradient(0, 0, 0, G); sky.forEach((col, i) => g.addColorStop(i / 2, col)); c.fillStyle = g; c.fillRect(0, 0, vw, vh);
   if (night) { const R = SC.rng(9); c.fillStyle = '#ffffff';
-    for (let i = 0; i < 40; i++) { const x = R() * RW, y = top + R() * (100 + extra), tw = 0.5 + 0.5 * Math.sin(t / 500 + i * 1.7); c.globalAlpha = 0.35 + 0.65 * tw; c.beginPath(); c.arc(x, y, 0.45 + (i % 3) * 0.2, 0, 7); c.fill(); }
-    c.globalAlpha = 1; const mx = 204, my = Math.max(top + 14, 18);
+    for (let i = 0; i < 46; i++) { const x = R() * vw, y = R() * (G - 50), tw = 0.5 + 0.5 * Math.sin(t / 500 + i * 1.7); c.globalAlpha = 0.35 + 0.65 * tw; c.beginPath(); c.arc(x, y, 0.45 + (i % 3) * 0.2, 0, 7); c.fill(); }
+    c.globalAlpha = 1; const mx = vw - 34, my = 18;
     const hg = c.createRadialGradient(mx, my, 2, mx, my, 22); hg.addColorStop(0, 'rgba(240,240,210,.35)'); hg.addColorStop(1, 'rgba(240,240,210,0)'); c.fillStyle = hg; c.fillRect(mx - 22, my - 22, 44, 44);
     c.save(); c.beginPath(); c.rect(mx - 10, my - 10, 20, 20); c.arc(mx + 3.2, my - 1.8, 5.6, 0, 7, true); c.clip();
     c.fillStyle = '#f4f1d6'; c.beginPath(); c.arc(mx, my, 6.5, 0, 7); c.fill(); c.restore(); }
-  else { const sx = 202, sy = Math.max(top + 14, 18), hg = c.createRadialGradient(sx, sy, 2, sx, sy, 26);
+  else { const sx = vw - 36, sy = 18, hg = c.createRadialGradient(sx, sy, 2, sx, sy, 26);
     hg.addColorStop(0, dusk ? 'rgba(255,190,110,.7)' : 'rgba(255,250,210,.8)'); hg.addColorStop(1, 'rgba(255,250,210,0)'); c.fillStyle = hg; c.fillRect(sx - 26, sy - 26, 52, 52);
     c.fillStyle = dusk ? '#ffb45a' : '#fff4b0'; c.beginPath(); c.arc(sx, sy, 7.5, 0, 7); c.fill();
-    const d = (t / 260) % (RW + 80); SC.cloud(c, (40 + d) % (RW + 80) - 40, 30, 9, 0.95); SC.cloud(c, (150 + d * 0.6) % (RW + 80) - 40, 52, 6.5, 0.8); }
-  // hills
-  SC.hills(c, RW + 40, 96, GROUND, 6, 30, 2, YARD.far[season]);
-  SC.hills(c, RW + 40, 110, GROUND, 5, 21, 0.4, YARD.hill[season]);
-  // ground
-  const gg = c.createLinearGradient(0, GROUND - 16, 0, RH); gg.addColorStop(0, YARD.ground[season]); gg.addColorStop(1, SC.dark(YARD.ground[season], 0.12));
-  c.fillStyle = gg; c.fillRect(-4, GROUND - 16, RW + 8, RH - GROUND + 20);
-  c.fillStyle = 'rgba(0,0,0,.08)'; c.fillRect(-4, GROUND - 16, RW + 8, 1.2);
-  if (season !== 3) { const R = SC.rng(13); for (let i = 0; i < 26; i++) { const x = R() * RW, y = GROUND - 12 + R() * 30, s = 1.6 + (y - GROUND + 12) / 30 * 1.6;
-    if (i % 6 === 2 && season < 2) SC.flower(c, x, y - 1, 0.9, ['#ffffff', '#ffb3c8', '#fff1a0'][i % 3]); else SC.tuft(c, x, y, s, 'rgba(30,90,30,.35)'); } }
-  // fence
-  const wood = '#c08f5c';
-  for (const yy of [GROUND - 31, GROUND - 23]) SC.depth(c, () => { c.beginPath(); c.roundRect(80, yy, RW - 76, 2.6, 1.3); }, wood, 1, 0.3);
-  for (let x = 84; x < RW; x += 16) SC.depth(c, () => { c.beginPath(); c.roundRect(x, GROUND - 36, 3.6, 24, [1.8, 1.8, 0.6, 0.6]); }, wood, 1, 0.3);
-  if (season === 3) { c.fillStyle = '#ffffff'; for (let x = 84; x < RW; x += 16) { c.beginPath(); c.ellipse(x + 1.8, GROUND - 36, 2.6, 1.3, 0, 0, 7); c.fill(); } c.fillRect(80, GROUND - 31.8, RW - 76, 1); }
-  // tree
-  SC.depth(c, () => { c.beginPath(); c.moveTo(213, GROUND - 10); c.lineTo(214.5, GROUND - 52); c.lineTo(219.5, GROUND - 52); c.lineTo(221, GROUND - 10); c.closePath(); }, '#7a4f2e', 1, 0.3);
-  const leaf = YARD.leaf[season], crown = [[0, -2, 10], [-9, 4, 8], [9, 4, 8.5], [-4, 9, 8], [5, 10, 7.5]];
-  if (leaf) { SC.depth(c, () => SC.blob(c, 217, GROUND - 64, crown), leaf, 2.2, 0.28);
-    c.fillStyle = 'rgba(255,255,255,.28)'; c.beginPath(); c.arc(212, GROUND - 69, 4, 0, 7); c.fill();
-    if (season === 0) { const R = SC.rng(4); c.fillStyle = '#ffc6dc'; for (let i = 0; i < 12; i++) { c.beginPath(); c.arc(203 + R() * 28, GROUND - 74 + R() * 22, 1.1, 0, 7); c.fill(); } }
-    if (season === 2) { const R = SC.rng(6); c.fillStyle = '#e8a33c'; for (let i = 0; i < 5; i++) { const fx = 200 + ((t / 30 + i * 47) % 50), fy = GROUND - 60 + ((t / 18 + i * 31) % 50); c.beginPath(); c.ellipse(fx, fy, 1.4, 0.8, t / 300 + i, 0, 7); c.fill(); } } }
-  else { c.strokeStyle = '#7a4f2e'; c.lineCap = 'round'; c.lineWidth = 2; c.beginPath(); c.moveTo(217, GROUND - 50); c.lineTo(208, GROUND - 62); c.moveTo(217, GROUND - 52); c.lineTo(226, GROUND - 66); c.moveTo(217, GROUND - 50); c.lineTo(218, GROUND - 68); c.stroke();
-    c.strokeStyle = '#ffffff'; c.lineWidth = 1.2; c.beginPath(); c.moveTo(208, GROUND - 63); c.lineTo(213, GROUND - 57); c.moveTo(226, GROUND - 67); c.lineTo(221, GROUND - 61); c.stroke(); }
-  if (season === 3) { c.fillStyle = '#ffffff'; for (let i = 0; i < 26; i++) { const x = (i * 41 + t / 40) % RW, y = top + (i * 23 + t / 25) % (GROUND - top); c.globalAlpha = 0.85; c.beginPath(); c.arc(x, y, 0.7 + (i % 3) * 0.25, 0, 7); c.fill(); } c.globalAlpha = 1; }
-  if (!s.bg) { yardHut(c, s, night); yardTala(c, t); }
+    const d = t / 260 - L * 0.15, wrap = vw + 80; SC.cloud(c, ((40 + d) % wrap + wrap) % wrap - 40, G - 120, 9, 0.95); SC.cloud(c, ((150 + d * 0.6) % wrap + wrap) % wrap - 40, G - 96, 6.5, 0.8); }
+  c.save(); c.translate(-L * 0.25 % 600, 0); SC.hills(c, vw + 640, G - 54, G, 6, 30, 2, YARD.far[season]); c.restore();
+  c.save(); c.translate(-L * 0.5 % 400, 0); SC.hills(c, vw + 440, G - 40, G, 5, 21, 0.4, YARD.hill[season]); c.restore();
+  // the world, zoomed about the ground line
+  c.setTransform(k * Z, 0, 0, k * Z, -L * Z * k, (G - GROUND * Z) * k);
+  const x0 = RANCH_W0() - 20, x1 = RANCH_W1() + 20;
+  const gg = c.createLinearGradient(0, GROUND - 16, 0, GROUND + 40); gg.addColorStop(0, YARD.ground[season]); gg.addColorStop(1, SC.dark(YARD.ground[season], 0.12));
+  c.fillStyle = gg; c.fillRect(x0, GROUND - 16, x1 - x0, 200);
+  c.fillStyle = 'rgba(0,0,0,.08)'; c.fillRect(x0, GROUND - 16, x1 - x0, 1.2);
+  // a dirt path along the whole ranch
+  c.fillStyle = season === 3 ? '#d9dfe6' : '#d9b77e'; c.beginPath(); c.moveTo(x0, GROUND - 2);
+  for (let X = x0; X <= x1; X += 16) c.lineTo(X, GROUND - 2 + Math.sin(X / 60) * 1.5); c.lineTo(x1, GROUND + 9); c.lineTo(x0, GROUND + 9); c.closePath(); c.fill();
+  if (season !== 3) { const R = SC.rng(13); for (let i = 0; i < 70; i++) { const x = x0 + R() * (x1 - x0), y = GROUND - 12 + R() * 30, s2 = 1.6 + (y - GROUND + 12) / 30 * 1.6;
+    if (y > GROUND - 4 && y < GROUND + 10) continue;
+    if (i % 6 === 2 && season < 2) SC.flower(c, x, y - 1, 0.9, ['#ffffff', '#ffb3c8', '#fff1a0'][i % 3]); else SC.tuft(c, x, y, s2, 'rgba(30,90,30,.35)'); } }
+  ranchBarn(c, -RW / 2, season, night, s);
+  ranchYard(c, t, season, s);
+  ranchTraining(c, RW, season);
+  if (season === 3) { c.setTransform(k, 0, 0, k, 0, 0); c.fillStyle = '#ffffff'; for (let i = 0; i < 30; i++) { const x = ((i * 41 + t / 40 - L * 0.4) % vw + vw) % vw, y = (i * 23 + t / 25) % G; c.globalAlpha = 0.85; c.beginPath(); c.arc(x, y, 0.7 + (i % 3) * 0.25, 0, 7); c.fill(); } c.globalAlpha = 1; }
   const ch = document.getElementById('r-chibi'); if (ch) ch.style.filter = night ? 'brightness(.8) saturate(.88)' : '';
-  if (night || dusk) { const tg = c.createLinearGradient(0, 80, 0, 100), tc = night ? '18,24,72' : '255,120,70', ta = night ? 0.42 : 0.12;
-    tg.addColorStop(0, `rgba(${tc},0)`); tg.addColorStop(1, `rgba(${tc},${ta})`); c.fillStyle = tg; c.fillRect(-4, 80, RW + 8, RH - 76); }
-  if (night && !s.bg) { const x = 4, top = GROUND - 40, hg = c.createRadialGradient(x + 7.5, top + 23.5, 1, x + 7.5, top + 23.5, 13);
-    hg.addColorStop(0, 'rgba(255,214,120,.55)'); hg.addColorStop(1, 'rgba(255,214,120,0)'); c.fillStyle = hg; c.fillRect(x - 6, top + 10, 28, 28);
-    c.fillStyle = '#ffd877'; c.beginPath(); c.roundRect(x + 3.5, top + 20, 8, 7, 1.5); c.fill(); }
+  if (night || dusk) { c.setTransform(k, 0, 0, k, 0, 0); const tg = c.createLinearGradient(0, G - 70, 0, G - 40), tc = night ? '18,24,72' : '255,120,70', ta = night ? 0.42 : 0.12;
+    tg.addColorStop(0, `rgba(${tc},0)`); tg.addColorStop(1, `rgba(${tc},${ta})`); c.fillStyle = tg; c.fillRect(0, G - 70, vw, vh); }
+  if (night) { c.setTransform(k * Z, 0, 0, k * Z, -L * Z * k, (G - GROUND * Z) * k); barnWindows(c, -RW / 2, true); }
   return true;
 }
-function yardHut(c, s, night) {
-  const x = 4, w = 40, top = GROUND - 40;
-  SC.depth(c, () => { c.beginPath(); c.roundRect(x, top + 12, w, 28, 2); }, '#c98b57', 1.5, 0.25);
-  c.fillStyle = 'rgba(0,0,0,.08)'; for (let y = top + 17; y < GROUND - 2; y += 5) c.fillRect(x + 1, y, w - 2, 0.8);
-  SC.depth(c, () => { c.beginPath(); c.moveTo(x - 4, top + 14); c.quadraticCurveTo(x + w / 2, top - 6, x + w + 4, top + 14); c.lineTo(x + w + 4, top + 16); c.lineTo(x - 4, top + 16); c.closePath(); }, '#b24e3a', 2, 0.3);
-  c.fillStyle = 'rgba(255,255,255,.22)'; c.beginPath(); c.ellipse(x + 12, top + 6, 6, 1.6, -0.35, 0, 7); c.fill();
-  SC.depth(c, () => { c.beginPath(); c.roundRect(x + 14, top + 22, 12, 18, [3, 3, 0, 0]); }, s.hidden ? '#5a3a28' : '#5b3824', 0, 0);
-  c.fillStyle = '#e8c070'; c.beginPath(); c.arc(x + 23.5, top + 32, 0.9, 0, 7); c.fill();
-  const win = night ? '#ffd877' : '#bfe4ff';
-  SC.depth(c, () => { c.beginPath(); c.roundRect(x + 3.5, top + 20, 8, 7, 1.5); }, win, 1, 0.3);
-  // bowl
-  SC.depth(c, () => { c.beginPath(); c.moveTo(BOWLX, GROUND - 4.5); c.lineTo(BOWLX + 12, GROUND - 4.5); c.quadraticCurveTo(BOWLX + 11, GROUND, BOWLX + 6, GROUND); c.quadraticCurveTo(BOWLX + 1, GROUND, BOWLX, GROUND - 4.5); c.closePath(); }, '#e0533f', 1, 0.3);
-  const bowl = s.props.find(p => p.k === 'bowl');
-  if (bowl && bowl.food) { c.fillStyle = bowl.food; c.beginPath(); c.ellipse(BOWLX + 6, GROUND - 4.8, 5.4, 1.8, 0, 0, 7); c.fill(); }
-  c.fillStyle = 'rgba(255,255,255,.35)'; c.beginPath(); c.ellipse(BOWLX + 3.5, GROUND - 3, 1.6, 0.7, 0, 0, 7); c.fill();
+/* the barn: 2.3 m doors a Mega walks through, a hay loft, hay bales and a water trough */
+const BARN = { w: 190, h: 196, door: 104 };
+function barnWindows(c, cx, night) {
+  const y = GROUND - 162; c.fillStyle = night ? '#ffd877' : '#f2ead6';
+  c.beginPath(); c.roundRect(cx - 20, y, 40, 28, 4); c.fill();
+  if (night) { const hg = c.createRadialGradient(cx, y + 14, 2, cx, y + 14, 46); hg.addColorStop(0, 'rgba(255,214,120,.4)'); hg.addColorStop(1, 'rgba(255,214,120,0)'); c.fillStyle = hg; c.fillRect(cx - 50, y - 34, 100, 96);
+    c.fillStyle = 'rgba(255,214,120,.25)'; c.beginPath(); c.moveTo(cx - 44, GROUND); c.lineTo(cx - 34, GROUND - BARN.door + 4); c.lineTo(cx + 34, GROUND - BARN.door + 4); c.lineTo(cx + 44, GROUND); c.closePath(); c.fill(); }
 }
-/* Tala, the ranch assistant: a small chibi person standing by the hut */
-function yardTala(c, t) {
-  const x = HELPX + 4, y = GROUND, b = Math.sin(t / 420) * 0.35;
-  c.fillStyle = 'rgba(0,0,0,.16)'; c.beginPath(); c.ellipse(x, y, 5, 1.2, 0, 0, 7); c.fill();
-  c.strokeStyle = '#2f2a3a'; c.lineCap = 'round'; c.lineWidth = 2; c.beginPath(); c.moveTo(x - 1.6, y - 6); c.lineTo(x - 1.8, y - 0.8); c.moveTo(x + 1.6, y - 6); c.lineTo(x + 1.8, y - 0.8); c.stroke();
-  SC.depth(c, () => { c.beginPath(); c.roundRect(x - 4.2, y - 14 + b, 8.4, 9, 3); }, '#4a86d8', 1, 0.3);
-  c.strokeStyle = '#f2c68c'; c.lineWidth = 1.8; c.beginPath(); c.moveTo(x - 4, y - 12 + b); c.lineTo(x - 5.4, y - 7.5 + b); c.moveTo(x + 4, y - 12 + b); c.lineTo(x + 5.4, y - 7.5 + b); c.stroke();
-  SC.depth(c, () => { c.beginPath(); c.arc(x, y - 19 + b, 5.6, 0, 7); }, '#f6cf98', 1, 0.25);
-  c.fillStyle = '#4a2c1a'; c.beginPath(); c.arc(x, y - 20.2 + b, 5.9, Math.PI * 1.02, Math.PI * 1.98); c.closePath(); c.fill();
-  c.beginPath(); c.ellipse(x + 4.6, y - 18 + b, 1.6, 3.4, -0.3, 0, 7); c.fill();
-  c.fillStyle = '#2a1e2e'; c.beginPath(); c.arc(x - 1.9, y - 18.2 + b, 0.85, 0, 7); c.arc(x + 1.9, y - 18.2 + b, 0.85, 0, 7); c.fill();
-  c.fillStyle = 'rgba(255,120,140,.45)'; c.beginPath(); c.arc(x - 3.3, y - 16.6 + b, 1, 0, 7); c.arc(x + 3.3, y - 16.6 + b, 1, 0, 7); c.fill();
+function ranchBarn(c, cx, season, night, s) {
+  const w = BARN.w, h = BARN.h, x = cx - w / 2, top = GROUND - h, red = '#c4473a';
+  SC.depth(c, () => { c.beginPath(); c.moveTo(x, GROUND); c.lineTo(x, top + 64); c.lineTo(x + 26, top + 22); c.lineTo(cx, top + 4); c.lineTo(x + w - 26, top + 22); c.lineTo(x + w, top + 64); c.lineTo(x + w, GROUND); c.closePath(); }, red, 3, 0.3);
+  c.fillStyle = 'rgba(0,0,0,.07)'; for (let i = 12; i < w; i += 12) c.fillRect(x + i, top + 30, 1.4, h - 30);
+  SC.depth(c, () => { c.beginPath(); c.moveTo(x - 10, top + 66); c.lineTo(x + 22, top + 16); c.lineTo(cx, top - 6); c.lineTo(x + w - 22, top + 16); c.lineTo(x + w + 10, top + 66);
+    c.lineTo(x + w, top + 70); c.lineTo(x + w - 28, top + 28); c.lineTo(cx, top + 10); c.lineTo(x + 28, top + 28); c.lineTo(x, top + 70); c.closePath(); }, season === 3 ? '#eef3f8' : '#6a4a3a', 2.5, 0.3);
+  barnWindows(c, cx, false);
+  // the doorway and open doors
+  const dw = 76, dh = BARN.door, dx = cx - dw / 2;
+  c.fillStyle = '#3a2416'; c.beginPath(); c.roundRect(dx, GROUND - dh, dw, dh, [6, 6, 0, 0]); c.fill();
+  c.fillStyle = '#e7c46a'; c.beginPath(); c.ellipse(dx + 18, GROUND - 4, 16, 6, 0, 0, 7); c.ellipse(dx + 52, GROUND - 3, 14, 5, 0, 0, 7); c.fill();
+  for (const [ex, dir] of [[dx, -1], [dx + dw, 1]]) { SC.depth(c, () => { c.beginPath(); c.moveTo(ex, GROUND - dh); c.lineTo(ex + dir * 22, GROUND - dh + 6); c.lineTo(ex + dir * 22, GROUND + 2); c.lineTo(ex, GROUND); c.closePath(); }, '#ece4d0', 1.5, 0.3);
+    c.strokeStyle = red; c.lineWidth = 3.5; c.beginPath(); c.moveTo(ex, GROUND - dh + 3); c.lineTo(ex + dir * 22, GROUND - 4); c.moveTo(ex + dir * 22, GROUND - dh + 9); c.lineTo(ex, GROUND - 2); c.stroke(); }
+  c.strokeStyle = '#f2ead6'; c.lineWidth = 4; c.strokeRect(dx, GROUND - dh, dw, dh);
+  // hay bales and a trough beside it
+  for (const [bx, by] of [[x + w + 18, 0], [x + w + 40, 0], [x + w + 29, -16]]) { SC.depth(c, () => { c.beginPath(); c.roundRect(bx - 11, GROUND - 16 + by, 22, 16, 4); }, '#e2bf62', 1.5, 0.25);
+    c.strokeStyle = 'rgba(140,100,30,.4)'; c.lineWidth = 1; c.beginPath(); c.moveTo(bx - 4, GROUND - 16 + by); c.lineTo(bx - 4, GROUND + by); c.moveTo(bx + 4, GROUND - 16 + by); c.lineTo(bx + 4, GROUND + by); c.stroke(); }
+  SC.depth(c, () => { c.beginPath(); c.roundRect(x - 52, GROUND - 14, 38, 14, [2, 2, 5, 5]); }, '#8a6a4a', 1.5, 0.3);
+  c.fillStyle = season === 3 ? '#dff1ff' : '#6fc3ef'; c.beginPath(); c.roundRect(x - 49, GROUND - 13, 32, 4, 2); c.fill();
+}
+/* the yard: fence, tree, food bowl and the toy box (balls and snacks come from here) */
+function ranchYard(c, t, season, s) {
+  const wood = '#c08f5c';
+  for (const yy of [GROUND - 42, GROUND - 24]) SC.depth(c, () => { c.beginPath(); c.roundRect(84, yy, RW - 30, 3.4, 1.7); }, wood, 1.2, 0.3);
+  for (let x = 88; x < RW + 60; x += 22) SC.depth(c, () => { c.beginPath(); c.roundRect(x, GROUND - 48, 4.5, 46, [2.2, 2.2, 0.6, 0.6]); }, wood, 1.2, 0.3);
+  if (season === 3) { c.fillStyle = '#ffffff'; for (let x = 88; x < RW + 60; x += 22) { c.beginPath(); c.ellipse(x + 2.2, GROUND - 48, 3.2, 1.6, 0, 0, 7); c.fill(); } c.fillRect(84, GROUND - 42.8, RW - 30, 1.2); }
+  // tree, about 3 m
+  const tx = 214;
+  SC.depth(c, () => { c.beginPath(); c.moveTo(tx - 6, GROUND - 4); c.lineTo(tx - 4, GROUND - 100); c.lineTo(tx + 4, GROUND - 100); c.lineTo(tx + 6, GROUND - 4); c.closePath(); }, '#7a4f2e', 1.5, 0.3);
+  const leaf = YARD.leaf[season], crown = [[0, -4, 22], [-20, 8, 17], [20, 8, 18], [-9, 20, 17], [10, 22, 16]].map(([a, b, r]) => [a, b, r]);
+  if (leaf) { SC.depth(c, () => SC.blob(c, tx, GROUND - 124, crown), leaf, 3.5, 0.28);
+    c.fillStyle = 'rgba(255,255,255,.26)'; c.beginPath(); c.arc(tx - 9, GROUND - 134, 7, 0, 7); c.fill();
+    if (season === 0) { const R = SC.rng(4); c.fillStyle = '#ffc6dc'; for (let i = 0; i < 16; i++) { c.beginPath(); c.arc(tx - 30 + R() * 60, GROUND - 146 + R() * 44, 1.8, 0, 7); c.fill(); } }
+    if (season === 2) { c.fillStyle = '#e8a33c'; for (let i = 0; i < 6; i++) { const fx = tx - 30 + ((t / 30 + i * 47) % 80), fy = GROUND - 110 + ((t / 18 + i * 31) % 110); c.beginPath(); c.ellipse(fx, fy, 2, 1.1, t / 300 + i, 0, 7); c.fill(); } } }
+  else { c.strokeStyle = '#7a4f2e'; c.lineCap = 'round'; c.lineWidth = 3.5; c.beginPath(); c.moveTo(tx, GROUND - 96); c.lineTo(tx - 18, GROUND - 124); c.moveTo(tx, GROUND - 100); c.lineTo(tx + 20, GROUND - 130); c.moveTo(tx, GROUND - 98); c.lineTo(tx + 2, GROUND - 136); c.stroke();
+    c.strokeStyle = '#ffffff'; c.lineWidth = 2; c.beginPath(); c.moveTo(tx - 18, GROUND - 125); c.lineTo(tx - 9, GROUND - 112); c.moveTo(tx + 20, GROUND - 131); c.lineTo(tx + 10, GROUND - 117); c.stroke(); }
+  // food bowl
+  SC.depth(c, () => { c.beginPath(); c.moveTo(BOWLX, GROUND - 5); c.lineTo(BOWLX + 13, GROUND - 5); c.quadraticCurveTo(BOWLX + 12, GROUND, BOWLX + 6.5, GROUND); c.quadraticCurveTo(BOWLX + 1, GROUND, BOWLX, GROUND - 5); c.closePath(); }, '#e0533f', 1, 0.3);
+  const bowl = s.props.find(p => p.k === 'bowl');
+  if (bowl && bowl.food) { c.fillStyle = bowl.food; c.beginPath(); c.ellipse(BOWLX + 6.5, GROUND - 5.3, 5.8, 1.9, 0, 0, 7); c.fill(); }
+  c.fillStyle = 'rgba(255,255,255,.35)'; c.beginPath(); c.ellipse(BOWLX + 3.5, GROUND - 3, 1.6, 0.7, 0, 0, 7); c.fill();
+  // toy box where Tala used to stand
+  const bx = HELPX - 4;
+  SC.depth(c, () => { c.beginPath(); c.roundRect(bx - 12, GROUND - 18, 24, 18, 3); }, '#d39a5a', 1.5, 0.28);
+  c.fillStyle = 'rgba(0,0,0,.1)'; c.fillRect(bx - 12, GROUND - 12, 24, 1.2);
+  c.fillStyle = '#ffd23f'; c.beginPath(); c.arc(bx - 4, GROUND - 19, 4.5, Math.PI, 0); c.fill(); c.fillStyle = '#4aa3ff'; c.beginPath(); c.arc(bx + 5, GROUND - 19, 3.5, Math.PI, 0); c.fill();
+}
+/* the training ground: sand, posts, a boulder, a hurdle, a target and the ball machine, then the road to town */
+function ranchTraining(c, X, season) {
+  c.fillStyle = season === 3 ? '#e6e9ee' : '#e0c38a'; c.beginPath(); c.ellipse(X + RW / 2, GROUND + 2, RW * 0.46, 10, 0, 0, 7); c.fill();
+  const bm = X + HELPX;                                  // ball machine, where drills throw balls from
+  SC.depth(c, () => { c.beginPath(); c.roundRect(bm - 10, GROUND - 22, 20, 18, 5); }, '#4a86d8', 1.5, 0.3);
+  c.fillStyle = '#2f3a52'; c.beginPath(); c.roundRect(bm + 4, GROUND - 24, 12, 7, 3); c.fill();
+  c.strokeStyle = '#2f3a52'; c.lineWidth = 2.5; c.lineCap = 'round'; c.beginPath(); c.moveTo(bm - 6, GROUND - 4); c.lineTo(bm - 8, GROUND); c.moveTo(bm + 6, GROUND - 4); c.lineTo(bm + 8, GROUND); c.stroke();
+  for (const [px, h] of [[X + 18, 34], [X + 30, 24], [X + 42, 42]]) SC.depth(c, () => { c.beginPath(); c.roundRect(px, GROUND - h, 9, h + 2, 4); }, '#a8774a', 1.5, 0.3);
+  c.strokeStyle = '#f2ead6'; c.lineWidth = 3; c.beginPath(); c.moveTo(X + 92, GROUND); c.lineTo(X + 92, GROUND - 26); c.moveTo(X + 120, GROUND); c.lineTo(X + 120, GROUND - 26); c.stroke();
+  c.strokeStyle = '#d24f43'; c.lineWidth = 4; c.beginPath(); c.moveTo(X + 90, GROUND - 24); c.lineTo(X + 122, GROUND - 24); c.stroke();
+  const dx = X + 186; c.strokeStyle = '#8a5a32'; c.lineWidth = 3; c.beginPath(); c.moveTo(dx, GROUND); c.lineTo(dx, GROUND - 60); c.moveTo(dx - 14, GROUND - 44); c.lineTo(dx + 14, GROUND - 44); c.stroke();
+  SC.depth(c, () => { c.beginPath(); c.ellipse(dx, GROUND - 52, 12, 16, 0, 0, 7); }, '#e7c46a', 2, 0.3);
+  c.fillStyle = '#d24f43'; c.beginPath(); c.arc(dx, GROUND - 52, 6, 0, 7); c.fill(); c.fillStyle = '#fff'; c.beginPath(); c.arc(dx, GROUND - 52, 2.8, 0, 7); c.fill();
+  // signpost to town
+  const sx = X + RW - 16; c.fillStyle = '#8a5a32'; c.fillRect(sx - 2, GROUND - 40, 4, 40);
+  SC.depth(c, () => { c.beginPath(); c.moveTo(sx - 22, GROUND - 46); c.lineTo(sx + 16, GROUND - 46); c.lineTo(sx + 24, GROUND - 38); c.lineTo(sx + 16, GROUND - 30); c.lineTo(sx - 22, GROUND - 30); c.closePath(); }, '#c99a62', 1.5, 0.3);
+  c.fillStyle = '#4a3220'; c.font = '700 8px system-ui'; c.textAlign = 'center'; c.fillText('Town', sx - 2, GROUND - 35);
+}
+
+/* ---------- Tala ---------- */
+/* her head, about 70 units across, centred on (0,0); faces: happy, talk, worried, surprised */
+function talaHead(x, face = 'talk') {
+  const hair = '#5a3420', hairD = '#3e2214';
+  SC.depth(x, () => { x.beginPath(); x.ellipse(30, 6, 11, 21, -0.35, 0, 7); }, hair, 3, 0.3);
+  x.fillStyle = '#d24f43'; x.beginPath(); x.roundRect(22, -14, 10, 6, 3); x.fill();
+  SC.depth(x, () => { x.beginPath(); x.ellipse(0, 4, 31, 30, 0, 0, 7); }, '#f8d3a3', 3, 0.22);
+  x.fillStyle = hair; x.beginPath(); x.moveTo(-33, 10); x.bezierCurveTo(-36, -30, -14, -36, 0, -35); x.bezierCurveTo(16, -36, 36, -30, 33, 10);
+  x.quadraticCurveTo(30, -6, 22, -12); x.quadraticCurveTo(16, -2, 8, -6); x.quadraticCurveTo(2, -14, -4, -6); x.quadraticCurveTo(-12, 0, -16, -10); x.quadraticCurveTo(-26, -4, -33, 10); x.fill();
+  x.fillStyle = 'rgba(255,255,255,.22)'; x.beginPath(); x.ellipse(-12, -24, 10, 3.5, -0.35, 0, 7); x.fill();
+  x.fillStyle = hairD; x.beginPath(); x.ellipse(-30, 14, 4, 10, 0.1, 0, 7); x.ellipse(30, 14, 4, 10, -0.1, 0, 7); x.fill();
+  const ey = 8, ex = 12;
+  if (face === 'happy') { x.strokeStyle = '#2a1e2e'; x.lineWidth = 3.2; x.lineCap = 'round'; for (const s2 of [-1, 1]) { x.beginPath(); x.arc(s2 * ex, ey + 3, 6, Math.PI * 1.15, Math.PI * 1.85); x.stroke(); } }
+  else { const ry = face === 'surprised' ? 8.5 : 7.5;
+    for (const s2 of [-1, 1]) { x.fillStyle = '#2a1e2e'; x.beginPath(); x.ellipse(s2 * ex, ey, 5.6, ry, 0, 0, 7); x.fill();
+      x.fillStyle = '#fff'; x.beginPath(); x.arc(s2 * ex - 1.8, ey - 3, 2.3, 0, 7); x.fill(); x.beginPath(); x.arc(s2 * ex + 2, ey + 2.5, 1.1, 0, 7); x.fill(); } }
+  x.strokeStyle = hairD; x.lineWidth = 2.4; x.lineCap = 'round';
+  const br = face === 'worried' ? [[-17, -4, -7, -7], [17, -4, 7, -7]] : face === 'surprised' ? [[-17, -8, -7, -9], [17, -8, 7, -9]] : [[-17, -5, -7, -5], [17, -5, 7, -5]];
+  for (const [a, b, c2, e] of br) { x.beginPath(); x.moveTo(a, b); x.lineTo(c2, e); x.stroke(); }
+  x.fillStyle = 'rgba(255,120,140,.42)'; x.beginPath(); x.ellipse(-20, 18, 5, 3, 0, 0, 7); x.ellipse(20, 18, 5, 3, 0, 0, 7); x.fill();
+  x.fillStyle = '#8a3a3a'; x.strokeStyle = '#8a3a3a'; x.lineWidth = 2.2;
+  if (face === 'happy') { x.beginPath(); x.moveTo(-6, 20); x.quadraticCurveTo(0, 28, 6, 20); x.closePath(); x.fill(); }
+  else if (face === 'talk') { x.beginPath(); x.ellipse(0, 22, 4.5, 3.4, 0, 0, 7); x.fill(); }
+  else if (face === 'worried') { x.beginPath(); x.moveTo(-5, 24); x.quadraticCurveTo(0, 20, 5, 24); x.stroke(); }
+  else if (face === 'surprised') { x.beginPath(); x.ellipse(0, 23, 3.5, 4.5, 0, 0, 7); x.fill(); }
+}
+/* her portrait: head and shoulders in a square canvas */
+function talaPortrait(cv, face) {
+  const dpr = devicePixelRatio || 1, S = (cv.clientWidth || 64) * dpr; cv.width = S; cv.height = S;
+  const x = cv.getContext('2d'); x.clearRect(0, 0, S, S);
+  x.fillStyle = '#cfe7f6'; x.fillRect(0, 0, S, S); x.fillStyle = '#bfe0a8'; x.fillRect(0, S * 0.74, S, S);
+  const u = S / 120; x.translate(S / 2, S * 0.5); x.scale(u, u);
+  x.fillStyle = '#f2c68c'; x.fillRect(-8, 24, 16, 16);                         // neck, joining head to shoulders
+  SC.depth(x, () => { x.beginPath(); x.roundRect(-38, 34, 76, 60, 22); }, '#4a86d8', 3, 0.3);
+  x.fillStyle = '#e9e2d0'; x.beginPath(); x.moveTo(-14, 34); x.lineTo(0, 52); x.lineTo(14, 34); x.closePath(); x.fill();
+  x.fillStyle = '#d24f43'; x.beginPath(); x.moveTo(-12, 36); x.lineTo(0, 52); x.lineTo(12, 36); x.lineTo(0, 44); x.closePath(); x.fill();
+  x.translate(0, -6); x.scale(1.05, 1.05); talaHead(x, face);
+}
+/* which face fits what she's saying */
+function talaMood(t) {
+  t = String(t || '').replace(/<[^>]*>/g, '');
+  if (/hurt|tired|exhaust|strain|sick|\bcold\b|hates|wasn't happy|flinch|tense|scared|injur|lifespan|no training|lost|fail|cost it|worn/i.test(t)) return 'worried';
+  if (/dug up|wandered in|birthday|Learned|changing|turned into|rival/i.test(t)) return 'surprised';
+  if (/!|love|best|great|good|squeaky|rested|favourite|fun|solid/i.test(t)) return 'happy';
+  return 'talk';
+}
+/* put her portrait into a speech box (the ranch line or a tip) */
+function talaFace(box, text) {
+  if (!box || typeof CHIBI_ART === 'undefined' || !CHIBI_ART) return;
+  let cv = box.querySelector('canvas.tala-pic');
+  if (!cv) { cv = document.createElement('canvas'); cv.className = 'tala-pic'; box.prepend(cv); }
+  box.classList.add('has-pic'); talaPortrait(cv, talaMood(text));
 }

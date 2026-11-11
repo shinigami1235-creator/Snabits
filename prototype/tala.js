@@ -24,6 +24,7 @@ function checkTips(){
   if(!t){ box.style.display="none"; el("r-say").style.display=""; return; }
   box.style.display="block"; el("r-say").style.display="none";
   box.innerHTML=`<div class="tip-who">Tala</div><div>${t[2](s)}</div><div class="tip-acts"><button class="big" id="tip-ok">Got it</button>${t[0]==="welcome"?`<button class="btn2" id="tip-skip">I know how to play</button>`:""}</div>`;
+  if(typeof talaFace==="function") talaFace(box,t[2](s));
   el("tip-ok").onclick=()=>{ PLAYER.tips[t[0]]=true; saveGame(); checkTips(); drawUI(); };
   if(el("tip-skip")) el("tip-skip").onclick=()=>{ PLAYER.tutorialDone=true; saveGame(); box.style.display="none"; el("r-say").style.display=""; drawUI(); };
 }
