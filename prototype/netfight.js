@@ -173,7 +173,7 @@ async function guestTurn(m){
 function netEnd(){
   const f=B.fight, won=f.winner===0, draw=f.winner===null; LN.inFight=false; nWakeLock(false);
   $("b-btns").innerHTML="";
-  $("b-result").innerHTML=`<h2>${draw?"Draw":won?"You win":"You lose"}</h2><p>${f.judged?"The judges called it after "+f.turn+" turns.":`${won?f.p[1].name:f.p[0].name} broke into pixels in ${f.turn} turns.`}</p><div class="brow"><button class="big" id="b-room">Back to the room</button><button class="small" id="b-leave">Leave</button></div>`;
+  $("b-result").innerHTML=`<h2>${draw?"Draw":won?"You win":"You lose"}</h2><p>${f.judged?"The judges called it after "+f.turn+" turns.":`${won?f.p[1].name:f.p[0].name} fainted in ${f.turn} turns.`}</p><div class="brow"><button class="big" id="b-room">Back to the room</button><button class="small" id="b-leave">Leave</button></div>`;
   $("b-result").style.display="block"; $("b-fight").classList.add("done");
   el("b-room").onclick=()=>{ $("battle").style.display="none"; B=null; LN.host?hostWait():guestWait(); };
   el("b-leave").onclick=()=>{ $("battle").style.display="none"; B=null; netLeave(); openRooms(); };

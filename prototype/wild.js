@@ -68,7 +68,7 @@ function wildCard(res,card){
       ${o.shiny?`<p class="abil"><b class="hid">Rare colours.</b> It pays double.</p>`:""}
       <p class="abil"><b>${o.m.ability[0]}</b> ${o.m.ability[1]}.</p>
       <p>Skills: ${o.skills.join(", ")}.</p></div>`;
-  paint(document.getElementById("wild-spr"),o.fm.grid,o.fm.pal,1);
+  paintMon(document.getElementById("wild-spr"),o.fm,{grid:o.fm.grid,stage:o.fm.stage||(o.fm.grid.length>20?"Byte":"Bit")});
   document.getElementById("wild-go").onclick=()=>wildFight();
   document.getElementById("wild-run").onclick=()=>{ WILD.foe=null; if(typeof wildRescan==="function") wildRescan(); };
   if(typeof musWant==="function") musWant();

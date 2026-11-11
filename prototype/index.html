@@ -190,9 +190,9 @@ function render(full){
         <div class="evo-peek"><canvas id="byte" class="mon-tile sm"></canvas><p>Its Byte form, once it evolves.</p></div>
         <p class="why">${why} The main colour sits ${m.band==="middle"?"in the middle":"toward the "+m.band} and is ${m.shape}, which makes a ${m.family}. Drag the circle to try another spot.</p>
       </div>`;
-    paint(document.getElementById("bit"),m.grid,m.pal,1);
+    paintMon(document.getElementById("bit"),m,{stage:"Bit"});
     lastMon=m; const fb=document.getElementById("fightbtn"); if(fb) fb.onclick=()=>openBattle(lastMon); const rb=document.getElementById("raisebtn"); if(rb) rb.onclick=()=>openRanch(lastMon);
-    paint(document.getElementById("byte"),scale2x(m.grid),m.pal,1);
+    paintMon(document.getElementById("byte"),m,{stage:"Byte",grid:scale2x(m.grid)});
     if(typeof obSheet==="function") obSheet(m);
   }catch(e){fail(e);}
 }
@@ -259,7 +259,7 @@ function setWildUI(on){
   if(typeof musWant==="function") musWant();
 }
 function wildRescan(){ if(stream){ aim={x:.5,y:.5}; placeRing(); setMode("live"); } else setMode(still.width?"aim":"start"); }
-try{ const mm=randomOpponent(Math.random); paint(document.getElementById("msgmon"),mm.grid,mm.pal,1); }catch(e){}
+try{ const mm=randomOpponent(Math.random); paintMon(document.getElementById("msgmon"),mm,{stage:"Bit"}); }catch(e){}
 if(/(^#|&)test(&|$)/.test(location.hash)) startCam(); else showTitle();
 </script>
 </body>

@@ -39,7 +39,7 @@ const CHIBI = (() => {
     effort: { arm: [[12, 4, 8, 12], [12, 4, 8, 12]], feet: [-5, 0, 5, 0], eyes: 'hurt', open: 0.15, sx: 1.08, sy: 0.9, extra: 'sweat' },
     lean:   { arm: [REST, [10, 10, 4, 18]], feet: [-2, 0, 2, 0], eyes: 'open', open: 0, tilt: -9, lean: -3 },
     hover:  { arm: [[16, -2, 24, -4], [16, -2, 24, -4]], feet: [-2, -6, 2, -6], eyes: 'happy', open: 0.3, lift: -14 },
-    hurt:   { arm: [[8, 2, 2, -12], [8, 2, 2, -12]], feet: [-2, 0, 2, 0], eyes: 'hurt', open: 0.15, tilt: -5, sx: 1.04, sy: 0.95, front: 1, extra: 'sweat' },
+    hurt:   { arm: [[8, 2, 2, -12], [8, 2, 2, -12]], feet: [-2, 0, 2, 0], eyes: 'hurt', open: 0, ouch: 1, tilt: -5, sx: 1.04, sy: 0.95, front: 1, extra: 'sweat' },
     // battle
     guard:  { arm: [[8, 4, -16, -2], [8, 4, -16, 4]], feet: [-4, 0, 4, 0], eyes: 'fierce', open: 0, sy: 0.95, front: 1 },
     crouch: { arm: [[10, 10, 14, 16], [10, 10, 14, 16]], feet: [-5, 0, 5, 0], eyes: 'fierce', open: 0.2, sx: 1.1, sy: 0.84, lean: -5, tilt: -4 },
@@ -54,10 +54,10 @@ const CHIBI = (() => {
     swipedown: { arm: [[18, 4, 30, 16], [18, 4, 30, 16]], feet: [-5, 0, 5, -3], eyes: 'fierce', open: 0.75, tilt: 11, lean: 8, front: 1 },
     cast:   { arm: [[14, -14, 22, -24], [14, -14, 22, -24]], feet: [-3, 0, 3, 0], eyes: 'shut', open: 0, lift: -6 },
     push:   { arm: [[18, -4, 34, -6], [18, -4, 34, -6]], feet: [-6, 0, 6, 0], eyes: 'fierce', open: 0.35, lean: 7, tilt: 5, front: 1 },
-    float:  { arm: [[14, -10, 20, -22], [14, -10, 20, -22]], feet: [-4, 6, 4, 6], eyes: 'hurt', open: 0.5, extra: 'sweat' },
+    float:  { arm: [[14, -10, 20, -22], [14, -10, 20, -22]], feet: [-4, 6, 4, 6], eyes: 'hurt', open: 0, ouch: 1, extra: 'sweat' },
     dodge:  { arm: [[14, -6, 20, -14], REST], feet: [-6, -3, 2, 0], eyes: 'open', open: 0.3, tilt: -14, lean: -6 },
     attack: { arm: [[18, -2, 30, -6], [18, -2, 30, -6]], feet: [-5, 0, 5, -3], eyes: 'fierce', open: 1, tilt: 7, lean: 8, front: 1 },
-    hit:    { arm: [[16, -8, 24, -18], [16, -8, 24, -18]], feet: [-3, -4, 3, 0], eyes: 'hurt', open: 0.3, tilt: -9, lean: -6, sx: 0.94, sy: 1.04, extra: 'sweat' },
+    hit:    { arm: [[16, -8, 24, -18], [16, -8, 24, -18]], feet: [-3, -4, 3, 0], eyes: 'hurt', open: 0, ouch: 1, tilt: -9, lean: -6, sx: 0.94, sy: 1.04, extra: 'sweat' },
     ko:     { arm: [[14, 14, 22, 18], [14, 14, 22, 18]], feet: [-6, 0, 6, 0], eyes: 'ko', open: 0.2, tilt: 9, sx: 1.1, sy: 0.74, extra: 'stars' }
   };
 
@@ -155,7 +155,7 @@ const CHIBI = (() => {
     c.strokeStyle = rgb(INK); c.lineCap = 'round'; c.lineJoin = 'round'; c.lineWidth = 4.2 * s;
     if (type === 'happy') { c.beginPath(); c.moveTo(-8 * s, 2 * s); c.quadraticCurveTo(0, -9 * s, 8 * s, 2 * s); c.stroke(); }
     else if (type === 'shut') { c.beginPath(); c.moveTo(-8 * s, -1 * s); c.quadraticCurveTo(0, 6 * s, 8 * s, -1 * s); c.stroke(); }
-    else if (type === 'hurt') { const d = side; c.beginPath(); c.moveTo(-6 * s * d, -6 * s); c.lineTo(6 * s * d, 0); c.lineTo(-6 * s * d, 6 * s); c.stroke(); }
+    else if (type === 'hurt') { const d = -side; c.beginPath(); c.moveTo(-6 * s * d, -6 * s); c.lineTo(6 * s * d, 0); c.lineTo(-6 * s * d, 6 * s); c.stroke(); }
     else if (type === 'ko') { c.beginPath(); c.moveTo(-6 * s, -6 * s); c.lineTo(6 * s, 6 * s); c.moveTo(6 * s, -6 * s); c.lineTo(-6 * s, 6 * s); c.stroke(); }
     else if (type === 'dizzy') { c.lineWidth = 2.6 * s; c.beginPath(); for (let a = 0; a < 15; a++) { const r = a * 0.62 * s, an = a * 0.9 * side; a ? c.lineTo(Math.cos(an) * r, Math.sin(an) * r) : c.moveTo(0, 0); } c.stroke(); }
     else if (type === 'tired') { c.fillStyle = rgb(INK); c.beginPath(); c.ellipse(0, 1 * s, 8.6 * s, 9 * s, 0, 0, Math.PI); c.fill();
@@ -230,8 +230,8 @@ const CHIBI = (() => {
     c.translate(P.lean || 0, lift);
     c.translate(100, 176); c.rotate(((P.tilt || 0) + (P.wobble ? Math.sin(t / 160) * 8 : 0)) * Math.PI / 180); c.scale(sx, sy); c.translate(-100, -176);
     if (m.fx) fxBehind(c, m.fx, () => roundBox(c, left, g.top, g.bw, g.bh, st.r), g, body, t);
-    const W = m.worn || {}, feetAt = [];
-    if (W.back) wings(c, g, W.back, t);
+    const W = m.worn || {}, feetAt = [], back = !!m.back;
+    if (W.back && !back) wings(c, g, W.back, t);
     // feet sit behind the body
     const F = P.feet || [0, 0, 0, 0], footLift = [Math.max(0, walk) * -5, Math.max(0, -walk) * -5];
     for (const [i, side] of [[0, -1], [1, 1]]) {
@@ -243,7 +243,7 @@ const CHIBI = (() => {
     if (W.feet === 'Boots') boots(c, feetAt);
     if (horned) horns(c, g, lt(parts, 0.5));
     const shoulderY = g.top + g.bh * 0.56;
-    const armBehind = st.arm && !P.front, arms = () => {
+    const armBehind = st.arm && (!P.front || back), arms = () => {
       arm(c, left + 4, shoulderY, P.arm[0], -1, st, parts, handCol, (m.limbs || {}).armL, t);
       arm(c, left + g.bw - 4, shoulderY, P.arm[1], 1, st, parts, handCol, (m.limbs || {}).armR, t);
     };
@@ -257,14 +257,19 @@ const CHIBI = (() => {
     const E = ELEMENT[m.el];
     if (m.stage === 'Mega' && E) E.pattern(c, g, body);
     const my = g.top + g.bh * 0.62, mw = g.bw * st.mw;
-    if (stout) { c.fillStyle = rgb(lt(body, 0.6)); c.beginPath(); c.ellipse(g.cx, my + g.bh * 0.17, g.bw * 0.36, g.bh * 0.28, 0, 0, 7); c.fill(); }
+    if (stout && !back) { c.fillStyle = rgb(lt(body, 0.6)); c.beginPath(); c.ellipse(g.cx, my + g.bh * 0.17, g.bw * 0.36, g.bh * 0.28, 0, 0, 7); c.fill(); }
     if (m.fx) fxOnBody(c, m.fx, () => roundBox(c, left, g.top, g.bw, g.bh, st.r), g, body, t);
     c.restore();
     // one white highlight arc on the upper left
     c.strokeStyle = 'rgba(255,255,255,.55)'; c.lineWidth = m.stage === 'Bit' ? 4.5 : 5.5; c.lineCap = 'round';
     c.beginPath(); c.moveTo(left + 9, g.top + st.r * 1.05); c.quadraticCurveTo(left + 10, g.top + 9, left + st.r * 1.25, g.top + 7); c.stroke();
-    // face
     const ey = g.top + g.bh * 0.34, ex = g.bw * 0.19, s = st.eye;
+    if (back) {                    // seen from behind: no face, a little tail, and wings and hats on top
+      c.fillStyle = rgb(rim); c.beginPath(); c.arc(g.cx, g.bot - 4, 8.5, 0, 7); c.fill(); c.fillStyle = rgb(lt(body, 0.12)); c.beginPath(); c.arc(g.cx, g.bot - 6, 7.5, 0, 7); c.fill();
+      if (W.back) wings(c, g, W.back, t);
+      if (W.head) hat(c, { head: [g.cx, g.top + 3, g.bw * 0.46] }, W.head, t);
+    } else {
+    // face
     if (E) for (const side of [-1, 1]) E.mark(c, g.cx + side * (g.bw / 2 - 11), ey - 6, s * (m.stage === 'Bit' ? 0.8 : 1), rgba(acc, 0.9));
     c.fillStyle = rgba(BLUSH, 0.7);
     for (const side of [-1, 1]) { c.beginPath(); c.ellipse(g.cx + side * g.bw * 0.31, ey + 13 * s, 7.5 * s, 4.5 * s, 0, 0, 7); c.fill(); }
@@ -276,8 +281,9 @@ const CHIBI = (() => {
         c.save(); c.beginPath(); c.ellipse(x + look[0] * 2.5 * s, ey + look[1] * 2 * s, 9.2 * s, 10.8 * s, 0, 0, 7); c.clip();
         c.beginPath(); c.moveTo(x - 12 * s * side, ey - 14 * s); c.lineTo(x + 12 * s * side, ey - 14 * s); c.lineTo(x + 12 * s * side, ey - 10 * s); c.lineTo(x - 12 * s * side, ey - 4 * s); c.closePath(); c.fill(); c.restore(); }
     }
-    if (P.frown) { c.save(); c.translate(0, my * 2 + mw * 0.2); c.scale(1, -1); mouth(c, g.cx, my, mw * 0.7, 0, st, body); c.restore(); } else mouth(c, g.cx, my, mw, open, st, body);
+    if (P.frown || P.ouch) { c.save(); c.translate(0, my * 2 + mw * 0.2); c.scale(1, -1); mouth(c, g.cx, my, mw * 0.7, 0, st, body); c.restore(); } else mouth(c, g.cx, my, mw, open, st, body);
     wornFront(c, { head: [g.cx, g.top + 3, g.bw * 0.46], eyes: { cx: g.cx, y: ey, ex, s }, mouth: [g.cx, my, s] }, W, t);
+    }
     if (!armBehind && st.arm) arms();
     if (m.fx) fxFront(c, m.fx, () => roundBox(c, left, g.top, g.bw, g.bh, st.r), g, t);
     c.restore();
@@ -535,6 +541,9 @@ const CHIBI = (() => {
   function smallMouth(c, cx, my, s, open, fang, frown) {
     c.strokeStyle = rgb(INK); c.fillStyle = rgb(INK); c.lineCap = 'round'; c.lineWidth = 3.6 * s;
     if (frown) { c.beginPath(); c.moveTo(cx - 6 * s, my + 4 * s); c.quadraticCurveTo(cx, my - 2 * s, cx + 6 * s, my + 4 * s); c.stroke(); return; }
+    if (fang === 'ouch') { roundBox(c, cx - 9 * s, my - 2 * s, 18 * s, 9 * s, 3.5 * s); c.fill();          // gritted teeth
+      c.strokeStyle = '#fff'; c.lineWidth = 1.8 * s; c.lineJoin = 'round'; c.beginPath(); c.moveTo(cx - 7 * s, my + 2.5 * s);
+      for (let k = 1; k <= 6; k++) c.lineTo(cx - 7 * s + k * 14 * s / 6, my + (k % 2 ? 0.5 : 4.5) * s); c.stroke(); return; }
     if (open < 0.2) { c.beginPath(); c.moveTo(cx - 7 * s, my); c.quadraticCurveTo(cx, my + 7 * s, cx + 7 * s, my); c.stroke();
       if (fang) { c.fillStyle = '#fff'; c.beginPath(); c.moveTo(cx + 1.5 * s, my + 2.6 * s); c.lineTo(cx + 6 * s, my + 1.2 * s); c.lineTo(cx + 4.4 * s, my + 6.5 * s); c.closePath(); c.fill(); }
       return; }
@@ -553,7 +562,7 @@ const CHIBI = (() => {
     eye(c, g.cx - ex, ey, s, eyes, -1, look); eye(c, g.cx + ex, ey, s, eyes, 1, look);
     if (eyes === 'fierce') for (const side of [-1, 1]) lid(c, g.cx + side * ex, ey, s, side, look, rgb(o.lidCol || x.body));
     if (o.extraEyes) for (const side of [-1, 1]) eye(c, g.cx + side * g.bw * o.extraEyes, ey - 7 * s, s * 0.45, eyes === 'fierce' ? 'open' : eyes, side, look);
-    smallMouth(c, g.cx, my, s, x.open, x.stage === 'Mega' || o.fang, x.P.frown);
+    smallMouth(c, g.cx, my, s, x.open, x.P.ouch ? 'ouch' : x.stage === 'Mega' || o.fang, x.P.frown);
     if (o.chelicerae) { c.fillStyle = rgb(lt(x.parts, 0.6)); for (const side of [-1, 1]) { c.beginPath(); c.moveTo(g.cx + side * 3 * s, my + 5 * s); c.lineTo(g.cx + side * 8 * s, my + 5 * s); c.lineTo(g.cx + side * 5 * s, my + 11 * s); c.closePath(); c.fill(); } }
     return { my, ey, ex, s, cx: g.cx };
   }
@@ -605,6 +614,11 @@ const CHIBI = (() => {
           limb(c, [hx, g.bot - 6, hx, g.bot + ll * 0.5, hx + x.P.feet[i * 2], 181 - lift], lw, x.parts, mat, x.t);
           blob(c, hx + x.P.feet[i * 2], 182 - lift, by(g.stage, 9, 11, 12), by(g.stage, 5.5, 6.5, 7), x.parts, mat, x.t, 'foot'); x.feet.push([hx + x.P.feet[i * 2], 182 - lift, by(g.stage, 8, 9, 10)]); });
       },
+      backInside(c, g, x) {          // the back of the set: a vented panel and a plug
+        roundBox(c, g.left + g.bw * 0.16, g.top + g.bh * 0.16, g.bw * 0.68, g.bh * 0.6, 10); c.fillStyle = rgb(dk(x.body, 0.12)); c.fill();
+        c.strokeStyle = rgb(dk(x.body, 0.32)); c.lineWidth = 3; c.lineCap = 'round';
+        for (let k = 0; k < 4; k++) { const yy = g.top + g.bh * (0.26 + k * 0.12); c.beginPath(); c.moveTo(g.cx - g.bw * 0.22, yy); c.lineTo(g.cx + g.bw * 0.22, yy); c.stroke(); }
+        c.fillStyle = rgb(x.acc); c.beginPath(); c.arc(g.cx, g.top + g.bh * 0.86, 4.5, 0, 7); c.fill(); },
       inside(c, g, x) { if (g.stage === 'Bit') return;
         roundBox(c, g.left + g.bw * 0.12, g.top + g.bh * 0.12, g.bw * 0.76, g.bh * 0.58, 14); c.fillStyle = rgb(lt(x.body, 0.66)); c.fill();
         c.strokeStyle = rgb(dk(x.body, 0.22)); c.lineWidth = 3; c.stroke();
@@ -632,8 +646,9 @@ const CHIBI = (() => {
           c.fillStyle = rgb(INK); c.beginPath(); c.arc(g.cx + lx, ey + ly, 4 * s, 0, 7); c.fill();
           c.fillStyle = '#fff'; c.beginPath(); c.arc(g.cx + lx + 2.6 * s, ey + ly - 2.8 * s, 2.2 * s, 0, 7); c.fill(); c.beginPath(); c.arc(g.cx + lx - 2.4 * s, ey + ly + 2.6 * s, 1 * s, 0, 7); c.fill();
           c.save(); c.beginPath(); c.ellipse(g.cx, ey, 10.5 * s, 11.5 * s, 0, 0, 7); c.clip(); c.fillStyle = rgb(x.body); c.fillRect(g.cx - 12 * s, ey - 13 * s, 24 * s, 5 * s); c.restore();
-        } else eye(c, g.cx, ey, s, e === 'hurt' ? 'shut' : e, 1, look);
-        smallMouth(c, g.cx, my, by(g.stage, 0.85, 0.95, 1), x.open, g.stage === 'Mega', x.P.frown);
+        } else if (e === 'hurt') { eye(c, g.cx - 7 * s * 0.55, ey, s * 0.6, 'hurt', -1, look); eye(c, g.cx + 7 * s * 0.55, ey, s * 0.6, 'hurt', 1, look); }
+        else eye(c, g.cx, ey, s, e, 1, look);
+        smallMouth(c, g.cx, my, by(g.stage, 0.85, 0.95, 1), x.open, x.P.ouch ? 'ouch' : g.stage === 'Mega', x.P.frown);
         return { my, ey, ex: 0, s: s * 0.55, one: true, cx: g.cx };
       }
     },
@@ -649,6 +664,10 @@ const CHIBI = (() => {
         c.quadraticCurveTo(R - w * 0.02, T + h * 0.8, R - w * 0.22, B);
         c.quadraticCurveTo(g.cx, B + h * 0.1, L + w * 0.22, B);
         c.quadraticCurveTo(L + w * 0.02, T + h * 0.8, L + w * 0.04, T + h * 0.42); c.closePath(); },
+      backInside(c, g, x) {          // the top of the shell: two ridges and a row of bumps
+        c.strokeStyle = rgb(dk(x.body, 0.2)); c.lineWidth = 3; c.lineCap = 'round';
+        for (const k of [-1, 1]) { c.beginPath(); c.moveTo(g.cx + k * g.bw * 0.14, g.top + g.bh * 0.12); c.quadraticCurveTo(g.cx + k * g.bw * 0.26, g.top + g.bh * 0.5, g.cx + k * g.bw * 0.16, g.top + g.bh * 0.9); c.stroke(); }
+        c.fillStyle = rgb(lt(x.body, 0.18)); for (let k = 0; k < 3; k++) { c.beginPath(); c.arc(g.cx, g.top + g.bh * (0.25 + k * 0.22), 5 - k, 0, 7); c.fill(); } },
       inside(c, g, x) { if (g.stage === 'Bit') return;           // the shell's seam and, at Mega, its rim of points
         c.strokeStyle = rgb(dk(x.body, 0.18)); c.lineWidth = 2.6; c.beginPath(); c.moveTo(g.left + g.bw * 0.12, g.top + g.bh * 0.66); c.quadraticCurveTo(g.cx, g.top + g.bh * 0.8, g.left + g.bw * 0.88, g.top + g.bh * 0.66); c.stroke(); },
       front(c, g, x) { if (g.stage !== 'Mega') return;
@@ -681,7 +700,10 @@ const CHIBI = (() => {
     /* a flat body slung between spider legs, four eyes at Mega and no arms */
     Skit: {
       dims: { Bit: [80, 40], Byte: [104, 50], Mega: [126, 58] }, slots: { feet: false }, wingY: 0.05,
-      bottom(st) { return by(st, 168, 166, 164); }, height(st) { return 184 - (this.bottom(st) - this.dims[st][1]) + 6; },
+      bottom(st) { return by(st, 168, 166, 164); },
+      backInside(c, g, x) {          // the marking on a spider's back
+        c.fillStyle = rgb(lt(x.body, 0.3)); c.beginPath(); c.moveTo(g.cx, g.top + g.bh * 0.15); c.lineTo(g.cx + g.bw * 0.12, g.top + g.bh * 0.5); c.lineTo(g.cx, g.top + g.bh * 0.85); c.lineTo(g.cx - g.bw * 0.12, g.top + g.bh * 0.5); c.closePath(); c.fill();
+        c.fillStyle = rgb(x.acc); for (const k of [-1, 1]) { c.beginPath(); c.arc(g.cx + k * g.bw * 0.26, g.top + g.bh * 0.5, 4, 0, 7); c.fill(); } }, height(st) { return 184 - (this.bottom(st) - this.dims[st][1]) + 6; },
       path(c, g) { roundBox(c, g.left, g.top, g.bw, g.bh, g.bh * 0.5); },
       behind(c, g, x) { const n = by(g.stage, 2, 3, 4), lw = by(g.stage, 5, 5, 5.5);
         for (const [side, mat] of [[-1, x.L.legL], [1, x.L.legR]]) for (let k = n - 1; k >= 0; k--) {
@@ -835,7 +857,7 @@ const CHIBI = (() => {
     const fl = F.float ? Math.sin(t / 420) * 4 - 2 : 0, bob = P.walk ? -Math.abs(walk) * 4 : Math.sin(t / 600) * 1.2;
     const lift = (P.lift || 0) + bob + fl, open = Math.max(0, Math.min(1, (P.open || 0) + chew * 0.5 - (P.chew ? 0.25 : 0)));
     const bot = F.bottom(stage), g = { cx: 100, bw, bh, bot, top: bot - bh, left: 100 - bw / 2, stage };
-    const x = { P, t, walk, body, parts, acc, L, stage, open, m, feet: [] }, W = m.worn || {}, bootsOn = W.feet === 'Boots' && !(F.slots && F.slots.feet === false);
+    const x = { P, t, walk, body, parts, acc, L, stage, open, m, feet: [], back: !!m.back }, W = m.worn || {}, bootsOn = W.feet === 'Boots' && !(F.slots && F.slots.feet === false);
     c.fillStyle = rgba(INK, F.float ? 0.08 : 0.14);
     c.beginPath(); c.ellipse(100 + (P.lean || 0) * 0.5, 189, Math.max(bw * 0.44, 24) * (F.float ? 0.75 : 1) * (1 + lift * 0.008), 6, 0, 0, 7); c.fill();
     c.save();
@@ -843,7 +865,7 @@ const CHIBI = (() => {
     c.translate(100, 176); c.rotate(((P.tilt || 0) + (P.wobble ? Math.sin(t / 160) * 8 : 0)) * Math.PI / 180); c.scale(P.sx || 1, P.sy || 1); c.translate(-100, -176);
     if (m.fx) fxBehind(c, m.fx, () => F.path.call(F, c, g, x), g, body, t);
     if (F.behind) F.behind.call(F, c, g, x);
-    if (W.back) wings(c, g, W.back, t, F.wingY);
+    if (W.back && !x.back) wings(c, g, W.back, t, F.wingY);
     let booted = 0; const putBoots = () => { if (bootsOn) boots(c, x.feet.slice(booted)); booted = x.feet.length; };
     putBoots();
     const sh = F.shoulder ? F.shoulder.call(F, g) : null;
@@ -861,7 +883,7 @@ const CHIBI = (() => {
           arm(c, g.cx + side * (g.bw / 2 - inset), sy, a.map(v => v * k), side, st, parts, lt(parts, 0.22), mat, t));
       }
     };
-    if (!P.front) arms();
+    if (!P.front || x.back) arms();
     if (F.glow && F.glow(stage)) { c.save(); c.shadowColor = rgba(lt(body, 0.5), 0.9); c.shadowBlur = 18; F.path(c, g, x); c.fillStyle = rgb(body); c.fill(); c.restore(); }
     const shell = F.glass ? lt(body, 0.72) : body;
     c.save(); c.translate(0, 4); F.path.call(F, c, g, x); c.restore(); c.fillStyle = rgb(dk(body, F.glass ? 0.3 : 0.38)); c.fill();
@@ -871,19 +893,29 @@ const CHIBI = (() => {
     c.save(); F.path.call(F, c, g, x); c.clip();
     const E = ELEMENT[m.el];
     if (stage === 'Mega' && E && !F.patternAfter) E.pattern(c, g, body);
-    if (F.inside) F.inside.call(F, c, g, x);
+    if (F.inside && !(x.back && F.backInside)) F.inside.call(F, c, g, x);
+    if (x.back && F.backInside) F.backInside.call(F, c, g, x);
     if (stage === 'Mega' && E && F.patternAfter) E.pattern(c, g, body);
     if (m.fx) fxOnBody(c, m.fx, () => F.path.call(F, c, g, x), g, body, t);
     c.restore();
     const h = F.hl ? F.hl(g) : [g.left + g.bw * 0.13, g.top + g.bh * 0.42, g.left + g.bw * 0.12, g.top + g.bh * 0.12, g.left + g.bw * 0.4, g.top + g.bh * 0.08];
     c.strokeStyle = 'rgba(255,255,255,.55)'; c.lineWidth = stage === 'Bit' ? 4.5 : 5.5; c.lineCap = 'round';
     c.beginPath(); c.moveTo(h[0], h[1]); c.quadraticCurveTo(h[2], h[3], h[4], h[5]); c.stroke();
-    if (E) for (const side of [-1, 1]) E.mark(c, g.cx + side * (g.bw / 2 - 10), g.top + g.bh * 0.3, stage === 'Bit' ? 0.7 : 0.85, rgba(acc, 0.9));
-    const fi = F.face(c, g, x, look), my = fi.my;
-    if (F.front) F.front.call(F, c, g, x);
-    putBoots();
-    wornFront(c, { head: F.head ? F.head.call(F, g) : [g.cx, g.top + 2, g.bw * 0.5], eyes: { cx: fi.cx, y: fi.ey, ex: fi.ex, s: fi.s, one: fi.one }, mouth: [fi.cx, my, fi.s] }, W, t);
-    if (P.front) arms();
+    const headAt = F.head ? F.head.call(F, g) : [g.cx, g.top + 2, g.bw * 0.5];
+    let my = g.top + g.bh * 0.65;
+    if (x.back) {                  // seen from behind: no face; wings sit on the back in front of the body
+      if (F.front) F.front.call(F, c, g, x);
+      putBoots();
+      if (W.back) wings(c, g, W.back, t, F.wingY);
+      if (W.head) hat(c, { head: headAt }, W.head, t);
+    } else {
+      if (E) for (const side of [-1, 1]) E.mark(c, g.cx + side * (g.bw / 2 - 10), g.top + g.bh * 0.3, stage === 'Bit' ? 0.7 : 0.85, rgba(acc, 0.9));
+      const fi = F.face(c, g, x, look); my = fi.my;
+      if (F.front) F.front.call(F, c, g, x);
+      putBoots();
+      wornFront(c, { head: headAt, eyes: { cx: fi.cx, y: fi.ey, ex: fi.ex, s: fi.s, one: fi.one }, mouth: [fi.cx, my, fi.s] }, W, t);
+    }
+    if (P.front && !x.back) arms();
     if (m.fx) fxFront(c, m.fx, () => F.path.call(F, c, g, x), g, t);
     c.restore();
     const top = g.top + lift;

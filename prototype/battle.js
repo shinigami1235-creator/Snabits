@@ -268,8 +268,8 @@ class Fight{
     const f=this.p[i];
     if(f.ability==="Haunt"&&by!=null&&by!==i&&this.p[by].hp>0){ const d=Math.round(this.p[by].maxhp/4); this.p[by].hp=Math.max(0,this.p[by].hp-d); this.pop(i,"Haunt"); this.say(`${f.name}'s Haunt drains ${this.p[by].name}.`); this.events.push({t:"hit",who:by,dmg:d,eff:1,dot:true}); }
     this.over=true; this.winner=1-i;
-    if(by!=null&&this.p[by].hp<=0){ this.winner=null; this.say("Both monsters break into pixels."); this.events.push({t:"ko",who:by}); }
-    this.say(`${f.name} breaks into pixels.`); this.events.push({t:"ko",who:i});
+    if(by!=null&&this.p[by].hp<=0){ this.winner=null; this.say("Both monsters faint."); this.events.push({t:"ko",who:by}); }
+    this.say(`${f.name} faints.`); this.events.push({t:"ko",who:i});
   }
   endTurn(){
     for(let i=0;i<2;i++){

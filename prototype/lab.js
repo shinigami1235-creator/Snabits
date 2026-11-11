@@ -2,7 +2,7 @@
 const CATALYSTS=["Stat seed","Element stone","Lucky bit","Life fruit"];
 const ASSIST=["It's all up to you.","This doesn't look so good.","I'm not sure about this one.","This should be fine.","This looks good.","This looks good.","These two look great together."];
 
-function sprite(m,grid,size=56){ const c=document.createElement("canvas"); paint(c,grid||m.grid,m.pal,1); c.style.cssText=`width:${size}px;height:${size}px;image-rendering:pixelated;background:#24242c;border-radius:8px`; return c; }
+function sprite(m,grid,size=56,st){ const c=document.createElement("canvas"); paintMon(c,m,{grid:grid||m.grid,s:st,size}); c.style.cssText=`width:${size}px;height:${size}px;image-rendering:${c.style.imageRendering||"pixelated"};background:#24242c;border-radius:8px`; return c; }
 function entryState(e){ if(RS&&RS.id===e.id) return RS; return e.st||{stage:"Bit",tp:[0,0,0,0,0,0],level:1,grade:"E",used:0}; }
 function entryName(e){ const st=entryState(e); return st.stage&&st.stage!=="Bit"?`${e.m.name}, ${MARK[st.mark][0]} ${st.stage}`:e.m.name; }
 
@@ -15,7 +15,7 @@ function openFreezer(){
   if(!list.length) box.innerHTML="<div style='font-size:13px;opacity:.7'>Nothing here yet. Scan a photo and tap Raise it.</div>";
   list.forEach(e=>{ const st=entryState(e), row=document.createElement("div");
     row.style.cssText="display:flex;gap:10px;align-items:center;background:#1e1e26;border-radius:10px;padding:6px 8px";
-    row.appendChild(sprite(e.m,st.grid,48));
+    row.appendChild(sprite(e.m,st.grid,48,st));
     const t=document.createElement("div"); t.style.cssText="flex:1;font-size:13px";
     t.innerHTML=`<b>${entryName(e)}</b><br><span style="opacity:.7">Lv ${st.level||1}, grade ${st.grade||"E"}, ${Math.floor((st.used||0)/4)} of ${e.m.lifespan} months</span>`;
     row.appendChild(t);
@@ -137,7 +137,7 @@ async function doFuse(e1,e2,cat){
   const child=fuseChild(e1,e2,cat,R);
   // the fusion scene: both parents slide together and flash into the child
   panel(`<div id="fuse" style="flex-basis:100%;position:relative;height:120px;background:#1b1b24;border-radius:12px;overflow:hidden"></div><div id="fuse-t" style="flex-basis:100%;font-size:13px"></div>`);
-  const box=el("fuse"), a=sprite(e1.m,entryState(e1).grid,96), b=sprite(e2.m,entryState(e2).grid,96), c=sprite(child.m,null,104);
+  const box=el("fuse"), a=sprite(e1.m,entryState(e1).grid,96,entryState(e1)), b=sprite(e2.m,entryState(e2).grid,96,entryState(e2)), c=sprite(child.m,null,104);
   [a,b,c].forEach(x=>{ x.style.position="absolute"; x.style.top="12px"; x.style.transition="left .9s ease-in,opacity .4s,filter .4s"; box.appendChild(x); });
   a.style.left="8%"; b.style.left="calc(92% - 96px)"; c.style.left="calc(50% - 52px)"; c.style.opacity=0;
   await rsleep(200); a.style.left=b.style.left="calc(50% - 48px)"; await rsleep(950);

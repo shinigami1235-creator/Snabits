@@ -179,7 +179,7 @@ function obChoose(){
       <b>${m.name}</b><span class="sheet-kind"><span class="elc" style="${chipStyle(ELC(m.el1))}">${m.el1}</span>${m.el2?`<span class="elc" style="${chipStyle(ELC(m.el2))}">${m.el2}</span>`:""}<span class="fam">${m.family}</span></span>
       <small>${obBest(m)}</small></button>`).join("")}</div>
     <button class="big" id="ob-take"></button></div>`;
-  ONB.picks.forEach((m,i)=>paint(document.getElementById("ob-p"+i),m.grid,m.pal,1));
+  ONB.picks.forEach((m,i)=>paintMon(document.getElementById("ob-p"+i),m,{stage:"Bit"}));
   obRoot().querySelectorAll(".ob-pick").forEach(b=>b.onclick=()=>{ ONB.sel=+b.dataset.i; obMark(); });
   document.getElementById("ob-take").onclick=()=>obHome(ONB.picks[ONB.sel]);
   obMark(); obShow(true);

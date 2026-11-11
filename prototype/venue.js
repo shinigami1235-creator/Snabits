@@ -150,7 +150,7 @@ function vLoop(){
   const show=VEN.show||{};
   // feet sit on the ground line, whatever the sprite's height
   const footRow=grid=>{ for(let r=grid.length-1;r>=0;r--) if(grid[r].some(v=>v)) return r+1; return grid.length; };
-  const drawMon=(grid,pal,cx,flip,base,onPod)=>{ if(!VEN.cache) VEN.cache=new Map(); let c=VEN.cache.get(grid); if(!c){ c=document.createElement("canvas"); paint(c,grid,pal,1); VEN.cache.set(grid,c); }
+  const drawMon=(grid,pal,cx,flip,base,onPod,fm)=>{ if(typeof chibiVenue==="function"&&chibiVenue(fm,cx,flip,base)) return; if(!VEN.cache) VEN.cache=new Map(); let c=VEN.cache.get(grid); if(!c){ c=document.createElement("canvas"); paint(c,grid,pal,1); VEN.cache.set(grid,c); }
     const sz=big?80:40, feet=footRow(grid)*sz/grid.length, by=Math.round(Math.sin(VEN.t/14+cx)*1);
     if(!onPod){ x.fillStyle="rgba(0,0,0,.3)"; x.beginPath(); x.ellipse(cx,base,big?26:14,big?4:2.5,0,0,6.29); x.fill(); }
     x.save(); if(flip){ x.translate(cx*2,0); x.scale(-1,1); } x.drawImage(c,cx-sz/2,Math.round(base-feet+1-Math.max(0,by)),sz,sz); x.restore(); };
@@ -158,8 +158,9 @@ function vLoop(){
   if(show.podium!=null){ x.fillStyle="#e9e4d4"; x.fillRect(W/2-22,podTop,44,14); x.fillStyle="#bdb6a0"; x.fillRect(W/2-22,podTop+10,44,4); x.fillStyle="#7a5a1a"; x.fillRect(W/2-1,podTop+3,2,6);
     for(let k=0;k<16;k++){ x.fillStyle=BANNER_COLS[k%6]; x.fillRect((k*37+VEN.t*(1+k%3))%W,(k*23+VEN.t*1.5)%H,2,3); } }
   const s=RS;
-  if(show.champ) drawMon(show.champ.fm.grid,show.champ.fm.pal,W/2,false,podTop,true);
-  else if(s&&show.me){ const fm=fightMon(s); drawMon(fm.grid,fm.pal,show.foe?W/2-gap:W/2,false,show.podium!=null?podTop:ground,show.podium!=null); }
-  if(show.foe) drawMon(show.foe.fm.grid,show.foe.fm.pal,W/2+gap,true,ground);
+  if(show.champ) drawMon(show.champ.fm.grid,show.champ.fm.pal,W/2,false,podTop,true,show.champ.fm);
+  else if(s&&show.me){ const fm=fightMon(s); drawMon(fm.grid,fm.pal,show.foe?W/2-gap:W/2,false,show.podium!=null?podTop:ground,show.podium!=null,fm); }
+  if(show.foe) drawMon(show.foe.fm.grid,show.foe.fm.pal,W/2+gap,true,ground,false,show.foe.fm);
+  if(typeof chibiVenueFlush==="function") chibiVenueFlush(cv);
   VEN.raf=requestAnimationFrame(vLoop);
 }
