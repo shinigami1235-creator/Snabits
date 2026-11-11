@@ -70,7 +70,7 @@ function fightMon(s){
   const stats=s.m.stats.map((v,i)=>Math.round(v*bonus(i)));
   const flat=s.tp.map((v,i)=>Math.round(v/EARN_DIV*bonus(i)));
   if(s.variant==="Lean") stats[5]=Math.round(stats[5]*1.05);
-  return {...s.m,name:displayName(s),stats,flat,grid:s.grid||s.m.grid,pal:s.pal||s.m.pal};
+  return {...s.m,name:displayName(s),stats,flat,grid:s.grid||s.m.grid,pal:s.pal||s.m.pal,stage:s.stage,mark:s.mark,mark2:s.mark2,worn:s.worn};
 }
 function knownSkills(s){
   const k=new Set(s.skillsKnown||[]);

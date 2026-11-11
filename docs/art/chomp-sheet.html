@@ -1,0 +1,12 @@
+<!doctype html><html><body style="margin:0;background:#f6f3ec"><canvas id="c"></canvas>
+<script src="../../prototype/chibi.js"></script><script>
+const poses=['idle','walk','happy','eat','hurt','sleep','attack','hit','ko'], stages=['Bit','Byte','Mega'];
+const pal={body:[232,140,52],parts:[128,68,30],accent:[255,236,214]};
+const W=170,H=190,c=document.getElementById('c'),d=2; c.width=(poses.length*W+60)*d; c.height=(stages.length*H+30)*d; c.style.width=c.width/d+'px';
+const x=c.getContext('2d'); x.scale(d,d); x.font='600 13px sans-serif'; x.fillStyle='#776'; 
+poses.forEach((p,i)=>x.fillText(p,60+i*W+W/2-15,18));
+stages.forEach((s,j)=>{ x.fillStyle='#776'; x.fillText(s,8,30+j*H+H/2);
+  const marks=s==='Bit'?[]:s==='Byte'?['Horned']:['Horned','Stout'];
+  poses.forEach((p,i)=>{ x.save(); x.translate(60+i*W,30+j*H-10); x.scale(W/200,W/200);
+    CHIBI.draw(x,{stage:s,pal,marks,el:'Brawl',worn:{}},p,(i*137)%600); x.restore(); }); });
+</script></body></html>

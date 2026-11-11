@@ -142,7 +142,7 @@ function startNetFight(){
   const fight=new Fight(playerFighter(RS),foe.fighter,rng(LN.seed));
   B={fight,mon:me,opp:foe.fm,busy:false,fast:false,net:true,shown:fight.p.map(f=>f.hp),opts:null};
   $("battle").style.display="flex"; $("loadout").style.display="none"; $("b-fight").style.display="flex"; $("b-fight").classList.remove("done");
-  paint($("b-me-sprite"),me.grid,me.pal,1); paint($("b-foe-sprite"),foe.fm.grid,foe.fm.pal,1);
+  paintSprite($("b-me-sprite"),me); paintSprite($("b-foe-sprite"),foe.fm);
   ["me","foe"].forEach(k=>{ $("b-"+k+"-sprite").className="bsprite"; });
   $("b-log").innerHTML=""; $("b-result").style.display="none";
   logLine(`Friend room ${LN.code}. ${fight.p[1].name}, Lv ${opp.level}. Its skills are ${fight.p[1].skills.map(x=>x.name).join(", ")}.`);

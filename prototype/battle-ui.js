@@ -31,7 +31,7 @@ function startFight(opp){
   opp=opp||randomOpponent();
   const fight=new Fight(makeFighter(mon,picked,level),makeFighter(opp,aiLoadout(opp,level),level));
   B={fight,mon,opp,busy:false,shown:fight.p.map(f=>f.hp)};
-  paint($("b-me-sprite"),mon.grid,mon.pal,1); paint($("b-foe-sprite"),opp.grid,opp.pal,1);
+  paintSprite($("b-me-sprite"),mon); paintSprite($("b-foe-sprite"),opp);
   ["me","foe"].forEach(k=>{$("b-"+k+"-sprite").className="bsprite";});
   $("b-log").innerHTML=""; $("b-result").style.display="none";
   $("loadout").style.display="none"; $("b-fight").style.display="flex"; $("b-fight").classList.remove("done");
@@ -86,7 +86,7 @@ function popup(who,text,color,big){
   requestAnimationFrame(()=>{p.style.transform="translate(-50%,-40px)";p.style.opacity="0";});
   setTimeout(()=>p.remove(),1000);
 }
-function bump(who,cls){ const s=$(who===0?"b-me-sprite":"b-foe-sprite"); s.classList.remove(cls); void s.offsetWidth; s.classList.add(cls); }
+function bump(who,cls){ if(typeof chibiPose==="function") chibiPose(who,{bhit:"hit",bcast:"attack",bguard:"hurt"}[cls]||"idle",450); const s=$(who===0?"b-me-sprite":"b-foe-sprite"); s.classList.remove(cls); void s.offsetWidth; s.classList.add(cls); }
 
 const bw=ms=>B&&B.fast?Promise.resolve():wait(ms);
 async function pick(id){
@@ -112,7 +112,7 @@ async function playEvents(f,ev){
     if(e.t==="cast"){ bump(e.who,"bcast"); await bw(250); }
     if(e.t==="status"){ popup(e.who,e.name,STATUS_COL[e.name]); await bw(300); }
     if(e.t==="switch"&&f.teams){ const nf=f.teams[e.who][e.j]; B.cur[e.who]=nf; B.shown[e.who]=e.hp; teamSprite(e.who,nf); bump(e.who,"bcast"); drawPanels(); await bw(450); }
-    if(e.t==="ko"){ $(e.who===0?"b-me-sprite":"b-foe-sprite").classList.add("bko"); await bw(700); }
+    if(e.t==="ko"){ if(typeof chibiPose==="function") chibiPose(e.who,"ko"); $(e.who===0?"b-me-sprite":"b-foe-sprite").classList.add("bko"); await bw(700); }
   }
 }
 function afterTurn(){
@@ -145,7 +145,7 @@ function arenaFight({s,foe,mode="control",title="",turnLimit=15,noDraw=false,rec
   B.mus=foe.boss?"boss":/^Wild/.test(title)?"wild":"cup";
   $("arena").className=B.mus==="wild"?"":"cup"; $("b-fight").classList.remove("done"); if(B.mus!=="wild"&&typeof stadiumBg==="function") stadiumBg($("b-bg"));
   $("battle").style.display="flex"; $("loadout").style.display="none"; $("b-fight").style.display="flex"; $("b-fight").classList.remove("done");
-  paint($("b-me-sprite"),me.grid,me.pal,1); paint($("b-foe-sprite"),foe.fm.grid,foe.fm.pal,1);
+  paintSprite($("b-me-sprite"),me,s); paintSprite($("b-foe-sprite"),foe.fm);
   ["me","foe"].forEach(k=>{$("b-"+k+"-sprite").className="bsprite";});
   $("b-log").innerHTML=""; $("b-result").style.display="none";
   logLine(`${title?title+". ":""}${fight.p[1].name}, Lv ${foe.level}. Its skills are ${fight.p[1].skills.map(x=>x.name).join(", ")}.`);

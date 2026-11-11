@@ -97,7 +97,7 @@ function teamFight(mine,foes){
   logLine(`Team battle, 6 on 6. ${ta[0].name} leads for you and ${tb[0].name} for them.`);
   drawPanels(); drawButtons();
 }
-function teamSprite(who,f){ f=f||B.fight.p[who]; const c=$(who===0?"b-me-sprite":"b-foe-sprite"); paint(c,f.m.grid,f.m.pal,1); c.className="bsprite"; }
+function teamSprite(who,f){ f=f||B.fight.p[who]; const c=$(who===0?"b-me-sprite":"b-foe-sprite"); paintSprite(c,f.m); c.className="bsprite"; }
 
 /* Called from afterTurn: replacements after a knockout, then the end of the fight. */
 async function teamAfter(){

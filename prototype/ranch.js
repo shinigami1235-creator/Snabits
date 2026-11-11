@@ -688,7 +688,7 @@ function rLoop(t){
   requestAnimationFrame(rLoop);
 }
 function drawMonster(c,t){
-  const s=RS; if(s.hidden) return;
+  const s=RS; if(typeof chibiRanch==="function"&&chibiRanch(s,t)) return; if(s.hidden) return;
   if(!s.busy){ const half=s.P.N*0.42*s.P.scale; s.x=clamp(s.x,half+10,RW-half-12); }
   const o=poseOf(t), P=s.P, sc=P.scale, F=buildFrame(P,o);
   paintFrame(FC,F,s.pal||s.m.pal,sc,P.big,s.flash>0); if(s.flash>0&&s.flash<99) s.flash--;
