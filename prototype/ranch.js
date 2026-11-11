@@ -189,7 +189,7 @@ function injectRanch(){
 <div id="r-view"><canvas id="r-canvas" width="${RW}" height="${RH}"></canvas><div id="r-banner"></div><button class="small" id="r-skip">Skip ▸▸</button></div>
 <div id="r-say"></div><div id="r-stats"></div><div id="r-learned" style="font-size:12px;opacity:.8"></div><div id="r-panel"></div><div id="r-nums"></div>
 <div id="r-menu">${["Train","Rest","Feed","Care","Out"].map(n=>`<button class="rb" data-m="${n}">${n}</button>`).join("")}</div>
-<div id="r-foot"><button class="small" id="r-back">Back to scan</button><label><input type="checkbox" id="r-off"> Scenes off</label><label><input type="checkbox" id="r-numsbox"> Show hidden numbers</label></div>`;
+<div id="r-foot"><button class="small" id="r-back">Back to scan</button><button class="small musbtn" onclick="musToggle()" style="opacity:${typeof MUS!=="undefined"&&!MUS.on?.5:1}">${typeof MUS!=="undefined"&&!MUS.on?"♪ Off":"♪ On"}</button><label><input type="checkbox" id="r-off"> Scenes off</label><label><input type="checkbox" id="r-numsbox"> Show hidden numbers</label></div>`;
   document.body.appendChild(d);
   el("r-back").onclick=closeRanch;
   el("r-skip").onclick=()=>{RS.skip=true;};
@@ -225,6 +225,7 @@ function banner(t,col){ const b=el("r-banner"); b.textContent=t; b.style.color=c
 function panel(html){ el("r-panel").innerHTML=html; }
 
 function menu(which){
+  if(RS) RS.inTown=false;
   const s=RS; if(s.busy) return;
   el("r-menu").querySelectorAll(".rb").forEach(b=>b.classList.toggle("on",b.dataset.m===which));
   if(!which){ panel(""); return; }
@@ -256,8 +257,8 @@ function menu(which){
   }
   if(which==="Out"){
     if(s.away){ missionStatus(); return; }
-    panel(`<button class="rb" id="r-mis">Missions<small>1, 4 or 8 hours</small></button><button class="rb" id="r-cup">Tournaments<small>Grade ${s.grade}</small></button><button class="rb" id="r-lab">Fusion lab<small>Fusion and rebirth</small></button><button class="rb" id="r-town">Town<small>Shops and upgrades</small></button><button class="rb" id="r-frz">Freezer<small>${PLAYER.roster.length-1} frozen</small></button><button class="rb" id="r-ghost">Friend battle<small>Room code or ghost code</small></button><button class="rb" id="r-prac">Practice fight<small>Not saved to habits</small></button><button class="rb" id="r-trip">Skill trip<small>4 weeks in a region</small></button>`);
-    el("r-mis").onclick=openBoard; el("r-cup").onclick=openCups; el("r-lab").onclick=openLab; el("r-frz").onclick=openFreezer; el("r-trip").onclick=()=>{ if(tripsLocked()){ say("Skill trips open at 1 heart."); return; } openTrips(); }; el("r-town").onclick=openTown; el("r-ghost").onclick=()=>openRooms();
+    panel(`<button class="rb" id="r-wild">Wild battle<small>${typeof wildLeft==="function"?wildLeft(s):3} left this week</small></button><button class="rb" id="r-mis">Missions<small>1, 4 or 8 hours</small></button><button class="rb" id="r-cup">Tournaments<small>Grade ${s.grade}</small></button><button class="rb" id="r-lab">Fusion lab<small>Fusion and rebirth</small></button><button class="rb" id="r-town">Town<small>Shops and upgrades</small></button><button class="rb" id="r-frz">Freezer<small>${PLAYER.roster.length-1} frozen</small></button><button class="rb" id="r-ghost">Friend battle<small>Room code or ghost code</small></button><button class="rb" id="r-prac">Practice fight<small>Not saved to habits</small></button><button class="rb" id="r-trip">Skill trip<small>4 weeks in a region</small></button>`);
+    el("r-wild").onclick=startWild; el("r-mis").onclick=openBoard; el("r-cup").onclick=openCups; el("r-lab").onclick=openLab; el("r-frz").onclick=openFreezer; el("r-trip").onclick=()=>{ if(tripsLocked()){ say("Skill trips open at 1 heart."); return; } openTrips(); }; el("r-town").onclick=openTown; el("r-ghost").onclick=()=>openRooms();
     el("r-prac").onclick=()=>{ const o=gradedOpponent(s.grade,Math.max(1,s.level+Math.floor(rnd(-1,2))),Math.random); arenaFight({s,foe:o,mode:"control",title:"Practice",learn:true,onEnd:r=>{ if(r.learned.length) say(r.learned.join(" ")); saveGame(); }}); };
   }
 }
@@ -514,7 +515,7 @@ async function evolveNow(){
   const vs=variantsMet(s); let variant=await pickVariant(vs);
   const oldP=s.P, old={stage:s.stage,mark:s.mark,mark2:s.mark2,variant:s.variant};
   if(to==="Byte") s.mark=topMark(); else s.mark2=order.find(x=>x[1]!==s.mark)[1];
-  s.stage=to;
+  s.stage=to; if(typeof musJingle==="function") musJingle("evo");
   if(variant){ s.variant=variant.split(":")[0];
     if(variant.startsWith("Wanderer")){ const reg=REGIONS.concat([{n:"The Rift",el:"Void"}]).find(r=>r.n===variant.split(":")[1]); s.wanderEl=reg.el;
       if(s.m.mono&&await askYesNo(`It roamed ${reg.n} so long it could take ${reg.el} as its second element. Should it?`,`Take ${reg.el}`,"Stay mono")){ s.m.el2=reg.el; s.m.mono=false; s.m.name=speciesName(s.m.family,s.m.el1,s.m.el2); } } }

@@ -139,6 +139,7 @@ function arenaFight({s,foe,mode="control",title="",turnLimit=15,noDraw=false,rec
   const fight=new Fight(playerFighter(s),foe.fighter||makeFighter(foe.fm,foe.skills,foe.level),rand);
   if(foe.boss){ const b=fight.p[1]; b.maxhp=Math.round(b.maxhp*1.25); b.hp=b.maxhp; b.name=foe.boss; }
   B={fight,mon:me,opp:foe.fm,busy:false,fast:false,shown:fight.p.map(f=>f.hp),opts:{s,turnLimit,noDraw,learn,foeHabits,record:record?s:null,auto:mode==="auto",onEnd}};
+  B.mus=foe.boss?"boss":/^Wild/.test(title)?"wild":"cup";
   $("battle").style.display="flex"; $("loadout").style.display="none"; $("b-fight").style.display="flex";
   paint($("b-me-sprite"),me.grid,me.pal,1); paint($("b-foe-sprite"),foe.fm.grid,foe.fm.pal,1);
   ["me","foe"].forEach(k=>{$("b-"+k+"-sprite").className="bsprite";});
@@ -160,6 +161,7 @@ function endArena(){
   $("b-btns").innerHTML="";
   $("b-result").innerHTML=`<h2>${draw?"Draw":won?"Win":"Loss"}</h2><p>${f.judged?"The judges called it after "+f.turn+" turns.":`${won?f.p[1].name:f.p[0].name} broke into pixels in ${f.turn} turns.`}</p><div class="brow"><button class="big" id="b-cont">Continue</button></div>`;
   $("b-result").style.display="block";
+  if(typeof musJingle==="function"&&!draw) musJingle(won);
   const learned=o.learn?afterFight(o.s,f.p[0],true):[]; if(learned.length) $("b-result").querySelector("p").textContent+=" "+learned.join(" ");
   $("b-cont").onclick=()=>{ const res={winner:f.winner,turns:f.turn,judged:!!f.judged,hpLeft:f.p[0].hp/f.p[0].maxhp,foeHpLeft:f.p[1].hp/f.p[1].maxhp,learned};
     $("battle").style.display="none"; B=null; if(o.onEnd) o.onEnd(res); };

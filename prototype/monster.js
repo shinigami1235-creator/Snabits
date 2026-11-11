@@ -167,9 +167,9 @@ function speciesName(family,el1,el2){
 }
 
 /* Main entry: res is the scan result with colours, cells and photo numbers. */
-function hatch(res,now=new Date()){
+function hatch(res,now=new Date(),ov={}){
   const el1=EL[res.main.g], el2=res.second?EL[res.second.g]:null;
-  const {family,band,shape}=pickFamily(res.cells);
+  const pf=pickFamily(res.cells), family=ov.family||pf.family, band=pf.band, shape=pf.shape;
   const F=FAMILY[family];
   const sat=res.sat, con=res.contrast, bri=res.bright;
   const parts={
@@ -178,6 +178,7 @@ function hatch(res,now=new Date()){
     top: Math.floor(sat*10)%5,
     arms: Math.floor(bri*10)%5,
   };
+  if(ov.parts) Object.assign(parts,ov.parts(parts));
   const seed=hashStr(res.photoKey+"|"+Math.floor(now.getTime()/60000));
   const R=rng(seed);
   // colours

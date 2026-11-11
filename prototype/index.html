@@ -84,7 +84,8 @@ video,#still{width:100%;height:100%;object-fit:cover}
   <button class="big" id="scanbtn" style="display:none">Scan</button>
   <label class="small" id="newbtn" for="take" style="display:none">New photo</label>
   <label class="small" for="pick">From gallery</label>
-  <button class="small" id="ranchbtn" style="display:none" onclick="openRanch()">Ranch</button>
+  <button class="small musbtn" onclick="musToggle()">♪ On</button>
+  <button class="small" id="ranchbtn" style="display:none" onclick="if(typeof WILD!=='undefined'&&WILD)endWild();openRanch()">Ranch</button>
   <input type="file" id="pick" accept="image/*">
   <input type="file" id="take" accept="image/*" capture="environment" style="display:none">
 </div>
@@ -117,6 +118,8 @@ video,#still{width:100%;height:100%;object-fit:cover}
 <script src="peer.js"></script>
 <script src="netfight.js"></script>
 <script src="tala.js"></script>
+<script src="wild.js"></script>
+<script src="music.js"></script>
 <script>if(hasSave()){ document.getElementById("ranchbtn").style.display=""; document.getElementById("msgranch").style.display=""; }</script>
 <script>
 const GROUPS=["red","orange","yellow","green","cyan","blue","violet","pink","brown","white","silver","black"];
@@ -228,6 +231,7 @@ function render(full){
   try{
     const res=scan(still,still.width,still.height); show(res);
     if(!full) return;
+    if(typeof WILD!=="undefined"&&WILD){ wildCard(res,card); return; }
     const m=hatch(res);
     const name=m.name, kind=(m.el2?`${m.el1} / ${m.el2}`:m.el1)+" "+m.family;
     const why=res.mono?`Mono, since ${res.main.w>=MONO_MAIN?`the main colour reached ${Math.round(res.main.w)}%`:res.ranked[1]?`the main colour reached ${Math.round(res.main.w)}% and the second only ${Math.round(res.ranked[1].w)}%`:"one colour fills the frame"}.`:res.second.w>=DUAL_SECOND?`Dual, since the second colour reached ${Math.round(res.second.w)}%.`:`Dual, since no colour leads the photo and the main one only reached ${Math.round(res.main.w)}%.`;
@@ -293,6 +297,13 @@ stage.addEventListener("pointerdown",e=>{if(mode==="live"||mode==="start")return
 stage.addEventListener("pointermove",e=>{if(dragging) moveAim(e);});
 stage.addEventListener("pointerup",()=>dragging=false);
 stage.addEventListener("pointercancel",()=>dragging=false);
+function setWildUI(on){
+  document.getElementById("main").textContent=on?"Wild: point at something":"Point at something";
+  document.getElementById("msgtext").textContent=on?"Wild battle. Take a photo of something colourful and a wild Snabit jumps out of its colours.":"Take a photo, drag the circle onto what you want scanned, then tap Scan.";
+  if(on){ if(stream){ aim={x:.5,y:.5}; placeRing(); setMode("live"); } else setMode("start"); }
+  if(typeof musWant==="function") musWant();
+}
+function wildRescan(){ if(stream){ aim={x:.5,y:.5}; placeRing(); setMode("live"); } else setMode(still.width?"aim":"start"); }
 startCam();
 </script>
 </body>

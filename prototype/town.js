@@ -41,6 +41,7 @@ function buy(k,price,then){
   say(`Bought ${/^[AEIOU]/.test(k)?"an":"a"} ${k} for ${price} bits.`); drawUI(); saveGame(); if(then) then();
 }
 function openTown(){
+  if(RS) RS.inTown=true;
   panel(`<div style="flex-basis:100%;font-size:13px">${PLAYER.bits} bits. The Item shop and Skill shop restock every week.</div>
     <button class="rb" id="tw-m">Market<small>Snacks, medicine, toys</small></button><button class="rb" id="tw-i">Item shop<small>Worn and held items</small></button>
     <button class="rb" id="tw-s">Skill shop<small>Tier 1 chips</small></button><button class="rb" id="tw-w">Workshop<small>Ranch upgrades</small></button>
