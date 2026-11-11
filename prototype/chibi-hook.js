@@ -150,7 +150,7 @@ const ANIM = {
     fx(c, t, x) { if (t < 300) { psyAura(c, x.self, t, 0.7, 0, [255, 226, 90]); x.from.forEach(o => { c.save(); c.strokeStyle = '#fff6a0'; c.lineWidth = 2;
         for (let i = 0; i < 3; i++) { const a = t / 40 + i * 2; c.beginPath(); c.moveTo(o.x, o.y); c.lineTo(o.x + Math.cos(a) * 10, o.y + Math.sin(a) * 10 - 4); c.stroke(); } c.restore(); }); return; }
       const sx = { bolts: CB.boltCache = t < 320 ? {} : CB.boltCache || {} };
-      for (const t0 of [300, 520]) if (t >= t0 && t < t0 + 260) { const fl = lightningFx(c, x.target, t - t0, sx); if (fl) CB.screenFlash = fl; } } },
+      for (const t0 of [300, 520]) if (t >= t0 && t < t0 + 260) { const fl = lightningFx(c, x.target, t - t0, sx), big = CB.lastHit && CB.lastHit.tier === 'heavy' && CB.te - CB.lastHit.te < 500; if (fl && big) CB.screenFlash = fl; } } },
   pillar: { C: 520, D: 1040,
     atk: t => ({ f: 0, pose: t < 220 ? 'slamup' : t < 860 ? 'slam' : 'idle' }),
     fx(c, t, x) { if (t > 220 && t < 520) crack(c, x.self, x.target, (t - 220) / 300, x.col); if (t >= 460 && t < 980) pillarFx(c, x, Math.min(1, (t - 460) / 90) * Math.min(1, (980 - t) / 160), t); } },
@@ -202,14 +202,14 @@ function chibiUse(e) {
 const hexRgb = h => /^#[0-9a-f]{6}$/i.test(h) ? [1, 3, 5].map(k => parseInt(h.slice(k, k + 2), 16)) : [170, 110, 255];
 /* a hit lands: everything here fires within the same instant, scaled by how hard it was */
 const TIER = {
-  light:  { stop: 40,  trauma: 0.18, push: 0.05, sparks: 5,  flash: 50 },
-  medium: { stop: 75,  trauma: 0.38, push: 0.09, sparks: 10, flash: 70 },
-  heavy:  { stop: 100, trauma: 0.75, push: 0.15, sparks: 22, flash: 100, impact: 1 }
+  light:  { stop: 30,  trauma: 0.1,  push: 0.04, sparks: 4,  flash: 45 },
+  medium: { stop: 55,  trauma: 0.22, push: 0.07, sparks: 7,  flash: 55 },
+  heavy:  { stop: 100, trauma: 0.75, push: 0.15, sparks: 22, flash: 100, white: 1, impact: 1 }   // crits and super-effective hits only
 };
 function chibiHit(e) {
   const st = CB.side[e.who]; if (!st) return;
   const tier = e.dot ? 'light' : e.crit || e.eff > 1 ? 'heavy' : e.dmg >= 30 ? 'medium' : 'light', T = TIER[tier], now = cbNow();
-  st.react = { kind: 'hit', t0: CB.te, tier };
+  st.react = { kind: 'hit', t0: CB.te, tier }; CB.lastHit = { tier, te: CB.te };
   if (!e.dot) { CB.freezeUntil = Math.max(CB.freezeUntil, now + T.stop); CB.vibrate = { who: e.who, until: now + T.stop + 60 }; }
   CB.trauma = Math.min(1, CB.trauma + T.trauma * (REDUCED ? 0.35 : 1));
   if (T.impact && !REDUCED) CB.impact = { who: e.who, until: now + 70 };
@@ -494,7 +494,7 @@ function sideState(who, te, pos) {
   if (R) { const dur = R.kind === 'hit' ? (R.tier === 'heavy' ? 560 : 420) : 380, k = (te - R.t0) / dur;
     if (k > 1) st.react = null;
     else if (R.kind === 'hit') { const T = TIER[R.tier || 'light'];
-      out.pose = 'hit'; out.flash = te - R.t0 < 18 ? 2 : te - R.t0 < T.flash ? 1 : 0;
+      out.pose = 'hit'; const dt = te - R.t0; out.flash = T.white ? (dt < 18 ? 2 : dt < T.flash ? 1 : 0) : dt < T.flash ? 3 : 0;
       out.f += -T.push * (k < 0.25 ? eo(k / 0.25) : 1 - eio((k - 0.25) / 0.75)); out.rot += -0.12 * (R.tier === 'heavy' ? 1.6 : 1) * Math.sin(Math.min(1, k * 1.5) * Math.PI) * (who ? -1 : 1); }
     else { const s2 = Math.sin(k * Math.PI); out.pose = 'dodge'; out.off = [pos.perp[0] * 30 * s2, pos.perp[1] * 30 * s2 - 10 * s2]; } }
   if (st.ko != null) { out.pose = 'ko'; const k = (te - st.ko - 420) / 160;
@@ -517,6 +517,7 @@ function chibiBattleFrame(now) {
   const ar = document.getElementById('arena'), sh = CB.trauma * CB.trauma;
   if (ar) ar.style.transform = sh > 0.001 ? `translate(${(10 * sh * Math.sin(now / 27)).toFixed(2)}px,${(7 * sh * Math.sin(now / 19 + 1)).toFixed(2)}px) rotate(${(1.4 * sh * Math.sin(now / 33)).toFixed(3)}deg)` : '';
   const homes = [home(0), home(1)], placed = [], imp = CB.impact && now < CB.impact.until ? CB.impact : null;
+  if (typeof chibiArenaScene === 'function') chibiArenaScene(now, homes);
   if (imp) {                                   // impact frame: the arena goes dark with speed lines, the one hit turns white
     c.save(); c.scale(dpr, dpr); c.fillStyle = 'rgba(16,8,28,.88)'; c.fillRect(0, 0, r.width, r.height);
     const h = homes[imp.who]; c.strokeStyle = 'rgba(255,255,255,.85)';
@@ -556,7 +557,7 @@ function chibiBattleFrame(now) {
     if (speed > 5 && st.trail.length > 6 && !imp) for (const [i, a] of [[st.trail.length - 7, 0.14], [st.trail.length - 4, 0.24]]) {
       const g = st.trail[i]; c.save(); c.translate((g.x - x) * dpr, (g.y - y) * dpr); put(a * S.alpha, 'saturate(0.4) brightness(1.4)', false); c.restore(); }
     const white = imp && imp.who === who;
-    put(S.alpha, white || S.flash === 2 ? 'brightness(0) invert(1)' : S.flash ? 'brightness(1.5)' : '', true);
+    put(S.alpha, white || S.flash === 2 ? 'brightness(0) invert(1)' : S.flash === 1 ? 'brightness(1.5)' : S.flash === 3 ? 'brightness(1.18)' : '', true);
     const cp = st.cap || {}, d = q => q ? { x: q.x / dpr, y: q.y / dpr } : null;
     placed[who] = { x, y: y - CHIBI.height(st.spec.stage, st.spec.marks, st.spec.family) * u * 0.45, foot: y, lift: S.lift, back: !!st.spec.back, r: CHIBI.width(st.spec.stage, st.spec.family) * u * 0.55,
       eyes: cp.eyes && cp.eyes.map(d), mouth: d(cp.mouth), hands: (cp.hands || []).map(d), top: d(cp.top) || { x, y: y - 50 }, center: d(cp.center) };

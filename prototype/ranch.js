@@ -658,15 +658,18 @@ function rLoop(t){
   if(cv.height!==wantH) cv.height=wantH; if(cv.width!==wantW) cv.width=wantW;
   const c=cv.getContext("2d"); c.imageSmoothingEnabled=false;
   const k=rk(), extra=cv.height-RH, room=RW-cv.width; s.vExtra=extra;
+  // with the smooth art on, the yard draws on its own layer underneath and this canvas only carries props and effects
+  const smooth=!s.bg&&typeof CHIBI_ART!=="undefined"&&CHIBI_ART&&typeof chibiYard==="function"; if(smooth) c.clearRect(0,0,cv.width,cv.height);
+  else { const sc=el("r-scene"); if(sc) sc.style.display="none"; const ch=el("r-chibi"); if(ch) ch.style.filter=""; }
   const camT=clamp(s.x-cv.width/2,0,room); s.camX=s.camX==null?camT:s.camX+(camT-s.camX)*0.08; const camX=Math.round(clamp(s.camX,0,room));
   c.save(); c.translate(-camX,extra); if(s.shake>0){ c.translate(Math.round(rnd(-2,2)),Math.round(rnd(-2,2))); s.shake--; }
-  drawYard(c,t);
+  if(!(smooth&&chibiYard(s,t,cv))) drawYard(c,t);
   // props physics
   for(const p of s.props){ if(p.vx!==undefined){ p.x+=p.vx*k; p.y+=(p.vy||0)*k; p.vy=(p.vy||0)+(p.g||0)*k;
       if(p.bounce&&p.y>GROUND-3){ p.y=GROUND-3; p.vy*=-0.45; p.vx*=0.7; } if(p.k==="boulder") p.rot+=p.vx*0.09*k; }
     if(p.k==="bug"){ p.t+=k; p.x+=Math.sin(p.t/9)*0.6; p.y+=Math.cos(p.t/7)*0.4; } }
   if(s.behind) drawMonster(c,t);
-  if(!s.bg) drawHut(c);
+  if(!s.bg&&!smooth) drawHut(c);
   drawProps(c,t,false);
   if(s.visitor){ const v=s.visitor; if(performance.now()>v.until){ v.x+=0.6; if(v.x>RW+40) s.visitor=null; } else v.x=Math.max(RW-22,v.x-0.6);
     if(s.visitor){ if(!v.cv){ v.cv=document.createElement("canvas"); paint(v.cv,v.m.grid,v.m.pal,2); } c.drawImage(v.cv,Math.round(v.x-20),GROUND-40+(Math.floor(t/300)%2)); } }
@@ -682,9 +685,9 @@ function rLoop(t){
     else { const col={dust:"#d9c8a8",crumb:"#e8c070",sweat:"#9fd8ff",sparkle:"#ffffff",smoke:"#7a7a80",drip:"#4aa3ff",zap:"#ffe14d",flake:"#ffffff",leaf:"#5fc46a"}[p.kind]||"#fff";
       c.fillStyle=col; const sz=p.kind==="smoke"?3:p.kind==="dust"?2:1; if(p.kind==="smoke"){p.vy=-0.4;} c.fillRect(Math.round(p.x),Math.round(p.y),sz,sz); if(p.kind==="sparkle"&&p.life%8<4){c.fillRect(Math.round(p.x)-1,Math.round(p.y),3,1);c.fillRect(Math.round(p.x),Math.round(p.y)-1,1,3);} }
     c.globalAlpha=1; }
-  const h=new Date().getHours(); if(h<6||h>=19){ c.fillStyle="rgba(20,24,70,.28)"; c.fillRect(0,-Math.max(0,extra),RW,RH+Math.max(0,extra)); }
+  const h=new Date().getHours(); if(!smooth&&(h<6||h>=19)){ c.fillStyle="rgba(20,24,70,.28)"; c.fillRect(0,-Math.max(0,extra),RW,RH+Math.max(0,extra)); }
   c.restore();
-  if(extra>0) c.drawImage(cv,0,extra,cv.width,1,0,0,cv.width,extra);
+  if(extra>0&&!smooth) c.drawImage(cv,0,extra,cv.width,1,0,0,cv.width,extra);
   requestAnimationFrame(rLoop);
 }
 function drawMonster(c,t){
