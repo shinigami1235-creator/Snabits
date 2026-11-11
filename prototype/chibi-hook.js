@@ -45,7 +45,16 @@ function chibiRanch(s, t) {
 /* ---------- battle ----------
    Both monsters draw on one layer over the arena, so an attack can cross it and land on the other side.
    The sprite canvases stay in place, hidden, as the anchors for each side's position and for the damage popups. */
-const CB = { side: [null, null], anim: null, loop: false, now: null };
+/* te is the battle's own clock: it stops during hit stop and runs slow during a knockout, so every timeline,
+   reaction and particle freezes or slows together. Real time (now) still drives the screen shake and the vibration. */
+const CB = { side: [null, null], anim: null, loop: false, now: null, te: 0, last: 0, freezeUntil: 0, slowUntil: 0, trauma: 0, impact: null, parts: [] };
+const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+function tick(now) {
+  const dt = Math.max(0, Math.min(50, now - (CB.last || now))); CB.last = now;
+  CB.te += dt * (now < CB.freezeUntil ? 0 : now < CB.slowUntil ? 0.35 : 1);
+  CB.trauma = Math.max(0, CB.trauma - dt / 1000 * 1.6);
+  return dt;
+}
 const SIDE_ID = ['b-me-sprite', 'b-foe-sprite'];
 const cbNow = () => CB.now != null ? CB.now : performance.now();
 const eo = k => 1 - Math.pow(1 - Math.min(1, Math.max(0, k)), 3), ei = k => Math.pow(Math.min(1, Math.max(0, k)), 3);
@@ -112,41 +121,63 @@ const ANIM = {
     atk: t => ({ f: t < 470 ? 0.05 * eo(t / 470) : 0.05 * (1 - eio((t - 470) / 400)), pose: t < 200 ? 'cast' : t < 700 ? 'push' : 'idle' }),
     def(t) { if (t < 470) return null; const k = (t - 470) / 530; return { f: -0.22 * (k < 0.25 ? eo(k / 0.25) : 1 - eio((k - 0.25) / 0.75)), rot: -0.15 * (1 - k), pose: k < 0.5 ? 'hit' : 'idle' }; },
     fx(c, t, x) { if (t < 300) psyAura(c, x.self, t, 0.7); if (t > 200 && t < 560) waves(c, x.self, x.target, (t - 200) / 360); } },
-  /* projectiles: the attacker stays home and sends something across */
+  /* projectiles start where the move comes from: x.from is a list of points (eyes, mouth or hands) */
   bolt: { C: 560, D: 860,
-    atk: t => ({ f: 0, pose: t < 220 ? 'cast' : t < 640 ? 'push' : 'idle' }),
-    fx(c, t, x) { if (t < 220) missile(c, lerpP(x.self, x.target, 0.08, 0), x, t, 0.4 + t / 400);
-      else if (t < 560) { const k = (t - 220) / 340; for (let i = 4; i >= 0; i--) { const kk = k - i * 0.05; if (kk > 0) missile(c, lerpP(x.self, x.target, 0.08 + kk * 0.92, 18), x, t, i ? 0.9 - i * 0.15 : 1, i ? 0.45 - i * 0.08 : 1); } }
-      else if (t < 780) burst(c, x.target, (t - 560) / 220, x.col); } },
+    atk: t => ({ f: 0, pose: t < 220 ? (fromHands(t) ? 'slamup' : 'cast') : t < 640 ? 'push' : 'idle' }),
+    fx(c, t, x) { const o = x.from[0], tg = x.target;
+      if (t < 220) missile(c, o, x, t, 0.3 + t / 380);
+      else if (t < 560) { const k = (t - 220) / 340; for (let i = 4; i >= 0; i--) { const kk = k - i * 0.05; if (kk > 0) missile(c, lerpP(o, tg, kk, 16), x, t, i ? 0.9 - i * 0.15 : 1, i ? 0.45 - i * 0.08 : 1); } } } },
   beam: { C: 380, D: 960,
-    atk: t => ({ f: 0, pose: t < 200 ? 'cast' : t < 820 ? 'push' : 'idle' }),
-    fx(c, t, x) { if (t < 200) { missile(c, lerpP(x.self, x.target, 0.08, 0), x, t, 0.3 + t / 300); return; }
-      if (t < 800) beamFx(c, x, t, Math.min(1, (t - 200) / 90) * Math.min(1, (800 - t) / 140)); } },
+    atk: t => ({ f: 0, pose: t < 200 ? 'cast' : t < 820 ? (x_src === 'eyes' ? 'idle' : 'push') : 'idle' }),
+    fx(c, t, x) { if (t < 200) { x.from.forEach(o => missile(c, o, x, t, 0.2 + t / 450)); return; }
+      if (t < 800) { const w = Math.min(1, (t - 200) / 90) * Math.min(1, (800 - t) / 140); x.from.forEach(o => beamFx(c, x, t, w * (x.from.length > 1 ? 0.55 : 1), o)); } } },
   spear: { C: 520, D: 860,
-    atk: t => ({ f: 0, pose: t < 200 ? 'cast' : t < 640 ? 'push' : 'idle' }),
-    fx(c, t, x) { for (let i = 0; i < 3; i++) { const k = (t - 200 - i * 70) / 320; if (k > 0 && k <= 1) spearFx(c, x, lerpP(x.self, x.target, 0.08 + k * 0.92, 10, (i - 1) * 14), i); }
-      if (t > 520 && t < 760) burst(c, x.target, (t - 520) / 240, x.col); } },
+    atk: t => ({ f: 0, pose: t < 200 ? 'slamup' : t < 640 ? 'push' : 'idle' }),
+    fx(c, t, x) { for (let i = 0; i < 3; i++) { const o = x.from[i % x.from.length], k = (t - 200 - i * 70) / 320;
+        if (t < 200 + i * 70) spearFx(c, x, { x: o.x, y: o.y - 6 - i * 4, ang: Math.atan2(x.target.y - o.y, x.target.x - o.x) }, i, Math.min(1, t / 180));
+        else if (k <= 1) spearFx(c, x, lerpP(o, x.target, k, 10, (i - 1) * 10), i, 1); } } },
   volley: { C: 560, D: 980,
     atk: t => ({ f: 0, pose: t < 160 ? 'cast' : t < 760 ? 'push' : 'idle' }),
-    fx(c, t, x) { for (let i = 0; i < 6; i++) { const k = (t - 160 - i * 60) / 400; if (k > 0 && k <= 1) bit(c, x, lerpP(x.self, x.target, 0.08 + k * 0.92, 30 + (i % 3) * 22, (i % 2 ? 1 : -1) * 10 * (i % 3)), t, i); }
-      if (t > 560 && t < 900) burst(c, x.target, ((t - 560) % 120) / 120, x.col); } },
+    fx(c, t, x) { for (let i = 0; i < 6; i++) { const k = (t - 160 - i * 60) / 400; if (k > 0 && k <= 1) bit(c, x, lerpP(x.from[i % x.from.length], x.target, k, 30 + (i % 3) * 22, (i % 2 ? 1 : -1) * 10 * (i % 3)), t, i); } } },
   shadowclaw: { C: 520, D: 920,
     atk: t => ({ f: 0, pose: t < 200 ? 'swipeup' : t < 620 ? 'swipedown' : 'idle' }),
-    fx(c, t, x) { const k = (t - 220) / 300; if (k > 0 && k <= 1) crescents(c, lerpP(x.self, x.target, 0.1 + k * 0.9, 12), x, k);
+    fx(c, t, x) { const k = (t - 220) / 300; if (k > 0 && k <= 1) crescents(c, lerpP(x.from[0], x.target, k, 12), x, k);
       if (t > 500 && t < 880) slash(c, x.target, (t - 500) / 380, [70, 30, 120], 1.4); } },
   lightning: { C: 420, D: 880,
-    atk: t => ({ f: 0, pose: t < 700 ? 'cast' : 'idle' }),
-    fx(c, t, x) { if (t < 300) { psyAura(c, x.self, t, 0.7, 0, x.col); return; } if (t < 700 && Math.floor(t / 55) % 3 !== 2) lightningFx(c, x.target, t); if (t > 420 && t < 700) burst(c, x.target, (t - 420) / 280, [255, 236, 120]); } },
-  pillar: { C: 460, D: 1000,
-    atk: t => ({ f: 0, pose: t < 820 ? 'cast' : 'idle' }),
-    fx(c, t, x) { if (t > 100 && t < 460) groundRing(c, x.target, (t - 100) / 360, x.col); if (t >= 400 && t < 940) pillarFx(c, x, Math.min(1, (t - 400) / 90) * Math.min(1, (940 - t) / 160), t); } },
+    atk: t => ({ f: 0, pose: t < 700 ? 'slamup' : 'idle' }),
+    fx(c, t, x) { if (t < 300) { psyAura(c, x.self, t, 0.7, 0, [255, 226, 90]); x.from.forEach(o => { c.save(); c.strokeStyle = '#fff6a0'; c.lineWidth = 2;
+        for (let i = 0; i < 3; i++) { const a = t / 40 + i * 2; c.beginPath(); c.moveTo(o.x, o.y); c.lineTo(o.x + Math.cos(a) * 10, o.y + Math.sin(a) * 10 - 4); c.stroke(); } c.restore(); }); return; }
+      if (t < 700 && Math.floor(t / 55) % 3 !== 2) lightningFx(c, x.target, t); } },
+  pillar: { C: 520, D: 1040,
+    atk: t => ({ f: 0, pose: t < 220 ? 'slamup' : t < 860 ? 'slam' : 'idle' }),
+    fx(c, t, x) { if (t > 220 && t < 520) crack(c, x.self, x.target, (t - 220) / 300, x.col); if (t >= 460 && t < 980) pillarFx(c, x, Math.min(1, (t - 460) / 90) * Math.min(1, (980 - t) / 160), t); } },
+  /* rock attacks: slam the ground and send the earth across */
+  rockpath: { C: 600, D: 1100,
+    atk: t => ({ f: 0, pose: t < 240 ? 'slamup' : t < 900 ? 'slam' : 'idle' }),
+    def: t => t > 600 && t < 760 ? { lift: -18 * Math.sin((t - 600) / 160 * Math.PI) } : null,
+    fx(c, t, x) { if (t > 240) rockSpikes(c, x.self, x.target, (t - 240) / 360, t); } },
+  boulder: { C: 760, D: 1150,
+    atk: t => ({ f: 0, pose: t < 220 ? 'slamup' : t < 440 ? 'slam' : t < 560 ? 'punchwind' : t < 760 ? 'punch' : 'idle' }),
+    fx(c, t, x) { const front = lerpP(x.self, x.target, 0.18);
+      if (t > 220 && t < 560) boulderFx(c, { x: front.x, y: front.y - 30 * eo((t - 220) / 200) + 12 }, t, 0.6 + 0.4 * eo((t - 220) / 200));
+      else if (t >= 560 && t < 760) { const k = (t - 560) / 200; boulderFx(c, lerpP({ x: front.x, y: front.y - 18 }, x.target, ei(k), 40), t * 3, 1); } } },
   cast: { C: 320, D: 620,
     atk: t => ({ f: 0, pose: t < 480 ? 'cast' : 'idle' }),
     fx(c, t, x) { if (t < 480) psyAura(c, x.self, t, 0.6, 0, x.col); } }
 };
 /* which attack a move plays: by its name first, then by what the body can do */
+let x_src = 'hands';
+const fromHands = () => x_src === 'hands';
 const PROJECTILE = [[/Solar Beam|Prism Ray|Holy Ray|Hypno Ray/, 'beam'], [/Zap|Bolt Strike/, 'lightning'], [/Flame Pillar|Absolute Zero/, 'pillar'],
-  [/Ice Shard|Frost Nip|Stone Edge/, 'spear'], [/Seed Volley|Leaf Storm|Heart Burst|Starfall|Bitstorm/, 'volley'], [/Night Claw/, 'shadowclaw']];
+  [/Ice Shard|Frost Nip/, 'spear'], [/Stone Edge|Quake/, 'rockpath'], [/Rock Slam|Landslide/, 'boulder'],
+  [/Seed Volley|Leaf Storm|Heart Burst|Starfall|Bitstorm/, 'volley'], [/Night Claw/, 'shadowclaw']];
+/* where a projectile leaves the body: rays from the eyes, breath and spit from the mouth, thrown things from the hands */
+function sourceFor(e, spec) {
+  const n = e.name || '', arms = !['Squib', 'Skit'].includes(spec.family) && spec.stage !== 'Bit';
+  if (/Hypno|Prism|Holy|Glint|Abyss|Gaze/.test(n)) return 'eyes';
+  if (/Solar|Flare|Fire|Flame|Toxic|Acid|Spit|Seed|Ember|Breath/.test(n)) return 'mouth';
+  return arms ? 'hands' : 'mouth';
+}
 function animFor(e, spec) {
   const n = e.name || '', fam = spec.family, bit = spec.stage === 'Bit', arms = !['Squib', 'Skit'].includes(fam) && !bit;
   for (const [re, kind] of PROJECTILE) if (re.test(n)) return kind;
@@ -161,23 +192,55 @@ function animFor(e, spec) {
 function chibiUse(e) {
   const st = CB.side[e.who]; if (!st) return Promise.resolve();
   const kind = animFor(e, st.spec), A = ANIM[kind];
-  CB.anim = { who: e.who, kind, t0: cbNow(), el: e.el, name: e.name, col: e.el ? hexRgb(typeof ELC === 'function' ? ELC(e.el) : '#a070ff') : [255, 214, 90] };
+  CB.anim = { who: e.who, kind, t0: CB.te, el: e.el, name: e.name, src: sourceFor(e, st.spec), col: e.el ? hexRgb(typeof ELC === 'function' ? ELC(e.el) : '#a070ff') : [255, 214, 90] };
+  sfx(['bolt', 'beam', 'spear', 'volley', 'lightning', 'pillar', 'shadowclaw', 'lift', 'push'].includes(kind) ? 'charge' : 'whoosh');
   return new Promise(r => setTimeout(r, A.C));
 }
 const hexRgb = h => /^#[0-9a-f]{6}$/i.test(h) ? [1, 3, 5].map(k => parseInt(h.slice(k, k + 2), 16)) : [170, 110, 255];
-/* a hit, a miss, a guard or a cast shown on one side */
+/* a hit lands: everything here fires within the same instant, scaled by how hard it was */
+const TIER = {
+  light:  { stop: 40,  trauma: 0.18, push: 0.05, sparks: 5,  flash: 50 },
+  medium: { stop: 75,  trauma: 0.38, push: 0.09, sparks: 10, flash: 70 },
+  heavy:  { stop: 140, trauma: 0.75, push: 0.15, sparks: 22, flash: 90, impact: 1 }
+};
+function chibiHit(e) {
+  const st = CB.side[e.who]; if (!st) return;
+  const tier = e.dot ? 'light' : e.crit || e.eff > 1 ? 'heavy' : e.dmg >= 30 ? 'medium' : 'light', T = TIER[tier], now = cbNow();
+  st.react = { kind: 'hit', t0: CB.te, tier };
+  if (!e.dot) { CB.freezeUntil = Math.max(CB.freezeUntil, now + T.stop); CB.vibrate = { who: e.who, until: now + T.stop + 60 }; }
+  CB.trauma = Math.min(1, CB.trauma + T.trauma * (REDUCED ? 0.35 : 1));
+  if (T.impact && !REDUCED) CB.impact = { who: e.who, until: now + 70 };
+  CB.spark = { who: e.who, n: T.sparks, col: CB.anim && CB.anim.who !== e.who ? CB.anim.col : [255, 236, 160], fresh: true };
+  sfx(tier === 'heavy' ? 'heavy' : tier === 'medium' ? 'hit' : 'tap');
+}
 function chibiBump(who, cls) {
   const st = CB.side[who]; if (!st) return;
-  const now = cbNow();
-  if (cls === 'bhit') st.react = { kind: 'hit', t0: now };
-  if (cls === 'miss') st.react = { kind: 'dodge', t0: now };
-  if (cls === 'bguard') st.hold = { pose: 'guard', until: now + 550 };
-  if (cls === 'bcast' && !(CB.anim && CB.anim.who === who)) st.hold = { pose: 'cast', until: now + 500 };
+  if (cls === 'bhit') { if (!st.react || CB.te - st.react.t0 > 30) st.react = { kind: 'hit', t0: CB.te, tier: 'light' }; }
+  if (cls === 'miss') { st.react = { kind: 'dodge', t0: CB.te }; sfx('whoosh'); }
+  if (cls === 'bguard') st.hold = { pose: 'guard', until: CB.te + 550 };
+  if (cls === 'bcast' && !(CB.anim && CB.anim.who === who)) st.hold = { pose: 'cast', until: CB.te + 500 };
+  if (cls === 'ability') { st.hold = { pose: 'cast', until: CB.te + 450 }; st.aura = CB.te; }
 }
 function chibiPose(who, pose, ms) {
   const st = CB.side[who]; if (!st) return;
-  if (pose === 'ko') { st.ko = cbNow(); return; }
-  st.hold = { pose, until: ms ? cbNow() + ms : Infinity };
+  if (pose === 'ko') { st.ko = CB.te; CB.slowUntil = cbNow() + 650; CB.trauma = Math.min(1, CB.trauma + (REDUCED ? 0.2 : 0.6)); sfx('ko'); return; }
+  st.hold = { pose, until: ms ? CB.te + ms : Infinity };
+}
+/* hit sounds built on the game's own synth, so they follow the music on/off switch */
+let SFXBUS = null;
+function sfx(kind) {
+  try {
+    if (typeof AC === 'undefined' || !AC || typeof MUS === 'undefined' || !MUS.on || !MUS.nb || CB.now != null) return;
+    if (!SFXBUS) { SFXBUS = AC.createGain(); SFXBUS.gain.value = 0.55; SFXBUS.connect(AC.destination); }
+    const t = AC.currentTime + 0.005, d = SFXBUS;
+    if (kind === 'tap') { dKick(d, t, 0.35); dNoise(d, t, 0.05, 0.2, 'bandpass', 2400, 1.4); }
+    if (kind === 'hit') { dKick(d, t, 0.7); dNoise(d, t, 0.09, 0.35, 'bandpass', 1600, 1); }
+    if (kind === 'heavy') { dKick(d, t, 1); dKick(d, t + 0.03, 0.6); dNoise(d, t, 0.22, 0.5, 'lowpass', 900); dNoise(d, t, 0.06, 0.4, 'highpass', 4000); }
+    if (kind === 'ko') { dKick(d, t, 1); dNoise(d, t, 0.5, 0.45, 'lowpass', 500); }
+    if (kind === 'whoosh') dNoise(d, t, 0.16, 0.18, 'bandpass', 900, 0.7);
+    if (kind === 'charge') { const o = AC.createOscillator(), g = AC.createGain(); o.type = 'triangle'; o.frequency.setValueAtTime(300, t); o.frequency.exponentialRampToValueAtTime(900, t + 0.22);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.12, t + 0.05); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.26); o.connect(g); g.connect(d); o.start(t); o.stop(t + 0.28); }
+  } catch (err) {}
 }
 
 /* ---------- effects that fly between the two sides ---------- */
@@ -245,8 +308,8 @@ function missile(c, p, x, t, sc = 1, alpha = 1) {
   else { c.fillStyle = rgbS(col.map(v => Math.min(255, v + 40))); c.beginPath(); c.arc(0, 0, 10, 0, 7); c.fill(); c.fillStyle = 'rgba(255,255,255,.8)'; c.beginPath(); c.arc(-3, -3, 3.5, 0, 7); c.fill(); }
   c.restore();
 }
-function beamFx(c, x, t, w) {
-  const a = lerpP(x.self, x.target, 0.08), b = x.target, prism = /Prism/.test(x.name), hypno = /Hypno/.test(x.name), col = /Solar/.test(x.name) ? [200, 240, 90] : x.col;
+function beamFx(c, x, t, w, a) {
+  const b = x.target, prism = /Prism/.test(x.name), hypno = /Hypno/.test(x.name), col = /Solar/.test(x.name) ? [200, 240, 90] : x.col;
   c.save(); c.lineCap = 'round'; c.shadowColor = rgbS(col, 0.9); c.shadowBlur = 20;
   if (prism) { const gr = c.createLinearGradient(a.x, a.y, b.x, b.y); ['#ff5a5a', '#ffb347', '#ffe14a', '#5ad16a', '#4aa8ff', '#a070ff'].forEach((h, i) => gr.addColorStop(i / 5, h)); c.strokeStyle = gr; }
   else c.strokeStyle = rgbS(col, 0.85);
@@ -256,8 +319,8 @@ function beamFx(c, x, t, w) {
   c.fillStyle = 'rgba(255,255,255,.9)'; c.beginPath(); c.arc(b.x, b.y, 10 * w + Math.sin(t / 25) * 3, 0, 7); c.fill();
   c.restore();
 }
-function spearFx(c, x, p, i) {
-  c.save(); c.translate(p.x, p.y); c.rotate(p.ang); const rock = x.el === 'Stone';
+function spearFx(c, x, p, i, sc = 1) {
+  c.save(); c.translate(p.x, p.y); c.rotate(p.ang); c.scale(sc, sc); const rock = x.el === 'Stone';
   c.shadowColor = rock ? 'rgba(0,0,0,.3)' : 'rgba(150,215,255,.9)'; c.shadowBlur = 10;
   c.fillStyle = rock ? 'rgb(150,112,78)' : 'rgb(190,232,255)'; c.beginPath();
   if (rock) { c.moveTo(16, 0); c.lineTo(2, -8); c.lineTo(-12, -5); c.lineTo(-10, 6); c.lineTo(4, 7); }
@@ -303,59 +366,128 @@ function pillarFx(c, x, w, t) {
   c.restore();
 }
 
+/* a crack runs along the ground from the attacker's feet to the enemy's */
+function crack(c, a, b, k, col) {
+  const n = 9, A = { x: a.x, y: a.foot }, B = { x: b.x, y: b.foot };
+  c.save(); c.strokeStyle = 'rgba(70,40,20,.85)'; c.lineWidth = 3; c.lineJoin = 'round'; c.beginPath();
+  for (let i = 0; i <= n * Math.min(1, k); i++) { const p = lerpP(A, B, i / n); i ? c.lineTo(p.x + (i % 2 ? 4 : -4), p.y + (i % 2 ? 2 : -1)) : c.moveTo(p.x, p.y); } c.stroke();
+  const tip = lerpP(A, B, Math.min(1, k)); c.fillStyle = rgbS(col, 0.6); c.beginPath(); c.ellipse(tip.x, tip.y, 10, 4, 0, 0, 7); c.fill(); c.restore();
+}
+/* rock spikes burst up one after another along the ground, the last and biggest under the enemy */
+function rockSpikes(c, a, b, k, t) {
+  const n = 7, A = { x: a.x, y: a.foot }, B = { x: b.x, y: b.foot };
+  c.save();
+  for (let i = 1; i <= n; i++) { const born = (i - 1) / n, age = (k - born) * 3.2; if (age <= 0) continue;
+    const p = lerpP(A, B, i / n), big = i === n ? 1.9 : 0.7 + i * 0.08, rise = Math.min(1, age) * (age > 2.2 ? Math.max(0, 1 - (age - 2.2)) : 1), h = 26 * big * eo(rise), w = 11 * big;
+    if (h < 1) continue;
+    c.fillStyle = 'rgb(122,92,66)'; c.beginPath(); c.moveTo(p.x - w, p.y + 2); c.lineTo(p.x - w * 0.2, p.y - h); c.lineTo(p.x + w * 0.35, p.y - h * 0.75); c.lineTo(p.x + w, p.y + 2); c.closePath(); c.fill();
+    c.fillStyle = 'rgb(168,132,96)'; c.beginPath(); c.moveTo(p.x - w * 0.55, p.y); c.lineTo(p.x - w * 0.2, p.y - h); c.lineTo(p.x, p.y - h * 0.4); c.closePath(); c.fill();
+    if (age < 0.5) { c.fillStyle = 'rgba(200,170,130,.7)'; for (let d = 0; d < 3; d++) { c.beginPath(); c.arc(p.x + (d - 1) * 9, p.y - age * 30 - d * 4, 3, 0, 7); c.fill(); } } }
+  c.restore();
+}
+function boulderFx(c, p, t, sc) {
+  c.save(); c.translate(p.x, p.y); c.rotate(t / 160); c.scale(sc, sc);
+  c.fillStyle = 'rgb(108,82,60)'; c.beginPath(); for (let i = 0; i < 9; i++) { const a = i / 9 * Math.PI * 2, r = 17 + (i % 3) * 2.5; c.lineTo(Math.cos(a) * r, Math.sin(a) * r + 2); } c.closePath(); c.fill();
+  c.fillStyle = 'rgb(150,118,88)'; c.beginPath(); for (let i = 0; i < 9; i++) { const a = i / 9 * Math.PI * 2, r = 16 + (i % 3) * 2.5; c.lineTo(Math.cos(a) * r, Math.sin(a) * r); } c.closePath(); c.fill();
+  c.fillStyle = 'rgba(255,255,255,.25)'; c.beginPath(); c.ellipse(-5, -7, 6, 3, -0.5, 0, 7); c.fill();
+  c.restore();
+}
+/* sparks fly away from the attacker in a cone and fall; they live on the battle clock, so they freeze in hit stop */
+function spawnSparks(p, dir, n, col) {
+  for (let i = 0; i < n; i++) { const a = dir + (Math.random() - 0.5) * 1.7, v = 0.18 + Math.random() * 0.32;
+    CB.parts.push({ x: p.x, y: p.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 0.12, born: CB.te, life: 260 + Math.random() * 260, col: i % 3 ? col : [255, 255, 255], w: 2 + Math.random() * 2.5 }); }
+}
+function drawSparks(c, dt) {
+  CB.parts = CB.parts.filter(q => CB.te - q.born < q.life);
+  for (const q of CB.parts) { q.x += q.vx * dt; q.y += q.vy * dt; q.vy += 0.0009 * dt; const k = (CB.te - q.born) / q.life;
+    c.strokeStyle = rgbS(q.col, 1 - k); c.lineWidth = q.w * (1 - k * 0.5); c.lineCap = 'round';
+    c.beginPath(); c.moveTo(q.x, q.y); c.lineTo(q.x - q.vx * 26, q.y - q.vy * 26); c.stroke(); }
+}
+/* origin points for the attack in progress */
+function originOf(p, src) {
+  if (!p) return [];
+  if (src === 'eyes') return p.back || !p.eyes ? [p.top] : p.eyes;
+  if (src === 'mouth') return [p.back || !p.mouth ? p.top : p.mouth];
+  return p.hands && p.hands.length ? p.hands : [p.back || !p.mouth ? p.top : p.mouth];
+}
+
 /* ---------- one frame ---------- */
-function sideState(who, now, pos) {
+function sideState(who, te, pos) {
   const st = CB.side[who], A = CB.anim, out = { f: 0, arc: 0, lift: 0, rot: 0, sx: 1, sy: 1, pose: 'idle', flash: 0, shake: 0, off: [0, 0], alpha: 1 };
-  if (A) { const t = now - A.t0, K = ANIM[A.kind];
+  if (A) { const t = te - A.t0, K = ANIM[A.kind]; x_src = A.src;
     if (t > K.D) CB.anim = null;
     else if (A.who === who) Object.assign(out, K.atk(t, pos));
     else if (K.def) { const d = K.def(t, pos); if (d) Object.assign(out, d); } }
-  if (st.hold) { if (now > st.hold.until) st.hold = null; else out.pose = st.hold.pose; }
+  if (st.hold) { if (te > st.hold.until) st.hold = null; else out.pose = st.hold.pose; }
   const R = st.react;
-  if (R) { const k = (now - R.t0) / (R.kind === 'hit' ? 420 : 380);
+  if (R) { const dur = R.kind === 'hit' ? (R.tier === 'heavy' ? 560 : 420) : 380, k = (te - R.t0) / dur;
     if (k > 1) st.react = null;
-    else if (R.kind === 'hit') { out.pose = 'hit'; out.flash = k < 0.25 ? 1 : 0; out.shake = Math.sin(k * 40) * 6 * (1 - k); out.f += -0.05 * Math.sin(k * Math.PI); }
+    else if (R.kind === 'hit') { const T = TIER[R.tier || 'light'];
+      out.pose = 'hit'; out.flash = te - R.t0 < 18 ? 2 : te - R.t0 < T.flash ? 1 : 0;
+      out.f += -T.push * (k < 0.25 ? eo(k / 0.25) : 1 - eio((k - 0.25) / 0.75)); out.rot += -0.12 * (R.tier === 'heavy' ? 1.6 : 1) * Math.sin(Math.min(1, k * 1.5) * Math.PI) * (who ? -1 : 1); }
     else { const s2 = Math.sin(k * Math.PI); out.pose = 'dodge'; out.off = [pos.perp[0] * 30 * s2, pos.perp[1] * 30 * s2 - 10 * s2]; } }
-  if (st.ko) { out.pose = 'ko'; out.alpha = Math.max(0, 1 - (now - st.ko - 350) / 600); }
+  if (st.ko != null) { out.pose = 'ko'; out.alpha = Math.max(0, 1 - (te - st.ko - 350) / 600); }
   return out;
 }
 function chibiBattleLoop() {
   const bat = document.getElementById('battle');
-  if (!CB.side[0] && !CB.side[1] || !bat || bat.style.display === 'none') { CB.loop = false; return; }
+  if (!CB.side[0] && !CB.side[1] || !bat || bat.style.display === 'none') { CB.loop = false; const ar = document.getElementById('arena'); if (ar) ar.style.transform = ''; return; }
   chibiBattleFrame(cbNow());
   requestAnimationFrame(chibiBattleLoop);
 }
 function chibiBattleFrame(now) {
+  tick(now); const te = CB.te, dte = CB.prevTe == null ? 0 : Math.max(0, te - CB.prevTe); CB.prevTe = te;
   const o = arenaLayer(), r = o.getBoundingClientRect(), dpr = devicePixelRatio || 1;
   const W = Math.round(r.width * dpr), H = Math.round(r.height * dpr);
   if (o.width !== W) o.width = W; if (o.height !== H) o.height = H;
   const c = o.getContext('2d'); c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, W, H);
-  const H0 = home(0), H1 = home(1), homes = [H0, H1];
-  const placed = [], fxq = [];
+  // screen shake: trauma squared, smooth sines, never random per frame
+  const ar = document.getElementById('arena'), sh = CB.trauma * CB.trauma;
+  if (ar) ar.style.transform = sh > 0.001 ? `translate(${(10 * sh * Math.sin(now / 27)).toFixed(2)}px,${(7 * sh * Math.sin(now / 19 + 1)).toFixed(2)}px) rotate(${(1.4 * sh * Math.sin(now / 33)).toFixed(3)}deg)` : '';
+  const homes = [home(0), home(1)], placed = [], imp = CB.impact && now < CB.impact.until ? CB.impact : null;
+  if (imp) {                                   // impact frame: the arena goes dark with speed lines, the one hit turns white
+    c.save(); c.scale(dpr, dpr); c.fillStyle = 'rgba(16,8,28,.88)'; c.fillRect(0, 0, r.width, r.height);
+    const h = homes[imp.who]; c.strokeStyle = 'rgba(255,255,255,.85)';
+    for (let i = 0; i < 26; i++) { const a = i / 26 * Math.PI * 2, r0 = 40 + (i % 3) * 14; c.lineWidth = 1.5 + (i % 4);
+      c.beginPath(); c.moveTo(h.x + Math.cos(a) * r0, h.y - 40 + Math.sin(a) * r0); c.lineTo(h.x + Math.cos(a) * 400, h.y - 40 + Math.sin(a) * 400); c.stroke(); }
+    c.restore();
+  }
   for (const who of [1, 0]) {                        // the far side first, so the near side draws over it
     const st = CB.side[who]; if (!st) continue;
     const h = homes[who], o2 = homes[1 - who], V = [o2.x - h.x, o2.y - h.y], L = Math.hypot(V[0], V[1]) || 1;
     const u = unitOf(st, h), other = CB.side[1 - who];
     const foeH = other ? CHIBI.height(other.spec.stage, other.spec.marks, other.spec.family) * unitOf(other, o2) : 60;
-    const S = sideState(who, now, { foeH, perp: [-V[1] / L, V[0] / L] });
-    if (S.pose !== st.shown) { st.from = st.shown; st.shown = S.pose; st.t0 = now; }
-    const k = (now - st.t0) / 110, P = k >= 0 && k < 1 && CHIBI.POSES.includes(st.from) ? CHIBI.blend(st.from, S.pose, k) : S.pose;
-    const x = h.x + V[0] * S.f + S.shake + S.off[0], y = h.y + V[1] * S.f + S.arc + S.lift + S.off[1], mir = who === 1 ? -1 : 1;
-    c.save(); c.scale(dpr, dpr); c.globalAlpha = S.alpha; if (S.flash) c.filter = 'brightness(1.45)';
-    c.translate(x, y); c.rotate(S.rot); c.scale(mir * u * S.sx, u * S.sy); c.translate(-100, -188);
-    CHIBI.draw(c, st.spec, P, now, [0.6, who === 0 ? -0.5 : 0.5]);
-    c.restore();
-    placed[who] = { x, y: y - CHIBI.height(st.spec.stage, st.spec.marks, st.spec.family) * u * 0.45, foot: y, lift: S.lift };
-    if (st.react && st.react.kind === 'hit') fxq.push(['burst', who, (now - st.react.t0) / 260]);
+    const S = sideState(who, te, { foeH, perp: [-V[1] / L, V[0] / L] });
+    if (S.pose !== st.shown) { st.from = st.shown; st.shown = S.pose; st.t0 = te; }
+    const k = (te - st.t0) / 110, P = k >= 0 && k < 1 && CHIBI.POSES.includes(st.from) ? CHIBI.blend(st.from, S.pose, k) : S.pose;
+    const vib = CB.vibrate && CB.vibrate.who === who && now < CB.vibrate.until ? Math.sin(now / 9) * 4 : 0;     // the target shakes while time is stopped
+    const x = h.x + V[0] * S.f + S.shake + S.off[0] + vib, y = h.y + V[1] * S.f + S.arc + S.lift + S.off[1], mir = who === 1 ? -1 : 1;
+    const put = (alpha, filter, cap) => { c.save(); c.scale(dpr, dpr); c.globalAlpha = alpha; if (filter) c.filter = filter;
+      c.translate(x, y); c.rotate(S.rot); c.scale(mir * u * S.sx, u * S.sy); c.translate(-100, -188);
+      CHIBI.draw(c, cap ? { ...st.spec, capture: (st.cap = {}) } : st.spec, P, te, [0.6, who === 0 ? -0.5 : 0.5]); c.restore(); };
+    // afterimages behind a fast move
+    st.trail = st.trail || []; const last = st.trail[st.trail.length - 1], speed = last ? Math.hypot(x - last.x, y - last.y) : 0;
+    st.trail.push({ x, y }); if (st.trail.length > 10) st.trail.shift();
+    if (speed > 5 && st.trail.length > 6 && !imp) for (const [i, a] of [[st.trail.length - 7, 0.14], [st.trail.length - 4, 0.24]]) {
+      const g = st.trail[i]; c.save(); c.translate((g.x - x) * dpr, (g.y - y) * dpr); put(a * S.alpha, 'saturate(0.4) brightness(1.4)', false); c.restore(); }
+    const white = imp && imp.who === who;
+    put(S.alpha, white || S.flash === 2 ? 'brightness(0) invert(1)' : S.flash ? 'brightness(1.5)' : '', true);
+    const cp = st.cap || {}, d = q => q ? { x: q.x / dpr, y: q.y / dpr } : null;
+    placed[who] = { x, y: y - CHIBI.height(st.spec.stage, st.spec.marks, st.spec.family) * u * 0.45, foot: y, lift: S.lift, back: !!st.spec.back,
+      eyes: cp.eyes && cp.eyes.map(d), mouth: d(cp.mouth), hands: (cp.hands || []).map(d), top: d(cp.top) || { x, y: y - 50 }, center: d(cp.center) };
+    if (st.aura != null && te - st.aura < 500) { c.save(); c.scale(dpr, dpr); psyAura(c, placed[who], te, 1 - (te - st.aura) / 500, 0, [255, 214, 90]); c.restore(); }
   }
   c.save(); c.scale(dpr, dpr);
   const A = CB.anim;
-  if (A && ANIM[A.kind].fx && placed[A.who]) { const tgt = placed[1 - A.who] || { x: homes[1 - A.who].x, y: homes[1 - A.who].y - 40, foot: homes[1 - A.who].y };
-    ANIM[A.kind].fx(c, now - A.t0, { self: placed[A.who], target: tgt, targetLift: tgt.lift || 0, col: A.col || [255, 214, 90], el: A.el, name: A.name || '' }); }
-  for (const [kind, who, k] of fxq) if (k < 1 && placed[who]) burst(c, placed[who], k);
+  if (A && ANIM[A.kind].fx && placed[A.who]) { const T0 = placed[1 - A.who] || { x: homes[1 - A.who].x, y: homes[1 - A.who].y - 40, foot: homes[1 - A.who].y };
+    const tgt = { ...T0, x: T0.center ? T0.center.x : T0.x, y: T0.center ? T0.center.y : T0.y };
+    ANIM[A.kind].fx(c, te - A.t0, { self: placed[A.who], target: tgt, targetLift: tgt.lift || 0, col: A.col || [255, 214, 90], el: A.el, name: A.name || '', from: originOf(placed[A.who], A.src) }); }
+  if (CB.spark && CB.spark.fresh && placed[CB.spark.who]) { const p = placed[CB.spark.who], src = placed[1 - CB.spark.who] || homes[1 - CB.spark.who];
+    const c0 = p.center || p; spawnSparks(c0, Math.atan2(c0.y - src.y, c0.x - src.x), CB.spark.n, CB.spark.col); CB.spark.fresh = false; CB.burstAt = { who: CB.spark.who, t0: te, col: CB.spark.col }; }
+  if (CB.burstAt && placed[CB.burstAt.who] && te - CB.burstAt.t0 < 260) { const p = placed[CB.burstAt.who]; burst(c, p.center || p, (te - CB.burstAt.t0) / 260, CB.burstAt.col); }
+  drawSparks(c, dte);
   c.restore();
 }
-
 /* ---------- tiles and the stadium ---------- */
 /* a still drawing in a tile canvas (scan result, Freezer, fusion lab, first-scan picker, wild battle card);
    o: { stage, s (ranch state), grid and scale for the pixel fallback, size in css px when the canvas isn't shown yet } */

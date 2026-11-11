@@ -143,7 +143,9 @@ body[data-mode="aim"] #bars{bottom:calc(var(--safe-b) + 150px)}
 .bguard{animation:bg .4s}@keyframes bg{50%{transform:scale(.92)}}
 .bcast{animation:bc .4s}@keyframes bc{50%{transform:translateY(-10px)}}
 .bko{opacity:0;transform:scale(1.25)}
-.bpop{position:absolute;font:700 22px var(--pix);text-shadow:0 2px 0 #000;transition:transform .8s,opacity .8s;transform:translate(-50%,0);pointer-events:none}
+.bpop{position:absolute;font:700 22px var(--pix);text-shadow:0 2px 0 #000;transition:transform .8s,opacity .8s;transform:translate(-50%,0);pointer-events:none;animation:bpopin .3s cubic-bezier(.2,1.9,.45,1)}
+@keyframes bpopin{from{scale:2.1}to{scale:1}}
+@media (prefers-reduced-motion:reduce){.bpop{animation:none}}
 .bpop.ab{font-size:14px;background:#000a;padding:2px 8px;border-radius:6px;white-space:nowrap}
 #b-log{font-size:14px;min-height:64px;max-height:72px;overflow:hidden;background:var(--panel);border:2px solid var(--line);border-radius:var(--r);padding:8px 12px;color:#d6d2c4}
 #b-log div:last-child{color:var(--text);font-weight:600}

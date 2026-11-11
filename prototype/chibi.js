@@ -9,6 +9,12 @@ const CHIBI = (() => {
   const rgb = c => `rgb(${c[0]},${c[1]},${c[2]})`, rgba = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
   const lerp = (a, b, t) => a + (b - a) * t;
   const INK = [42, 22, 30], BLUSH = [245, 154, 181], TONGUE = [242, 122, 155];
+  /* when a drawing is given m.capture, it records where its eyes, mouth, hands and body ended up on the canvas
+     (canvas pixels, after every transform), so attacks can start from the right spot */
+  let CAP = null;
+  const capPt = (c, x, y) => { const p = c.getTransform().transformPoint({ x, y }); return { x: p.x, y: p.y }; };
+  function capBody(c, g) { if (!CAP) return; CAP.top = capPt(c, g.cx, g.top + g.bh * 0.18); CAP.center = capPt(c, g.cx, g.top + g.bh * 0.5); CAP.feet = capPt(c, g.cx, 186); }
+  function capFace(c, cx, ey, ex, my, one) { if (!CAP) return; CAP.eyes = one ? [capPt(c, cx, ey)] : [capPt(c, cx - ex, ey), capPt(c, cx + ex, ey)]; CAP.mouth = capPt(c, cx, my); }
 
   /* Bit keeps the silhouette, eyes, feet, colour and the toothy mouth. Byte adds arms and the training mark.
      Mega adds fangs, claws, the second mark and the element pattern. */
@@ -56,6 +62,8 @@ const CHIBI = (() => {
     push:   { arm: [[18, -4, 34, -6], [18, -4, 34, -6]], feet: [-6, 0, 6, 0], eyes: 'fierce', open: 0.35, lean: 7, tilt: 5, front: 1 },
     float:  { arm: [[14, -10, 20, -22], [14, -10, 20, -22]], feet: [-4, 6, 4, 6], eyes: 'hurt', open: 0, ouch: 1, extra: 'sweat' },
     dodge:  { arm: [[14, -6, 20, -14], REST], feet: [-6, -3, 2, 0], eyes: 'open', open: 0.3, tilt: -14, lean: -6 },
+    slamup: { arm: [[12, -18, 6, -38], [12, -18, 6, -38]], feet: [-3, 0, 3, 0], eyes: 'fierce', open: 0.45, sx: 0.92, sy: 1.1, lift: -6 },
+    slam:   { arm: [[18, 10, 26, 30], [18, 10, 26, 30]], feet: [-7, 0, 7, 0], eyes: 'fierce', open: 0.85, sx: 1.16, sy: 0.8, front: 1 },
     attack: { arm: [[18, -2, 30, -6], [18, -2, 30, -6]], feet: [-5, 0, 5, -3], eyes: 'fierce', open: 1, tilt: 7, lean: 8, front: 1 },
     hit:    { arm: [[16, -8, 24, -18], [16, -8, 24, -18]], feet: [-3, -4, 3, 0], eyes: 'hurt', open: 0, ouch: 1, tilt: -9, lean: -6, sx: 0.94, sy: 1.04, extra: 'sweat' },
     ko:     { arm: [[14, 14, 22, 18], [14, 14, 22, 18]], feet: [-6, 0, 6, 0], eyes: 'ko', open: 0.2, tilt: 9, sx: 1.1, sy: 0.74, extra: 'stars' }
@@ -194,6 +202,7 @@ const CHIBI = (() => {
   /* the arm is one stroke with a round end and a hand ball, like Nong Tape's */
   function arm(c, sx, sy, a, side, st, col, hand, mat, t) {
     const o = side, q = [sx, sy, sx + a[0] * o, sy + a[1], sx + a[2] * o, sy + a[3]];
+    if (CAP) (CAP.hands = CAP.hands || []).push(capPt(c, q[4], q[5]));
     limb(c, q, st.arm, col, mat, t);
     blob(c, q[4], q[5], st.hand, st.hand, hand, mat, t, 'hand');
   }
@@ -260,6 +269,7 @@ const CHIBI = (() => {
     if (stout && !back) { c.fillStyle = rgb(lt(body, 0.6)); c.beginPath(); c.ellipse(g.cx, my + g.bh * 0.17, g.bw * 0.36, g.bh * 0.28, 0, 0, 7); c.fill(); }
     if (m.fx) fxOnBody(c, m.fx, () => roundBox(c, left, g.top, g.bw, g.bh, st.r), g, body, t);
     c.restore();
+    capBody(c, g);
     // one white highlight arc on the upper left
     c.strokeStyle = 'rgba(255,255,255,.55)'; c.lineWidth = m.stage === 'Bit' ? 4.5 : 5.5; c.lineCap = 'round';
     c.beginPath(); c.moveTo(left + 9, g.top + st.r * 1.05); c.quadraticCurveTo(left + 10, g.top + 9, left + st.r * 1.25, g.top + 7); c.stroke();
@@ -275,6 +285,7 @@ const CHIBI = (() => {
     for (const side of [-1, 1]) { c.beginPath(); c.ellipse(g.cx + side * g.bw * 0.31, ey + 13 * s, 7.5 * s, 4.5 * s, 0, 0, 7); c.fill(); }
     const eyes = P.eyes === 'open' && m.stage === 'Mega' ? 'fierce' : P.eyes;
     eye(c, g.cx - ex, ey, s, eyes, -1, look); eye(c, g.cx + ex, ey, s, eyes, 1, look);
+    capFace(c, g.cx, ey, ex, my, false);
     if (eyes === 'fierce') {        // a slanted top lid in body colour makes the Mega look ready to fight
       c.fillStyle = rgb(mix(lt(body, 0.05), body, 0.5));
       for (const side of [-1, 1]) { const x = g.cx + side * ex;
@@ -560,6 +571,7 @@ const CHIBI = (() => {
     for (const side of [-1, 1]) { c.beginPath(); c.ellipse(g.cx + side * (ex + 9 * s), ey + 12 * s, 7 * s, 4.2 * s, 0, 0, 7); c.fill(); }
     const eyes = x.P.eyes === 'open' && x.stage === 'Mega' ? 'fierce' : x.P.eyes;
     eye(c, g.cx - ex, ey, s, eyes, -1, look); eye(c, g.cx + ex, ey, s, eyes, 1, look);
+    capFace(c, g.cx, ey, ex, my, false);
     if (eyes === 'fierce') for (const side of [-1, 1]) lid(c, g.cx + side * ex, ey, s, side, look, rgb(o.lidCol || x.body));
     if (o.extraEyes) for (const side of [-1, 1]) eye(c, g.cx + side * g.bw * o.extraEyes, ey - 7 * s, s * 0.45, eyes === 'fierce' ? 'open' : eyes, side, look);
     smallMouth(c, g.cx, my, s, x.open, x.P.ouch ? 'ouch' : x.stage === 'Mega' || o.fang, x.P.frown);
@@ -568,6 +580,7 @@ const CHIBI = (() => {
   }
   /* a crab claw at the end of an arm, opening outward; side flips it for the left arm */
   function claw(c, x, y, ang, sz, col, side, serrate) {
+    if (CAP) (CAP.hands = CAP.hands || []).push(capPt(c, x, y));
     c.save(); c.translate(x, y); c.scale(side, 1); c.rotate(ang);
     const jaw = (up) => { const k = up ? -1 : 1; c.beginPath(); c.moveTo(-sz * 0.1, 0);
       c.bezierCurveTo(sz * 0.1, k * sz * (up ? 0.95 : 0.7), sz * 0.9, k * sz * (up ? 0.8 : 0.55), sz * 1.15, k * sz * (up ? 0.22 : 0.1));
@@ -638,6 +651,7 @@ const CHIBI = (() => {
           blob(c, fx + sw * 1.4, 182, lw * 0.6, lw * 0.5, x.parts, mat, x.t, 'foot'); x.feet.push([fx + sw * 1.4, 183, lw * 0.6]); }); },
       face(c, g, x, look) {
         const s = by(g.stage, 1.45, 1.75, 2.0), ey = g.top + g.bh * 0.42, my = g.top + g.bh * 0.72, e = x.P.eyes;
+        capFace(c, g.cx, ey, 0, my, true);
         c.fillStyle = rgba(BLUSH, 0.7); for (const side of [-1, 1]) { c.beginPath(); c.ellipse(g.cx + side * g.bw * 0.3, ey + 15 * s * 0.55, 7.5, 4.5, 0, 0, 7); c.fill(); }
         if ((e === 'open' && g.stage === 'Mega') || e === 'fierce') {          // the Mega's eye gets a coloured iris and a slanted lid
           const lx = look[0] * 4, ly = look[1] * 3;
@@ -898,6 +912,7 @@ const CHIBI = (() => {
     if (stage === 'Mega' && E && F.patternAfter) E.pattern(c, g, body);
     if (m.fx) fxOnBody(c, m.fx, () => F.path.call(F, c, g, x), g, body, t);
     c.restore();
+    capBody(c, g);
     const h = F.hl ? F.hl(g) : [g.left + g.bw * 0.13, g.top + g.bh * 0.42, g.left + g.bw * 0.12, g.top + g.bh * 0.12, g.left + g.bw * 0.4, g.top + g.bh * 0.08];
     c.strokeStyle = 'rgba(255,255,255,.55)'; c.lineWidth = stage === 'Bit' ? 4.5 : 5.5; c.lineCap = 'round';
     c.beginPath(); c.moveTo(h[0], h[1]); c.quadraticCurveTo(h[2], h[3], h[4], h[5]); c.stroke();
@@ -941,7 +956,11 @@ const CHIBI = (() => {
 
   /* the visible height of each stage in units, so screens can size it */
   const chompHeight = (stage, marks = []) => (STAGE[stage] || STAGE.Bit).bh + 18 + (marks.includes('Horned') && stage !== 'Bit' ? 28 : 0);
-  const draw = (c, m, p, t = 0, look = [0, 0]) => (FAM[m.family] ? drawFamily(c, m, p, t, look, FAM[m.family]) : drawChomp(c, m, p, t, look));
+  const draw = (c, m, p, t = 0, look = [0, 0]) => {
+    CAP = m.capture || null; if (CAP) { CAP.hands = []; CAP.eyes = null; CAP.mouth = null; }
+    const r = FAM[m.family] ? drawFamily(c, m, p, t, look, FAM[m.family]) : drawChomp(c, m, p, t, look);
+    CAP = null; return r;
+  };
   const height = (stage, marks = [], family = 'Chomp') => FAM[family] ? FAM[family].height(stage) : chompHeight(stage, marks);
   const width = (stage, family = 'Chomp') => FAM[family] ? FAM[family].dims[stage][0] : STAGE[stage].bw;
   return { draw, blend, height, width, POSES: Object.keys(POSE), STAGE, FAMILIES: ['Chomp', ...Object.keys(FAM)] };
