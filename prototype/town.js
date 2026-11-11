@@ -19,7 +19,8 @@ const HELD={
   "Lucky bit":{price:1200,desc:"Crit chance goes from 5% to 10%"},
 };
 const MARKET={"Berry":15,"Cool leaf":20,"Candy":15,"Energy nut":30,"Honey cake":40,"Bitter root":25,"Slim tea":30,"Medicine":80,"Ball":60};
-const UPGRADES={"Kitchen":[1500,"A liked meal also takes 5 fatigue off"],"Better hut":[2000,"A rest week takes 45 fatigue off instead of 35"],"Training gear":[3000,"Great drills +5%"],"Big Freezer":[5000,"Holds 30 monsters instead of 20"]};
+const UP_NAME={"Better hut":"Better barn"};   // shown name; the save key stays "Better hut"
+const UPGRADES={"Kitchen":[1500,"A liked meal also takes 5 fatigue off"],"Better hut":[2000,"A bigger bed in the barn, so a rest week takes 45 fatigue off instead of 35"],"Training gear":[3000,"Great drills +5%"],"Big Freezer":[5000,"Holds 30 monsters instead of 20"]};
 const has=u=>!!(PLAYER.upgrades&&PLAYER.upgrades[u]);
 const priceOf=k=>MARKET[k]||(WORN[k]&&WORN[k].price)||(HELD[k]&&HELD[k].price)||(k.startsWith("Skill chip: ")?300:ITEMS[k]&&ITEMS[k].rarity===2?1500:0);
 const wornText=k=>{ const w=WORN[k], p=[];
@@ -60,8 +61,8 @@ function openSkillShop(){ const st=weekStock();
   shopList("Skill shop, this week.",st.chips.map(n=>({name:"Skill chip: "+n,price:300,desc:`${SKILLS[n].el} ${SKILLS[n].kind}. ${describe(n)}`})),openSkillShop); }
 function openWorkshop(){
   PLAYER.upgrades=PLAYER.upgrades||{};
-  shopList("Workshop. Each upgrade is bought once.",Object.entries(UPGRADES).map(([k,[p,d]])=>({name:k,price:p,desc:has(k)?"Built":d,off:has(k),
-    buy:()=>{ if(PLAYER.bits<p) return; PLAYER.bits-=p; PLAYER.upgrades[k]=true; say(`The ${k} is built.`); drawUI(); saveGame(); openWorkshop(); }})),openWorkshop);
+  shopList("Workshop. Each upgrade is bought once.",Object.entries(UPGRADES).map(([k,[p,d]])=>({name:UP_NAME[k]||k,price:p,desc:has(k)?"Built":d,off:has(k),
+    buy:()=>{ if(PLAYER.bits<p) return; PLAYER.bits-=p; PLAYER.upgrades[k]=true; say(`The ${UP_NAME[k]||k} is built.`); drawUI(); saveGame(); openWorkshop(); }})),openWorkshop);
 }
 function openSell(){
   const bag=PLAYER.bag, names=Object.keys(bag).filter(k=>bag[k]>0&&priceOf(k)>0);

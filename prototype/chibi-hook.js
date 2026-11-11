@@ -1,8 +1,8 @@
 /* Puts the chibi drawings (chibi.js) into the ranch and battle screens while the pixel art stays the default.
-   Turn it on with #art=chibi in the address, or localStorage "snabits-art" set to "chibi".
+   It's on by default. #art=pixel in the address, or localStorage "snabits-art" set to "pixel", brings back the pixel art.
    Only families listed in CHIBI_FAMS are drawn smooth; the rest keep their pixels. */
 const CHIBI_FAMS = ['Chomp', 'Squib', 'Antik', 'Moko', 'Pinch', 'Stilt', 'Skit', 'Booly'];
-const CHIBI_ART = /(^#|&)art=chibi(&|$)/.test(location.hash) || (() => { try { return localStorage.getItem('snabits-art') === 'chibi'; } catch (e) { return false; } })();
+const CHIBI_ART = !/(^#|&)art=pixel(&|$)/.test(location.hash) && (() => { try { return localStorage.getItem('snabits-art') !== 'pixel'; } catch (e) { return true; } })();
 
 /* m is a hatched monster or a fight snapshot; s is the ranch state when there is one */
 function chibiSpec(m, s) {
