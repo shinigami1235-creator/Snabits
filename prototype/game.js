@@ -6,6 +6,7 @@ const GRADE_INFO={E:{lv:[1,10],earned:[0,40],purse:200},D:{lv:[8,18],earned:[40,
   B:{lv:[25,38],earned:[200,320],purse:3000},A:{lv:[35,48],earned:[300,420],purse:7000},S:{lv:[45,60],earned:[400,520],purse:15000}};
 const expNeed=L=>10+6*L;
 const FREEZER_MAX=20;
+const tierOf=n=>{ const l=SKILLS[n].lv; return l<=8?1:l<=20?2:3; };
 
 /* Items the bag can hold. Snacks are in ranch.js; these are the finds. */
 const ITEMS={
@@ -44,7 +45,7 @@ function saveGame(){
 const hasSave=()=>{ try{ return !!localStorage.getItem(SAVE_KEY); }catch(e){ return false; } };
 
 /* Ranch state fields that persist. Everything else (puppet, particles, props) is rebuilt. */
-const KEEP=["stage","mark","grid","tp","lastTrained","used","spoil","fear","fatigue","stress","weight","like","dis","known","mess","messKind","messSpots",
+const KEEP=["weather","weatherBonus","majorInvite","master","stage","mark","mark2","variant","wanderEl","stageRegions","stageCups","neglect","cleanRun","uses","book","grid","tp","lastTrained","used","spoil","fear","fatigue","stress","weight","like","dis","known","mess","messKind","messSpots",
   "learned","injured","sick","strainRun","petWeek","playWeek","snackWeek","mealMonth","hinted","toldEvo","slackBonus","dead","level","exp","grade",
   "wins","losses","habits","fightNo","equip","skillsKnown","away","fruitUsed","cups","majors","born"];
 function packRanch(s){ const o={}; for(const k of KEEP) if(s[k]!==undefined) o[k]=s[k]; return o; }
@@ -57,13 +58,19 @@ function addToRoster(m){
   PLAYER.roster.push(e); return e;
 }
 const activeEntry=()=>PLAYER.roster.find(r=>r.id===PLAYER.active);
-const displayName=s=>s.stage==="Bit"?s.m.name:`${s.m.name}, ${MARK[s.mark][0]} ${s.stage}`;
+const displayName=s=>s.stage==="Bit"?s.m.name:`${s.m.name}, ${s.variant&&s.variant!=="Scruffy"?s.variant+" ":""}${MARK[s.mark][0]} ${s.stage}`;
 const slotsFor=s=>s.stage==="Bit"?2:s.stage==="Byte"?3:4;
 
 /* Fight stats: the scan's stats plus 1 for every 4 earned points, and the mark's bonus. */
+/* Fight stats: the scan's stats run through the level formula, then earned points add on top at 1 for every 3,
+   so training counts the same at every level. The mark adds 5% (Mega: 10% and 5%). */
+const EARN_DIV=3;
 function fightMon(s){
-  const stats=s.m.stats.map((v,i)=>{ let x=v+Math.floor(s.tp[i]/4); if(s.stage!=="Bit"&&s.mark===i) x=Math.round(x*1.05); return x; });
-  return {...s.m,name:displayName(s),stats,grid:s.grid||s.m.grid};
+  const bonus=i=>(s.stage!=="Bit"&&s.mark===i?(s.stage==="Mega"?1.10:1.05):1)*(s.stage==="Mega"&&s.mark2===i?1.05:1);
+  const stats=s.m.stats.map((v,i)=>Math.round(v*bonus(i)));
+  const flat=s.tp.map((v,i)=>Math.round(v/EARN_DIV*bonus(i)));
+  if(s.variant==="Lean") stats[5]=Math.round(stats[5]*1.05);
+  return {...s.m,name:displayName(s),stats,flat,grid:s.grid||s.m.grid,pal:s.pal||s.m.pal};
 }
 function knownSkills(s){
   const k=new Set(s.skillsKnown||[]);
@@ -85,10 +92,10 @@ function giveExp(s,amt){
 }
 
 /* A computer monster for a grade: a random scan, levelled and trained, and evolved if its training has reached its species' total. */
-function gradedOpponent(grade,level,rand,wantEl){
+function gradedOpponent(grade,level,rand,wantEl,earned){
   let m=randomOpponent(rand);
   if(wantEl) for(let k=0;k<300&&m.el1!==wantEl;k++) m=randomOpponent(rand);
-  const G=GRADE_INFO[grade], total=Math.round(G.earned[0]+rand()*(G.earned[1]-G.earned[0]));
+  const G=GRADE_INFO[grade], roll=Math.round(G.earned[0]+rand()*(G.earned[1]-G.earned[0])), total=earned!=null?earned:roll;
   const focus=Math.floor(rand()*6), second=(focus+1+Math.floor(rand()*5))%6, tp=[0,0,0,0,0,0];
   for(let k=0;k<total;k++){ const r=rand(); tp[r<0.4?focus:r<0.6?second:Math.floor(rand()*6)]++; }
   const s={m,tp,stage:"Bit",mark:-1,level,grid:m.grid};
@@ -166,4 +173,38 @@ function rollFind(rand,boost=1){
 function addItem(name,n=1){ PLAYER.bag[name]=(PLAYER.bag[name]||0)+n; }
 
 /* A frozen copy of a monster for fights that must replay exactly. */
-function fightSnapshot(s){ return {m:s.m,tp:s.tp.slice(),stage:s.stage,mark:s.mark,grid:s.grid,level:s.level,equip:s.equip.slice(),habits:s.habits.slice(),lowLoyalty:RS===s&&hearts()<2}; }
+function fightSnapshot(s){ return {m:s.m,variant:s.variant,pal:s.pal,mark2:s.mark2,uses:{...(s.uses||{})},tp:s.tp.slice(),stage:s.stage,mark:s.mark,grid:s.grid,level:s.level,equip:s.equip.slice(),habits:s.habits.slice(),lowLoyalty:RS===s&&hearts()<2}; }
+
+/* Skill use counts, mastery, the Skill book and learning a skill by being hit with it. */
+const MASTERY=60, CHAIN_USES=30;
+function playerFighter(s){
+  const f=makeFighter(fightMon(s),s.equip,s.level), u=s.uses||{};
+  if(s.variant==="Bulky"){ f.maxhp=Math.round(f.maxhp*1.1); f.hp=f.maxhp; }
+  if(s.variant==="Feral") f.critBonus=0.05;
+  f.skills=f.skills.map(k=>u[k.name]>=MASTERY&&k.power?{...k,power:Math.round(k.power*1.1),mastered:true}:k);
+  return f;
+}
+function bookMark(s,name,how){ s.book=s.book||{}; const rank={seen:1,hit:2,learned:3}; if(!s.book[name]||rank[how]>rank[s.book[name]]) s.book[name]=how; }
+function canLearnOutside(s,n,route){ // route: "trip" | "chip" | "hit"
+  const sk=SKILLS[n], own=!sk.el||sk.el===s.m.el1||sk.el===s.m.el2, t=tierOf(n);
+  if(sk.fromStat!==undefined) return false;
+  if(t===1) return true;
+  if(own) return t===2||route==="trip";
+  return t===2&&route==="trip";
+}
+function afterFight(s,fighter,learn){
+  const lines=[];
+  s.uses=s.uses||{};
+  for(const [n,c] of Object.entries(fighter.used||{})) s.uses[n]=(s.uses[n]||0)+c;
+  for(const n of Object.keys(fighter.seen||{})) bookMark(s,n,"seen");
+  for(const n of Object.keys(fighter.hitBy||{})) bookMark(s,n,"hit");
+  if(learn){
+    const known=knownSkills(s), chance=(RS===s&&hearts()>=4)?0.2:0.1;
+    for(const n of Object.keys(fighter.hitBy||{})){
+      if(known.includes(n)||!canLearnOutside(s,n,"hit")) continue;
+      if(Math.random()<chance){ s.skillsKnown=(s.skillsKnown||[]).concat(n); bookMark(s,n,"learned"); fixEquip(s); lines.push(`It picked up ${n} from being hit by it.`); break; }
+    }
+  }
+  for(const n of knownSkills(s)) bookMark(s,n,"learned");
+  return lines;
+}

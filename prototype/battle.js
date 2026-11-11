@@ -12,8 +12,8 @@ const BASIC_SKILL={name:"Attack",el:null,kind:"Strike",power:40,acc:100,basic:tr
 function basicFor(f){ return f.base.mnd>f.base.pow?{...BASIC_SKILL,kind:"Cast"}:BASIC_SKILL; }
 
 function makeFighter(m,loadout,level=LEVEL){
-  const s=m.stats, st=i=>Math.floor(s[i]*level/50+5);
-  const maxhp=Math.floor(s[0]*2*level/50+3*level+30);
+  const s=m.stats, fl=m.flat||[0,0,0,0,0,0], st=i=>Math.floor(s[i]*level/50+5+fl[i]);
+  const maxhp=Math.floor(s[0]*2*level/50+3*level+30+fl[0]*2);
   const names=(loadout||m.skills);
   return {m,name:m.name,el1:m.el1,el2:m.el2,mono:m.mono,ability:m.ability[0],level,maxhp,hp:maxhp,energy:3,
     base:{pow:st(1),grd:st(2),mnd:st(3),spr:st(4),spd:st(5)},stage:{pow:0,grd:0,mnd:0,spr:0,spd:0},
@@ -156,7 +156,7 @@ class Fight{
     if(s.charge&&!(s.sunInstant&&this.field&&this.field.name==="Sunlit")){ me.charging=s; me.hitWhileCharging=false; this.say(`${me.name} gathers power for ${s.name}.`); this.events.push({t:"cast",who:i,el:s.el}); return; }
     if(s.power){ this.hit(i,s); return; }
     this.events.push({t:"cast",who:i,el:s.el});
-    this.say(`${me.name} uses ${s.name}.`);
+    this.say(`${me.name} uses ${s.name}.`); if(!s.basic){ me.used=me.used||{}; me.used[s.name]=(me.used[s.name]||0)+1; this.p[1-i].seen=this.p[1-i].seen||{}; this.p[1-i].seen[s.name]=1; }
     if(s.protect){ if(me.usedProtect) this.say(`${me.name} braces for anything.`); else this.say("It fails, since it was used last turn."); }
     if(s.counter) this.say(`${me.name} waits to counter.`);
     if(s.field){ this.field={name:s.field,turns:5}; this.say(`The field turns ${s.field}.`); this.events.push({t:"field"}); }
@@ -182,7 +182,7 @@ class Fight{
     let tgt=1-i, power=s.power;
     if(s.kind==="Cast"&&this.p[tgt].mirror){ this.p[tgt].mirror=false; this.say(`${this.p[tgt].name}'s Mirror Charm bounces ${s.name} back.`); tgt=i; power/=2; }
     const def=this.p[tgt];
-    this.say(`${me.name} uses ${s.name}.`);
+    this.say(`${me.name} uses ${s.name}.`); if(!s.basic){ me.used=me.used||{}; me.used[s.name]=(me.used[s.name]||0)+1; this.p[1-i].seen=this.p[1-i].seen||{}; this.p[1-i].seen[s.name]=1; }
     if(def.protect&&tgt!==i){ this.say(`${def.name} blocks it.`); this.events.push({t:"miss",who:tgt}); return; }
     const seen=s.kind==="Cast"&&me.foresight&&tgt!==i; if(seen) me.foresight=false;
     if(!s.basic&&!s.sure&&!seen&&tgt!==i){
@@ -215,7 +215,7 @@ class Fight{
       let d=pw*atk/dfs*(me.level/50+0.4)/2;
       const stab=el&&(el===me.el1||el===me.el2)?(me.mono?1.4:1.2):1;
       const spdEdge=Math.max(0,Math.min(0.10,(this.eff(me,"spd")-this.eff(def,"spd"))/this.eff(def,"spd")*0.25));
-      const crit=seen||(def.ability!=="Shell"&&!def.bulwark&&R()<(0.05+(s.crit||0)+spdEdge));
+      const crit=seen||(def.ability!=="Shell"&&!def.bulwark&&R()<(0.05+(s.crit||0)+(me.critBonus||0)+spdEdge));
       d*=m*stab*(crit?1.5:1)*(0.9+R()*0.1);
       if(this.field&&el) d*=(FIELD_FX[this.field.name][el]||1);
       if(def.guard) d*=0.5;
@@ -228,7 +228,7 @@ class Fight{
       d=Math.max(1,Math.round(d));
       if(def.endure&&d>=def.hp&&tgt!==i){ d=def.hp-1; this.say(`${def.name} endures the hit.`); }
       if(def.ability==="Bedrock"&&def.hp===def.maxhp&&d>=def.hp){ d=def.hp-1; this.pop(tgt,"Bedrock"); this.say(`${def.name} hangs on.`); }
-      def.hp=Math.max(0,def.hp-d); total+=d; landed++;
+      def.hp=Math.max(0,def.hp-d); total+=d; landed++; if(!s.basic&&tgt!==i){ def.hitBy=def.hitBy||{}; def.hitBy[s.name]=1; }
       if(def.charging) def.hitWhileCharging=true;
       this.events.push({t:"hit",who:tgt,dmg:d,eff:m,crit});
       if(crit) this.say("A critical hit.");

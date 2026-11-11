@@ -12,6 +12,8 @@ function cupsThisWeek(s){
     if(wk===0||wk===2) out.push({grade:gr,name:CUP_NAMES[gr][(mo+wk)%3]+` (${gr})`,format:"robin",size:4,official:false});
     if(wk===3&&mo%3===2) out.push({grade:gr,name:`Official ${gr} Cup`,format:"elim",size:8,official:true});
   }
+  if(s.majorInvite&&wk===1&&mo%3===2) out.unshift({grade:"S",name:`${SEASON[Math.floor(mo/3)]} Major`,format:"bo3",size:8,major:true,season:SEASON[Math.floor(mo/3)]});
+  if(s.master&&mo===11&&wk===3) out.unshift({grade:"S",name:"Legend Cup",format:"robin",size:6,legend:true});
   out.push({grade:s.grade,name:"Exhibition match",format:"single",size:2,official:false,small:true});
   return out;
 }
@@ -24,7 +26,7 @@ function openCups(){
   if(s.sick||s.injured){ say("It isn't fit to fight. Rest it or give it medicine first."); return; }
   const list=cupsThisWeek(s);
   panel(`<div style="flex-basis:100%;font-size:13px">Grade ${s.grade}. ${s.wins} wins, ${s.losses} losses. ${nextCupText()}</div>`+
-    list.map((c,i)=>`<button class="rb" data-c="${i}">${c.name}<small>${c.format==="robin"?"Round robin of 4":c.format==="elim"?"Elimination of 8":"One match"}, ${c.small?"small purse":GRADE_INFO[c.grade].purse+" bits for first"}${c.official&&c.grade===s.grade&&s.grade!=="S"?", winning moves it up a grade":""}</small></button>`).join("")+
+    list.map((c,i)=>`<button class="rb" data-c="${i}">${c.name}<small>${c.format==="robin"?`Round robin of ${c.size}`:c.format==="elim"?"Elimination of 8":c.format==="bo3"?"Elimination of 8, best of 3":"One match"}, ${c.small?"small purse":(c.legend?60000:c.major?30000:GRADE_INFO[c.grade].purse)+" bits for first"}${c.official&&c.grade===s.grade&&s.grade!=="S"?", winning moves it up a grade":""}</small></button>`).join("")+
     `<button class="rb" id="r-cback">Back</button>`);
   el("r-panel").querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>startCup(list[+b.dataset.c]));
   el("r-cback").onclick=()=>menu("Out");
@@ -33,7 +35,8 @@ function startCup(c){
   const s=RS, R=rng(hashStr(s.id+"|cup|"+PLAYER.week+"|"+c.name)), G=GRADE_INFO[c.grade];
   const lvl=()=>clamp(s.level+Math.floor(R()*4)-1,G.lv[0],G.lv[1]);
   const field=[{me:true,name:displayName(s)}];
-  while(field.length<c.size){ const o=gradedOpponent(c.grade,lvl(),R); field.push({o,name:o.stage==="Bit"?o.m.name:`${o.m.name}, ${MARK[o.mark][0]} Byte`}); }
+  const big=c.major||c.legend, bigLv=()=>clamp(s.level+Math.floor(R()*5)-1,50,70);
+  while(field.length<c.size){ const o=big?gradedOpponent("S",bigLv(),R,null,Math.round(c.legend?560+R()*80:480+R()*120)):gradedOpponent(c.grade,lvl(),R); field.push({o,name:o.stage==="Bit"?o.m.name:`${o.m.name}, ${MARK[o.mark][0]} Byte`}); }
   CUP={c,field,R,pts:field.map(()=>0),hp:field.map(()=>0),log:[],round:0,alive:field.map((_,i)=>i),done:false,myWins:0,fights:0,out:false};
   if(c.format==="robin"){ // circle method, 4 entrants, 3 rounds
     const n=c.size, ids=[...Array(n).keys()], rounds=[];
@@ -58,8 +61,9 @@ function nextMatch(){
     return matchCard(opp);
   }
   if(c.format==="single") return CUP.round>0?finishCup():matchCard(1);
-  // elimination
+  // elimination, and best of 3 for the Major 4
   if(CUP.out||CUP.alive.length===1) return finishCup();
+  if(c.format==="bo3"&&CUP.series&&CUP.series.opp!=null) return matchCard(CUP.series.opp);
   const al=CUP.alive, pairs=[]; for(let k=0;k<al.length;k+=2) pairs.push([al[k],al[k+1]]);
   CUP.pairs=pairs;
   const mine=pairs.find(p=>p.includes(0));
@@ -78,12 +82,12 @@ function standings(){
 }
 function matchCard(opp){
   const s=RS, e=CUP.field[opp], c=CUP.c;
-  const roundName=c.format==="robin"?`Round ${CUP.round+1} of ${CUP.rounds.length}`:c.format==="single"?"The match":["Quarter-final","Semi-final","Final"][CUP.round]||"Final";
+  const roundName=(c.format==="robin"?`Round ${CUP.round+1} of ${CUP.rounds.length}`:c.format==="single"?"The match":["Quarter-final","Semi-final","Final"][CUP.round]||"Final")+(c.format==="bo3"&&CUP.series&&CUP.series.opp!=null?`, game ${CUP.series.me+CUP.series.them+1} (${CUP.series.me}-${CUP.series.them})`:"");
   panel(`<div style="flex-basis:100%;font-weight:700">${c.name}: ${roundName}</div>${standings()}
     <div style="flex-basis:100%;font-size:13px">Next: ${e.name}, Lv ${e.o.level}, ${e.o.m.el2?e.o.m.el1+" / "+e.o.m.el2:e.o.m.el1}.</div>
     <button class="rb" id="t-fight">Fight<small>You give the commands</small></button><button class="rb" id="t-auto">Auto<small>It fights on its habits</small></button>
     <button class="rb" id="t-forfeit">Forfeit<small>${c.format==="elim"?"Ends your run":"Gives up this match"}</small></button><button class="rb" id="t-drop">Drop out<small>No prize</small></button>`);
-  const go=mode=>arenaFight({s,foe:e.o,mode,title:c.name,noDraw:c.format!=="robin",record:mode==="control",rand:CUP.R,onEnd:res=>afterMatch(opp,res)});
+  const go=mode=>arenaFight({s,foe:e.o,mode,title:c.name,noDraw:c.format!=="robin",record:mode==="control",learn:true,rand:CUP.R,onEnd:res=>afterMatch(opp,res)});
   el("t-fight").onclick=()=>go("control"); el("t-auto").onclick=()=>go("auto");
   el("t-forfeit").onclick=()=>afterMatch(opp,{winner:1,forfeit:true,hpLeft:0,foeHpLeft:1});
   el("t-drop").onclick=()=>{ CUP.dropped=true; finishCup(); };
@@ -92,11 +96,15 @@ function afterMatch(opp,res){
   const s=RS, c=CUP.c;
   CUP.fights++; if(!res.forfeit){ s.fatigue+=6; s.stress+=2; }
   const won=res.winner===0;
+  if(res.learned&&res.learned.length) (CUP.learned=CUP.learned||[]).push(...res.learned);
   if(won){ CUP.myWins++; s.wins++; } else if(res.winner===1) s.losses++;
   if(won) CUP.expGain=(CUP.expGain||0)+4+2*CUP.field[opp].o.level;
   if(c.format==="robin"){ const f={winner:res.winner,p:[{hp:res.hpLeft,maxhp:1},{hp:res.foeHpLeft,maxhp:1}]}; scoreRobin(0,opp,f); CUP.round++; }
   else if(c.format==="single"){ CUP.round++; CUP.singleWon=won; }
   else {
+    if(c.format==="bo3"&&!res.forfeit){ CUP.series=CUP.series&&CUP.series.opp===opp?CUP.series:{opp,me:0,them:0}; if(won) CUP.series.me++; else CUP.series.them++;
+      if(CUP.series.me<2&&CUP.series.them<2){ clampAll(); drawUI(); return nextMatch(); }
+      CUP.series.opp=null; }
     const next=[]; for(const [a,b] of CUP.pairs){ if(a===0||b===0){ next.push(won?0:opp); if(!won) CUP.out=true; } else { const f=simPair(a,b); next.push(f.winner===0?a:b); } }
     CUP.alive=next; CUP.round++;
     if(CUP.out){ while(CUP.alive.length>1){ const al=CUP.alive, nx=[]; for(let k=0;k<al.length;k+=2){ const f=simPair(al[k],al[k+1]); nx.push(f.winner===0?al[k]:al[k+1]); } CUP.alive=nx; } }
@@ -109,17 +117,22 @@ function finishCup(){
   else if(c.format==="robin"){ const order=CUP.field.map((e,i)=>i).sort((x,y)=>CUP.pts[y]-CUP.pts[x]||CUP.hp[y]-CUP.hp[x]); place=order.indexOf(0)+1; }
   else if(c.format==="single") place=CUP.singleWon?1:2;
   else place=CUP.alive[0]===0?1:CUP.round>=3?2:CUP.round===2?3:5;
-  const purse=c.small?Math.round(GRADE_INFO[c.grade].purse/10):GRADE_INFO[c.grade].purse;
+  const purse=c.legend?60000:c.major?30000:c.small?Math.round(GRADE_INFO[c.grade].purse/10):GRADE_INFO[c.grade].purse;
   const prize=place===1?purse:place===2?Math.round(purse/2):place===3?Math.round(purse/4):0;
   const lines=[];
   if(place===null) lines.push(`It dropped out of the ${c.name}.`);
   else if(c.format==="elim"&&place>1) lines.push(`It went out in the ${place===2?"final":place===3?"semi-final":"quarter-final"} of the ${c.name}.`);
   else lines.push(`${place===1?"It won":"It finished "+["","first","second","third","fourth","fifth"][Math.min(place,5)]+" in"} the ${c.name}.`);
   if(prize){ PLAYER.bits+=prize; lines.push(`${prize} bits.`); }
-  if(place===1&&!c.small){ s.cups=(s.cups||[]).concat(c.name);
+  if(place===1&&!c.small){ s.cups=(s.cups||[]).concat(c.name); s.stageCups=(s.stageCups||0)+1;
     if(c.official&&c.grade===s.grade&&s.grade!=="S"){ s.grade=GRADES[GRADES.indexOf(s.grade)+1]; lines.push(`It moves up to grade ${s.grade}.`); }
+    if(c.official&&c.grade==="S"&&!s.majorInvite){ s.majorInvite=true; lines.push("It's been invited to the Major 4, one big cup each season."); }
+    if(c.major){ s.majors=[...new Set((s.majors||[]).concat(c.season))]; lines.push(`That's ${s.majors.length} of the Major 4.`);
+      if(s.majors.length===4&&!s.master){ s.master=true; lines.push("It's won all four. It's a Master now, and the Legend Cup is open at the end of each year."); } }
+    if(c.legend) lines.push("A Legend Cup champion. Its name goes on the wall in town.");
     if((c.grade==="A"||c.grade==="S")&&CUP.R()<0.3){ addItem("Rebirth seed"); lines.push("The prize table had a Rebirth seed."); }
     if(c.grade==="A"&&c.official){ addItem("Life fruit"); lines.push("And a Life fruit."); } }
+  if(CUP.learned) lines.push(...CUP.learned);
   const lv=giveExp(s,(CUP.expGain||0)+(place===1?10:3));
   CUP.done=true;
   scene(async()=>{ s.pose=place===1?"happy":"idle"; if(place===1){ spark(s.x,headY()-6,"sparkle",12); await hop(16,420); } await rwait(500); await endWeek(1,lines.concat(lv).join(" ")); });

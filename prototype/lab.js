@@ -1,7 +1,6 @@
 /* The Freezer, the fusion lab, rebirth, the skills page and the bag. Needs game.js and ranch.js. */
 const CATALYSTS=["Stat seed","Element stone","Lucky bit","Life fruit"];
 const ASSIST=["It's all up to you.","This doesn't look so good.","I'm not sure about this one.","This should be fine.","This looks good.","This looks good.","These two look great together."];
-const tierOf=n=>{ const l=SKILLS[n].lv; return l<=8?1:l<=20?2:3; };
 
 function sprite(m,grid,size=56){ const c=document.createElement("canvas"); paint(c,grid||m.grid,m.pal,1); c.style.cssText=`width:${size}px;height:${size}px;image-rendering:pixelated;background:#24242c;border-radius:8px`; return c; }
 function entryState(e){ if(RS&&RS.id===e.id) return RS; return e.st||{stage:"Bit",tp:[0,0,0,0,0,0],level:1,grade:"E",used:0}; }
@@ -31,11 +30,11 @@ function openFreezer(){
 function openSkills(){
   const s=RS, known=knownSkills(s), n=slotsFor(s);
   panel(`<div style="flex-basis:100%;font-size:13px">Tap to equip. A ${s.stage} has ${n} slots.</div>`+
-    known.map(k=>`<button class="rb ${s.equip.includes(k)?"on":""}" data-k="${k}">${k}<small>${SKILLS[k].el||"Neutral"} ${SKILLS[k].kind}, ${SKILLS[k].cost} energy</small></button>`).join("")+
-    `<div style="flex-basis:100%;font-size:12px;opacity:.85"><b>Fight style.</b> ${styleText(s)}</div><button class="rb" id="k-back">Back</button>`);
+    known.map(k=>`<button class="rb ${s.equip.includes(k)?"on":""}" data-k="${k}">${k}${((s.uses||{})[k]||0)>=MASTERY?" ★":""}<small>${SKILLS[k].el||"Neutral"} ${SKILLS[k].kind}, ${SKILLS[k].cost} energy</small></button>`).join("")+
+    `<div style="flex-basis:100%;font-size:12px;opacity:.85"><b>Fight style.</b> ${styleText(s)}</div><button class="rb" id="k-book">Skill book</button><button class="rb" id="k-back">Back</button>`);
   el("r-panel").querySelectorAll("[data-k]").forEach(b=>b.onclick=()=>{ const k=b.dataset.k, i=s.equip.indexOf(k);
     if(i>=0) s.equip.splice(i,1); else { if(s.equip.length>=n) s.equip.shift(); s.equip.push(k); } saveGame(); openSkills(); });
-  el("k-back").onclick=()=>menu("Care");
+  el("k-back").onclick=()=>menu("Care"); el("k-book").onclick=()=>openBook();
 }
 
 /* ---------- The bag ---------- */
@@ -165,7 +164,7 @@ async function doRebirth(keep){
   await scene(async()=>{
     say("The seed takes root..."); s.pose="sleep"; await rwait(800);
     for(let k=0;k<10;k++){ s.flash=99; await rwait(Math.max(60,240-k*20)); s.flash=0; await rwait(60); }
-    s.stage="Bit"; s.mark=-1; s.grid=s.m.grid; s.P=makePuppet(s.m.grid,false,s.m.family);
+    s.stage="Bit"; s.mark=-1; s.mark2=undefined; s.variant=null; s.pal=null; s.grid=s.m.grid; s.P=makePuppet(s.m.grid,false,s.m.family); s.stageRegions={}; s.stageCups=0; s.neglect=0;
     s.messSpots=s.messSpots.map(p=>({x:Math.floor(p.x/2),y:Math.floor(p.y/2)}));
     s.tp=s.tp.map(v=>Math.round(v*0.2)); s.m.talent=s.m.talent.map(t=>Math.min(15,t+1)); s.m.stats=s.m.stats.map(v=>v+1);
     s.level=1; s.exp=0; s.used=0; s.grade="E"; s.fatigue=0; s.stress=0; s.hinted=false; s.toldEvo=false; s.fruitUsed=false;

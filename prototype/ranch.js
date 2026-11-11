@@ -38,7 +38,7 @@ const el=id=>document.getElementById(id);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 
 /* ---------- puppet: cut the label grid into parts once, then build each frame from them ---------- */
-function makePuppet(G,big,fam){
+function makePuppet(G,big,fam,scaleOverride){
   const N=G.length, f=big?2:1, F=FAMILY[fam];
   const yt=F.body[0]*f, yb=(F.body[0]+F.body[1].length)*f-1;
   const px=[]; let topY=N, base=0;
@@ -56,7 +56,7 @@ function makePuppet(G,big,fam){
   for(const k in eyeCol){const ys=eyeCol[k];eyeCol[k]={top:Math.min(...ys),bot:Math.max(...ys),n:ys.length};}
   const bodyPx=px.filter(p=>p.g==="body"&&p.l===1);
   const pad=big?6:3;
-  return {N,pad,W:N+pad*2,px,eyeCol,topY,base,big,f,bodyPx,scale:big?2:3};
+  return {N,pad,W:N+pad*2,px,eyeCol,topY,base,big,f,bodyPx,scale:scaleOverride||(big?2:3)};
 }
 function eyeLabel(p,face,P){
   const c=P.eyeCol[p.x]; if(!c||face==="open") return p.l;
@@ -93,7 +93,7 @@ function paintFrame(canvas,G,pal,scale,big,flash){
   const H=G.length,W=G[0].length; if(canvas.width!==W*scale){canvas.width=W*scale;canvas.height=H*scale;}
   const x=canvas.getContext("2d"); x.imageSmoothingEnabled=false; x.clearRect(0,0,canvas.width,canvas.height);
   const filled=(i,j)=>j>=0&&j<H&&i>=0&&i<W&&G[j][i]!==0;
-  const messCol=RS&&RS.messKind==="mud"?[110,74,40]:[150,140,128];
+  const messCol=RS&&RS.messKind==="mud"?[110,74,40]:RS&&RS.messKind==="ink"?[40,46,90]:[150,140,128];
   const dot=(i,j,c)=>{x.fillStyle=flash?"#fff":css(c);x.fillRect(i*scale,j*scale,scale,scale);};
   for(let j=0;j<H;j++)for(let i=0;i<W;i++){
     const l=G[j][i];
@@ -106,7 +106,7 @@ function paintFrame(canvas,G,pal,scale,big,flash){
 }
 
 /* ---------- evolution: add the mark on the Bit grid, then double it ---------- */
-function addMark(G0,mark){
+function addMark(G0,mark,mega){
   const G=G0.map(r=>r.slice()), N=G.length;
   let ty=N,yb=0; for(let y=0;y<N;y++) for(let x=0;x<N;x++) if(G[y][x]===1){ty=Math.min(ty,y);yb=Math.max(yb,y);}
   const edge=y=>{for(let x=0;x<10;x++)if(G[y]&&G[y][x]===1)return x;return 9;};
@@ -115,6 +115,7 @@ function addMark(G0,mark){
   if(mark===0){ for(let y=yb-3;y<=yb-1;y++) for(let x=7;x<=9;x++) if(G[y][x]===1) set(x,y,8); }
   if(mark===1){ set(lx+1,ty-1,10); set(lx,ty-2,10); set(lx,ty-3,10); set(lx+1,ty-4,10); }
   if(mark===2){ const e0=edge(ty); for(let y=ty;y<=ty+1;y++) for(let x=0;x<10;x++) if(G[y][x]===1) set(x,y,2); for(let x=e0+1;x<=9;x+=2){ set(x,ty-1,10); set(x,ty-2,10); } }
+  if(mark===3&&mega){ set(9,ty+1,3); set(9,ty+2,6); }
   if(mark===3){ set(lx,ty-1,12); set(lx,ty-2,12); set(lx-1,ty-3,12); set(lx-1,ty-4,11); set(lx-2,ty-4,11); set(lx-1,ty-5,11); }
   if(mark===4){ for(let x=6;x<=9;x++) set(x,ty-3,11); set(5,ty-2,11); }
   if(mark===5){ const e=edge(ty+1); set(e-1,ty,12); set(e-2,ty-1,12); set(e-2,ty,12); set(e-3,ty-1,12); set(e-3,ty-2,10); set(e-4,ty-2,10); set(e-1,ty+1,12); }
@@ -131,17 +132,17 @@ function newRanch(entry){
     learned:[],injured:false,hinted:false,petWeek:-1,playWeek:-1,snackWeek:-1,mealMonth:-1,strainRun:0,sick:0,    x:150,dir:1,pose:"idle",jy:0,bx:0,upside:false,hidden:false,behind:false,flash:0,shake:0,ghosts:false,trail:[],props:[],parts:[],
     busy:false,cur:0,skip:false,noScenes:false,showNums:false,ptrX:null,ptrT:0,rub:null,bbox:null,ready:false,dead:false};
   if(entry.st) Object.assign(s,JSON.parse(JSON.stringify(entry.st)));
-  s.P=makePuppet(s.grid||m.grid,s.stage!=="Bit",m.family);
+  if(s.stage!=="Bit"||s.variant) rebuildLook(s); else s.P=makePuppet(m.grid,false,m.family);
   fixEquip(s);
   const body=s.P.bodyPx.filter(p=>p.x<10); if(!entry.st) for(let i=0;i<6&&body.length;i++){const p=body[Math.floor(r()*body.length)];s.messSpots.push({x:p.x,y:p.y},{x:19-p.x,y:p.y+1});}
   return s;
 }
-const loyalty=()=>clamp(Math.round((RS.spoil+RS.fear)/2-Math.max(0,Math.abs(RS.spoil-RS.fear)-20)),0,100);
+const loyalty=()=>{ const v=clamp(Math.round((RS.spoil+RS.fear)/2-Math.max(0,Math.abs(RS.spoil-RS.fear)-20)),0,100); return RS.variant==="Devoted"?Math.max(80,v):v; };
 const hearts=()=>Math.floor(loyalty()/20);
 const spoiled=()=>RS.spoil-RS.fear>=30, scared=()=>RS.fear-RS.spoil>=30;
 const tpTotal=()=>RS.tp.reduce((a,b)=>a+b,0);
-const evoTotal=()=>(EVO_TOTAL[RS.m.family]||[110,250])[0];
-const evoReady=()=>RS.stage==="Bit"&&tpTotal()>=evoTotal();
+const evoTotal=()=>(EVO_TOTAL[RS.m.family]||[110,250])[RS.stage==="Bit"?0:1];
+const evoReady=()=>RS.stage!=="Mega"&&tpTotal()>=evoTotal();
 const lifeWeeks=()=>RS.m.lifespan*4;
 function dateText(){const w=PLAYER.week, y=Math.floor(w/48)+1, mo=Math.floor(w/4)%12, s=Math.floor(mo/3);return `Year ${y}, ${SEASON[s]}, month ${mo%3+1}, week ${w%4+1}`;}
 
@@ -228,10 +229,10 @@ function menu(which){
   if(!which){ panel(""); return; }
   s.lastMenu=which;
   if(which==="Train"){
-    const heavy=hearts()>=2;
-    const noTrain=s.sick||s.injured;
+    const heavy=hearts()>=2, noTrain=s.sick||s.injured, noHeavy=!heavy||s.fatigue>=90||s.fatigue+2*s.stress>=90;
     panel(DRILLS.map((d,i)=>`<button class="rb" data-d="${i}" ${noTrain?"disabled":""}>${d}<small>${STATS[i]}, rank ${rankOf(FAMILY[s.m.family].base[i])}</small></button>`).join("")+
-      `<div style="flex-basis:100%;font-size:12px;opacity:.7">${s.injured?"It's hurt. A rest week or medicine fixes it.":s.sick?"It's sick this week, so it can't train. Rest or medicine fixes it.":heavy?"Heavy drills are open at 2 hearts. Their scenes come next in the prototype.":"Heavy drills ("+HEAVY_DRILLS.join(", ")+") open at 2 hearts."}</div>`);
+      `<div style="flex-basis:100%;font-size:12px;opacity:.7">${s.injured?"It's hurt. A rest week or medicine fixes it.":s.sick?"It's sick this week, so it can't train. Rest or medicine fixes it.":!heavy?"Heavy drills open at 2 hearts.":noHeavy?"It's too worn out for heavy drills.":"Heavy drills push one stat hard, raise a second and lower a third."}</div>`+
+      HEAVY.map((h,k)=>`<button class="rb" data-d="${6+k}" ${noTrain||noHeavy?"disabled":""}>${h[0]}<small>${STATS[h[1]]} up, ${STATS[h[2]]} +, ${STATS[h[3]]} −2</small></button>`).join(""));
     el("r-panel").querySelectorAll("[data-d]").forEach(b=>b.onclick=()=>runDrill(+b.dataset.d));
   }
   if(which==="Rest"){ panel(`<button class="rb" id="r-rest">Rest this week<small>Fatigue −35, stress −7. Uses the week.</small></button><div style="flex-basis:100%;font-size:12px;opacity:.7">${condition()}</div>`); el("r-rest").onclick=runRest; }
@@ -254,9 +255,9 @@ function menu(which){
   }
   if(which==="Out"){
     if(s.away){ missionStatus(); return; }
-    panel(`<button class="rb" id="r-mis">Missions<small>1, 4 or 8 hours</small></button><button class="rb" id="r-cup">Tournaments<small>Grade ${s.grade}</small></button><button class="rb" id="r-lab">Fusion lab<small>Fusion and rebirth</small></button><button class="rb" id="r-frz">Freezer<small>${PLAYER.roster.length-1} frozen</small></button><button class="rb" id="r-prac">Practice fight<small>Not saved to habits</small></button><button class="rb" disabled>Skill trip<small>Later</small></button>`);
-    el("r-mis").onclick=openBoard; el("r-cup").onclick=openCups; el("r-lab").onclick=openLab; el("r-frz").onclick=openFreezer;
-    el("r-prac").onclick=()=>{ const o=gradedOpponent(s.grade,Math.max(1,s.level+Math.floor(rnd(-1,2))),Math.random); arenaFight({s,foe:o,mode:"control",title:"Practice",onEnd:()=>{}}); };
+    panel(`<button class="rb" id="r-mis">Missions<small>1, 4 or 8 hours</small></button><button class="rb" id="r-cup">Tournaments<small>Grade ${s.grade}</small></button><button class="rb" id="r-lab">Fusion lab<small>Fusion and rebirth</small></button><button class="rb" id="r-frz">Freezer<small>${PLAYER.roster.length-1} frozen</small></button><button class="rb" id="r-prac">Practice fight<small>Not saved to habits</small></button><button class="rb" id="r-trip">Skill trip<small>4 weeks in a region</small></button>`);
+    el("r-mis").onclick=openBoard; el("r-cup").onclick=openCups; el("r-lab").onclick=openLab; el("r-frz").onclick=openFreezer; el("r-trip").onclick=openTrips;
+    el("r-prac").onclick=()=>{ const o=gradedOpponent(s.grade,Math.max(1,s.level+Math.floor(rnd(-1,2))),Math.random); arenaFight({s,foe:o,mode:"control",title:"Practice",learn:true,onEnd:r=>{ if(r.learned.length) say(r.learned.join(" ")); saveGame(); }}); };
   }
 }
 
@@ -266,7 +267,7 @@ async function scene(fn){
   s.busy=true; s.cur=++RACT; s.skip=s.noScenes; s.behind=false; s.hidden=false; s.upside=false; s.rub=null;
   panel(""); el("r-menu").querySelectorAll(".rb").forEach(b=>b.classList.remove("on")); drawUI(); el("r-skip").style.display="block";
   try{ await fn(); }catch(e){ if(e!==RSTOP) console.error(e); }
-  s.busy=false; s.skip=false; el("r-skip").style.display="none"; s.pose="idle"; s.jy=0; s.bx=0; s.upside=false; s.ghosts=false;
+  s.busy=false; s.skip=false; s.bg=null; s.props=s.props.filter(p=>p.k==="bowl"); el("r-skip").style.display="none"; s.pose="idle"; s.jy=0; s.bx=0; s.upside=false; s.ghosts=false;
   drawUI(); if(s.lastMenu&&!s.dead) menu(s.lastMenu); saveGame();
 }
 function walkTo(x,speed=45,pose="walk",id=RS.cur){
@@ -296,27 +297,36 @@ const headY=()=>GROUND-(RS.P.base-RS.P.topY+1)*RS.P.scale-RS.jy;
 function rollDrill(){
   const s=RS, h=hearts();
   if(spoiled()&&Math.random()<0.2+(s.slackBonus||0)) return "slack";
-  const great=10+2*h+(s.fatigue<20?5:0), fail=Math.max(5,25-5*h)+(s.fatigue>50?15:0)-(s.stress<10&&s.fatigue<30?5:0);
+  const great=10+2*h+(s.fatigue<20?5:0)+(s.weatherBonus?10:0), fail=Math.max(5,25-5*h)+(s.fatigue>50?15:0)-(s.stress<10&&s.fatigue<30?5:0);
   const r=Math.random()*100; return r<great?"great":r<great+fail?"fail":"success";
 }
+// heavy drills: [name, main stat, minor stat, dropped stat, mess]
+const HEAVY=[["Marathon",0,5,1,"mud"],["Quarry",1,0,5,"dust"],["Fortress",2,1,3,"dust"],["Library",3,4,2,"ink"],["Shrine",4,2,0,null],["Obstacle course",5,3,4,"mud"]];
 async function runDrill(i){
   await scene(async()=>{
-    const s=RS, res=rollDrill(); s.lastTrained=i;
-    say(`${DRILLS[i]}. Let's see how it does.`);
-    if(res==="slack") await SLACK(i); else await SCENE_FN[i](res);
-    const fam=FAMILY[s.m.family].base[i], frac=s.used/s.m.lifespan, age=frac<0.2?0.8:frac<0.7?1.2:0.8;
-    let pts=RANK_PTS[rankOf(fam)]; pts=res==="great"?pts*2:res==="fail"?1:res==="slack"?Math.max(1,Math.floor(pts/2)):pts;
-    pts=Math.max(1,Math.round(pts*age));
-    const shp=shapeOf(s.weight)[0], fm=shp==="Thin"?1.25:shp==="Chubby"?1.25:shp==="Heavy"?1.5:1, sm=shp==="Thin"?1.5:shp==="Slim"?1.25:shp==="Chubby"?0.75:shp==="Heavy"?0.5:1;
-    s.fatigue+=Math.round((res==="great"||res==="slack"?5:10)*fm); s.stress+=Math.round((res==="great"?9:5)*sm); s.weight-=1;
-    s.tp[i]+=pts;
+    const s=RS, res=rollDrill(), heavy=i>=6, H=heavy?HEAVY[i-6]:null, main=heavy?H[1]:i, name=heavy?H[0]:DRILLS[i];
+    s.lastTrained=main;
+    say(`${name}. Let's see how it does.`);
+    if(res==="slack") await SLACK(i); else await (heavy?HEAVY_FN[i-6]:SCENE_FN[i])(res);
+    s.bg=null; s.x=150; s.props=s.props.filter(p=>p.k==="bowl"); s.upside=false; s.parted=false; s.jy=0;
+    const frac=s.used/lifeWeeks(), age=frac<0.2?0.8:frac<0.7?1.2:0.8, base=FAMILY[s.m.family].base;
+    const rp=k=>RANK_PTS[rankOf(base[k])], mult=res==="great"?2:res==="slack"?0.5:1;
+    const gains={};
+    if(res==="fail") gains[main]=1;
+    else { gains[main]=Math.max(1,Math.round(rp(main)*(heavy?1.5:1)*mult*age)); if(heavy) gains[H[2]]=Math.max(1,Math.round(rp(H[2])/2*mult*age)); }
+    if(heavy) gains[H[3]]=(gains[H[3]]||0)-2;
+    const shp=shapeOf(s.weight)[0], fm=shp==="Thin"?1.25:shp==="Chubby"?1.25:shp==="Heavy"?1.5:1, sm=shp==="Thin"?1.5:shp==="Slim"?1.25:shp==="Chubby"?0.75:shp==="Heavy"?0.5:1, hv=heavy?2:1;
+    s.fatigue+=Math.round((res==="great"||res==="slack"?5:10)*fm*hv); s.stress+=Math.round(((res==="great"?9:5)*hv)*sm*(s.variant==="Pampered"?0.75:1)); s.weight-=hv;
+    for(const k in gains) s.tp[k]=Math.max(0,s.tp[k]+gains[k]);
     const hurtP=s.fatigue>=90?0.3:s.fatigue>=70?0.15:0;
     const col={great:"#ffd23f",success:"#ffffff",fail:"#ff8a8a",slack:"#c9a6ff"}[res];
     banner({great:"Great!",success:"Success",fail:"Fail",slack:"Slacked off"}[res],col);
-    if(DRILL_MESS[i]&&res!=="slack"){ s.mess=Math.min(100,s.mess+35); s.messKind=DRILL_MESS[i]; }
-    drawUI(); popStat(i,"+"+pts);
+    const mess=heavy?H[4]:DRILL_MESS[i];
+    if(mess&&res!=="slack"){ s.mess=Math.min(100,s.mess+35); s.messKind=mess; }
+    if(heavy&&H[0]==="Shrine"&&res!=="slack") s.mess=0;
+    drawUI(); for(const k in gains) popStat(+k,(gains[k]>0?"+":"")+gains[k],gains[k]<0);
     await rwait(900); banner("");
-    for(const [nm,need] of STAT_SKILLS[i]) if(s.tp[i]>=need&&!s.learned.includes(nm)){ s.learned.push(nm); banner("Learned "+nm+"!","#7dff9a"); s.pose="happy"; spark(s.x,headY()-6,"sparkle",8); drawUI(); await rwait(1300); banner(""); s.pose="idle"; }
+    for(const k in gains) for(const [nm,need] of STAT_SKILLS[k]) if(s.tp[k]>=need&&!s.learned.includes(nm)){ s.learned.push(nm); fixEquip(s); banner("Learned "+nm+"!","#7dff9a"); s.pose="happy"; spark(s.x,headY()-6,"sparkle",8); drawUI(); await rwait(1300); banner(""); s.pose="idle"; }
     if(Math.random()<hurtP){ s.injured=true; s.used+=2; s.pose="hurt"; spark(s.x,headY()-4,"star",4); say("It pushed too hard and got hurt."); await rwait(1200); s.pose="tired"; }
     await praiseOrScold(res);
     await endWeek(1, (s.injured?"It pushed too hard and got hurt. That's 2 weeks off its life, and it needs a rest or medicine.":{great:"That was its best yet.",success:"Solid work.",fail:"It'll get it next time.",slack:"It wandered off halfway. It's getting a bit spoiled."}[res]));
@@ -450,17 +460,71 @@ async function runCare(kind){
 function petOnce(){ const s=RS; if(s.petWeek!==PLAYER.week){ s.petWeek=PLAYER.week; s.spoil+=2; s.stress-=2; say(scared()?"It flinched at first, then leaned in.":"It leans right into it."); } else say("It likes that, though it's had its fuss this week."); clampAll(); drawUI(); }
 function clampAll(){ const s=RS; s.fatigue=clamp(s.fatigue,0,100); s.stress=clamp(s.stress,0,100); s.spoil=clamp(s.spoil,0,100); s.fear=clamp(s.fear,0,100); s.weight=clamp(s.weight,-50,50); }
 
+function moonFull(){ const d=(Date.now()-Date.UTC(2000,0,6,18,14))/864e5, ph=((d%29.530589)+29.530589)%29.530589; return Math.abs(ph-14.77)<1.1; }
+function variantsMet(s){
+  const v=[], shp=shapeOf(s.weight)[0];
+  if(hearts()===5&&!spoiled()&&!scared()) v.push("Devoted");
+  if(spoiled()) v.push("Pampered");
+  if(scared()) v.push("Feral");
+  if(shp==="Heavy") v.push("Bulky");
+  if(shp==="Thin") v.push("Lean");
+  const wr=Object.entries(s.stageRegions||{}).find(([r,w])=>w>=12&&REGIONS.concat([{n:"The Rift",el:"Void"}]).find(x=>x.n===r).el!==s.m.el1&&REGIONS.concat([{n:"The Rift",el:"Void"}]).find(x=>x.n===r).el!==s.m.el2);
+  if(wr) v.push("Wanderer:"+wr[0]);
+  if((s.stageCups||0)>0) v.push("Champion");
+  if(moonFull()) v.push("Moonlit");
+  if((s.neglect||0)>=5) v.push("Scruffy");
+  return v;
+}
+const VARIANT_TEXT={Devoted:"a soft glow, and its loyalty never drops below 4 hearts",Pampered:"a rounder body and sparkly eyes, and drills stress it less",Feral:"sharp teeth and a dark outline, and +5% crits",
+  Bulky:"a wider body and +10% HP",Lean:"longer legs and +5% Speed",Wanderer:"the colours of the region it roamed",Champion:"a champion's crest",Moonlit:"a night palette and silver eyes",Scruffy:"messy fur until it gets 4 weeks of care"};
+function pickVariant(list){
+  if(list.length<=1) return Promise.resolve(list[0]||null);
+  return new Promise(done=>{
+    panel(`<div style="flex-basis:100%;font-size:13px">Its life left a mark. Pick one variant.</div>`+list.map((v,i)=>`<button class="rb" data-v="${i}">${v.split(":")[0]}<small>${VARIANT_TEXT[v.split(":")[0]]}${v.includes(":")?" ("+v.split(":")[1]+")":""}</small></button>`).join(""));
+    el("r-skip").style.display="none";
+    el("r-panel").querySelectorAll("[data-v]").forEach(b=>b.onclick=()=>{ panel(""); el("r-skip").style.display="block"; done(list[+b.dataset.v]); });
+  });
+}
+function askYesNo(q,yes,no){ return new Promise(done=>{ panel(`<div style="flex-basis:100%;font-size:13px">${q}</div><button class="rb" id="yn-y">${yes}</button><button class="rb" id="yn-n">${no}</button>`); el("r-skip").style.display="none";
+  el("yn-y").onclick=()=>{ panel(""); el("r-skip").style.display="block"; done(true); }; el("yn-n").onclick=()=>{ panel(""); el("r-skip").style.display="block"; done(false); }; }); }
+function stageGrid(s){
+  if(s.stage==="Bit") return s.m.grid;
+  let G=addMark(s.m.grid,s.mark);
+  if(s.stage==="Mega"){ G=addMark(G,s.mark2,true); }
+  if(s.variant==="Champion"){ let ty=20; for(let y=0;y<20;y++) for(let x=0;x<20;x++) if(G[y][x]===1) ty=Math.min(ty,y); if(ty>=2){ G[ty-1][9]=G[ty-1][10]=11; G[ty-2][8]=G[ty-2][11]=11; } }
+  return scale2x(G);
+}
+function variantPal(s){
+  const p={...s.m.pal}, v=s.variant;
+  if(v==="Feral"){ p.outline=[0,0,0]; p.dark=[20,10,10]; }
+  if(v==="Devoted") p.outline=tone(p.body,0.45,-0.3);
+  if(v==="Moonlit"){ p.body=mix(p.body,[60,70,140],0.45); p.parts=mix(p.parts,[90,100,170],0.4); p.pupil=[210,220,240]; }
+  if(v&&v.startsWith("Wanderer")&&s.wanderEl){ const c=hexOf(COL[Object.keys(EL).find(k=>EL[k]===s.wanderEl)]||"#ffffff"); p.accent=c; p.parts=mix(p.parts,c,0.5); }
+  if(v==="Pampered") p.glint=[255,255,255];
+  return p;
+}
+const hexOf=h=>[1,3,5].map(k=>parseInt(h.slice(k,k+2),16));
+function rebuildLook(s){ s.grid=stageGrid(s); s.pal=variantPal(s); s.P=makePuppet(s.grid,s.stage!=="Bit",s.m.family,s.stage==="Mega"?3:null); }
 async function evolveNow(){
-  const s=RS;
-  const top=s.tp.indexOf(Math.max(...s.tp)), mark=s.tp.filter(v=>v===s.tp[top]).length>1&&s.tp[s.lastTrained]===s.tp[top]?s.lastTrained:top;
+  const s=RS, to=s.stage==="Bit"?"Byte":"Mega";
   banner("");
   say("Something's happening to it!"); s.pose="idle"; await walkTo(130,40); s.pose="idle"; await rwait(600);
-  const oldP=s.P, G=scale2x(addMark(s.m.grid,mark)), newP=makePuppet(G,true,s.m.family);
+  const order=s.tp.map((v,i)=>[v,i]).sort((a,b)=>b[0]-a[0]||(b[1]===s.lastTrained)-(a[1]===s.lastTrained));
+  const vs=variantsMet(s); let variant=await pickVariant(vs);
+  const oldP=s.P, old={stage:s.stage,mark:s.mark,mark2:s.mark2,variant:s.variant};
+  if(to==="Byte") s.mark=topMark(); else s.mark2=order.find(x=>x[1]!==s.mark)[1];
+  s.stage=to;
+  if(variant){ s.variant=variant.split(":")[0];
+    if(variant.startsWith("Wanderer")){ const reg=REGIONS.concat([{n:"The Rift",el:"Void"}]).find(r=>r.n===variant.split(":")[1]); s.wanderEl=reg.el;
+      if(s.m.mono&&await askYesNo(`It roamed ${reg.n} so long it could take ${reg.el} as its second element. Should it?`,`Take ${reg.el}`,"Stay mono")){ s.m.el2=reg.el; s.m.mono=false; s.m.name=speciesName(s.m.family,s.m.el1,s.m.el2); } } }
+  rebuildLook(s); const newP=s.P;
   for(let k=0;k<10;k++){ s.flash=99; s.P=k%2?newP:oldP; await rwait(Math.max(60,260-k*22)); }
-  s.P=newP; s.grid=G; s.flash=0; s.stage="Byte"; s.mark=mark; fixEquip(s); s.messSpots=s.messSpots.map(p=>({x:p.x*2,y:p.y*2}));
+  s.P=newP; s.flash=0; fixEquip(s); s.messSpots=s.messSpots.map(p=>({x:Math.min(39,p.x*(old.stage==="Bit"?2:1)),y:Math.min(39,p.y*(old.stage==="Bit"?2:1))}));
+  s.stageRegions={}; s.stageCups=0; s.neglect=0; s.hinted=false;
   spark(s.x,headY()+10,"sparkle",16); s.pose="happy"; await hop(16,450); await rwait(600);
-  banner(MARK[mark][0]+" Byte!","#ffd23f"); await rwait(1200); banner("");
-  return `It evolved into a ${MARK[mark][0]} Byte, with ${MARK[mark][1]}. ${STATS[mark]} +5%, and a third skill slot opens.`;
+  banner(`${MARK[s.mark][0]} ${to}!`,"#ffd23f"); await rwait(1200); banner("");
+  const markLine=to==="Byte"?`with ${MARK[s.mark][1]}. ${STATS[s.mark]} +5%, and a third skill slot opens.`:`adding ${MARK[s.mark2][1]}. ${STATS[s.mark]} +10%, ${STATS[s.mark2]} +5%, and a fourth skill slot opens.`;
+  return `It evolved into ${displayName(s)}, ${markLine}${s.variant&&s.variant!==old.variant?` As a ${s.variant} it has ${VARIANT_TEXT[s.variant]}.`:""}`;
 }
 const topMark=()=>{const s=RS, top=s.tp.indexOf(Math.max(...s.tp)); return s.tp.filter(v=>v===s.tp[top]).length>1&&s.tp[s.lastTrained]===s.tp[top]?s.lastTrained:top;};
 
@@ -477,11 +541,20 @@ async function endWeek(weeks,line){
   if(PLAYER.week%4===0) notes.push("A new month, so it can have another meal.");
   const findP=(s.m.el1==="Wild"||s.m.el1==="Stone")?0.12:0.06;
   if(!s.sick&&Math.random()<findP){ const coins=Math.round(rnd(30,90)); PLAYER.bits+=coins; notes.push(`It dug up ${coins} bits in the yard.`); try{ s.pose="effort"; spark(s.x,GROUND-2,"dust",6); await rwait(500); spark(s.x,GROUND-10,"sparkle",5); }catch(e){} }
+  // the week's events
+  const season=Math.floor((PLAYER.week%48)/12), W=[["Rain",["Tide","Wild"]],["A heatwave",["Blaze","Light"]],["Wind",["Spark","Charm"]],["Snow",["Frost","Steel"]]][season];
+  s.weather=Math.random()<0.3?W[0]:null; s.weatherBonus=!!s.weather&&W[1].includes(s.m.el1);
+  if(s.weatherBonus) notes.push(`${W[0]} is coming, and ${s.m.el1} monsters love it, so drills will go better next week.`);
+  if(Math.random()<0.05){ const v=randomOpponent(Math.random); s.visitor={m:v,x:RW+20,until:performance.now()+9000}; s.stress-=10; notes.push(`A wild ${v.name} wandered in, and they played until sundown.`); }
+  if(PLAYER.week>s.born&&(PLAYER.week-s.born)%52===0){ const g=COMMON_FINDS[Math.floor(Math.random()*COMMON_FINDS.length)]; addItem(g); s.spoil+=5; notes.push(`It's its birthday! There was cake, and a ${g} as a present.`); }
+  { const mo=Math.floor(PLAYER.week/4)%12, wk=PLAYER.week%4; if(mo%3===2&&wk===2){ const r=gradedOpponent(s.grade,s.level+1,Math.random); notes.push(`Your rival dropped by with a ${r.m.name} to show off before the official cup. It's a ${r.m.el1} monster, so plan for that.`); } }
   notes.push(condition());
   if(s.stress>50) notes.push("It seems tense lately, maybe give it a rest.");
-  if(s.stage==="Bit"){
+  if(s.petWeek!==PLAYER.week-1&&s.playWeek!==PLAYER.week-1) s.neglect=(s.neglect||0)+1;
+  if(s.variant==="Scruffy"){ s.cleanRun=(s.petWeek===PLAYER.week-1||s.playWeek===PLAYER.week-1)?(s.cleanRun||0)+1:0; if(s.cleanRun>=4){ s.variant=null; notes.push("It's groomed itself back to looking smart."); } }
+  if(s.stage!=="Mega"){
     if(evoReady()){ say(notes.filter(Boolean).join(" ")); drawUI(); await rwait(1400); notes=[await evolveNow()]; }
-    else if(!s.hinted&&tpTotal()>=evoTotal()-10){ s.hinted=true; notes.push(MARK_HINT[topMark()]); }
+    else if(!s.hinted&&tpTotal()>=evoTotal()-10){ s.hinted=true; notes.push(MARK_HINT[s.stage==="Bit"?topMark():s.tp.map((v,i)=>[v,i]).filter(x=>x[1]!==s.mark).sort((a,b)=>b[0]-a[0])[0][1]]); }
   }
   const past=s.used-lifeWeeks();
   if(past>=0){
@@ -544,7 +617,7 @@ const BMP={heart:["01010","11111","11111","01110","00100"],z:["1111","0010","010
 const BMP_COL={heart:"#ff5d82",z:"#dfe8ff",star:"#ffe14d",q:"#ffffff",bulb:"#fff27a"};
 function bmp(c,b,x,y,col){ c.fillStyle=col; b.forEach((row,j)=>{for(let i=0;i<row.length;i++) if(row[i]==="1") c.fillRect(Math.round(x)+i,Math.round(y)+j,1,1);}); }
 function poseOf(t){
-  const s=RS, o={legL:0,legR:0,armL:0,armR:0,topX:0,face:"open",mouth:false,bx:s.bx,by:0,kx:shapeOf(s.weight)[2]*(s.stage!=="Bit"&&s.mark===0?1.08:1),ky:1};
+  const s=RS, o={legL:0,legR:0,armL:0,armR:0,topX:0,face:"open",mouth:false,bx:s.bx,by:0,kx:shapeOf(s.weight)[2]*(s.stage!=="Bit"&&s.mark===0?1.08:1)*({Bulky:1.12,Lean:0.9,Pampered:1.05}[s.variant]||1),ky:1};
   const blink=(t%3800)<150, tiredFace=s.fatigue>50;
   switch(s.pose){
     case "idle": o.by=Math.floor(t/520)%2; o.topX=Math.round(Math.sin(t/700)*0.7); o.face=blink?"shut":tiredFace?"tired":"open"; break;
@@ -577,9 +650,14 @@ function rLoop(t){
       if(p.bounce&&p.y>GROUND-3){ p.y=GROUND-3; p.vy*=-0.45; p.vx*=0.7; } if(p.k==="boulder") p.rot+=p.vx*0.09*k; }
     if(p.k==="bug"){ p.t+=k; p.x+=Math.sin(p.t/9)*0.6; p.y+=Math.cos(p.t/7)*0.4; } }
   if(s.behind) drawMonster(c,t);
-  drawHut(c);
+  if(!s.bg) drawHut(c);
   drawProps(c,t,false);
+  if(s.visitor){ const v=s.visitor; if(performance.now()>v.until){ v.x+=0.6; if(v.x>RW+40) s.visitor=null; } else v.x=Math.max(RW-22,v.x-0.6);
+    if(s.visitor){ if(!v.cv){ v.cv=document.createElement("canvas"); paint(v.cv,v.m.grid,v.m.pal,2); } c.drawImage(v.cv,Math.round(v.x-20),GROUND-40+(Math.floor(t/300)%2)); } }
   if(!s.behind) drawMonster(c,t);
+  if(s.weather==="Rain"&&!s.bg){ c.fillStyle="rgba(170,200,255,.7)"; for(let i=0;i<40;i++){ const x=(i*29+t/3)%RW, y=(i*47+t/2)%GROUND; c.fillRect(Math.round(x),Math.round(y),1,3);} }
+  if(s.weather==="Wind"&&!s.bg){ c.fillStyle="#d9822b"; for(let i=0;i<8;i++){ const x=(i*61+t/8)%RW, y=60+(i*23)%70+Math.sin(t/300+i)*6; c.fillRect(Math.round(x),Math.round(y),2,1);} }
+  if(s.weather==="A heatwave"&&!s.bg){ c.fillStyle="rgba(255,180,60,.12)"; c.fillRect(0,0,RW,RH); }
   drawProps(c,t,true);
   // particles
   s.parts=s.parts.filter(p=>p.life<p.max);
@@ -595,7 +673,7 @@ function rLoop(t){
 function drawMonster(c,t){
   const s=RS; if(s.hidden) return;
   const o=poseOf(t), P=s.P, sc=P.scale, F=buildFrame(P,o);
-  paintFrame(FC,F,s.m.pal,sc,P.big,s.flash>0); if(s.flash>0&&s.flash<99) s.flash--;
+  paintFrame(FC,F,s.pal||s.m.pal,sc,P.big,s.flash>0); if(s.flash>0&&s.flash<99) s.flash--;
   const w=FC.width, hgt=FC.height, baseY=(P.base+P.pad+1)*sc;
   const dx=Math.round(s.x-w/2+o.bx*sc), dy=Math.round(GROUND-baseY+o.by*sc-s.jy);
   // shadow
@@ -607,6 +685,7 @@ function drawMonster(c,t){
   s.bbox=[dx+P.pad*sc,dy+(P.topY+P.pad)*sc,dx+w-P.pad*sc,dy+baseY];
 }
 function drawYard(c,t){
+  if(RS.bg&&typeof drawBg==="function"){ drawBg(c,t); return; }
   const s=RS, season=Math.floor((PLAYER.week%48)/12), h=new Date().getHours();
   const night=h<6||h>=19, dusk=h>=17&&h<19;
   const sky=night?["#0f1430","#1a2150","#27306a"]:dusk?["#f08a5d","#f6b07a","#ffd6a5"]:["#6fbbef","#97d0f5","#c4e7ff"];
@@ -644,6 +723,7 @@ function drawHut(c){
 }
 function drawProps(c,t,front){
   for(const p of RS.props){
+    if(typeof drawProp2==="function"&&drawProp2(c,p,t,front)) continue;
     if(p.k==="boulder"&&!front){ const r=p.r; for(let j=-r;j<=r;j++){ const w=Math.round(Math.sqrt(r*r-j*j)); for(let i=-w;i<=w;i++){ const sh=((i*Math.cos(p.rot)-j*Math.sin(p.rot))>3)?"#6f6a64":(j<-4?"#b8b2aa":"#958f88"); c.fillStyle=sh; c.fillRect(Math.round(p.x)+i,Math.round(p.y)-r+j,1,1);} } }
     if(p.k==="box"&&!front){ c.fillStyle="#b07a45"; c.fillRect(Math.round(p.x)-6,Math.round(p.y)-10,12,10); c.fillStyle="#7a5230"; c.fillRect(Math.round(p.x)-6,Math.round(p.y)-10,12,1); c.fillRect(Math.round(p.x)-1,Math.round(p.y)-9,2,9);
       if(p.open){ c.fillStyle="#b07a45"; c.fillRect(Math.round(p.x)-7,Math.round(p.y)-16,3,7); } else { c.fillStyle="#d79a5a"; c.fillRect(Math.round(p.x)-7,Math.round(p.y)-12,14,2);} }

@@ -90,7 +90,7 @@ function bump(who,cls){ const s=$(who===0?"b-me-sprite":"b-foe-sprite"); s.class
 const bw=ms=>B&&B.fast?Promise.resolve():wait(ms);
 async function pick(id){
   if(!B||B.busy||B.fight.over) return;
-  B.busy=true; $("b-btns").classList.add("busy");
+  B.busy=true; if(!(B.opts&&B.opts.auto)) $("b-btns").classList.add("busy");
   const f=B.fight, ai=f.aiPick(f.p[1],f.p[0]);
   if(B.opts&&B.opts.record) recordHabit(B.opts.record,f,id);
   const ev=f.play(id,ai);
@@ -106,7 +106,7 @@ async function pick(id){
     if(e.t==="status"){ popup(e.who,e.name,STATUS_COL[e.name]); await bw(300); }
     if(e.t==="ko"){ $(e.who===0?"b-me-sprite":"b-foe-sprite").classList.add("bko"); await bw(700); }
   }
-  B.shown=f.p.map(x=>x.hp); drawPanels(); drawButtons();
+  B.shown=f.p.map(x=>x.hp); drawPanels(); if(!(B.opts&&B.opts.auto)) drawButtons();
   $("b-btns").classList.remove("busy"); B.busy=false;
   if(f.over&&B.opts){ endArena(); return; }
   if(B.opts&&B.opts.auto){ autoStep(); return; }
@@ -123,11 +123,11 @@ async function pick(id){
 }
 
 /* Arena fights for the ranch: tournaments, missions and practice. mode "control" gives the player the buttons, "auto" plays on the monster's habits. */
-function arenaFight({s,foe,mode="control",title="",turnLimit=15,noDraw=false,record=false,rand=Math.random,onEnd}){
+function arenaFight({s,foe,mode="control",title="",turnLimit=15,noDraw=false,record=false,learn=false,rand=Math.random,onEnd}){
   const me=fightMon(s); if(record) s.fightNo=(s.fightNo||0)+1;
-  const fight=new Fight(makeFighter(me,s.equip,s.level),makeFighter(foe.fm,foe.skills,foe.level),rand);
-  if(foe.boss){ const b=fight.p[1]; b.maxhp=Math.round(b.maxhp*1.5); b.hp=b.maxhp; b.name=foe.boss; }
-  B={fight,mon:me,opp:foe.fm,busy:false,fast:false,shown:fight.p.map(f=>f.hp),opts:{s,turnLimit,noDraw,record:record?s:null,auto:mode==="auto",onEnd}};
+  const fight=new Fight(playerFighter(s),makeFighter(foe.fm,foe.skills,foe.level),rand);
+  if(foe.boss){ const b=fight.p[1]; b.maxhp=Math.round(b.maxhp*1.25); b.hp=b.maxhp; b.name=foe.boss; }
+  B={fight,mon:me,opp:foe.fm,busy:false,fast:false,shown:fight.p.map(f=>f.hp),opts:{s,turnLimit,noDraw,learn,record:record?s:null,auto:mode==="auto",onEnd}};
   $("battle").style.display="flex"; $("loadout").style.display="none"; $("b-fight").style.display="flex";
   paint($("b-me-sprite"),me.grid,me.pal,1); paint($("b-foe-sprite"),foe.fm.grid,foe.fm.pal,1);
   ["me","foe"].forEach(k=>{$("b-"+k+"-sprite").className="bsprite";});
@@ -138,8 +138,9 @@ function arenaFight({s,foe,mode="control",title="",turnLimit=15,noDraw=false,rec
 }
 function autoStep(){
   const f=B.fight;
-  $("b-btns").innerHTML=`<div style="grid-column:1/-1;display:flex;justify-content:space-between;align-items:center"><span style="opacity:.8">Auto. It fights on its habits.</span><button class="small" id="b-fast">Skip ▸▸</button></div>`;
-  $("b-fast").onclick=()=>{ B.fast=true; };
+  if(!$("b-fast")){ $("b-btns").innerHTML=`<div style="grid-column:1/-1;display:flex;justify-content:space-between;align-items:center"><span style="opacity:.8">Auto. It fights on its habits.</span><button class="small" id="b-fast">Skip ▸▸</button></div>`;
+    $("b-fast").onclick=()=>{ B.fast=true; }; }
+  $("b-btns").classList.remove("busy");
   setTimeout(()=>{ if(B&&!B.fight.over) pick(habitPick(f,0,B.opts.s)); }, B.fast?0:450);
 }
 function endArena(){
@@ -147,6 +148,7 @@ function endArena(){
   $("b-btns").innerHTML="";
   $("b-result").innerHTML=`<h2>${draw?"Draw":won?"Win":"Loss"}</h2><p>${f.judged?"The judges called it after "+f.turn+" turns.":`${won?f.p[1].name:f.p[0].name} broke into pixels in ${f.turn} turns.`}</p><div class="brow"><button class="big" id="b-cont">Continue</button></div>`;
   $("b-result").style.display="block";
-  $("b-cont").onclick=()=>{ const res={winner:f.winner,turns:f.turn,judged:!!f.judged,hpLeft:f.p[0].hp/f.p[0].maxhp,foeHpLeft:f.p[1].hp/f.p[1].maxhp};
+  const learned=o.learn?afterFight(o.s,f.p[0],true):[]; if(learned.length) $("b-result").querySelector("p").textContent+=" "+learned.join(" ");
+  $("b-cont").onclick=()=>{ const res={winner:f.winner,turns:f.turn,judged:!!f.judged,hpLeft:f.p[0].hp/f.p[0].maxhp,foeHpLeft:f.p[1].hp/f.p[1].maxhp,learned};
     $("battle").style.display="none"; B=null; if(o.onEnd) o.onEnd(res); };
 }
