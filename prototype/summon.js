@@ -87,7 +87,7 @@ const SUMMON = (() => {
     function render(t) {
       c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, W, H);
       // the room darkens around the photo
-      const dark = seg(t, 320, 700); c.fillStyle = `rgba(12,13,20,${0.94 * dark + (t < 320 ? 0 : 0)})`; c.fillRect(0, 0, W, H);
+      const dark = seg(t, 320, 700); c.fillStyle = `rgba(12,13,20,${0.97 * dark})`; c.fillRect(0, 0, W, H);
       if (t >= 3500) { glow(c, cx, cy, Math.max(W, H) * 0.6, main, 0.55); rays(c, cx, cy, 14, Math.max(W, H), t / 4000, lt(main, 0.6), 0.12); }
       // the photo: full screen, then shrinking into a card
       if (t < 1250) { const k = out3(seg(t, 320, 700)), x = card.x * k, y = card.y * k, w = W + (cw - W) * k, h = H + (chh - H) * k, b = 6 * k;
@@ -152,7 +152,7 @@ const SUMMON = (() => {
       const fl = t < 280 ? Math.pow(1 - t / 280, 2) * 0.95 : t >= 3500 ? Math.pow(1 - seg(t, 3500, 3850), 2) * 0.85 : 0;
       if (fl > 0.01) { c.fillStyle = `rgba(255,255,255,${fl})`; c.fillRect(0, 0, W, H); }
     }
-    return { render, duration: 5100 };
+    return { render, duration: 5100, cues: [[0, 'tap'], [1250, 'whoosh'], [2300, 'charge'], [3500, 'heavy'], [3650, 'whoosh']] };
   }
 
   /* ---------- fusion ---------- */
@@ -198,15 +198,27 @@ const SUMMON = (() => {
           c.fillStyle = '#f5f0e2'; c.fillText(o.name, cx, fC + hC * 0.24 + (1 - al) * 12); c.globalAlpha = 1; } }
       const fl = t >= 2800 && t < 3150 ? Math.pow(1 - seg(t, 2800, 3150), 2) * 0.9 : 0; if (fl > 0.01) { c.fillStyle = `rgba(255,255,255,${fl})`; c.fillRect(0, 0, W, H); }
     }
-    return { render, duration: 4900 };
+    return { render, duration: 4900, cues: [[450, 'charge'], [950, 'whoosh'], [2800, 'heavy'], [2950, 'whoosh'], [4150, 'tap']] };
   }
 
   /* plays a scene on a full-screen canvas; tap to skip */
   function play(scene, cv, done) {
-    const t0 = performance.now(); let skip = false; cv.onpointerdown = () => { skip = true; };
+    const t0 = performance.now(); let skip = false, cue = 0; cv.onpointerdown = () => { skip = true; };
     const step = now => { const t = skip ? scene.duration : now - t0; scene.render(Math.min(t, scene.duration));
+      while (!skip && scene.cues && cue < scene.cues.length && scene.cues[cue][0] <= t) { if (typeof sfx === 'function') sfx(scene.cues[cue][1]); cue++; }
       if (t < scene.duration) requestAnimationFrame(step); else { cv.onpointerdown = null; done && done(); } };
     requestAnimationFrame(step);
   }
-  return { summon, fusion, play, toBits, ENTER };
+  /* a full-screen canvas over everything, at the screen's real resolution */
+  function overlay() { const cv = document.createElement('canvas'), d = devicePixelRatio || 1;
+    cv.width = Math.round(innerWidth * d); cv.height = Math.round(innerHeight * d); cv.className = 'summon-cv'; document.body.appendChild(cv); return cv; }
+  /* what to draw for a monster: the smooth drawing's spec, or its pixel sprite as an image */
+  function specFor(m, st, stage) {
+    const sp = typeof chibiSpec === 'function' && chibiSpec(m, st);
+    if (sp) { if (stage) sp.stage = stage; return sp; }
+    const c = document.createElement('canvas'); paint(c, (st && st.grid) || m.grid, (st && st.pal) || m.pal, 4); return { img: c, pal: m.pal };
+  }
+  /* plays a scene on its own overlay and resolves when it ends or is tapped away */
+  const run = scene => new Promise(done => { const cv = overlay(); play(scene(cv), cv, () => { cv.remove(); done(); }); });
+  return { summon, fusion, play, toBits, ENTER, overlay, specFor, run };
 })();

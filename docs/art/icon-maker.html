@@ -1,0 +1,11 @@
+<!doctype html><html><body style="margin:0;background:transparent"><canvas id="c"></canvas>
+<script src="../../prototype/chibi.js"></script><script>
+/* draws the app icon: a happy Chomp on a night-blue tile. ?s=size&m=1 for the maskable version (full bleed, smaller monster) */
+const q=new URLSearchParams(location.search), S=+q.get('s')||512, mask=q.get('m')==='1', c=document.getElementById('c'); c.width=c.height=S; const x=c.getContext('2d');
+const r=mask?0:S*0.22; x.beginPath(); x.roundRect(0,0,S,S,r); x.clip();
+const g=x.createRadialGradient(S*0.5,S*0.42,S*0.05,S*0.5,S*0.5,S*0.75); g.addColorStop(0,'#4a5db8'); g.addColorStop(0.6,'#26305e'); g.addColorStop(1,'#11121a'); x.fillStyle=g; x.fillRect(0,0,S,S);
+x.fillStyle='#57b65a'; x.beginPath(); x.ellipse(S*0.5,S*1.02,S*0.75,S*0.3,0,0,7); x.fill();
+x.fillStyle='rgba(255,255,255,.85)'; for(const [a,b,rr] of [[0.2,0.2,0.012],[0.8,0.16,0.01],[0.72,0.3,0.007],[0.3,0.33,0.007]]){ x.beginPath(); x.arc(S*a,S*b,S*rr,0,7); x.fill(); }
+const k=(mask?0.6:0.78)*S/200; x.translate(S*0.5-100*k, S*(mask?0.8:0.86)-188*k); x.scale(k,k);
+CHIBI.draw(x,{family:'Chomp',stage:'Byte',marks:[],worn:{},el:'Brawl',pal:{body:[240,138,36],parts:[128,68,30],accent:[255,236,214]}},'happy',300);
+</script></body></html>

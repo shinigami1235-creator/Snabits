@@ -47,18 +47,31 @@ const hasSave=()=>{ try{ return !!localStorage.getItem(SAVE_KEY); }catch(e){ ret
 /* The save file. The game lives in this browser's storage, which survives refreshes and closing the tab but not
    "Clear site data", so the player can keep a copy as a .json file and load it back on any phone or computer. */
 let PERSIST_ASKED=false;
+/* Installing it as an app: Chrome offers it once the page qualifies, and the Install buttons show only then. */
+let INSTALL=null;
+const installShow=()=>document.querySelectorAll(".install-btn").forEach(b=>b.hidden=!INSTALL);
+addEventListener("beforeinstallprompt",e=>{ e.preventDefault(); INSTALL=e; installShow(); });
+addEventListener("appinstalled",()=>{ INSTALL=null; installShow(); });
+function installApp(){ if(!INSTALL) return; const p=INSTALL; INSTALL=null; p.prompt(); p.userChoice.finally(installShow); }
 function askPersist(){ if(PERSIST_ASKED) return; PERSIST_ASKED=true; try{ if(navigator.storage&&navigator.storage.persist) navigator.storage.persist(); }catch(e){} }
-function exportSave(){
-  saveGame(); const d=new Date(), day=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
-  PLAYER.lastExport=d.toISOString(); saveGame();
-  const blob=new Blob([JSON.stringify({game:"snabits",v:1,saved:d.toISOString(),save:PLAYER})],{type:"application/json"});
-  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=`snabits-save-${day}.json`; document.body.appendChild(a); a.click();
+/* the file is JSON with the save squeezed by gzip into one base64 line: about 4 KB for 20 Snabits */
+const b64=buf=>{ let s=""; const u=new Uint8Array(buf); for(let i=0;i<u.length;i+=0x8000) s+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000)); return btoa(s); };
+const unb64=t=>Uint8Array.from(atob(t),ch=>ch.charCodeAt(0));
+const squeeze=async(txt,how)=>new Response(new Blob([txt]).stream().pipeThrough(how)).arrayBuffer();
+async function exportSave(){
+  saveGame(); const d=new Date(); PLAYER.lastExport=d.toISOString(); saveGame();
+  const txt=JSON.stringify(PLAYER); let body;
+  try{ body=JSON.stringify({game:"snabits",v:2,saved:d.toISOString(),gz:b64(await squeeze(txt,new CompressionStream("gzip")))}); }
+  catch(e){ body=JSON.stringify({game:"snabits",v:1,saved:d.toISOString(),save:PLAYER}); }
+  const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([body],{type:"application/json"})); a.download="snabits-save.json"; document.body.appendChild(a); a.click();
   setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },2000);
 }
 async function readSaveFile(file){
-  let o; try{ o=JSON.parse(await file.text()); }catch(e){ throw new Error("That file isn't a Snabits save."); }
-  const p=o&&o.game==="snabits"?o.save:o;
-  if(!p||!Array.isArray(p.roster)||typeof p.week!=="number") throw new Error("That file isn't a Snabits save.");
+  const bad=()=>new Error("That file isn't a Snabits save.");
+  let o; try{ o=JSON.parse(await file.text()); }catch(e){ throw bad(); }
+  let p=o;
+  if(o&&o.game==="snabits"){ if(o.gz){ try{ p=JSON.parse(new TextDecoder().decode(await squeeze(unb64(o.gz),new DecompressionStream("gzip")))); }catch(e){ throw bad(); } } else p=o.save; }
+  if(!p||!Array.isArray(p.roster)||typeof p.week!=="number") throw bad();
   return {p,saved:o.saved?new Date(o.saved):null};
 }
 function applySave(p){ localStorage.setItem(SAVE_KEY,JSON.stringify(p)); location.hash=location.hash.replace(/(^#|&)test(&|$)/,"$1"); location.reload(); }

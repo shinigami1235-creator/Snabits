@@ -126,19 +126,13 @@ async function doFuse(e1,e2,cat){
   const R=rng(hashStr(e1.id+e2.id+PLAYER.week));
   if(cat){ PLAYER.bag[cat]--; if(PLAYER.bag[cat]<=0) delete PLAYER.bag[cat]; }
   const child=fuseChild(e1,e2,cat,R);
-  // the fusion scene: both parents slide together and flash into the child
-  panel(`<div id="fuse" style="flex-basis:100%;position:relative;height:120px;background:#1b1b24;border-radius:12px;overflow:hidden"></div><div id="fuse-t" style="flex-basis:100%;font-size:13px"></div>`);
-  const box=el("fuse"), a=sprite(e1.m,entryState(e1).grid,96,entryState(e1)), b=sprite(e2.m,entryState(e2).grid,96,entryState(e2)), c=sprite(child.m,null,104);
-  [a,b,c].forEach(x=>{ x.style.position="absolute"; x.style.top="12px"; x.style.transition="left .9s ease-in,opacity .4s,filter .4s"; box.appendChild(x); });
-  a.style.left="8%"; b.style.left="calc(92% - 96px)"; c.style.left="calc(50% - 52px)"; c.style.opacity=0;
-  await rsleep(200); a.style.left=b.style.left="calc(50% - 48px)"; await rsleep(950);
-  a.style.filter=b.style.filter="brightness(4)"; await rsleep(350); a.style.opacity=b.style.opacity=0; c.style.opacity=1; c.style.filter="brightness(3)"; await rsleep(300); c.style.filter="none";
+  // the fusion scene: both parents break into bits, orbit, crush into light and build the child
+  if(typeof SUMMON!=="undefined") await SUMMON.run(cv=>SUMMON.fusion(cv,{a:SUMMON.specFor(e1.m,entryState(e1)),b:SUMMON.specFor(e2.m,entryState(e2)),child:SUMMON.specFor(child.m,child.st,"Bit"),name:child.m.name}));
   // the parents are used up and the child takes the ranch
   PLAYER.roster=PLAYER.roster.filter(e=>e.id!==e1.id&&e.id!==e2.id);
   const e={id:"m"+(PLAYER.nextId++),m:child.m,st:child.st}; PLAYER.roster.push(e); PLAYER.active=e.id; RS=null; LAB={a:null,b:null,cat:null};
   saveGame();
-  el("fuse-t").innerHTML=`It's a ${child.m.name}${child.hybrid?", a hybrid":""}. It keeps ${child.carry}% of its parents' training and knows ${child.st.skillsKnown.join(", ")}. <button class="small" id="fuse-go">To the ranch</button>`;
-  el("fuse-go").onclick=()=>openRanch();
+  panel(""); openRanch(); say(`It's a ${child.m.name}${child.hybrid?", a hybrid":""}. It keeps ${child.carry}% of its parents' training and knows ${child.st.skillsKnown.join(", ")}.`);
 }
 
 /* ---------- Rebirth ---------- */
