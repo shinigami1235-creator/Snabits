@@ -672,6 +672,7 @@ function rLoop(t){
 }
 function drawMonster(c,t){
   const s=RS; if(s.hidden) return;
+  if(!s.busy){ const half=s.P.N*0.42*s.P.scale; s.x=clamp(s.x,half+2,RW-half-2); }
   const o=poseOf(t), P=s.P, sc=P.scale, F=buildFrame(P,o);
   paintFrame(FC,F,s.pal||s.m.pal,sc,P.big,s.flash>0); if(s.flash>0&&s.flash<99) s.flash--;
   const w=FC.width, hgt=FC.height, baseY=(P.base+P.pad+1)*sc;
