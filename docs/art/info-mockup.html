@@ -1,0 +1,177 @@
+<!doctype html><html><head><meta charset="utf-8">
+<link rel="stylesheet" href="../../prototype/ui.css">
+<style>
+html,body{overflow:auto;height:auto;background:#0a0b10}
+.wrap{display:flex;gap:28px;padding:24px;align-items:flex-start}
+.cap{font:700 20px var(--pix);color:var(--mute);margin:0 0 10px 4px}
+.ph{width:390px;height:844px;background:var(--ink);border:2px solid var(--line);border-radius:28px;overflow:hidden;display:flex;flex-direction:column}
+.top{display:flex;align-items:center;gap:10px;padding:16px 14px 8px}
+.top h2{font-size:26px;flex:1}
+.x{width:34px;height:34px;border-radius:8px;background:var(--panel2);border:2px solid var(--line2);display:grid;place-items:center;font:700 18px var(--pix)}
+.tabs{display:flex;gap:6px;padding:0 14px 10px}
+.tab{flex:1;text-align:center;font:700 16px var(--pix);padding:7px 0;border-radius:8px;background:var(--panel);border:2px solid var(--line);color:var(--mute)}
+.tab.on{background:var(--panel2);border-color:var(--gold);color:var(--text)}
+.body{flex:1;overflow:hidden;padding:0 14px 14px;display:flex;flex-direction:column;gap:10px}
+.card{background:var(--panel);border:2px solid var(--line);border-radius:10px;padding:10px 12px}
+.hero{display:flex;gap:10px;align-items:stretch}
+.port{width:132px;height:132px;border-radius:10px;background:radial-gradient(circle at 50% 70%,#2f3d33 0,#1c2130 70%);border:2px solid var(--line);flex:none}
+.id{flex:1;display:flex;flex-direction:column;gap:3px;font-size:13px;color:var(--mute)}
+.id b{font:700 19px var(--pix);color:var(--text)}
+.chips{display:flex;gap:5px;flex-wrap:wrap;margin:2px 0}
+.el{font:700 13px var(--pix);padding:1px 8px;border-radius:5px;color:#1a1208}
+.big2{font:700 15px var(--pix);color:var(--text)}
+.stat{display:grid;grid-template-columns:62px 18px 1fr 36px;gap:6px;align-items:center;font:700 15px var(--pix);margin:3px 0}
+.stat .r{font-size:13px;text-align:center;border-radius:4px;padding:0 2px;color:#1a1208}
+.bar{height:10px;background:#11131c;border-radius:5px;overflow:hidden;border:1px solid var(--line)}
+.bar i{display:block;height:100%;border-radius:5px}
+.stat .n{text-align:right}
+.rows{display:grid;grid-template-columns:96px 1fr;row-gap:7px;column-gap:8px;font-size:13.5px;align-items:center}
+.rows .k{font:700 14px var(--pix);color:var(--mute)}
+.meter{display:flex;gap:3px;align-items:center}
+.meter i{width:16px;height:9px;border-radius:2px;background:#2b2f42}
+.meter i.f{background:var(--mint)} .meter i.w{background:var(--gold)} .meter i.h{background:var(--coral)}
+.meter span{margin-left:6px}
+.lean{position:relative;height:10px;border-radius:5px;background:linear-gradient(90deg,#ff7aa2,#3a3f58 50%,#5cb8ff);margin:2px 0}
+.lean b{position:absolute;top:-4px;width:6px;height:18px;border-radius:3px;background:#fff;box-shadow:0 0 0 2px var(--ink)}
+.ends{display:flex;justify-content:space-between;font-size:11px;color:var(--dim)}
+.hearts{color:var(--pink);font-size:15px;letter-spacing:1px}
+.q{color:var(--dim)}
+.new{font:700 11px var(--pix);background:var(--sky);color:#06203a;border-radius:4px;padding:0 5px;margin-left:5px}
+.talk{background:var(--panel2);border:2px solid var(--line2);border-radius:10px;padding:8px 10px;font-size:13px}
+.talk .who{font:700 14px var(--pix);color:var(--gold);margin-right:6px}
+/* skills */
+.slots{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.slot{background:var(--panel2);border:2px solid var(--line2);border-radius:10px;padding:8px 9px;min-height:92px;position:relative;box-shadow:0 3px 0 #0b0c12}
+.slot.sel{border-color:var(--gold)}
+.slot .no{position:absolute;right:8px;top:6px;font:700 13px var(--pix);color:var(--dim)}
+.slot b{font:700 16px var(--pix);display:block;margin:3px 0 2px}
+.slot small{display:block;font-size:11.5px;color:var(--mute);line-height:1.3}
+.slot.lock{display:grid;place-items:center;text-align:center;color:var(--dim);font-size:12px;box-shadow:none;border-style:dashed}
+.kind{font:700 12px var(--pix);padding:0 6px;border-radius:4px;color:#1a1208;display:inline-block}
+.sec{font:700 14px var(--pix);color:var(--mute);margin:2px 0 -2px}
+.filters{display:flex;gap:5px}
+.filters span{font:700 13px var(--pix);padding:3px 9px;border-radius:6px;background:var(--panel);border:2px solid var(--line);color:var(--mute)}
+.filters span.on{border-color:var(--gold);color:var(--text)}
+.list{display:flex;flex-direction:column;gap:6px}
+.sk{display:grid;grid-template-columns:8px 1fr auto;gap:9px;align-items:center;background:var(--panel);border:2px solid var(--line);border-radius:9px;padding:6px 9px}
+.sk .dot{width:8px;height:30px;border-radius:4px}
+.sk b{font:700 15px var(--pix)}
+.sk small{display:block;font-size:11.5px;color:var(--mute)}
+.sk .pw{font:700 14px var(--pix);text-align:right;color:var(--text)}
+.sk .pw small{font:400 11px var(--body)}
+.sk.eq{border-color:#6d6440;background:#24253a}
+.sk.eq b::after{content:" ● in slot";font:400 11px var(--body);color:var(--gold)}
+.foot{display:flex;gap:8px}
+.foot .small{flex:1;text-align:center}
+/* record */
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.num{background:var(--panel);border:2px solid var(--line);border-radius:10px;padding:8px;text-align:center}
+.num b{font:700 24px var(--pix);display:block}
+.num small{font-size:11.5px;color:var(--mute)}
+.cups{display:flex;gap:6px;flex-wrap:wrap}
+.cup{font:700 13px var(--pix);background:var(--panel2);border:2px solid var(--gold-d);border-radius:6px;padding:3px 8px}
+.cup i{color:var(--gold);font-style:normal}
+.line{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:1px solid var(--line)}
+.line:last-child{border:0}
+.line span:first-child{color:var(--mute)}
+</style></head><body>
+<div class="wrap">
+
+<!-- ================= STATUS ================= -->
+<div><div class="cap">1 · Status</div><div class="ph">
+ <div class="top"><h2>Kibo</h2><div class="x">✕</div></div>
+ <div class="tabs"><div class="tab on">Status</div><div class="tab">Skills</div><div class="tab">Record</div></div>
+ <div class="body">
+  <div class="hero">
+   <canvas class="port" id="p1" width="264" height="264"></canvas>
+   <div class="id">
+    <b>Horned Chomp</b>
+    <div class="chips"><span class="el" style="background:#e88c34">Brawl</span><span class="el" style="background:#e24c3e;color:#fff">Blaze</span></div>
+    <span class="big2">Byte · Lv 14 · Grade C</span>
+    <span>Prime, week 34 of 120</span>
+    <span>1.03 m · Normal build</span>
+    <span class="hearts">♥♥♥♥♡</span>
+   </div>
+  </div>
+  <div class="card">
+   <div class="stat"><span>HP</span><span class="r" style="background:#57dd96">B</span><span class="bar"><i style="width:71%;background:#57dd96"></i></span><span class="n">142</span></div>
+   <div class="stat"><span>Power</span><span class="r" style="background:#ffc93c">A</span><span class="bar"><i style="width:84%;background:#ff8a4c"></i></span><span class="n">168</span></div>
+   <div class="stat"><span>Guard</span><span class="r" style="background:#a6a4b8">C</span><span class="bar"><i style="width:48%;background:#9aa6cf"></i></span><span class="n">96</span></div>
+   <div class="stat"><span>Mind</span><span class="r" style="background:#75738a;color:#fff">D</span><span class="bar"><i style="width:30%;background:#b088f0"></i></span><span class="n">61</span></div>
+   <div class="stat"><span>Spirit</span><span class="r" style="background:#a6a4b8">C</span><span class="bar"><i style="width:44%;background:#ffd36e"></i></span><span class="n">88</span></div>
+   <div class="stat"><span>Speed</span><span class="r" style="background:#57dd96">B</span><span class="bar"><i style="width:60%;background:#5cb8ff"></i></span><span class="n">120</span></div>
+  </div>
+  <div class="card rows">
+   <span class="k">Personality</span><span><b>Bold</b> · Power +10%, Guard −10%</span>
+   <span class="k">Ability</span><span><b>Big Bite</b> · strikes of 50 power or less hit 20% harder</span>
+   <span class="k">Likes</span><span>Fish ♥ · <span class="q">Drill: ???</span><span class="new">new</span></span>
+   <span class="k">Dislikes</span><span class="q">Not found yet</span>
+   <span class="k">Raised</span><span><div class="lean"><b style="left:58%"></b></div><div class="ends"><span>Spoiled</span><span>Balanced</span><span>Strict</span></div></span>
+   <span class="k">Fatigue</span><span class="meter"><i class="w"></i><i class="w"></i><i></i><i></i><i></i><span>A bit tired</span></span>
+   <span class="k">Stress</span><span class="meter"><i class="f"></i><i></i><i></i><i></i><i></i><span>Relaxed</span></span>
+   <span class="k">Condition</span><span>Healthy</span>
+  </div>
+  <div class="talk"><span class="who">Tala</span>It's been pushing hard on Power. One more rest week and it'll be fresh again.</div>
+ </div>
+</div></div>
+
+<!-- ================= SKILLS ================= -->
+<div><div class="cap">2 · Skills: pick the 4 it fights with</div><div class="ph">
+ <div class="top"><h2>Kibo</h2><div class="x">✕</div></div>
+ <div class="tabs"><div class="tab">Status</div><div class="tab on">Skills</div><div class="tab">Record</div></div>
+ <div class="body">
+  <div class="slots">
+   <div class="slot"><span class="no">1</span><span class="kind" style="background:#e88c34">Brawl Strike</span><b>Iron Palm</b><small>100 power · 5 energy</small><small>Breaks through Guard</small></div>
+   <div class="slot sel"><span class="no">2</span><span class="kind" style="background:#ffc93c">Signature</span><b>Crunch ★</b><small>80 power · 4 energy</small><small>30% to lower Guard</small></div>
+   <div class="slot"><span class="no">3</span><span class="kind" style="background:#e24c3e;color:#fff">Blaze Cast</span><b>Fire Spin</b><small>25 × 3 · 4 energy</small><small>20% to Burn</small></div>
+   <div class="slot"><span class="no">4</span><span class="kind" style="background:#a6a4b8">Support</span><b>Bulk Up</b><small>3 energy</small><small>Power and Guard up 1 step</small></div>
+  </div>
+  <div class="talk" style="padding:6px 10px"><span class="who">Tala</span>Slot 2 is picked. Tap a skill below to put it there.</div>
+  <div class="sec">Learned · 11</div>
+  <div class="filters"><span class="on">All</span><span>Strike</span><span>Cast</span><span>Support</span></div>
+  <div class="list">
+   <div class="sk eq"><span class="dot" style="background:#ffc93c"></span><span><b>Crunch ★</b><small>Signature Strike · learned at Lv 5</small></span><span class="pw">80<small>4 en</small></span></div>
+   <div class="sk"><span class="dot" style="background:#e88c34"></span><span><b>Jab</b><small>Brawl Strike</small></span><span class="pw">55<small>2 en</small></span></div>
+   <div class="sk"><span class="dot" style="background:#a6a4b8"></span><span><b>Body Slam</b><small>Strike · stronger at high HP</small></span><span class="pw">80<small>4 en</small></span></div>
+   <div class="sk"><span class="dot" style="background:#e24c3e"></span><span><b>Ember Bite</b><small>Blaze Strike · 20% to Burn</small></span><span class="pw">45<small>2 en</small></span></div>
+   <div class="sk"><span class="dot" style="background:#a6a4b8"></span><span><b>Gust</b><small>Cast · from a chip · goes first</small></span><span class="pw">40<small>2 en</small></span></div>
+   <div class="sk"><span class="dot" style="background:#a6a4b8"></span><span><b>Protect</b><small>Support · blocks one hit</small></span><span class="pw">–<small>2 en</small></span></div>
+  </div>
+  <div class="foot"><span class="small">Skill book</span><span class="small">Save as set B</span></div>
+ </div>
+</div></div>
+
+<!-- ================= RECORD ================= -->
+<div><div class="cap">3 · Record</div><div class="ph">
+ <div class="top"><h2>Kibo</h2><div class="x">✕</div></div>
+ <div class="tabs"><div class="tab">Status</div><div class="tab">Skills</div><div class="tab on">Record</div></div>
+ <div class="body">
+  <div class="nums">
+   <div class="num"><b>23</b><small>Wins</small></div><div class="num"><b>7</b><small>Losses</small></div><div class="num"><b>3</b><small>Cups</small></div>
+  </div>
+  <div class="card"><div class="sec" style="margin-bottom:7px">Cups won</div>
+   <div class="cups"><span class="cup">Sprout Cup</span><span class="cup">Pebble Cup</span><span class="cup">Ember Cup</span></div></div>
+  <div class="card">
+   <div class="line"><span>Fight style</span><span>Opens with Bulk Up, then Iron Palm</span></div>
+   <div class="line"><span>Favourite move</span><span>Iron Palm (41 uses)</span></div>
+   <div class="line"><span>Mastered</span><span>Crunch ★</span></div>
+   <div class="line"><span>Trips</span><span>Cinder Peak ×2, Saffron Dojo</span></div>
+   <div class="line"><span>Marks</span><span>Horned (Power, at Byte)</span></div>
+   <div class="line"><span>Born</span><span>Spring, Month 1, Week 2</span></div>
+   <div class="line"><span>Lifespan</span><span>30 months</span></div>
+  </div>
+  <div class="card"><div class="sec" style="margin-bottom:6px">Training, last 8 weeks</div>
+   <div style="display:grid;grid-template-columns:repeat(8,1fr);gap:4px;text-align:center"><div><div style="background:#ff8a4c;color:#11121a;font:700 12px var(--pix);border-radius:6px;padding:12px 0">Power</div><small style="font-size:10.5px;color:var(--dim)">W27</small></div><div><div style="background:#ff8a4c;color:#11121a;font:700 12px var(--pix);border-radius:6px;padding:12px 0">Power</div><small style="font-size:10.5px;color:var(--dim)">W28</small></div><div><div style="background:#3a3f58;color:#f5f0e2;font:700 12px var(--pix);border-radius:6px;padding:12px 0">Rest</div><small style="font-size:10.5px;color:var(--dim)">W29</small></div><div><div style="background:#5cb8ff;color:#11121a;font:700 12px var(--pix);border-radius:6px;padding:12px 0">Speed</div><small style="font-size:10.5px;color:var(--dim)">W30</small></div><div><div style="background:#ff8a4c;color:#11121a;font:700 12px var(--pix);border-radius:6px;padding:12px 0">Power</div><small style="font-size:10.5px;color:var(--dim)">W31</small></div><div><div style="background:#57dd96;color:#11121a;font:700 12px var(--pix);border-radius:6px;padding:12px 0">HP</div><small style="font-size:10.5px;color:var(--dim)">W32</small></div><div><div style="background:#7a62b8;color:#f5f0e2;font:700 12px var(--pix);border-radius:6px;padding:12px 0">Trip</div><small style="font-size:10.5px;color:var(--dim)">W33</small></div><div><div style="background:#ff8a4c;color:#11121a;font:700 12px var(--pix);border-radius:6px;padding:12px 0">Power</div><small style="font-size:10.5px;color:var(--dim)">W34</small></div></div>
+  </div>
+ </div>
+</div></div>
+
+</div>
+<script src="../../prototype/chibi.js"></script>
+<script>
+const pal={body:[232,140,52],parts:[128,68,30],accent:[255,236,214]};
+function loop(t){ const c=document.getElementById('p1').getContext('2d'); c.setTransform(1,0,0,1,0,0); c.clearRect(0,0,264,264); c.setTransform(1.32,0,0,1.32,0,6);
+  CHIBI.draw(c,{family:'Chomp',stage:'Byte',marks:['Horned'],pal,el:'Brawl',worn:{}},'idle',t); requestAnimationFrame(loop); }
+requestAnimationFrame(loop);
+</script>
+</body></html>
