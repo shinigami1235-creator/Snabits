@@ -6,7 +6,7 @@ const rankOf=b=>b>=70?"S":b>=60?"A":b>=55?"B":b>=45?"C":b>=40?"D":"E";
 const DRILLS=["Laps","Boulder push","Brace","Puzzle box","Meditate","Dodgeball"];
 const HEAVY_DRILLS=["Marathon","Quarry","Fortress","Library","Shrine","Obstacle course"];
 const DRILL_MESS=["mud","dust","dust",null,null,"mud"];
-// name, coins, stress, spoil, fear, weight, bowl colour
+// name, bits, stress, spoil, fear, weight, bowl colour
 const MEALS=[["Rice ball",10,3,-3,0,0,"#f4f1e6"],["Milk",30,-2,1,0,2,"#ffffff"],["Fish",60,-4,2,0,3,"#8fb7d9"],["Jelly",80,-5,1,0,-5,"#e86aa8"],["Meat",150,-6,4,0,8,"#a5432f"],["Vitamin pack",250,-13,1,2,3,"#f2c94c"]];
 const SNACKS={
   "Cool leaf":{c:"#5fc46a",say:"It munches the leaf and loosens up.",fx:s=>{s.stress=Math.round(s.stress/2);s.spoil-=2;},react:"calm"},
@@ -122,16 +122,18 @@ function addMark(G0,mark){
 }
 
 /* ---------- state ---------- */
-function newRanch(m){
+function newRanch(entry){
+  const m=entry.m;
   const r=rng(hashStr(m.name+m.stats.join(",")));
   const like=Math.floor(r()*6); let dis=Math.floor(r()*5); if(dis>=like) dis++;
-  const s={m,grid:m.grid,stage:"Bit",mark:-1,tp:[0,0,0,0,0,0],lastTrained:-1,week:0,used:0,coins:600,
+  const s={id:entry.id,m,grid:m.grid,stage:"Bit",mark:-1,tp:[0,0,0,0,0,0],lastTrained:-1,used:0,level:1,exp:0,grade:"E",wins:0,losses:0,habits:[],fightNo:0,equip:m.skills.slice(),skillsKnown:m.skills.slice(),cups:[],majors:[],born:PLAYER.week,
     spoil:15,fear:15,fatigue:0,stress:0,weight:0,like,dis,known:{},mess:0,messKind:"mud",messSpots:[],
-    learned:[],injured:false,hinted:false,petWeek:-1,playWeek:-1,snackWeek:-1,mealMonth:-1,strainRun:0,sick:0,bag:{"Cool leaf":2,"Energy nut":2,"Berry":3,"Candy":2,"Honey cake":2,"Bitter root":2,"Slim tea":1},
-    x:150,dir:1,pose:"idle",jy:0,bx:0,upside:false,hidden:false,behind:false,flash:0,shake:0,ghosts:false,trail:[],props:[],parts:[],
+    learned:[],injured:false,hinted:false,petWeek:-1,playWeek:-1,snackWeek:-1,mealMonth:-1,strainRun:0,sick:0,    x:150,dir:1,pose:"idle",jy:0,bx:0,upside:false,hidden:false,behind:false,flash:0,shake:0,ghosts:false,trail:[],props:[],parts:[],
     busy:false,cur:0,skip:false,noScenes:false,showNums:false,ptrX:null,ptrT:0,rub:null,bbox:null,ready:false,dead:false};
-  s.P=makePuppet(m.grid,false,m.family);
-  const body=s.P.bodyPx.filter(p=>p.x<10); for(let i=0;i<6&&body.length;i++){const p=body[Math.floor(r()*body.length)];s.messSpots.push({x:p.x,y:p.y},{x:19-p.x,y:p.y+1});}
+  if(entry.st) Object.assign(s,JSON.parse(JSON.stringify(entry.st)));
+  s.P=makePuppet(s.grid||m.grid,s.stage!=="Bit",m.family);
+  fixEquip(s);
+  const body=s.P.bodyPx.filter(p=>p.x<10); if(!entry.st) for(let i=0;i<6&&body.length;i++){const p=body[Math.floor(r()*body.length)];s.messSpots.push({x:p.x,y:p.y},{x:19-p.x,y:p.y+1});}
   return s;
 }
 const loyalty=()=>clamp(Math.round((RS.spoil+RS.fear)/2-Math.max(0,Math.abs(RS.spoil-RS.fear)-20)),0,100);
@@ -141,18 +143,21 @@ const tpTotal=()=>RS.tp.reduce((a,b)=>a+b,0);
 const evoTotal=()=>(EVO_TOTAL[RS.m.family]||[110,250])[0];
 const evoReady=()=>RS.stage==="Bit"&&tpTotal()>=evoTotal();
 const lifeWeeks=()=>RS.m.lifespan*4;
-function dateText(){const w=RS.week, y=Math.floor(w/48)+1, mo=Math.floor(w/4)%12, s=Math.floor(mo/3);return `Year ${y}, ${SEASON[s]}, month ${mo%3+1}, week ${w%4+1}`;}
+function dateText(){const w=PLAYER.week, y=Math.floor(w/48)+1, mo=Math.floor(w/4)%12, s=Math.floor(mo/3);return `Year ${y}, ${SEASON[s]}, month ${mo%3+1}, week ${w%4+1}`;}
 
 /* ---------- open and close ---------- */
 function openRanch(m){
+  if(!PLAYER) loadGame();
   injectRanch();
-  if(!RS||RS.m!==m){ RS=newRanch(m); RS.say="This is the ranch. Train it, feed it, and watch how it takes it."; }
+  if(m){ if(RS&&RS.id) saveGame(); const e=addToRoster(m); if(!e){ alert("The Freezer is full."); return; } PLAYER.active=e.id; }
+  const e=activeEntry(); if(!e){ el("ranch").style.display="flex"; RS=null; panel(""); openFreezer(); return; }
+  if(!RS||RS.id!==e.id){ RS=newRanch(e); RS.say=e.st?"Welcome back.":"This is the ranch. Train it, feed it, and watch how it takes it."; }
   el("ranch").style.display="flex"; RS.open=true;
-  drawUI(); menu();
+  checkReturn(); drawUI(); menu(RS.away?"Out":undefined); saveGame();
   if(!RLOOP){RLOOP=true;requestAnimationFrame(rLoop);}
-  if(!RIDLE) RIDLE=setInterval(idleTick,700);
+  if(!RIDLE) RIDLE=setInterval(()=>{ idleTick(); if(RS&&RS.away) checkReturn(); },700);
 }
-function closeRanch(){ el("ranch").style.display="none"; if(RS){RS.open=false;} }
+function closeRanch(){ saveGame(); el("ranch").style.display="none"; if(RS){RS.open=false;} }
 
 function injectRanch(){
   if(el("ranch")) return;
@@ -179,7 +184,7 @@ function injectRanch(){
   document.head.appendChild(st);
   const d=document.createElement("div"); d.id="ranch";
   d.innerHTML=`<div id="r-top"><b id="r-name"></b><span id="r-date"></span></div>
-<div id="r-sub"><span class="ht" id="r-hearts"></span><span id="r-shape"></span><span id="r-coins"></span><span id="r-form"></span></div>
+<div id="r-sub"><span class="ht" id="r-hearts"></span><span id="r-shape"></span><span id="r-coins"></span><span id="r-form"></span><span id="r-lv"></span></div>
 <div id="r-view"><canvas id="r-canvas" width="${RW}" height="${RH}"></canvas><div id="r-banner"></div><button class="small" id="r-skip">Skip ▸▸</button></div>
 <div id="r-say"></div><div id="r-stats"></div><div id="r-learned" style="font-size:12px;opacity:.8"></div><div id="r-panel"></div><div id="r-nums"></div>
 <div id="r-menu">${["Train","Rest","Feed","Care","Out"].map(n=>`<button class="rb" data-m="${n}">${n}</button>`).join("")}</div>
@@ -196,11 +201,12 @@ function injectRanch(){
 /* ---------- UI ---------- */
 function drawUI(){
   const s=RS, m=s.m;
-  el("r-name").textContent=s.stage==="Bit"?m.name:`${m.name}, ${MARK[s.mark][0]} Byte`;
+  el("r-name").textContent=displayName(s);
   el("r-date").textContent=dateText();
   const h=hearts(); el("r-hearts").textContent="♥".repeat(h)+"♡".repeat(5-h);
   el("r-shape").textContent=shapeOf(s.weight)[0];
-  el("r-coins").textContent=s.coins+" coins";
+  el("r-coins").textContent=PLAYER.bits+" bits";
+  el("r-lv").textContent=`Lv ${s.level}, grade ${s.grade}`;
   el("r-form").textContent=s.stage+" form";
   el("r-stats").innerHTML=STATS.map((st,i)=>{const fam=FAMILY[m.family].base[i], v=shownStat(i);
     return `<div class="rs" id="rs${i}"><span>${st} <small style="opacity:.6">${rankOf(fam)}</small></span><span class="bg"><i style="width:${Math.min(100,v/2)}%"></i></span><span>${v}${s.tp[i]?` <small style="opacity:.6">(+${s.tp[i]})</small>`:""}</span></div>`;}).join("");
@@ -208,7 +214,7 @@ function drawUI(){
   const n=el("r-nums"); n.style.display=s.showNums?"block":"none";
   n.textContent=`Fatigue ${s.fatigue}, stress ${s.stress}, Strain ${s.fatigue+2*s.stress}. Spoil ${s.spoil}, Fear ${s.fear}, loyalty ${loyalty()}. Weight ${s.weight}. Weeks lived ${s.used} of ${lifeWeeks()} (${s.m.lifespan} months). Earned points ${tpTotal()}${s.stage==="Bit"?` of ${evoTotal()} for Byte`:""}.`;
   el("r-learned").textContent=s.learned.length?"Stat skills: "+s.learned.join(", "):"";
-  el("r-menu").querySelectorAll(".rb").forEach(b=>b.disabled=s.busy||s.dead);
+  el("r-menu").querySelectorAll(".rb").forEach(b=>b.disabled=s.busy||s.dead||(!!s.away&&b.dataset.m!=="Out"));
 }
 function shownStat(i){ const s=RS; let v=s.m.stats[i]+s.tp[i]; if(s.stage!=="Bit"&&s.mark===i) v=Math.round(v*1.05); return v; }
 function popStat(i,txt,neg){ const r=el("rs"+i); if(!r) return; const p=document.createElement("span"); p.className="pop"+(neg?" neg":""); p.textContent=txt; r.appendChild(p); setTimeout(()=>p.remove(),1500); }
@@ -230,24 +236,27 @@ function menu(which){
   }
   if(which==="Rest"){ panel(`<button class="rb" id="r-rest">Rest this week<small>Fatigue −35, stress −7. Uses the week.</small></button><div style="flex-basis:100%;font-size:12px;opacity:.7">${condition()}</div>`); el("r-rest").onclick=runRest; }
   if(which==="Feed"){
-    const mo=Math.floor(s.week/4), fed=s.mealMonth===mo, snacked=s.snackWeek===s.week;
-    panel(MEALS.map((ml,i)=>`<button class="rb" data-ml="${i}" ${fed||s.coins<ml[1]?"disabled":""}>${ml[0]}${s.known[i]==="like"?" ♥":s.known[i]==="dis"?" ✕":""}<small>${ml[1]} coins</small></button>`).join("")+
+    const mo=Math.floor(PLAYER.week/4), fed=s.mealMonth===mo, snacked=s.snackWeek===PLAYER.week;
+    panel(MEALS.map((ml,i)=>`<button class="rb" data-ml="${i}" ${fed||PLAYER.bits<ml[1]?"disabled":""}>${ml[0]}${s.known[i]==="like"?" ♥":s.known[i]==="dis"?" ✕":""}<small>${ml[1]} bits</small></button>`).join("")+
       `<div style="flex-basis:100%;font-size:12px;opacity:.7">${fed?"It's had this month's meal. The next one is at the start of next month.":"The month's meal. It eats it now, then again each month."} ${snacked?"It's had this week's snack.":"One snack a week:"}</div>`+
-      Object.keys(SNACKS).map(n=>`<button class="rb" data-sn="${n}" ${snacked||!s.bag[n]?"disabled":""}>${n}<small>${s.bag[n]||0} in the bag</small></button>`).join(""));
+      Object.keys(SNACKS).map(n=>`<button class="rb" data-sn="${n}" ${snacked||!PLAYER.bag[n]?"disabled":""}>${n}<small>${PLAYER.bag[n]||0} in the bag</small></button>`).join(""));
     el("r-panel").querySelectorAll("[data-ml]").forEach(b=>b.onclick=()=>runMeal(+b.dataset.ml));
     el("r-panel").querySelectorAll("[data-sn]").forEach(b=>b.onclick=()=>runSnack(b.dataset.sn));
   }
   if(which==="Care"){
-    panel(`<button class="rb" id="r-pet">Pet<small>Or rub it on screen</small></button><button class="rb" id="r-clean" ${s.mess?"":"disabled"}>Clean<small>${s.mess?"Or wipe it on screen":"It's clean"}</small></button><button class="rb" id="r-play">Play<small>Throw the ball</small></button>`+
-      (s.sick||s.injured?`<button class="rb" id="r-med">Medicine<small>${s.injured?"Heals the injury":"Cures the cold"}, 80 coins</small></button>`:"")+
+    panel(`<button class="rb" id="r-skills">Skills<small>${s.equip.length} of ${slotsFor(s)} equipped</small></button><button class="rb" id="r-items">Items<small>The bag</small></button><button class="rb" id="r-pet">Pet<small>Or rub it on screen</small></button><button class="rb" id="r-clean" ${s.mess?"":"disabled"}>Clean<small>${s.mess?"Or wipe it on screen":"It's clean"}</small></button><button class="rb" id="r-play">Play<small>Throw the ball</small></button>`+
+      (s.sick||s.injured?`<button class="rb" id="r-med">Medicine<small>${s.injured?"Heals the injury":"Cures the cold"}, 80 bits</small></button>`:"")+
       `<div style="flex-basis:100%;font-size:12px;opacity:.7">${s.stage==="Bit"?`A ${s.m.family} evolves on its own at ${evoTotal()} earned points. It has ${tpTotal()}.`:"Mega form comes later in the prototype."}</div>`);
+    el("r-skills").onclick=openSkills; el("r-items").onclick=openItems;
     el("r-pet").onclick=()=>runCare("pet"); el("r-play").onclick=()=>runCare("play");
     if(s.mess) el("r-clean").onclick=()=>runCare("clean");
-    if(el("r-med")) el("r-med").onclick=()=>{ if(s.coins<80){say("We can't afford medicine right now.");return;} s.coins-=80; s.sick=0; s.injured=false; say("Medicine's in. It's well enough to train."); drawUI(); menu("Care"); };
+    if(el("r-med")) el("r-med").onclick=()=>{ if(PLAYER.bag.Medicine) PLAYER.bag.Medicine--; else if(PLAYER.bits<80){say("We can't afford medicine right now.");return;} else PLAYER.bits-=80; s.sick=0; s.injured=false; say("Medicine's in. It's well enough to train."); drawUI(); menu("Care"); };
   }
   if(which==="Out"){
-    panel(`<button class="rb" id="r-fight">Practice fight<small>The fight screen, with its scan stats</small></button><button class="rb" disabled>Skill trip<small>Later</small></button><button class="rb" disabled>Mission<small>Later</small></button><button class="rb" disabled>Tournament<small>Later</small></button>`);
-    el("r-fight").onclick=()=>{ if(typeof openBattle==="function") openBattle(s.m); };
+    if(s.away){ missionStatus(); return; }
+    panel(`<button class="rb" id="r-mis">Missions<small>1, 4 or 8 hours</small></button><button class="rb" id="r-cup">Tournaments<small>Grade ${s.grade}</small></button><button class="rb" id="r-lab">Fusion lab<small>Fusion and rebirth</small></button><button class="rb" id="r-frz">Freezer<small>${PLAYER.roster.length-1} frozen</small></button><button class="rb" id="r-prac">Practice fight<small>Not saved to habits</small></button><button class="rb" disabled>Skill trip<small>Later</small></button>`);
+    el("r-mis").onclick=openBoard; el("r-cup").onclick=openCups; el("r-lab").onclick=openLab; el("r-frz").onclick=openFreezer;
+    el("r-prac").onclick=()=>{ const o=gradedOpponent(s.grade,Math.max(1,s.level+Math.floor(rnd(-1,2))),Math.random); arenaFight({s,foe:o,mode:"control",title:"Practice",onEnd:()=>{}}); };
   }
 }
 
@@ -258,7 +267,7 @@ async function scene(fn){
   panel(""); el("r-menu").querySelectorAll(".rb").forEach(b=>b.classList.remove("on")); drawUI(); el("r-skip").style.display="block";
   try{ await fn(); }catch(e){ if(e!==RSTOP) console.error(e); }
   s.busy=false; s.skip=false; el("r-skip").style.display="none"; s.pose="idle"; s.jy=0; s.bx=0; s.upside=false; s.ghosts=false;
-  drawUI(); if(s.lastMenu&&!s.dead) menu(s.lastMenu);
+  drawUI(); if(s.lastMenu&&!s.dead) menu(s.lastMenu); saveGame();
 }
 function walkTo(x,speed=45,pose="walk",id=RS.cur){
   return new Promise((res,rej)=>{ const s=RS; s.pose=pose; s.dir=x<s.x?-1:1;
@@ -395,9 +404,9 @@ async function runRest(){
   });
 }
 async function runMeal(i){
-  const s=RS, ml=MEALS[i]; if(s.coins<ml[1]) return;
+  const s=RS, ml=MEALS[i]; if(PLAYER.bits<ml[1]) return;
   await scene(async()=>{
-    s.coins-=ml[1]; s.mealMonth=Math.floor(s.week/4); drawUI();
+    PLAYER.bits-=ml[1]; s.mealMonth=Math.floor(PLAYER.week/4); drawUI();
     const bowl=s.props.find(p=>p.k==="bowl")||prop({k:"bowl",x:BOWLX,y:GROUND}); bowl.food=ml[6];
     say(`${ml[0]} in the bowl.`); await walkTo(BOWLX+RS.P.scale*7,40);
     const like=i===s.like?"like":i===s.dis?"dis":"neutral";
@@ -412,9 +421,9 @@ async function runMeal(i){
   });
 }
 async function runSnack(n){
-  const s=RS, sn=SNACKS[n]; if(!s.bag[n]) return;
+  const s=RS, sn=SNACKS[n]; if(!PLAYER.bag[n]) return;
   await scene(async()=>{
-    s.bag[n]--; s.snackWeek=s.week; s.pose="idle";
+    PLAYER.bag[n]--; s.snackWeek=PLAYER.week; s.pose="idle";
     const p=prop({k:"snack",x:HELPX+6,y:GROUND-26,c:sn.c}); const tx=s.x, ty=headY()+10, T=36;
     p.vx=(tx-p.x)/T; p.vy=(ty-p.y)/T-0.05*T/2; p.g=0.05;
     await until(()=>Math.abs(p.x-tx)<3,2000); unprop(p); s.pose="eat"; await rwait(450);
@@ -433,12 +442,12 @@ async function runCare(kind){
     if(kind==="play"){
       for(let k=0;k<2;k++){ const tx=rnd(110,215), b=prop({k:"ball",x:HELPX+6,y:GROUND-26,vx:(tx-HELPX)/50,vy:-2.6,g:0.1,c:"#ffd23f",bounce:true});
         await walkTo(tx,85,"run"); await until(()=>Math.abs(b.x-s.x)<6&&b.y>GROUND-12,1200); unprop(b); s.pose="happy"; await hop(16,380); }
-      if(s.playWeek!==s.week){ s.playWeek=s.week; s.stress-=5; say("That took the edge off."); } else say("It had fun, though it's played enough for this week.");
+      if(s.playWeek!==PLAYER.week){ s.playWeek=PLAYER.week; s.stress-=5; say("That took the edge off."); } else say("It had fun, though it's played enough for this week.");
     }
     clampAll();
   });
 }
-function petOnce(){ const s=RS; if(s.petWeek!==s.week){ s.petWeek=s.week; s.spoil+=2; s.stress-=2; say(scared()?"It flinched at first, then leaned in.":"It leans right into it."); } else say("It likes that, though it's had its fuss this week."); clampAll(); drawUI(); }
+function petOnce(){ const s=RS; if(s.petWeek!==PLAYER.week){ s.petWeek=PLAYER.week; s.spoil+=2; s.stress-=2; say(scared()?"It flinched at first, then leaned in.":"It leans right into it."); } else say("It likes that, though it's had its fuss this week."); clampAll(); drawUI(); }
 function clampAll(){ const s=RS; s.fatigue=clamp(s.fatigue,0,100); s.stress=clamp(s.stress,0,100); s.spoil=clamp(s.spoil,0,100); s.fear=clamp(s.fear,0,100); s.weight=clamp(s.weight,-50,50); }
 
 async function evolveNow(){
@@ -448,7 +457,7 @@ async function evolveNow(){
   say("Something's happening to it!"); s.pose="idle"; await walkTo(130,40); s.pose="idle"; await rwait(600);
   const oldP=s.P, G=scale2x(addMark(s.m.grid,mark)), newP=makePuppet(G,true,s.m.family);
   for(let k=0;k<10;k++){ s.flash=99; s.P=k%2?newP:oldP; await rwait(Math.max(60,260-k*22)); }
-  s.P=newP; s.flash=0; s.stage="Byte"; s.mark=mark; s.messSpots=s.messSpots.map(p=>({x:p.x*2,y:p.y*2}));
+  s.P=newP; s.grid=G; s.flash=0; s.stage="Byte"; s.mark=mark; fixEquip(s); s.messSpots=s.messSpots.map(p=>({x:p.x*2,y:p.y*2}));
   spark(s.x,headY()+10,"sparkle",16); s.pose="happy"; await hop(16,450); await rwait(600);
   banner(MARK[mark][0]+" Byte!","#ffd23f"); await rwait(1200); banner("");
   return `It evolved into a ${MARK[mark][0]} Byte, with ${MARK[mark][1]}. ${STATS[mark]} +5%, and a third skill slot opens.`;
@@ -457,7 +466,7 @@ const topMark=()=>{const s=RS, top=s.tp.indexOf(Math.max(...s.tp)); return s.tp.
 
 /* ---------- the end of a week ---------- */
 async function endWeek(weeks,line){
-  const s=RS; s.week++; s.used+=weeks; clampAll();
+  const s=RS; PLAYER.week+=Math.max(1,weeks); s.used+=weeks; clampAll();
   let notes=[line];
   const strain=s.fatigue+2*s.stress;
   if(strain>=90){ s.used+=2; notes.push("It's under a lot of strain. That cost it 2 weeks of life."); }
@@ -465,9 +474,9 @@ async function endWeek(weeks,line){
   s.strainRun=strain>=70?s.strainRun+1:0;
   if(s.sick) s.sick--;
   if(s.strainRun>=2&&!s.sick){ s.sick=1; s.strainRun=0; notes.push("It's caught a cold. No training next week unless it gets medicine."); }
-  if(s.week%4===0) notes.push("A new month, so it can have another meal.");
+  if(PLAYER.week%4===0) notes.push("A new month, so it can have another meal.");
   const findP=(s.m.el1==="Wild"||s.m.el1==="Stone")?0.12:0.06;
-  if(!s.sick&&Math.random()<findP){ const coins=Math.round(rnd(30,90)); s.coins+=coins; notes.push(`It dug up ${coins} coins in the yard.`); try{ s.pose="effort"; spark(s.x,GROUND-2,"dust",6); await rwait(500); spark(s.x,GROUND-10,"sparkle",5); }catch(e){} }
+  if(!s.sick&&Math.random()<findP){ const coins=Math.round(rnd(30,90)); PLAYER.bits+=coins; notes.push(`It dug up ${coins} bits in the yard.`); try{ s.pose="effort"; spark(s.x,GROUND-2,"dust",6); await rwait(500); spark(s.x,GROUND-10,"sparkle",5); }catch(e){} }
   notes.push(condition());
   if(s.stress>50) notes.push("It seems tense lately, maybe give it a rest.");
   if(s.stage==="Bit"){
@@ -476,22 +485,25 @@ async function endWeek(weeks,line){
   }
   const past=s.used-lifeWeeks();
   if(past>=0){
-    let p=0.10+0.05*past; if(hearts()===5&&strain<70) p/=2;
-    if(Math.random()<p){ await dieScene(); return; }
+    for(let w=Math.max(0,past-Math.max(1,weeks)+1);w<=past;w++){ let p=0.10+0.05*w; if(hearts()===5&&strain<70) p/=2;
+      if(Math.random()<p){ await dieScene(); return; } }
     if(past===0) notes.push("It's reached its full lifespan. Every week from here is a bonus.");
   }
-  say(notes.filter(Boolean).join(" ")); drawUI();
+  say(notes.filter(Boolean).join(" ")); drawUI(); saveGame();
 }
 async function dieScene(){
   const s=RS; s.pose="sleep"; banner("");
   for(let k=0;k<8;k++){ spark(s.x+rnd(-14,14),headY()+rnd(0,24),"sparkle"); await rwait(220); }
   s.hidden=true; spark(s.x,GROUND-20,"sparkle",14); await rwait(900);
-  s.dead=true; say(`It died peacefully after ${Math.floor(s.used/4)} months. It goes to the Archive with its record.`); drawUI();
+  s.dead=true; say(`It died peacefully after ${Math.floor(s.used/4)} months. It goes to the Archive with its record.`);
+  PLAYER.archive.push({name:displayName(s),months:Math.floor(s.used/4),grade:s.grade,wins:s.wins,family:s.m.family});
+  PLAYER.roster=PLAYER.roster.filter(r=>r.id!==s.id); PLAYER.active=null; s.id=null; drawUI(); saveGame();
+  panel(`<button class="rb" id="r-frz2">Freezer<small>Bring out another</small></button>`); el("r-frz2").onclick=openFreezer;
 }
 
 /* ---------- ordinary life: what it does on its own ---------- */
 async function idleTick(){
-  const s=RS; if(!s||!s.open||s.busy||s.idling||s.rub||s.dead) return;
+  const s=RS; if(!s||!s.open||s.busy||s.idling||s.rub||s.dead||s.away) return;
   s.idling=true; const id=s.cur=++RACT;
   try{
     if(s.injured){ s.pose="tired"; await rwait(2500,id); }
@@ -555,7 +567,7 @@ function poseOf(t){
 }
 function elFx(){ const e=RS.m.el1; return e==="Blaze"?"smoke":e==="Tide"?"drip":e==="Spark"?"zap":e==="Frost"?"flake":e==="Wild"?"leaf":"sweat"; }
 function rLoop(t){
-  if(!RS){return;} if(!RS.open){ requestAnimationFrame(rLoop); return; }
+  if(!RS||!RS.open){ requestAnimationFrame(rLoop); return; }
   const s=RS, c=el("r-canvas").getContext("2d"); c.imageSmoothingEnabled=false;
   const k=rk();
   c.save(); if(s.shake>0){ c.translate(Math.round(rnd(-2,2)),Math.round(rnd(-2,2))); s.shake--; }
@@ -595,7 +607,7 @@ function drawMonster(c,t){
   s.bbox=[dx+P.pad*sc,dy+(P.topY+P.pad)*sc,dx+w-P.pad*sc,dy+baseY];
 }
 function drawYard(c,t){
-  const s=RS, season=Math.floor((s.week%48)/12), h=new Date().getHours();
+  const s=RS, season=Math.floor((PLAYER.week%48)/12), h=new Date().getHours();
   const night=h<6||h>=19, dusk=h>=17&&h<19;
   const sky=night?["#0f1430","#1a2150","#27306a"]:dusk?["#f08a5d","#f6b07a","#ffd6a5"]:["#6fbbef","#97d0f5","#c4e7ff"];
   for(let i=0;i<3;i++){ c.fillStyle=sky[i]; c.fillRect(0,i*30,RW,i===2?100:30); }

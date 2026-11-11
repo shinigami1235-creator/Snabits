@@ -48,6 +48,7 @@ class Fight{
   stageChange(f,changes,fromFoe){
     const i=this.idx(f), foe=this.p[1-i];
     for(const [k,n] of Object.entries(changes)){
+      if(n<0&&fromFoe&&f.bulwark){ this.say(`${f.name}'s Bulwark holds.`); continue; }
       if(n<0&&k==="grd"&&f.ability==="Unbreakable"){ this.pop(i,"Unbreakable"); this.say(`${f.name}'s Guard can't be lowered.`); continue; }
       const before=f.stage[k]; f.stage[k]=Math.max(-3,Math.min(3,f.stage[k]+n));
       if(f.stage[k]===before) continue;
@@ -59,6 +60,7 @@ class Fight{
   inflict(f,name,fromIdx){
     const i=this.idx(f);
     if(f.hp<=0||f.status) return false;
+    if(f.statusBlock){ this.say(`${f.name} stays calm and shrugs it off.`); return false; }
     if(f.ability==="Sanctuary"&&f.hp===f.maxhp){ this.pop(i,"Sanctuary"); return false; }
     if(name==="Crack"&&f.ability==="Unbreakable"){ this.pop(i,"Unbreakable"); return false; }
     if(name==="Freeze"&&f.thawed) return false;
@@ -90,6 +92,11 @@ class Fight{
       else if(s.mirror) sc=me.mirror?0:16;
       else if(s.cleanse) sc=(me.status||Object.values(me.stage).some(v=>v<0))?40:0;
       else if(s.protect) sc=me.protectLast?0:foe.charging?70:6;
+      else if(s.endure) sc=me.hp<me.maxhp*0.3?38:0;
+      else if(s.bulwark) sc=me.bulwark?0:16;
+      else if(s.foresight) sc=!me.foresight&&me.skills.some(x=>x.kind==="Cast"&&x.power)?22:0;
+      else if(s.castWard) sc=!me.castWard&&this.eff(foe,"mnd")>this.eff(foe,"pow")?26:0;
+      else if(s.afterimage) sc=me.afterimage?0:20;
       else if(s.counter) sc=this.eff(foe,"pow")>this.eff(foe,"mnd")?20:2;
       else if(s.taunt) sc=foe.taunt?0:foe.skills.some(x=>x.kind==="Support"||x.kind==="Field")?16:0;
       else if(s.erase) sc=(this.field||Object.values(foe.stage).some(v=>v>0))?32:0;
@@ -117,9 +124,10 @@ class Fight{
     });
     picks.forEach((id,i)=>{ const f=this.p[i], s=id>=0?f.skills[id]:null; f.guard=id===GUARD; f.usedProtect=false;
       if(s&&s.protect&&!f.protectLast&&f.energy>=costOf(f,s)) { f.protect=true; f.usedProtect=true; }
-      if(s&&s.counter&&f.energy>=costOf(f,s)) f.counter=true; });
+      if(s&&s.counter&&f.energy>=costOf(f,s)){ f.counter=true; f.counterMul=s.counterMul||1.5; }
+      if(s&&s.endure&&f.energy>=costOf(f,s)) f.endure=true; });
     const prio=i=>{ const id=picks[i], f=this.p[i], s=id>=0?f.skills[id]:null;
-      if(id===GUARD||(s&&(s.protect||s.counter))) return 3;
+      if(id===GUARD||(s&&(s.protect||s.counter||s.endure))) return 3;
       let p=s&&s.first?1:0; if(this.turn===1&&f.ability==="Long Stride") p+=1; return p; };
     const order=[0,1].sort((x,y)=>prio(y)-prio(x)||this.eff(this.p[y],"spd")-this.eff(this.p[x],"spd")||(this.rand()<0.5?-1:1));
     if(this.turn===1) order.forEach(i=>{ if(this.p[i].ability==="Long Stride"&&prio(i)>0) this.pop(i,"Long Stride"); });
@@ -154,10 +162,16 @@ class Fight{
     if(s.field){ this.field={name:s.field,turns:5}; this.say(`The field turns ${s.field}.`); this.events.push({t:"field"}); }
     if(s.raise) this.stageChange(me,s.raise,false);
     if(s.lower){ if(foe.protect) this.say(`${foe.name} is protected.`); else this.stageChange(foe,s.lower,true); }
-    if(s.regen){ me.regen=3; this.say(`${me.name} starts healing.`); }
+    if(s.regen){ me.regen=s.regen; this.say(`${me.name} starts healing.`); }
     if(s.heal){ const h=Math.round(me.maxhp*s.heal); me.hp=Math.min(me.maxhp,me.hp+h); this.events.push({t:"heal",who:i,amt:h}); }
     if(s.rest){ me.sleep=true; me.status=null; this.say(`${me.name} falls asleep.`); }
     if(s.cleanse){ me.status=null; for(const k in me.stage) me.stage[k]=Math.max(0,me.stage[k]); this.say(`${me.name} is purified.`); }
+    if(s.endure) this.say(`${me.name} digs in.`);
+    if(s.bulwark){ me.bulwark=5; this.say(`${me.name} braces behind a Bulwark.`); }
+    if(s.foresight){ me.foresight=true; this.say(`${me.name} sees the next move coming.`); }
+    if(s.castWard){ me.castWard=3; this.say(`${me.name} raises a Spirit Ward.`); }
+    if(s.afterimage){ me.afterimage=3; this.say(`${me.name} blurs into afterimages.`); }
+    if(s.statusBlock){ me.statusBlock=s.statusBlock; }
     if(s.mirror){ me.mirror=true; this.say(`${me.name} raises a Mirror Charm.`); }
     if(s.taunt){ foe.taunt=s.taunt; this.say(`${foe.name} is taunted.`); }
     if(s.erase){ for(const k in foe.stage) foe.stage[k]=Math.min(0,foe.stage[k]); if(this.field){ this.say(`The ${this.field.name} field is erased.`); this.field=null; } this.say(`${foe.name}'s boosts are erased.`); }
@@ -170,8 +184,9 @@ class Fight{
     const def=this.p[tgt];
     this.say(`${me.name} uses ${s.name}.`);
     if(def.protect&&tgt!==i){ this.say(`${def.name} blocks it.`); this.events.push({t:"miss",who:tgt}); return; }
-    if(!s.basic&&!s.sure&&tgt!==i){
-      let acc=s.acc/100;
+    const seen=s.kind==="Cast"&&me.foresight&&tgt!==i; if(seen) me.foresight=false;
+    if(!s.basic&&!s.sure&&!seen&&tgt!==i){
+      let acc=s.acc/100; if(def.afterimage) acc-=0.3;
       if(me.status&&me.status.name==="Blind"&&me.ability!=="Keen Eye") acc-=0.2;
       const fs=this.eff(def,"spd"), ms=this.eff(me,"spd");
       if(!s.noDodge&&me.ability!=="Keen Eye"&&fs>ms) acc-=Math.min(0.15,(fs-ms)/ms*0.5);
@@ -186,29 +201,32 @@ class Fight{
     const m=el?part(def.el1)*(def.el2?part(def.el2):1):1;
     if(el==="Blaze"&&def.ability==="Insulated"&&vs(el,def.el1)*(def.el2?vs(el,def.el2):1)>1) this.pop(tgt,"Insulated");
     if(m===0){ this.say(`It has no effect on ${def.name}.`); this.events.push({t:"miss",who:tgt}); return; }
-    const hits=s.hits||1; let total=0, landed=0;
+    const hits=s.hitsRange?s.hitsRange[0]+Math.floor(R()*(s.hitsRange[1]-s.hitsRange[0]+1)):(s.hits||1); let total=0, landed=0;
     for(let h=0;h<hits;h++){
       if(def.hp<=0||me.hp<=0) break;
       let pw=power;
       if(s.ifPoison&&def.status&&def.status.name==="Poison") pw*=2;
       if(s.ifStatus&&def.status) pw*=2;
+      if(s.hpScale) pw=Math.max(20,pw-10*Math.floor((1-me.hp/me.maxhp)*10));
       if(s.kind==="Strike"&&pw<=50&&me.ability==="Big Bite") pw*=1.2;
       if(el==="Wild"&&me.ability==="Bloom"&&me.hp<me.maxhp/3) pw*=1.5;
-      const atk=s.kind==="Cast"?this.eff(me,"mnd"):this.eff(me,"pow");
+      const atk=s.atkStat?this.eff(me,s.atkStat):s.kind==="Cast"?this.eff(me,"mnd"):this.eff(me,"pow");
       const dfs=s.kind==="Cast"?this.eff(def,"spr",{pierce:s.pierce}):this.eff(def,"grd",{pierce:s.pierce});
       let d=pw*atk/dfs*(me.level/50+0.4)/2;
       const stab=el&&(el===me.el1||el===me.el2)?(me.mono?1.4:1.2):1;
       const spdEdge=Math.max(0,Math.min(0.10,(this.eff(me,"spd")-this.eff(def,"spd"))/this.eff(def,"spd")*0.25));
-      const crit=def.ability!=="Shell"&&R()<(0.05+(s.crit||0)+spdEdge);
+      const crit=seen||(def.ability!=="Shell"&&!def.bulwark&&R()<(0.05+(s.crit||0)+spdEdge));
       d*=m*stab*(crit?1.5:1)*(0.9+R()*0.1);
       if(this.field&&el) d*=(FIELD_FX[this.field.name][el]||1);
       if(def.guard) d*=0.5;
+      if(def.castWard&&s.kind==="Cast") d*=0.5;
       if(def.status&&def.status.name==="Soak"&&el==="Spark") d*=1.25;
       if(def.ability==="Plated"&&s.kind==="Strike") d*=0.9;
       if(def.status&&def.status.name==="Freeze"&&me.ability==="Permafrost") d*=1.2;
       if(def.ability==="Wobble"&&!def.firstHitTaken){ d*=0.7; this.pop(tgt,"Wobble"); }
       def.firstHitTaken=true;
       d=Math.max(1,Math.round(d));
+      if(def.endure&&d>=def.hp&&tgt!==i){ d=def.hp-1; this.say(`${def.name} endures the hit.`); }
       if(def.ability==="Bedrock"&&def.hp===def.maxhp&&d>=def.hp){ d=def.hp-1; this.pop(tgt,"Bedrock"); this.say(`${def.name} hangs on.`); }
       def.hp=Math.max(0,def.hp-d); total+=d; landed++;
       if(def.charging) def.hitWhileCharging=true;
@@ -227,7 +245,7 @@ class Fight{
     // after-hit effects on the user
     if(s.drain&&total){ const h=Math.round(total*s.drain); me.hp=Math.min(me.maxhp,me.hp+h); this.events.push({t:"heal",who:i,amt:h}); }
     if(s.recoil&&total){ const r=Math.max(1,Math.round(total*s.recoil)); me.hp=Math.max(0,me.hp-r); this.say(`${me.name} is hurt by the recoil.`); this.events.push({t:"hit",who:i,dmg:r,eff:1,dot:true}); }
-    if(def.counter&&s.kind==="Strike"&&tgt!==i&&total&&def.hp>0){ def.counter=false; const back=Math.round(total*1.5); me.hp=Math.max(0,me.hp-back); this.say(`${def.name} counters.`); this.events.push({t:"hit",who:i,dmg:back,eff:1}); }
+    if(def.counter&&s.kind==="Strike"&&tgt!==i&&total&&def.hp>0){ def.counter=false; const back=Math.round(total*(def.counterMul||1.5)); me.hp=Math.max(0,me.hp-back); this.say(`${def.name} counters.`); this.events.push({t:"hit",who:i,dmg:back,eff:1}); }
     if(def.ability==="Reflect"&&s.kind==="Cast"&&m<1&&total&&tgt!==i){ const back=Math.round(total*0.3); me.hp=Math.max(0,me.hp-back); this.pop(tgt,"Reflect"); this.events.push({t:"hit",who:i,dmg:back,eff:1}); }
     if(s.steal&&def.hp>0){ const g=Math.min(s.steal,def.energy); def.energy-=g; me.energy=Math.min(10,me.energy+g); this.say(`${me.name} steals ${g} energy.`); }
     if(s.selfLower) this.stageChange(me,Object.fromEntries(Object.entries(s.selfLower).map(([k,v])=>[k,-v])),false);
@@ -250,7 +268,8 @@ class Fight{
   endTurn(){
     for(let i=0;i<2;i++){
       const f=this.p[i]; if(this.over) return;
-      f.guard=false; f.protect=false; f.counter=false; f.protectLast=!!f.usedProtect;
+      f.guard=false; f.protect=false; f.counter=false; f.endure=false; f.protectLast=!!f.usedProtect;
+      for(const k of ["bulwark","castWard","afterimage","statusBlock"]) if(f[k]) f[k]--;
       if(f.thawed&&!(f.status&&f.status.name==="Freeze")) f.thawedTurn=(f.thawedTurn||0)+1; if(f.thawedTurn>1){ f.thawed=false; f.thawedTurn=0; }
       if(f.taunt) f.taunt--;
       if(f.ability==="Sunbather"&&this.field&&this.field.name==="Sunlit"&&f.hp<f.maxhp){ const h=Math.round(f.maxhp/16); f.hp=Math.min(f.maxhp,f.hp+h); this.pop(i,"Sunbather"); this.events.push({t:"heal",who:i,amt:h}); }

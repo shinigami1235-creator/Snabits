@@ -103,6 +103,35 @@ const SKILLS={
 const POOLS={};
 for(const [n,s] of Object.entries(SKILLS)){ const k=s.el||"Neutral"; (POOLS[k]=POOLS[k]||[]).push(n); }
 
+/* Stat skills: learned from training one stat, never part of a scan pool. */
+const STAT_SKILL_DATA={
+  "Second Wind":{kind:"Support",cost:3,heal:0.3,fromStat:0},
+  "Endure":{kind:"Support",cost:2,endure:true,fromStat:0},
+  "Body Slam":{kind:"Strike",cost:4,power:80,acc:100,hpScale:true,fromStat:0},
+  "Regrow":{kind:"Support",cost:4,regen:5,fromStat:0},
+  "Haymaker":{kind:"Strike",cost:3,power:80,acc:80,fromStat:1},
+  "Pump Up":{kind:"Support",cost:2,raise:{pow:2},fromStat:1},
+  "Crush":{kind:"Strike",cost:5,power:85,acc:95,pierce:true,fromStat:1},
+  "Rampage":{kind:"Strike",cost:7,power:130,acc:90,recoil:0.25,fromStat:1},
+  "Harden":{kind:"Support",cost:2,raise:{grd:2},fromStat:2},
+  "Shield Bash":{kind:"Strike",cost:3,power:65,acc:100,atkStat:"grd",fromStat:2},
+  "Retaliate":{kind:"Support",cost:3,counter:true,counterMul:2,fromStat:2},
+  "Bulwark":{kind:"Support",cost:4,bulwark:true,fromStat:2},
+  "Concentrate":{kind:"Support",cost:2,raise:{mnd:2},fromStat:3},
+  "Mind Spike":{kind:"Cast",cost:3,power:65,acc:100,crit:0.2,fromStat:3},
+  "Foresight":{kind:"Support",cost:2,foresight:true,fromStat:3},
+  "Brainstorm":{kind:"Cast",cost:6,power:120,acc:95,selfLower:{mnd:1},fromStat:3},
+  "Calm":{kind:"Support",cost:2,raise:{mnd:1,spr:1},fromStat:4},
+  "Still Water":{kind:"Support",cost:2,cleanse:true,statusBlock:3,fromStat:4},
+  "Spirit Ward":{kind:"Support",cost:3,castWard:true,fromStat:4},
+  "Soul Flare":{kind:"Cast",cost:5,power:90,acc:100,atkStat:"spr",fromStat:4},
+  "Dart":{kind:"Strike",cost:1,power:35,acc:100,first:true,fromStat:5},
+  "Agility":{kind:"Support",cost:2,raise:{spd:2},fromStat:5},
+  "Barrage":{kind:"Strike",cost:4,power:20,acc:95,hitsRange:[2,5],fromStat:5},
+  "Afterimage":{kind:"Support",cost:3,afterimage:true,fromStat:5},
+};
+for(const [n,d] of Object.entries(STAT_SKILL_DATA)) SKILLS[n]={el:null,lv:0,...d};
+
 /* Pool order: the scan's pool size (6 to 12) takes skills from the front of this list. */
 function buildPool(el1,el2,size){
   const A=POOLS[el1], B=el2?POOLS[el2]:[], N=POOLS.Neutral;
@@ -129,18 +158,27 @@ function describe(n){
   if(s.ifPoison) p.push("double on Poisoned");
   if(s.ifStatus) p.push("double on any status");
   if(s.steal) p.push(`steals ${s.steal} energy`);
-  if(s.selfLower) p.push("lowers user's Mind 2");
+  if(s.selfLower) p.push(`lowers user's ${Object.entries(s.selfLower).map(([k,v])=>STAT_NAME[k]+" "+v).join(", ")}`);
   if(s.lower) p.push(`${s.lowerChance?s.lowerChance+"% ":""}lowers ${Object.entries(s.lower).map(([k,v])=>STAT_NAME[k]+" "+v).join(", ")}`);
   if(s.raise) p.push(`raises ${Object.entries(s.raise).map(([k,v])=>STAT_NAME[k]+" "+v).join(", ")}`);
   if(s.field) p.push(`sets ${s.field}`);
   if(s.heal) p.push(`heals ${s.heal*100}%`);
   if(s.rest) p.push("then sleeps a turn");
-  if(s.regen) p.push("heals 10% a turn for 3 turns");
+  if(s.regen) p.push(`heals 10% a turn for ${s.regen} turns`);
   if(s.inflict) p.push(`${s.inflict}s the target`);
   if(s.cleanse) p.push("clears status and drops");
   if(s.mirror) p.push("bounces the next Cast");
   if(s.protect) p.push("blocks all damage this turn");
-  if(s.counter) p.push("returns 1.5x the next Strike");
+  if(s.counter) p.push(`returns ${s.counterMul||1.5}x the next Strike`);
+  if(s.hitsRange) p.push(`${s.power} x ${s.hitsRange[0]} to ${s.hitsRange[1]}`);
+  if(s.hpScale) p.push("weaker as its HP drops");
+  if(s.atkStat) p.push(`uses ${STAT_NAME[s.atkStat]}`);
+  if(s.endure) p.push("goes first, survives any hit this turn");
+  if(s.bulwark) p.push("no stat drops or crits against it for 5 turns");
+  if(s.foresight) p.push("next Cast can't miss and always crits");
+  if(s.castWard) p.push("halves Cast damage for 3 turns");
+  if(s.afterimage) p.push("+30% dodge for 3 turns");
+  if(s.statusBlock) p.push(`blocks new statuses for ${s.statusBlock} turns`);
   if(s.taunt) p.push("target can't use Support or Field for 3 turns");
   if(s.erase) p.push("removes target's buffs and the field");
   return p.join(", ");

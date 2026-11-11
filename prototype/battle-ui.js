@@ -87,24 +87,29 @@ function popup(who,text,color,big){
 }
 function bump(who,cls){ const s=$(who===0?"b-me-sprite":"b-foe-sprite"); s.classList.remove(cls); void s.offsetWidth; s.classList.add(cls); }
 
+const bw=ms=>B&&B.fast?Promise.resolve():wait(ms);
 async function pick(id){
   if(!B||B.busy||B.fight.over) return;
   B.busy=true; $("b-btns").classList.add("busy");
   const f=B.fight, ai=f.aiPick(f.p[1],f.p[0]);
+  if(B.opts&&B.opts.record) recordHabit(B.opts.record,f,id);
   const ev=f.play(id,ai);
+  if(B.opts&&!f.over&&f.turn>=B.opts.turnLimit){ judge(f,B.opts.noDraw); ev.push({t:"log",text:f.log[f.log.length-1]}); }
   for(const e of ev){
-    if(e.t==="log"){ logLine(e.text); await wait(260); }
-    if(e.t==="ability"){ popup(e.who,e.name,"#ffd23f",true); await wait(380); }
-    if(e.t==="hit"){ B.shown[e.who]=Math.max(0,B.shown[e.who]-e.dmg); bump(e.who,"bhit"); popup(e.who,`-${e.dmg}${e.eff>1?"!":""}`,e.crit||e.eff>1?"#ffd23f":e.eff<1?"#9aa":"#fff"); drawPanels(); await wait(380); }
-    if(e.t==="heal"){ B.shown[e.who]=Math.min(f.p[e.who].maxhp,B.shown[e.who]+e.amt); popup(e.who,`+${e.amt}`,"#4dd36a"); drawPanels(); await wait(300); }
-    if(e.t==="miss"){ popup(e.who,"miss","#9aa"); await wait(300); }
-    if(e.t==="guard"){ bump(e.who,"bguard"); await wait(200); }
-    if(e.t==="cast"){ bump(e.who,"bcast"); await wait(250); }
-    if(e.t==="status"){ popup(e.who,e.name,STATUS_COL[e.name]); await wait(300); }
-    if(e.t==="ko"){ $(e.who===0?"b-me-sprite":"b-foe-sprite").classList.add("bko"); await wait(700); }
+    if(e.t==="log"){ logLine(e.text); await bw(260); }
+    if(e.t==="ability"){ popup(e.who,e.name,"#ffd23f",true); await bw(380); }
+    if(e.t==="hit"){ B.shown[e.who]=Math.max(0,B.shown[e.who]-e.dmg); bump(e.who,"bhit"); popup(e.who,`-${e.dmg}${e.eff>1?"!":""}`,e.crit||e.eff>1?"#ffd23f":e.eff<1?"#9aa":"#fff"); drawPanels(); await bw(380); }
+    if(e.t==="heal"){ B.shown[e.who]=Math.min(f.p[e.who].maxhp,B.shown[e.who]+e.amt); popup(e.who,`+${e.amt}`,"#4dd36a"); drawPanels(); await bw(300); }
+    if(e.t==="miss"){ popup(e.who,"miss","#9aa"); await bw(300); }
+    if(e.t==="guard"){ bump(e.who,"bguard"); await bw(200); }
+    if(e.t==="cast"){ bump(e.who,"bcast"); await bw(250); }
+    if(e.t==="status"){ popup(e.who,e.name,STATUS_COL[e.name]); await bw(300); }
+    if(e.t==="ko"){ $(e.who===0?"b-me-sprite":"b-foe-sprite").classList.add("bko"); await bw(700); }
   }
   B.shown=f.p.map(x=>x.hp); drawPanels(); drawButtons();
   $("b-btns").classList.remove("busy"); B.busy=false;
+  if(f.over&&B.opts){ endArena(); return; }
+  if(B.opts&&B.opts.auto){ autoStep(); return; }
   if(f.over){
     const won=f.winner===0, draw=f.winner===null;
     $("b-result").innerHTML=`<h2>${draw?"Draw":won?"You win":"You lose"}</h2><p>${draw?"Both monsters broke into pixels":won?`${f.p[1].name} broke into pixels`:`${f.p[0].name} broke into pixels and rebuilds after the fight`} in ${f.turn} turns.</p>
@@ -115,4 +120,33 @@ async function pick(id){
     $("b-skills").onclick=()=>openBattle(B.mon);
     $("b-back").onclick=closeBattle;
   }
+}
+
+/* Arena fights for the ranch: tournaments, missions and practice. mode "control" gives the player the buttons, "auto" plays on the monster's habits. */
+function arenaFight({s,foe,mode="control",title="",turnLimit=15,noDraw=false,record=false,rand=Math.random,onEnd}){
+  const me=fightMon(s); if(record) s.fightNo=(s.fightNo||0)+1;
+  const fight=new Fight(makeFighter(me,s.equip,s.level),makeFighter(foe.fm,foe.skills,foe.level),rand);
+  if(foe.boss){ const b=fight.p[1]; b.maxhp=Math.round(b.maxhp*1.5); b.hp=b.maxhp; b.name=foe.boss; }
+  B={fight,mon:me,opp:foe.fm,busy:false,fast:false,shown:fight.p.map(f=>f.hp),opts:{s,turnLimit,noDraw,record:record?s:null,auto:mode==="auto",onEnd}};
+  $("battle").style.display="flex"; $("loadout").style.display="none"; $("b-fight").style.display="flex";
+  paint($("b-me-sprite"),me.grid,me.pal,1); paint($("b-foe-sprite"),foe.fm.grid,foe.fm.pal,1);
+  ["me","foe"].forEach(k=>{$("b-"+k+"-sprite").className="bsprite";});
+  $("b-log").innerHTML=""; $("b-result").style.display="none";
+  logLine(`${title?title+". ":""}${fight.p[1].name}, Lv ${foe.level}. Its skills are ${fight.p[1].skills.map(x=>x.name).join(", ")}.`);
+  drawPanels();
+  if(B.opts.auto) autoStep(); else drawButtons();
+}
+function autoStep(){
+  const f=B.fight;
+  $("b-btns").innerHTML=`<div style="grid-column:1/-1;display:flex;justify-content:space-between;align-items:center"><span style="opacity:.8">Auto. It fights on its habits.</span><button class="small" id="b-fast">Skip ▸▸</button></div>`;
+  $("b-fast").onclick=()=>{ B.fast=true; };
+  setTimeout(()=>{ if(B&&!B.fight.over) pick(habitPick(f,0,B.opts.s)); }, B.fast?0:450);
+}
+function endArena(){
+  const f=B.fight, o=B.opts, won=f.winner===0, draw=f.winner===null;
+  $("b-btns").innerHTML="";
+  $("b-result").innerHTML=`<h2>${draw?"Draw":won?"Win":"Loss"}</h2><p>${f.judged?"The judges called it after "+f.turn+" turns.":`${won?f.p[1].name:f.p[0].name} broke into pixels in ${f.turn} turns.`}</p><div class="brow"><button class="big" id="b-cont">Continue</button></div>`;
+  $("b-result").style.display="block";
+  $("b-cont").onclick=()=>{ const res={winner:f.winner,turns:f.turn,judged:!!f.judged,hpLeft:f.p[0].hp/f.p[0].maxhp,foeHpLeft:f.p[1].hp/f.p[1].maxhp};
+    $("battle").style.display="none"; B=null; if(o.onEnd) o.onEnd(res); };
 }

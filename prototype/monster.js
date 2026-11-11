@@ -149,8 +149,8 @@ function paint(canvas,G,pal,scale){
   for(let j=0;j<H;j++)for(let i=0;i<W;i++){
     const l=G[j][i];
     if(!l){ if(filled(i-1,j)||filled(i+1,j)||filled(i,j-1)||filled(i,j+1)) dot(i,j,pal.outline); continue; }
-    let c={1:pal.body,2:pal.parts,3:pal.eye,4:pal.dark,5:pal.accent,6:pal.pupil,7:pal.eye}[l];
-    if(l===1||l===2){ if(!filled(i,j-1)) c=tone(c,0.12,-0.05); else if(!filled(i,j+1)||(W>20&&!filled(i,j+2))) c=tone(c,-0.16,0.05); }
+    let c={1:pal.body,2:pal.parts,3:pal.eye,4:pal.dark,5:pal.accent,6:pal.pupil,7:pal.eye,8:tone(pal.body,0.22,-0.15),10:[240,228,196],11:[255,214,74],12:tone(pal.body,0.32,-0.2)}[l]||pal.body;
+    if(l===1||l===2||l===12){ if(!filled(i,j-1)) c=tone(c,0.12,-0.05); else if(!filled(i,j+1)||(W>20&&!filled(i,j+2))) c=tone(c,-0.16,0.05); }
     dot(i,j,c);
     if(W>20&&l===6&&G[j-1]&&G[j-1][i]!==6&&G[j][i-1]!==6) dot(i,j,pal.glint);
   }

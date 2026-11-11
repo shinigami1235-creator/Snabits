@@ -84,10 +84,11 @@ video,#still{width:100%;height:100%;object-fit:cover}
   <button class="big" id="scanbtn" style="display:none">Scan</button>
   <label class="small" id="newbtn" for="take" style="display:none">New photo</label>
   <label class="small" for="pick">From gallery</label>
+  <button class="small" id="ranchbtn" style="display:none" onclick="openRanch()">Ranch</button>
   <input type="file" id="pick" accept="image/*">
   <input type="file" id="take" accept="image/*" capture="environment" style="display:none">
 </div>
-<div id="msg"><div><h1>Snabits</h1><p id="msgtext">Take a photo, drag the circle onto what you want scanned, then tap Scan.</p><label id="takebtn" for="take" style="display:inline-block;background:#fff;color:#111;font-weight:600;border-radius:999px;padding:14px 26px;cursor:pointer">Take a photo</label></div></div>
+<div id="msg"><div><h1>Snabits</h1><p id="msgtext">Take a photo, drag the circle onto what you want scanned, then tap Scan.</p><label id="takebtn" for="take" style="display:inline-block;background:#fff;color:#111;font-weight:600;border-radius:999px;padding:14px 26px;cursor:pointer">Take a photo</label><button class="small" id="msgranch" style="display:none;margin-left:10px;padding:14px 20px" onclick="openRanch()">Ranch</button></div></div>
 <div id="battle">
 <div id="loadout"><div id="lo-head"></div><div id="lo-list"></div><div class="brow"><button class="big" id="lo-go" onclick="startFight()">Start fight</button><button class="small" onclick="closeBattle()">Back to scan</button></div></div>
 <div id="b-fight">
@@ -105,6 +106,11 @@ video,#still{width:100%;height:100%;object-fit:cover}
 <script src="battle.js"></script>
 <script src="battle-ui.js"></script>
 <script src="ranch.js"></script>
+<script src="game.js"></script>
+<script src="missions.js"></script>
+<script src="tourney.js"></script>
+<script src="lab.js"></script>
+<script>if(hasSave()){ document.getElementById("ranchbtn").style.display=""; document.getElementById("msgranch").style.display=""; }</script>
 <script>
 const GROUPS=["red","orange","yellow","green","cyan","blue","violet","pink","brown","white","silver","black"];
 const EL={red:"Blaze",orange:"Brawl",yellow:"Spark",green:"Wild",cyan:"Frost",blue:"Tide",violet:"Venom",pink:"Charm",brown:"Stone",white:"Light",silver:"Steel",black:"Shade"};
