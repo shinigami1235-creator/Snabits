@@ -1,0 +1,73 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="../../prototype/ui.css">
+<style>html,body{overflow:auto;height:auto;background:#07080c}
+.row{display:flex;gap:14px;padding:6px 18px 18px;flex-wrap:nowrap}
+h3{font:700 22px var(--pix);color:#ffc93c;padding:18px 18px 4px}
+.f{display:flex;flex-direction:column;gap:5px}
+.f canvas{width:216px;height:384px;border-radius:16px;border:2px solid #2b2f42;display:block}
+.f span{font:13px var(--body);color:#a6a4b8;max-width:216px;line-height:1.3}
+.f b{font:700 14px var(--pix);color:#f5f0e2}
+.ent canvas{width:150px;height:200px;border-radius:12px}
+.ent span{max-width:150px}
+</style></head><body>
+<script src="../../prototype/chibi.js"></script><script src="../../prototype/summon.js"></script>
+<script>
+document.fonts.load('700 30px Pix').then(()=>{
+const PAL={Blaze:[[226,76,62],[150,40,40],[255,214,90]],Frost:[[120,214,224],[70,130,200],[240,252,255]],Brawl:[[232,140,52],[128,68,30],[255,236,214]],Wild:[[118,190,92],[64,120,58],[250,220,110]],
+ Venom:[[150,96,206],[72,48,110],[170,240,120]],Charm:[[244,150,190],[150,92,190],[255,240,250]],Light:[[244,240,226],[214,180,100],[255,206,90]],Steel:[[170,178,192],[88,96,112],[120,210,240]],Tide:[[70,130,220],[36,70,156],[200,240,255]]};
+const pal=e=>({body:PAL[e][0],parts:PAL[e][1],accent:PAL[e][2]});
+const spec=(family,el,stage='Bit',more={})=>({family,stage,marks:[],worn:{},el,pal:pal(el),...more});
+/* a stand-in photo: a red mug on a wooden table by a window */
+function photo(W,H){ const cv=document.createElement('canvas'); cv.width=W; cv.height=H; const c=cv.getContext('2d');
+  let g=c.createLinearGradient(0,0,W,H*0.6); g.addColorStop(0,'#e9dcc6'); g.addColorStop(1,'#c9b597'); c.fillStyle=g; c.fillRect(0,0,W,H*0.62);
+  g=c.createLinearGradient(0,0,0,H*0.4); g.addColorStop(0,'#cfe4f2'); g.addColorStop(1,'#a9c9de'); c.fillStyle=g; c.fillRect(W*0.08,H*0.06,W*0.34,H*0.3);
+  c.strokeStyle='#f4efe6'; c.lineWidth=W*0.02; c.strokeRect(W*0.08,H*0.06,W*0.34,H*0.3); c.beginPath(); c.moveTo(W*0.25,H*0.06); c.lineTo(W*0.25,H*0.36); c.stroke();
+  g=c.createLinearGradient(0,H*0.6,0,H); g.addColorStop(0,'#a8744a'); g.addColorStop(1,'#6e4527'); c.fillStyle=g; c.fillRect(0,H*0.6,W,H*0.4);
+  c.strokeStyle='rgba(60,34,16,.35)'; c.lineWidth=2; for(let k=0;k<9;k++){ c.beginPath(); c.moveTo(0,H*(0.64+k*0.04)); c.bezierCurveTo(W*0.3,H*(0.63+k*0.04),W*0.6,H*(0.66+k*0.04),W,H*(0.64+k*0.04)); c.stroke(); }
+  const mx=W*0.55, my=H*0.5, mw=W*0.36, mh=H*0.26;
+  c.fillStyle='rgba(40,20,10,.35)'; c.beginPath(); c.ellipse(mx+mw*0.05,my+mh+6,mw*0.62,mh*0.1,0,0,7); c.fill();
+  c.strokeStyle='#b8332b'; c.lineWidth=W*0.05; c.beginPath(); c.ellipse(mx+mw*0.55,my+mh*0.45,mw*0.2,mh*0.28,0,-1.4,1.4); c.stroke();
+  g=c.createLinearGradient(mx-mw/2,0,mx+mw/2,0); g.addColorStop(0,'#9e2620'); g.addColorStop(0.35,'#e2483f'); g.addColorStop(0.55,'#f06a5e'); g.addColorStop(1,'#a52a22');
+  c.fillStyle=g; c.beginPath(); c.moveTo(mx-mw/2,my); c.lineTo(mx-mw/2,my+mh); c.ellipse(mx,my+mh,mw/2,mh*0.1,0,Math.PI,0,true); c.lineTo(mx+mw/2,my); c.fill();
+  c.fillStyle='#7a1d18'; c.beginPath(); c.ellipse(mx,my,mw/2,mh*0.1,0,0,7); c.fill(); c.fillStyle='#3a1a10'; c.beginPath(); c.ellipse(mx,my+2,mw*0.44,mh*0.075,0,0,7); c.fill();
+  c.fillStyle='#4f8a3a'; for(let k=0;k<6;k++){ c.beginPath(); c.ellipse(W*0.14+k*8,H*0.5-k*10,W*0.06,H*0.02,-0.6+k*0.25,0,7); c.fill(); }
+  c.fillStyle='#d8cfc0'; c.fillRect(W*0.08,H*0.5,W*0.14,H*0.12);
+  const d=c.getImageData(0,0,W,H); for(let i=0;i<d.data.length;i+=4){ const n=(Math.random()-0.5)*14; d.data[i]+=n; d.data[i+1]+=n; d.data[i+2]+=n; } c.putImageData(d,0,0);
+  return cv; }
+function frame(row,label,note,w=432,h=768,cls=''){ const f=document.createElement('div'); f.className='f '+cls; const cv=document.createElement('canvas'); cv.width=w; cv.height=h;
+  f.appendChild(cv); f.insertAdjacentHTML('beforeend',`<b>${label}</b><span>${note||''}</span>`); row.appendChild(f); return cv; }
+function section(title){ document.body.insertAdjacentHTML('beforeend',`<h3>${title}</h3>`); const r=document.createElement('div'); r.className='row'; document.body.appendChild(r); return r; }
+
+/* 1. camera and summon */
+const PH=photo(432,768), CH=spec('Chomp','Blaze');
+let row=section('1 · Camera, scan and summon');
+{ const cv=frame(row,'Camera','A plain camera. Corner marks and a small aim ring; drag the ring before the shot to pick what gets read.'), c=cv.getContext('2d');
+  c.drawImage(PH,0,0); c.strokeStyle='rgba(255,255,255,.9)'; c.lineWidth=5; c.lineCap='round';
+  for(const [x,y,sx,sy] of [[40,90,1,1],[392,90,-1,1],[40,560,1,-1],[392,560,-1,-1]]){ c.beginPath(); c.moveTo(x,y+40*sy); c.lineTo(x,y); c.lineTo(x+40*sx,y); c.stroke(); }
+  c.lineWidth=3; c.strokeStyle='rgba(255,255,255,.85)'; c.beginPath(); c.arc(216,400,46,0,7); c.stroke(); c.beginPath(); c.moveTo(216,346); c.lineTo(216,360); c.moveTo(216,440); c.lineTo(216,454); c.moveTo(162,400); c.lineTo(176,400); c.moveTo(256,400); c.lineTo(270,400); c.stroke();
+  c.fillStyle='rgba(10,10,16,.55)'; c.fillRect(0,640,432,128); c.fillStyle='#fff'; c.beginPath(); c.arc(216,704,38,0,7); c.fill(); c.strokeStyle='#11121a'; c.lineWidth=4; c.beginPath(); c.arc(216,704,30,0,7); c.stroke();
+  c.font='700 22px Pix'; c.fillStyle='#f5f0e2'; c.textAlign='center'; c.fillText('Flip',70,712); c.fillText('Gallery',360,712); c.fillText('Snaboscope',216,50); }
+const keys=[[70,'Snap','A white flash and an iris that snaps shut and open.'],[230,'Iris',''],[600,'The card','The photo shrinks into a card and the room goes dark.'],[960,'Scanning','A line sweeps down and turns the photo into blocks of its own colours.'],
+ [1650,'Bits lift off','The blocks spiral off the card.'],[2500,'The disc','They spin into a disc like the MR2 shrine, and a pillar of light shoots up.'],[3100,'The egg','The disc falls into a glowing egg that wobbles.'],[3420,'Crack',''],[3620,'Burst','A flash, rays, a ring and confetti in its colours.'],[4750,'It\'s here','The family\'s own entrance, then its name.']];
+for(const [t,l,n] of keys){ const cv=frame(row,l+' · '+(t/1000).toFixed(2)+'s',n); const sc=SUMMON.summon(cv,{photo:PH,spec:CH,pal:CH.pal,name:'Emberchomp'}); sc.render(t); }
+
+/* 2. entrances */
+row=section('2 · Each family\'s entrance');
+const ENT=[['Chomp','Brawl','Drops in, lands with a squash, chomps twice'],['Squib','Frost','Floats down swaying'],['Antik','Steel','Flickers on like an old TV'],['Moko','Charm','Pops up with its eye shut, then blinks it open'],
+ ['Pinch','Blaze','Scuttles in from the side and clacks its claws'],['Stilt','Wild','Unfolds its legs and stands up tall'],['Skit','Venom','Drops on a silk thread'],['Booly','Light','Fades in out of mist and says boo']];
+const T={Chomp:[200,480,780,1300],Squib:[200,600,1000,1300],Antik:[150,420,700,1100],Moko:[150,500,800,1200],Pinch:[150,450,800,1300],Stilt:[150,350,700,1100],Skit:[200,500,750,1300],Booly:[200,500,850,1300]};
+for(const [f,e,n] of ENT){ const box=document.createElement('div'); box.style.cssText='display:flex;flex-direction:column;gap:4px'; const r2=document.createElement('div'); r2.style.cssText='display:flex;gap:6px';
+  box.appendChild(r2); box.insertAdjacentHTML('beforeend',`<b style="font:700 14px var(--pix);color:#f5f0e2">${f}</b><span style="font:13px var(--body);color:#a6a4b8;max-width:300px">${n}</span>`); row.appendChild(box);
+  for(const t of T[f]){ const cv=document.createElement('canvas'); cv.width=300; cv.height=400; cv.style.cssText='width:150px;height:200px;border-radius:12px;border:2px solid #2b2f42'; r2.appendChild(cv);
+    const sp=spec(f,e); const sc=SUMMON.summon(cv,{photo:PH,spec:sp,pal:sp.pal}); sc.render(3500+t); } }
+document.querySelector('.row:last-of-type').style.flexWrap='wrap';
+
+/* 3. fusion */
+row=section('3 · Fusion: two Snabits become bits and build the new one');
+CHIBI.hybrid('Pinch+Squib','Pinch','Squib');
+const A=spec('Pinch','Blaze','Byte'), B=spec('Squib','Frost','Byte'), mixp=(a,b,k)=>a.map((v,i)=>Math.round(v+(b[i]-v)*k));
+const C={family:'Pinch+Squib',stage:'Bit',marks:[],worn:{},el:'Blaze',pal:{body:mixp(A.pal.body,B.pal.body,1/3),parts:mixp(A.pal.parts,B.pal.parts,1/3),accent:mixp(A.pal.accent,B.pal.accent,0.5)}};
+const fk=[[300,'Ready','Both hop.'],[820,'Linked','A beam joins them and they glow white.'],[1150,'Breaking up','Each one breaks into square bits of its own drawing, top first.'],[1800,'Orbit','The bits circle in two tilted rings and their colours mix.'],
+ [2620,'Crush','The rings crush into a ball of light.'],[2880,'Flash',''],[3250,'Building','The bits fly out and build the new one from the feet up.'],[3700,'Blocks','The last bits land in place.'],[3950,'Smooth','The blocks melt into the drawing.'],[4700,'Hello','A happy hop, sparkles and its name.']];
+for(const [t,l,n] of fk){ const cv=frame(row,l+' · '+(t/1000).toFixed(2)+'s',n); const sc=SUMMON.fusion(cv,{a:A,b:B,child:C,name:'Pinuib'}); sc.render(t); }
+});
+</script></body></html>
