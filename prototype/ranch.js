@@ -386,7 +386,7 @@ async function dayFade(kind,atBlack){
   const to=async(col,ms,hold=0)=>{ d.style.transition=`background-color ${Math.round(ms/rk())}ms ease`; d.style.backgroundColor=col; await rwait(ms+hold); };
   if(kind==="night"){ await to("rgba(170,80,70,.3)",1000); await to("rgba(12,14,38,.85)",800); s.dayHour=21; await to("rgba(12,14,38,.15)",800,1000); }
   await to("rgba(3,4,9,1)",kind==="sleep"?2200:1000,600);
-  if(atBlack) atBlack();
+  if(atBlack) await atBlack();
   s.dayHour=6; await to("rgba(255,196,130,.42)",1000); s.dayHour=null; await to("rgba(255,196,130,0)",1000);
 }
 const headY=()=>{ const h=RS.cam&&typeof chibiHeadY==="function"?chibiHeadY(RS):null; return h!=null?h:GROUND-(RS.P.base-RS.P.topY+1)*RS.P.scale-RS.jy; };

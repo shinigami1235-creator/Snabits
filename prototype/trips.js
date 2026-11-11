@@ -51,24 +51,28 @@ async function runTrip(reg){
     await tripArrive(reg.el);
     s.tripLabel=`${reg.n} · Week 1 of 4`; drawUI();
     await stageCard(reg.n,`We'll train ${STATS[main]} the most here, and ${STATS[second]} a little too.`,"guide");
+    const areas=TRIP_AREAS[reg.el], tName=TEACHER[reg.el][0], tThe=/^The /.test(tName)?tName:"the "+tName, Cap=t=>t[0].toUpperCase()+t.slice(1), lc=t=>t[0].toLowerCase()+t.slice(1);
+    let teacher=null;
     for(let w=0;w<4;w++){
-      const age=ageMult(s);
-      const ok=Math.random()*100<Math.min(95,60+8*hearts()-(s.fatigue>50?15:0));
+      const age=ageMult(s), A=areas[w], [tn,kind,stat]=A.tasks[Math.floor(Math.random()*A.tasks.length)];
+      let pc=Math.min(95,60+8*hearts()-(s.fatigue>50?15:0))/100; if(stat>=0) pc=(pc+taskChance(s,stat))/2;
+      const ok=Math.random()<pc;
       const a=Math.max(1,Math.round(rp(main)*age*(ok?1:0.5))), b=Math.max(1,Math.round(rp(second)/2*age*(ok?1:0.5)));
-      s.tripLabel=`${reg.n} · Week ${w+1} of 4`; drawUI(); banner(`Week ${w+1}`,"#fff");
-      if(w>0) K(["Hit the post again and put your weight behind it.","Faster this time, and don't stop between hits.","This is the last week, so give it everything."][w-1]); else K("Start on the post. Hit it as hard as you can.");
+      s.tripLabel=`${A.name} · Week ${w+1} of 4`; drawUI(); banner(A.name,"#fff");
+      if(kind==="lesson"){ teacher=prop({k:"teacher",el:reg.el,x:186,y:GROUND,keep:true}); K(`${Cap(tThe)} lives up here and will train ${nm} this week.`); }
+      else K(`${nm}, ${lc(tn)}.`);
       await rwait(900); banner("");
-      await playTask("drill",ok);
+      await playTask(kind,ok,{look:A.look,fall:FALLER[reg.el],teacher});
       s.tp[main]+=a; s.tp[second]+=b; gain[0]+=a; gain[1]+=b; s.fatigue+=18; s.stress+=7;   // MR2's errantry: +18 fatigue and +7 stress every week, so it comes home very tired
       drawUI(); popStat(main,"+"+a); popStat(second,"+"+b);
-      let line=`Week ${w+1}: ${STATS[main]} +${a}, ${STATS[second]} +${b}.${ok?"":" It was a rough week."}`;
+      let line=`Week ${w+1}, ${A.name}: ${STATS[main]} +${a}, ${STATS[second]} +${b}.${ok?"":" It was a rough week."}`;
       await stageResult(ok,ok?`That was a good week. ${STATS[main]} went up by ${a} and ${STATS[second]} by ${b}.`:`That was a rough week, so ${STATS[main]} only went up by ${a} and ${STATS[second]} by ${b}.`,"guide");
       if(ok){
         s.uses=s.uses||{}; for(const n of knownSkills(s)) if(SKILLS[n].el===reg.el) s.uses[n]=(s.uses[n]||0)+5;
         if(learned.length<max){
           const opts=tripOptions(s,reg).filter(x=>x.chainOk&&x.score>=x.need);
-          if(opts.length){ const x=opts[Math.floor(Math.random()*opts.length)], p=Math.min(50,25+Math.floor((x.score-x.need)/4)), got=Math.random()*100<p;
-            banner("Special training","#ffd23f"); K(`Let's try ${x.n} this week.`); if(s.guide) s.guide.pose="point"; await rwait(900); banner("");
+          if(opts.length){ const x=opts[Math.floor(Math.random()*opts.length)], p=Math.min(60,25+Math.floor((x.score-x.need)/4)+(teacher?10:0)), got=Math.random()*100<p;
+            banner("Special training","#ffd23f"); K(teacher?`${Cap(tThe)} will show ${nm} how to do ${x.n}.`:`Let's try ${x.n} this week.`); if(s.guide) s.guide.pose="point"; await rwait(900); banner("");
             for(let k=0;k<3;k++){ s.pose="effort"; await hop(8,240); spark(s.x+14,headY()+6,k===2&&got?"sparkle":"dust",k===2&&got?8:3); s.pose="idle"; await rwait(260); }
             if(s.guide) s.guide.pose="stand";
             if(got){ learned.push(x.n); s.skillsKnown=(s.skillsKnown||[]).concat(x.n); bookMark(s,x.n,"learned"); line+=` It learned ${x.n}.`; banner(`Learned ${x.n}!`,"#7dff9a"); if(s.guide) s.guide.face="surprised"; K(`Well done! ${nm} has learned ${x.n}.`); s.pose="happy"; await rwait(1500); banner(""); if(s.guide) s.guide.face="talk"; }
@@ -78,7 +82,9 @@ async function runTrip(reg){
       }
       weeks.push(line);
       for(const k of [main,second]) for(const [nm2,need] of STAT_SKILLS[k]) if(s.tp[k]>=need&&!s.learned.includes(nm2)){ s.learned.push(nm2); weeks.push(`It learned the stat skill ${nm2}.`); }
-      if(w<3) await campNight(`${reg.n} · Night ${w+1}`,NIGHT_LINES[w].replace("{n}",nm));
+      if(w<3){ const next=async()=>{ await showRoute(reg.el,w+1); s.bg=`area:${reg.el}:${areas[w+1].key}`; s.camJump=true; };
+        if(kikoOn()) await campNight(`${A.name} · Night ${w+1}`,NIGHT_LINES[w].replace("{n}",nm),next);
+        else { await sceneFade(true,500); await next(); await sceneFade(false,500); } }
     }
     s.stageRegions=s.stageRegions||{}; s.stageRegions[reg.n]=(s.stageRegions[reg.n]||0)+4;
     fixEquip(s); clampAll();

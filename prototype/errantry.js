@@ -71,15 +71,38 @@ const TASKS={
 };
 
 /* Plays one task. ok is decided before; the scene shows it. */
+const AREA_KIND={search:"forage",cross:"river",track:"tracks"};
 async function playTask(k,ok,extra={}){
-  const s=RS; s.props=s.props.filter(p=>p.k==="bowl"||p===s.guide); s.x=40; s.hidden=false; s.pose="walk";
-  if(k==="forage"){ const b=prop({k:"bush",x:175,y:GROUND}); await walkTo(140,40); s.pose="effort"; b.shake=true; await rwait(900); b.shake=false;
+  k=AREA_KIND[k]||k; const L=extra.look||{};
+  const s=RS; s.props=s.props.filter(p=>p.k==="bowl"||p===s.guide||p.keep); s.x=40; s.hidden=false; s.pose="walk";
+  const put=o=>prop(Object.assign(o,o.k==="bush"?{col:L.bush,dot:L.dot}:o.k==="ledge"?{col:L.ledge}:{col:L.stream,foam:L.foam}));
+  if(k==="dodge"){ await walkTo(120,40); s.pose="idle"; const kind=extra.fall||"rock";
+    for(let i=0;i<3;i++){ const hit=!ok&&i===2, tx=s.x, f=prop({k:"faller",kind,x:tx,y:GROUND-150});
+      spark(tx,GROUND-4,"q"); await rwait(250);
+      for(let y=GROUND-150;y<GROUND-10;y+=9){ f.y=y; if(!hit&&y>GROUND-80&&Math.abs(s.x-tx)<20){ s.pose="walk"; s.x+=i%2?-3:3; } await rwait(20); }
+      unprop(f); spark(tx,GROUND-4,"dust",4);
+      if(hit){ s.pose="hurt"; s.shake=6; await rwait(700); s.pose="tired"; await rwait(300); } else { s.pose="idle"; await rwait(180); } }
+    if(ok){ s.pose="happy"; await hop(10,300); } }
+  if(k==="puzzle"){ prop({k:"glowpath",x:70,y:GROUND-4,n:6}); await walkTo(80,40);
+    for(const x of [110,140]){ s.pose="idle"; spark(s.x,headY()-6,"q"); await rwait(650); await walkTo(x,40); }
+    if(ok){ await walkTo(176,45); spark(s.x,headY()-6,"sparkle",6); s.pose="happy"; await rwait(600); }
+    else { s.pose="dizzy"; await rwait(600); await walkTo(70,40); s.pose="sad"; await rwait(500); } }
+  if(k==="fish"){ prop({k:"hole",x:150,y:GROUND,col:L.hole}); await walkTo(126,40); s.pose="idle"; await rwait(900);
+    s.pose="effort"; s.bx=2; spark(150,GROUND-4,"drip",6); await rwait(300); s.bx=0;
+    if(ok){ const f=prop({k:"fish",x:150,y:GROUND-4}); for(let i=0;i<=16;i++){ f.x=150-i*1.4; f.y=GROUND-4-Math.sin(i/16*Math.PI)*26; f.rot=-i/8; await rwait(28); }
+      s.pose="happy"; await hop(10,300); unprop(f); }
+    else { s.pose="sad"; await rwait(900); } }
+  if(k==="lesson"){ await walkTo(128,40); const T=extra.teacher;
+    for(let i=0;i<3;i++){ if(T) T.pose="effort"; spark(160,GROUND-30,"star",2); await rwait(260); if(T) T.pose="idle";
+      s.pose="effort"; s.bx=2; spark(146,GROUND-20,"dust",2); await rwait(240); s.bx=0; s.pose="idle"; await rwait(200); }
+    s.pose=ok?"happy":"tired"; if(ok) spark(s.x,headY()-6,"sparkle",6); await rwait(500); }
+  if(k==="forage"){ const b=put({k:"bush",x:175,y:GROUND}); await walkTo(140,40); s.pose="effort"; b.shake=true; await rwait(900); b.shake=false;
     if(ok){ b.picked=true; const it=prop({k:"item",x:160,y:GROUND-16}); s.pose="happy"; await hop(10,300); await rwait(300); unprop(it); }
     else { spark(160,GROUND-14,"leaf",5); s.pose="sad"; await rwait(700); } }
-  if(k==="climb"){ prop({k:"ledge",x:150,y:GROUND,h:24}); await walkTo(130,45); s.pose="effort"; await rwait(400);
+  if(k==="climb"){ put({k:"ledge",x:150,y:GROUND,h:24}); await walkTo(130,45); s.pose="effort"; await rwait(400);
     if(ok){ await hop(40,520); s.jy=24; s.x=170; s.pose="happy"; await rwait(600); s.jy=0; }
     else { await hop(18,380); spark(s.x,GROUND-2,"dust",6); s.pose="hurt"; s.shake=6; await rwait(700); } }
-  if(k==="river"){ prop({k:"stream",x:110,y:GROUND-2}); await walkTo(104,45); s.pose="walk";
+  if(k==="river"){ put({k:"stream",x:110,y:GROUND-2}); await walkTo(104,45); s.pose="walk";
     if(ok){ for(const x of [122,144,166]){ await hop(12,260); s.x=x; } await hop(10,240); s.x=196; s.pose="happy"; await rwait(400); }
     else { await hop(12,260); s.x=122; await hop(8,220); s.x=140; spark(140,GROUND-4,"drip",8); s.pose="dizzy"; await rwait(500); await walkTo(96,30,"walk"); s.pose="tired"; await rwait(400); } }
   if(k==="tracks"){ prop({k:"tracks",x:60,y:GROUND-6}); s.pose="walk"; await walkTo(ok?200:120,30,"walk");

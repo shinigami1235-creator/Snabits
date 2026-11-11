@@ -383,14 +383,14 @@ async function tripArrive(el) {
 /* tasks clear the props; Kiko stays */
 function keepGuide() { const s = RS; if (s.guide && !s.props.includes(s.guide)) s.props.unshift(s.guide); }
 /* a short night at camp between weeks, then morning in the same place */
-async function campNight(label, line) {
+async function campNight(label, line, atDawn) {
   const s = RS; if (!kikoOn()) return;
   await sceneFade(true, 600);
   const keep = s.props; s.props = [{ k: 'tent', x: 52, y: GROUND }, { k: 'npc', who: 'guide', x: 100, y: GROUND, face: 'happy', pose: 'sit' }, { k: 'fire', x: 128, y: GROUND }];
   s.x = 164; s.pose = 'sleep'; s.night = 1; s.tripLabel = label; drawUI(); say(line, 'guide');
   await sceneFade(false, 700);
   for (let k = 0; k < 3; k++) { spark(s.x + 8, headY(), 'z'); await rwait(550); }
-  await dayFade('camp', () => { s.night = 0; s.props = keep; keepGuide(); s.x = 60; s.pose = 'idle'; });
+  await dayFade('camp', async () => { s.night = 0; s.props = keep; keepGuide(); s.x = 60; s.pose = 'idle'; if (atDawn) await atDawn(); });
 }
 /* sunset in the region, the walk into the ranch at night, then black and morning at home */
 async function tripHome(duskLine, homeLine, mood) {

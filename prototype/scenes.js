@@ -609,6 +609,14 @@ function awayProps(c, p, t, front) {
   switch (p.k) {
     case 'npc': if (front) return; npcFull(c, p.who, x, y, npcPx(p.who), p.face || 'happy', p.pose || 'stand', t, !!p.flip); return;
     case 'tent': if (front) return; tentProp(c, x, y); return;
+    case 'teacher': if (front) return; if (typeof teacherProp === 'function') teacherProp(c, p, t); return;
+    case 'faller': if (!front) return; if (typeof fallerProp === 'function') fallerProp(c, p, t); return;
+    case 'hole': if (front) return; SC.depth(c, () => { c.beginPath(); c.ellipse(x, y - 2, 12, 3.6, 0, 0, 7); }, p.col || '#2f6f9a', 0.8, 0.3);
+      c.strokeStyle = 'rgba(255,255,255,.6)'; c.lineWidth = 0.8; c.beginPath(); c.ellipse(x, y - 2, 6 + (t / 120 % 6), 1.6 + (t / 120 % 6) * 0.3, 0, 0, 7); c.stroke(); return;
+    case 'fish': if (!front) return; c.fillStyle = p.col || '#7fc4e8'; c.beginPath(); c.ellipse(x, y, 5, 2.6, p.rot || 0, 0, 7); c.fill(); c.beginPath(); c.moveTo(x - 4, y); c.lineTo(x - 8, y - 3); c.lineTo(x - 8, y + 3); c.closePath(); c.fill();
+      c.fillStyle = '#1d1d26'; c.beginPath(); c.arc(x + 2.5, y - 0.6, 0.8, 0, 7); c.fill(); return;
+    case 'glowpath': if (front) return; for (let i = 0; i < p.n; i++) { const gx = x + i * 16, a = 0.5 + 0.5 * Math.sin(t / 200 - i);
+      const g = c.createRadialGradient(gx, y, 0.5, gx, y, 6); g.addColorStop(0, `rgba(255,240,170,${a})`); g.addColorStop(1, 'rgba(255,240,170,0)'); c.fillStyle = g; c.fillRect(gx - 6, y - 6, 12, 12); } return;
     case 'counter': if (front) return; shopCounter(c); return;
     case 'floatie': if (!front) return; { const w = p.w, h = w * 0.22;          // a swim ring at the waterline
       c.lineWidth = h * 0.9; for (let i = 0; i < 8; i++) { c.strokeStyle = i % 2 ? '#ffffff' : '#e2483f'; c.beginPath(); c.ellipse(x, y, w, h, 0, i * Math.PI / 4, (i + 1) * Math.PI / 4); c.stroke(); }
@@ -629,12 +637,12 @@ function awayProps(c, p, t, front) {
     case 'hurdle': if (front) return; c.strokeStyle = '#f2ead6'; c.lineWidth = 2.4; c.lineCap = 'round'; c.beginPath(); c.moveTo(x - 7, y); c.lineTo(x - 7, y - 14); c.moveTo(x + 7, y); c.lineTo(x + 7, y - 14); c.stroke();
       c.strokeStyle = '#d24f43'; c.lineWidth = 3; c.beginPath(); c.moveTo(x - 9, y - 13); c.lineTo(x + 9, y - 13); c.stroke(); return;
     case 'rope': if (!front) return; { const a = Math.sin(t / 300) * 0.6; c.strokeStyle = '#c9a66b'; c.lineWidth = 1.6; c.beginPath(); c.moveTo(170, GROUND - 127); c.lineTo(170 + Math.sin(a) * 50, GROUND - 127 + Math.cos(a) * 50); c.stroke(); } return;
-    case 'bush': if (front) return; { const sh = p.shake ? Math.sin(t / 40) * 1.5 : 0; SC.depth(c, () => SC.blob(c, x + sh, y - 11, [[0, -4, 10], [-9, 2, 8], [9, 2, 8]]), '#3f8a44', 1.5, 0.3);
-      if (!p.picked) { c.fillStyle = '#d9425a'; for (const [dx, dy] of [[-6, -14], [6, -9], [0, -5]]) { c.beginPath(); c.arc(x + dx + sh, y + dy, 1.8, 0, 7); c.fill(); } } } return;
-    case 'ledge': if (front) return; SC.depth(c, () => { c.beginPath(); c.roundRect(x, y - p.h, 60, p.h + 2, [4, 4, 0, 0]); }, '#8a847c', 1.5, 0.3);
+    case 'bush': if (front) return; { const sh = p.shake ? Math.sin(t / 40) * 1.5 : 0; SC.depth(c, () => SC.blob(c, x + sh, y - 11, [[0, -4, 10], [-9, 2, 8], [9, 2, 8]]), p.col || '#3f8a44', 1.5, 0.3);
+      if (!p.picked) { c.fillStyle = p.dot || '#d9425a'; for (const [dx, dy] of [[-6, -14], [6, -9], [0, -5]]) { c.beginPath(); c.arc(x + dx + sh, y + dy, 1.8, 0, 7); c.fill(); } } } return;
+    case 'ledge': if (front) return; SC.depth(c, () => { c.beginPath(); c.roundRect(x, y - p.h, 60, p.h + 2, [4, 4, 0, 0]); }, p.col || '#8a847c', 1.5, 0.3);
       c.fillStyle = 'rgba(255,255,255,.18)'; c.fillRect(x + 2, y - p.h + 1, 56, 2); return;
-    case 'stream': if (front) return; c.fillStyle = '#3a9bc9'; c.beginPath(); c.roundRect(x, y - 3, 70, 10, 4); c.fill();
-      c.strokeStyle = 'rgba(200,235,255,.9)'; c.lineWidth = 0.9; for (let k = x + (t / 30) % 10; k < x + 66; k += 10) { c.beginPath(); c.moveTo(k, y + 1); c.lineTo(k + 4, y + 1); c.stroke(); }
+    case 'stream': if (front) return; c.fillStyle = p.col || '#3a9bc9'; c.beginPath(); c.roundRect(x, y - 3, 70, 10, 4); c.fill();
+      c.strokeStyle = p.foam || 'rgba(200,235,255,.9)'; c.lineWidth = 0.9; for (let k = x + (t / 30) % 10; k < x + 66; k += 10) { c.beginPath(); c.moveTo(k, y + 1); c.lineTo(k + 4, y + 1); c.stroke(); }
       for (const q of [12, 34, 56]) SC.depth(c, () => { c.beginPath(); c.ellipse(x + q, y - 1, 5, 2.2, 0, 0, 7); }, '#9a948c', 0.8, 0.3); return;
     case 'tracks': if (front) return; c.fillStyle = 'rgba(60,40,25,.45)'; for (let i = 0; i < 7; i++) { const tx = x + i * 16, ty = y + 2 + (i % 2) * 3; c.beginPath(); c.ellipse(tx, ty, 2, 1.3, 0, 0, 7); c.fill(); for (const d of [-1.6, 0, 1.6]) { c.beginPath(); c.arc(tx + d, ty - 2, 0.6, 0, 7); c.fill(); } } return;
     case 'crate': if (front) return; SC.depth(c, () => { c.beginPath(); c.roundRect(x - 14, y - 26, 28, 26, 2); }, '#c98a4c', 1.5, 0.28);
