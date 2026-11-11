@@ -40,7 +40,8 @@ const MOVE_KIND = {
 function moveAnim(e, spec) {
   const n = e.name || '';
   if (/ Web$/.test(n)) return 'web';
-  if (MOVE_KIND[n] === 'punch' && (['Squib', 'Skit'].includes(spec.family) || spec.stage === 'Bit')) return 'tackle';
+  const of = typeof FAMILY !== 'undefined' && FAMILY[spec.family] && FAMILY[spec.family].of;
+  if (MOVE_KIND[n] === 'punch' && (['Squib', 'Skit'].includes(spec.family) || (of && (['Squib', 'Skit'].includes(of[0]) || of[1] === 'Skit')) || spec.stage === 'Bit')) return 'tackle';
   return MOVE_KIND[n] || null;
 }
 /* how big an effect draws: weak moves 0.8, middling 1.05, strong 1.35 */

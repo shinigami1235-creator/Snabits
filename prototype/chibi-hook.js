@@ -6,8 +6,8 @@ const CHIBI_ART = /(^#|&)art=chibi(&|$)/.test(location.hash) || (() => { try { r
 
 /* m is a hatched monster or a fight snapshot; s is the ranch state when there is one */
 function chibiSpec(m, s) {
-  const base = s && s.m ? s.m : m, src = s || m, fam = base.family;
-  if (!CHIBI_ART || typeof CHIBI === 'undefined' || !CHIBI_FAMS.includes(fam)) return null;
+  const base = s && s.m ? s.m : m, src = s || m, fam = base.family, of = typeof FAMILY !== 'undefined' && FAMILY[fam] && FAMILY[fam].of;
+  if (!CHIBI_ART || typeof CHIBI === 'undefined' || !(CHIBI_FAMS.includes(fam) || (of && of.every(f => CHIBI_FAMS.includes(f)) && CHIBI.hybrid(fam, of[0], of[1])))) return null;
   const stage = src.stage || 'Bit', marks = [];
   if (stage !== 'Bit' && src.mark != null && MARK[src.mark]) marks.push(MARK[src.mark][0]);
   if (stage === 'Mega' && src.mark2 != null && MARK[src.mark2]) marks.push(MARK[src.mark2][0]);
@@ -25,7 +25,8 @@ function sizeK(m) {
   for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 16777619); }
   return 0.85 + ((h >>> 0) % 1000) / 1000 * 0.3;
 }
-function heightCm(m, stage) { const a = SIZE_CM[m && m.family] || [50, 100, 170]; return a[Math.max(0, ['Bit', 'Byte', 'Mega'].indexOf(stage || 'Bit'))] * sizeK(m); }
+function heightCm(m, stage) { const of = m && typeof FAMILY !== 'undefined' && FAMILY[m.family] && FAMILY[m.family].of;
+  const a = SIZE_CM[m && m.family] || (of && SIZE_CM[of[0]] && SIZE_CM[of[1]] ? SIZE_CM[of[0]].map((v, i) => (v + SIZE_CM[of[1]][i]) / 2) : [50, 100, 170]); return a[Math.max(0, ['Bit', 'Byte', 'Mega'].indexOf(stage || 'Bit'))] * sizeK(m); }
 const heightText = cm => cm >= 100 ? (cm / 100).toFixed(2) + ' m' : Math.round(cm) + ' cm';
 
 /* ranch: the scene canvas is 240 wide and stretched, so the monster draws on a full-resolution layer over it */

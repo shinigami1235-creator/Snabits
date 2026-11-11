@@ -33,7 +33,7 @@ function loadGame(){
 /* A hybrid family: the first family's body on the second family's legs. */
 function registerHybrid(a,b){
   const name=a.slice(0,3)+b.slice(-3).toLowerCase(), A=FAMILY[a], Bf=FAMILY[b];
-  if(!FAMILY[name]) FAMILY[name]={body:A.body,legs:Bf.legs,eyes:A.eyes,mouth:A.mouth,top:A.top,arms:Bf.legs==="spider"?0:Bf.arms,base:A.base.map((v,i)=>Math.round((v+Bf.base[i])/2)),ability:A.ability};
+  if(!FAMILY[name]) FAMILY[name]={of:[a,b],body:A.body,legs:Bf.legs,eyes:A.eyes,mouth:A.mouth,top:A.top,arms:Bf.legs==="spider"?0:Bf.arms,base:A.base.map((v,i)=>Math.round((v+Bf.base[i])/2)),ability:A.ability};
   if(!EVO_TOTAL[name]) EVO_TOTAL[name]=EVO_TOTAL[a].map((v,i)=>Math.round((v+EVO_TOTAL[b][i])/2));
   return name;
 }

@@ -745,11 +745,13 @@ const CHIBI = (() => {
       bottom(st) { return 180 - this.ll(st); }, height(st) { return this.dims[st][1] + this.ll(st) + this.al(st) + 14; },
       path(c, g) { roundBox(c, g.left, g.top, g.bw, g.bh, by(g.stage, 22, 24, 26)); },
       arms: 'stub', armW: st => by(st, 0, 6, 7), handR: st => by(st, 0, 5, 6), shoulderY: 0.6, armK: 0.8,
-      behind(c, g, x) {
+      behind(c, g, x) { this.ants(c, g, x); this.legs(c, g, x); },
+      ants(c, g, x) {
         const al = this.al(g.stage), ants = g.stage === 'Mega' ? [-0.42, 0.42] : [0.28];
         c.strokeStyle = rgb(dk(x.parts, 0.15)); c.lineWidth = 4; c.lineCap = 'round';
         for (const a of ants) { const bx = g.cx + a * 12, tx = g.cx + Math.sin(a) * al * 1.2 + Math.sin(x.t / 500) * 1.5, ty = g.top - al;
-          c.beginPath(); c.moveTo(bx, g.top + 6); c.lineTo(tx, ty); c.stroke(); c.fillStyle = rgb(x.acc); c.beginPath(); c.arc(tx, ty, by(g.stage, 4.5, 5.5, 6), 0, 7); c.fill(); }
+          c.beginPath(); c.moveTo(bx, g.top + 6); c.lineTo(tx, ty); c.stroke(); c.fillStyle = rgb(x.acc); c.beginPath(); c.arc(tx, ty, by(g.stage, 4.5, 5.5, 6), 0, 7); c.fill(); } },
+      legs(c, g, x) {
         const ll = this.ll(g.stage), lw = by(g.stage, 7, 8, 9);
         [[-1, x.L.legL, 0], [1, x.L.legR, 1]].forEach(([side, mat, i]) => { const hx = g.cx + side * g.bw * 0.22, lift = [Math.max(0, x.walk), Math.max(0, -x.walk)][i] * 5;
           limb(c, [hx, g.bot - 6, hx, g.bot + ll * 0.5, hx + x.P.feet[i * 2], 181 - lift], lw, x.parts, mat, x.t);
@@ -992,6 +994,50 @@ const CHIBI = (() => {
     }
   };
 
+  /* ---------- fusion hybrids: the first family's body on the second family's legs ----------
+     Chomp is drawn by its own function, so a Chomp body or Chomp feet use this stand-in built from STAGE. */
+  const CHOMP_F = {
+    dims: { Bit: [STAGE.Bit.bw, STAGE.Bit.bh], Byte: [STAGE.Byte.bw, STAGE.Byte.bh], Mega: [STAGE.Mega.bw, STAGE.Mega.bh] },
+    bottom() { return 174; }, height(st) { return STAGE[st].bh + 18; },
+    path(c, g) { roundBox(c, g.left, g.top, g.bw, g.bh, STAGE[g.stage].r * g.bw / STAGE[g.stage].bw); },
+    arms: 'stub', armW: st => STAGE[st].arm, handR: st => STAGE[st].hand, shoulderY: 0.56,
+    legs(c, g, x) { const S = STAGE[g.stage], F = x.P.feet || [0, 0, 0, 0], fx = g.bw * 0.24;
+      for (const [i, side] of [[0, -1], [1, 1]]) { const lift = [Math.max(0, x.walk), Math.max(0, -x.walk)][i] * -5;
+        const px = g.cx + side * fx + F[i * 2], py = 183 + F[i * 2 + 1] + lift, mat = i ? x.L.legR : x.L.legL;
+        blob(c, px, py, S.foot[0], S.foot[1], x.parts, mat, x.t, 'foot'); x.feet.push([px, py, S.foot[0] * 0.85]);
+        if (S.toes && !mat) for (let k = 0; k < S.toes; k++) { c.fillStyle = rgb(x.acc); c.beginPath(); c.arc(px - 7 + k * 7, py + S.foot[1] - 2.5, 2.6, 0, 7); c.fill(); } } },
+    face(c, g, x, look) { const S = { ...STAGE[g.stage], fang: VAR === 'Feral' ? 2 : STAGE[g.stage].fang }, k = g.bw / S.bw, s = S.eye * Math.min(1.1, k);
+      const ey = g.top + g.bh * 0.34, ex = g.bw * 0.19, my = g.top + g.bh * 0.62, mw = g.bw * S.mw;
+      c.fillStyle = rgba(BLUSH, 0.7); for (const side of [-1, 1]) { c.beginPath(); c.ellipse(g.cx + side * g.bw * 0.31, ey + 13 * s, 7.5 * s, 4.5 * s, 0, 0, 7); c.fill(); }
+      const eyes = x.P.eyes === 'open' && (g.stage === 'Mega' || VAR === 'Feral') ? 'fierce' : x.P.eyes;
+      eye(c, g.cx - ex, ey, s, eyes, -1, look); eye(c, g.cx + ex, ey, s, eyes, 1, look); capFace(c, g.cx, ey, ex, my, false);
+      if (eyes === 'fierce') for (const side of [-1, 1]) lid(c, g.cx + side * ex, ey, s, side, look, rgb(x.body));
+      if (x.P.frown || x.P.ouch) { c.save(); c.translate(0, my * 2 + mw * 0.2); c.scale(1, -1); mouth(c, g.cx, my, mw * 0.7, 0, S, x.body); c.restore(); } else mouth(c, g.cx, my, mw, x.open, S, x.body);
+      return { my, ey, ex, s, cx: g.cx }; }
+  };
+  /* Booly's legs are a ghost tail, so a body on them floats with a wisp curling underneath */
+  function ghostTail(c, g, x) {
+    const sw = Math.sin(x.t / 320) * 5, tl = g.bw * 0.5, L = g.left + g.bw * 0.14, R = g.left + g.bw * 0.86, y0 = g.bot - 12;
+    const shape = () => { c.beginPath(); c.moveTo(L, y0); c.quadraticCurveTo(g.cx - g.bw * 0.1, g.bot + 24, g.cx + tl * 0.7 + sw, g.bot + 14 + sw * 0.4);
+      c.quadraticCurveTo(g.cx + tl * 0.5, g.bot + 6, R, y0); c.closePath(); };
+    c.save(); c.translate(0, 4); shape(); c.fillStyle = rgb(dk(x.body, 0.38)); c.fill(); c.restore();
+    shape(); c.fillStyle = rgb(lt(x.body, 0.08)); c.fill();
+  }
+  const famOf = n => n === 'Chomp' ? CHOMP_F : FAM[n];
+  function legsOf(b) { const B = famOf(b); if (b === 'Booly') return ghostTail; if (b === 'Antik') return (c, g, x) => B.legs(c, g, x); return (c, g, x) => (B.legs || B.behind).call(B, c, g, x); }
+  function hybrid(name, a, b) {
+    if (FAM[name]) return FAM[name];
+    const A = famOf(a), B = famOf(b); if (!A || !B) return null;
+    const legs = legsOf(b), F = Object.create(A);
+    Object.assign(F, {
+      hybridOf: [a, b], float: b === 'Booly', slots: B.slots, wingY: A.wingY,
+      bottom: st => B.bottom.call(B, st), height: st => A.height.call(A, st) - (184 - A.bottom.call(A, st)) + (184 - B.bottom.call(B, st)) + (b === 'Booly' ? 10 : 0),
+      behind(c, g, x) { if (a === 'Antik') A.ants.call(A, c, g, x); legs(c, g, x); },
+      arms: b === 'Skit' && A.arms !== 'claw' ? null : A.arms
+    });
+    FAM[name] = F; return F;
+  }
+
   function drawFamily(c, m, p, t, look, F) {
     const P = typeof p === 'string' ? POSE[p] || POSE.idle : p, stage = F.dims[m.stage] ? m.stage : 'Bit';
     const mk = m.marks || [], stoutK = stage !== 'Bit' && mk.includes('Stout') ? 1.12 : 1, D = F.dims[stage], bw = Math.round(D[0] * stoutK * (VAR_W[VAR] || 1)), bh = Math.round(D[1] * (VAR_H[VAR] || 1)), pal = m.pal, body = pal.body, parts = pal.parts, acc = pal.accent, L = m.limbs || {};
@@ -1098,5 +1144,5 @@ const CHIBI = (() => {
   };
   const height = (stage, marks = [], family = 'Chomp') => FAM[family] ? FAM[family].height(stage) : chompHeight(stage, marks);
   const width = (stage, family = 'Chomp') => FAM[family] ? FAM[family].dims[stage][0] : STAGE[stage].bw;
-  return { draw, blend, height, width, POSES: Object.keys(POSE), STAGE, FAMILIES: ['Chomp', ...Object.keys(FAM)] };
+  return { draw, blend, height, width, hybrid, POSES: Object.keys(POSE), STAGE, FAMILIES: ['Chomp', ...Object.keys(FAM).filter(k => !FAM[k].hybridOf)] };
 })();
