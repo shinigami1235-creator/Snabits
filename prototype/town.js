@@ -33,7 +33,8 @@ function weekStock(){
   while(worn.length<4){ const k=wk[Math.floor(R()*wk.length)]; if(!worn.includes(k)) worn.push(k); }
   const chips=Object.entries(SKILLS).filter(([n,s])=>(s.el&&s.el!=="Void"&&s.lv<=8||s.chip)&&s.fromStat===undefined&&!s.sig).map(([n])=>n), ch=[];
   while(ch.length<3){ const n=chips[Math.floor(R()*chips.length)]; if(!ch.includes(n)) ch.push(n); }
-  return {worn,held:hd[Math.floor(R()*hd.length)],chips:ch};
+  const held=hd[Math.floor(R()*hd.length)], held2=GRADES.indexOf(bestGrade())>=2?hd.filter(k=>k!==held)[Math.floor(R()*(hd.length-1))]:null;
+  return {worn,held,held2,chips:ch};
 }
 /* Nena's shop: the Market, the week's things to wear and hold, skill chips and selling, all from her counter.
    With the smooth art it's a place you walk into; she talks in the box at the top of the panel. */
@@ -47,8 +48,8 @@ function openTown(){
   if(RS) RS.inTown=true;
   if(RS&&RS.visit==="shop"){ leaveVisit().then(openTown); return; }
   panel(`<div class="full lab-head"><b>Town</b><button class="small" id="tw-back">Back</button></div><div class="full lab-info">Nena's things to wear and her skill chips change every week.</div>
-    <button class="rb" id="tw-shop">Nena's shop<small>Snacks, medicine, things to wear, skill chips</small></button><button class="rb" id="tw-w">Workshop<small>Ranch upgrades</small></button>`);
-  el("tw-shop").onclick=()=>openShop(); el("tw-w").onclick=openWorkshop; el("tw-back").onclick=()=>menu("Out");
+    <button class="rb" id="tw-shop">Nena's shop<small>Snacks, medicine, things to wear, skill chips</small></button><button class="rb" id="tw-w">Workshop<small>Ranch upgrades</small></button><button class="rb" id="tw-hall">Town Hall<small>${loanLeft()?`Pay the loan, ${loanLeft().toLocaleString()} bits left`:"The loan is paid"}</small></button>`);
+  el("tw-shop").onclick=()=>openShop(); el("tw-w").onclick=openWorkshop; el("tw-hall").onclick=()=>openHall(); el("tw-back").onclick=()=>menu("Out");
 }
 async function openShop(line){
   if(RS&&RS.visit!=="shop") await visitPlace("shop");
@@ -67,7 +68,7 @@ function shopList(line,rows,back,exit=()=>openShop("Anything else?")){
 }
 function openMarket(){ shopList("Snacks, medicine and toys are on these shelves.",Object.entries(MARKET).map(([k,p])=>({name:k,price:p,desc:`${itemDesc(k)} You have ${PLAYER.bag[k]||0}.`})),openMarket); }
 function openItemShop(){ const st=weekStock();
-  shopList("These are the things to wear this week. I get new ones every week.",st.worn.map(k=>({name:k,price:WORN[k].price,desc:`Worn on the ${WORN[k].slot}. ${itemDesc(k)}`})).concat([{name:st.held,price:HELD[st.held].price,desc:"Held. "+itemDesc(st.held)}]),openItemShop); }
+  shopList("These are the things to wear this week. I get new ones every week.",st.worn.map(k=>({name:k,price:WORN[k].price,desc:`Worn on the ${WORN[k].slot}. ${itemDesc(k)}`})).concat([st.held,st.held2].filter(Boolean).map(h=>({name:h,price:HELD[h].price,desc:"Held. "+itemDesc(h)}))),openItemShop); }
 function openSkillShop(){ const st=weekStock();
   shopList("These chips are in the case this week. Each one teaches a skill.",st.chips.map(n=>({name:"Skill chip: "+n,price:300,desc:`${SKILLS[n].el} ${SKILLS[n].kind}. ${describe(n)}`})),openSkillShop); }
 function openWorkshop(){

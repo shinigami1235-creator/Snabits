@@ -6,6 +6,7 @@ const NPC = {
   shop: { name: 'Nena', cm: 150, tag: '#ff9fb8' },
   doc: { name: 'Dr. Ines', cm: 168, tag: '#c9b3ff' },
   aide: { name: 'Benji', cm: 172, tag: '#7fe0d0' },
+  rival: { name: 'Rook', cm: 170, tag: '#ffb04a' },
 };
 
 /* ---------- faces, shared ---------- */
@@ -120,10 +121,30 @@ function benjiHead(x, face = 'talk') {
   x.fillStyle = 'rgba(255,255,255,.4)'; for (const s of [-1, 1]) { x.beginPath(); x.moveTo(s * 11.5 + 1, 3); x.lineTo(s * 11.5 + 5, 3); x.lineTo(s * 11.5, 13); x.lineTo(s * 11.5 - 3, 13); x.closePath(); x.fill(); }
 }
 
-const NPC_HEAD = { guide: kikoHead, shop: nenaHead, doc: inesHead, aide: benjiHead };
+
+/* ---------- Rook, the rival breeder from the Grand Ranch: spiky navy hair with a white streak, a red scarf ---------- */
+function rookHead(x, face = 'talk') {
+  const skin = '#e8b48a', hair = '#27304f';
+  SC.depth(x, () => { x.beginPath(); x.ellipse(-29, 8, 5.5, 7.5, 0, 0, 7); x.ellipse(29, 8, 5.5, 7.5, 0, 0, 7); }, skin, 2, 0.28);
+  SC.depth(x, () => { x.beginPath(); x.ellipse(0, 6, 29, 27, 0, 0, 7); }, skin, 2.5, 0.22);
+  // spikes swept up and back, the white streak on the left one
+  SC.depth(x, () => { x.beginPath(); x.moveTo(-33, 4); x.quadraticCurveTo(-38, -18, -30, -26); x.lineTo(-40, -38); x.lineTo(-20, -34); x.lineTo(-22, -50); x.lineTo(-6, -38);
+    x.lineTo(2, -56); x.lineTo(10, -38); x.lineTo(26, -50); x.lineTo(22, -32); x.lineTo(40, -36); x.quadraticCurveTo(37, -16, 33, 4);
+    x.quadraticCurveTo(28, -10, 16, -14); x.quadraticCurveTo(4, -9, -6, -15); x.quadraticCurveTo(-22, -10, -33, 4); x.closePath(); }, hair, 2.5, 0.3);
+  x.fillStyle = '#e9edf5'; x.beginPath(); x.moveTo(-22, -50); x.lineTo(-6, -38); x.lineTo(-12, -18); x.lineTo(-18, -32); x.closePath(); x.fill();
+  x.fillStyle = 'rgba(255,255,255,.16)'; x.beginPath(); x.ellipse(10, -30, 8, 3, -0.5, 0, 7); x.fill();
+  npcEyes(x, face, { ex: 12, ey: 9, rx: 5, ry: 6.4 });
+  // sharp brows that slope down to the middle when it's not worried
+  x.strokeStyle = hair; x.lineWidth = 3.2; x.lineCap = 'round'; const d = face === 'worried' ? 3 : face === 'surprised' ? -3 : -1;
+  for (const s of [-1, 1]) { x.beginPath(); x.moveTo(s * 18, -3 + d); x.lineTo(s * 6, 0 - d); x.stroke(); }
+  npcBlush(x, 19, 21, 0.28);
+  if (face === 'happy') { x.strokeStyle = '#8a3a3a'; x.lineWidth = 2.4; x.beginPath(); x.moveTo(-6, 22); x.quadraticCurveTo(2, 26, 8, 19); x.stroke(); }   // a lopsided grin
+  else npcMouth(x, face, '#8a3a3a', 23);
+}
+const NPC_HEAD = { guide: kikoHead, shop: nenaHead, doc: inesHead, aide: benjiHead, rival: rookHead };
 
 /* ---------- portraits for the speech box: head and shoulders on a coloured square ---------- */
-const NPC_BG = { guide: ['#d9ecc4', '#a9cf8a'], shop: ['#fbe0c8', '#e8b98a'], doc: ['#e2dcf6', '#b9b2d8'], aide: ['#d4f0ec', '#9fd2c9'] };
+const NPC_BG = { guide: ['#d9ecc4', '#a9cf8a'], shop: ['#fbe0c8', '#e8b98a'], doc: ['#e2dcf6', '#b9b2d8'], aide: ['#d4f0ec', '#9fd2c9'], rival: ['#ffe2bf', '#f2b878'] };
 function npcShoulders(x, who) {
   if (who === 'guide') { x.fillStyle = '#c98a55'; x.fillRect(-7, 24, 14, 14);
     SC.depth(x, () => { x.beginPath(); x.roundRect(-30, 34, 60, 60, 14); }, '#efe6cf', 3, 0.25);
@@ -138,6 +159,11 @@ function npcShoulders(x, who) {
     x.fillStyle = '#7a5bc2'; x.beginPath(); x.moveTo(-10, 34); x.lineTo(0, 58); x.lineTo(10, 34); x.closePath(); x.fill(); x.fillRect(-8, 30, 16, 6);
     x.strokeStyle = 'rgba(0,0,0,.12)'; x.lineWidth = 1.5; x.beginPath(); x.moveTo(-10, 34); x.lineTo(-16, 64); x.moveTo(10, 34); x.lineTo(16, 64); x.stroke();
     x.fillStyle = '#5ab0ff'; x.beginPath(); x.roundRect(14, 50, 3, 12, 1); x.fill(); x.fillStyle = '#ff6b6b'; x.beginPath(); x.roundRect(18, 52, 3, 10, 1); x.fill(); return; }
+  if (who === 'rival') { x.fillStyle = '#d9a274'; x.fillRect(-7, 24, 14, 14);
+    SC.depth(x, () => { x.beginPath(); x.roundRect(-32, 34, 64, 60, 14); }, '#2f3a66', 3, 0.28);
+    x.fillStyle = '#f4f6f8'; x.beginPath(); x.moveTo(-9, 34); x.lineTo(0, 60); x.lineTo(9, 34); x.closePath(); x.fill();
+    x.strokeStyle = '#e8c35a'; x.lineWidth = 2.5; x.beginPath(); x.moveTo(-9, 34); x.lineTo(-14, 94); x.moveTo(9, 34); x.lineTo(14, 94); x.stroke();
+    SC.depth(x, () => { x.beginPath(); x.ellipse(0, 33, 17, 6, 0, 0, 7); x.moveTo(6, 34); x.lineTo(16, 58); x.lineTo(8, 58); x.closePath(); }, '#d6453a', 2, 0.3); return; }
   x.fillStyle = '#b77d50'; x.fillRect(-7, 24, 14, 14);
   SC.depth(x, () => { x.beginPath(); x.roundRect(-32, 34, 64, 60, 14); }, '#f4f6f8', 3, 0.18);
   x.fillStyle = '#2fa89a'; x.beginPath(); x.moveTo(-10, 34); x.lineTo(0, 54); x.lineTo(10, 34); x.closePath(); x.fill();
@@ -162,6 +188,7 @@ function npcFull(c, who, X, Y, h, face = 'happy', pose = 'stand', t = 0, flip = 
     shop: { leg: '#ecbd8c', shoe: '#7a4a6a', top: '#e86f5a', skin: '#ecbd8c', arm: '#e86f5a' },
     doc: { leg: '#3c3a52', shoe: '#2a2836', top: '#f4f6f8', skin: '#f2cba2', arm: '#f4f6f8' },
     aide: { leg: '#3b4a6a', shoe: '#d24f43', top: '#f4f6f8', skin: '#c98d5e', arm: '#f4f6f8' },
+    rival: { leg: '#262a3a', shoe: '#d6453a', top: '#2f3a66', skin: '#e8b48a', arm: '#2f3a66' },
   }[who];
   if (sit) c.translate(0, 18);
   // backpack behind Kiko
@@ -191,6 +218,12 @@ function npcFull(c, who, X, Y, h, face = 'happy', pose = 'stand', t = 0, flip = 
     c.save(); c.beginPath(); c.moveTo(-11, -42); c.lineTo(11, -42); c.lineTo(13, -10); c.lineTo(-13, -10); c.closePath(); c.clip();
     c.fillStyle = '#d9f2e6'; c.fillRect(-14, -42, 28, 34); c.fillStyle = '#7fcfb0'; for (let k = -12; k < 14; k += 6) c.fillRect(k, -42, 3, 34); c.restore();
     c.fillStyle = '#ffffff'; c.beginPath(); c.roundRect(-6, -30, 12, 8, 2); c.fill();
+  } else if (who === 'rival') {
+    SC.depth(c, () => { c.beginPath(); c.roundRect(-13, -57, 26, 31, 8); }, C.top, 2.5, 0.28);
+    c.fillStyle = '#f4f6f8'; c.beginPath(); c.moveTo(-5, -57); c.lineTo(0, -42); c.lineTo(5, -57); c.closePath(); c.fill();
+    c.strokeStyle = '#e8c35a'; c.lineWidth = 1.6; c.beginPath(); c.moveTo(-5, -57); c.lineTo(-3, -27); c.moveTo(5, -57); c.lineTo(3, -27); c.stroke();
+    c.fillStyle = '#e8c35a'; c.beginPath(); c.arc(-8, -48, 2.2, 0, 7); c.fill();   // the Grand Ranch pin
+    SC.depth(c, () => { c.beginPath(); c.ellipse(0, -57, 10, 3.6, 0, 0, 7); c.moveTo(4, -56); c.lineTo(10, -42); c.lineTo(5, -42); c.closePath(); }, '#d6453a', 1.2, 0.3);
   } else {
     // lab coats: long, open at the front
     const coatLen = who === 'doc' ? -12 : -16;

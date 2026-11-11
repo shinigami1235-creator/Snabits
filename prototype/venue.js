@@ -58,12 +58,16 @@ function venueEntry(c){
 }
 
 /* ---------- the calendar: a month of cups, week by week. Only this week's can be entered ---------- */
+function calExtra(w){ const f=typeof festivalOf==="function"&&festivalOf(w), ct=typeof contestOf==="function"&&contestOf(w), r=weekParts(w).wk===2&&typeof story==="function"&&story().seen.gradeD;
+  return (f?`<div class="cu ev"><span class="g gF">★</span><span><b>${f[0]}</b><br><small style="margin:0">A free ${f[1]} and 10 stress off</small></span></div>`:"")+
+    (ct?`<div class="cu ev"><span class="g gF">C</span><span><b>${ct.name}</b><br><small style="margin:0">Contest, judged on ${ct.judged}. Out > Contests</small></span></div>`:"")+
+    (r?`<div class="cu ev"><span class="g gF">R</span><span><b>Rival match: Rook</b><br><small style="margin:0">One match against Rook's Snabit</small></span></div>`:""); }
 function venueCalendar(off){
   const s=RS, start=Math.floor(PLAYER.week/4)*4+off*4, mo=Math.floor(start/4)%12;
   el("v-name").textContent="Calendar"; el("v-sub").textContent=`${SEASON[Math.floor(mo/3)]} · Month ${mo%3+1}`;
   const weeks=[0,1,2,3].map(k=>{ const w=start+k, list=cupsOfWeek(w), now=w===PLAYER.week, past=w<PLAYER.week;
     return `<div class="wk ${now?"now":""}"><h4>Week ${k+1}${now?" · this week":past?" · done":""}</h4>${list.length?list.map(c=>{ const why=cupBlock(c,s);
-      return `<div class="cu ${why?"no":""}">${gradeTag(c.major||c.legend?"S":c.grade)}<span><b>${c.name.replace(/ \([A-SF]\)$/,"")}</b><br><small style="margin:0">${cupFormat(c)}${c.prize?` · ${c.prize}`:""}</small></span><small>${cupPurse(c).toLocaleString()} bits${why?`<br>${why}`:""}</small></div>`; }).join(""):'<div class="none">No cups this week.</div>'}</div>`; }).join("");
+      return `<div class="cu ${why?"no":""}">${gradeTag(c.major||c.legend?"S":c.grade)}<span><b>${c.name.replace(/ \([A-SF]\)$/,"")}</b><br><small style="margin:0">${cupFormat(c)}${c.prize?` · ${c.prize}`:""}</small></span><small>${cupPurse(c).toLocaleString()} bits${why?`<br>${why}`:""}</small></div>`; }).join(""):'<div class="none">No cups this week.</div>'}${calExtra(w)}</div>`; }).join("");
   vBody(`<div class="v-card"><div class="v-calnav"><button class="btn2" id="c-prev" ${off<=0?"disabled":""}>◂ Month</button><b>${SEASON[Math.floor(mo/3)]} · Month ${mo%3+1}</b><button class="btn2" id="c-next" ${off>=11?"disabled":""}>Month ▸</button></div></div>
     <div class="v-card v-cal">${weeks}</div><button class="btn2 v-end" id="c-back">Back</button>`);
   el("c-prev").onclick=()=>venueCalendar(off-1); el("c-next").onclick=()=>venueCalendar(off+1); el("c-back").onclick=venueLobby;

@@ -198,6 +198,7 @@ function openRanch(m){
   if(m){ if(RS&&RS.id) saveGame(); const e=addToRoster(m); if(!e){ alert("The Freezer is full."); return; } PLAYER.active=e.id; }
   const e=activeEntry(); if(!e){ el("ranch").style.display="flex"; RS=null; panel(""); openFreezer(); return; }
   if(!RS||RS.id!==e.id){ RS=newRanch(e); RS.say=e.st?"Welcome back.":"This is the ranch. Train it, feed it, and watch how it takes it."; }
+  if(typeof dexRaise==="function"){ dexBackfill(); dexRaise(RS.m,RS.stage); }
   el("ranch").style.display="flex"; RS.open=true;
   checkReturn(); { const hungry=hungerCheck(); if(hungry&&!RS.busy) say(hungry); } drawUI(); menu(RS.away?"Out":undefined); saveGame();
   if(!RLOOP){RLOOP=true;requestAnimationFrame(rLoop);}
@@ -316,12 +317,12 @@ function menu(which){
   }
   if(which==="Out"){
     if(s.away){ missionStatus(); return; }
-    panel(`<button class="rb full feat" id="r-wild">Wild battle<small>${typeof wildLeft==="function"?wildLeft(s):3} left this week</small></button><button class="rb" id="r-mis">Missions<small>1 to 3 weeks away</small></button><button class="rb" id="r-cup">Tournaments<small>Grade ${s.grade}</small></button><button class="rb" id="r-lab">Fusion lab<small>Fusion and rebirth</small></button><button class="rb" id="r-town">Town<small>Shops and upgrades</small></button><button class="rb" id="r-frz">Freezer<small>${PLAYER.roster.length-1} frozen</small></button><button class="rb" id="r-ghost">Friend battle<small>Room or ghost code</small></button><button class="rb" id="r-prac">Practice fight<small>Won't shape its habits</small></button><button class="rb" id="r-trip">Skill trip<small>4 weeks in a region</small></button><button class="rb full" id="r-team">Team battle<small>6 on 6 · ${typeof teamReady==="function"?Math.min(6,teamReady().length):0} of 6 ready</small></button>`);
+    panel(`<button class="rb full feat" id="r-wild">Wild battle<small>${typeof wildLeft==="function"?wildLeft(s):3} left this week</small></button><button class="rb" id="r-mis">Missions<small>1 to 3 weeks away</small></button><button class="rb" id="r-cup">Tournaments<small>Grade ${s.grade}</small></button><button class="rb" id="r-lab">Fusion lab<small>Fusion and rebirth</small></button><button class="rb" id="r-town">Town<small>Shops, Town Hall and upgrades</small></button><button class="rb" id="r-ct">Contests<small>${typeof contestOf==="function"&&contestOf(PLAYER.week)?"One is on this week":"First week of each month"}</small></button><button class="rb" id="r-goals">Goals<small>The loan, grades and what's next</small></button><button class="rb" id="r-dex">Bestiary<small>Every Snabit kind you've seen</small></button><button class="rb" id="r-frz">Freezer<small>${PLAYER.roster.length-1} frozen</small></button><button class="rb" id="r-ghost">Friend battle<small>Room or ghost code</small></button><button class="rb" id="r-prac">Practice fight<small>Won't shape its habits</small></button><button class="rb" id="r-trip">Skill trip<small>4 weeks in a region</small></button><button class="rb full" id="r-team">Team battle<small>6 on 6 · ${typeof teamReady==="function"?Math.min(6,teamReady().length):0} of 6 ready</small></button>`);
     // anything that can't go ahead says why on the button itself, since the speech box is hidden behind this panel on a phone
     const ill=s.sick?"It has a cold. Rest it or give it medicine first.":s.injured?"It's hurt. Rest it or give it medicine first.":null;
     const block=(id,why)=>{ const bt=el(id); if(!why||!bt) return; bt.disabled=true; bt.classList.add("blocked"); const sm=bt.querySelector("small"); if(sm) sm.textContent=why; };
-    block("r-wild",typeof wildBlock==="function"?wildBlock(s):null); block("r-mis",ill); block("r-cup",ill); block("r-trip",ill||(tripsLocked()?"Opens at 1 heart.":null));
-    el("r-wild").onclick=startWild; el("r-mis").onclick=openBoard; el("r-cup").onclick=openCups; el("r-lab").onclick=openLab; el("r-frz").onclick=openFreezer; el("r-trip").onclick=()=>{ if(tripsLocked()){ say("Skill trips open at 1 heart."); return; } openTrips(); }; el("r-town").onclick=openTown; el("r-ghost").onclick=()=>openRooms(); el("r-team").onclick=openTeam;
+    block("r-wild",typeof wildBlock==="function"?wildBlock(s):null); block("r-mis",ill); block("r-cup",ill); block("r-ct",ill); block("r-trip",ill||(tripsLocked()?"Opens at 1 heart.":null));
+    el("r-wild").onclick=startWild; el("r-mis").onclick=openBoard; el("r-cup").onclick=openCups; el("r-lab").onclick=openLab; el("r-frz").onclick=openFreezer; el("r-trip").onclick=()=>{ if(tripsLocked()){ say("Skill trips open at 1 heart."); return; } openTrips(); }; el("r-town").onclick=openTown; el("r-goals").onclick=openGoals; el("r-ct").onclick=openContests; el("r-dex").onclick=()=>openDex(); el("r-ghost").onclick=()=>openRooms(); el("r-team").onclick=openTeam;
     el("r-prac").onclick=()=>{ const o=gradedOpponent(s.grade,Math.max(1,s.level+Math.floor(rnd(-1,2))),Math.random); arenaFight({s,foe:o,mode:"control",title:"Practice",learn:true,onEnd:r=>{ if(r.learned.length) say(r.learned.join(" ")); saveGame(); }}); };
   }
 }
@@ -670,6 +671,7 @@ async function evolveNow(){
   for(let k=0;k<10;k++){ s.flash=99; s.P=k%2?newP:oldP; await rwait(Math.max(60,260-k*22)); }
   s.P=newP; s.flash=0; fixEquip(s); s.messSpots=s.messSpots.map(p=>({x:Math.min(39,p.x*(old.stage==="Bit"?2:1)),y:Math.min(39,p.y*(old.stage==="Bit"?2:1))}));
   s.stageRegions={}; s.stageCups=0; s.neglect=0; s.hinted=false;
+  if(typeof dexRaise==="function") dexRaise(s.m,s.stage);
   spark(s.x,headY()+10,"sparkle",16); s.pose="happy"; await hop(16,450); await rwait(600);
   banner(`${MARK[s.mark][0]} ${to}!`,"#ffd23f"); await rwait(1200); banner("");
   const markLine=to==="Byte"?`with ${MARK[s.mark][1]}. ${STATS[s.mark]} +5%.`:`adding ${MARK[s.mark2][1]}. ${STATS[s.mark]} +10% and ${STATS[s.mark2]} +5%.`;
@@ -698,7 +700,8 @@ async function endWeek(weeks,line){
   if(s.weatherBonus) notes.push(`${W[0]} is coming, and ${s.m.el1} monsters love it, so drills will go better next week.`);
   if(Math.random()<0.05){ const v=randomOpponent(Math.random); s.visitor={m:v,x:RW+20,until:performance.now()+9000}; s.stress-=10; notes.push(`A wild ${v.name} wandered in, and they played until sundown.`); }
   if(PLAYER.week>s.born&&(PLAYER.week-s.born)%52===0){ const g=COMMON_FINDS[Math.floor(Math.random()*COMMON_FINDS.length)]; addItem(g); s.spoil+=5; notes.push(`It's its birthday! There was cake, and a ${g} as a present.`); }
-  { const mo=Math.floor(PLAYER.week/4)%12, wk=PLAYER.week%4; if(mo%3===2&&wk===2){ const r=gradedOpponent(s.grade,s.level+1,Math.random); notes.push(`Your rival dropped by with a ${r.m.name} to show off before the official cup. It's a ${r.m.el1} monster, so plan for that.`); } }
+  { const mo=Math.floor(PLAYER.week/4)%12, wk=PLAYER.week%4; if(mo%3===2&&wk===2&&typeof rookMon==="function"&&story().seen.intro){ const r=rookMon(s.grade); notes.push(`Rook dropped by with ${r.m.name} to show off before the official cup. It's a ${r.m.el1} ${r.m.family}, so plan for that.`); } }
+  { const fest=typeof festivalOf==="function"&&festivalOf(PLAYER.week); if(fest){ addItem(fest[1]); s.stress-=10; notes.push(`The ${fest[0]} is on in town this week. Nena gave every ranch a ${fest[1]}, and the music took 10 stress off.`); } }
   notes.push(condition());
   if(s.stress>50) notes.push("It seems tense lately, maybe give it a rest.");
   if(s.petWeek!==PLAYER.week-1&&s.playWeek!==PLAYER.week-1) s.neglect=(s.neglect||0)+1;
@@ -710,6 +713,7 @@ async function endWeek(weeks,line){
   const past=s.used-lifeWeeks();
   if(past>=0&&past<weeks) notes.push("It's reached the end of its lifespan. It's a veteran now. It still fights as hard as ever, but training barely changes it.");
   say(notes.filter(Boolean).join(" ")); drawUI(); saveGame();
+  if(typeof storyAfterWeek==="function") await storyAfterWeek();
 }
 /* ---------- ordinary life: what it does on its own ---------- */
 /* how it feels shows on its face and stance: worn out, droopy, normal, fresh, or fired up on some weeks in top shape */

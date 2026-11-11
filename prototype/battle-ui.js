@@ -140,6 +140,7 @@ function afterTurn(){
 /* Arena fights for the ranch: tournaments, missions and practice. mode "control" gives the player the buttons, "auto" plays on the monster's habits. */
 function arenaFight({s,foe,mode="control",title="",turnLimit=15,noDraw=false,record=false,learn=false,foeHabits=null,rand=Math.random,onEnd}){
   const me=fightMon(s); if(record) s.fightNo=(s.fightNo||0)+1;
+  if(foe&&foe.m&&typeof dexSee==="function") dexSee(foe.m);
   const fight=new Fight(playerFighter(s),foe.fighter||makeFighter(foe.fm,foe.skills,foe.level),rand);
   if(foe.boss){ const b=fight.p[1]; b.maxhp=Math.round(b.maxhp*1.25); b.hp=b.maxhp; b.name=foe.boss; }
   B={fight,mon:me,opp:foe.fm,busy:false,fast:false,shown:fight.p.map(f=>f.hp),opts:{s,turnLimit,noDraw,learn,foeHabits,record:record?s:null,auto:mode==="auto",onEnd}};
