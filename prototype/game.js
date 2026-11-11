@@ -47,7 +47,7 @@ const hasSave=()=>{ try{ return !!localStorage.getItem(SAVE_KEY); }catch(e){ ret
 /* Ranch state fields that persist. Everything else (puppet, particles, props) is rebuilt. */
 const KEEP=["worn","held","weather","weatherBonus","majorInvite","master","stage","mark","mark2","variant","wanderEl","stageRegions","stageCups","neglect","cleanRun","uses","book","grid","tp","lastTrained","used","spoil","fear","fatigue","stress","weight","like","dis","known","mess","messKind","messSpots",
   "learned","injured","sick","strainRun","petWeek","playWeek","snackWeek","mealMonth","hinted","toldEvo","slackBonus","dead","level","exp","grade",
-  "wins","losses","habits","fightNo","equip","skillsKnown","away","fruitUsed","cups","majors","born"];
+  "wins","losses","habits","fightNo","equip","skillsKnown","away","fruitUsed","cups","majors","born","likeT","disT","found","log"];
 function packRanch(s){ const o={}; for(const k of KEEP) if(s[k]!==undefined) o[k]=s[k]; return o; }
 
 function addToRoster(m){
@@ -59,7 +59,7 @@ function addToRoster(m){
 }
 const activeEntry=()=>PLAYER.roster.find(r=>r.id===PLAYER.active);
 const displayName=s=>s.stage==="Bit"?s.m.name:`${s.m.name}, ${s.variant&&s.variant!=="Scruffy"?s.variant+" ":""}${MARK[s.mark][0]} ${s.stage}`;
-const slotsFor=s=>s.stage==="Bit"?2:s.stage==="Byte"?3:4;
+const slotsFor=()=>4;     // every stage fights with the 4 skills picked on its info page
 
 /* Fight stats: the scan's stats plus 1 for every 4 earned points, and the mark's bonus. */
 /* Fight stats: the scan's stats run through the level formula, then earned points add on top at 1 for every 3,

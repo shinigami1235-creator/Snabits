@@ -1,4 +1,4 @@
-/* The Freezer, the fusion lab, rebirth, the skills page and the bag. Needs game.js and ranch.js. */
+/* The Freezer, the fusion lab, rebirth and the bag. Needs game.js and ranch.js. */
 const CATALYSTS=["Stat seed","Element stone","Lucky bit","Life fruit"];
 const ASSIST=["It's all up to you.","This doesn't look so good.","I'm not sure about this one.","This should be fine.","This looks good.","This looks good.","These two look great together."];
 
@@ -26,16 +26,7 @@ function openFreezer(){
   el("f-back").onclick=()=>{ if(RS) menu("Out"); else openScope(); };
 }
 
-/* ---------- Skills page ---------- */
-function openSkills(){
-  const s=RS, known=knownSkills(s), n=slotsFor(s);
-  panel(`<div style="flex-basis:100%;font-size:13px">Tap to equip. A ${s.stage} has ${n} slots.</div>`+
-    known.map(k=>`<button class="rb ${s.equip.includes(k)?"on":""}" data-k="${k}">${k}${((s.uses||{})[k]||0)>=MASTERY?" ★":""}<small>${SKILLS[k].el||"Neutral"} ${SKILLS[k].kind}, ${SKILLS[k].cost} energy</small></button>`).join("")+
-    `<div style="flex-basis:100%;font-size:12px;opacity:.85"><b>Fight style.</b> ${styleText(s)}</div><button class="rb" id="k-book">Skill book</button><button class="rb" id="k-back">Back</button>`);
-  el("r-panel").querySelectorAll("[data-k]").forEach(b=>b.onclick=()=>{ const k=b.dataset.k, i=s.equip.indexOf(k);
-    if(i>=0) s.equip.splice(i,1); else { if(s.equip.length>=n) s.equip.shift(); s.equip.push(k); } saveGame(); openSkills(); });
-  el("k-back").onclick=()=>menu("Care"); el("k-book").onclick=()=>openBook();
-}
+/* The skills page moved to the info page (info.js). */
 
 /* ---------- The bag ---------- */
 function openItems(){

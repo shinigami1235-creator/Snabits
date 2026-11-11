@@ -20,6 +20,19 @@ const SNACKS={
 const MARK=[["Stout","a wider body and a pale belly"],["Horned","horns"],["Shelled","a spiked shell"],["Sage","antennae"],["Haloed","a gold halo"],["Winged","small wings"]];
 const MARK_HINT=["It's been running a lot. I think it'll fill out.","It's been working those muscles. I bet it grows horns.","All that bracing is toughening its shoulders.","It's been thinking hard. Something might sprout up top.","Its spirit's been glowing lately.","It's so quick now. I wonder if it'll grow wings."];
 const SEASON=["Spring","Summer","Autumn","Winter"];
+/* Likes and dislikes, the Monster Rancher 2 way: one thing it loves and one it can't stand. Either can be a meal, a drill,
+   a snack, something to wear, or battles, and neither shows on its info page until it happens the first time. */
+const TASTE_KINDS=[["meal",30],["drill",30],["snack",15],["item",10],["battle",15]];
+function tastePick(r,avoid){
+  for(let n=0;n<50;n++){ let x=r()*100, k="meal"; for(const [nm,w] of TASTE_KINDS){ if(x<w){ k=nm; break; } x-=w; }
+    const pick=a=>a[Math.floor(r()*a.length)];
+    const v=k==="meal"?Math.floor(r()*MEALS.length):k==="drill"?Math.floor(r()*DRILLS.length):k==="snack"?pick(Object.keys(SNACKS)):k==="item"?pick(Object.keys(WORN)):null;
+    if(!avoid||avoid.k!==k||(k!=="battle"&&avoid.v!==v)) return {k,v}; }
+  return {k:"meal",v:0};
+}
+const taste=(k,v,s=RS)=>{ const hit=T=>T&&T.k===k&&(k==="battle"||T.v===v); return hit(s.likeT)?"like":hit(s.disT)?"dis":null; };
+function tasteFound(t,s=RS){ s.found=s.found||{}; const first=!s.found[t]; s.found[t]=true; return first; }
+const tasteName=T=>!T?"":T.k==="meal"?MEALS[T.v][0]:T.k==="drill"?DRILLS[T.v]:T.k==="battle"?"Battles":T.v;
 const EVO_TOTAL={Squib:[90,220],Stilt:[90,220],Skit:[100,240],Antik:[110,250],Chomp:[110,250],Pinch:[120,260],Moko:[130,280],Booly:[130,280]};
 const STAT_SKILLS=[[["Second Wind",30],["Endure",80],["Body Slam",150],["Regrow",240]],[["Haymaker",30],["Pump Up",80],["Crush",150],["Rampage",240]],[["Harden",30],["Shield Bash",80],["Retaliate",150],["Bulwark",240]],[["Concentrate",30],["Mind Spike",80],["Foresight",150],["Brainstorm",240]],[["Calm",30],["Still Water",80],["Spirit Ward",150],["Soul Flare",240]],[["Dart",30],["Agility",80],["Barrage",150],["Afterimage",240]]];
 const CONDITION=[[20,"It's full of energy!"],[50,"It's in good shape."],[70,"It seems a little tired."],[90,"It's really tired. It needs a rest."],[999,"It's exhausted!"]];
@@ -156,6 +169,8 @@ function newRanch(entry){
     learned:[],injured:false,hinted:false,petWeek:-1,playWeek:-1,snackWeek:-1,mealMonth:-1,strainRun:0,sick:0,    x:150,dir:1,pose:"idle",jy:0,bx:0,upside:false,hidden:false,behind:false,flash:0,shake:0,ghosts:false,trail:[],props:[],parts:[],
     busy:false,cur:0,skip:false,noScenes:false,showNums:false,ptrX:null,ptrT:0,rub:null,bbox:null,ready:false,dead:false};
   if(entry.st) Object.assign(s,JSON.parse(JSON.stringify(entry.st)));
+  if(!s.likeT){ if(entry.st){ s.likeT={k:"meal",v:s.like}; s.disT={k:"meal",v:s.dis}; s.found={like:s.known[s.like]==="like",dis:s.known[s.dis]==="dis"}; }
+    else { s.likeT=tastePick(r); s.disT=tastePick(r,s.likeT); s.found={}; } }
   if(s.stage!=="Bit"||s.variant) rebuildLook(s); else s.P=makePuppet(m.grid,false,m.family);
   fixEquip(s);
   const body=s.P.bodyPx.filter(p=>p.x<10); if(!entry.st) for(let i=0;i<6&&body.length;i++){const p=body[Math.floor(r()*body.length)];s.messSpots.push({x:p.x,y:p.y},{x:19-p.x,y:p.y+1});}
@@ -192,7 +207,7 @@ function closeRanch(){ saveGame(); el("ranch").style.display="none"; if(RS){RS.o
 function injectRanch(){
   if(el("ranch")) return;
   const d=document.createElement("div"); d.id="ranch";
-  d.innerHTML=`<div id="r-top"><div class="r-id"><b id="r-name"></b><span id="r-lv"></span></div><div class="r-right"><span id="r-coins"></span><button class="iconbtn" id="r-gear" aria-label="Settings">☰</button></div></div>
+  d.innerHTML=`<div id="r-top"><div class="r-id"><b id="r-name"></b><span id="r-lv"></span></div><div class="r-right"><span id="r-coins"></span><button class="small" id="r-info">Info</button><button class="iconbtn" id="r-gear" aria-label="Settings">☰</button></div></div>
 <div id="r-sub"><span class="ht" id="r-hearts"></span><span id="r-form"></span><span id="r-shape"></span></div>
 <div id="r-view"><div id="r-frame"><canvas id="r-canvas" width="${RW}" height="${RH}"></canvas><span id="r-date"></span><div id="r-banner"></div><button class="small" id="r-skip">Skip ▸▸</button><button class="small" id="r-goout">◂ Outside</button></div></div>
 <div id="r-say"></div><div id="r-stats"></div><div id="r-learned"></div><div id="r-panel"></div><div id="r-week"></div><div id="r-nums"></div>
@@ -205,6 +220,7 @@ function injectRanch(){
   document.body.appendChild(d);
   el("r-back").onclick=()=>{ el("r-foot").classList.remove("open"); openScope(); };
   el("r-gear").onclick=()=>el("r-foot").classList.toggle("open");
+  el("r-info").onclick=()=>openInfo("status"); el("r-name").onclick=()=>openInfo("status");
   el("r-setx").onclick=()=>el("r-foot").classList.remove("open");
   el("r-foot").onclick=e=>{ if(e.target.id==="r-foot") el("r-foot").classList.remove("open"); };
   el("r-mus").onchange=()=>{ if(typeof musToggle==="function") musToggle(); };
@@ -276,10 +292,10 @@ function menu(which){
     el("r-panel").querySelectorAll("[data-sn]").forEach(b=>b.onclick=()=>runSnack(b.dataset.sn));
   }
   if(which==="Care"){
-    panel(`<button class="rb" id="r-skills">Skills<small>${s.equip.length} of ${slotsFor(s)} equipped</small></button><button class="rb" id="r-items">Items<small>${Object.values(PLAYER.bag).reduce((a,b)=>a+b,0)} in the bag</small></button><button class="rb" id="r-wear">Wear<small>${Object.values(s.worn||{}).filter(Boolean).length+(s.held?1:0)} on</small></button><button class="rb" id="r-pet">Pet<small>${s.petWeek===PLAYER.week?"Done this week":"Once a week"}</small></button><button class="rb" id="r-clean" ${s.mess?"":"disabled"}>Clean<small>${s.mess?"It's dirty":"It's clean"}</small></button><button class="rb" id="r-play">Play<small>${s.playWeek===PLAYER.week?"Done this week":"Once a week"}</small></button>`+
+    panel(`<button class="rb" id="r-skills">Skills<small>${s.equip.length} of 4 picked for battle</small></button><button class="rb" id="r-items">Items<small>${Object.values(PLAYER.bag).reduce((a,b)=>a+b,0)} in the bag</small></button><button class="rb" id="r-wear">Wear<small>${Object.values(s.worn||{}).filter(Boolean).length+(s.held?1:0)} on</small></button><button class="rb" id="r-pet">Pet<small>${s.petWeek===PLAYER.week?"Done this week":"Once a week"}</small></button><button class="rb" id="r-clean" ${s.mess?"":"disabled"}>Clean<small>${s.mess?"It's dirty":"It's clean"}</small></button><button class="rb" id="r-play">Play<small>${s.playWeek===PLAYER.week?"Done this week":"Once a week"}</small></button>`+
       (s.sick||s.injured?`<button class="rb" id="r-med">Medicine<small>${s.injured?"Heals the injury":"Cures the cold"}, 80 bits</small></button>`:"")+
       "");
-    el("r-skills").onclick=openSkills; el("r-items").onclick=openItems; el("r-wear").onclick=openWear;
+    el("r-skills").onclick=()=>openInfo("skills"); el("r-items").onclick=openItems; el("r-wear").onclick=openWear;
     el("r-pet").onclick=()=>runCare("pet"); el("r-play").onclick=()=>runCare("play");
     if(s.mess) el("r-clean").onclick=()=>runCare("clean");
     if(el("r-med")) el("r-med").onclick=()=>{ if(PLAYER.bag.Medicine) PLAYER.bag.Medicine--; else if(PLAYER.bits<80){say("We can't afford medicine right now.");return;} else PLAYER.bits-=80; s.sick=0; s.injured=false; say("Medicine's in. It's well enough to train."); drawUI(); menu("Care"); };
@@ -338,7 +354,7 @@ const HEAVY=[["Marathon",0,5,1,"mud"],["Quarry",1,0,5,"dust"],["Fortress",2,1,3,
 async function runDrill(i){
   await scene(async()=>{
     const s=RS, res=rollDrill(), heavy=i>=6, H=heavy?HEAVY[i-6]:null, main=heavy?H[1]:i, name=heavy?H[0]:DRILLS[i];
-    s.lastTrained=main;
+    s.lastTrained=main; s.weekAct=STATS[main];
     say(`${name}. Let's see how it does.`);
     if(!heavy&&smoothRanch()){ await walkTo(RW+30,80,"walk"); s.x-=RW; s.zx=RW; }    // over to the training ground, then the drill runs in its usual spots
     if(res==="slack") await SLACK(i); else await (heavy?HEAVY_FN[i-6]:SCENE_FN[i])(res);
@@ -351,6 +367,9 @@ async function runDrill(i){
     if(heavy) gains[H[3]]=(gains[H[3]]||0)-2;
     const shp=shapeOf(s.weight)[0], fm=shp==="Thin"?1.25:shp==="Chubby"?1.25:shp==="Heavy"?1.5:1, sm=shp==="Thin"?1.5:shp==="Slim"?1.25:shp==="Chubby"?0.75:shp==="Heavy"?0.5:1, hv=heavy?2:1;
     s.fatigue+=Math.round((res==="great"||res==="slack"?5:10)*fm*hv); s.stress+=Math.round(((res==="great"?9:5)*hv)*sm*(s.variant==="Pampered"?0.75:1)); s.weight-=hv;
+    const tz=heavy?null:taste("drill",i), tFirst=tz?tasteFound(tz):false;
+    if(tz==="like"){ s.stress-=4; s.spoil+=2; spark(s.x,headY()-4,"heart",3); } if(tz==="dis"){ s.stress+=8; s.spoil-=2; spark(s.x,headY()-6,"q"); }
+    const tLine=!tz?"":tz==="like"?(tFirst?`It loves ${name}. I'll remember that.`:`${name} is its favourite.`):(tFirst?`It really doesn't like ${name}. I'll remember that.`:`It grumbled through ${name} again.`);
     for(const k in gains) s.tp[k]=Math.max(0,s.tp[k]+gains[k]);
     const hurtP=s.fatigue>=90?0.3:s.fatigue>=70?0.15:0;
     const col={great:"#ffd23f",success:"#ffffff",fail:"#ff8a8a",slack:"#c9a6ff"}[res];
@@ -363,7 +382,7 @@ async function runDrill(i){
     for(const k in gains) for(const [nm,need] of STAT_SKILLS[k]) if(s.tp[k]>=need&&!s.learned.includes(nm)){ s.learned.push(nm); fixEquip(s); banner("Learned "+nm+"!","#7dff9a"); s.pose="happy"; spark(s.x,headY()-6,"sparkle",8); drawUI(); await rwait(1300); banner(""); s.pose="idle"; }
     if(Math.random()<hurtP){ s.injured=true; s.used+=2; s.pose="hurt"; spark(s.x,headY()-4,"star",4); say("It pushed too hard and got hurt."); await rwait(1200); s.pose="tired"; }
     await praiseOrScold(res);
-    await endWeek(1, (s.injured?"It pushed too hard and got hurt. That's 2 weeks off its prime, and it needs a rest or medicine.":{great:"That was its best yet.",success:"Solid work.",fail:"It'll get it next time.",slack:"It wandered off halfway. It's getting a bit spoiled."}[res]));
+    await endWeek(1, tLine+" "+(s.injured?"It pushed too hard and got hurt. That's 2 weeks off its prime, and it needs a rest or medicine.":{great:"That was its best yet.",success:"Solid work.",fail:"It'll get it next time.",slack:"It wandered off halfway. It's getting a bit spoiled."}[res]));
   });
 }
 /* How you react after a drill, the Monster Rancher 2 way: praise is for a great result, scolding is for when it ignored
@@ -469,13 +488,13 @@ async function runMeal(i){
     PLAYER.bits-=ml[1]; s.mealMonth=Math.floor(PLAYER.week/4); drawUI();
     const bowl=s.props.find(p=>p.k==="bowl")||prop({k:"bowl",x:BOWLX,y:GROUND}); bowl.food=ml[6];
     say(`${ml[0]} in the bowl.`); await walkTo(BOWLX+RS.P.scale*7,40);
-    const like=i===s.like?"like":i===s.dis?"dis":"neutral";
+    const like=taste("meal",i)||"neutral";
     if(like==="dis"){ s.pose="idle"; spark(s.x,headY()-6,"q"); await rwait(600); await walkTo(s.x+14,30); await rwait(500); await walkTo(BOWLX+RS.P.scale*7,30); s.pose="eat"; for(let k=0;k<6;k++){ if(k%2) spark(BOWLX+6,GROUND-6,"crumb"); await rwait(330);} s.pose="sad"; await rwait(800); }
     else { s.pose="eat"; for(let k=0;k<(like==="like"?6:8);k++){ spark(BOWLX+6,GROUND-6,"crumb"); await rwait(like==="like"?140:220);} if(like==="like"){ s.pose="happy"; spark(s.x,headY()-4,"heart",3); await hop(14,420); await rwait(500);} else { s.pose="idle"; await rwait(600);} }
     bowl.food=null;
     let [ , , st,sp,fe,wt]=ml; s.stress+=st; s.spoil+=sp; s.fear+=fe; s.weight+=wt;
     if(like==="like"){ s.stress-=3; s.spoil+=2; if(has("Kitchen")) s.fatigue-=5; } if(like==="dis"){ s.stress+=12; s.spoil-=6; s.fear+=2; }
-    const first=!s.known[i]; s.known[i]=like;
+    const first=!s.known[i]; s.known[i]=like; if(like!=="neutral") tasteFound(like);
     say(like==="like"?(first?"It loves this! I'll mark it with a heart.":"Its favourite, gone in seconds."):like==="dis"?(first?"It hates this one. I'll mark it so we remember.":"It ate it, but it wasn't happy."):"It ate it all. Nothing special.");
     clampAll();
   });
@@ -492,7 +511,9 @@ async function runSnack(n){
     else if(sn.react==="bounce"){ s.pose="happy"; await hop(18,350); await walkTo(s.x+30>215?s.x-30:s.x+30,90,"run"); await hop(18,350); }
     else if(sn.react==="happy"){ s.pose="happy"; spark(s.x,headY()-4,"heart",1); await rwait(700); }
     else { s.pose="idle"; spark(s.x,headY()-4,"sparkle",3); await rwait(600); }
-    sn.fx(s); clampAll(); say(sn.say);
+    sn.fx(s); const tz=taste("snack",n), tFirst=tz?tasteFound(tz):false;
+    if(tz==="like"){ s.stress-=5; s.spoil+=3; spark(s.x,headY()-4,"heart",3); } if(tz==="dis"){ s.stress+=8; s.spoil-=3; }
+    clampAll(); say(!tz?sn.say:tz==="like"?(tFirst?`It loves ${n}! I'll remember that.`:`Its favourite snack.`):(tFirst?`It spat half the ${n} out. It doesn't like those.`:`It ate the ${n}, but it wasn't happy.`));
   });
 }
 async function runCare(kind){
@@ -573,7 +594,7 @@ async function evolveNow(){
   s.stageRegions={}; s.stageCups=0; s.neglect=0; s.hinted=false;
   spark(s.x,headY()+10,"sparkle",16); s.pose="happy"; await hop(16,450); await rwait(600);
   banner(`${MARK[s.mark][0]} ${to}!`,"#ffd23f"); await rwait(1200); banner("");
-  const markLine=to==="Byte"?`with ${MARK[s.mark][1]}. ${STATS[s.mark]} +5%, and a third skill slot opens.`:`adding ${MARK[s.mark2][1]}. ${STATS[s.mark]} +10%, ${STATS[s.mark2]} +5%, and a fourth skill slot opens.`;
+  const markLine=to==="Byte"?`with ${MARK[s.mark][1]}. ${STATS[s.mark]} +5%.`:`adding ${MARK[s.mark2][1]}. ${STATS[s.mark]} +10% and ${STATS[s.mark2]} +5%.`;
   return `It evolved into ${displayName(s)}, ${markLine}${s.variant&&s.variant!==old.variant?` As a ${s.variant} it has ${VARIANT_TEXT[s.variant]}.`:""}`;
 }
 const topMark=()=>{const s=RS, top=s.tp.indexOf(Math.max(...s.tp)); return s.tp.filter(v=>v===s.tp[top]).length>1&&s.tp[s.lastTrained]===s.tp[top]?s.lastTrained:top;};
@@ -581,6 +602,7 @@ const topMark=()=>{const s=RS, top=s.tp.indexOf(Math.max(...s.tp)); return s.tp.
 /* ---------- the end of a week ---------- */
 async function endWeek(weeks,line){
   const s=RS; PLAYER.week+=Math.max(1,weeks); s.used+=weeks; clampAll();
+  s.log=(s.log||[]).concat(Array(Math.max(1,weeks)).fill(s.weekAct||"Rest")).slice(-8); s.weekAct=null;
   let notes=[line];
   const strain=s.fatigue+2*s.stress;
   if(strain>=90){ s.used+=2; notes.push("It's under a lot of strain. That cost it 2 weeks of its prime."); }
@@ -589,6 +611,8 @@ async function endWeek(weeks,line){
   if(s.sick) s.sick--;
   if(s.strainRun>=2&&!s.sick){ s.sick=1; s.strainRun=0; notes.push("It's caught a cold. No training next week unless it gets medicine."); }
   if(PLAYER.week%4===0) notes.push("A new month, so it can have another meal.");
+  for(const it of Object.values(s.worn||{})){ const tz=it&&taste("item",it); if(!tz) continue; s.stress+=tz==="like"?-3:4;
+    if(tasteFound(tz)) notes.push(tz==="like"?`It keeps admiring its ${it}. It loves wearing that.`:`It keeps tugging at the ${it}. It doesn't like wearing it.`); }
   const findP=(s.m.el1==="Wild"||s.m.el1==="Stone")?0.12:0.06;
   if(!s.sick&&Math.random()<findP){ const coins=Math.round(rnd(30,90)); PLAYER.bits+=coins; notes.push(`It dug up ${coins} bits in the yard.`); try{ s.pose="effort"; spark(s.x,GROUND-2,"dust",6); await rwait(500); spark(s.x,GROUND-10,"sparkle",5); }catch(e){} }
   // the week's events

@@ -168,6 +168,9 @@ function endArena(){
   $("b-result").style.display="block"; $("b-fight").classList.add("done");
   if(typeof musJingle==="function"&&!draw) musJingle(won);
   const learned=o.learn?afterFight(o.s,f.p[0],true):[]; if(learned.length) $("b-result").querySelector("p").insertAdjacentHTML("afterend",`<div class="learn">${learned.join(" ")}</div>`);
+  const tz=o.s&&o.s.likeT&&typeof taste==="function"?taste("battle",null,o.s):null;
+  if(tz){ const first=tasteFound(tz,o.s); o.s.stress=Math.max(0,o.s.stress+(tz==="like"?-4:6)); o.s.spoil+=tz==="like"?2:-1;
+    $("b-result").querySelector("p").insertAdjacentHTML("afterend",`<div class="learn">${tz==="like"?(first?"It loves a good fight.":"It enjoyed that."):(first?"It hates fighting.":"It didn't enjoy that.")}</div>`); }
   $("b-cont").onclick=()=>{ const res={winner:f.winner,turns:f.turn,judged:!!f.judged,hpLeft:f.p[0].hp/f.p[0].maxhp,foeHpLeft:f.p[1].hp/f.p[1].maxhp,learned};
     $("battle").style.display="none"; B=null; if(o.onEnd) o.onEnd(res); };
 }

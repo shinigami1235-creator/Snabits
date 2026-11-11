@@ -122,5 +122,5 @@ function finishCup(){
   if(CUP.learned) lines.push(...CUP.learned);
   const lv=giveExp(s,(CUP.expGain||0)+(place===1?10:3));
   CUP.done=true; CUP.place=place; CUP.prize=prize; CUP.lines=lines.concat(lv);
-  venueCeremony(()=>{ closeVenue(); scene(async()=>{ s.pose=place===1?"happy":"idle"; if(place===1){ spark(s.x,headY()-6,"sparkle",12); await hop(16,420); } await rwait(500); await endWeek(1,CUP.lines.join(" ")); }); });
+  venueCeremony(()=>{ closeVenue(); scene(async()=>{ s.pose=place===1?"happy":"idle"; if(place===1){ spark(s.x,headY()-6,"sparkle",12); await hop(16,420); } await rwait(500); RS.weekAct="Cup"; await endWeek(1,CUP.lines.join(" ")); }); });
 }

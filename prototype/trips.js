@@ -77,7 +77,7 @@ async function runTrip(reg){
     s.stageRegions=s.stageRegions||{}; s.stageRegions[reg.n]=(s.stageRegions[reg.n]||0)+4;
     fixEquip(s); clampAll();
     await homeArrive(140); s.pose=learned.length?"happy":"idle"; if(learned.length) spark(s.x,headY()-6,"sparkle",10); await rwait(600);
-    await endWeek(4,`Back from ${reg.n}.`);
+    RS.weekAct="Trip"; await endWeek(4,`Back from ${reg.n}.`);
   });
   panel(`<div class="full lab-head"><b>Trip to ${reg.n}</b><button class="small" id="tr-ok">Done</button></div><div class="full trip-log">`+weeks.map(t=>`<div class="trip-row ${/rough/.test(t)?"no":"ok"}"><i>${/rough/.test(t)?"✕":"✓"}</i><span>${t}</span></div>`).join("")+
     `</div><div class="full lab-info">${learned.length?"It learned "+learned.join(" and ")+".":"No new skill this time."}</div>`);
@@ -104,5 +104,5 @@ function openBook(filter){
       return `<div class="rb" style="text-align:left"><b>${n}${u>=MASTERY?" ★":""}</b><small>${st==="learned"?`Learned. Used ${u} times${u>=MASTERY?", mastered":""}.`:st==="hit"?"It's been hit by this.":"It's seen this used."} ${describe(n)}</small></div>`; }).join("")+
     `<button class="rb" id="bk-back">Back</button>`);
   el("bk-f").onchange=e=>openBook(e.target.value);
-  el("bk-back").onclick=openSkills;
+  el("bk-back").onclick=()=>{ panel(""); openInfo("skills"); };
 }

@@ -111,7 +111,7 @@ async function runMission(b){
   await scene(async()=>{
     s.bg="reg:"+reg.el; s.x=60; s.pose=won?"happy":"tired"; if(won){ spark(s.x,headY()-6,"sparkle",8); await hop(14,360); } await rwait(700);
     await walkTo(RW+30,60,"walk"); s.bg=null; s.tripLabel=null; await homeArrive(130); s.pose=won?"happy":"tired"; await rwait(500);
-    await endWeek(K.weeks,`Back from ${b.reg}.`);
+    RS.weekAct="Mission"; await endWeek(K.weeks,`Back from ${b.reg}.`);
   });
   showReport(s,b,res,foe,won,lv);
 }

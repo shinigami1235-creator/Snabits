@@ -11,7 +11,7 @@ function chibiSpec(m, s) {
   const stage = src.stage || 'Bit', marks = [];
   if (stage !== 'Bit' && src.mark != null && MARK[src.mark]) marks.push(MARK[src.mark][0]);
   if (stage === 'Mega' && src.mark2 != null && MARK[src.mark2]) marks.push(MARK[src.mark2][0]);
-  return { family: fam, stage, marks, pal: src.pal || base.pal, el: base.el1, worn: src.worn || {}, cm: heightCm(base, stage) };
+  return { family: fam, stage, marks, pal: src.pal || base.pal, el: base.el1, worn: src.worn || {}, variant: src.variant || null, cm: heightCm(base, stage) };
 }
 
 /* ---------- size ----------
@@ -620,7 +620,7 @@ function paintMon(cv, m, o = {}) {
   cv.width = S; cv.height = S; cv.style.imageRendering = 'auto';
   const c = cv.getContext('2d'), u = S / 205 * Math.min(1.6, 165 / (CHIBI.height(spec.stage, spec.marks, spec.family) + 20));
   c.setTransform(u, 0, 0, u, S / 2 - 100 * u, S * 0.95 - 188 * u);
-  CHIBI.draw(c, spec, o.pose || 'idle', 600, [0, 0]);
+  CHIBI.draw(c, spec, o.pose || 'idle', o.t == null ? 600 : o.t, [0, 0]);
 }
 /* the stadium canvas is 195 wide and stretched, so its monsters draw on a layer over it like the ranch */
 const VQ = [];
