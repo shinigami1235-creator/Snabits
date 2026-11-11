@@ -30,5 +30,5 @@ function openGhost(){
       const foe={fm:fightMon(g),skills:g.equip,level:g.level,fighter:playerFighter(g),m:g.m};
       arenaFight({s:RS,foe,mode,title:"Ghost battle",foeHabits:g,onEnd:r=>{ say(r.winner===0?`It beat ${displayName(g)}'s ghost.`:r.winner===1?`${displayName(g)}'s ghost won.`:"A draw with the ghost."); saveGame(); }}); };
     el("g-go").onclick=()=>go("control"); el("g-auto").onclick=()=>go("auto"); el("g-back3").onclick=openGhost; };
-  el("g-back").onclick=()=>menu("Out");
+  el("g-back").onclick=()=>openRooms();
 }

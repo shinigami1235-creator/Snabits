@@ -90,11 +90,17 @@ function bump(who,cls){ const s=$(who===0?"b-me-sprite":"b-foe-sprite"); s.class
 const bw=ms=>B&&B.fast?Promise.resolve():wait(ms);
 async function pick(id){
   if(!B||B.busy||B.fight.over) return;
+  if(B.net){ netPick(id); return; }
   B.busy=true; if(!(B.opts&&B.opts.auto)) $("b-btns").classList.add("busy");
   const f=B.fight, ai=B.opts&&B.opts.foeHabits?habitPick(f,1,B.opts.foeHabits):f.aiPick(f.p[1],f.p[0]);
   if(B.opts&&B.opts.record) recordHabit(B.opts.record,f,id);
   const ev=f.play(id,ai);
   if(B.opts&&!f.over&&f.turn>=B.opts.turnLimit){ judge(f,B.opts.noDraw); ev.push({t:"log",text:f.log[f.log.length-1]}); }
+  await playEvents(f,ev);
+  afterTurn();
+}
+/* Plays a turn's events on screen. Live friend rooms call this with the events the host sent. */
+async function playEvents(f,ev){
   for(const e of ev){
     if(e.t==="log"){ logLine(e.text); await bw(260); }
     if(e.t==="ability"){ popup(e.who,e.name,"#ffd23f",true); await bw(380); }
@@ -106,8 +112,13 @@ async function pick(id){
     if(e.t==="status"){ popup(e.who,e.name,STATUS_COL[e.name]); await bw(300); }
     if(e.t==="ko"){ $(e.who===0?"b-me-sprite":"b-foe-sprite").classList.add("bko"); await bw(700); }
   }
+}
+function afterTurn(){
+  const f=B.fight;
   B.shown=f.p.map(x=>x.hp); drawPanels(); if(!(B.opts&&B.opts.auto)) drawButtons();
   $("b-btns").classList.remove("busy"); B.busy=false;
+  if(f.over&&B.net){ netEnd(); return; }
+  if(B.net){ return; }
   if(f.over&&B.opts){ endArena(); return; }
   if(B.opts&&B.opts.auto){ autoStep(); return; }
   if(f.over){
