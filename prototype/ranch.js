@@ -396,13 +396,15 @@ const headY=()=>{ const h=RS.cam&&typeof chibiHeadY==="function"?chibiHeadY(RS):
 function rollDrill(){
   const s=RS, h=hearts();
   if(spoiled()&&Math.random()<0.2+(s.slackBonus||0)) return "slack";
-  const great=10+2*h+(s.fatigue<20?5:0)+(s.weatherBonus?10:0)+(has("Training gear")?5:0), fail=Math.max(5,25-5*h)+(s.fatigue>50?15:0)-(s.stress<10&&s.fatigue<30?5:0);
+  const pl=typeof placeLv==="function"&&s.drillPlace?placeLv(s.drillPlace):0;
+  const great=10+2*h+(s.fatigue<20?5:0)+(s.weatherBonus?10:0)+(has("Training gear")?5:0)+4*pl, fail=Math.max(5,25-5*h)+(s.fatigue>50?15:0)-(s.stress<10&&s.fatigue<30?5:0);
   const r=Math.random()*100; return r<great?"great":r<great+fail?"fail":"success";
 }
 // heavy drills: [name, main stat, minor stat, dropped stat, mess]
 const HEAVY=[["Marathon",0,5,1,"mud"],["Quarry",1,0,5,"dust"],["Fortress",2,1,3,"dust"],["Library",3,4,2,"ink"],["Shrine",4,2,0,null],["Obstacle course",5,3,4,"mud"]];
 async function runDrill(i){
   await scene(async()=>{
+    RS.drillPlace=i<6?DRILL_PLACE[i]:null;
     const s=RS, res=rollDrill(), heavy=i>=6, H=heavy?HEAVY[i-6]:null, main=heavy?H[1]:i, name=heavy?H[0]:DRILLS[i];
     s.lastTrained=main; s.weekAct=STATS[main];
     const place=heavy?HEAVY_PLACE[i-6]:smoothRanch()?DRILL_PLACE[i]:null;
@@ -414,7 +416,7 @@ async function runDrill(i){
     const rp=k=>RANK_PTS[rankOf(base[k])], mult=res==="great"?2:res==="slack"?0.5:1;
     const gains={};
     if(res==="fail") gains[main]=1;
-    else { gains[main]=Math.max(vet?0:1,Math.round(rp(main)*(heavy?1.5:1)*mult*age)); if(heavy) gains[H[2]]=Math.max(vet?0:1,Math.round(rp(H[2])/2*mult*age)); }
+    else { gains[main]=Math.max(vet?0:1,Math.round(rp(main)*(heavy?1.5:1)*mult*age*(1+0.15*(!heavy&&typeof placeLv==="function"?placeLv(DRILL_PLACE[i]):0)))); if(heavy) gains[H[2]]=Math.max(vet?0:1,Math.round(rp(H[2])/2*mult*age)); }
     if(heavy) gains[H[3]]=(gains[H[3]]||0)-2;
     const shp=shapeOf(s.weight)[0], fm=shp==="Thin"?1.25:shp==="Chubby"?1.25:shp==="Heavy"?1.5:1, sm=shp==="Thin"?1.5:shp==="Slim"?1.25:shp==="Chubby"?0.75:shp==="Heavy"?0.5:1, hv=heavy?2:1;
     s.fatigue+=Math.round((res==="great"||res==="slack"?5:10)*fm*hv); s.stress+=Math.round(((res==="great"?9:5)*hv)*sm*(s.variant==="Pampered"?0.75:1)); s.weight-=hv;
@@ -602,12 +604,12 @@ async function runCare(kind){
     if(kind==="play"){
       for(let k=0;k<2;k++){ const tx=rnd(110,215), b=prop({k:"ball",x:HELPX+6,y:GROUND-26,vx:(tx-HELPX)/50,vy:-2.6,g:0.1,c:"#ffd23f",bounce:true});
         await walkTo(tx,85,"run"); await until(()=>Math.abs(b.x-s.x)<6&&b.y>GROUND-12,1200); unprop(b); s.pose="happy"; await hop(16,380); }
-      if(s.playWeek!==PLAYER.week){ s.playWeek=PLAYER.week; s.stress-=5; say("That took the edge off."); } else say("It had fun, though it's played enough for this week.");
+      if(s.playWeek!==PLAYER.week){ s.playWeek=PLAYER.week; s.stress-=has("Toy chest")?10:5; say("That took the edge off."); } else say("It had fun, though it's played enough for this week.");
     }
     clampAll();
   },true);
 }
-function petOnce(){ const s=RS; if(s.petWeek!==PLAYER.week){ s.petWeek=PLAYER.week; s.spoil+=2; s.stress-=2; say(scared()?"It flinched at first, then leaned in.":"It leans right into it."); } else say("It likes that, though it's had its fuss this week."); clampAll(); drawUI(); }
+function petOnce(){ const s=RS; if(s.petWeek!==PLAYER.week){ s.petWeek=PLAYER.week; s.spoil+=2; s.stress-=has("Cozy rug")?5:2; say(scared()?"It flinched at first, then leaned in.":"It leans right into it."); } else say("It likes that, though it's had its fuss this week."); clampAll(); drawUI(); }
 function clampAll(){ const s=RS; s.fatigue=clamp(s.fatigue,0,100); s.stress=clamp(s.stress,0,100); s.spoil=clamp(s.spoil,0,100); s.fear=clamp(s.fear,0,100); s.weight=clamp(s.weight,-50,50); }
 
 function moonFull(){ const d=(Date.now()-Date.UTC(2000,0,6,18,14))/864e5, ph=((d%29.530589)+29.530589)%29.530589; return Math.abs(ph-14.77)<1.1; }
@@ -692,6 +694,7 @@ async function endWeek(weeks,line){
   if(s.strainRun>=2&&!s.sick){ s.sick=1; s.strainRun=0; notes.push("It's caught a cold. No training next week unless it gets medicine."); }
   for(const it of Object.values(s.worn||{})){ const tz=it&&taste("item",it); if(!tz) continue; s.stress+=tz==="like"?-3:4;
     if(tasteFound(tz)) notes.push(tz==="like"?`It keeps admiring its ${it}. It loves wearing that.`:`It keeps tugging at the ${it}. It doesn't like wearing it.`); }
+  if(has("Potted plants")) s.stress-=2;
   const findP=(s.m.el1==="Wild"||s.m.el1==="Stone")?0.12:0.06;
   if(!s.sick&&Math.random()<findP){ const coins=Math.round(rnd(30,90)); PLAYER.bits+=coins; notes.push(`It dug up ${coins} bits in the yard.`); try{ s.pose="effort"; spark(s.x,GROUND-2,"dust",6); await rwait(500); spark(s.x,GROUND-10,"sparkle",5); }catch(e){} }
   // the week's events

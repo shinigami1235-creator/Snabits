@@ -38,7 +38,7 @@ async function runContest(K) {
   const rivals = [0, 1, 2, 3].map(() => { const G = GRADE_INFO[T[1]], o = gradedOpponent(T[1], Math.round(G.lv[0] + R() * (G.lv[1] - G.lv[0])), R); return { o, name: o.m.name, f: makeFighter(o.fm, o.skills, o.level), sum: 0 }; });
   const me = { name: nm, f: playerFighter(s), sum: 0, me: true }, all = [me].concat(rivals);
   await scene(async () => {
-    s.weekAct = 'Contest'; say(`${nm} is entered in the ${T[0]} ${K.name}. Three rounds, and the judges score each one out of 10.`);
+    s.weekAct = 'Contest'; say(`${nm} is entered in the ${T[0]} ${K.name}. It has three rounds, and the judges score each one out of 10.`);
     await goPlace(K.place);
     rivals.slice(0, 2).forEach((r, i) => prop({ k: 'foe', x: s.x + 58 + i * 30, y: GROUND, fm: r.o.fm }));
     for (let r = 0; r < 3; r++) {

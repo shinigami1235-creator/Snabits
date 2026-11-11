@@ -71,10 +71,27 @@ function openItemShop(){ const st=weekStock();
   shopList("These are the things to wear this week. I get new ones every week.",st.worn.map(k=>({name:k,price:WORN[k].price,desc:`Worn on the ${WORN[k].slot}. ${itemDesc(k)}`})).concat([st.held,st.held2].filter(Boolean).map(h=>({name:h,price:HELD[h].price,desc:"Held. "+itemDesc(h)}))),openItemShop); }
 function openSkillShop(){ const st=weekStock();
   shopList("These chips are in the case this week. Each one teaches a skill.",st.chips.map(n=>({name:"Skill chip: "+n,price:300,desc:`${SKILLS[n].el} ${SKILLS[n].kind}. ${describe(n)}`})),openSkillShop); }
+/* The Workshop: ranch upgrades from the start, home upgrades once a quarter of the loan is paid, and two levels for
+   each training place at half and three quarters paid. A training place upgrade makes drills there give more. */
+const HOME_UP={"Cozy rug":[1200,"A big round rug in the barn. Petting takes 3 more stress off"],"Toy chest":[1800,"A chest of toys by the shelf. Playing takes 5 more stress off"],"Potted plants":[900,"Plants on the beams and the wardrobe. Stress -2 every week"]};
+const PLACE_UP={pool:["Lane ropes and a slide","Lights and a scoreboard"],trail:["Rope rails","A boulder rack"],cage:["A faster pitching machine","A second cage"],
+  study:["A bigger chalkboard","A puzzle shelf"],pond:["Stepping stones","Stone lanterns"],court:["New nets","Lights and a scoreboard"]};
+const PLACE_COST=[2500,6000];
+const placeLv=p=>(PLAYER.upgrades&&PLAYER.upgrades["place:"+p])||0;
 function openWorkshop(){
-  PLAYER.upgrades=PLAYER.upgrades||{};
-  panel(`<div style="flex-basis:100%;font-size:13px">The Workshop builds each upgrade once. You have ${PLAYER.bits} bits.</div>`+Object.entries(UPGRADES).map(([k,[p,d]],i)=>`<button class="rb" data-u="${k}" ${PLAYER.bits<p||has(k)?"disabled":""}>${UP_NAME[k]||k} · ${p}<small>${has(k)?"Built":d}</small></button>`).join("")+`<button class="rb" id="ws-back">Back</button>`);
-  el("r-panel").querySelectorAll("[data-u]").forEach(b=>b.onclick=()=>{ const k=b.dataset.u, p=UPGRADES[k][0]; if(PLAYER.bits<p) return; PLAYER.bits-=p; PLAYER.upgrades[k]=true; say(`The ${UP_NAME[k]||k} is built.`); drawUI(); saveGame(); openWorkshop(); });
+  PLAYER.upgrades=PLAYER.upgrades||{}; const step=typeof loanStep==="function"?loanStep():4;
+  const btn=(k,p,name,d,built,lock)=>`<button class="rb" data-u="${k}" data-p="${p}" ${PLAYER.bits<p||built||lock?"disabled":""}>${name} · ${p.toLocaleString()}<small>${built?"Built":lock||d}</small></button>`;
+  const places=DRILL_PLACE.map((pl,i)=>{ const lv=placeLv(pl); if(lv>=2) return `<button class="rb" disabled>${PLACE_NAME[pl].replace(/^the /,"").replace(/^./,c=>c.toUpperCase())} ★★<small>Fully upgraded. ${DRILLS[i]} gives 30% more</small></button>`;
+    const need=lv===0?2:3, lock=step<need?`Opens at ${["","","half","three quarters"][need]} of the loan paid`:null;
+    return btn("place:"+pl,PLACE_COST[lv],`${PLACE_NAME[pl].replace(/^the /,"").replace(/^./,c=>c.toUpperCase())} ${"★".repeat(lv)}${"☆".repeat(2-lv)}`,`${PLACE_UP[pl][lv]}. ${DRILLS[i]} gives ${15*(lv+1)}% more and goes great more often`,false,lock); }).join("");
+  panel(`<div class="full lab-head"><b>Workshop</b><button class="small" id="ws-back">Back</button></div><div class="full lab-info">You have ${PLAYER.bits.toLocaleString()} bits.</div>
+    <div class="full sec">The ranch</div>`+Object.entries(UPGRADES).map(([k,[p,d]])=>btn(k,p,UP_NAME[k]||k,d,has(k))).join("")+
+    `<div class="full sec">The barn<small>${step<1?"Opens at a quarter of the loan paid":"Home upgrades"}</small></div>`+Object.entries(HOME_UP).map(([k,[p,d]])=>btn(k,p,k,d,has(k),step<1?"Opens at a quarter of the loan paid":null)).join("")+
+    `<div class="full sec">Training places<small>${step<2?"Opens at half the loan paid":"Two levels each"}</small></div>`+places);
+  el("r-panel").querySelectorAll("[data-u]").forEach(b=>b.onclick=()=>{ const k=b.dataset.u, p=+b.dataset.p; if(PLAYER.bits<p) return; PLAYER.bits-=p;
+    if(k.startsWith("place:")){ PLAYER.upgrades[k]=(PLAYER.upgrades[k]||0)+1; say(`${PLACE_NAME[k.slice(6)].replace(/^./,c=>c.toUpperCase())} is upgraded. Drills there give more from now on.`); }
+    else { PLAYER.upgrades[k]=true; say(`The ${UP_NAME[k]||k} is built.`); }
+    drawUI(); saveGame(); openWorkshop(); });
   el("ws-back").onclick=openTown;
 }
 function openSell(){

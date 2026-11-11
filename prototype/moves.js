@@ -34,6 +34,12 @@ const MOVE_KIND = {
   // neutral, wind and stat skills
   'Quick Strike': 'tackle', 'Gust': 'gust', 'Tornado': 'tornado', 'Body Slam': 'stomp', 'Haymaker': 'punch', 'Crush': 'stomp', 'Rampage': 'tackle',
   'Shield Bash': 'tackle', 'Mind Spike': 'bolt', 'Brainstorm': 'push', 'Soul Flare': 'bolt', 'Dart': 'tackle', 'Barrage': 'volley',
+  // the late skills
+  'Heat Wave': 'push', 'Blaze Rush': 'tackle', 'Comet Punch': 'punch', 'Final Blow': 'punch', 'Ion Beam': 'beam', 'Storm Call': 'lightning',
+  'Thorn Spear': 'spear', 'Gaia Crash': 'boulder', 'Hail Storm': 'tornado', 'Ice Age': 'icefall', 'Bubble Beam': 'volley', 'Tsunami': 'wave',
+  'Venom Storm': 'tornado', 'Miasma': 'mist', 'Dream Lift': 'lift', 'Heartbreak': 'beam', 'Sand Storm': 'tornado', 'Titan Fall': 'meteor',
+  'Sun Pillar': 'pillar', 'Judgement': 'volley', 'Steel Beam': 'beam', 'Drill Spear': 'spear', 'Dark Pulse': 'push', 'Eclipse': 'pillar',
+  'Void Pulse': 'push', 'Rift Spear': 'spear', 'Null Storm': 'tornado', 'Event Horizon': 'beam',
   // signature skills
   'Crunch': 'bite', 'Ink Jet': 'bolt', 'Static Screen': 'push', 'High Kick': 'stomp', 'Fly': 'fly',
 };
@@ -389,6 +395,6 @@ function chibiSupport(e) {
   CB.anim = { who: e.who, kind, t0: CB.te, el: e.el, name: e.name, src: 'eyes', pw: 1, col: e.el ? hexRgb(typeof ELC === 'function' ? ELC(e.el) : '#a070ff') : [255, 214, 90] };
   if (kind === 'takeoff') st.sky = true;
   if (kind === 'mistcast') CB.anim.kind = 'mist';
-  sfx(kind === 'buff' || kind === 'heal' || kind === 'gather' ? 'charge' : 'whoosh');
+  sfx(kind === 'buff' || kind === 'heal' || kind === 'gather' ? 'charge' : 'whoosh'); if (typeof elSfx === 'function') elSfx(e.el, 'cast');
   return Math.round(A.D * 0.85);
 }

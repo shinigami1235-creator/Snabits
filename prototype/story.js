@@ -41,7 +41,7 @@ const BEATS = {
     const s = RS, nm = s.m.name, mon = rookMon('C');
     await talk('tala', 'A letter came from the Grand Ranch. The last owner borrowed 30,000 bits from them to build this place, and the loan came with the ranch.');
     const w = await walkIn('rival', { mon }); s.dir = 1;
-    await talk('rival', `So you're the new rancher. I'm Rook, and my family runs the Grand Ranch. This is ${mon.m.name}.`);
+    await talk('rival', `So you're the new rancher. I'm Rook, my family runs the Grand Ranch, and ${mon.m.name} is my Snabit.`);
     w.p.face = 'worried'; await talk('rival', 'My family wants this land back. Pay off the 30,000 bits and it stays yours.');
     w.p.face = 'happy'; await talk('rival', `Until then, ${mon.m.name} and I will be at the official cups. You'll lose this ranch one cup at a time.`);
     await walkOut(w); s.pose = 'happy';
@@ -50,7 +50,7 @@ const BEATS = {
   },
   async loan25() { await talk('tala', 'A quarter of the loan is paid. The Workshop can build home upgrades for the barn now.'); },
   async loan50() { await talk('tala', 'Half the loan is paid. The Workshop can upgrade the training places now, so drills there give more.'); },
-  async loan75() { await talk('tala', "Three quarters paid. The Workshop's biggest training place upgrades are open now."); },
+  async loan75() { await talk('tala', 'Three quarters of the loan is paid now, so the Workshop can build the second level of each training place.'); },
   async loan100() {
     const s = RS; const w = await walkIn('rival', { mon: rookMon(bestGrade()) });
     w.p.face = 'worried'; await talk('rival', 'My father says the loan is paid in full. Here is the deed to the ranch.');
@@ -73,18 +73,18 @@ const BEATS = {
   },
   async gradeA() {
     const w = await walkIn('guide');
-    await talk('guide', "Grade A. I've never taken anyone to the Rift, but I'll take you. Pick The Rift from the skill trips.");
+    await talk('guide', "So you made grade A. I've never taken anyone to the Rift, but I'll take you. Pick The Rift from the skill trips.");
     w.p.face = 'worried'; await talk('guide', 'Bring plenty of food, since nothing grows there.');
     await walkOut(w);
   },
   async gradeS() {
     const w = await walkIn('rival', { mon: rookMon('S') });
-    w.p.face = 'talk'; await talk('rival', 'Grade S. Win the Official S Cup and they send you an invite to the Major 4. I already have mine.');
+    w.p.face = 'talk'; await talk('rival', 'So you made grade S. Win the Official S Cup and they send you an invite to the Major 4. I already have mine.');
     await walkOut(w);
   },
   async master() {
     const w = await walkIn('rival', { mon: rookMon('S') });
-    w.p.face = 'worried'; await talk('rival', 'All four Majors. I won them too.');
+    w.p.face = 'worried'; await talk('rival', 'You won all four Majors, and so did I.');
     w.p.face = 'talk'; await talk('rival', 'The Legend Cup is in the first month of Summer. Only one of us leaves it as champion.');
     await walkOut(w);
   },

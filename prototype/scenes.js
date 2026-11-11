@@ -396,13 +396,23 @@ function barnRoom(c, s, t, k, night) {
   if (!cups) { c.fillStyle = 'rgba(80,50,30,.35)'; c.font = '600 6px system-ui'; c.textAlign = 'center'; c.fillText('Cups go here', 95, F - 96); }
   // floor and rug
   c.fillStyle = '#a8774a'; c.fillRect(-10, F, RW + 20, 60); c.fillStyle = 'rgba(0,0,0,.08)'; for (let x = 0; x < RW; x += 18) c.fillRect(x, F, 1, 60); c.fillStyle = 'rgba(0,0,0,.18)'; c.fillRect(-10, F, RW + 20, 1.5);
-  c.fillStyle = '#5b8fd8'; c.beginPath(); c.ellipse(118, F + 6, 52, 7, 0, 0, 7); c.fill(); c.strokeStyle = '#f2ead6'; c.lineWidth = 1.2; c.beginPath(); c.ellipse(118, F + 6, 44, 5, 0, 0, 7); c.stroke();
+  const up = k => typeof has === 'function' && has(k);
+  if (up('Cozy rug')) { for (const [rx, ry, col] of [[70, 11, '#d9604f'], [62, 9.5, '#f2b04a'], [52, 8, '#5b8fd8'], [40, 6.2, '#7fc4a0'], [26, 4.2, '#f2ead6']]) { c.fillStyle = col; c.beginPath(); c.ellipse(120, F + 8, rx, ry, 0, 0, 7); c.fill(); } }
+  else { c.fillStyle = '#5b8fd8'; c.beginPath(); c.ellipse(118, F + 6, 52, 7, 0, 0, 7); c.fill(); c.strokeStyle = '#f2ead6'; c.lineWidth = 1.2; c.beginPath(); c.ellipse(118, F + 6, 44, 5, 0, 0, 7); c.stroke(); }
   // toy shelf with balls and a plush
   const sx = 70;
   SC.depth(c, () => { c.beginPath(); c.roundRect(sx - 21, F - 46, 42, 46, 2.5); }, '#8a5a36', 1.5, 0.3);
   c.fillStyle = '#6a4428'; c.fillRect(sx - 18, F - 24, 36, 2.5);
   for (const [dx, dy, col, r] of [[-9, -29, '#ffd23f', 4.6], [3, -28, '#4aa3ff', 3.8], [-8, -5, '#e8453c', 4.6]]) SC.depth(c, () => { c.beginPath(); c.arc(sx + dx, F + dy, r, 0, 7); }, col, 0.8, 0.3);
   SC.depth(c, () => { c.beginPath(); c.ellipse(sx + 8, F - 6, 5.5, 5.5, 0, 0, 7); c.ellipse(sx + 4, F - 12, 2, 2.4, 0, 0, 7); c.ellipse(sx + 12, F - 12, 2, 2.4, 0, 0, 7); }, '#c8a2e8', 0.8, 0.3);
+  // toy chest by the shelf, lid open with toys peeking out
+  if (up('Toy chest')) { const tx = 89; SC.depth(c, () => { c.beginPath(); c.roundRect(tx - 10, F - 14, 20, 14, 2); }, '#c0793f', 1.2, 0.3);
+    c.fillStyle = '#e8c35a'; c.fillRect(tx - 10, F - 9, 20, 2); c.save(); c.translate(tx - 10, F - 14); c.rotate(-0.5); c.fillStyle = '#a8612f'; c.fillRect(0, -5, 20, 5); c.restore();
+    for (const [dx, col] of [[-5, '#4aa3ff'], [1, '#ff7aa2'], [6, '#7dd36a']]) { c.fillStyle = col; c.beginPath(); c.arc(tx + dx, F - 15, 3, 0, 7); c.fill(); } }
+  // potted plants hanging from the beam and on the wardrobe
+  if (up('Potted plants')) { for (const px of [52, 104]) { c.strokeStyle = '#6a4428'; c.lineWidth = 0.8; c.beginPath(); c.moveTo(px - 4, F - 121); c.lineTo(px, F - 106); c.lineTo(px + 4, F - 121); c.stroke();
+      SC.depth(c, () => { c.beginPath(); c.roundRect(px - 5, F - 108, 10, 7, [1, 1, 3, 3]); }, '#d9714a', 0.8, 0.3);
+      c.fillStyle = '#4f9a45'; for (let k = 0; k < 5; k++) { c.beginPath(); c.ellipse(px - 6 + k * 3, F - 104 + (k % 2) * 6 + k, 1.8, 5, (k - 2) * 0.4, 0, 7); c.fill(); } } }
   // stove corner, once the Kitchen is built
   if (typeof has === 'function' && has('Kitchen')) { const kx = 110;
     SC.depth(c, () => { c.beginPath(); c.roundRect(kx - 11, F - 28, 22, 28, 2); }, '#d9dde4', 1.5, 0.3);
@@ -413,6 +423,7 @@ function barnRoom(c, s, t, k, night) {
   c.strokeStyle = 'rgba(0,0,0,.2)'; c.lineWidth = 0.8; c.beginPath(); c.moveTo(ax, F - 54); c.lineTo(ax, F - 2); c.stroke();
   c.fillStyle = '#e8c070'; c.beginPath(); c.arc(ax - 2.5, F - 28, 1.2, 0, 7); c.arc(ax + 2.5, F - 28, 1.2, 0, 7); c.fill();
   c.fillStyle = '#e8453c'; c.beginPath(); c.ellipse(ax, F - 57, 7, 4, 0, Math.PI, 0); c.fill(); c.fillRect(ax, F - 58, 9, 1.6);
+  if (up('Potted plants')) { SC.depth(c, () => { c.beginPath(); c.roundRect(ax + 5, F - 64, 8, 8, [1, 1, 2, 2]); }, '#d9714a', 0.8, 0.3); c.fillStyle = '#5fae4a'; for (let k = 0; k < 4; k++) { c.beginPath(); c.ellipse(ax + 6 + k * 2, F - 67, 1.6, 4, (k - 1.5) * 0.4, 0, 7); c.fill(); } }
   // bed: a hay nest with a quilt, bigger once the barn is upgraded
   const big = typeof has === 'function' && has('Better hut'), bx = 202, bw = big ? 40 : 34;
   SC.depth(c, () => { c.beginPath(); c.ellipse(bx, F - 4, bw, 9, 0, 0, 7); }, '#e2bf62', 2, 0.25);
@@ -442,7 +453,19 @@ function awayScene(c, s, t, k) {
   if (area && typeof areaArt === 'function' && areaArt(c, area[1], area[2], t)) { if (s.night || s.dusk) { c.setTransform(k, 0, 0, k, 0, 0); regionNight(c, s, t, vw, vh, G); world(); } }
   else if (reg) { regionArt(c, reg, t, off); if ((s.night || s.dusk) && typeof regionNight === 'function') { c.setTransform(k, 0, 0, k, 0, 0); regionNight(c, s, t, vw, vh, G); world(); } }
   else if (typeof npcPlaceArt === 'function' && npcPlaceArt(c, s, bg, t)) { /* the shop or the lab */ }
-  else drillArt(c, s, bg, t, off);
+  else { drillArt(c, s, bg, t, off); placeDeco(c, bg, t); }
+}
+/* a training place's upgrades: bunting at level 1, then lamps and a scoreboard at level 2 */
+function placeDeco(c, bg, t) {
+  const lv = typeof placeLv === 'function' ? placeLv(bg) : 0; if (!lv) return;
+  const y = GROUND - 128; c.strokeStyle = 'rgba(80,60,40,.6)'; c.lineWidth = 0.8; c.beginPath(); c.moveTo(-10, y); c.quadraticCurveTo(RW / 2, y + 14, RW + 10, y); c.stroke();
+  for (let i = 0; i < 16; i++) { const x = -4 + i * 16, yy = y + Math.sin((i / 15) * Math.PI) * 7 + 0.5; c.fillStyle = ['#e2483f', '#ffd23f', '#3b8fd0', '#5fae4a'][i % 4];
+    c.beginPath(); c.moveTo(x - 4, yy); c.lineTo(x + 4, yy); c.lineTo(x + Math.sin(t / 400 + i) * 0.8, yy + 8); c.closePath(); c.fill(); }
+  if (lv < 2) return;
+  for (const x of [10, RW - 10]) { c.fillStyle = '#3e444b'; c.fillRect(x - 1.5, GROUND - 120, 3, 108); SC.depth(c, () => { c.beginPath(); c.roundRect(x - 7, GROUND - 126, 14, 8, 2); }, '#5a6270', 1, 0.3);
+    const g = c.createRadialGradient(x, GROUND - 118, 1, x, GROUND - 110, 40); g.addColorStop(0, 'rgba(255,240,180,.45)'); g.addColorStop(1, 'rgba(255,240,180,0)'); c.fillStyle = g; c.fillRect(x - 40, GROUND - 150, 80, 80); }
+  SC.depth(c, () => { c.beginPath(); c.roundRect(RW / 2 - 22, GROUND - 150, 44, 18, 3); }, '#2b3242', 1.5, 0.3);
+  c.fillStyle = '#ffd23f'; c.font = '700 9px system-ui'; c.textAlign = 'center'; c.fillText('★ ★', RW / 2, GROUND - 138);
 }
 function regionArt(c, A, t, off) {
   const x0 = -20, x1 = RW + 20, D = A.deco;
