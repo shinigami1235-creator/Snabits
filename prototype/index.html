@@ -3,75 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0e0e12">
-<title>Snabits scan to monster</title>
-<style>
-*{box-sizing:border-box;margin:0}
-html,body{height:100%;background:#0e0e12;color:#f2f0ea;font:15px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden}
-#stage{position:fixed;inset:0;touch-action:none;display:flex;align-items:center;justify-content:center;background:#000}
-video,#still{width:100%;height:100%;object-fit:cover}
-#still{display:none;position:absolute;inset:0}
-#ring{position:absolute;border:3px solid #fff;border-radius:50%;pointer-events:none;box-shadow:0 0 0 2000px rgba(0,0,0,.28)}
-#ring::after{content:"";position:absolute;inset:-9px;border:2px dashed rgba(255,255,255,.45);border-radius:50%}
-#top{position:fixed;left:0;right:0;top:0;padding:calc(env(safe-area-inset-top) + 12px) 14px 10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.chip{padding:6px 12px;border-radius:999px;font-weight:600;font-size:15px;background:#222;color:#fff;border:2px solid rgba(255,255,255,.25)}
-#kind{font-size:13px;opacity:.85;margin-left:2px}
-#bars{position:fixed;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom) + 108px);display:grid;gap:4px}
-.bar{display:grid;grid-template-columns:62px 1fr 38px;align-items:center;gap:8px;font-size:12px;text-shadow:0 1px 2px #000}
-.bar i{display:block;height:8px;border-radius:4px}
-.bar span:last-child{text-align:right;opacity:.85}
-#bottom{position:fixed;left:0;right:0;bottom:0;padding:10px 0 calc(env(safe-area-inset-bottom) + 18px);display:flex;justify-content:center;align-items:center;gap:28px}
-#shutter{width:74px;height:74px;border-radius:50%;border:5px solid #fff;background:rgba(255,255,255,.18);cursor:pointer}
-#shutter:active{transform:scale(.94)}
-.big{background:#fff;color:#111;border:0;border-radius:999px;padding:16px 34px;font-size:17px;font-weight:700;cursor:pointer}
-.small{background:none;border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:10px;padding:8px 12px;font-size:13px;cursor:pointer}
-#top,#bars{pointer-events:none}
-#card{max-height:62vh;overflow:auto}
-#card{position:fixed;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom) + 108px);background:rgba(14,14,18,.94);border:1px solid #333;border-radius:16px;padding:16px;display:none}
-#card h2{font-size:22px;margin-bottom:4px}
-#card p{font-size:14px;opacity:.85;margin-top:6px}
-#card table{width:100%;margin-top:10px;font-size:13px;border-collapse:collapse}
-#card td{padding:3px 0;border-top:1px solid #2a2a30}
-#card td:last-child{text-align:right;opacity:.85}
-#msg{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:30px;text-align:center;background:#0e0e12}
-#msg div{max-width:360px}
-#msg h1{font-size:20px;margin-bottom:10px}
-#msg p{opacity:.8;margin-bottom:16px}
-#pick{display:none}
-#battle{position:fixed;inset:0;background:#14141a;display:none;flex-direction:column;padding:calc(env(safe-area-inset-top) + 10px) 12px calc(env(safe-area-inset-bottom) + 12px);gap:8px;z-index:10;overflow:auto}
-.bpanel{background:#1e1e26;border-radius:12px;padding:8px 12px}
-.bpanel .nm{font-weight:700;font-size:15px}.bpanel small{opacity:.7;font-weight:400}
-.bchip{display:inline-block;font-size:11px;font-weight:700;padding:2px 7px;border-radius:999px;margin-left:4px;color:#fff;vertical-align:middle}
-.hpbar{height:10px;background:#333;border-radius:5px;overflow:hidden;margin:6px 0 3px}.hpbar i{display:block;height:100%;transition:width .35s}
-.brow2{display:flex;justify-content:space-between;align-items:center;font-size:12px}
-.en{display:flex;gap:3px}.en i{width:9px;height:9px;border-radius:2px;background:#333}.en i.on{background:#5ab0ff}
-#arena{position:relative;flex:1;min-height:210px}
-.bsprite{position:absolute;width:132px;height:132px;image-rendering:pixelated;transition:opacity .6s,transform .6s}
-#b-foe-sprite{right:8%;top:4px}#b-me-sprite{left:8%;bottom:4px}
-#b-field{position:absolute;left:0;right:0;top:45%;text-align:center;font-size:12px;opacity:.75}
-.bhit{animation:bh .35s}@keyframes bh{0%,100%{transform:translateX(0);filter:none}25%{transform:translateX(-7px);filter:brightness(2.2)}60%{transform:translateX(6px)}}
-.bguard{animation:bg .4s}@keyframes bg{50%{transform:scale(.92)}}
-.bcast{animation:bc .4s}@keyframes bc{50%{transform:translateY(-10px)}}
-.bko{opacity:0;transform:scale(1.25)}
-.bpop{position:absolute;font-weight:800;font-size:20px;text-shadow:0 2px 3px #000;transition:transform .8s,opacity .8s;transform:translate(-50%,0);pointer-events:none}
-#b-log{font-size:13px;min-height:72px;opacity:.9}#b-log div:last-child{font-weight:600}
-#b-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}#b-btns.busy{opacity:.5;pointer-events:none}
-
-#loadout,#b-fight{flex-direction:column;gap:8px;flex:1;min-height:0}
-#loadout{display:none;overflow:auto}#b-fight{display:none}
-#lo-list{display:flex;flex-direction:column;gap:8px;overflow:auto}
-.lo{background:#1e1e26;color:#fff;border:2px solid #333;border-radius:12px;padding:10px 12px;text-align:left;cursor:pointer;line-height:1.5}
-.lo.on{background:#262634}.lo:disabled{opacity:.4}.lo small{opacity:.75}
-.lvl{background:#22222b;color:#fff;border:1px solid #444;border-radius:999px;padding:6px 12px;cursor:pointer}.lvl.on{background:#fff;color:#111}
-.abl{font-size:11px;opacity:.65;font-weight:400}
-.bpop.ab{font-size:14px;background:#000a;padding:2px 8px;border-radius:8px;white-space:nowrap}
-#lo-go:disabled{opacity:.4}
-.bbtn{background:#22222b;color:#fff;border:2px solid #888;border-radius:12px;padding:10px;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:2px}
-.bbtn b{font-size:15px}.bbtn small{opacity:.7;font-size:12px}.bbtn:disabled{opacity:.35}
-#b-result{display:none;position:absolute;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom) + 12px);background:#1e1e26;border:1px solid #333;border-radius:16px;padding:16px}
-#b-result p{opacity:.85;margin:6px 0 12px}.brow{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-
-</style>
+<meta name="theme-color" content="#11121a">
+<title>Snabits</title>
+<link rel="stylesheet" href="ui.css">
 </head>
 <body>
 <div id="stage"><video id="video" playsinline muted autoplay></video><canvas id="still"></canvas><div id="ring"></div></div>
@@ -89,12 +23,12 @@ video,#still{width:100%;height:100%;object-fit:cover}
   <input type="file" id="pick" accept="image/*">
   <input type="file" id="take" accept="image/*" capture="environment" style="display:none">
 </div>
-<div id="msg"><div><h1>Snabits</h1><p id="msgtext">Take a photo, drag the circle onto what you want scanned, then tap Scan.</p><label id="takebtn" for="take" style="display:inline-block;background:#fff;color:#111;font-weight:600;border-radius:999px;padding:14px 26px;cursor:pointer">Take a photo</label><button class="small" id="msgranch" style="display:none;margin-left:10px;padding:14px 20px" onclick="openRanch()">Ranch</button></div></div>
+<div id="msg"><div><div class="brand"><canvas id="msgmon" class="mon-tile"></canvas><h1>Snabits</h1><p id="msgtext">Point your camera at anything colourful and a monster hatches out of its colours.</p></div><div class="brow"><label id="takebtn" for="take">Take a photo</label><button id="msgranch" style="display:none" onclick="openRanch()">Ranch</button></div></div></div>
 <div id="battle">
-<div id="loadout"><div id="lo-head"></div><div id="lo-list"></div><div class="brow"><button class="big" id="lo-go" onclick="startFight()">Start fight</button><button class="small" onclick="closeBattle()">Back to scan</button></div></div>
+<div id="loadout"><div id="lo-head"></div><div id="lo-list"></div><div class="lo-foot"><button class="btn2" onclick="closeBattle()">Back</button><button class="big" id="lo-go" onclick="startFight()">Start fight</button></div></div>
 <div id="b-fight">
   <div class="bpanel"><div class="nm" id="b-foe-name"></div><div class="hpbar"><i id="b-foe-hp"></i></div><div class="brow2"><span id="b-foe-st"></span><span><span id="b-foe-hpt"></span></span></div><div class="en" id="b-foe-en" style="margin-top:4px"></div></div>
-  <div id="arena"><canvas id="b-foe-sprite" class="bsprite"></canvas><div id="b-field"></div><canvas id="b-me-sprite" class="bsprite"></canvas></div>
+  <div id="arena"><canvas id="b-bg" width="195" height="70"></canvas><i class="plat foe"></i><i class="plat me"></i><canvas id="b-foe-sprite" class="bsprite"></canvas><div id="b-field"></div><canvas id="b-me-sprite" class="bsprite"></canvas></div>
   <div class="bpanel"><div class="nm" id="b-me-name"></div><div class="hpbar"><i id="b-me-hp"></i></div><div class="brow2"><span id="b-me-st"></span><span id="b-me-hpt"></span></div><div class="en" id="b-me-en" style="margin-top:4px"></div></div>
   <div id="b-log"></div>
   <div id="b-btns"></div>
@@ -102,6 +36,7 @@ video,#still{width:100%;height:100%;object-fit:cover}
 </div>
 </div>
 <canvas id="work" width="160" height="160" style="display:none"></canvas>
+<script src="version.js"></script>
 <script src="skills.js"></script>
 <script src="monster.js"></script>
 <script src="battle.js"></script>
@@ -112,6 +47,7 @@ video,#still{width:100%;height:100%;object-fit:cover}
 <script src="missions.js"></script>
 <script src="trips.js"></script>
 <script src="tourney.js"></script>
+<script src="venue.js"></script>
 <script src="lab.js"></script>
 <script src="town.js"></script>
 <script src="ghost.js"></script>
@@ -203,7 +139,7 @@ function placeRing(){
 ring.style.position="absolute"; addEventListener("resize",placeRing); placeRing();
 
 function setMode(m){
-  mode=m;
+  mode=m; document.body.dataset.mode=m;
   const photo=m==="aim"||m==="photoResult";
   shutter.style.display=photo?"none":"";
   scanBtn.style.display=m==="aim"?"":"none";
@@ -213,7 +149,7 @@ function setMode(m){
   bars.style.display=(m==="live"||m==="aim")?"grid":"none";
   still.style.display=(m==="liveResult"||photo)?"block":"none";
   msg.style.display=m==="start"?"flex":"none";
-  document.getElementById("top").style.display=m==="start"?"none":"flex";
+  document.getElementById("top").style.display=(m==="start"||m==="liveResult"||m==="photoResult")?"none":"flex";
 }
 
 function visibleCrop(w,h){
@@ -226,7 +162,7 @@ function grab(src,w,h){
   const c=document.createElement("canvas"); c.width=Math.round(sw); c.height=Math.round(sh);
   c.getContext("2d").drawImage(src,sx,sy,sw,sh,0,0,c.width,c.height); return c;
 }
-function stars(t){const n=t>=12?3:t>=8?2:t>=4?1:0;return "★".repeat(n)+"<span style=\"opacity:.25\">"+"★".repeat(3-n)+"</span>";}
+function stars(t){const n=t>=12?3:t>=8?2:t>=4?1:0;return "★".repeat(n)+"<span class=\"st0\">"+"★".repeat(3-n)+"</span>";}
 function render(full){
   try{
     const res=scan(still,still.width,still.height); show(res);
@@ -235,15 +171,19 @@ function render(full){
     const m=hatch(res);
     const name=m.name, kind=(m.el2?`${m.el1} / ${m.el2}`:m.el1)+" "+m.family;
     const why=res.mono?`Mono, since ${res.main.w>=MONO_MAIN?`the main colour reached ${Math.round(res.main.w)}%`:res.ranked[1]?`the main colour reached ${Math.round(res.main.w)}% and the second only ${Math.round(res.ranked[1].w)}%`:"one colour fills the frame"}.`:res.second.w>=DUAL_SECOND?`Dual, since the second colour reached ${Math.round(res.second.w)}%.`:`Dual, since no colour leads the photo and the main one only reached ${Math.round(res.main.w)}%.`;
-    card.innerHTML=`<div style="display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap">
-      <div style="text-align:center"><canvas id="bit" style="width:120px;height:120px;image-rendering:pixelated;background:#24242c;border-radius:10px"></canvas><div style="font-size:11px;opacity:.7">Bit</div></div>
-      <div style="text-align:center"><canvas id="byte" style="width:120px;height:120px;image-rendering:pixelated;background:#24242c;border-radius:10px"></canvas><div style="font-size:11px;opacity:.7">Byte, after evolving</div></div>
-      <div style="flex:1;min-width:180px"><h2 style="font-size:22px">${name}</h2><div style="font-size:13px;opacity:.75">${kind}</div>
-        <p style="margin-top:2px">${m.hidden?"<b style=\"color:#ffd23f\">Hidden ability!</b> ":""}${m.ability[0]}: ${m.ability[1]}.</p>
-        <p>${m.pers[0]} personality, ${STATS[m.pers[1]]} up and ${STATS[m.pers[2]]} down. Lifespan ${m.lifespan} months.</p>
-        <p>Starts with ${m.skills.join(" and ")}. Skill pool of ${m.pool.length}.</p></div></div>
-      <table>${STATS.map((st,i)=>`<tr><td style="width:62px">${st}</td><td><i style="display:inline-block;height:8px;border-radius:4px;width:${Math.min(100,m.stats[i])}%;background:${COL[res.main.g]==="#1b1b1f"?"#8888aa":COL[res.main.g]}"></i></td><td style="width:40px">${m.stats[i]}</td><td style="width:56px;color:#ffd23f">${stars(m.talent[i])}</td></tr>`).join("")}</table>
-      <p style="font-size:12px;opacity:.7">${why} The main colour sits ${m.band==="middle"?"in the middle":"toward the "+m.band} and is ${m.shape}, which makes a ${m.family}. Drag the circle to try another spot.</p><div class="brow" style="margin-top:10px"><button class="big" id="raisebtn">Raise it</button><button class="small" id="fightbtn">Fight</button><span style="font-size:12px;opacity:.7">Raise it on the ranch, or pick 2 skills and fight</span></div>`;
+    const tint=COL[res.main.g]==="#1b1b1f"?"#8888aa":COL[res.main.g];
+    card.innerHTML=`<div class="sheet-head">
+        <canvas id="bit" class="mon-tile"></canvas>
+        <div class="sheet-id"><h2>${name}</h2><div class="sheet-kind"><span class="elc" style="${chipStyle(COL[res.main.g])}">${m.el1}</span>${m.el2?`<span class="elc" style="${chipStyle(COL[res.second.g])}">${m.el2}</span>`:""}<span class="fam">${m.family}</span></div>
+          <div class="sheet-meta">${m.pers[0]} · ${m.lifespan} months</div></div></div>
+      <div class="sheet-actions"><button class="big" id="raisebtn">Raise it</button><button class="btn2" id="fightbtn">Quick fight</button></div>
+      <div class="sheet-body">
+        <p class="abil">${m.hidden?"<b class=\"hid\">Hidden ability</b> ":""}<b>${m.ability[0]}</b> ${m.ability[1]}.</p>
+        <div class="statgrid">${STATS.map((st,i)=>{const r=rankOf(FAMILY[m.family].base[i]);return `<div class="sg"><span>${st} <small class="gr r${r}">${r}</small></span><b>${m.stats[i]}</b><i><u style="width:${Math.min(100,m.stats[i]/2)}%"></u></i><em></em></div>`;}).join("")}</div>
+        <p>${STATS[m.pers[1]]} grows faster, ${STATS[m.pers[2]]} slower. Starts with ${m.skills.join(" and ")}, ${m.pool.length} skills to learn.</p>
+        <div class="evo-peek"><canvas id="byte" class="mon-tile sm"></canvas><p>Its Byte form, once it evolves.</p></div>
+        <p class="why">${why} The main colour sits ${m.band==="middle"?"in the middle":"toward the "+m.band} and is ${m.shape}, which makes a ${m.family}. Drag the circle to try another spot.</p>
+      </div>`;
     paint(document.getElementById("bit"),m.grid,m.pal,1);
     lastMon=m; const fb=document.getElementById("fightbtn"); if(fb) fb.onclick=()=>openBattle(lastMon); const rb=document.getElementById("raisebtn"); if(rb) rb.onclick=()=>openRanch(lastMon);
     paint(document.getElementById("byte"),scale2x(m.grid),m.pal,1);
@@ -304,6 +244,7 @@ function setWildUI(on){
   if(typeof musWant==="function") musWant();
 }
 function wildRescan(){ if(stream){ aim={x:.5,y:.5}; placeRing(); setMode("live"); } else setMode(still.width?"aim":"start"); }
+try{ const mm=randomOpponent(Math.random); paint(document.getElementById("msgmon"),mm.grid,mm.pal,1); }catch(e){}
 startCam();
 </script>
 </body>

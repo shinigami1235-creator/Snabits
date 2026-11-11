@@ -42,10 +42,10 @@ function buy(k,price,then){
 }
 function openTown(){
   if(RS) RS.inTown=true;
-  panel(`<div style="flex-basis:100%;font-size:13px">${PLAYER.bits} bits. The Item shop and Skill shop restock every week.</div>
-    <button class="rb" id="tw-m">Market<small>Snacks, medicine, toys</small></button><button class="rb" id="tw-i">Item shop<small>Worn and held items</small></button>
+  panel(`<div class="full lab-head"><b>Town</b><button class="small" id="tw-back">Back</button></div><div class="full lab-info">The Item shop and Skill shop restock every week.</div>
+    <button class="rb" id="tw-m">Market<small>Snacks, medicine, toys</small></button><button class="rb" id="tw-i">Item shop<small>Hats, charms, gear</small></button>
     <button class="rb" id="tw-s">Skill shop<small>Tier 1 chips</small></button><button class="rb" id="tw-w">Workshop<small>Ranch upgrades</small></button>
-    <button class="rb" id="tw-sell">Sell<small>Half price back</small></button><button class="rb" id="tw-back">Back</button>`);
+    <button class="rb" id="tw-sell">Sell<small>Half price back</small></button>`);
   el("tw-m").onclick=openMarket; el("tw-i").onclick=openItemShop; el("tw-s").onclick=openSkillShop; el("tw-w").onclick=openWorkshop; el("tw-sell").onclick=openSell; el("tw-back").onclick=()=>menu("Out");
 }
 function shopList(title,rows,back){

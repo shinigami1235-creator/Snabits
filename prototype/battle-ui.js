@@ -11,16 +11,16 @@ function openBattle(mon){
   const level=LO&&LO.mon===mon?LO.level:20;
   const open=mon.pool.filter(n=>SKILLS[n].lv<=level);
   LO={mon,level,picked:(LO&&LO.mon===mon?LO.picked:mon.skills).filter(n=>open.includes(n)).slice(0,SLOTS)};
-  $("battle").style.display="flex"; $("b-fight").style.display="none"; $("loadout").style.display="flex";
+  $("battle").style.display="flex"; $("b-fight").style.display="none"; $("loadout").style.display="flex"; $("arena").className="";
   drawLoadout();
 }
 function drawLoadout(){
   const {mon,level,picked}=LO;
-  $("lo-head").innerHTML=`<h2>${mon.name}</h2><div style="font-size:13px;opacity:.75">${mon.el2?mon.el1+" / "+mon.el2:mon.el1} ${mon.family}. Ability: ${mon.ability[0]}.</div>
-    <div class="brow" style="margin-top:8px">${[10,20,30].map(l=>`<button class="lvl ${l===level?"on":""}" data-l="${l}">Lv ${l}</button>`).join("")}<span style="font-size:12px;opacity:.7">Pick ${SLOTS} skills. Bit forms have ${SLOTS} slots.</span></div>`;
+  $("lo-head").innerHTML=`<h2>${mon.name}</h2><div class="nmtags">${chips(mon)}<span class="fam">${mon.family} · ${mon.ability[0]}</span></div>
+    <div class="lo-bar"><div class="brow">${[10,20,30].map(l=>`<button class="lvl ${l===level?"on":""}" data-l="${l}">Lv ${l}</button>`).join("")}</div><span class="lo-count">Skills ${picked.length} / ${SLOTS}</span></div>`;
   $("lo-list").innerHTML=mon.pool.map(n=>{const s=SKILLS[n], locked=s.lv>level, on=picked.includes(n);
-    return `<button class="lo ${on?"on":""}" data-n="${n}" ${locked?"disabled":""} style="border-color:${on?ELC(s.el):"#333"}">
-      <b>${n}</b> <span class="bchip" style="background:${ELC(s.el)}">${s.el||"Neutral"}</span> <small>${s.kind}, ${s.cost} energy${locked?`, learns at Lv ${s.lv}`:""}</small><br><small>${(d=>d[0].toUpperCase()+d.slice(1))(describe(n))}</small></button>`;}).join("");
+    return `<button class="lo ${on?"on":""}" data-n="${n}" ${locked?"disabled":""}>
+      <span class="lo-top"><b>${n}</b><span class="elc" style="${chipStyle(ELC(s.el))}">${s.el||"Neutral"}</span><small>${s.kind} · ${s.cost} energy${locked?` · learns at Lv ${s.lv}`:""}</small></span><small>${(d=>d[0].toUpperCase()+d.slice(1))(describe(n).split(", ").join(" · "))}</small></button>`;}).join("");
   $("lo-go").disabled=picked.length!==SLOTS;
   $("lo-head").querySelectorAll(".lvl").forEach(b=>b.onclick=()=>{LO.level=+b.dataset.l; LO.picked=LO.picked.filter(n=>SKILLS[n].lv<=LO.level); drawLoadout();});
   $("lo-list").querySelectorAll(".lo").forEach(b=>b.onclick=()=>{const n=b.dataset.n, i=LO.picked.indexOf(n);
@@ -34,20 +34,20 @@ function startFight(opp){
   paint($("b-me-sprite"),mon.grid,mon.pal,1); paint($("b-foe-sprite"),opp.grid,opp.pal,1);
   ["me","foe"].forEach(k=>{$("b-"+k+"-sprite").className="bsprite";});
   $("b-log").innerHTML=""; $("b-result").style.display="none";
-  $("loadout").style.display="none"; $("b-fight").style.display="flex";
+  $("loadout").style.display="none"; $("b-fight").style.display="flex"; $("b-fight").classList.remove("done");
   logLine(`A wild ${opp.name} appears. Its skills are ${fight.p[1].skills.map(s=>s.name).join(" and ")}.`);
   drawPanels(); drawButtons();
 }
 function closeBattle(){ $("battle").style.display="none"; B=null; }
 
-function chips(f){ return `<span class="bchip" style="background:${ELC(f.el1)}">${f.el1}</span>`+(f.el2?`<span class="bchip" style="background:${ELC(f.el2)}">${f.el2}</span>`:""); }
+function chips(f){ return `<span class="elc" style="${chipStyle(ELC(f.el1))}">${f.el1}</span>`+(f.el2?`<span class="elc" style="${chipStyle(ELC(f.el2))}">${f.el2}</span>`:""); }
 function drawPanels(){
   B.fight.p.forEach((f,i)=>{
     const k=i===0?"me":"foe", hp=B.shown[i], pct=Math.max(0,100*hp/f.maxhp);
-    $("b-"+k+"-name").innerHTML=`${f.name} <small>Lv ${f.level}</small> ${chips(f)}<div class="abl">${f.ability}</div>`;
+    $("b-"+k+"-name").innerHTML=`<div class="nmrow"><span>${f.name} <small>Lv ${f.level}</small></span><span class="hpn">${Math.max(0,Math.round(hp))}/${f.maxhp}</span></div><div class="nmtags">${chips(f)}<span class="abl">${f.ability}</span></div>`;
     $("b-"+k+"-hp").style.width=pct+"%";
     $("b-"+k+"-hp").style.background=pct>50?"#4dd36a":pct>20?"#f2c12b":"#e2483f";
-    $("b-"+k+"-hpt").textContent=`${Math.max(0,Math.round(hp))} / ${f.maxhp}`;
+    $("b-"+k+"-hpt").textContent="";
     $("b-"+k+"-en").innerHTML=Array.from({length:10},(_,j)=>`<i class="${j<f.energy?"on":""}"></i>`).join("");
     const st=f.status;
     let tags=st?`<span class="bchip" style="background:${STATUS_COL[st.name]};color:${["Shock","Blind","Freeze"].includes(st.name)?"#111":"#fff"}">${st.name}</span>`:"";
@@ -60,19 +60,19 @@ function drawPanels(){
 }
 function drawButtons(){
   const me=B.fight.p[0], foe=B.fight.p[1];
-  const btn=(id,label,sub,color,ok,arrow)=>`<button class="bbtn" data-id="${id}" ${ok?"":"disabled"} style="border-color:${color}"><b>${label}${arrow}</b><small>${sub}</small></button>`;
+  const btn=(id,label,sub,color,ok,arrow,cost)=>`<button class="bbtn" data-id="${id}" ${ok?"":"disabled"} style="--c:${color}">${cost!=null?`<span class="cost ${String(cost)[0]==="+"?"gain":""}"><i></i>${cost}</span>`:""}<b>${label}</b><small>${arrow}${sub}</small></button>`;
   let h;
   if(me.charging){ h=btn(RELEASE,`Release ${me.charging.name}`,"It fires this turn","#5ab0ff",true,""); $("b-btns").innerHTML=h; }
   else{
     const bk=basicFor(me);
-    h=btn(BASIC,"Attack",`Free, +1 energy, uses ${bk.kind==="Cast"?"Mind":"Power"}`,"#888",true,"");
+    h=btn(BASIC,"Attack",`Free · uses ${bk.kind==="Cast"?"Mind":"Power"}`,"#888",true,"","+1");
     me.skills.forEach((s,i)=>{
       const c=costOf(me,s), m=s.power?effect(s.el,foe):1;
-      const arrow=!s.power?"":m===0?' <span style="color:#999">✕</span>':m>1?' <span style="color:#4dd36a">▲</span>':m<1?' <span style="color:#e2483f">▼</span>':"";
+      const arrow=!s.power?"":m===0?' <span class="tag bad">No effect</span>':m>1?' <span class="tag good">Strong</span>':m<1?' <span class="tag weak">Weak</span>':"";
       const blocked=(me.taunt&&(s.kind==="Support"||s.kind==="Field"))||(s.protect&&me.protectLast);
-      h+=btn(i,s.name,`${c} energy. ${(d=>d?d[0].toUpperCase()+d.slice(1):"")(describe(s.name))}`,ELC(s.el),c<=me.energy&&!blocked,arrow);
+      h+=btn(i,s.name,describe(s.name).split(", ").filter(Boolean).join(" · ")||s.kind,ELC(s.el),c<=me.energy&&!blocked,arrow,c);
     });
-    h+=btn(GUARD,"Guard","Half damage, +2 energy","#888",true,"");
+    h+=btn(GUARD,"Guard","Half damage this turn","#888",true,"","+2");
     $("b-btns").innerHTML=h;
   }
   $("b-btns").querySelectorAll("button").forEach(b=>b.onclick=()=>pick(+b.dataset.id));
@@ -125,7 +125,7 @@ function afterTurn(){
     const won=f.winner===0, draw=f.winner===null;
     $("b-result").innerHTML=`<h2>${draw?"Draw":won?"You win":"You lose"}</h2><p>${draw?"Both monsters broke into pixels":won?`${f.p[1].name} broke into pixels`:`${f.p[0].name} broke into pixels and rebuilds after the fight`} in ${f.turn} turns.</p>
       <div class="brow"><button class="big" id="b-again">Rematch</button><button class="small" id="b-new">New opponent</button><button class="small" id="b-skills">Change skills</button><button class="small" id="b-back">Back to scan</button></div>`;
-    $("b-result").style.display="block";
+    $("b-result").style.display="block"; $("b-fight").classList.add("done");
     $("b-again").onclick=()=>startFight(B.opp);
     $("b-new").onclick=()=>startFight();
     $("b-skills").onclick=()=>openBattle(B.mon);
@@ -140,7 +140,8 @@ function arenaFight({s,foe,mode="control",title="",turnLimit=15,noDraw=false,rec
   if(foe.boss){ const b=fight.p[1]; b.maxhp=Math.round(b.maxhp*1.25); b.hp=b.maxhp; b.name=foe.boss; }
   B={fight,mon:me,opp:foe.fm,busy:false,fast:false,shown:fight.p.map(f=>f.hp),opts:{s,turnLimit,noDraw,learn,foeHabits,record:record?s:null,auto:mode==="auto",onEnd}};
   B.mus=foe.boss?"boss":/^Wild/.test(title)?"wild":"cup";
-  $("battle").style.display="flex"; $("loadout").style.display="none"; $("b-fight").style.display="flex";
+  $("arena").className=B.mus==="wild"?"":"cup"; $("b-fight").classList.remove("done"); if(B.mus!=="wild"&&typeof stadiumBg==="function") stadiumBg($("b-bg"));
+  $("battle").style.display="flex"; $("loadout").style.display="none"; $("b-fight").style.display="flex"; $("b-fight").classList.remove("done");
   paint($("b-me-sprite"),me.grid,me.pal,1); paint($("b-foe-sprite"),foe.fm.grid,foe.fm.pal,1);
   ["me","foe"].forEach(k=>{$("b-"+k+"-sprite").className="bsprite";});
   $("b-log").innerHTML=""; $("b-result").style.display="none";
@@ -157,10 +158,10 @@ function autoStep(){
   setTimeout(()=>{ if(B&&!B.fight.over) pick(habitPick(f,0,B.opts.s)); }, B.fast?0:450);
 }
 function endArena(){
-  const f=B.fight, o=B.opts, won=f.winner===0, draw=f.winner===null;
+  const f=B.fight, o=B.opts, won=f.winner===0, draw=f.winner===null; $("b-fight").classList.add("done");
   $("b-btns").innerHTML="";
-  $("b-result").innerHTML=`<h2>${draw?"Draw":won?"Win":"Loss"}</h2><p>${f.judged?"The judges called it after "+f.turn+" turns.":`${won?f.p[1].name:f.p[0].name} broke into pixels in ${f.turn} turns.`}</p><div class="brow"><button class="big" id="b-cont">Continue</button></div>`;
-  $("b-result").style.display="block";
+  $("b-result").innerHTML=`<h2>${draw?"Draw":won?"Win":"Loss"}</h2><p>${f.judged?"Judges' call · "+f.turn+" turns":f.turn+" turns"}</p><div class="brow"><button class="big" id="b-cont">Continue</button></div>`;
+  $("b-result").style.display="block"; $("b-fight").classList.add("done");
   if(typeof musJingle==="function"&&!draw) musJingle(won);
   const learned=o.learn?afterFight(o.s,f.p[0],true):[]; if(learned.length) $("b-result").querySelector("p").textContent+=" "+learned.join(" ");
   $("b-cont").onclick=()=>{ const res={winner:f.winner,turns:f.turn,judged:!!f.judged,hpLeft:f.p[0].hp/f.p[0].maxhp,foeHpLeft:f.p[1].hp/f.p[1].maxhp,learned};

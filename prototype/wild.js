@@ -59,18 +59,18 @@ function wildCard(res,card){
   const el=o.m.el2?`${o.m.el1} / ${o.m.el2}`:o.m.el1;
   const notes=[o.shiny?"<b style=\"color:#ffd23f\">Rare colours!</b> It pays double.":"",
     o.famShift?"Same colours, but a different family showed up this time.":"", o.elShift?"Its second element shifted with the light.":""].filter(Boolean).join(" ");
-  card.innerHTML=`<div style="display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap">
-    <canvas id="wild-spr" style="width:120px;height:120px;image-rendering:pixelated;background:#24242c;border-radius:10px"></canvas>
-    <div style="flex:1;min-width:180px"><div style="font-size:12px;opacity:.7">A wild one jumped out</div><h2 style="font-size:22px">${o.fm.name}</h2>
-      <div style="font-size:13px;opacity:.75">${el} ${o.m.family}, Lv ${o.level}${o.stage!=="Bit"?", "+o.stage:""}</div>
-      <p style="margin-top:4px">${o.m.ability[0]}: ${o.m.ability[1]}.</p>
-      <p style="font-size:12px;opacity:.75">Skills: ${o.skills.join(", ")}. ${notes}</p></div></div>
-    <p style="font-size:12px;opacity:.7">Scan the same spot again and something else may come out. ${wildLeft(s)} wild fight${wildLeft(s)===1?"":"s"} left this week.</p>
-    <div class="brow" style="margin-top:10px"><button class="big" id="wild-go">Fight</button><button class="small" id="wild-run">Run</button><button class="small" id="wild-home">Back to the ranch</button></div>`;
+  const chip=e=>`<span class="elc" style="${chipStyle(ELC(e))}">${e}</span>`;
+  card.innerHTML=`<div class="sheet-head"><canvas id="wild-spr" class="mon-tile"></canvas>
+      <div class="sheet-id"><div class="sheet-meta" style="margin:0 0 2px;color:var(--coral)">Wild · ${wildLeft(s)} fight${wildLeft(s)===1?"":"s"} left this week</div><h2>${o.fm.name}</h2>
+        <div class="sheet-kind">${chip(o.m.el1)}${o.m.el2?chip(o.m.el2):""}<span class="fam">${o.m.family} · Lv ${o.level}${o.stage!=="Bit"?" "+o.stage:""}</span></div></div></div>
+    <div class="sheet-actions"><button class="big" id="wild-go">Fight</button><button class="btn2" id="wild-run">Run</button></div>
+    <div class="sheet-body">
+      ${o.shiny?`<p class="abil"><b class="hid">Rare colours.</b> It pays double.</p>`:""}
+      <p class="abil"><b>${o.m.ability[0]}</b> ${o.m.ability[1]}.</p>
+      <p>Skills: ${o.skills.join(", ")}.</p></div>`;
   paint(document.getElementById("wild-spr"),o.fm.grid,o.fm.pal,1);
   document.getElementById("wild-go").onclick=()=>wildFight();
   document.getElementById("wild-run").onclick=()=>{ WILD.foe=null; if(typeof wildRescan==="function") wildRescan(); };
-  document.getElementById("wild-home").onclick=()=>{ endWild(); openRanch(); };
   if(typeof musWant==="function") musWant();
 }
 

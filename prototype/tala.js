@@ -18,11 +18,11 @@ function checkTips(){
   PLAYER.tips=PLAYER.tips||{};
   const t=TIPS.find(([id,cond])=>!PLAYER.tips[id]&&cond(s));
   let box=el("r-tip");
-  if(!box){ box=document.createElement("div"); box.id="r-tip"; box.style.cssText="background:#253247;border:2px solid #5ab0ff;border-radius:12px;padding:10px;font-size:14px;display:none";
+  if(!box){ box=document.createElement("div"); box.id="r-tip"; box.className="tipbox"; box.style.display="none";
     el("r-say").after(box); }
-  if(!t){ box.style.display="none"; return; }
-  box.style.display="block";
-  box.innerHTML=`<b style="color:#9fd4ff">Tala:</b> ${t[2](s)}<div style="display:flex;gap:8px;margin-top:8px"><button class="small" id="tip-ok">Got it</button>${t[0]==="welcome"?`<button class="small" id="tip-skip">I know how to play</button>`:""}</div>`;
+  if(!t){ box.style.display="none"; el("r-say").style.display=""; return; }
+  box.style.display="block"; el("r-say").style.display="none";
+  box.innerHTML=`<div class="tip-who">Tala</div><div>${t[2](s)}</div><div class="tip-acts"><button class="big" id="tip-ok">Got it</button>${t[0]==="welcome"?`<button class="btn2" id="tip-skip">I know how to play</button>`:""}</div>`;
   el("tip-ok").onclick=()=>{ PLAYER.tips[t[0]]=true; saveGame(); checkTips(); drawUI(); };
-  if(el("tip-skip")) el("tip-skip").onclick=()=>{ PLAYER.tutorialDone=true; saveGame(); box.style.display="none"; drawUI(); };
+  if(el("tip-skip")) el("tip-skip").onclick=()=>{ PLAYER.tutorialDone=true; saveGame(); box.style.display="none"; el("r-say").style.display=""; drawUI(); };
 }

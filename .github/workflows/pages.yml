@@ -1,0 +1,39 @@
+# Every push to main publishes the game to GitHub Pages with a new build number.
+# The number goes into prototype/version.json and version.js, and every script link gets ?v=<number>
+# so phones load the new files instead of old cached ones.
+name: Publish
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Stamp the version
+        run: |
+          V=${{ github.run_number }}
+          D=$(date -u +%Y-%m-%d)
+          cd prototype
+          printf '{"v":"%s","date":"%s","note":""}\n' "$V" "$D" > version.json
+          sed -i "s/__VER__/$V/; s/__DATE__/$D/" version.js
+          sed -i -E "s/(<script src=\"[a-z0-9-]+\.js)\"/\1?v=$V\"/g" index.html
+          sed -i -E "s/(<link rel=\"stylesheet\" href=\"[a-z0-9-]+\.css)\"/\1?v=$V\"/g" index.html
+          grep -c "?v=$V" index.html
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+      - id: deploy
+        uses: actions/deploy-pages@v4

@@ -237,6 +237,7 @@ function musWant(){
   if(performance.now()<MUS.jingleT) return null;
   if(typeof B!=="undefined"&&B&&shown("battle")) return B.mus||"cup";
   if(typeof WILD!=="undefined"&&WILD) return "wild";
+  if(shown("venue")) return "cup";
   if(typeof RS!=="undefined"&&RS&&shown("ranch")){
     if(RS.inTown) return "town";
     const h=new Date().getHours(); return h<6||h>=19?"night":"day";
@@ -283,10 +284,11 @@ function musJingle(kind){
 }
 function musToggle(){
   MUS.on=!MUS.on; try{ localStorage.setItem("snabits.music",MUS.on?"1":"0"); }catch(e){}
-  document.querySelectorAll(".musbtn").forEach(b=>{ b.textContent=MUS.on?"♪ On":"♪ Off"; b.style.opacity=MUS.on?1:.5; });
+  musLabels();
   if(MUS.on) audioInit();
 }
-document.querySelectorAll(".musbtn").forEach(b=>{ b.textContent=MUS.on?"♪ On":"♪ Off"; b.style.opacity=MUS.on?1:.5; });
+musLabels();
+function musLabels(){ document.querySelectorAll(".musbtn").forEach(b=>{ b.textContent=b.closest("#bottom")?"♪":MUS.on?"Music on":"Music off"; b.setAttribute("aria-label",MUS.on?"Music on":"Music off"); b.style.opacity=MUS.on?1:.45; }); }
 /* Render a tune offline, for testing. */
 async function musRender(key,secs){
   const sr=44100,oc=new OfflineAudioContext(1,sr*secs,sr),prev=MC,prevNb=MUS.nb;MC=oc;

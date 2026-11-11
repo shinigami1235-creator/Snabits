@@ -67,7 +67,7 @@ function netJoin(code){
   const p=LN.peer=new Peer(netPeerOpts());
   const to=setTimeout(()=>{ if(!LN.on&&LN.peer===p){ nStatus("No answer from room "+code+". Check the code and your internet connection."); netClose(); } },15000);
   p.on("open",()=>{ const cn=p.connect(NET_PFX+code,{reliable:true,serialization:"json"}); nWire(cn);
-    cn.on("open",()=>{ clearTimeout(to); LN.on=true; LN.lastRx=performance.now(); nl("joined "+code); nSend({t:"hello",ver:NET_VER,name:displayName(RS),mon:ghostCode(RS)}); guestWait(); }); });
+    cn.on("open",()=>{ clearTimeout(to); LN.on=true; LN.lastRx=performance.now(); nl("joined "+code); nSend({t:"hello",ver:NET_VER,app:APP_VER,name:displayName(RS),mon:ghostCode(RS)}); guestWait(); }); });
   p.on("error",e=>{ nl("error "+e.type); if(LN.reconn) return; clearTimeout(to); nStatus(e.type==="peer-unavailable"?"There is no open room with code "+code:/network|server|socket/.test(e.type)?"Could not reach the room server. Check your internet connection.":"Online error: "+e.type); netClose(); });
 }
 function nDrop(){
@@ -83,7 +83,7 @@ function nRejoin(){
   if(p.disconnected){ try{ p.reconnect(); }catch(e){} return; }
   nl("rejoin try "+R0.n);
   const cn=p.connect(NET_PFX+LN.code,{reliable:true,serialization:"json"});
-  cn.on("open",()=>{ if(LN.conn&&LN.conn.open){ cn.close(); return; } nWire(cn); LN.reconn=null; nl("rejoined"); nSend({t:"hello",ver:NET_VER,name:displayName(RS),mon:ghostCode(RS),rejoin:true}); say("Back in the room."); });
+  cn.on("open",()=>{ if(LN.conn&&LN.conn.open){ cn.close(); return; } nWire(cn); LN.reconn=null; nl("rejoined"); nSend({t:"hello",ver:NET_VER,app:APP_VER,name:displayName(RS),mon:ghostCode(RS),rejoin:true}); say("Back in the room."); });
 }
 
 /* ---------- lobby ---------- */
@@ -105,12 +105,15 @@ function guestWait(){
 function nHandle(m){
   const t=m.t;
   if(t==="away"){ LN.away=true; return; } if(t==="back"){ LN.away=false; return; }
-  if(t==="deny"){ say(m.why); netClose(); openRooms(m.why); return; }
+  if(t==="deny"){ say(m.why); netClose(); openRooms(m.why); if(m.old) verCheck().then(j=>{ if(!VER_NEW) { VER_NEW=j||{v:Date.now()}; verBar(); } }); return; }
   if(t==="bye"){ say(`${LN.oppName||"The other player"} left the room.`); const wasHost=LN.host; if(B&&B.net){ $("battle").style.display="none"; B=null; }
     if(wasHost){ LN.opp=null; LN.oppName=""; LN.conn=null; LN.inFight=false; hostWait(); } else { netClose(); openRooms(); } return; }
   if(LN.host){
     if(t==="hello"){
-      if(m.ver!==NET_VER){ nSend({t:"deny",why:`You have game version ${m.ver} and the host has ${NET_VER}. Reload the game on both phones so both update, then try again.`}); return; }
+      if(m.ver!==NET_VER){ const mine=appVerNum(APP_VER), theirs=appVerNum(m.app);
+        if(mine<theirs){ nSend({t:"deny",why:`Your friend's game is on version ${APP_VER} and yours is on ${m.app}. They need to tap Update, then you can join again.`}); say(`Your friend is on version ${m.app}. Tap Update, then host again.`); verCheck(); }
+        else nSend({t:"deny",old:true,why:`Your game is on version ${m.app||"an older build"} and your friend's is on ${APP_VER}. Tap Update, then join again.`});
+        return; }
       try{ LN.opp=readGhost(m.mon); }catch(e){ nSend({t:"deny",why:"The host couldn't read your monster."}); return; }
       LN.oppName=m.name; LN.oppCode=m.mon;
       nSend({t:"room",name:displayName(RS),mon:ghostCode(RS)});
@@ -138,7 +141,7 @@ function startNetFight(){
   const me=fightMon(RS), opp=LN.opp, foe={fm:fightMon(opp),skills:opp.equip,level:opp.level,fighter:playerFighter(opp),m:opp.m};
   const fight=new Fight(playerFighter(RS),foe.fighter,rng(LN.seed));
   B={fight,mon:me,opp:foe.fm,busy:false,fast:false,net:true,shown:fight.p.map(f=>f.hp),opts:null};
-  $("battle").style.display="flex"; $("loadout").style.display="none"; $("b-fight").style.display="flex";
+  $("battle").style.display="flex"; $("loadout").style.display="none"; $("b-fight").style.display="flex"; $("b-fight").classList.remove("done");
   paint($("b-me-sprite"),me.grid,me.pal,1); paint($("b-foe-sprite"),foe.fm.grid,foe.fm.pal,1);
   ["me","foe"].forEach(k=>{ $("b-"+k+"-sprite").className="bsprite"; });
   $("b-log").innerHTML=""; $("b-result").style.display="none";
@@ -171,7 +174,7 @@ function netEnd(){
   const f=B.fight, won=f.winner===0, draw=f.winner===null; LN.inFight=false; nWakeLock(false);
   $("b-btns").innerHTML="";
   $("b-result").innerHTML=`<h2>${draw?"Draw":won?"You win":"You lose"}</h2><p>${f.judged?"The judges called it after "+f.turn+" turns.":`${won?f.p[1].name:f.p[0].name} broke into pixels in ${f.turn} turns.`}</p><div class="brow"><button class="big" id="b-room">Back to the room</button><button class="small" id="b-leave">Leave</button></div>`;
-  $("b-result").style.display="block";
+  $("b-result").style.display="block"; $("b-fight").classList.add("done");
   el("b-room").onclick=()=>{ $("battle").style.display="none"; B=null; LN.host?hostWait():guestWait(); };
   el("b-leave").onclick=()=>{ $("battle").style.display="none"; B=null; netLeave(); openRooms(); };
 }

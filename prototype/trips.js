@@ -47,7 +47,7 @@ async function runTrip(reg){
   await scene(async()=>{
     say(`Off to ${reg.n} for 4 weeks.`); s.pose="happy"; await hop(12,380); await walkTo(-30,60,"walk"); s.hidden=true; await rwait(500);
     for(let w=0;w<4;w++){
-      const frac=s.used/lifeWeeks(), age=frac<0.2?0.8:frac<0.7?1.2:0.8;
+      const age=ageMult(s);
       const ok=Math.random()*100<Math.min(95,60+8*hearts()-(s.fatigue>50?15:0));
       const a=Math.max(1,Math.round(rp(main)*age)), b=Math.max(1,Math.round(rp(second)/2*age));
       s.tp[main]+=a; s.tp[second]+=b; s.fatigue+=16; s.stress+=8;

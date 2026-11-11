@@ -20,10 +20,9 @@ function board(s){
 function openBoard(){
   const s=RS;
   if(s.sick||s.injured){ say("It isn't well enough to go out. Rest it or give it medicine first."); return; }
-  panel(`<div style="flex-basis:100%;font-size:13px">This week's board. Missions run in real time and use game weeks when it gets back.</div>`+
+  panel(`<div class="full lab-head"><b>Missions</b><button class="small" id="r-bback">Back</button></div><div class="full lab-info">They run in real time. The weeks pass when your monster returns.</div>`+
     board(s).map((b,i)=>{ const K=KINDS[b.kind], reg=REGIONS.find(x=>x.n===b.reg);
-      return `<button class="rb" data-b="${i}">${b.kind} at ${b.reg}<small>${K.h} hour${K.h>1?"s":""}, ${K.weeks} week${K.weeks>1?"s":""}, Lv ${b.level}, ${reg.el}</small></button>`; }).join("")+
-    `<button class="rb" id="r-bback">Back</button>`);
+      return `<button class="rb mis" data-b="${i}"><span class="mis-t">${b.kind}<span class="elc" style="${chipStyle(ELC(reg.el))}">${reg.el}</span></span><span class="mis-r">${b.reg}</span><small>${K.h}h · ${K.weeks} wk · Lv ${b.level}</small></button>`; }).join(""));
   const bs=board(s);
   el("r-panel").querySelectorAll("[data-b]").forEach(x=>x.onclick=()=>depart(bs[+x.dataset.b]));
   el("r-bback").onclick=()=>menu("Out");

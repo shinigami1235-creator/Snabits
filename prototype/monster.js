@@ -27,6 +27,9 @@ const EL_ABILITY = {
 };
 const PERSONALITY = [["Bold",1,2],["Calm",4,1],["Hasty",5,4],["Careful",2,5],["Cheerful",3,2],["Gloomy",4,5],["Proud",1,4],["Timid",5,1]];
 
+/* Dark or light text for a coloured chip. */
+function textOn(hex){ const h=String(hex).replace("#",""); if(h.length<6) return "#fff"; const r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),b=parseInt(h.slice(4,6),16); return (0.299*r+0.587*g+0.114*b)>150?"#10131c":"#fff"; }
+function chipStyle(hex){ const dark=(0.299*parseInt(String(hex).slice(1,3),16)+0.587*parseInt(String(hex).slice(3,5),16)+0.114*parseInt(String(hex).slice(5,7),16))<45; return dark?"--c:#5b4a7e;color:#fff":`--c:${hex};color:${textOn(hex)}`; }
 function rng(seed){let a=seed>>>0;return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
 function hashStr(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
 

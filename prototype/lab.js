@@ -84,13 +84,12 @@ function openLab(){
     const fam=e1.m.family===e2.m.family?`${e1.m.family} 100%`:`${e1.m.family} 55%, ${e2.m.family} 30%, a hybrid 15%`;
     info=`<div style="flex-basis:100%;font-size:13px"><b>Assistant:</b> "${ASSIST[m]}" The child will be ${fam}, and it keeps about ${carry}% of the parents' training. Both parents are used up, and it costs 500 bits.</div>`; }
   const st=RS&&RS.id?RS:null, elder=st&&st.used>=lifeWeeks()*0.7;
-  panel(`<div style="flex-basis:100%;font-size:13px">First parent counts twice as much as the second.</div>
-    <label style="flex-basis:100%;font-size:13px">First parent <select id="l-a">${opt(LAB.a,LAB.b)}</select></label>
-    <label style="flex-basis:100%;font-size:13px">Second parent <select id="l-b"><option value="">Pick one</option>${opt(LAB.b,LAB.a)}</select></label>
-    <label style="flex-basis:100%;font-size:13px">Catalyst <select id="l-c"><option value="">None</option>${cats.map(c=>`<option ${c===LAB.cat?"selected":""}>${c}</option>`).join("")}</select></label>
-    ${info}<button class="rb" id="l-fuse" ${e1&&e2?"":"disabled"}>Fuse</button>
-    <button class="rb" id="l-reb" ${PLAYER.bag["Rebirth seed"]&&st?"":"disabled"}>Rebirth ${st?displayName(st):""}<small>${PLAYER.bag["Rebirth seed"]?(elder?"Uses the Rebirth seed":"Only an Elder can be reborn"):"Needs a Rebirth seed"}</small></button>
-    <button class="rb" id="l-back">Back</button>`);
+  panel(`<div class="full lab-head"><b>Fusion lab</b><button class="small" id="l-back">Back</button></div>
+    <label class="fld">First parent<select id="l-a">${opt(LAB.a,LAB.b)}</select><small>Counts twice as much</small></label>
+    <label class="fld">Second parent<select id="l-b"><option value="">Pick one</option>${opt(LAB.b,LAB.a)}</select></label>
+    <label class="fld full">Catalyst<select id="l-c"><option value="">None</option>${cats.map(c=>`<option ${c===LAB.cat?"selected":""}>${c}</option>`).join("")}</select></label>
+    ${info.replace('style="flex-basis:100%;font-size:13px"','class="full lab-info"')}<button class="big full" id="l-fuse" ${e1&&e2?"":"disabled"}>Fuse · 500 bits</button>
+    <button class="rb full" id="l-reb" ${PLAYER.bag["Rebirth seed"]&&st?"":"disabled"}>Rebirth ${st?displayName(st):""}<small>${PLAYER.bag["Rebirth seed"]?(elder?"Uses the Rebirth seed":"Only an Elder or Veteran can be reborn"):"Needs a Rebirth seed"}</small></button>`);
   el("l-a").onchange=e=>{LAB.a=e.target.value;openLab();}; el("l-b").onchange=e=>{LAB.b=e.target.value||null;openLab();}; el("l-c").onchange=e=>{LAB.cat=e.target.value||null;};
   el("l-fuse").onclick=()=>doFuse(e1,e2,LAB.cat);
   el("l-reb").onclick=()=>{ if(!elder){ say("Rebirth only works on an Elder, in the last 30% of its lifespan."); return; } rebirthPick(); };
