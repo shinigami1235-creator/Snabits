@@ -61,7 +61,7 @@ function wildCard(res,card){
     o.famShift?"Same colours, but a different family showed up this time.":"", o.elShift?"Its second element shifted with the light.":""].filter(Boolean).join(" ");
   const chip=e=>`<span class="elc" style="${chipStyle(ELC(e))}">${e}</span>`;
   card.innerHTML=`<div class="sheet-head"><canvas id="wild-spr" class="mon-tile"></canvas>
-      <div class="sheet-id"><div class="sheet-meta" style="margin:0 0 2px;color:var(--coral)">Wild · ${wildLeft(s)} fight${wildLeft(s)===1?"":"s"} left this week</div><h2>${o.fm.name}</h2>
+      <div class="sheet-id"><div class="sheet-meta" style="margin:0 0 2px;color:var(--gold)">Wild · ${wildLeft(s)} fight${wildLeft(s)===1?"":"s"} left this week</div><h2>${o.fm.name}</h2>
         <div class="sheet-kind">${chip(o.m.el1)}${o.m.el2?chip(o.m.el2):""}<span class="fam">${o.m.family} · Lv ${o.level}${o.stage!=="Bit"?" "+o.stage:""}</span></div></div></div>
     <div class="sheet-actions"><button class="big" id="wild-go">Fight</button><button class="btn2" id="wild-run">Run</button></div>
     <div class="sheet-body">

@@ -145,7 +145,7 @@ function buildPool(el1,el2,size){
 /* One short line describing what a skill does, for buttons and the loadout list. */
 function describe(n){
   const s=SKILLS[n], p=[];
-  if(s.power) p.push(s.hits?`${s.power} x ${s.hits}`:`${s.power} power`);
+  if(s.power) p.push(s.hits?`${s.power} power x ${s.hits}`:`${s.power} power`);
   if(s.first) p.push("goes first");
   if(s.charge) p.push(s.sunInstant?"charges a turn, instant in sun":s.focus?"charges a turn, fails if hit":"charges a turn");
   if(s.status) p.push(`${s.status[1]}% ${s.status[0]}`);

@@ -642,7 +642,7 @@ function rLoop(t){
   const wantH=Math.max(100,Math.min(RH+40,Math.round(RW/asp))), wantW=RW;
   if(cv.height!==wantH) cv.height=wantH; if(cv.width!==wantW) cv.width=wantW;
   const c=cv.getContext("2d"); c.imageSmoothingEnabled=false;
-  const k=rk(), extra=cv.height-RH, room=RW-cv.width;
+  const k=rk(), extra=cv.height-RH, room=RW-cv.width; s.vExtra=extra;
   const camT=clamp(s.x-cv.width/2,0,room); s.camX=s.camX==null?camT:s.camX+(camT-s.camX)*0.08; const camX=Math.round(clamp(s.camX,0,room));
   c.save(); c.translate(-camX,extra); if(s.shake>0){ c.translate(Math.round(rnd(-2,2)),Math.round(rnd(-2,2))); s.shake--; }
   drawYard(c,t);
@@ -693,8 +693,8 @@ function drawYard(c,t){
   const night=h<6||h>=19, dusk=h>=17&&h<19;
   const sky=night?["#0f1430","#1a2150","#27306a"]:dusk?["#f08a5d","#f6b07a","#ffd6a5"]:["#6fbbef","#97d0f5","#c4e7ff"];
   for(let i=0;i<3;i++){ c.fillStyle=sky[i]; c.fillRect(0,i*30,RW,i===2?100:30); }
-  if(night){ c.fillStyle="#fff"; for(let i=0;i<24;i++){ const x=(i*53)%RW, y=(i*29)%70; if((t/600+i)%7>0.6) c.fillRect(x,y,1,1);} c.fillStyle="#f4f1d0"; c.fillRect(200,14,9,9); c.fillStyle="#0f1430"; c.fillRect(204,13,7,7); }
-  else { c.fillStyle=dusk?"#ffb347":"#fff3a0"; c.fillRect(196,14,12,12); }
+  if(night){ c.fillStyle="#fff"; for(let i=0;i<24;i++){ const x=(i*53)%RW, y=(i*29)%70; if((t/600+i)%7>0.6) c.fillRect(x,y,1,1);} const sy=Math.max(14,8-(RS.vExtra||0)); if(sy<60){ c.fillStyle="#f4f1d0"; c.fillRect(200,sy,9,9); } c.fillStyle="#0f1430"; c.fillRect(204,13,7,7); }
+  else { const sy=Math.max(14,8-(RS.vExtra||0)); if(sy<60){ c.fillStyle=dusk?"#ffb347":"#fff3a0"; c.fillRect(196,sy,12,12); } }
   // hills
   c.fillStyle=SEASON_COL.hill[season]; for(let x=0;x<RW;x++){ const y=Math.round(104+Math.sin(x/23)*6+Math.sin(x/9)*2); c.fillRect(x,y,1,GROUND-y); }
   // ground

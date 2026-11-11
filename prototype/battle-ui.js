@@ -70,7 +70,7 @@ function drawButtons(){
       const c=costOf(me,s), m=s.power?effect(s.el,foe):1;
       const arrow=!s.power?"":m===0?' <span class="tag bad">No effect</span>':m>1?' <span class="tag good">Strong</span>':m<1?' <span class="tag weak">Weak</span>':"";
       const blocked=(me.taunt&&(s.kind==="Support"||s.kind==="Field"))||(s.protect&&me.protectLast);
-      h+=btn(i,s.name,describe(s.name).split(", ").filter(Boolean).join(" · ")||s.kind,ELC(s.el),c<=me.energy&&!blocked,arrow,c);
+      h+=btn(i,s.name,describe(s.name).split(", ").filter(Boolean).map(x=>`<span>${x}</span>`).join("")||s.kind,ELC(s.el),c<=me.energy&&!blocked,arrow,c);
     });
     h+=btn(GUARD,"Guard","Half damage this turn","#888",true,"","+2");
     $("b-btns").innerHTML=h;
@@ -163,7 +163,7 @@ function endArena(){
   $("b-result").innerHTML=`<h2>${draw?"Draw":won?"Win":"Loss"}</h2><p>${f.judged?"Judges' call · "+f.turn+" turns":f.turn+" turns"}</p><div class="brow"><button class="big" id="b-cont">Continue</button></div>`;
   $("b-result").style.display="block"; $("b-fight").classList.add("done");
   if(typeof musJingle==="function"&&!draw) musJingle(won);
-  const learned=o.learn?afterFight(o.s,f.p[0],true):[]; if(learned.length) $("b-result").querySelector("p").textContent+=" "+learned.join(" ");
+  const learned=o.learn?afterFight(o.s,f.p[0],true):[]; if(learned.length) $("b-result").querySelector("p").insertAdjacentHTML("afterend",`<div class="learn">${learned.join(" ")}</div>`);
   $("b-cont").onclick=()=>{ const res={winner:f.winner,turns:f.turn,judged:!!f.judged,hpLeft:f.p[0].hp/f.p[0].maxhp,foeHpLeft:f.p[1].hp/f.p[1].maxhp,learned};
     $("battle").style.display="none"; B=null; if(o.onEnd) o.onEnd(res); };
 }

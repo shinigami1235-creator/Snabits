@@ -44,7 +44,7 @@ function startCup(c){
     for(let r=0;r<n-1;r++){ const pairs=[]; for(let k=0;k<n/2;k++) pairs.push([ids[k],ids[n-1-k]]); rounds.push(pairs); ids.splice(1,0,ids.pop()); }
     CUP.rounds=rounds;
   }
-  CUP.ann=`${c.name.replace(/ \([A-S]\)$/,"")}, ${field.length} monsters. ${c.format==="robin"?"3 points a win, 1 a draw.":c.format==="single"?"One match, winner takes the purse.":"Lose once and you're out."}`;
+  CUP.ann=`${c.name.replace(/ \([A-S]\)$/,"")}, ${field.length} monsters. ${c.format==="robin"?"3 points for a win, 1&nbsp;for&nbsp;a&nbsp;draw.":c.format==="single"?"One match, winner takes the purse.":"Lose once and you're out."}`;
   nextMatch();
 }
 function fighterOf(e){ return e.me?null:e.o; }

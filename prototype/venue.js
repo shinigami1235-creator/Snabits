@@ -136,7 +136,7 @@ function vLoop(){
   const cv=el("v-canvas"); if(!cv){ VEN.raf=requestAnimationFrame(vLoop); return; }
   const sr=el("v-stage").getBoundingClientRect(), wantH=sr.width>0?Math.max(105,Math.round(195*sr.height/sr.width)):119;
   if(cv.height!==wantH) cv.height=wantH;
-  const x=cv.getContext("2d"), W=cv.width, H=cv.height, extra=H-119, fy=Math.round(extra*0.6), big=false; x.imageSmoothingEnabled=false;
+  const x=cv.getContext("2d"), W=cv.width, H=cv.height, extra=H-119, fy=0, big=false; x.imageSmoothingEnabled=false;
   const g=x.createLinearGradient(0,0,0,52); g.addColorStop(0,"#241a3f"); g.addColorStop(1,"#5b3d6e"); x.fillStyle=g; x.fillRect(0,0,W,66);
   // stands with a bobbing crowd
   if(!VEN.crowd){ const R=rng(7); VEN.crowd=[]; for(let r=0;r<4;r++) for(let c2=0;c2<W/5;c2++) VEN.crowd.push([c2*5+(r%2?2:0)+R()*2,30+r*7,STAND_COLS[Math.floor(R()*STAND_COLS.length)],R()*6.28]); }
@@ -154,7 +154,7 @@ function vLoop(){
     const sz=big?80:40, feet=footRow(grid)*sz/grid.length, by=Math.round(Math.sin(VEN.t/14+cx)*1);
     if(!onPod){ x.fillStyle="rgba(0,0,0,.3)"; x.beginPath(); x.ellipse(cx,base,big?26:14,big?4:2.5,0,0,6.29); x.fill(); }
     x.save(); if(flip){ x.translate(cx*2,0); x.scale(-1,1); } x.drawImage(c,cx-sz/2,Math.round(base-feet+1-Math.max(0,by)),sz,sz); x.restore(); };
-  const gap=big?52:40, ground=102+fy, podTop=96+fy;
+  const gap=big?52:40, ground=102, podTop=Math.min(H-16,104);
   if(show.podium!=null){ x.fillStyle="#e9e4d4"; x.fillRect(W/2-22,podTop,44,14); x.fillStyle="#bdb6a0"; x.fillRect(W/2-22,podTop+10,44,4); x.fillStyle="#7a5a1a"; x.fillRect(W/2-1,podTop+3,2,6);
     for(let k=0;k<16;k++){ x.fillStyle=BANNER_COLS[k%6]; x.fillRect((k*37+VEN.t*(1+k%3))%W,(k*23+VEN.t*1.5)%H,2,3); } }
   const s=RS;
