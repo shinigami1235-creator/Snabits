@@ -99,7 +99,7 @@ async function runMission(b){
       if(st.task!=="rest") drawUI();
     }
     s.props=s.props.filter(p=>p.k==="bowl"); s.x=60; s.pose="idle"; s.tripLabel=`${b.reg} · The way home`; drawUI();
-    const fp=prop({k:"foe",x:196,y:GROUND,grid:foe.fm.grid,pal:foe.fm.pal});
+    const fp=prop({k:"foe",x:196,y:GROUND,grid:foe.fm.grid,pal:foe.fm.pal,fm:foe.fm});
     banner(foe.boss?foe.boss:"On the way home","#ffd23f"); say(foe.boss?`The boss of ${b.reg} blocks the way.`:`A wild ${foe.m.name} blocks the way home.`); await rwait(1400); banner(""); unprop(fp);
   });
   // the end fight, played out on its habits

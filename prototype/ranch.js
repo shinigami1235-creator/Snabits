@@ -698,13 +698,13 @@ function rLoop(t){
   const c=cv.getContext("2d"); c.imageSmoothingEnabled=false;
   const k=rk(), extra=cv.height-RH, room=RW-cv.width; s.vExtra=extra;
   // with the smooth art on, the yard draws on its own layer underneath and this canvas only carries props and effects
-  const smooth=!s.bg&&smoothRanch(); if(smooth) c.clearRect(0,0,cv.width,cv.height);
+  const smooth=smoothRanch(); if(smooth) c.clearRect(0,0,cv.width,cv.height);
   else { s.cam=null; const sc=el("r-scene"); if(sc) sc.style.display="none"; const ch=el("r-chibi"); if(ch) ch.style.filter=""; }
   { const go=el("r-goout"); if(go){ const on=smooth&&s.room==="barn"&&!s.busy; if(go.style.display!==(on?"block":"none")) go.style.display=on?"block":"none"; } }
   if(smooth){   // the side-scrolling ranch: the camera follows the monster, zooms in on small ones, and can be dragged to look around
-    const sp=chibiSpec(null,s), hpx=sp?sp.cm/100*RANCH_PX_M:60, Zt=clamp(66/hpx,1,1.8); s.zoom=s.zoom?s.zoom+(Zt-s.zoom)*0.05:Zt;
+    const sp=chibiSpec(null,s), hpx=sp?sp.cm/100*RANCH_PX_M:60, Zt=clamp(66/hpx,1,s.bg?1.3:1.8);   /* away scenes stay wide so their props show */ s.zoom=s.zoom?s.zoom+(Zt-s.zoom)*0.05:Zt;
     const Z=s.zoom, vw=cv.width/Z, wx=s.x+(s.zx||0), panning=s.pan||(s.panUntil&&performance.now()<s.panUntil);
-    const lo=s.room?0:-RW, hi=Math.max(lo,(s.room?RW:2*RW)-vw), Lt=clamp(panning?s.panL:wx-vw/2,lo,hi); s.camL=s.camL==null||s.camJump?Lt:s.camL+(Lt-s.camL)*(s.pan?1:0.08); s.camJump=false;
+    const one=s.room||s.bg, lo=one?0:-RW, hi=Math.max(lo,(one?RW:2*RW)-vw), Lt=clamp(panning?s.panL:wx-vw/2,lo,hi); s.camL=s.camL==null||s.camJump?Lt:s.camL+(Lt-s.camL)*(s.pan?1:0.08); s.camJump=false;
     s.cam={L:s.camL,Z,extra}; }
   const camT=clamp(s.x-cv.width/2,0,room); s.camX=s.camX==null?camT:s.camX+(camT-s.camX)*0.08; const camX=Math.round(clamp(s.camX,0,room));
   c.save(); if(smooth) c.setTransform(s.zoom,0,0,s.zoom,(-s.camL+(s.zx||0))*s.zoom,GROUND+extra-GROUND*s.zoom); else c.translate(-camX,extra); if(s.shake>0){ c.translate(Math.round(rnd(-2,2)),Math.round(rnd(-2,2))); s.shake--; }
@@ -719,7 +719,7 @@ function rLoop(t){
   if(s.visitor){ const v=s.visitor; if(performance.now()>v.until){ v.x+=0.6; if(v.x>RW+40) s.visitor=null; } else v.x=Math.max(RW-22,v.x-0.6);
     if(s.visitor&&!smooth){ if(!v.cv){ v.cv=document.createElement("canvas"); paint(v.cv,v.m.grid,v.m.pal,2); } c.drawImage(v.cv,Math.round(v.x-20),GROUND-40+(Math.floor(t/300)%2)); } }
   if(!s.behind) drawMonster(c,t);
-  if(smooth){ c.save(); c.setTransform(1,0,0,1,0,extra); if(s.room) c.globalAlpha=0; }
+  if(smooth){ c.save(); c.setTransform(1,0,0,1,0,extra); if(s.room||s.bg) c.globalAlpha=0; }
   if(s.weather==="Rain"&&!s.bg){ c.fillStyle="rgba(170,200,255,.7)"; for(let i=0;i<40;i++){ const x=(i*29+t/3)%RW, y=(i*47+t/2)%GROUND; c.fillRect(Math.round(x),Math.round(y),1,3);} }
   if(s.weather==="Wind"&&!s.bg){ c.fillStyle="#d9822b"; for(let i=0;i<8;i++){ const x=(i*61+t/8)%RW, y=60+(i*23)%70+Math.sin(t/300+i)*6; c.fillRect(Math.round(x),Math.round(y),2,1);} }
   if(s.weather==="A heatwave"&&!s.bg){ c.fillStyle="rgba(255,180,60,.12)"; c.fillRect(0,0,RW,RH); }

@@ -91,7 +91,7 @@ async function playTask(k,ok,extra={}){
   if(k==="drill"){ prop({k:"post",x:150,y:GROUND}); await walkTo(132,40);
     for(let i=0;i<3;i++){ s.pose="effort"; s.bx=2; spark(146,GROUND-20,"dust",2); await rwait(220); s.bx=0; s.pose="idle"; await rwait(160); }
     s.pose=ok?"happy":"tired"; if(ok) spark(s.x,headY()-6,"sparkle",6); await rwait(500); }
-  if(k==="fight"){ const o=extra.foe, fp=prop({k:"foe",x:196,y:GROUND,grid:o.fm.grid,pal:o.fm.pal}); await walkTo(118,45);
+  if(k==="fight"){ const o=extra.foe, fp=prop({k:"foe",x:196,y:GROUND,grid:o.fm.grid,pal:o.fm.pal,fm:o.fm}); await walkTo(118,45);
     for(let i=0;i<3;i++){ s.bx=3; fp.x-=4; spark(156,GROUND-22,"star",2); await rwait(200); s.bx=0; fp.x+=4; await rwait(220); }
     if(ok){ for(let a=1;a>=0;a-=0.1){ fp.fade=a; await rwait(40);} s.pose="happy"; await hop(10,300); }
     else { s.pose="hurt"; s.x-=10; s.shake=6; await rwait(700); s.pose="tired"; }
