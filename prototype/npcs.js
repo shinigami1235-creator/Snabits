@@ -7,6 +7,7 @@ const NPC = {
   doc: { name: 'Dr. Ines', cm: 168, tag: '#c9b3ff' },
   aide: { name: 'Benji', cm: 172, tag: '#7fe0d0' },
   rival: { name: 'Rook', cm: 170, tag: '#ffb04a' },
+  mc: { name: 'Rico', cm: 176, tag: '#c08cff' },
 };
 
 /* ---------- faces, shared ---------- */
@@ -141,10 +142,25 @@ function rookHead(x, face = 'talk') {
   if (face === 'happy') { x.strokeStyle = '#8a3a3a'; x.lineWidth = 2.4; x.beginPath(); x.moveTo(-6, 22); x.quadraticCurveTo(2, 26, 8, 19); x.stroke(); }   // a lopsided grin
   else npcMouth(x, face, '#8a3a3a', 23);
 }
-const NPC_HEAD = { guide: kikoHead, shop: nenaHead, doc: inesHead, aide: benjiHead, rival: rookHead };
+/* ---------- Rico, the stadium announcer: a tall swept-up quiff, a purple jacket with gold lapels and a microphone ---------- */
+function ricoHead(x, face = 'talk') {
+  const skin = '#c98d5e', hair = '#3a2418';
+  SC.depth(x, () => { x.beginPath(); x.ellipse(-29, 8, 5.5, 7.5, 0, 0, 7); x.ellipse(29, 8, 5.5, 7.5, 0, 0, 7); }, skin, 2, 0.28);
+  SC.depth(x, () => { x.beginPath(); x.ellipse(0, 6, 28, 27, 0, 0, 7); }, skin, 2.5, 0.22);
+  // short sides and a big quiff swept up and over to the right
+  SC.depth(x, () => { x.beginPath(); x.moveTo(-31, 10); x.quadraticCurveTo(-37, -10, -30, -24); x.quadraticCurveTo(-32, -46, -6, -50); x.quadraticCurveTo(22, -56, 38, -44);
+    x.quadraticCurveTo(48, -34, 36, -24); x.quadraticCurveTo(37, -8, 31, 10); x.quadraticCurveTo(28, -6, 20, -12); x.quadraticCurveTo(10, -22, -2, -15); x.quadraticCurveTo(-18, -12, -31, 10); x.closePath(); }, hair, 2.5, 0.3);
+  x.fillStyle = 'rgba(255,255,255,.2)'; x.beginPath(); x.ellipse(8, -44, 18, 4.5, -0.15, 0, 7); x.fill();
+  x.strokeStyle = 'rgba(255,255,255,.14)'; x.lineWidth = 2; x.beginPath(); x.moveTo(-22, -36); x.quadraticCurveTo(4, -46, 30, -36); x.stroke();
+  npcEyes(x, face, { ex: 12, ey: 8, rx: 5.2, ry: 6.8 }); npcBrows(x, face, hair, { by: -6, bw: 3 }); npcBlush(x, 18, 21, 0.3);
+  if (face === 'happy' || face === 'talk') { x.fillStyle = '#7a2a2a'; x.beginPath(); x.moveTo(-9, 18); x.quadraticCurveTo(0, 31, 9, 18); x.closePath(); x.fill();   // a big open grin
+    x.fillStyle = '#fff'; x.fillRect(-7, 18, 14, 3); }
+  else npcMouth(x, face, '#8a3a3a', 22);
+}
+const NPC_HEAD = { guide: kikoHead, shop: nenaHead, doc: inesHead, aide: benjiHead, rival: rookHead, mc: ricoHead };
 
 /* ---------- portraits for the speech box: head and shoulders on a coloured square ---------- */
-const NPC_BG = { guide: ['#d9ecc4', '#a9cf8a'], shop: ['#fbe0c8', '#e8b98a'], doc: ['#e2dcf6', '#b9b2d8'], aide: ['#d4f0ec', '#9fd2c9'], rival: ['#ffe2bf', '#f2b878'] };
+const NPC_BG = { guide: ['#d9ecc4', '#a9cf8a'], shop: ['#fbe0c8', '#e8b98a'], doc: ['#e2dcf6', '#b9b2d8'], aide: ['#d4f0ec', '#9fd2c9'], rival: ['#ffe2bf', '#f2b878'], mc: ['#ece0ff', '#b99be6'] };
 function npcShoulders(x, who) {
   if (who === 'guide') { x.fillStyle = '#c98a55'; x.fillRect(-7, 24, 14, 14);
     SC.depth(x, () => { x.beginPath(); x.roundRect(-30, 34, 60, 60, 14); }, '#efe6cf', 3, 0.25);
@@ -159,6 +175,13 @@ function npcShoulders(x, who) {
     x.fillStyle = '#7a5bc2'; x.beginPath(); x.moveTo(-10, 34); x.lineTo(0, 58); x.lineTo(10, 34); x.closePath(); x.fill(); x.fillRect(-8, 30, 16, 6);
     x.strokeStyle = 'rgba(0,0,0,.12)'; x.lineWidth = 1.5; x.beginPath(); x.moveTo(-10, 34); x.lineTo(-16, 64); x.moveTo(10, 34); x.lineTo(16, 64); x.stroke();
     x.fillStyle = '#5ab0ff'; x.beginPath(); x.roundRect(14, 50, 3, 12, 1); x.fill(); x.fillStyle = '#ff6b6b'; x.beginPath(); x.roundRect(18, 52, 3, 10, 1); x.fill(); return; }
+  if (who === 'mc') { x.fillStyle = '#b77d50'; x.fillRect(-7, 24, 14, 14);
+    SC.depth(x, () => { x.beginPath(); x.roundRect(-33, 34, 66, 60, 14); }, '#6b3fa0', 3, 0.3);
+    x.fillStyle = '#f4f6f8'; x.beginPath(); x.moveTo(-10, 34); x.lineTo(0, 62); x.lineTo(10, 34); x.closePath(); x.fill();
+    x.fillStyle = '#e8c35a'; for (const s of [-1, 1]) { x.beginPath(); x.moveTo(s * 10, 34); x.lineTo(s * 2, 64); x.lineTo(s * 18, 48); x.closePath(); x.fill(); }
+    x.fillStyle = '#d6453a'; x.beginPath(); x.moveTo(0, 38); x.lineTo(-9, 33); x.lineTo(-9, 43); x.closePath(); x.moveTo(0, 38); x.lineTo(9, 33); x.lineTo(9, 43); x.closePath(); x.fill();
+    x.fillStyle = '#2a2a33'; x.beginPath(); x.roundRect(17, 40, 7, 30, 3); x.fill(); SC.depth(x, () => { x.beginPath(); x.arc(20.5, 36, 8, 0, 7); }, '#c9ced8', 1.5, 0.3);   // the microphone
+    x.fillStyle = 'rgba(0,0,0,.2)'; for (let k = -1; k <= 1; k++) x.fillRect(14 + 6.5 + k * 3, 30, 1, 12); return; }
   if (who === 'rival') { x.fillStyle = '#d9a274'; x.fillRect(-7, 24, 14, 14);
     SC.depth(x, () => { x.beginPath(); x.roundRect(-32, 34, 64, 60, 14); }, '#2f3a66', 3, 0.28);
     x.fillStyle = '#f4f6f8'; x.beginPath(); x.moveTo(-9, 34); x.lineTo(0, 60); x.lineTo(9, 34); x.closePath(); x.fill();
@@ -189,6 +212,7 @@ function npcFull(c, who, X, Y, h, face = 'happy', pose = 'stand', t = 0, flip = 
     doc: { leg: '#3c3a52', shoe: '#2a2836', top: '#f4f6f8', skin: '#f2cba2', arm: '#f4f6f8' },
     aide: { leg: '#3b4a6a', shoe: '#d24f43', top: '#f4f6f8', skin: '#c98d5e', arm: '#f4f6f8' },
     rival: { leg: '#262a3a', shoe: '#d6453a', top: '#2f3a66', skin: '#e8b48a', arm: '#2f3a66' },
+    mc: { leg: '#22222c', shoe: '#f4f6f8', top: '#6b3fa0', skin: '#c98d5e', arm: '#6b3fa0' },
   }[who];
   if (sit) c.translate(0, 18);
   // backpack behind Kiko
@@ -218,6 +242,12 @@ function npcFull(c, who, X, Y, h, face = 'happy', pose = 'stand', t = 0, flip = 
     c.save(); c.beginPath(); c.moveTo(-11, -42); c.lineTo(11, -42); c.lineTo(13, -10); c.lineTo(-13, -10); c.closePath(); c.clip();
     c.fillStyle = '#d9f2e6'; c.fillRect(-14, -42, 28, 34); c.fillStyle = '#7fcfb0'; for (let k = -12; k < 14; k += 6) c.fillRect(k, -42, 3, 34); c.restore();
     c.fillStyle = '#ffffff'; c.beginPath(); c.roundRect(-6, -30, 12, 8, 2); c.fill();
+  } else if (who === 'mc') {
+    SC.depth(c, () => { c.beginPath(); c.moveTo(-13, -57); c.lineTo(13, -57); c.lineTo(15, -24); c.lineTo(-15, -24); c.closePath(); }, C.top, 2.5, 0.28);
+    c.fillStyle = '#f4f6f8'; c.beginPath(); c.moveTo(-5, -57); c.lineTo(0, -40); c.lineTo(5, -57); c.closePath(); c.fill();
+    c.fillStyle = '#e8c35a'; for (const s of [-1, 1]) { c.beginPath(); c.moveTo(s * 5, -57); c.lineTo(s * 1, -38); c.lineTo(s * 10, -47); c.closePath(); c.fill(); }
+    c.fillStyle = '#d6453a'; c.beginPath(); c.moveTo(0, -54); c.lineTo(-5, -57); c.lineTo(-5, -51); c.closePath(); c.moveTo(0, -54); c.lineTo(5, -57); c.lineTo(5, -51); c.closePath(); c.fill();
+    c.fillStyle = 'rgba(255,240,200,.5)'; for (let k = 0; k < 6; k++) { c.beginPath(); c.arc(-11 + (k * 37) % 22, -52 + (k * 53) % 26, 0.9, 0, 7); c.fill(); }   // sequins
   } else if (who === 'rival') {
     SC.depth(c, () => { c.beginPath(); c.roundRect(-13, -57, 26, 31, 8); }, C.top, 2.5, 0.28);
     c.fillStyle = '#f4f6f8'; c.beginPath(); c.moveTo(-5, -57); c.lineTo(0, -42); c.lineTo(5, -57); c.closePath(); c.fill();
@@ -240,7 +270,11 @@ function npcFull(c, who, X, Y, h, face = 'happy', pose = 'stand', t = 0, flip = 
   let armR = pose === 'wave' ? [sh, -52, 27, -58, 30, -71] : pose === 'point' ? [sh, -52, 24, -52, 30, -56] : pose === 'offer' ? [sh, -52, 18, -44, 12, -38] : sit ? [sh, -52, 16, -42, 8, -34] : [sh, -52, 18 + sw * 0.3, -42, 16 + sw * 0.6, -32];
   if (who === 'aide' && pose !== 'wave' && pose !== 'point') armR = [sh, -52, 14, -44, 4, -42];
   if (who === 'doc' && pose === 'stand') armR = [sh, -52, 16, -42, 12, -32];
-  npcLimb(c, C.arm, aw, armL); npcLimb(c, C.arm, aw, armR); hand(armL[4], armL[5]); hand(armR[4], armR[5]);
+  let armL2 = null;
+  if (who === 'mc') { armR = [sh, -52, 24, -48, 15, -57];             // the mic up at his mouth
+    if (pose === 'wave' || pose === 'point') armL2 = pose === 'wave' ? [-sh, -52, -27, -60, -30, -73] : [-sh, -52, -24, -54, -31, -60]; }
+  const aL = armL2 || armL; npcLimb(c, C.arm, aw, aL); npcLimb(c, C.arm, aw, armR); hand(aL[4], aL[5]); hand(armR[4], armR[5]);
+
   if (who === 'guide' && pose !== 'wave' && pose !== 'point' && !sit) { c.strokeStyle = '#8a5a32'; c.lineWidth = 2.6; c.lineCap = 'round'; c.beginPath(); c.moveTo(armR[4] + 1, armR[5] - 18); c.lineTo(armR[4] + 2, 0); c.stroke();
     c.fillStyle = '#6a4226'; c.beginPath(); c.arc(armR[4] + 1, armR[5] - 18, 2.2, 0, 7); c.fill(); }
   if (who === 'aide' && pose !== 'wave' && pose !== 'point') { c.save(); c.translate(2, -46); c.rotate(-0.15); c.fillStyle = '#b07a45'; c.beginPath(); c.roundRect(-6, -2, 13, 17, 1.5); c.fill(); c.fillStyle = '#fff'; c.fillRect(-4.5, 1, 10, 12.5);
@@ -248,7 +282,9 @@ function npcFull(c, who, X, Y, h, face = 'happy', pose = 'stand', t = 0, flip = 
   if (pose === 'offer') { c.fillStyle = '#ffd23f'; c.beginPath(); c.roundRect(-7, -44, 14, 9, 3); c.fill(); c.fillStyle = '#fff'; c.beginPath(); c.arc(-3, -41, 1.4, 0, 7); c.fill(); }
   // neck and head
   c.fillStyle = C.skin; c.fillRect(-4.5, -64, 9, 10);
-  c.translate(0, who === 'guide' ? -77 : -76); c.scale(0.62, 0.62); NPC_HEAD[who](c, face);
+  c.save(); c.translate(0, who === 'guide' ? -77 : -76); c.scale(0.62, 0.62); NPC_HEAD[who](c, face); c.restore();
+  if (who === 'mc') { c.save(); c.translate(armR[4], armR[5]); c.rotate(-0.6); c.fillStyle = '#2a2a33'; c.beginPath(); c.roundRect(-1.8, -3, 3.6, 13, 1.5); c.fill();   // the mic in front of his chin
+    c.fillStyle = '#c9ced8'; c.beginPath(); c.arc(0, -5.5, 4, 0, 7); c.fill(); c.fillStyle = 'rgba(0,0,0,.25)'; c.fillRect(-2.8, -6, 5.6, 0.9); c.restore(); }
   c.restore();
 }
 /* a person standing in the scenes, at real height: 48 px to a metre */
