@@ -7,7 +7,7 @@ const NPC = {
   doc: { name: 'Dr. Ines', cm: 168, tag: '#c9b3ff' },
   aide: { name: 'Benji', cm: 172, tag: '#7fe0d0' },
   rival: { name: 'Rook', cm: 170, tag: '#ffb04a' },
-  mc: { name: 'Rico', cm: 176, tag: '#c08cff' },
+  mc: { name: 'Mira', cm: 172, tag: '#c08cff' },
 };
 
 /* ---------- faces, shared ---------- */
@@ -142,8 +142,8 @@ function rookHead(x, face = 'talk') {
   if (face === 'happy') { x.strokeStyle = '#8a3a3a'; x.lineWidth = 2.4; x.beginPath(); x.moveTo(-6, 22); x.quadraticCurveTo(2, 26, 8, 19); x.stroke(); }   // a lopsided grin
   else npcMouth(x, face, '#8a3a3a', 23);
 }
-/* ---------- Rico, the stadium announcer: a tall swept-up quiff, a purple jacket with gold lapels and a microphone ---------- */
-function ricoHead(x, face = 'talk') {
+/* ---------- Mira, the stadium announcer: a tall swept-up quiff, gold hoops, a purple jacket with gold lapels and a microphone ---------- */
+function miraHead(x, face = 'talk') {
   const skin = '#c98d5e', hair = '#3a2418';
   SC.depth(x, () => { x.beginPath(); x.ellipse(-29, 8, 5.5, 7.5, 0, 0, 7); x.ellipse(29, 8, 5.5, 7.5, 0, 0, 7); }, skin, 2, 0.28);
   SC.depth(x, () => { x.beginPath(); x.ellipse(0, 6, 28, 27, 0, 0, 7); }, skin, 2.5, 0.22);
@@ -152,12 +152,14 @@ function ricoHead(x, face = 'talk') {
     x.quadraticCurveTo(48, -34, 36, -24); x.quadraticCurveTo(37, -8, 31, 10); x.quadraticCurveTo(28, -6, 20, -12); x.quadraticCurveTo(10, -22, -2, -15); x.quadraticCurveTo(-18, -12, -31, 10); x.closePath(); }, hair, 2.5, 0.3);
   x.fillStyle = 'rgba(255,255,255,.2)'; x.beginPath(); x.ellipse(8, -44, 18, 4.5, -0.15, 0, 7); x.fill();
   x.strokeStyle = 'rgba(255,255,255,.14)'; x.lineWidth = 2; x.beginPath(); x.moveTo(-22, -36); x.quadraticCurveTo(4, -46, 30, -36); x.stroke();
-  npcEyes(x, face, { ex: 12, ey: 8, rx: 5.2, ry: 6.8 }); npcBrows(x, face, hair, { by: -6, bw: 3 }); npcBlush(x, 18, 21, 0.3);
-  if (face === 'happy' || face === 'talk') { x.fillStyle = '#7a2a2a'; x.beginPath(); x.moveTo(-9, 18); x.quadraticCurveTo(0, 31, 9, 18); x.closePath(); x.fill();   // a big open grin
+  x.strokeStyle = '#e8c35a'; x.lineWidth = 2.6; for (const s of [-1, 1]) { x.beginPath(); x.arc(s * 30, 18, 5, 0, 7); x.stroke(); }   // gold hoops
+  npcEyes(x, face, { ex: 12, ey: 8, rx: 5.2, ry: 6.8 }); npcBrows(x, face, hair, { by: -6, bw: 2.2 }); npcBlush(x, 18, 21, 0.38);
+  if (face !== 'happy') { x.strokeStyle = '#2a1e2e'; x.lineWidth = 2; x.lineCap = 'round'; for (const s of [-1, 1]) { x.beginPath(); x.moveTo(s * 16.5, 3); x.lineTo(s * 20.5, 0); x.moveTo(s * 17.5, 6); x.lineTo(s * 21.5, 4.5); x.stroke(); } }   // lashes
+  if (face === 'happy' || face === 'talk') { x.fillStyle = '#b8323e'; x.beginPath(); x.moveTo(-9, 18); x.quadraticCurveTo(0, 31, 9, 18); x.closePath(); x.fill();   // a big open grin
     x.fillStyle = '#fff'; x.fillRect(-7, 18, 14, 3); }
   else npcMouth(x, face, '#8a3a3a', 22);
 }
-const NPC_HEAD = { guide: kikoHead, shop: nenaHead, doc: inesHead, aide: benjiHead, rival: rookHead, mc: ricoHead };
+const NPC_HEAD = { guide: kikoHead, shop: nenaHead, doc: inesHead, aide: benjiHead, rival: rookHead, mc: miraHead };
 
 /* ---------- portraits for the speech box: head and shoulders on a coloured square ---------- */
 const NPC_BG = { guide: ['#d9ecc4', '#a9cf8a'], shop: ['#fbe0c8', '#e8b98a'], doc: ['#e2dcf6', '#b9b2d8'], aide: ['#d4f0ec', '#9fd2c9'], rival: ['#ffe2bf', '#f2b878'], mc: ['#ece0ff', '#b99be6'] };

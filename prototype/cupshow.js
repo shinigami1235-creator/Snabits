@@ -1,7 +1,7 @@
 /* The cup show: the build-up and wrap-up around cup fights, the way a broadcast would do it.
-   The lights go down and the cup's name comes up with fireworks, Rico the announcer opens it, Tala has a word at the gate,
+   The lights go down and the cup's name comes up with fireworks, Mira the announcer opens it, Tala has a word at the gate,
    the draw is shown, then each match gets a VS card. After a match Rico sums it up and Tala reacts, and at the end
-   the top three stand on the podium. Each beat is a picture drawn from its own clock plus an optional line in a speech box.
+   the top three stand on the podium. Mira is the announcer. Each beat is a picture drawn from its own clock plus an optional line in a speech box.
    Tap to finish a line or move on, and Skip ends the whole show. Needs scenes.js, npcs.js, chibi.js and summon.js. */
 const CUPSHOW = (() => {
   const cl = k => Math.min(1, Math.max(0, k)), eo = k => 1 - Math.pow(1 - cl(k), 3);
@@ -100,7 +100,7 @@ const CUPSHOW = (() => {
     ribbon(c, W, H * 0.27, info.cup.name, t, 1300);
     if (t > 1900) { c.globalAlpha = cl((t - 1900) / 300); c.font = `700 18px ${PIX}`; c.fillStyle = '#fff6d8'; c.textAlign = 'center'; c.fillText(info.cup.sub, W / 2, H * 0.27 + 44); c.globalAlpha = 1; }
   } });
-  /* Rico on the announcer's stand at the edge of the ring, under a spotlight */
+  /* Mira on the announcer's stand at the edge of the ring, under a spotlight */
   B.mc = (info, text, o = {}) => ({ who: 'mc', face: o.face || 'happy', text, textAt: 300, draw(c, W, H, t) {
     stadium(c, W, H, t, { dark: 0.35, cheer: true, spots: 1, spotAt: { x: W * 0.5, y: H * 0.55 } });
     const fx = W * 0.5, fy = H * 0.6;
@@ -185,14 +185,15 @@ const CUPSHOW = (() => {
       c.lineWidth = 8; c.strokeStyle = '#1b1530'; c.strokeText('VS', 0, 0); c.fillStyle = '#ffc93c'; c.fillText('VS', 0, 0); c.restore(); }
     c.font = `700 18px ${PIX}`; c.fillStyle = '#fff6d8'; c.textAlign = 'center'; c.globalAlpha = cl((t - 300) / 300); c.fillText(info.round, W / 2, 34); c.globalAlpha = 1;
   } });
-  /* after the match: the winner celebrates in the ring and Rico or Tala says how it went */
+  /* after the match: the winner celebrates in the ring and Mira or Tala says how it went */
   B.result = (info, who, text, face) => ({ who, face, text, textAt: who === 'tala' ? 200 : 1200, draw(c, W, H, t) {
     const won = info.won;
     stadium(c, W, H, t, { cheer: true, spots: 0.6, spotAt: { x: W * (won ? 0.3 : 0.7), y: H * 0.6 } });
     const gy = H * 0.62, hop = Math.abs(Math.sin(t / 220)) * 22;
     shadow(c, W * 0.3, gy, 46); shadow(c, W * 0.7, gy, 46);
-    mon(c, info.me.spec, W * 0.3, gy - (won ? hop : 0), 150, won ? (hop > 11 ? 'jump' : 'happy') : 'sad', t, false);
-    mon(c, info.foe.spec, W * 0.7, gy - (won ? 0 : hop), 150, won ? 'sad' : (hop > 11 ? 'jump' : 'happy'), t, true);
+    const dr = info.draw, up = hop > 11 ? 'jump' : 'happy';
+    mon(c, info.me.spec, W * 0.3, gy - (won ? hop : 0), 150, dr ? 'tired' : won ? up : 'sad', t, false);
+    mon(c, info.foe.spec, W * 0.7, gy - (won || dr ? 0 : hop), 150, dr ? 'tired' : won ? 'sad' : up, t, true);
     if (won) confetti(c, W, H * 0.7, t, 30);
     ribbon(c, W, H * 0.2, info.title, t, 100, won ? {} : { col: '#9aa0ad', dk: '#5a6070' });
   } });
@@ -225,11 +226,14 @@ const CUPSHOW = (() => {
   function run(beats) {
     return new Promise(done => {
       if (!beats.length) return done();
+      API.on = true; API.mus = beats[0].mus || 'arena';
+      const start = b => { if (b.mus !== undefined) API.mus = b.mus; if (b.jingle && typeof musJingle === 'function') musJingle(b.jingle); };
       const cv = SUMMON.overlay(), c = cv.getContext('2d'), d = devicePixelRatio || 1, W = cv.width / d, H = cv.height / d;
       const skip = document.createElement('button'); skip.className = 'small show-skip'; skip.textContent = 'Skip ▸▸'; document.body.appendChild(skip);
       let i = 0, t0 = performance.now(), over = false;
-      const end = () => { if (over) return; over = true; cv.remove(); skip.remove(); done(); };
-      const next = () => { i++; t0 = performance.now(); if (i >= beats.length) end(); };
+      const end = () => { if (over) return; over = true; API.on = false; cv.remove(); skip.remove(); done(); };
+      const next = () => { i++; t0 = performance.now(); if (i >= beats.length) end(); else start(beats[i]); };
+      start(beats[0]);
       const typed = (b, t) => !b.text || b.skipAt != null || (t - b.textAt) * CPS >= b.text.length;
       cv.onpointerdown = () => { const b = beats[i], t = performance.now() - t0; if (!b || t < 250) return;
         if (b.text && t < b.textAt) { t0 -= b.textAt - t; return; } if (!typed(b, t)) b.skipAt = t; else next(); };
@@ -242,7 +246,8 @@ const CUPSHOW = (() => {
       requestAnimationFrame(step);
     });
   }
-  return { B, run, still, frame, mon, trophy };
+  const API = { B, run, still, frame, mon, trophy, on: false, mus: null };
+  return API;
 })();
 
 /* ---------- the lines. Rico calls the cup, Tala talks to the player ---------- */
@@ -298,3 +303,48 @@ const CUPLINE = {
     return `We'll get them next time, ${me}. Let's go home and rest up.`;
   },
 };
+
+/* ---------- the shows the cups play ---------- */
+const showSpec = fm => SUMMON.specFor(fm);
+const showCup = c => { const fm = c.format, n = CUP.field.length;
+  return { name: c.name.replace(/ \([A-S]\)$/, ''), grade: c.major || c.legend ? 'S' : c.small ? 'F' : c.grade, format: fm, size: n, purse: cupPurse(c), prize: c.prize,
+    sub: fm === 'single' ? 'One match' : `${fm === 'robin' ? 'Round robin' : fm === 'bo3' ? 'Knockout, best of 3' : 'Knockout'} · ${n} Snabits` }; };
+function showSide(i) { const e = CUP.field[i], s = RS;
+  if (e.me) return { name: displayName(s), spec: showSpec(fightMon(s)), line: `Lv ${s.level} · Grade ${s.grade}`, me: true };
+  return { name: e.name, spec: showSpec(e.o.fm), line: `Lv ${e.o.level} · ${e.rook ? 'Rook' : e.breeder}`, rook: !!e.rook, breeder: e.breeder }; }
+const showOk = () => CUP && CUP.c.format !== 'team5';
+/* before a match: the opening the first time, then the VS card with the square-off sting */
+function cupBeforeShow(opp) {
+  if (!showOk()) return Promise.resolve();
+  const c = CUP.c, cup = showCup(c), me = showSide(0), foe = showSide(opp), L = CUPLINE, B = CUPSHOW.B, e = CUP.field[opp];
+  const info = { cup, me, foe, round: roundName(), field: CUP.field.map((_, i) => ({ ...showSide(i), me: !!CUP.field[i].me, breeder: CUP.field[i].breeder })) };
+  const beats = [];
+  if (!CUP.opened) { CUP.opened = true;
+    const foeF = e.o ? makeFighter(e.o.fm, e.o.skills, e.o.level) : null;
+    beats.push({ ...B.open(info), mus: 'arena' }, B.mc(info, L.open(cup)), B.mc(info, L.rules(cup), { pose: 'point' }));
+    if (foeF) beats.push(B.gate(info, L.advice(playerFighter(RS), foeF, me.name, foe.name)));
+    if (c.format === 'elim' || c.format === 'bo3') beats.push(B.bracket(info, L.draw(me.name, foe.name))); }
+  beats.push({ ...B.vs(info, L.vs(roundName(), me, { ...e, name: e.name })), jingle: 'vs', mus: 'cup' });
+  return CUPSHOW.run(beats);
+}
+/* after a match: Mira's recap, then Tala if the cup goes on */
+function cupAfterShow(opp, res) {
+  if (!showOk()) return Promise.resolve();
+  const c = CUP.c, me = showSide(0), foe = showSide(opp), won = res.winner === 0, draw = res.winner === null, B = CUPSHOW.B, L = CUPLINE;
+  const info = { cup: showCup(c), me, foe, won, draw, title: draw ? 'Draw' : `${won ? me.name : foe.name} wins${won ? '!' : ''}` };
+  CUP.lastFoe = foe.name;
+  const series = c.format === 'bo3' && CUP.series && CUP.series.opp != null;
+  const over = c.format === 'single' || CUP.out || (c.format === 'robin' ? CUP.round >= CUP.rounds.length : !series && CUP.alive.length === 1);
+  const beats = [{ ...B.result(info, 'mc', L.recap(res, me.name, foe.name), won ? 'happy' : 'talk'), mus: 'arena' }];
+  if (!over) beats.push(B.result(info, 'tala', series ? `${won ? `Good job, ${me.name}!` : `We lost that one, ${me.name}.`} It's ${CUP.series.me} to ${CUP.series.them} in the series.` : L.after(res, me.name, c, CUP), won || draw ? 'happy' : 'worried'));
+  return CUPSHOW.run(beats);
+}
+/* at the end: the top three on the podium */
+function cupPodiumShow() {
+  if (!showOk() || CUP.place == null || CUP.field.length < 4 || !CUP.fights) return Promise.resolve();
+  const c = CUP.c, order = cupOrder(), me = showSide(0), B = CUPSHOW.B, L = CUPLINE, place = CUP.place, champ = showSide(order[0]).name;
+  const info = { cup: showCup(c), podium: order.slice(0, 3).map(i => ({ ...showSide(i), me: !!CUP.field[i].me })) };
+  const up = (CUP.lines.find(l => /moves up to grade (\w)/.test(l)) || '').match(/grade (\w)/);
+  return CUPSHOW.run([{ ...B.podium(info, 'mc', L.podium(place, me.name, champ, info.cup, CUP.prize), 'happy'), mus: place === 1 ? null : 'arena', jingle: place === 1 ? true : null },
+    B.podium(info, 'tala', L.talaEnd(place, me.name, up && up[1], CUP.prize), place <= 3 ? 'happy' : 'worried')]);
+}

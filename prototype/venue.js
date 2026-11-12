@@ -118,16 +118,18 @@ function venueMatch(){
 }
 
 /* ---------- prize ceremony ---------- */
-function venueCeremony(done){
-  const s=RS, c=CUP.c, F=CUP.field, purse=cupPurse(c);
-  VEN.show={me:true,podium:CUP.place};
-  el("v-name").textContent=c.name.replace(/ \([A-S]\)$/,""); el("v-sub").textContent="Results";
-  let order;
+function cupOrder(){
+  const c=CUP.c, F=CUP.field; let order;
   if(c.format==="robin") order=F.map((e,i)=>i).sort((x,y)=>CUP.pts[y]-CUP.pts[x]||CUP.hp[y]-CUP.hp[x]);
   else if(c.format==="single") order=CUP.singleWon?[0,1]:[1,0];
   else if(c.format==="team5") order=CUP.place===1?[0,5]:[5,0];
   else { const H=CUP.hist, last=H[H.length-1]||[], fin=H[H.length-2]||[], semi=H[H.length-3]||[]; order=[...last,...fin.filter(i=>!last.includes(i)),...semi.filter(i=>!fin.includes(i))]; }
   if(CUP.place==null) order=order.filter(i=>!F[i].me).concat(order.filter(i=>F[i].me));
+  return order;
+}
+function venueCeremony(done){
+  const s=RS, c=CUP.c, F=CUP.field, purse=cupPurse(c), order=cupOrder();
+  el("v-name").textContent=c.name.replace(/ \([A-S]\)$/,""); el("v-sub").textContent="Results";
   VEN.show={podium:1,me:true,champ:F[order[0]].me?null:F[order[0]].o};
   const prizeOf=k=>c.format==="team5"?(k===0?CUP.prize:0):k===0?purse:k===1&&!c.small?Math.round(purse/2):k===2&&!c.small?Math.round(purse/4):0;
   const up=CUP.lines.find(l=>/moves up to grade|invited|Master now/.test(l));

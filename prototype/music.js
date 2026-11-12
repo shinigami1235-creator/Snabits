@@ -163,6 +163,18 @@ const TRACKS={
       "Eb6 - - - G6 - - - F6 - Eb6 - D6 - - -",
       "C6 - - - Eb6 - - - G6 - - - F6 - Eb6 -",
       "F6 - - - - - - - Eb6 - - - A5 - C6 -"]}}},
+  arena:{name:"Drums Up",bpm:108,lead:"saw",lv:0.1,comp:"pow",bassK:"saw",
+    dr:{k:"x.....x...x.....",s:"............x...",h:"x.x.x.x.x.x.x.x.",t:"t..t..T.t.tTt.TT"},
+    bs:"R.....R...R.....",cp:"L---------------",form:["A","A"],
+    sec:{A:{ch:["Dm","Dm","Bb","C","Dm","Dm","Bb","A"],mel:[
+      "D5 - - - - - - - . . . . . . . .",
+      ". . . . . . . . A4 - - - D5 - - -",
+      "F5 - - - - - - - . . . . . . . .",
+      ". . . . . . . . E5 - - - G5 - - -",
+      "A5 - - - - - - - . . . . . . . .",
+      ". . . . . . . . F5 - - - A5 - - -",
+      "Bb5 - - - - - - - D6 - - - - - - -",
+      "C#6 - - - - - - - . . . . . . . ."]}}},
   boss:{name:"Crowned Beast",bpm:156,lead:"saw",lv:0.15,comp:"pow",bassK:"saw",
     dr:{k:"x.x...x.x.x...x.",s:"....x.......x...",h:"xxxxxxxxxxxxxxxx"},
     bs:"RRORRRORRRORRROR",cp:"C.....C.....C...",form:["A","B","A","B"],
@@ -228,6 +240,7 @@ function dKick(d,t,v){const o=mo("sine",165,t),g=MC.createGain();o.frequency.exp
 function dNoise(d,t,dur,v,type,f,q=1){const s=nsrc(t,dur+.02),fl=MC.createBiquadFilter(),g=MC.createGain();fl.type=type;fl.frequency.value=f;fl.Q.value=q;g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);s.connect(fl);fl.connect(g);g.connect(d);}
 function dSnare(d,t,v){dNoise(d,t,.17,v,"highpass",1400);const o=mo("triangle",210,t),g=MC.createGain();o.frequency.exponentialRampToValueAtTime(150,t+.07);g.gain.setValueAtTime(v*.8,t);g.gain.exponentialRampToValueAtTime(.001,t+.09);o.connect(g);g.connect(d);o.start(t);o.stop(t+.1);}
 function dClap(d,t,v){for(let i=0;i<3;i++)dNoise(d,t+i*.011,i<2?.03:.16,v*(i<2?.7:1),"bandpass",1300,1.2);}
+function dTom(d,t,v,f){const o=mo("sine",f,t),g=MC.createGain();o.frequency.exponentialRampToValueAtTime(f*.55,t+.28);g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+.42);o.connect(g);g.connect(d);o.start(t);o.stop(t+.45);dNoise(d,t,.06,v*.35,"lowpass",900);}
 function dRim(d,t,v){const o=mo("square",1650,t),g=MC.createGain();g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+.035);o.connect(g);g.connect(d);o.start(t);o.stop(t+.04);dNoise(d,t,.03,v*.6,"bandpass",3500,2);}
 
 /* one 16th step of a track */
@@ -238,6 +251,7 @@ function musStep(tr,t,sp,hot){
   if(D.dr.k[s]==="x"&&!(last&&s>=12&&!D.calm))dKick(dst,t,.6);
   if(last&&s>=12&&!D.calm)dSnare(dst,t,.22+.08*(s-12));
   else{const sn=D.dr.s[s];if(sn==="x")dSnare(dst,t,.42);else if(sn==="c")dClap(dst,t,.5);else if(sn==="r")dRim(dst,t,.22);}
+  if(D.dr.t){const tm=D.dr.t[s];if(tm==="t")dTom(dst,t,.5,105);else if(tm==="T")dTom(dst,t,.42,160);}   // toms for the arena drums
   const h=hot?"x":D.dr.h[s];
   if(h==="x")dNoise(dst,t,.035,s%4===2?.13:.08,"highpass",8000);else if(h==="o")dNoise(dst,t,.2,.1,"highpass",7000);else if(h==="s")dNoise(dst,t,.03,s%2?.05:.08,"bandpass",6500,1.5);
   if(b===0&&s===0&&!D.calm)dNoise(dst,t,1.3,.13,"highpass",4200);
@@ -277,6 +291,7 @@ const shown=id=>{ const e=document.getElementById(id); return !!e&&e.style.displ
 /* Which tune fits the screen right now. */
 function musWant(){
   if(performance.now()<MUS.jingleT) return null;
+  if(typeof CUPSHOW!=="undefined"&&CUPSHOW.on) return CUPSHOW.mus;
   if(typeof B!=="undefined"&&B&&shown("battle")) return B.mus||"cup";
   if(typeof WILD!=="undefined"&&WILD) return "wild";
   if(shown("venue")) return "cup";
@@ -318,6 +333,12 @@ function musJingle(kind){
     [81,79,84].forEach((m,i)=>iLead(g,t+.5+i*.16,m,.14,.12,"square",3200,[0]));
     for(const m of[72,76,79,84])iEP(g,t+1,m,1.3,.07); iLead(g,t+1,88,1.2,.13,"square",3400,[0]); iBell(g,t+1,96,1.2,.06);
     dKick(g,t+1,.8); dNoise(g,t+1,1.6,.16,"highpass",4200); iBass(g,t+1,36,1.2,.3,"pick"); len=4200;
+  } else if(kind==="vs"){            // the square-off: a rising sweep, then two big hits and a brass stab
+    const sw=nsrc(t,.75),fl=AC.createBiquadFilter(),sg=AC.createGain(); fl.type="bandpass"; fl.Q.value=4; fl.frequency.setValueAtTime(300,t); fl.frequency.exponentialRampToValueAtTime(5200,t+.7);
+    sg.gain.setValueAtTime(.02,t); sg.gain.exponentialRampToValueAtTime(.35,t+.68); sg.gain.exponentialRampToValueAtTime(.001,t+.75); sw.connect(fl); fl.connect(sg); sg.connect(g);
+    for(let i=0;i<6;i++) dSnare(g,t+.3+i*.06,.12+i*.04);
+    for(const [dt,ch] of [[.75,[50,57,62,65]],[1.2,[50,57,62,65]],[1.5,[49,57,61,64]]]){ dKick(g,t+dt,1); dTom(g,t+dt,.6,90); iPow(g,t+dt,ch,dt===1.5?1:.3,.14); }
+    dNoise(g,t+.75,1.4,.22,"highpass",3800); iLead(g,t+1.5,69,.9,.12,"sawtooth",2600,[-10,10]); len=2600;
   } else if(kind==="evo"){
     [60,64,67,71,72,76,79,83,84].forEach((m,i)=>iBell(g,t+i*.11,m,.3,.07));
     for(const m of[60,67,72,76,79])iPad(g,t+1.05,[m],2.2,.03);
