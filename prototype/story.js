@@ -42,29 +42,29 @@ async function playBeat(id) {
 const BEATS = {
   async intro() {
     const s = RS, nm = s.m.name, mon = rookMon('C');
-    await talk('tala', "A letter came from the Grand Ranch. I still owe them 30,000 bits from when I bought this place, and they want it paid.");
+    await talk('tala', "The Grand Ranch sent a letter. I still owe them 30,000 bits from when I bought this ranch, and they want the money.");
     const w = await walkIn('rival', { mon }); s.dir = 1;
-    await talk('rival', `So you're Tala's new ranch hand. I'm Rook. My family runs the Grand Ranch, and ${mon.m.name} is my Snabit.`);
-    w.p.face = 'worried'; await talk('rival', "My family wants this land for the business. Pay off the 30,000 bits and it stays Tala's.");
-    w.p.face = 'happy'; await talk('rival', `Until then, ${mon.m.name} and I will be at the official cups. If you ever beat me to the Legend Cup, I'll get my family to drop whatever is left of the loan.`);
+    await talk('rival', `You must be the new ranch hand. I'm Rook, and this is my Snabit, ${mon.m.name}. My family owns the Grand Ranch.`);
+    w.p.face = 'worried'; await talk('rival', "My father wants this land for a second ranch. If Tala can't pay the 30,000 bits, it goes to us.");
+    w.p.face = 'happy'; await talk('rival', `I'll make you a deal. ${mon.m.name} and I are entering the official cups too. Win the Legend Cup before we do and I'll get my father to drop what's left of the loan.`);
     await walkOut(w); s.pose = 'happy';
-    await talk('tala', `Cup prizes are the fastest way to pay. You can pay 1,000 or 5,000 at a time at the Town Hall in town, and each quarter paid lets the Workshop build more for ${nm}.`);
-    say('Out > Goals shows how much of the loan is paid and what to aim for next.');
+    await talk('tala', `Cup prizes are the quickest way to pay him back. Take the prize money to the Town Hall in town and pay 1,000 or 5,000 at a time. Every quarter we pay off, the Workshop can build more for ${nm}.`);
+    say('Out > Goals shows how much is paid and what to aim for next.');
   },
-  async loan25() { await talk('tala', 'A quarter of the loan is paid. The Workshop can build home upgrades for the barn now.'); },
-  async loan50() { await talk('tala', 'Half the loan is paid. The Workshop can upgrade the training places now, so drills there give more.'); },
-  async loan75() { await talk('tala', 'Three quarters of the loan is paid now, so the Workshop can build the second level of each training place.'); },
+  async loan25() { await talk('tala', "We've paid off a quarter of the loan, so the Workshop can start building upgrades for the barn."); },
+  async loan50() { await talk('tala', "We've paid off half the loan, so the Workshop can upgrade the training places and drills there will give more."); },
+  async loan75() { await talk('tala', "We've paid off three quarters of the loan, so the Workshop can build the second level of each training place."); },
   async loan100() {
     const s = RS; const w = await walkIn('rival', { mon: rookMon(bestGrade()) });
-    w.p.face = 'worried'; await talk('rival', 'My father says the loan is paid in full. Here is the deed to the ranch.');
-    s.pose = 'happy'; await hop(12, 380); await talk('tala', 'The ranch is ours now, all of it.');
-    w.p.face = 'happy'; await talk('rival', "That doesn't change the cups. I'll still beat you at the Majors.");
+    w.p.face = 'worried'; await talk('rival', 'My father got your last payment and told me to bring you the deed.');
+    s.pose = 'happy'; await hop(12, 380); await talk('tala', 'The ranch is finally ours.');
+    w.p.face = 'happy'; await talk('rival', "This doesn't change anything at the cups. I'm still going to beat you at the Majors.");
     await walkOut(w); addItem('Life fruit'); await talk('tala', 'The Grand Ranch sent a Life fruit with the deed.');
   },
   async gradeD() {
     const s = RS; const w = await walkIn('rival', { mon: rookMon('D') });
-    w.p.face = 'surprised'; await talk('rival', `Grade D already? ${rookMon('D').m.name} only got there last season.`);
-    w.p.face = 'happy'; await talk('rival', "I'll be at the stadium in the third week of every month. Come for a rival match if you think you can win.");
+    w.p.face = 'surprised'; await talk('rival', `Grade D already? It took ${rookMon('D').m.name} a whole season to get there.`);
+    w.p.face = 'happy'; await talk('rival', "I'm at the stadium in the third week of every month. Come find me if you want a match.");
     await walkOut(w); await talk('tala', 'The rival match shows under Out > Tournaments in week 3, and winning it pays a quarter of an official cup prize.');
   },
   async gradeC() { await talk('shop', "Grade C! From now on I'll have a second held item for you each week."); },
@@ -77,7 +77,7 @@ const BEATS = {
   async gradeA() {
     const w = await walkIn('guide');
     await talk('guide', "So you made grade A. I've never taken anyone to the Rift, but I'll take you. Pick The Rift from the skill trips.");
-    w.p.face = 'worried'; await talk('guide', 'The Rift is the only place that teaches Void skills, and the Rift Lord trains monsters at its heart.');
+    w.p.face = 'worried'; await talk('guide', 'The Rift is the only place that teaches Void skills. The Rift Lord lives in the middle of it and trains monsters there.');
     await walkOut(w);
   },
   async gradeS() {
@@ -97,7 +97,7 @@ const BEATS = {
     else { addItem('Life fruit'); await talk('rival', "The loan's paid already, so take this Life fruit instead."); }
     w.p.face = 'happy'; await talk('rival', "I'm still coming back next year to win it."); await walkOut(w);
     const d = await walkIn('doc');
-    await talk('doc', 'Kiko took me to the heart of the Rift while you were at the cup. Snabits come through it as colour and hide in whatever has that colour.');
+    await talk('doc', 'Kiko took me into the middle of the Rift while you were at the cup. Snabits come through it as colour and hide in whatever has that colour.');
     await talk('doc', 'They blend into it so well that only a Snaboscope can uncover them. Every Snabit you found came from there.');
     await walkOut(d); s.pose = 'happy'; await hop(14, 400); spark(s.x, headY() - 6, 'sparkle', 12);
     say(''); banner('The End', '#ffd23f'); await rwait(2600); banner('');

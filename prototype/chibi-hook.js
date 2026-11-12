@@ -442,7 +442,7 @@ function beamFx(c, x, t, w, a) {
   c.lineWidth = 16 * w + Math.sin(t / 30) * 2 * w; c.beginPath(); c.moveTo(a.x, a.y); c.lineTo(b.x, b.y); c.stroke();
   c.shadowBlur = 0; c.strokeStyle = 'rgba(255,255,255,.95)'; c.lineWidth = 5 * w; c.beginPath(); c.moveTo(a.x, a.y); c.lineTo(b.x, b.y); c.stroke();
   if (hypno) for (let i = 0; i < 4; i++) { const k = ((t / 300) + i / 4) % 1, p = lerpP(a, b, k); c.strokeStyle = `rgba(255,140,210,${1 - k * 0.5})`; c.lineWidth = 2.5; c.beginPath(); c.arc(p.x, p.y, 8 + k * 6, 0, 7); c.stroke(); }
-  c.fillStyle = 'rgba(255,255,255,.9)'; c.beginPath(); c.arc(b.x, b.y, 10 * w + Math.sin(t / 25) * 3, 0, 7); c.fill();
+  c.fillStyle = 'rgba(255,255,255,.9)'; c.beginPath(); c.arc(b.x, b.y, Math.max(0, (10 + Math.sin(t / 25) * 3) * w), 0, 7); c.fill();
   c.restore();
 }
 function spearFx(c, x, p, i, sc = 1) {
@@ -596,7 +596,8 @@ function sideState(who, te, pos) {
 function chibiBattleLoop() {
   const bat = document.getElementById('battle');
   if (!CB.side[0] && !CB.side[1] || !bat || bat.style.display === 'none') { CB.loop = false; const ar = document.getElementById('arena'); if (ar) ar.style.transform = ''; return; }
-  chibiBattleFrame(cbNow());
+  // one bad frame drops the effect in progress instead of stopping the loop, which froze the arena for the rest of the session
+  try { chibiBattleFrame(cbNow()); } catch (err) { CB.anim = null; if (!CB.warned) { CB.warned = true; console.error('battle frame', err); } }
   requestAnimationFrame(chibiBattleLoop);
 }
 function chibiBattleFrame(now) {
