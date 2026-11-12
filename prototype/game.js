@@ -119,6 +119,8 @@ const slotsFor=()=>4;     // every stage fights with the 4 skills picked on its 
 /* Fight stats: the scan's stats run through the level formula, then earned points add on top at 1 for every 3,
    so training counts the same at every level. The mark adds 5% (Mega: 10% and 5%). */
 const EARN_DIV=3;
+/* Stamina takes the edge off fatigue from drills, trips, missions, cups and wild fights: up to 30% less */
+function tireMul(s){ const v=(s.m.stats[0]||0)+((s.tp&&s.tp[0])||0); return 1-Math.min(0.3,Math.max(0,(v-40)/500)); }
 function fightMon(s){
   const bonus=i=>(s.stage!=="Bit"&&s.mark===i?(s.stage==="Mega"?1.10:1.05):1)*(s.stage==="Mega"&&s.mark2===i?1.05:1);
   const stats=s.m.stats.map((v,i)=>Math.round(v*bonus(i)));

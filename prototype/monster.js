@@ -1,15 +1,17 @@
 /* Snabits Bit monster generator: label grid, photo colours, stats from the design doc. */
 const FAMILY = {
-  Squib:{body:[3,[3,5,6,6,7,7,7,7]], legs:"tentacles", base:[55,40,40,65,50,50], ability:["Wobble","The first hit it takes each fight deals 30% less"]},
-  Antik:  {body:[4,[3,5,6,6,6,6,6,5,3]], legs:"twolegs", top:1, base:[50,65,55,35,40,55], ability:["Heavy Lifter","Held item bonuses +50%"]},
-  Chomp:  {body:[3,[4,5,6,6,6,6,6,6,6,6,5]], legs:"stubby", mouth:3, base:[55,60,50,35,40,60], ability:["Big Bite","Strikes of 50 power or less, its basic attack included, hit 20% harder"]},
-  Moko:  {body:[3,[3,5,6,7,7,7,7,6,5,3]], legs:"tentacles", eyes:"cyclops", base:[55,35,40,75,50,45], ability:["Keen Eye","Its accuracy can't be lowered and dodge doesn't work against it"]},
-  Pinch:  {body:[5,[5,6,6,6,6,6,6,5]], legs:"twolegs", arms:3, base:[50,55,65,35,50,45], ability:["Shell","Crits can't land on it"]},
-  Stilt:  {body:[2,[2,3,3,3,3,3,3,3,2]], legs:"longlegs", base:[55,50,35,50,45,65], ability:["Long Stride","Acts first on the turn it switches in"]},
-  Skit: {body:[7,[3,5,6,6,6,6,5]], legs:"spider", eyes:"spider", arms:0, base:[45,55,45,45,45,65], ability:["Web","Its basic attack has a 30% chance to drop the target's Speed 1 step"]},
-  Booly:  {body:[3,[2,3,4,4,5,5,6,6,6,7,7,7]], legs:"ghost", base:[60,35,40,70,55,40], ability:["Slippery","10% chance to dodge any Strike"]},
+  Squib:{body:[3,[3,5,6,6,7,7,7,7]], legs:"tentacles", base:[55,40,45,65,50,45], ability:["Wobble","The first hit it takes each fight deals 30% less"]},
+  Antik:  {body:[4,[3,5,6,6,6,6,6,5,3]], legs:"twolegs", top:1, base:[45,65,60,35,45,50], ability:["Heavy Lifter","Held item bonuses +50%"]},
+  Chomp:  {body:[3,[4,5,6,6,6,6,6,6,6,6,5]], legs:"stubby", mouth:3, base:[60,60,55,35,35,55], ability:["Big Bite","Strikes of 50 power or less, its basic attack included, hit 20% harder"]},
+  Moko:  {body:[3,[3,5,6,7,7,7,7,6,5,3]], legs:"tentacles", eyes:"cyclops", base:[50,35,40,70,60,45], ability:["Keen Eye","Its accuracy can't be lowered and dodge doesn't work against it"]},
+  Pinch:  {body:[5,[5,6,6,6,6,6,6,5]], legs:"twolegs", arms:3, base:[45,55,70,35,50,45], ability:["Shell","Crits can't land on it"]},
+  Stilt:  {body:[2,[2,3,3,3,3,3,3,3,2]], legs:"longlegs", base:[60,50,35,45,45,65], ability:["Long Stride","Acts first on the turn it switches in"]},
+  Skit: {body:[7,[3,5,6,6,6,6,5]], legs:"spider", eyes:"spider", arms:0, base:[45,55,40,45,55,60], ability:["Web","Its basic attack has a 30% chance to drop the target's Speed 1 step"]},
+  Booly:  {body:[3,[2,3,4,4,5,5,6,6,6,7,7,7]], legs:"ghost", base:[55,35,40,70,60,40], ability:["Slippery","10% chance to dodge any Strike"]},
 };
-const STATS = ["HP","Power","Guard","Mind","Spirit","Speed"];
+/* Stamina: energy each turn and less fatigue. Power: Strike damage and crits. Constitution: HP and cutting all damage.
+   Mind: Cast damage and landing statuses. Insight: hit rate and shrugging off statuses. Speed: going first, dodging and follow-up attacks. */
+const STATS = ["Stamina","Power","Constitution","Mind","Insight","Speed"];
 const LEAN = {Blaze:[1,2],Brawl:[0,3],Spark:[5,0],Wild:[0,5],Frost:[2,0],Tide:[4,1],Venom:[3,4],Charm:[3,1],Stone:[2,3],Light:[4,2],Steel:[1,5],Shade:[5,4]};
 const EL_ABILITY = {
   Blaze:[["Hothead","Strike hits on it have a 20% chance to Burn the attacker"],["Wildfire","Burns it causes take 1/8 HP a turn instead of 1/16"]],

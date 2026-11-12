@@ -479,7 +479,7 @@ async function runDrill(i){
     else { gains[main]=Math.max(vet?0:1,Math.round(rp(main)*(heavy?1.5:1)*mult*age*(1+0.15*(!heavy&&typeof placeLv==="function"?placeLv(DRILL_PLACE[i]):0)))); if(heavy) gains[H[2]]=Math.max(vet?0:1,Math.round(rp(H[2])/2*mult*age)); }
     if(heavy) gains[H[3]]=(gains[H[3]]||0)-2;
     const shp=shapeOf(s.weight)[0], fm=shp==="Thin"?1.25:shp==="Chubby"?1.25:shp==="Heavy"?1.5:1, sm=shp==="Thin"?1.5:shp==="Slim"?1.25:shp==="Chubby"?0.75:shp==="Heavy"?0.5:1, hv=heavy?2:1;
-    s.fatigue+=Math.round((res==="great"||res==="slack"?5:10)*fm*hv); s.stress+=Math.round(((res==="great"?9:5)*hv)*sm*(s.variant==="Pampered"?0.75:1)); s.weight-=hv;
+    s.fatigue+=Math.round((res==="great"||res==="slack"?5:10)*fm*hv*tireMul(s)); s.stress+=Math.round(((res==="great"?9:5)*hv)*sm*(s.variant==="Pampered"?0.75:1)); s.weight-=hv;
     const tz=heavy?null:taste("drill",i), tFirst=tz?tasteFound(tz):false;
     if(tz==="like"){ s.stress-=4; s.spoil+=2; spark(s.x,headY()-4,"heart",3); } if(tz==="dis"){ s.stress+=8; s.spoil-=2; spark(s.x,headY()-6,"q"); }
     const tLine=!tz?"":tz==="like"?(tFirst?`It loves ${name}. I'll remember that.`:`${name} is its favourite.`):(tFirst?`It really doesn't like ${name}. I'll remember that.`:`It grumbled through ${name} again.`);

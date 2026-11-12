@@ -13,15 +13,17 @@ function basicFor(f){ return f.base.mnd>f.base.pow?{...BASIC_SKILL,kind:"Cast"}:
 
 function makeFighter(m,loadout,level=LEVEL){
   const s=m.stats, fl=m.flat||[0,0,0,0,0,0], st=i=>Math.floor(s[i]*level/50+5+fl[i]);
-  const maxhp=Math.floor(s[0]*2*level/50+3*level+30+fl[0]*2);
+  const maxhp=Math.floor(s[2]*1.5*level/50+3*level+55+fl[2]*1.5);   // Constitution sets HP
   const names=(loadout||m.skills);
   return {m,name:m.name,el1:m.el1,el2:m.el2,mono:m.mono,ability:m.ability[0],level,maxhp,hp:maxhp,energy:3,
-    base:{pow:st(1),grd:st(2),mnd:st(3),spr:st(4),spd:st(5)},stage:{pow:0,grd:0,mnd:0,spr:0,spd:0},
+    base:{sta:st(0),pow:st(1),grd:st(2),mnd:st(3),spr:st(4),spd:st(5)},stage:{sta:0,pow:0,grd:0,mnd:0,spr:0,spd:0},
     status:null,guard:false,protect:false,protectLast:false,counter:false,charging:null,hitWhileCharging:false,
     regen:0,mirror:false,sleep:false,taunt:0,lastSkill:null,thawed:false,firstHitTaken:false,lastStand:false,unseen:false,
     skills:names.map(n=>({name:n,...SKILLS[n],label:typeof skillLabel==="function"?skillLabel(n,m.family,m.stage):n}))};
 }
 function stageMul(n){ return n>=0?1+0.25*n:[1,0.8,0.67,0.57][-n]; }
+/* how far ahead one stat is of another, as a share of the other, clamped */
+const edge=(a,b,k,lo,hi)=>Math.max(lo,Math.min(hi,(a-b)/Math.max(1,b)*k));
 function costOf(f,sk){ return sk.cost+(f.status&&f.status.name==="Curse"?1:0); }
 
 class Fight{
@@ -71,11 +73,11 @@ class Fight{
   }
   aiPick(me,foe){
     if(me.charging) return RELEASE;
-    const R=this.rand; const bk=basicFor(me), bs=bk.kind==="Cast"?this.eff(me,"mnd")/this.eff(foe,"spr"):this.eff(me,"pow")/this.eff(foe,"grd"); let best={id:BASIC,score:40*bs+(me.energy<4?12:0)};
+    const R=this.rand; const bk=basicFor(me), bs=(bk.kind==="Cast"?this.eff(me,"mnd"):this.eff(me,"pow"))/this.eff(foe,"grd"); let best={id:BASIC,score:40*bs+(me.energy<4?12:0)};
     for(const o of this.options(me)){ if(o.id<0) continue; const s=me.skills[o.id]; let sc=0;
       if(me.taunt&&(s.kind==="Support"||s.kind==="Field")) continue;
       if(me.status&&me.status.name==="Dread"&&me.lastSkill===s.name) continue;
-      if(s.power){ const atk=s.kind==="Cast"?this.eff(me,"mnd")/this.eff(foe,"spr"):this.eff(me,"pow")/this.eff(foe,"grd");
+      if(s.power){ const atk=(s.kind==="Cast"?this.eff(me,"mnd"):this.eff(me,"pow"))/this.eff(foe,"grd");
         const stab=(s.el&&(s.el===me.el1||s.el===me.el2))?(me.mono?1.4:1.2):1;
         let pw=s.power*(s.hits||1); if(s.ifPoison&&foe.status&&foe.status.name==="Poison") pw*=2; if(s.ifStatus&&foe.status) pw*=2;
         sc=pw*atk*stab*effect(s.el,foe)*(s.acc/100)*(FIELD_FX[this.field?.name]?.[s.el]||1)-costOf(me,s)*3;
@@ -111,7 +113,9 @@ class Fight{
     if(this.over) return [];
     this.events=[]; this.turn++;
     if(this.turn===1) this.start();
-    else this.p.forEach((f,i)=>{ const gain=(this.p[1-i].ability==="Abyss"?1:2)+(f.energyBonus||0); f.energy=Math.min(10,f.energy+gain); });
+    else this.p.forEach((f,i)=>{ const o=this.p[1-i]; let gain=(o.ability==="Abyss"?1:2)+(f.energyBonus||0);
+      if(this.rand()<0.25+edge(this.eff(f,"sta"),this.eff(o,"sta"),1.2,-0.25,0.5)) gain++;   // Stamina: a chance of one more energy a turn
+      f.energy=Math.min(10,f.energy+gain); });
     const picks=[pickA,pickB];
     picks.forEach((id,i)=>{
       const f=this.p[i];
@@ -133,11 +137,18 @@ class Fight{
     const order=[0,1].sort((x,y)=>prio(y)-prio(x)||this.eff(this.p[y],"spd")-this.eff(this.p[x],"spd")||(this.rand()<0.5?-1:1));
     order.forEach(i=>{ const f=this.p[i]; if(f.ability==="Long Stride"&&(this.turn===1||f.freshIn)&&picks[i]>SWITCH0&&prio(i)>0) this.pop(i,"Long Stride"); });
     picks.forEach((id,i)=>{ if(id<=SWITCH0) this.swapIn(i,SWITCH0-id); });
-    for(const i of order){ if(this.over) break; if(picks[i]<=SWITCH0) continue; this.act(i,picks[i]); }
+    for(const i of order){ if(this.over) break; if(picks[i]<=SWITCH0) continue; this.act(i,picks[i]); this.followUp(i,picks[i]); }
     if(!this.over) this.endTurn();
     return this.events;
   }
+  /* Speed: a much quicker Snabit sometimes gets in a free follow-up Attack after its own attack */
+  followUp(i,id){
+    const me=this.p[i], foe=this.p[1-i]; if(this.over||me.hp<=0||foe.hp<=0||me.followed===this.turn) return;
+    const s=id===BASIC?basicFor(me):id>=0?me.skills[id]:null; if(!s||!s.power||me.charging||me.sleep) return;
+    if(this.rand()<edge(this.eff(me,"spd"),this.eff(foe,"spd"),0.5,0,0.25)){ me.followed=this.turn; this.say(`${me.name} is quick enough to follow up.`); this.events.push({t:"followup",who:i}); this.hit(i,{...basicFor(me),name:"Follow-up",label:"Follow-up"}); }
+  }
   start(){
+    this.p.forEach((f,i)=>{ if(this.eff(f,"sta")>this.eff(this.p[1-i],"sta")*1.2){ f.energy++; } });   // a lot more Stamina starts with an extra energy
     this.p.forEach((f,i)=>{ if(f.ability==="Beguile"){ this.pop(i,"Beguile"); this.say(`${f.name}'s Beguile charms ${this.p[1-i].name}.`); this.stageChange(this.p[1-i],{pow:-1},true); } });
   }
   act(i,id){
@@ -178,8 +189,10 @@ class Fight{
     if(s.mirror){ me.mirror=true; this.say(`${me.name} raises a Mirror Charm.`); }
     if(s.taunt){ foe.taunt=s.taunt; this.say(`${foe.name} is taunted.`); }
     if(s.erase){ for(const k in foe.stage) foe.stage[k]=Math.min(0,foe.stage[k]); if(this.field){ this.say(`The ${this.field.name} field is erased.`); this.field=null; } this.say(`${foe.name}'s boosts are erased.`); }
-    if(s.inflict){ if(foe.protect) this.say(`${foe.name} is protected.`); else if(R()*100>(s.acc||100)) this.say("It misses."); else if(foe.status) this.say(`It does nothing, since ${foe.name} already has a status.`); else this.inflict(foe,s.inflict,i); }
+    if(s.inflict){ if(foe.protect) this.say(`${foe.name} is protected.`); else if(R()*100>(s.acc||100)*this.statusOdds(me,foe)) this.say(foe.status?"It misses.":`${foe.name} shrugs it off.`); else if(foe.status) this.say(`It does nothing, since ${foe.name} already has a status.`); else this.inflict(foe,s.inflict,i); }
   }
+  /* Mind lands statuses and Insight shrugs them off: equal stats leave a skill's own chance as it is */
+  statusOdds(me,def){ return Math.max(0.5,Math.min(1.5,1+edge(this.eff(me,"mnd"),this.eff(def,"spr"),0.6,-0.5,0.5))); }
   hit(i,s){
     const me=this.p[i], R=this.rand;
     this.events.push({t:"use",who:i,name:s.name,kind:s.kind,el:s.el});
@@ -189,11 +202,11 @@ class Fight{
     this.say(`${me.name} uses ${s.label||s.name}.`); if(!s.basic){ me.used=me.used||{}; me.used[s.name]=(me.used[s.name]||0)+1; this.p[1-i].seen=this.p[1-i].seen||{}; this.p[1-i].seen[s.name]=1; }
     if(def.protect&&tgt!==i){ this.say(`${def.name} blocks it.`); this.events.push({t:"miss",who:tgt}); return; }
     const seen=s.kind==="Cast"&&me.foresight&&tgt!==i; if(seen) me.foresight=false;
-    if(!s.basic&&!s.sure&&!seen&&tgt!==i){
-      let acc=s.acc/100+(me.accMod||0); if(def.afterimage) acc-=0.3;
+    if(!s.sure&&!seen&&tgt!==i){
+      let acc=(s.acc||100)/100+(me.accMod||0); if(def.afterimage) acc-=0.3;
       if(me.status&&me.status.name==="Blind"&&me.ability!=="Keen Eye") acc-=0.2;
-      const fs=this.eff(def,"spd"), ms=this.eff(me,"spd");
-      if(!s.noDodge&&me.ability!=="Keen Eye"&&fs>ms) acc-=Math.min(0.15,(fs-ms)/ms*0.5);
+      // the attacker's Insight against the defender's Speed: a quick target dodges more, a sharp-eyed attacker misses less
+      if(!s.noDodge){ const d=edge(this.eff(me,"spr"),this.eff(def,"spd"),0.4,-0.2,0.1); acc+=me.ability==="Keen Eye"?Math.max(0,d):d; }
       if(def.ability==="Unseen"&&!def.unseen){ def.unseen=true; if(R()<0.3){ this.pop(tgt,"Unseen"); this.say("It misses."); this.events.push({t:"miss",who:tgt}); return; } }
       if(R()>acc){ this.say("It misses."); this.events.push({t:"miss",who:tgt}); return; }
     }
@@ -215,11 +228,11 @@ class Fight{
       if(s.kind==="Strike"&&pw<=50&&me.ability==="Big Bite") pw*=1.2;
       if(el==="Wild"&&me.ability==="Bloom"&&me.hp<me.maxhp/3) pw*=1.5;
       const atk=s.atkStat?this.eff(me,s.atkStat):s.kind==="Cast"?this.eff(me,"mnd"):this.eff(me,"pow");
-      const dfs=s.kind==="Cast"?this.eff(def,"spr",{pierce:s.pierce}):this.eff(def,"grd",{pierce:s.pierce});
+      const con=this.eff(def,"grd",{pierce:s.pierce}), dfs=s.kind==="Cast"?(con+3*(def.level+5))/4:(con+def.level+5)/2;   // Constitution cuts all damage: half weight against Strikes since it also sets HP, a quarter against Casts
       let d=pw*atk/dfs*(me.level/50+0.4)/2;
       const stab=el&&(el===me.el1||el===me.el2)?(me.mono?1.4:1.2):1;
-      const spdEdge=Math.max(0,Math.min(0.10,(this.eff(me,"spd")-this.eff(def,"spd"))/this.eff(def,"spd")*0.25));
-      const crit=seen||(def.ability!=="Shell"&&!def.bulwark&&R()<(0.05+(s.crit||0)+(me.critBonus||0)+spdEdge));
+      const powEdge=edge(this.eff(me,"pow"),this.eff(def,"grd"),0.2,0,0.12);   // Power: more crits against a softer target
+      const crit=seen||(def.ability!=="Shell"&&!def.bulwark&&R()<(0.05+(s.crit||0)+(me.critBonus||0)+powEdge));
       d*=m*stab*(crit?1.5:1)*(0.9+R()*0.1);
       if(this.field&&el) d*=(FIELD_FX[this.field.name][el]||1);
       if(def.guard) d*=0.5;
@@ -259,7 +272,7 @@ class Fight{
     if(me.hp<=0){ this.ko(i,tgt); return; }
     this.lastStand(tgt);
     if(s.basic&&me.ability==="Web"&&tgt!==i&&R()<0.3){ this.pop(i,"Web"); this.stageChange(def,{spd:-1},true); }
-    if(s.status&&tgt!==i){ let ch=s.status[1]; if(s.status[0]==="Freeze"&&((this.field&&this.field.name==="Snow")||me.ability==="Permafrost")) ch*=2; if(R()*100<ch) this.inflict(def,s.status[0],i); }
+    if(s.status&&tgt!==i){ let ch=s.status[1]*this.statusOdds(me,def); if(s.status[0]==="Freeze"&&((this.field&&this.field.name==="Snow")||me.ability==="Permafrost")) ch*=2; if(R()*100<ch) this.inflict(def,s.status[0],i); }
     if(s.lower&&s.lowerChance&&tgt!==i&&R()*100<s.lowerChance) this.stageChange(def,s.lower,true);
     if(this.field&&this.field.name==="Static"&&R()<0.1) this.inflict(def,"Shock",i);
   }

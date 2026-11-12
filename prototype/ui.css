@@ -431,7 +431,7 @@ body.ob-tut #ranchbtn,body.ob-tut #msgranch{display:none!important}
 .i-fam{font:700 13px var(--pix);color:var(--mute)}
 .i-big{font:700 15px var(--pix);color:var(--text)}
 .i-hearts{color:var(--pink);font-size:15px;letter-spacing:1px}
-.i-stat{display:grid;grid-template-columns:62px 18px 1fr 36px;gap:6px;align-items:center;font:700 15px var(--pix);margin:3px 0}
+.i-stat{display:grid;grid-template-columns:104px 18px 1fr 36px;gap:6px;align-items:center;font:700 15px var(--pix);margin:3px 0}
 .i-r{font-size:13px;text-align:center;border-radius:4px}
 .i-bar{height:10px;background:#11131c;border-radius:5px;overflow:hidden;border:1px solid var(--line)}
 .i-bar i{display:block;height:100%;border-radius:5px}
@@ -529,4 +529,4 @@ body.ob-tut #ranchbtn,body.ob-tut #msgranch{display:none!important}
 
 html:not(.dbg) .gr,html:not(.dbg) .dbg-only{display:none!important}
 html:not(.dbg) .i-r{visibility:hidden}
-html:not(.dbg) .i-stat{grid-template-columns:62px 0 1fr 36px}
+html:not(.dbg) .i-stat{grid-template-columns:104px 0 1fr 36px}

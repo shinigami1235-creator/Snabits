@@ -83,7 +83,7 @@ function wildFight(){
   arenaFight({s,foe:o,mode:"control",title:o.shiny?"Wild, rare colours":"Wild",learn:true,onEnd:r=>{
     WILD.fighting=false;
     const won=r.winner===0, lines=[];
-    s.fatigue=Math.min(100,s.fatigue+(won?6:10));
+    s.fatigue=Math.min(100,s.fatigue+Math.round((won?6:10)*tireMul(s)));
     if(won){
       const exp=Math.round(3+1.5*o.level), bits=Math.round((5+2*o.level)*(o.shiny?2:1));
       PLAYER.bits+=bits; lines.push(`It beat the wild ${o.fm.name}. ${exp} exp and ${bits} bits.`);

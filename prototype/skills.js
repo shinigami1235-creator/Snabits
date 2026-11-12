@@ -211,7 +211,7 @@ function describe(n){
   if(s.crit) p.push("high crit");
   if(s.noDodge) p.push("can't be dodged");
   if(s.sure) p.push("never misses");
-  if(s.pierce) p.push("ignores Guard buffs");
+  if(s.pierce) p.push("ignores Constitution buffs");
   if(s.ifPoison) p.push("double on Poisoned");
   if(s.ifStatus) p.push("double on any status");
   if(s.steal) p.push(`steals ${s.steal} energy`);
@@ -240,7 +240,7 @@ function describe(n){
   if(s.erase) p.push("removes target's buffs and the field");
   return p.join(", ");
 }
-const STAT_NAME={pow:"Power",grd:"Guard",mnd:"Mind",spr:"Spirit",spd:"Speed"};
+const STAT_NAME={pow:"Power",grd:"Constitution",mnd:"Mind",spr:"Insight",spd:"Speed",sta:"Stamina"};   // grd and spr keep their old keys
 
 /* Arm skills on a form with no arms keep their numbers and take a body name, since a Bit with no arms can't jab.
    The punch name and animation come back once it grows arms. */

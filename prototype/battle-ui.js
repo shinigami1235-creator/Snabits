@@ -151,7 +151,7 @@ function arenaFight({s,foe,mode="control",title="",turnLimit=15,noDraw=false,rec
   ["me","foe"].forEach(k=>{$("b-"+k+"-sprite").className="bsprite";});
   $("b-log").innerHTML=""; $("b-result").style.display="none";
   logLine(`${title?title+". ":""}${fight.p[1].name}, Lv ${foe.level}. Its skills are ${fight.p[1].skills.map(x=>x.label||x.name).join(", ")}.`);
-  if(fight.p[0].monocle){ const o=fight.p[1]; logLine(`Monocle: HP ${o.maxhp}, Power ${o.base.pow}, Guard ${o.base.grd}, Mind ${o.base.mnd}, Spirit ${o.base.spr}, Speed ${o.base.spd}.`); }
+  if(fight.p[0].monocle){ const o=fight.p[1]; logLine(`Monocle: HP ${o.maxhp}, Stamina ${o.base.sta}, Power ${o.base.pow}, Constitution ${o.base.grd}, Mind ${o.base.mnd}, Insight ${o.base.spr}, Speed ${o.base.spd}.`); }
   drawPanels();
   if(B.opts.auto) autoStep(); else drawButtons();
 }

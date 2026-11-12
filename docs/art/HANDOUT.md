@@ -124,6 +124,19 @@ Gid caught AI slop in the storyboard lines on 12 Nov 2026 because the skills wer
   - At the end the top three stand on a podium with the trophy, fireworks and confetti. Mira calls the result and Tala's line depends on the place: a win and a grade up, one win from the trophy, or the prize money going to the loan.
   - Mira is the announcer: a tall swept-up quiff, gold hoops, a purple jacket with gold lapels and a red bow tie, and a microphone. She started as Rico, and Gid said he looked like a girl, so the name changed.
   - Music: "Drums Up", a tom-heavy drum track in D minor, plays under the build-up and the recaps. The VS card has a square-off sting (a rising sweep, two big hits and a brass stab) before the cup tune comes in for the fight, and a cup win plays the win fanfare on the podium. `arena-music-preview.mp3` has both.
+- **Six stats, reworked (12 Nov 2026).** Gid merged HP and Guard into Constitution, renamed Spirit to Insight and added Stamina. The index order stays the same so every drill, place, mark and heavy drill keeps its slot (`STATS` in `monster.js`, the rules in `battle.js`):
+  - Stamina (0, Laps, Stout mark): a chance of one more energy each turn against the opponent's Stamina, an extra energy at the start with 20% more Stamina, and up to 30% less fatigue from drills, trips, missions, cups and wild fights (`tireMul()` in `game.js`).
+  - Power (1, Boulder push, Horned): Strike damage and more crits against a lower Constitution.
+  - Constitution (2, Brace, Shelled): sets HP and cuts all damage, at half weight against Strikes and a quarter against Casts since it already sets HP. The battle code still calls it `grd`.
+  - Mind (3, Puzzle box, Sage): Cast damage and the chance to land a status, against the target's Insight (`statusOdds`).
+  - Insight (4, Meditate, Haloed): hit rate against the target's Speed and resisting statuses. The battle code still calls it `spr`.
+  - Speed (5, Dodgeball, Winged): goes first, dodges (the free Attack can miss now too) and sometimes gets a free follow-up Attack when much quicker (`followUp`).
+  - The family bases were redone for the new stats with the same total: Pinch leans Constitution, Moko and Booly lean Mind and Insight, Stilt leans Stamina and Speed, Skit Speed and Insight. In a 5,000-fight simulation every family wins 45% to 56% of the time.
+  - Contests now judge Strength on Power and Constitution, Speed on Speed and Stamina, and Smarts on Mind and Insight.
+- **The scan card shows the ability, the starting skills and the stats.** Growth ranks, the faster and slower stats and the skill count only show with `#debug`, on the ranch and the info page too, since a paid NPC who reveals a Snabit's potential is planned for later.
+- **The Snaboscope** stops the camera when the ranch opens and reopens it fresh, reopens a picture that hasn't moved for 2 seconds, and gives up on a lens after 6 seconds. A Light button turns on the phone's flash where the camera has one. The gallery button stays for now and comes out later.
+- **Summon and fusion music** (`musCue` in `music.js`): a build-up timed to the scene into a crash, a major chord and a four-note fanfare, and each family has a cry when it appears (`cry()` in `chibi-hook.js`). `summon-music-preview.mp3` has both scores and the eight cries.
+- **Meditate at the pond** (`pondMeditate` in `ranch.js`): eyes shut, a growing glow, a dragonfly that lands on its head, a leaping koi and a petal gust, pebbles circling it on a great, two wobbling pebbles on a success, and the frog on a fail. `meditate.mp4` and `meditate-sheet.png` show all three.
 - **Battles keep drawing if an effect fails.** A beam's end glow could get a negative size from the far side, which threw and froze the arena for the rest of the session. That's fixed, and a frame that throws now drops the effect in progress.
 - **Cups come home at night too.** Going to the stadium fades out first. After the prize ceremony the Snabit walks into the ranch at night, then black and morning, then Tala's notes.
 - **Nena's shop (12 Nov 2026).** Town has Nena's shop and the Workshop. The shop is a place you walk into, with shelves, hats and wings on the wall, a sign, and a counter with the skill chips in a glass case. Snacks and medicine, things to wear, skill chips and selling are all bought from her, and she answers each sale in the box at the top of the panel.
@@ -172,6 +185,8 @@ Gid caught AI slop in the storyboard lines on 12 Nov 2026 because the skills wer
 ## Next
 
 - Computer opponents don't use signature skills yet.
+- An NPC who reveals a Snabit's growth ranks and lifespan for a fee.
+- Remove the gallery button from the Snaboscope.
 - Cloud save with a short code, built together with the PvP server.
 - Gid's answer on the Bitter root: keep it as discipline or make it a recovery item.
 - Later, for the cozy side: furniture and wall colours to buy and place.
@@ -246,4 +261,5 @@ Worn items: Head (Cap, Top hat, Crown, Party hat, Bow), Face (Sunglasses, Monocl
 - The local git remote on Gid's laptop still points at the old repo name. Pushes work through GitHub's redirect, and changing the remote needs Gid's OK.
 - The design doc's old real-time mission table should come out once Gid says so.
 - Team battle is against computer teams only. Friend rooms are still 1 on 1.
+- Skill descriptions and some skill names still lean on the old stats, such as Spirit Ward, which halves Cast damage.
 - The test scripts for the art live outside the repo, so a new chat has to write its own. They set up a save with `newPlayer()` and `openRanch()`, the pixel regression test uses `#art=pixel`, and Playwright runs with `/usr/bin/google-chrome` against a local server on port 8765.

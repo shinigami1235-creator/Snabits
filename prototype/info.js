@@ -6,7 +6,7 @@ const INFO_EL = { Blaze: '#e24c3e', Brawl: '#e88c34', Spark: '#f2cf3c', Wild: '#
   Charm: '#f496be', Stone: '#a07a56', Light: '#f4f0e2', Steel: '#aab2c0', Shade: '#5a5070', Void: '#3a2a5a' };
 const INFO_STAT_COL = ['#57dd96', '#ff8a4c', '#9aa6cf', '#b088f0', '#ffd36e', '#5cb8ff'];
 const INFO_RANK_COL = { S: '#ff7aa2', A: '#ffc93c', B: '#57dd96', C: '#a6a4b8', D: '#75738a', E: '#4a506c' };
-const INFO_STAT_KEY = { hp: 'HP', pow: 'Power', grd: 'Guard', mnd: 'Mind', spr: 'Spirit', spd: 'Speed', acc: 'Accuracy', eva: 'Dodge' };
+const INFO_STAT_KEY = { hp: 'HP', sta: 'Stamina', pow: 'Power', grd: 'Constitution', mnd: 'Mind', spr: 'Insight', spd: 'Speed', acc: 'Accuracy', eva: 'Dodge' };
 const elChip = (e, label) => `<span class="i-el" style="background:${INFO_EL[e] || '#a6a4b8'};color:${['Shade', 'Void', 'Blaze', 'Tide', 'Venom'].includes(e) ? '#fff' : '#1a1208'}">${label || e}</span>`;
 
 function openInfo(tab) {
@@ -158,7 +158,7 @@ function bindSkills(s) {
 }
 
 /* ---------- Record ---------- */
-const INFO_ACT_COL = { HP: '#57dd96', Power: '#ff8a4c', Guard: '#9aa6cf', Mind: '#b088f0', Spirit: '#ffd36e', Speed: '#5cb8ff', Rest: '#3a3f58', Trip: '#7a62b8', Mission: '#7a62b8', Cup: '#ffc93c' };
+const INFO_ACT_COL = { Stamina: '#57dd96', Power: '#ff8a4c', Constitution: '#9aa6cf', Mind: '#b088f0', Insight: '#ffd36e', Speed: '#5cb8ff', Rest: '#3a3f58', Trip: '#7a62b8', Mission: '#7a62b8', Cup: '#ffc93c' };
 function infoRecord(s) {
   const uses = s.uses || {}, top = Object.entries(uses).sort((a, b) => b[1] - a[1])[0], mastered = Object.keys(uses).filter(n => uses[n] >= MASTERY);
   const born = s.born != null ? (() => { const w = s.born, mo = Math.floor(w / 4) % 12, y = Math.floor(w / 48) + 1; return `${SEASON[Math.floor(mo / 3)]}, Month ${mo % 3 + 1}, Week ${w % 4 + 1}${y > 1 ? `, Year ${y}` : ''}`; })() : '';

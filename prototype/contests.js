@@ -2,9 +2,9 @@
    Smarts and Style take turns. Junior is for grades E and D, Senior for C and B, Pro for A and S. Three rounds,
    five entrants, and the prize table pays the top three. Needs ranch.js, game.js and story.js. */
 const CONTEST_KINDS = [
-  { kind: 'Strength', judged: 'Power and HP', stats: [1, 0], place: 'quarry', rounds: ['The boulder lift', 'The cart push', 'The log hold'] },
-  { kind: 'Speed', judged: 'Speed and Spirit', stats: [5, 4], place: 'road', rounds: ['The sprint', 'The hurdles', 'The long run'] },
-  { kind: 'Smarts', judged: 'Mind and Speed', stats: [3, 5], place: 'study', rounds: ['The puzzle box', 'The memory cards', 'The maze'] },
+  { kind: 'Strength', judged: 'Power and Constitution', stats: [1, 2], place: 'quarry', rounds: ['The boulder lift', 'The cart push', 'The log hold'] },
+  { kind: 'Speed', judged: 'Speed and Stamina', stats: [5, 0], place: 'road', rounds: ['The sprint', 'The hurdles', 'The long run'] },
+  { kind: 'Smarts', judged: 'Mind and Insight', stats: [3, 4], place: 'study', rounds: ['The puzzle box', 'The memory cards', 'The maze'] },
   { kind: 'Style', judged: 'loyalty, what it wears and its cups', stats: null, place: 'court', rounds: ['The walk', 'The pose', 'The trick'] },
 ];
 const CONTEST_WINS = { 1: 'Bow', 3: 'Party hat', 6: 'Top hat', 12: 'Crown' };   // something to wear at each milestone

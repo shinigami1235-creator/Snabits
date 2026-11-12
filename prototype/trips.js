@@ -63,7 +63,7 @@ async function runTrip(reg){
       else K(`${nm}, ${lc(tn)}.`);
       await rwait(900); banner("");
       await playTask(kind,ok,{look:A.look,fall:FALLER[reg.el],teacher});
-      s.tp[main]+=a; s.tp[second]+=b; gain[0]+=a; gain[1]+=b; s.fatigue+=18; s.stress+=7;   // MR2's errantry: +18 fatigue and +7 stress every week, so it comes home very tired
+      s.tp[main]+=a; s.tp[second]+=b; gain[0]+=a; gain[1]+=b; s.fatigue+=Math.round(18*tireMul(s)); s.stress+=7;   // MR2's errantry: +18 fatigue and +7 stress every week, so it comes home very tired
       drawUI(); popStat(main,"+"+a); popStat(second,"+"+b);
       let line=`Week ${w+1}, ${A.name}: ${STATS[main]} +${a}, ${STATS[second]} +${b}.${ok?"":" It was a rough week."}`;
       await stageResult(ok,ok?`That was a good week. ${STATS[main]} went up by ${a} and ${STATS[second]} by ${b}.`:`That was a rough week, so ${STATS[main]} only went up by ${a} and ${STATS[second]} by ${b}.`,"guide");

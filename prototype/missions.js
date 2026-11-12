@@ -111,7 +111,7 @@ async function runMission(b){
     await new Promise(done=>arenaFight({s:snap,foe,mode:"auto",title:foe.boss?"Boss":"Wild",noDraw:true,rand:rng(res.endSeed+1),onEnd:done}));
     s.stageRegions=s.stageRegions||{}; s.stageRegions[b.reg]=(s.stageRegions[b.reg]||0)+K.weeks;
     PLAYER.bits+=res.bits; res.finds.forEach(x=>addItem(x));
-    s.fatigue+=Math.max(0,res.fat)+12*K.weeks; s.stress+=3*K.weeks; if(res.injured){ s.injured=true; s.used+=2; }
+    s.fatigue+=Math.round((Math.max(0,res.fat)+12*K.weeks)*tireMul(s)); s.stress+=3*K.weeks; if(res.injured){ s.injured=true; s.used+=2; }
     lv=giveExp(s,res.exp); drawUI();
     s.trip=true; s.x=60; s.pose=won?"happy":"tired"; s.camJump=true; await sceneFade(false,500);
     if(won){ spark(s.x,headY()-6,"sparkle",8); await hop(14,360); } await rwait(500);

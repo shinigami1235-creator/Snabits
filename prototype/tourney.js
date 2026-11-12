@@ -151,7 +151,7 @@ function finishCup(){
   if(place===1&&c.qualifier){ s.exQual=`${weekParts(PLAYER.week).yr}:${c.grade}`; lines.push("It's in this year's Summer Exhibition, next month."); }
   // MR2's numbers: a cup wears it out but takes a lot of stress off, most of all with a win
   const last=place===null||(c.format==="robin"&&place===c.size)||(c.format==="elim"&&place===5)||((c.format==="single"||c.format==="team5")&&place===2);
-  if(CUP.fights){ if(place===1){ s.stress-=45; s.fatigue+=30; } else if(last){ s.stress-=30; s.fatigue+=50; } else { s.stress-=38; s.fatigue+=40; } clampAll(); }
+  if(CUP.fights){ const tm=tireMul(s); if(place===1){ s.stress-=45; s.fatigue+=Math.round(30*tm); } else if(last){ s.stress-=30; s.fatigue+=Math.round(50*tm); } else { s.stress-=38; s.fatigue+=Math.round(40*tm); } clampAll(); }
   if(place===1&&!c.small){ s.cups=(s.cups||[]).concat(c.name); s.stageCups=(s.stageCups||0)+1;
     if(c.official&&c.grade===s.grade&&s.grade!=="S"){ s.grade=GRADES[GRADES.indexOf(s.grade)+1]; lines.push(`It moves up to grade ${s.grade}.`); }
     if(c.official&&c.grade==="S"&&!s.majorInvite){ s.majorInvite=true; lines.push("It's been invited to the Major 4, one big cup each season."); }

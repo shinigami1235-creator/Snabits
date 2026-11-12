@@ -1,7 +1,7 @@
 /* Trip areas: a skill trip moves through four places in its region, one a week, the way MR2's expedition maps go
    from spot to spot. The first place is the region's own picture, the last is where its teacher lives, and each place
    has its own tasks. Tasks are [name, kind, stat]: the kind picks the animation in errantry.js and the stat decides how
-   likely it goes well (0 HP, 1 Power, 2 Guard, 3 Mind, 4 Spirit, 5 Speed). Needs scenes.js and errantry.js. */
+   likely it goes well (0 Stamina, 1 Power, 2 Constitution, 3 Mind, 4 Insight, 5 Speed). Needs scenes.js and errantry.js. */
 const A_ = (key, name, tasks, look = {}) => ({ key, name, tasks, look });
 const TRIP_AREAS = {
   Blaze: [A_('trail', 'Ash road', [['Clear the fallen rocks', 'haul', 2], ['Search the ash for coins', 'search', 3]], { bush: '#5a4a44', dot: '#ffb347' }),

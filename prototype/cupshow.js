@@ -264,7 +264,8 @@ const CUPLINE = {
     const st = ['pow', 'grd', 'mnd', 'spr', 'spd'], top = st.reduce((a, k) => foeF.base[k] > foeF.base[a] ? k : a, 'pow');
     if (meF.base.spd > foeF.base.spd * 1.15) return `${meName} is quicker than ${foeName}, so it should get the first hit in. Start with your strongest skill.`;
     if (top === 'pow' || top === 'mnd') return `${foeName} hits hard. Guard when it charges up and hit back on the next turn.`;
-    if (top === 'grd' || top === 'spr') return `${foeName} can take a lot of hits. Save your energy for strong skills rather than chipping away.`;
+    if (top === 'grd') return `${foeName} can take a lot of hits. Save your energy for strong skills rather than chipping away.`;
+    if (top === 'spr') return `${foeName} rarely misses and shakes off statuses, so hit it hard rather than trying to slow it down.`;
     return `${foeName} looks about even with ${meName}. Watch its first few moves before using your strongest skills.`;
   },
   recap(res, me, foe) {
