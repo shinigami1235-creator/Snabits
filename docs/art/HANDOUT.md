@@ -51,8 +51,8 @@ Gid caught AI slop in the storyboard lines on 12 Nov 2026 because the skills wer
 - **Support skills have their own effects:** arrows up for buffs, arrows down for drops, a hex bubble for shields (ice for Frost Armor, rock for Shard Wall, steel for Iron Wall), sparkles for heals, a gathering glow on charge turns, and a screen-wide change for fields (sun rays, rain, snow, static, moonlight).
 - **Signature skills (11 Nov 2026).** Each family learns its own move at level 5, and worn wings teach Fly. They never appear in scan pools, shops or trips (`SIG_SKILLS`, `FAMILY_SIG`, `sigSkills()` in `skills.js`):
   - Skit: a web in its own element (Fire Web burns, Ice Web freezes, Water Web soaks, and so on), 40 power, always lowers Speed.
-  - Pinch: Bunker Down, raises Guard 2 and Spirit 1, drawn as the crab tucking into its shell.
-  - Chomp: Crunch, 80 power, may lower Guard. Squib: Ink Jet, 40 power, 40% Blind. Antik: Static Screen, 45 power, 30% Daze. Moko: Glare, lowers Power and Speed. Stilt: High Kick, 90 power. Booly: Phase Shift, +30% dodge for 3 turns.
+  - Pinch: Bunker Down, raises Constitution 2 and Insight 1, drawn as the crab tucking into its shell.
+  - Chomp: Crunch, 80 power, may lower Constitution. Squib: Ink Jet, 40 power, 40% Blind. Antik: Static Screen, 45 power, 30% Daze. Moko: Glare, lowers Power and Speed. Stilt: High Kick, 90 power. Booly: Phase Shift, +30% dodge for 3 turns.
   - Bat wings or Angel wings: Fly, 90 power, goes up out of sight on the first turn and dives on the second.
 - **New skills, learnable outside the scan pool:** Fire Spin (Blaze, 25 x 3, Burn), Shadow Strike (Shade, 85, can't be dodged, rises out of the target's shadow), Gust (neutral chip, 40, goes first) and Tornado (neutral chip, 90, may lower Speed). Leaf Storm, Inferno and Maelstrom now play as leaf, fire and water tornadoes.
 - **Marks look the same on every family (11 Nov 2026).** Stout makes the body 12% wider with a pale belly. Horned puts two horns on the head. Shelled puts a spiked shell on the back, with the rim and spikes showing round the body from the front and the plates from behind. Sage adds two feathery feelers with glowing tips. Haloed floats a gold ring over the head, raised above any hat, horns, feelers or Antik's antenna. Winged adds small feathered wings in the body's colours, and worn wings take their place.
@@ -109,7 +109,7 @@ Gid caught AI slop in the storyboard lines on 12 Nov 2026 because the skills wer
 - **The intro (12 Nov 2026):** Snabits are camouflaged in the colour of whatever they hide in, and only a Snaboscope can uncover them (Gid's call). Tala is putting up a job request on the town board for help on her ranch, sees the player and offers them the job. The first Snaboscope trip has no scan limit: after each scan you keep it, scan again, or choose from the last six.
 - **The camera picks the main back lens.** Phones with several back lenses could give the game the macro or ultra-wide one, which is blurry past a few centimetres. After the first open it lists the lenses, skips any labelled macro, wide, tele or depth, prefers camera 0 and then the biggest sensor, asks for 1920 by 1080 and turns on continuous autofocus. Flip steps through every back lens and then the front one.
 - **The bestiary** (`dex.js`): the 8 families in the 12 elements, 96 kinds. A kind is seen once it's scanned or fought and raised once it lives on the ranch, with a star per stage reached. Unseen kinds show as dark shapes. Prizes at 10, 25, 40, 60, 80 and 96 seen and 3, 8, 15 and 24 raised.
-- **Contests** (`contests.js`): one in the first week of every month, taking turns between Strength (Power and HP, at the quarry), Speed (Speed and Spirit, on the long road), Smarts (Mind and Speed, in the study room) and Style (loyalty, what it wears and its cups, on the court). Junior for E and D, Senior for C and B, Pro for A and S. Three rounds scored out of 10 against four other entrants. Prizes for the top three, a thing to wear at 1, 3, 6 and 12 wins, and 15 stress off.
+- **Contests** (`contests.js`): one in the first week of every month, taking turns between Strength (Power and Constitution, at the quarry), Speed (Speed and Stamina, on the long road), Smarts (Mind and Insight, in the study room) and Style (loyalty, what it wears and its cups, on the court). Junior for E and D, Senior for C and B, Pro for A and S. Three rounds scored out of 10 against four other entrants. Prizes for the top three, a thing to wear at 1, 3, 6 and 12 wins, and 15 stress off.
 - **Festivals:** the Blossom Festival, the Lantern Festival, the Harvest Fair and the Snow Fair, one a season in week 2. Each gives a free item and takes 10 stress off. The calendar shows festivals, contests and rival matches.
 - **Upgrades:** the barn gets a Cozy rug (petting takes 3 more stress off), a Toy chest (playing takes 5 more off) and Potted plants (stress -2 a week), each drawn in the barn. Each of the six training places has two levels, drawn as bunting and then lamps and a scoreboard, giving 15% then 30% more from that drill and more great results.
 - **Late skills:** every element has two more skills at levels 34 and 42 so grade A and S monsters still learn, and Void has seven. Each uses an effect its element didn't have yet, such as Heat Wave as a push, Ion Beam as a beam, Ice Age as falling ice and Event Horizon as a beam.
@@ -217,11 +217,11 @@ Gid caught AI slop in the storyboard lines on 12 Nov 2026 because the skills wer
 
 | Stat trained most | Mark | What it adds |
 |---|---|---|
-| HP | Stout | A wider body and a pale belly |
+| Stamina | Stout | A wider body and a pale belly |
 | Power | Horned | Two horns |
-| Guard | Shelled | A spiked shell on the back |
+| Constitution | Shelled | A spiked shell on the back |
 | Mind | Sage | Two feathery feelers with glowing tips |
-| Spirit | Haloed | A gold halo |
+| Insight | Haloed | A gold halo |
 | Speed | Winged | Small feathered wings |
 
 Care variants: Devoted (pink glow, a drifting heart), Pampered (rounder body, star-sparkle eyes), Feral (dark outline, two fangs, narrowed eyes), Bulky (wider body), Lean (narrower and taller), Wanderer (region colours), Champion (gold medal), Moonlit (night palette, silver eyes, stars), Scruffy (fur tufts, dirt spots).
