@@ -97,13 +97,15 @@ Gid caught AI slop in the storyboard lines on 12 Nov 2026 because the skills wer
   - After each camp night the route map shows on the black screen, and a marker walks to the next place before the morning comes up there.
   - The teacher at the last place is a big Mega with the Haloed mark in the region's colours, for example the Frost Matron (a Squib) or the Foreman (an Antik). A skill learned that week is taught by the teacher, with a better chance than Kiko's weeks.
 - **The story (12 Nov 2026, built overnight on Gid's go-ahead, to be reviewed)** mixes three threads (`story.js`):
-  - The ranch came with a 30,000 bit loan from the Grand Ranch. Rook, the son of the family that runs it, wants the land back. Prize money pays the loan at the Town Hall in town, 1,000 or 5,000 or the rest at a time.
+  - Tala bought the ranch with a 30,000 bit loan from the Grand Ranch, and the player is the ranch hand she hired in the intro. Rook, the son of the family that runs the Grand Ranch, wants the land back for the business (Gid's call). Prize money pays the loan at the Town Hall in town, 1,000 or 5,000 or the rest at a time.
   - Each quarter paid has a scene and opens more of the Workshop: home upgrades at a quarter, the first level of each training place at half, the second level at three quarters. Paying it all brings Rook with the deed and a Life fruit.
   - Rook enters the official cups, the Majors and the Legend Cup with the same Snabit (a Shade monster trained up to each grade), waiting in the other half of a knockout. From grade D there's a rival match with him in week 3 of every month. Wins and losses against him are counted.
   - The first time any Snabit reaches a grade, a scene plays: Rook at D, Nena at C (a second held item in the shop each week), Dr. Ines at B (a signal from the Rift), Kiko at A (The Rift opens for trips), Rook at S, Rook again after all four Majors.
   - Winning the Legend Cup ends it: Rook drops the rest of the loan, and Dr. Ines explains that Snabits come through the Rift as colour and take a shape when a Snaboscope looks at them. "The End" shows, and the game carries on.
   - Rook is drawn like the others: spiky navy hair with a white streak, a navy jacket with gold trim and the Grand Ranch pin, a red scarf, and an orange name tag. During a scene the camera centres between the Snabit and whoever walked in.
   - Out > Goals shows the loan, the next grade step, the record against Rook, the bestiary and contests.
+- **The intro (12 Nov 2026):** Snabits are camouflaged in the colour of whatever they hide in, and only a Snaboscope can uncover them (Gid's call). Tala is putting up a job request on the town board for help on her ranch, sees the player and offers them the job. The first Snaboscope trip has no scan limit: after each scan you keep it, scan again, or choose from the last six.
+- **The camera picks the main back lens.** Phones with several back lenses could give the game the macro or ultra-wide one, which is blurry past a few centimetres. After the first open it lists the lenses, skips any labelled macro, wide, tele or depth, prefers camera 0 and then the biggest sensor, asks for 1920 by 1080 and turns on continuous autofocus. Flip steps through every back lens and then the front one.
 - **The bestiary** (`dex.js`): the 8 families in the 12 elements, 96 kinds. A kind is seen once it's scanned or fought and raised once it lives on the ranch, with a star per stage reached. Unseen kinds show as dark shapes. Prizes at 10, 25, 40, 60, 80 and 96 seen and 3, 8, 15 and 24 raised.
 - **Contests** (`contests.js`): one in the first week of every month, taking turns between Strength (Power and HP, at the quarry), Speed (Speed and Spirit, on the long road), Smarts (Mind and Speed, in the study room) and Style (loyalty, what it wears and its cups, on the court). Junior for E and D, Senior for C and B, Pro for A and S. Three rounds scored out of 10 against four other entrants. Prizes for the top three, a thing to wear at 1, 3, 6 and 12 wins, and 15 stress off.
 - **Festivals:** the Blossom Festival, the Lantern Festival, the Harvest Fair and the Snow Fair, one a season in week 2. Each gives a free item and takes 10 stress off. The calendar shows festivals, contests and rival matches.
@@ -163,8 +165,6 @@ Gid caught AI slop in the storyboard lines on 12 Nov 2026 because the skills wer
 - Cloud save with a short code, built together with the PvP server.
 - Gid's answer on the Bitter root: keep it as discipline or make it a recovery item.
 - Later, for the cozy side: furniture and wall colours to buy and place.
-- Gid to decide why the Grand Ranch wants the land back. The story never says.
-- The intro says Snabits are too small and quick to notice, while Dr. Ines says they only take a shape under a Snaboscope. Gid to pick which one stands.
 
 ## What decides a monster's look
 

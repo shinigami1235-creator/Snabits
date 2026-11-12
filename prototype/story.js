@@ -42,10 +42,10 @@ async function playBeat(id) {
 const BEATS = {
   async intro() {
     const s = RS, nm = s.m.name, mon = rookMon('C');
-    await talk('tala', 'A letter came from the Grand Ranch. The last owner borrowed 30,000 bits from them to build this place, and the loan came with the ranch.');
+    await talk('tala', "A letter came from the Grand Ranch. I still owe them 30,000 bits from when I bought this place, and they want it paid.");
     const w = await walkIn('rival', { mon }); s.dir = 1;
-    await talk('rival', `So you're the new rancher. I'm Rook. My family runs the Grand Ranch, and ${mon.m.name} is my Snabit.`);
-    w.p.face = 'worried'; await talk('rival', 'My family wants this land back. Pay off the 30,000 bits and it stays yours.');
+    await talk('rival', `So you're Tala's new ranch hand. I'm Rook. My family runs the Grand Ranch, and ${mon.m.name} is my Snabit.`);
+    w.p.face = 'worried'; await talk('rival', "My family wants this land for the business. Pay off the 30,000 bits and it stays Tala's.");
     w.p.face = 'happy'; await talk('rival', `Until then, ${mon.m.name} and I will be at the official cups. If you ever beat me to the Legend Cup, I'll get my family to drop whatever is left of the loan.`);
     await walkOut(w); s.pose = 'happy';
     await talk('tala', `Cup prizes are the fastest way to pay. You can pay 1,000 or 5,000 at a time at the Town Hall in town, and each quarter paid lets the Workshop build more for ${nm}.`);
@@ -93,12 +93,12 @@ const BEATS = {
   async legend() {
     const s = RS, St = story(); const w = await walkIn('rival', { mon: rookMon('S') });
     w.p.face = 'worried'; await talk('rival', "You won the Legend Cup, so I'll keep my word.");
-    if (loanLeft() > 0) { St.paid = LOAN; ['loan25', 'loan50', 'loan75', 'loan100'].forEach(k => St.seen[k] = PLAYER.week); await talk('rival', 'My family has dropped the rest of the loan. The ranch is yours, deed and all.'); }
+    if (loanLeft() > 0) { St.paid = LOAN; ['loan25', 'loan50', 'loan75', 'loan100'].forEach(k => St.seen[k] = PLAYER.week); await talk('rival', "My family has dropped the rest of the loan. The ranch is Tala's, deed and all."); }
     else { addItem('Life fruit'); await talk('rival', "The loan's paid already, so take this Life fruit instead."); }
     w.p.face = 'happy'; await talk('rival', "I'm still coming back next year to win it."); await walkOut(w);
     const d = await walkIn('doc');
     await talk('doc', 'Kiko took me to the heart of the Rift while you were at the cup. Snabits come through it as colour and hide in whatever has that colour.');
-    await talk('doc', 'They only take a shape when someone points a Snaboscope at them. Every Snabit you found came from there.');
+    await talk('doc', 'They blend into it so well that only a Snaboscope can uncover them. Every Snabit you found came from there.');
     await walkOut(d); s.pose = 'happy'; await hop(14, 400); spark(s.x, headY() - 6, 'sparkle', 12);
     say(''); banner('The End', '#ffd23f'); await rwait(2600); banner('');
     await talk('tala', 'The cups and the Rift stay open, and the Legend Cup comes back every Summer.');

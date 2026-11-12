@@ -754,6 +754,12 @@ const OB_SMOOTH = {
   town(c, t) { obSkyS(c, ['#f2a65a', '#f8d29a', '#fbe6c2'], 44); obSunS(c, 14, 14, '#ffd27a'); SC.cloud(c, 66, 9, 3, 0.9);
     obGroundS(c, 44, '#c39a68'); c.fillStyle = '#a8814f'; c.fillRect(0, 54, 96, 3);
     obHouseS(c, 2, 44, '#e8d5a8', '#5a6fb5', true); obHouseS(c, 28, 44, '#f4ead2', '#c0392b', true); obHouseS(c, 72, 44, '#d8e4c8', '#3f7f3b', true);
+    // the town board where Tala is pinning up her job request
+    c.fillStyle = '#6b4428'; c.fillRect(48.6, 40, 0.9, 15); c.fillRect(55.5, 40, 0.9, 15);
+    SC.depth(c, () => { c.beginPath(); c.roundRect(47.5, 34, 10, 8, 0.8); }, '#a8743f', 0.5, 0.3);
+    c.fillStyle = '#fbf3df'; c.fillRect(48.6, 35, 3.6, 4.6); c.fillStyle = '#e8eef8'; c.fillRect(53, 35.6, 3.4, 3.2);
+    c.fillStyle = '#c9b48c'; for (let k = 0; k < 3; k++) c.fillRect(49.1, 36.6 + k * 0.9, 2.6, 0.35);
+    c.fillStyle = '#e2483f'; c.beginPath(); c.arc(50.4, 35.4, 0.45, 0, 7); c.fill();
     talaFull(c, 60, 58, 19, 'happy', false, t); },
   handover(c, t) { obSkyS(c, ['#f2a65a', '#f8d29a', '#fbe6c2'], 40); obGroundS(c, 40, '#c39a68');
     obHouseS(c, -8, 40, '#e8d5a8', '#5a6fb5', true); obHouseS(c, 78, 40, '#d8e4c8', '#3f7f3b', true); talaFull(c, 48, 66, 54, 'talk', true, t); },

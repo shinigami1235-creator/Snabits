@@ -1,5 +1,5 @@
-/* Title screen, intro and the first Snaboscope trip: Tala hands over the Snaboscope in town, the player scans 3 things,
-   keeps 1 and walks it to the ranch. A returning player taps Continue and lands back at the ranch.
+/* Title screen, intro and the first Snaboscope trip: Tala, who needs help on her ranch, offers the player the job in
+   town, the player scans as many things as they like, keeps 1 and walks it to the ranch. A returning player taps Continue and lands back at the ranch.
    Needs monster.js, battle.js, game.js and ranch.js, plus the scan code in index.html. */
 let ONB=null;
 const OB_W=96, OB_H=64;
@@ -118,10 +118,11 @@ function obConfirmNew(){
 }
 
 const OB_INTRO=[
-  ["hidden",null,"Every colour hides a Snabit. They live in red mailboxes, green leaves and blue sky, too small and too quick for anyone to notice."],
-  ["scope",null,"A Snaboscope can see them. It reads the colours of whatever it's pointed at and draws out the Snabit living there."],
-  ["town","Tala","You must be the new rancher. I'm Tala, and I help run the ranch up the hill. It's yours now and it's empty, so we need to find your first Snabit."],
-  ["handover","Tala","Your phone is the Snaboscope. Scan three things, see what comes out of each, and bring your favourite home."],
+  ["hidden",null,"Snabits live everywhere, camouflaged in the colour of whatever they hide in, like a red mailbox, a green leaf or the blue sky."],
+  ["scope",null,"Only a Snaboscope can uncover them. It reads the colours of whatever it's pointed at and shows the Snabit hiding there."],
+  ["town","Tala","Hi, I'm Tala. I run a ranch up the hill, and I was just putting up this job request for someone to help me with it."],
+  ["town","Tala","You look like you'd be a good fit. The job is raising Snabits, training them and taking them to cups. The ranch is empty right now, so we'd start by finding your first one."],
+  ["handover","Tala","Your phone can work as a Snaboscope. Scan as many things as you like, see what comes out of each, and bring your favourite home."],
 ];
 function obIntro(){
   if(!PLAYER) PLAYER=newPlayer();
@@ -145,21 +146,19 @@ function obDrawStep(){
 }
 function obNext(){ if(ONB.step<OB_INTRO.length-1){ ONB.step++; obDrawStep(); } else obStartScope(); }
 
-/* ---------- the first Snaboscope trip ---------- */
-const OB_SCANS=3;
+/* ---------- the first Snaboscope trip: scan as many things as you like, then keep one ---------- */
+const OB_SHOW=6;   // the choosing screen shows the last 6 scans
 function obStartScope(){
   ONB.scene=null; ONB.tut=true; ONB.picks=[]; obShow(false);
   document.body.classList.add("ob-tut");
   obCoach(); openScope();
 }
-const obLeft=()=>OB_SCANS-ONB.picks.length;
 function obCoachText(){
   if(!ONB||!ONB.tut) return "";
   if(mode==="aim") return "Drag the circle onto what you want scanned, then tap Scan.";
   if(!stream) return "The Snaboscope needs your camera. Allow it when your browser asks, or use a photo from your gallery.";
   if(ONB.picks.length===0) return "Point it at something with strong colour, like a toy, a fruit or a shirt. The circle looks hardest at what's inside it. Tap the round button to scan.";
-  if(obLeft()===1) return "Last scan. After this you choose one of the three to take home.";
-  return `Scan ${ONB.picks.length+1} of ${OB_SCANS}. Try something a different colour, since the main colour decides its element.`;
+  return `You've scanned ${ONB.picks.length} so far. Try something a different colour, since the main colour decides its element.`;
 }
 function obCoach(){
   let d=document.getElementById("ob-coach");
@@ -173,20 +172,19 @@ function obCoach(){
 function obSheet(m){
   if(!ONB||!ONB.tut) return false;
   const acts=card.querySelector(".sheet-actions"); if(!acts) return false;
-  const last=obLeft()<=1;
-  acts.innerHTML=`<p class="ob-note">${last?"That's your third. Pick the one you want from all three.":`This one's ${/^[AEIOU]/.test(m.family)?"an":"a"} ${m.el1} ${m.family}. Keep it, or scan something else to see what else is out there.`}</p>
-    ${last?`<button class="big" id="ob-choose">Choose from all 3</button>`:`<button class="big" id="ob-keepme">Keep this one</button><button class="btn2" id="ob-again">Scan again · ${obLeft()-1} left</button>`}`;
+  const n=ONB.picks.length+1;
+  acts.innerHTML=`<p class="ob-note">This one's ${/^[AEIOU]/.test(m.el1)?"an":"a"} ${m.el1} ${m.family}. Keep it, or scan something else to see what else is out there.</p>
+    <button class="big" id="ob-keepme">Keep this one</button><button class="btn2" id="ob-again">Scan again</button>
+    ${n>1?`<button class="btn2" id="ob-choose">${n<=OB_SHOW?`Choose from all ${n}`:`Choose from the last ${OB_SHOW}`}</button>`:""}`;
   const cur=lastMon;
-  if(last) document.getElementById("ob-choose").onclick=()=>{ ONB.picks.push(cur); obChoose(); };
-  else{
-    document.getElementById("ob-keepme").onclick=()=>obHome(cur);
-    document.getElementById("ob-again").onclick=()=>{ ONB.picks.push(cur); obCoach(); openScope(true); };
-  }
+  document.getElementById("ob-keepme").onclick=()=>obHome(cur);
+  document.getElementById("ob-again").onclick=()=>{ ONB.picks.push(cur); obCoach(); openScope(true); };
+  if(n>1) document.getElementById("ob-choose").onclick=()=>{ ONB.picks.push(cur); ONB.picks=ONB.picks.slice(-OB_SHOW); obChoose(); };
   return true;
 }
 function obChoose(){
   ONB.tut=false; obCoach(); ONB.sel=0;
-  obRoot().innerHTML=`<div class="ob-story"><div class="ob-text"><div class="tip-who">Tala</div><p>Which one comes home? The other two go back into hiding.</p></div>
+  obRoot().innerHTML=`<div class="ob-story"><div class="ob-text"><div class="tip-who">Tala</div><p>Which one comes home? The others go back into hiding.</p></div>
     <div class="ob-picks">${ONB.picks.map((m,i)=>`<button class="ob-pick" data-i="${i}"><canvas class="mon-tile sm" id="ob-p${i}"></canvas>
       <b>${m.name}</b><span class="sheet-kind"><span class="elc" style="${chipStyle(ELC(m.el1))}">${m.el1}</span>${m.el2?`<span class="elc" style="${chipStyle(ELC(m.el2))}">${m.el2}</span>`:""}<span class="fam">${m.family}</span></span>
       <small>${obBest(m)}</small></button>`).join("")}</div>

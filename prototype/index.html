@@ -217,11 +217,35 @@ function liveTick(){
 }
 function putStill(c){still.width=c.width; still.height=c.height; still.getContext("2d").drawImage(c,0,0);}
 
-async function startCam(){
+/* Phones with several back lenses can hand over the macro or ultra-wide one for "the back camera", which looks blurry
+   past a few centimetres. After the first open, the game lists the back lenses, picks the main one (not labelled macro,
+   wide, tele or depth, then camera 0, then the biggest sensor) and reopens on it with autofocus. Flip steps through
+   every back lens and then the front one, in case the guess is wrong on some phone. */
+let camOrder=[], camAt=0;
+async function camList(){
+  try{ const ds=(await navigator.mediaDevices.enumerateDevices()).filter(d=>d.kind==="videoinput"&&d.deviceId);
+    const info=ds.map(d=>{ let cap={}; try{ cap=d.getCapabilities?d.getCapabilities():{}; }catch(e){}
+      const lab=(d.label||"").toLowerCase(), fm=cap.facingMode||[];
+      return { id:d.deviceId, front:fm.includes("user")||/front|user|face/.test(lab), odd:/macro|ultra|wide|tele|depth|infrared|mono/.test(lab),
+        zero:/camera2? ?0\b|camera 0|\b0, facing/.test(lab), px:((cap.width&&cap.width.max)||0)*((cap.height&&cap.height.max)||0) }; });
+    const backs=info.filter(c=>!c.front).sort((a,b)=>(a.odd-b.odd)||(b.zero-a.zero)||(b.px-a.px));
+    return backs.concat(info.filter(c=>c.front));
+  }catch(e){ return []; }
+}
+async function openCam(id){
+  const v=id?{deviceId:{exact:id},width:{ideal:1920},height:{ideal:1080}}:{facingMode:facing,width:{ideal:1920},height:{ideal:1080}};
+  const st=await navigator.mediaDevices.getUserMedia({video:v,audio:false});
+  const tr=st.getVideoTracks()[0]; try{ const cap=tr.getCapabilities?tr.getCapabilities():{}; if((cap.focusMode||[]).includes("continuous")) await tr.applyConstraints({advanced:[{focusMode:"continuous"}]}); }catch(e){}
+  return st;
+}
+async function startCam(pick){
   if(stream) stream.getTracks().forEach(t=>t.stop());
   try{
     if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia) throw new Error("no camera API");
-    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:facing,width:{ideal:1280},height:{ideal:1280}},audio:false});
+    if(pick==null){ stream=await openCam(null);   // the first open asks permission, and only then do lenses have labels
+      if(facing==="environment"){ camOrder=await camList(); camAt=0; const main=camOrder[0], cur=stream.getVideoTracks()[0].getSettings().deviceId;
+        if(main&&!main.front&&main.id!==cur){ stream.getTracks().forEach(t=>t.stop()); stream=await openCam(main.id); } } }
+    else stream=await openCam(camOrder[pick].id);
     video.srcObject=stream; await video.play();
     aim={x:.5,y:.5}; placeRing(); setMode("live");
     clearInterval(timer); timer=setInterval(liveTick,250);
@@ -241,7 +265,7 @@ shutter.onclick=()=>{
   else if(mode==="liveResult"){aim={x:.5,y:.5}; placeRing(); setMode("live");}
 };
 scanBtn.onclick=()=>{setMode("photoResult"); summonCard(render(true));};
-document.getElementById("flip").onclick=()=>{facing=facing==="environment"?"user":"environment"; startCam();};
+document.getElementById("flip").onclick=()=>{ if(camOrder.length>1){ camAt=(camAt+1)%camOrder.length; facing=camOrder[camAt].front?"user":"environment"; startCam(camAt); } else { facing=facing==="environment"?"user":"environment"; startCam(); } };
 
 async function decode(file){
   if(window.createImageBitmap){try{return await createImageBitmap(file);}catch(e){}}
