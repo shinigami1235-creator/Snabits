@@ -297,6 +297,31 @@ function sfx(kind) {
   } catch (err) {}
 }
 
+/* Each family has its own cry when it appears: Chomp goes "nom nom", Squib bubbles, Antik beeps, Moko mews,
+   Pinch clicks then squeaks, Stilt whistles "wheee-oo", Skit chitters and Booly lets out a wobbly "booo". Bigger stages cry lower. */
+function cry(fam, stage) {
+  try { const d = sfxBus(); if (!d) return; MC = AC;
+    const f = typeof FAMILY !== 'undefined' && FAMILY[fam] && FAMILY[fam].of ? FAMILY[fam].of[0] : fam;
+    const t = AC.currentTime + 0.02, p = stage === 'Mega' ? 0.72 : stage === 'Byte' ? 0.86 : 1;
+    const loud = f === 'Antik' || f === 'Skit' ? 3.6 : 2.6;   // loud enough to sit over the summon's fanfare
+    const voice = (at, type, pts, v0, vib = 0) => { const v = v0 * loud, o = mo(type, pts[0][1] * p, at), g = MC.createGain(), end = at + pts[pts.length - 1][0];
+      pts.forEach(([dt, fr]) => o.frequency.linearRampToValueAtTime(fr * p, at + dt));
+      if (vib) { const l = mo('sine', 11, at), lg = MC.createGain(); lg.gain.value = vib * p; l.connect(lg); lg.connect(o.frequency); l.start(at); l.stop(end + 0.05); }
+      const fl = MC.createBiquadFilter(); fl.type = 'lowpass'; fl.frequency.value = 3200;
+      g.gain.setValueAtTime(0.0001, at); g.gain.exponentialRampToValueAtTime(v, at + 0.02); g.gain.setValueAtTime(v, end - 0.04); g.gain.exponentialRampToValueAtTime(0.0001, end);
+      o.connect(fl); fl.connect(g); g.connect(d); o.start(at); o.stop(end + 0.02); };
+    switch (f) {
+      case 'Chomp': voice(t, 'square', [[0, 520], [0.07, 380], [0.12, 300]], 0.07); voice(t + 0.17, 'square', [[0, 560], [0.07, 400], [0.14, 300]], 0.07); dNoise(d, t + 0.1, 0.03, 0.12, 'bandpass', 1500); dNoise(d, t + 0.27, 0.03, 0.12, 'bandpass', 1500); break;
+      case 'Squib': [0, 0.11, 0.2].forEach((dt, i) => voice(t + dt, 'sine', [[0, 420 + i * 90], [0.08, 900 + i * 140]], 0.13)); break;
+      case 'Antik': voice(t, 'square', [[0, 880], [0.09, 880]], 0.05); voice(t + 0.11, 'square', [[0, 660], [0.09, 660]], 0.05); voice(t + 0.22, 'square', [[0, 990], [0.16, 1180]], 0.05); dNoise(d, t, 0.38, 0.04, 'bandpass', 4000, 0.7); break;
+      case 'Moko': voice(t, 'triangle', [[0, 700], [0.12, 1150], [0.32, 820], [0.42, 640]], 0.16, 14); break;
+      case 'Pinch': [0, 0.06, 0.12].forEach(dt => dNoise(d, t + dt, 0.025, 0.25, 'bandpass', 3200, 3)); voice(t + 0.2, 'sine', [[0, 1300], [0.07, 1900], [0.16, 1500]], 0.12); break;
+      case 'Stilt': voice(t, 'sine', [[0, 700], [0.22, 1500], [0.34, 1500], [0.55, 900]], 0.13, 8); break;
+      case 'Skit': for (let i = 0; i < 6; i++) voice(t + i * 0.05, 'triangle', [[0, 1800 + (i % 2) * 400], [0.035, 2300 + (i % 2) * 300]], 0.07); break;
+      case 'Booly': voice(t, 'sine', [[0, 520], [0.15, 600], [0.6, 360]], 0.15, 22); dNoise(d, t, 0.6, 0.05, 'bandpass', 900, 0.8); break;
+      default: voice(t, 'triangle', [[0, 800], [0.12, 1200], [0.22, 1000]], 0.13);
+    } } catch (err) {}
+}
 /* each element has its own sound over the whoosh or the hit: a crackle for Blaze, a chime for Frost, a splash for Tide,
    a zap for Spark, rustling for Wild, bubbles for Venom, a sparkle run for Charm, a rumble for Stone, a bell for Light,
    a clang for Steel, a low growl for Shade and a warble for Void. phase is 'cast' when it leaves and 'hit' when it lands */

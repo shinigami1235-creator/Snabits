@@ -526,3 +526,7 @@ body.ob-tut #ranchbtn,body.ob-tut #msgranch{display:none!important}
 .dex-t.unk b{color:var(--mute)}
 .goal-list .goal-bar{flex:0 0 14px;width:100%}
 .show-skip{position:fixed;top:calc(12px + env(safe-area-inset-top));right:12px;z-index:71}
+
+html:not(.dbg) .gr,html:not(.dbg) .dbg-only{display:none!important}
+html:not(.dbg) .i-r{visibility:hidden}
+html:not(.dbg) .i-stat{grid-template-columns:62px 0 1fr 36px}

@@ -644,6 +644,22 @@ function awayProps(c, p, t, front) {
     case 'floatie': if (!front) return; { const w = p.w, h = w * 0.22;          // a swim ring at the waterline
       c.lineWidth = h * 0.9; for (let i = 0; i < 8; i++) { c.strokeStyle = i % 2 ? '#ffffff' : '#e2483f'; c.beginPath(); c.ellipse(x, y, w, h, 0, i * Math.PI / 4, (i + 1) * Math.PI / 4); c.stroke(); }
       c.strokeStyle = 'rgba(255,255,255,.5)'; c.lineWidth = 1; c.beginPath(); c.ellipse(x, y - h * 0.2, w * 0.9, h * 0.6, 0, Math.PI * 1.1, Math.PI * 1.5); c.stroke(); } return;
+    case 'aura': if (front) return; { const g = c.createRadialGradient(x, y, 2, x, y, p.r);                 // the Meditate focus glow, behind the Snabit
+      const [r, gg, b] = p.col; g.addColorStop(0, `rgba(${r},${gg},${b},${0.75 * p.a})`); g.addColorStop(0.6, `rgba(${r},${gg},${b},${0.35 * p.a})`); g.addColorStop(1, `rgba(${r},${gg},${b},0)`);
+      c.fillStyle = g; c.beginPath(); c.arc(x, y, p.r, 0, 7); c.fill();
+      c.strokeStyle = `rgba(${r},${gg},${b},${0.8 * p.a})`; c.lineWidth = 1.4; c.beginPath(); c.arc(x, y, p.r * (0.62 + 0.06 * Math.sin(t / 260)), 0, 7); c.stroke(); } return;
+    case 'dfly': if (!front) return; c.save(); c.translate(x, y); c.rotate(p.rot || 0);         // a dragonfly, wings flickering unless it has landed
+      { const fl = p.landed ? 0.35 : Math.abs(Math.sin(t / 22)); c.fillStyle = `rgba(220,240,255,${0.45 + fl * 0.35})`;
+        for (const [wx, sy] of [[1.5, -1], [1.5, 1], [-1, -1], [-1, 1]]) { c.beginPath(); c.ellipse(wx, sy * (1.2 + fl * 2.6), 4.6, 1.2 + fl * 0.4, sy * (0.25 + fl * 0.4), 0, 7); c.fill(); }
+        c.fillStyle = '#2f9fb8'; c.beginPath(); c.roundRect(-9, -0.8, 11, 1.6, 0.8); c.fill(); c.fillStyle = '#1f6f8a'; c.beginPath(); c.arc(3, 0, 1.9, 0, 7); c.fill();
+        c.fillStyle = '#9fe3ff'; c.beginPath(); c.arc(3.6, -0.6, 0.7, 0, 7); c.fill(); } c.restore(); return;
+    case 'pebble': if (!front) return; if (p.glow) { const g = c.createRadialGradient(x, y, 0.5, x, y, 10); g.addColorStop(0, 'rgba(190,180,255,.85)'); g.addColorStop(1, 'rgba(190,180,255,0)'); c.fillStyle = g; c.fillRect(x - 10, y - 10, 20, 20); }
+      c.fillStyle = p.col || '#9a958c'; c.beginPath(); c.ellipse(x, y, 4.4, 3.2, p.rot || 0, 0, 7); c.fill(); c.fillStyle = 'rgba(255,255,255,.35)'; c.beginPath(); c.arc(x - 1.4, y - 1.1, 1.3, 0, 7); c.fill(); return;
+    case 'koi': if (!front) return; c.save(); c.translate(x, y); c.rotate(p.rot || 0); c.scale(p.dir || 1, 1);   // a koi leaping out of the pond
+      c.fillStyle = '#ffffff'; c.beginPath(); c.ellipse(0, 0, 7, 2.6, 0, 0, 7); c.fill(); c.fillStyle = '#ff8a3d'; c.beginPath(); c.ellipse(2, -0.6, 2.6, 1.5, 0, 0, 7); c.ellipse(-2.6, 0.4, 1.8, 1.2, 0, 0, 7); c.fill();
+      c.fillStyle = '#ffffff'; c.beginPath(); c.moveTo(-6, 0); c.lineTo(-10.5, -3); c.lineTo(-10.5, 3); c.closePath(); c.fill(); c.fillStyle = '#1d1d26'; c.beginPath(); c.arc(4.8, -0.6, 0.7, 0, 7); c.fill(); c.restore(); return;
+    case 'drop': if (!front) return; c.fillStyle = `rgba(190,235,255,${p.a == null ? 0.9 : p.a})`; c.beginPath(); c.ellipse(x, y, 1.2, 1.7, 0, 0, 7); c.fill(); return;
+    case 'petal': if (!front) return; c.fillStyle = 'rgba(255,190,214,.9)'; c.beginPath(); c.ellipse(x, y, 2, 1.2, (p.rot || 0) + t / 200, 0, 7); c.fill(); return;
     case 'frog': if (!front) return;                                             // the pond frog that sits on a sleeping head
       c.fillStyle = '#4f9a3c'; c.beginPath(); c.ellipse(x, y - 3, 5.5, 3.6, 0, 0, 7); c.fill(); c.fillStyle = '#3f7f2f'; c.beginPath(); c.ellipse(x - 4, y - 0.5, 2.6, 1.4, 0, 0, 7); c.ellipse(x + 4, y - 0.5, 2.6, 1.4, 0, 0, 7); c.fill();
       for (const sd of [-1, 1]) { c.fillStyle = '#5fb04a'; c.beginPath(); c.arc(x + sd * 2.6, y - 6.2, 1.9, 0, 7); c.fill(); c.fillStyle = '#1d1d26'; c.beginPath(); c.arc(x + sd * 2.6, y - 6.4, 0.9, 0, 7); c.fill(); }

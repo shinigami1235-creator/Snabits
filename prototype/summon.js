@@ -155,7 +155,8 @@ const SUMMON = (() => {
       const fl = t < 280 ? Math.pow(1 - t / 280, 2) * 0.95 : t >= 3500 ? Math.pow(1 - seg(t, 3500, 3850), 2) * 0.85 : 0;
       if (fl > 0.01) { c.fillStyle = `rgba(255,255,255,${fl})`; c.fillRect(0, 0, W, H); }
     }
-    return { render, duration: 5100 + BURST * (SLOW - 1), cues: [[0, 'tap'], [1250 * SLOW, 'whoosh'], [2300 * SLOW, 'charge'], [BURST * SLOW, 'heavy'], [BURST * SLOW + 150, 'whoosh']] };
+    return { render, duration: 5100 + BURST * (SLOW - 1), music: 'summon', burst: BURST * SLOW, fam: o.family || fam, stage: o.spec && o.spec.stage,
+      cues: [[0, 'tap'], [1250 * SLOW, 'whoosh'], [2300 * SLOW, 'charge'], [BURST * SLOW, 'heavy'], [BURST * SLOW + 150, 'whoosh'], [BURST * SLOW + 520, 'cry']] };
   }
 
   /* ---------- fusion ---------- */
@@ -201,15 +202,19 @@ const SUMMON = (() => {
           c.fillStyle = '#f5f0e2'; c.fillText(o.name, cx, fC + hC * 0.24 + (1 - al) * 12); c.globalAlpha = 1; } }
       const fl = t >= 2800 && t < 3150 ? Math.pow(1 - seg(t, 2800, 3150), 2) * 0.9 : 0; if (fl > 0.01) { c.fillStyle = `rgba(255,255,255,${fl})`; c.fillRect(0, 0, W, H); }
     }
-    return { render, duration: 4900, cues: [[450, 'charge'], [950, 'whoosh'], [2800, 'heavy'], [2950, 'whoosh'], [4150, 'tap']] };
+    return { render, duration: 4900, music: 'fusion', burst: 2800, fam: o.family || famOf(o.child), stage: 'Bit',
+      cues: [[450, 'charge'], [950, 'whoosh'], [2800, 'heavy'], [2950, 'whoosh'], [4150, 'tap'], [4250, 'cry']] };
   }
 
   /* plays a scene on a full-screen canvas; tap to skip */
   function play(scene, cv, done) {
-    const t0 = performance.now(); let skip = false, cue = 0; cv.onpointerdown = () => { skip = true; };
+    const t0 = performance.now(); let skip = false, cue = 0;
+    const mus = scene.music && typeof musCue === 'function' ? musCue(scene.music, scene.burst, scene.duration) : null;   // the score is laid out to the scene's own timing
+    cv.onpointerdown = () => { if (!skip && mus) mus.skip(performance.now() - t0); skip = true; };
     const step = now => { const t = skip ? scene.duration : now - t0; scene.render(Math.min(t, scene.duration));
-      while (!skip && scene.cues && cue < scene.cues.length && scene.cues[cue][0] <= t) { if (typeof sfx === 'function') sfx(scene.cues[cue][1]); cue++; }
-      if (t < scene.duration) requestAnimationFrame(step); else { cv.onpointerdown = null; done && done(); } };
+      while (!skip && scene.cues && cue < scene.cues.length && scene.cues[cue][0] <= t) { const k = scene.cues[cue][1];
+        if (k === 'cry') { if (typeof cry === 'function') cry(scene.fam, scene.stage); } else if (typeof sfx === 'function') sfx(k); cue++; }
+      if (t < scene.duration) requestAnimationFrame(step); else { cv.onpointerdown = null; if (skip && typeof cry === 'function') cry(scene.fam, scene.stage); done && done(); } };
     requestAnimationFrame(step);
   }
   /* a full-screen canvas over everything, at the screen's real resolution */

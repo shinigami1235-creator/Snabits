@@ -45,6 +45,7 @@ const CHIBI = (() => {
     eat:    { arm: [[8, 16, -8, 24], [8, 16, -8, 24]], feet: [0, 0, 0, 0], eyes: 'happy', open: 0.5, chew: 1, front: 1, extra: 'crumbs' },
     sleep:  { arm: [[10, 10, 12, 16], [10, 10, 12, 16]], feet: [-4, 0, 4, 0], eyes: 'shut', open: 0, sx: 1.07, sy: 0.86, extra: 'zz' },
     sit:    { arm: [[10, 12, 14, 18], [10, 12, 14, 18]], feet: [-7, -3, 7, -3], eyes: 'open', open: 0, sx: 1.05, sy: 0.9 },
+    zen:    { arm: [[10, 12, 14, 18], [10, 12, 14, 18]], feet: [-7, -3, 7, -3], eyes: 'shut', open: 0, sx: 1.05, sy: 0.9 },   // Meditate: sitting with its eyes shut
     dizzy:  { arm: [[14, 4, 20, 14], [14, 4, 20, 14]], feet: [-3, 0, 3, 0], eyes: 'dizzy', open: 0.25, wobble: 1, extra: 'stars' },
     effort: { arm: [[12, 4, 8, 12], [12, 4, 8, 12]], feet: [-5, 0, 5, 0], eyes: 'hurt', open: 0.15, sx: 1.08, sy: 0.9, extra: 'sweat' },
     lean:   { arm: [REST, [10, 10, 4, 18]], feet: [-2, 0, 2, 0], eyes: 'open', open: 0, tilt: -9, lean: -3 },

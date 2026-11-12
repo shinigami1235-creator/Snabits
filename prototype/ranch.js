@@ -194,6 +194,7 @@ function dateText(){const w=PLAYER.week, y=Math.floor(w/48)+1, mo=Math.floor(w/4
 /* ---------- open and close ---------- */
 function openRanch(m){
   if(!PLAYER) loadGame();
+  if(typeof camStop==="function") camStop();
   injectRanch();
   if(m){ if(RS&&RS.id) saveGame(); const e=addToRoster(m); if(!e){ alert("The Freezer is full."); return; } PLAYER.active=e.id; }
   const e=activeEntry(); if(!e){ el("ranch").style.display="flex"; RS=null; panel(""); openFreezer(); return; }
@@ -292,7 +293,7 @@ function menu(which){
   s.lastMenu=which;
   if(which==="Train"){
     const heavy=hearts()>=2, noTrain=s.sick||s.injured, noHeavy=!heavy||s.fatigue>=90||s.fatigue+2*s.stress>=90;
-    panel(DRILLS.map((d,i)=>`<button class="rb" data-d="${i}" ${noTrain?"disabled":""}>${d}<small>${STATS[i]}, rank ${rankOf(FAMILY[s.m.family].base[i])}</small></button>`).join("")+
+    panel(DRILLS.map((d,i)=>`<button class="rb" data-d="${i}" ${noTrain?"disabled":""}>${d}<small>${STATS[i]}<span class="dbg-only">, rank ${rankOf(FAMILY[s.m.family].base[i])}</span></small></button>`).join("")+
       `<div style="flex-basis:100%;font-size:12px;opacity:.7">${s.injured?"It's hurt. A rest week or medicine fixes it.":s.sick?"It's sick this week, so it can't train. Rest or medicine fixes it.":!heavy?"Heavy drills open at 2 hearts.":noHeavy?"It's too worn out for heavy drills.":"Heavy drills push one stat hard, raise a second and lower a third."}</div>`+
       HEAVY.map((h,k)=>`<button class="rb" data-d="${6+k}" ${noTrain||noHeavy?"disabled":""}>${h[0]}<small class="fx"><span>${STATS[h[1]]} ↑</span><span>${STATS[h[2]]} +</span><span>${STATS[h[3]]} −2</span></small></button>`).join(""));
     el("r-panel").querySelectorAll("[data-d]").forEach(b=>b.onclick=()=>runDrill(+b.dataset.d));
@@ -354,6 +355,64 @@ function hop(h,ms,id=RS.cur){
 }
 async function until(cond,max=5000,id=RS.cur){ const t0=performance.now(); while(!cond()&&performance.now()-t0<max){ await rwait(16,id); } }
 function prop(o){ RS.props.push(o); return o; }
+/* Meditate at the lotus pond. It sits on the stone with its eyes shut while a glow of focus grows round it, and the pond tries
+   to break it: a dragonfly buzzes its face, a koi leaps and splashes, a gust blows petals through. A focused Snabit lets the
+   dragonfly land on its head and keeps going. On a great it lifts the pebbles round the pond with its mind and floats up as
+   the lotuses open. On a success two pebbles wobble up and drop. On a fail it opens its eyes for the dragonfly, then dozes
+   off until a frog hops onto its head. */
+async function pondMeditate(r){
+  const s=RS, cy=()=>(headY()+GROUND)/2, made=[], add=o=>{ made.push(prop(o)); return o; };
+  try{
+    s.x=196; s.jy=5; s.pose="zen"; s.koiPull=0;
+    const au=add({k:"aura",x:s.x,y:cy(),r:12,a:0,col:[160,150,255]});
+    const glow=async(to,ms)=>{ const a0=au.a, r0=au.r, n=Math.max(1,Math.round(ms/30)); for(let i=1;i<=n;i++){ const k=i/n; au.a=a0+(to-a0)*k; au.r=r0+(16+to*34-r0)*k; au.y=cy(); if(au.a>0.15&&i%5===0) spark(s.x+rnd(-au.r*0.6,au.r*0.6),cy()+rnd(-6,10),"sparkle"); await rwait(30);} };   // motes rise off the glow
+    const ripple=async()=>{ const ring=add({k:"ring",x:s.x,y:GROUND-1,r:4}); for(let j=0;j<22;j++){ ring.r+=1.5; await rwait(30);} unprop(ring); };
+    await rwait(350);
+    for(let k=0;k<2;k++){ s.koiPull=(k+1)/3; await Promise.all([ripple(),glow(0.2+k*0.15,660)]); }
+    // the dragonfly comes in and buzzes round its face
+    const df=add({k:"dfly",x:-12,y:GROUND-74,rot:0}), hx=s.x+2, hy=headY()-3;
+    for(let f=0;f<=46;f++){ const k=f/46; df.x=-12+(hx+34+12)*k; df.y=GROUND-74+(hy-GROUND+74)*k+Math.sin(k*10)*9; df.rot=Math.sin(k*10)*0.2; await rwait(24); }
+    for(let f=0;f<26;f++){ df.x=hx+20+Math.sin(f/2.8)*13; df.y=hy-4+Math.cos(f/2)*6; df.rot=Math.cos(f/2.8)*0.3; await rwait(26); }
+    if(r==="fail"){                                                              // it opens its eyes to watch, and the glow is gone
+      s.pose="idle"; spark(s.x,headY()-8,"q"); await glow(0,300);
+      for(let f=0;f<=30;f++){ df.x=hx+20+f*7; df.y=hy-4-f*2.4+Math.sin(f/2)*5; await rwait(22); } unprop(df);
+      await rwait(300); s.pose="zen"; await rwait(500); s.pose="sleep"; for(let k=0;k<3;k++){ spark(s.x+6,headY(),"z"); await rwait(420); }
+      const fr=add({k:"frog",x:s.x+44,y:GROUND+6}); await rwait(400); const fx=s.x, fy=headY()+2;
+      for(let f=0;f<=24;f++){ const k=f/24; fr.x=s.x+44+(fx-s.x-44)*k; fr.y=GROUND+6+(fy-GROUND-6)*k-Math.sin(k*Math.PI)*26; await rwait(22); }
+      fr.on=true; await rwait(500); s.pose="hurt"; spark(s.x,headY()-8,"q"); await rwait(700);
+      for(let f=0;f<=20;f++){ const k=f/20; fr.x=fx-k*60; fr.y=fy+(GROUND+8-fy)*k-Math.sin(k*Math.PI)*20; await rwait(22); } s.pose="dizzy"; await rwait(700); return;
+    }
+    // it doesn't flinch, so the dragonfly lands on its head
+    { const x0=df.x, y0=df.y; for(let f=0;f<=18;f++){ const k=f/18; df.x=x0+(hx-x0)*k; df.y=y0+(hy-y0)*k-Math.sin(k*Math.PI)*8; df.rot=0; await rwait(26); } df.landed=true; }
+    await glow(0.45,500);
+    // a koi leaps right past it and splashes
+    { const koi=add({k:"koi",x:150,y:GROUND+4,dir:1}); const drops=()=>{ for(let i=0;i<7;i++) add({k:"drop",x:koi.x,y:GROUND,vx:rnd(-1.2,1.2),vy:-rnd(1.2,2.6)}); };
+      drops(); for(let f=0;f<=30;f++){ const k=f/30; koi.x=150+k*34; koi.y=GROUND+4-Math.sin(k*Math.PI)*46; koi.rot=-Math.cos(k*Math.PI)*1.1;
+        for(const d of made) if(d.k==="drop"){ d.x+=d.vx; d.y+=d.vy; d.vy+=0.18; if(d.y>GROUND+4) d.a=0; } await rwait(24); }
+      drops(); unprop(koi); for(let f=0;f<14;f++){ for(const d of made) if(d.k==="drop"){ d.x+=d.vx; d.y+=d.vy; d.vy+=0.18; if(d.y>GROUND+4) d.a=0; } await rwait(24); }
+      ripple(); await glow(0.6,360); }
+    // a gust blows petals through
+    { const ps=[]; for(let i=0;i<14;i++) ps.push(add({k:"petal",x:-rnd(0,90),y:GROUND-rnd(10,90),vx:rnd(3,4.6),vy:rnd(-0.3,0.4),rot:rnd(0,6)}));
+      for(let f=0;f<44;f++){ for(const q of ps){ q.x+=q.vx; q.y+=q.vy+Math.sin(f/4+q.rot)*0.4; } if(r!=="great"&&f===18){ df.landed=false; } if(!df.landed){ df.x+=4; df.y-=1.6; } await rwait(24); }
+      ps.forEach(unprop); if(!df.landed) unprop(df); }
+    if(r==="great"){                                                              // the pebbles lift with its mind and circle it
+      await glow(0.95,400);
+      const pb=[[150,2],[166,9],[214,8],[230,1],[180,10],[200,11]].map(([x,dy],i)=>add({k:"pebble",x,y:GROUND+dy,glow:true,rot:i,col:i%2?"#a49f96":"#8f8a83"}));
+      const home=pb.map(p=>[p.x,p.y]);
+      for(let f=0;f<=24;f++){ const k=f/24; pb.forEach((p,i)=>{ const a=i/pb.length*6.283; p.x=home[i][0]+(s.x+Math.cos(a)*30-home[i][0])*k; p.y=home[i][1]+(cy()+Math.sin(a)*12-home[i][1])*k; }); await rwait(26); }
+      s.lotus=true;
+      for(let f=0;f<60;f++){ s.jy=5+Math.min(10,f/3); pb.forEach((p,i)=>{ const a=i/pb.length*6.283+f/9; p.x=s.x+Math.cos(a)*30; p.y=cy()+Math.sin(a)*12; p.rot+=0.1; });
+        au.y=cy(); if(f%6===0) spark(s.x+rnd(-16,16),headY()+rnd(0,22),"sparkle"); await rwait(28); }
+      for(let f=0;f<=16;f++){ const k=f/16; pb.forEach((p,i)=>{ p.x+=(home[i][0]-p.x)*k*0.5; p.y+=(home[i][1]-p.y)*k*0.5; }); s.jy=5+10*(1-k); await rwait(26); }
+      pb.forEach(unprop); await rwait(250); s.pose="happy"; await rwait(500); s.jy=5; return;
+    }
+    // a success: two pebbles wobble up and fall back with a plop
+    { const pb=[add({k:"pebble",x:172,y:GROUND+9,glow:true}),add({k:"pebble",x:220,y:GROUND+7,glow:true})], y0=pb.map(p=>p.y);
+      for(let f=0;f<36;f++){ pb.forEach((p,i)=>{ p.y=y0[i]-Math.min(14,f*0.8)+Math.sin(f/1.5+i)*1.6; }); await rwait(26); }
+      for(let f=0;f<=8;f++){ pb.forEach((p,i)=>{ p.y+=(y0[i]-p.y)*0.5; }); await rwait(24); } ripple(); await glow(0.5,300);
+      s.pose="happy"; await rwait(700); }
+  } finally { made.forEach(unprop); s.koiPull=0; }
+}
 function unprop(o){ RS.props=RS.props.filter(p=>p!==o); }
 function spark(x,y,kind,n=1){ for(let i=0;i<n;i++){ const p={x,y,kind,life:0,max:40,vx:rnd(-.4,.4),vy:-rnd(.3,.8),g:0};
   if(kind==="dust"){p.vy=-rnd(.1,.4);p.vx=rnd(-.6,.6);p.max=24;}
@@ -526,17 +585,7 @@ const SCENE_FN=[
   },
   async r=>{ // Meditate
     const s=RS;
-    if(s.bg==="pond"){ s.x=196; s.jy=5; s.pose="sit"; await rwait(500);
-      const pulses=r==="fail"?1:3;
-      for(let k=0;k<pulses;k++){ s.koiPull=Math.min(1,(k+1)/3); const ring=prop({k:"ring",x:s.x,y:GROUND-1,r:4}); for(let j=0;j<24;j++){ ring.r+=1.4; await rwait(34);} unprop(ring); }
-      if(r==="fail"){ s.pose="sleep"; for(let k=0;k<3;k++){ spark(s.x+6,headY(),"z"); await rwait(420);}
-        const fr=prop({k:"frog",x:s.x+44,y:GROUND+6}); await rwait(400); const hx=s.x, hy=headY()+2;
-        for(let f=0;f<=24;f++){ const k=f/24; fr.x=s.x+44+(hx-s.x-44)*k; fr.y=GROUND+6+(hy-GROUND-6)*k-Math.sin(k*Math.PI)*26; await rwait(22); }
-        fr.on=true; await rwait(500); s.pose="hurt"; spark(s.x,headY()-8,"q"); await rwait(700);
-        for(let f=0;f<=20;f++){ const k=f/20; fr.x=hx-k*60; fr.y=hy+(GROUND+8-hy)*k-Math.sin(k*Math.PI)*20; await rwait(22); } unprop(fr); s.pose="dizzy"; await rwait(700); return; }
-      if(r==="great"){ s.lotus=true; s.pose="float"; for(let k=0;k<14;k++){ s.jy=5+Math.min(10,k); spark(s.x+rnd(-14,14),headY()+rnd(0,20),"sparkle"); await rwait(110);} await rwait(400); s.jy=5; s.pose="sit"; }
-      else { s.pose="happy"; await rwait(600); }
-      return; }
+    if(s.bg==="pond"){ await pondMeditate(r); return; }
     await walkTo(196,45); s.pose="sit";
     const pulses=r==="fail"?1:3;
     for(let k=0;k<pulses;k++){ const ring=prop({k:"ring",x:s.x,y:GROUND-18,r:3}); for(let j=0;j<20;j++){ ring.r+=1.2; await rwait(30);} unprop(ring); }

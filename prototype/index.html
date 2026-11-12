@@ -12,7 +12,7 @@
 </head>
 <body>
 <div id="stage"><video id="video" playsinline muted autoplay></video><canvas id="still"></canvas><div id="ring"></div><div id="corners"><i></i><i></i><i></i><i></i></div></div>
-<div id="top"><span class="chip" id="main">Snaboscope</span><span class="chip" id="second" style="display:none"></span><span id="kind"></span></div>
+<div id="top"><span class="chip" id="main">Snaboscope</span><span class="chip" id="second" style="display:none"></span><span id="kind"></span><button class="small" id="lightbtn" style="display:none;margin-left:auto" aria-label="Light">Light off</button></div>
 <div id="bars"></div>
 <div id="card"></div>
 <div id="bottom">
@@ -123,6 +123,7 @@ function scan(source,sw,sh){
 
 function chip(el,g){el.textContent=EL[g];el.style.background=COL[g];el.style.color=TXT[g]||"#fff";el.style.display="";}
 const DEBUG=/(^#|&)debug(&|$)/.test(location.hash);
+if(DEBUG) document.documentElement.classList.add("dbg");   // growth ranks and skill counts only show with #debug
 function show(res){
   if(!DEBUG) return;
   chip(document.getElementById("main"),res.main.g);
@@ -157,6 +158,7 @@ function setMode(m){
   scanBtn.style.display=m==="aim"?"":"none";
   newBtn.style.display=photo?"":"none";
   document.getElementById("flip").style.display=stream&&!photo?"":"none";
+  lightShow();
   card.style.display=(m==="liveResult"||m==="photoResult")?"block":"none";
   bars.style.display=DEBUG&&(m==="live"||m==="aim")?"grid":"none";
   still.style.display=(m==="liveResult"||photo)?"block":"none";
@@ -192,7 +194,8 @@ function render(full){
       <div class="sheet-body">
         <p class="abil">${m.hidden?"<b class=\"hid\">Hidden ability</b> ":""}<b>${m.ability[0]}</b> ${m.ability[1]}.</p>
         <div class="statgrid">${STATS.map((st,i)=>{const r=rankOf(FAMILY[m.family].base[i]);return `<div class="sg"><span>${st} <small class="gr r${r}">${r}</small></span><b>${m.stats[i]}</b><i><u style="width:${Math.min(100,m.stats[i]/2)}%"></u></i><em></em></div>`;}).join("")}</div>
-        <p>${STATS[m.pers[1]]} grows faster, ${STATS[m.pers[2]]} slower. Starts with ${m.skills.join(" and ")}, ${m.pool.length} skills to learn.</p>
+        <p>Skills: ${m.skills.join(" and ")}.</p>
+        <p class="dbg-only">${STATS[m.pers[1]]} grows faster, ${STATS[m.pers[2]]} slower. ${m.pool.length} skills to learn.</p>
 
         <p class="why">Drag the circle to try another spot.</p>
       </div>`;
@@ -208,7 +211,7 @@ async function summonCard(m){
   if(m&&typeof dexSee==="function"&&typeof PLAYER!=="undefined"&&PLAYER) dexSee(m);
   if(!m||typeof SUMMON==="undefined") return;
   card.classList.add("held");
-  await SUMMON.run(cv=>SUMMON.summon(cv,{photo:still,spec:SUMMON.specFor(m,null,"Bit"),pal:m.pal,name:m.name}));
+  await SUMMON.run(cv=>SUMMON.summon(cv,{photo:still,spec:SUMMON.specFor(m,null,"Bit"),pal:m.pal,name:m.name,family:m.family}));
   card.classList.remove("held"); card.classList.add("card-in"); setTimeout(()=>card.classList.remove("card-in"),600);
 }
 function liveTick(){
@@ -232,31 +235,56 @@ async function camList(){
     return backs.concat(info.filter(c=>c.front));
   }catch(e){ return []; }
 }
+/* getUserMedia can hang on some phones when the last lens hasn't let go yet, so each open gets 6 seconds */
+const inTime=(p,ms)=>Promise.race([p,new Promise((_,no)=>setTimeout(()=>no(new Error("camera timed out")),ms))]);
+const camOk=()=>{ const t=stream&&stream.getVideoTracks()[0]; return !!(t&&t.readyState==="live"&&!t.muted&&video.videoWidth); };
 async function openCam(id){
   const v=id?{deviceId:{exact:id},width:{ideal:1920},height:{ideal:1080}}:{facingMode:facing,width:{ideal:1920},height:{ideal:1080}};
-  const st=await navigator.mediaDevices.getUserMedia({video:v,audio:false});
+  const st=await inTime(navigator.mediaDevices.getUserMedia({video:v,audio:false}),6000);
   const tr=st.getVideoTracks()[0]; try{ const cap=tr.getCapabilities?tr.getCapabilities():{}; if((cap.focusMode||[]).includes("continuous")) await tr.applyConstraints({advanced:[{focusMode:"continuous"}]}); }catch(e){}
   return st;
 }
+let camBusy=false;
 async function startCam(pick){
-  if(stream) stream.getTracks().forEach(t=>t.stop());
+  if(camBusy) return; camBusy=true; light=false;
+  if(stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; await new Promise(r=>setTimeout(r,200)); }   // let the old lens go first
   try{
     if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia) throw new Error("no camera API");
     if(pick==null){ stream=await openCam(null);   // the first open asks permission, and only then do lenses have labels
       if(facing==="environment"){ camOrder=await camList(); camAt=0; const main=camOrder[0], cur=stream.getVideoTracks()[0].getSettings().deviceId;
-        if(main&&!main.front&&main.id!==cur){ stream.getTracks().forEach(t=>t.stop()); stream=await openCam(main.id); } } }
+        if(main&&!main.front&&main.id!==cur){ stream.getTracks().forEach(t=>t.stop()); await new Promise(r=>setTimeout(r,200));
+          try{ stream=await openCam(main.id); }catch(e){ stream=await openCam(null); } } } }   // fall back to the phone's own pick if the main lens won't open
     else stream=await openCam(camOrder[pick].id);
-    video.srcObject=stream; await video.play();
+    video.srcObject=stream; await inTime(video.play(),4000); camSeen={t:-1,at:performance.now()};
     aim={x:.5,y:.5}; placeRing(); setMode("live");
     clearInterval(timer); timer=setInterval(liveTick,250);
-  }catch(e){stream=null; setMode("start");}
+  }catch(e){ if(stream) stream.getTracks().forEach(t=>t.stop()); stream=null; setMode("start"); }
+  camBusy=false; lightShow();
   if(typeof obCoach==="function") obCoach();
 }
+/* The picture can stop without an error: the phone takes the camera back when the game sits in the background or another
+   screen is open, and the last frame just stays up. A camera that hasn't moved for 2 seconds gets reopened. */
+let camSeen={t:-1,at:0};
+function camStop(){ if(stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; } light=false; }   // the ranch and the other screens don't need the camera running
+const scopeHidden=()=>["ranch","venue","battle"].some(id=>{ const e=document.getElementById(id); return e&&e.style.display&&e.style.display!=="none"; });
+function camWatch(){
+  if(mode!=="live"||camBusy||document.hidden||scopeHidden()) return;
+  const t=video.currentTime; if(t!==camSeen.t){ camSeen={t,at:performance.now()}; return; }
+  if(performance.now()-camSeen.at>2000||!camOk()){ camSeen.at=performance.now(); startCam(camOrder.length?camAt:null); }
+}
+setInterval(camWatch,500);
+document.addEventListener("visibilitychange",()=>{ if(!document.hidden&&mode==="live"&&!scopeHidden()&&!camOk()) startCam(camOrder.length?camAt:null); });
+/* the backlight: the phone's flash kept on while aiming, on phones whose camera offers it */
+let light=false;
+function lightCan(){ const t=stream&&stream.getVideoTracks()[0]; try{ return !!(t&&t.getCapabilities&&t.getCapabilities().torch); }catch(e){ return false; } }
+function lightShow(){ const b=document.getElementById("lightbtn"); if(!b) return; b.style.display=mode==="live"&&lightCan()?"":"none"; b.textContent=light?"Light on":"Light off"; b.classList.toggle("on",light); }
+document.getElementById("lightbtn").onclick=async()=>{ const t=stream&&stream.getVideoTracks()[0]; if(!t) return;
+  try{ await t.applyConstraints({advanced:[{torch:!light}]}); light=!light; }catch(e){} lightShow(); };
 /* Opens the Snaboscope (the camera screen) from anywhere: the ranch, the title or the first-scan tutorial. */
 function openScope(){
   const r=document.getElementById("ranch"); if(r&&r.style.display!=="none"){ saveGame(); r.style.display="none"; if(RS) RS.open=false; }
   aim={x:.5,y:.5}; placeRing();
-  if(stream&&video.videoWidth) setMode("live"); else startCam();
+  if(camOk()) setMode("live"); else startCam(camOrder.length?camAt:null);
   if(typeof obCoach==="function") obCoach();
 }
 

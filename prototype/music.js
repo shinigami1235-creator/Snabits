@@ -350,6 +350,36 @@ function musJingle(kind){
   setTimeout(()=>g.disconnect(),len+500);
   MUS.jingleT=performance.now()+len; if(MUS.tr) musPlay(null); MUS.cur=null; return true;
 }
+/* The summon and fusion score, laid out to the scene's own clock: a build-up that speeds up and climbs until the burst
+   (a heartbeat kick, a pad stepping through four chords, bells that get faster and higher, a rising hiss and a snare roll),
+   then the reward: a crash, a bright major chord, a sparkle run and a four-note fanfare. Tapping to skip brings the reward in at once. */
+function musCue(kind,burstMs,durMs){
+  if(!AC||!MUS.bus||!MUS.on||!MUS.nb) return null; MC=AC;
+  const out=AC.createGain(); out.gain.value=1.15; out.connect(MUS.bus);
+  const build=AC.createGain(), rew=AC.createGain(); build.connect(out); rew.connect(out);
+  const t=AC.currentTime+.05, b=burstMs/1000, fus=kind==="fusion";
+  MUS.jingleT=performance.now()+durMs+900; if(MUS.tr) musPlay(null); MUS.cur=null;   // the background tune steps aside and comes back after
+  const CH=fus?[[57,62,64],[58,62,65],[60,63,67],[62,66,69]]:[[60,65,67],[56,60,63],[58,62,65],[55,59,62]], seg=b/4;
+  CH.forEach((ch,i)=>{ iPad(build,t+i*seg,ch,seg*1.02,.03+i*.008); iBass(build,t+i*seg,ch[0]-24,seg*.9,.2,"pick"); });
+  for(let x=0;x<b-.05;){ const k=x/b, beat=.62-.4*k; dKick(build,t+x,.35+.35*k); x+=beat; }        // the heartbeat speeds up
+  for(let x=.15,n=0;x<b-.04;n++){ const k=x/b, ch=CH[Math.min(3,Math.floor(x/seg))], m=ch[n%3]+12+12*Math.floor(k*2.2);
+    iBell(build,t+x,m,.25,.035+.03*k); x+=.24-.17*k; }                                                // bells, faster and higher
+  { const r0=t+b*.35, len=b*.65, sw=nsrc(r0,len+.05), fl=AC.createBiquadFilter(), g=AC.createGain(); fl.type="bandpass"; fl.Q.value=3;
+    fl.frequency.setValueAtTime(400,r0); fl.frequency.exponentialRampToValueAtTime(7000,r0+len); g.gain.setValueAtTime(.001,r0); g.gain.exponentialRampToValueAtTime(.22,r0+len); g.gain.setValueAtTime(0,r0+len+.02);
+    sw.connect(fl); fl.connect(g); g.connect(build); }
+  for(let x=b-.9,i=0;x<b-.02;i++){ dSnare(build,t+x,.08+.25*(1-(b-x)/.9)); x+=Math.max(.035,.13-i*.012); }   // the roll into the burst
+  build.gain.setValueAtTime(1,t+b-.02); build.gain.linearRampToValueAtTime(0,t+b+.05);
+  const reward=(g,at)=>{ const R=fus?62:60;                                                            // D major for fusion, C major for a summon
+    dKick(g,at,1); dNoise(g,at,2,.28,"highpass",3500); dNoise(g,at,.4,.18,"lowpass",300);
+    iPad(g,at,[R-12,R-5,R,R+4,R+7],2.6,.05); iBass(g,at,R-24,1.6,.3,"pick");
+    [R+12,R+16,R+19,R+24,R+28,R+31,R+36].forEach((m,i)=>iBell(g,at+.05+i*.055,m,.6,.06));
+    [[R+7,.35,.14],[R+12,.5,.14],[R+16,.65,.14],[R+19,.82,1.1]].forEach(([m,dt,d])=>{ iLead(g,at+dt,m,d,.11,"triangle",4800,[0]); iBell(g,at+dt,m+12,d,.05); });
+    [R+31,R+36,R+40].forEach((m,i)=>iBell(g,at+1.7+i*.09,m,.9,.04)); };
+  reward(rew,t+b);
+  const end=(t+durMs/1000+3)-AC.currentTime; setTimeout(()=>out.disconnect(),end*1000);
+  return { skip(ms){ const now=AC.currentTime; build.gain.cancelScheduledValues(now); build.gain.setValueAtTime(build.gain.value,now); build.gain.linearRampToValueAtTime(0,now+.12);
+    if(ms<burstMs){ rew.disconnect(); const r2=AC.createGain(); r2.connect(out); reward(r2,now+.08); } } };
+}
 function musToggle(){
   MUS.on=!MUS.on; try{ localStorage.setItem("snabits.music",MUS.on?"1":"0"); }catch(e){}
   musLabels();

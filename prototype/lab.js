@@ -129,7 +129,7 @@ async function doFuse(e1,e2,cat){
   if(cat){ PLAYER.bag[cat]--; if(PLAYER.bag[cat]<=0) delete PLAYER.bag[cat]; }
   const child=fuseChild(e1,e2,cat,R);
   // the fusion scene: both parents break into bits, orbit, crush into light and build the child
-  if(typeof SUMMON!=="undefined") await SUMMON.run(cv=>SUMMON.fusion(cv,{a:SUMMON.specFor(e1.m,entryState(e1)),b:SUMMON.specFor(e2.m,entryState(e2)),child:SUMMON.specFor(child.m,child.st,"Bit"),name:child.m.name}));
+  if(typeof SUMMON!=="undefined") await SUMMON.run(cv=>SUMMON.fusion(cv,{a:SUMMON.specFor(e1.m,entryState(e1)),b:SUMMON.specFor(e2.m,entryState(e2)),child:SUMMON.specFor(child.m,child.st,"Bit"),name:child.m.name,family:child.m.family}));
   // the parents are used up and the child takes the ranch
   PLAYER.roster=PLAYER.roster.filter(e=>e.id!==e1.id&&e.id!==e2.id);
   const e={id:"m"+(PLAYER.nextId++),m:child.m,st:child.st}; PLAYER.roster.push(e); PLAYER.active=e.id; RS=null; LAB={a:null,b:null,cat:null};
