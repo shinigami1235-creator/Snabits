@@ -4,6 +4,8 @@ const TRIP_STATS={"Cinder Peak":[1,0],"Saffron Dojo":[0,1],"Static Plains":[5,3]
   "Nightshade Marsh":[3,5],"Dream Garden":[3,4],"Granite Steps":[2,0],"Dawn Temple":[4,3],"Iron Foundry":[1,2],"Hollow Moor":[5,1],"The Rift":[3,1]};
 const TRIP_REGIONS=()=>REGIONS.concat([{n:"The Rift",el:"Void",boss:"Rift Lord"}]);
 const NEED=[0,20,80,140];
+/* Kiko's fee, the way MR2's errantries cost 2,000G: about four E cup purses, and The Rift costs more */
+const tripCost=reg=>reg.n==="The Rift"?3000:800;
 const atkStatOf=n=>{ const k=SKILLS[n].kind; return k==="Strike"?1:k==="Cast"?3:4; };
 function chainBefore(n){ // the skill before this one in its element's chain
   const sk=SKILLS[n]; if(tierOf(n)<2) return null;
@@ -35,10 +37,12 @@ function openTrips(){
   const s=RS;
   if(s.sick||s.injured){ say("It isn't well enough to travel. Rest it or give it medicine first."); return; }
   const regs=TRIP_REGIONS().filter(r=>r.n!=="The Rift"||s.grade==="A"||s.grade==="S");
-  panel(`<div style="flex-basis:100%;font-size:13px">Kiko takes it to one region for 4 weeks and trains two stats each week. Under each region he says whether it can learn a skill there.</div>`+
-    regs.map((r,i)=>{ const [a,b]=TRIP_STATS[r.n]; return `<button class="rb" data-t="${i}">${r.n}<small>${r.el}, ${STATS[a]} and ${STATS[b]}. ${tutorLine(s,r)}</small></button>`; }).join("")+
+  panel(`<div style="flex-basis:100%;font-size:13px">Kiko takes it to one region for 4 weeks and trains two stats each week, for ${tripCost({}).toLocaleString()} bits a trip. Under each region he says whether it can learn a skill there.</div>`+
+    regs.map((r,i)=>{ const [a,b]=TRIP_STATS[r.n]; return `<button class="rb" data-t="${i}">${r.n} · ${tripCost(r).toLocaleString()} bits<small>${r.el}, ${STATS[a]} and ${STATS[b]}. ${tutorLine(s,r)}</small></button>`; }).join("")+
     `<button class="rb" id="tr-back">Back</button>`);
-  el("r-panel").querySelectorAll("[data-t]").forEach(b=>b.onclick=()=>runTrip(regs[+b.dataset.t]));
+  el("r-panel").querySelectorAll("[data-t]").forEach(b=>b.onclick=()=>{ const r=regs[+b.dataset.t], cost=tripCost(r);
+    if(PLAYER.bits<cost){ say(`I charge ${cost.toLocaleString()} bits for ${r.n}, and you have ${PLAYER.bits.toLocaleString()}.`,"guide"); return; }
+    PLAYER.bits-=cost; drawUI(); runTrip(r); });
   el("tr-back").onclick=()=>menu("Out");
 }
 const NIGHT_LINES=["{n} is fast asleep. We'll start training again in the morning.","{n} fell asleep by the fire. We start again at sunrise.","{n} is tired out from today. Tomorrow starts the last week."];

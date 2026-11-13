@@ -475,7 +475,7 @@ async function tripHome(duskLine, homeLine, mood) {
   await sceneFade(false, 700); say(homeLine, 'guide');
   await Promise.all([walkTo(300, 60, 'walk'), (async () => { while (g.x > 344) { g.x -= 60 * rk() / 60; await rwait(16); } g.pose = 'stand'; })()]);
   s.pose = mood; await rwait(1200);
-  await dayFade('home', () => { unprop(g); s.x = 150; s.camJump = true; s.pose = mood; });
+  unprop(g); await toBed(mood);
 }
 
 /* ---------- visits: Nena's shop and the lab. No week passes, and the panel carries who is talking ---------- */

@@ -69,7 +69,9 @@ async function runContest(K) {
     if (purse) lines.push(`It brings home ${purse.toLocaleString()} bits${place === 1 ? ` and ${/^[AEIOU]/.test(T[3]) ? 'an' : 'a'} ${T[3]}` : ''}.`);
     const wonNow = place === 1 && CONTEST_WINS[story().contests]; if (wonNow) { addItem(wonNow); lines.push(`That's ${story().contests} contest win${story().contests > 1 ? 's' : ''}, and the judges sent ${/^[AEIOU]/.test(wonNow) ? 'an' : 'a'} ${wonNow} to wear.`); }
     lines.push('It lost 15 stress and gained 8 fatigue.');
-    await dayFade('night', backHome);
+    if (smoothRanch()) { await sceneFade(true, 800); backHome(); s.dayHour = 21; s.x = 2 * RW - 14; s.camJump = true; await sceneFade(false, 700);   // home at night, then off to bed
+      await walkTo(300, 60, 'walk'); await toBed(place === 1 ? 'happy' : 'idle'); }
+    else await dayFade('night', backHome);
     await endWeek(1, lines.join(' '));
   });
 }

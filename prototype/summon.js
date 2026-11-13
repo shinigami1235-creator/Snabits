@@ -218,7 +218,7 @@ const SUMMON = (() => {
     requestAnimationFrame(step);
   }
   /* a full-screen canvas over everything, at the screen's real resolution */
-  function overlay() { const cv = document.createElement('canvas'), d = devicePixelRatio || 1;
+  function overlay() { const cv = document.createElement('canvas'), d = Math.min(2, devicePixelRatio || 1);
     cv.width = Math.round(innerWidth * d); cv.height = Math.round(innerHeight * d); cv.className = 'summon-cv'; document.body.appendChild(cv); return cv; }
   /* what to draw for a monster: the smooth drawing's spec, or its pixel sprite as an image */
   function specFor(m, st, stage) {

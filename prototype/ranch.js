@@ -445,10 +445,17 @@ function hungerCheck(){ const s=RS, today=dayKey(); if(!s||s.hungerDay===today) 
 async function dayFade(kind,atBlack){
   const s=RS, d=el("r-dusk"); if(!d) return;
   const to=async(col,ms,hold=0)=>{ d.style.transition=`background-color ${Math.round(ms/rk())}ms ease`; d.style.backgroundColor=col; await rwait(ms+hold); };
-  if(kind==="night"){ await to("rgba(170,80,70,.3)",1000); await to("rgba(12,14,38,.85)",800); s.dayHour=21; await to("rgba(12,14,38,.15)",800,1000); }
-  await to("rgba(3,4,9,1)",kind==="sleep"?2200:1000,600);
+  // one fade to black, then the next morning comes up in one go (Gid: after training it's a fade to black, then the next day)
+  await to("rgba(3,4,9,1)",kind==="sleep"?2200:1100,600);
   if(atBlack) await atBlack();
-  s.dayHour=6; await to("rgba(255,196,130,.42)",1000); s.dayHour=null; await to("rgba(255,196,130,0)",1000);
+  s.dayHour=6; await to("rgba(3,4,9,0)",1400); s.dayHour=null;
+}
+/* the end of a long day away (a mission, a cup, a trip, a contest): it walks into the barn, curls up in bed, and the next day starts */
+async function toBed(mood){
+  const s=RS; if(!smoothRanch()){ await dayFade("sleep"); s.pose=mood||"happy"; return; }
+  if(!s.room){ await walkTo(HUTX(),110); s.room="barn"; s.x=24; s.camJump=true; }
+  await walkTo(202,60); s.pose="sleep"; for(let k=0;k<3;k++){ spark(s.x+8,headY(),"z"); await rwait(500); }
+  await dayFade("sleep",()=>{ s.room=null; s.x=150; s.camJump=true; s.pose=mood||"happy"; });   // it wakes up in the yard
 }
 const headY=()=>{ const h=RS.cam&&typeof chibiHeadY==="function"?chibiHeadY(RS):null; return h!=null?h:GROUND-(RS.P.base-RS.P.topY+1)*RS.P.scale-RS.jy; };
 

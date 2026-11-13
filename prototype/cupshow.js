@@ -43,11 +43,10 @@ const CUPSHOW = (() => {
       const cx = W * (0.12 + hsh(i) * 0.76), cy = H * (0.06 + hsh(i + 9) * top), col = FW[i % FW.length], k = age / 1500, r = eo(age / 700) * (60 + hsh(i + 3) * 46);
       if (age < 200) { c.fillStyle = col; c.globalAlpha = 1; c.beginPath(); c.arc(cx, cy + (1 - age / 200) * H * 0.3, 2.2, 0, 7); c.fill(); continue; }
       c.globalAlpha = 1 - k;
-      c.shadowColor = col; c.shadowBlur = 10;
+      c.globalAlpha = (1 - k) * 0.35; c.fillStyle = col; c.beginPath(); c.arc(cx, cy + k * k * 30, r * 0.9, 0, 7); c.fill(); c.globalAlpha = 1 - k;   // a soft glow without shadowBlur
       for (let p = 0; p < 28; p++) { const a = p / 28 * Math.PI * 2, x = cx + Math.cos(a) * r, y = cy + Math.sin(a) * r + k * k * 40;
         c.strokeStyle = col; c.lineWidth = 3; c.beginPath(); c.moveTo(x, y); c.lineTo(x - Math.cos(a) * 14, y - Math.sin(a) * 14 - 3); c.stroke();
         c.fillStyle = '#fff'; c.beginPath(); c.arc(cx + Math.cos(a + 0.1) * r * 0.55, cy + Math.sin(a + 0.1) * r * 0.55 + k * k * 30, 1.6, 0, 7); c.fill(); }
-      c.shadowBlur = 0;
       if (age < 320) { c.globalAlpha = 1 - age / 320; c.fillStyle = '#fff'; c.beginPath(); c.arc(cx, cy, 14, 0, 7); c.fill(); }
     }
     c.restore();
@@ -92,13 +91,16 @@ const CUPSHOW = (() => {
   /* ---------- the beats. Each returns { draw(c,W,H,t), who, face, text, textAt, auto } ---------- */
   const B = {};
   /* lights down, spotlights sweep, fireworks, the cup's name on a ribbon */
-  B.open = info => ({ textAt: 2600, auto: 3400, draw(c, W, H, t) {
-    const dark = t < 600 ? 0.25 + 0.6 * eo(t / 600) : 0.85 - 0.5 * eo((t - 1300) / 900);
-    stadium(c, W, H, t, { dark, cheer: t > 1300, spots: t > 500 ? cl((t - 500) / 400) : 0, hz: 0.5 });
-    fireworks(c, W, H, t, 1300, 9);
-    gradeBadge(c, W / 2, H * 0.27 - 50, info.cup.grade, 20 * cl((t - 1500) / 300) + 0.01);
-    ribbon(c, W, H * 0.27, info.cup.name, t, 1300);
-    if (t > 1900) { c.globalAlpha = cl((t - 1900) / 300); c.font = `700 18px ${PIX}`; c.fillStyle = '#fff6d8'; c.textAlign = 'center'; c.fillText(info.cup.sub, W / 2, H * 0.27 + 44); c.globalAlpha = 1; }
+  /* the lights ease down in one smooth move while the spotlights come on, then the cup's name bursts in and the lights come back */
+  const eio = k => { k = cl(k); return k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2; };
+  B.open = info => ({ textAt: 3200, auto: 4000, fadeIn: false, draw(c, W, H, t) {
+    const B0 = 1800, dark = t < B0 ? 0.85 * eio(t / 1500) : 0.85 - 0.5 * eio((t - B0) / 1100);
+    stadium(c, W, H, t, { dark, cheer: t > B0, spots: cl((t - 500) / 900), hz: 0.5 });
+    if (t > B0 - 60 && t < B0 + 140) { c.fillStyle = `rgba(255,248,225,${0.5 * (1 - Math.abs(t - B0 - 40) / 100)})`; c.fillRect(0, 0, W, H); }   // a flash on the burst
+    fireworks(c, W, H, t, B0, 9);
+    gradeBadge(c, W / 2, H * 0.27 - 50, info.cup.grade, 20 * cl((t - B0 - 200) / 300) + 0.01);
+    ribbon(c, W, H * 0.27, info.cup.name, t, B0);
+    if (t > B0 + 600) { c.globalAlpha = cl((t - B0 - 600) / 300); c.font = `700 18px ${PIX}`; c.fillStyle = '#fff6d8'; c.textAlign = 'center'; c.fillText(info.cup.sub, W / 2, H * 0.27 + 44); c.globalAlpha = 1; }
   } });
   /* Mira on the announcer's stand at the edge of the ring, under a spotlight */
   B.mc = (info, text, o = {}) => ({ who: 'mc', face: o.face || 'happy', text, textAt: 300, draw(c, W, H, t) {
@@ -216,29 +218,31 @@ const CUPSHOW = (() => {
 
   /* ---------- running a show ---------- */
   const CPS = 0.045;   // characters per millisecond while a line types out
-  function frame(c, W, H, b, t) {
+  function frame(c, W, H, b, t, prev) {
     c.clearRect(0, 0, W, H); b.draw(c, W, H, t);
-    if (b.fadeIn !== false && t < 260) { c.fillStyle = `rgba(0,0,0,${1 - t / 260})`; c.fillRect(0, 0, W, H); }
+    if (prev && t < 380) { c.save(); c.setTransform(1, 0, 0, 1, 0, 0); c.globalAlpha = 1 - eo(t / 380); c.drawImage(prev, 0, 0); c.restore(); }   // the last beat dissolves into this one
     if (b.text && t >= (b.textAt || 0)) { const sh = b.skipAt != null ? b.text.length : Math.floor((t - b.textAt) * CPS); box(c, W, H, b.who, b.face || 'talk', b.text, sh, sh >= b.text.length, t); }
   }
   /* draws one moment of one beat onto a canvas, for storyboards */
-  function still(cv, b, t, W, H) { const c = cv.getContext('2d'), d = cv.width / W; c.setTransform(d, 0, 0, d, 0, 0); frame(c, W, H, { ...b, fadeIn: false }, t); }
+  function still(cv, b, t, W, H) { const c = cv.getContext('2d'), d = cv.width / W; c.setTransform(d, 0, 0, d, 0, 0); frame(c, W, H, b, t, null); }
   function run(beats) {
     return new Promise(done => {
       if (!beats.length) return done();
       API.on = true; API.mus = beats[0].mus || 'arena';
       const start = b => { if (b.mus !== undefined) API.mus = b.mus; if (b.jingle && typeof musJingle === 'function') musJingle(b.jingle); };
-      const cv = SUMMON.overlay(), c = cv.getContext('2d'), d = devicePixelRatio || 1, W = cv.width / d, H = cv.height / d;
+      const cv = SUMMON.overlay(), c = cv.getContext('2d'), d = cv.width / innerWidth, W = cv.width / d, H = cv.height / d;
       const skip = document.createElement('button'); skip.className = 'small show-skip'; skip.textContent = 'Skip ▸▸'; document.body.appendChild(skip);
       let i = 0, t0 = performance.now(), over = false;
       const end = () => { if (over) return; over = true; API.on = false; cv.remove(); skip.remove(); done(); };
-      const next = () => { i++; t0 = performance.now(); if (i >= beats.length) end(); else start(beats[i]); };
+      const prev = document.createElement('canvas'); prev.width = cv.width; prev.height = cv.height; let hasPrev = false;
+      const next = () => { prev.getContext('2d').clearRect(0, 0, prev.width, prev.height); prev.getContext('2d').drawImage(cv, 0, 0); hasPrev = true;
+        i++; t0 = performance.now(); if (i >= beats.length) end(); else start(beats[i]); };
       start(beats[0]);
       const typed = (b, t) => !b.text || b.skipAt != null || (t - b.textAt) * CPS >= b.text.length;
       cv.onpointerdown = () => { const b = beats[i], t = performance.now() - t0; if (!b || t < 250) return;
         if (b.text && t < b.textAt) { t0 -= b.textAt - t; return; } if (!typed(b, t)) b.skipAt = t; else next(); };
       skip.onclick = end;
-      const step = now => { if (over) return; const b = beats[i], t = now - t0; c.setTransform(d, 0, 0, d, 0, 0); frame(c, W, H, b, t);
+      const step = now => { if (over) return; const b = beats[i], t = now - t0; c.setTransform(d, 0, 0, d, 0, 0); frame(c, W, H, b, t, hasPrev && b.dissolve !== false ? prev : null);
         if (b.cue && !b.cued && t >= b.cue[0]) { b.cued = true; if (typeof sfx === 'function') sfx(b.cue[1]); }
         const textEnd = b.text ? (b.skipAt != null ? b.skipAt : b.textAt + b.text.length / CPS) : 0;
         if (b.text ? t > textEnd + 2600 : t > (b.auto || 2000)) next();
