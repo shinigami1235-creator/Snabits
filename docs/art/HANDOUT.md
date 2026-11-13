@@ -116,7 +116,21 @@ Gid caught AI slop in the storyboard lines on 12 Nov 2026 because the skills wer
 - **Sounds for skills and abilities:** each element has its own sound when a skill leaves and when it lands (a crackle for Blaze, a chime for Frost, a splash for Tide, a zap for Spark, a clang for Steel and so on), and beams, lightning, storms, meteors, volleys, pillars and waves have their own on top. Abilities show an aura and particles in their element with the same sound.
 - **Moods show on the ranch.** A tired or worn out Snabit droops, with heavy eyelids and a sigh. A rested one with low stress looks fresh, and on some weeks in top shape it looks determined instead (`moodPose()` in `ranch.js`).
 - **Forms without arms don't punch.** Jab shows as Headbutt, Iron Palm as Shoulder Ram, Focus Punch as Focus Ram and Haymaker as Big Headbutt until the Snabit grows arms (`skillLabel()` in `skills.js`).
-- **Cups follow MR2's calendar.** The stadium lobby has a Calendar with the year's fixed cups: the Majors, the Legend Cup, officials for every grade, the Summer Qualifier, the five-bout team Summer Exhibition and an Open Cup every month. A Snabit can enter cups one grade above its own and everything below. Regular cups give an item, and every cup lowers stress and adds fatigue the way MR2 does. The weekly 1-on-1 is called the Friendly match.
+- **Cups follow a fixed calendar (13 Nov 2026)** so a player can plan the rest before one (`cupsOfWeek` in `tourney.js`). Each grade has one regular cup a month on its own week (E in week 0, D in week 1 and so on), the Open Cup runs in week 2 of every other month, and the Friendly match only in week 3 of each season's middle month. The Majors, the Legend Cup, the officials, the Summer Qualifier and the team Summer Exhibition keep their dates. A Snabit can enter cups one grade above its own and everything below. Regular cups give an item, and every cup lowers stress and adds fatigue the way MR2 does.
+- **Fight shape on cup day (13 Nov 2026)** comes from fatigue and stress (`fightCond` in `tourney.js`): Top shape fights 5% above itself, Good as it is, Worn 5% below and Exhausted 12% below. The ranch shows the next cup and the fight shape, and Tala says in the lobby and in the week's notes when a cup coming up can raise the grade and how the Snabit will fight.
+- **Even fatigue rates (13 Nov 2026),** checked against the MR2 guide. A heavy drill adds 20 fatigue and 10 stress, a light one 10 and 5, and a rest week takes 55 fatigue and 25 stress off (65 with the Better barn), so two heavy drills, a light one and a rest bring it back to Top shape. A trip week adds 14 fatigue and 6 stress, so a whole trip leaves it worn out and one rest clears it. Strain is fatigue plus twice the stress, and at 110 it costs a week of its prime, at 140 two. Stamina still cuts all of it by up to 30%.
+- **Liked drills go better.** A liked drill lands more greats and a disliked one more slacks, as in MR2.
+- **Strays (13 Nov 2026).** After a trip with at least three good weeks, a wild Snabit of the region may pick a fight on the last day 60% of the time. It fights on its habits, and a win pays three quarters of a cup purse. One time in seven it's the region's champion, tougher and worth twice that.
+- **Lifespans are 3 to 4 years** (36 to 48 months by the photo's brightness), so a Snabit reaches S around the middle of its life. The top purses came down to A 5,000, S 8,000, the Majors 15,000 and the Legend Cup 30,000.
+- **The ranch's best grade opens things (13 Nov 2026),** listed under Out > Goals (`PERKS` in `game.js`):
+  - E: trips to 4 regions, 3 wild fights a week, a Freezer for 20.
+  - D: 7 regions, 4 wild fights, rival matches with Rook, new scans start 2 points higher in every stat.
+  - C: 10 regions, 5 more Freezer spaces, Nena's second held item, hidden abilities in scans at half the A rate.
+  - B: all 12 regions, 5 wild fights, Nena sells the fusion catalysts (Stat seed, Element stone, Lucky bit), scans 6 higher.
+  - A: The Rift, 5 more Freezer spaces, hidden abilities twice as often as at C.
+  - S: the Majors and the Legend Cup, Nena sells Life seeds, scans 10 higher.
+- **Kiko charges for trips:** 800 bits, 3,000 for The Rift.
+- **After a cup, a trip or a mission the Snabit goes to bed** in the barn and the screen fades once into the next morning (`toBed` in `ranch.js`). A drill also fades once, sunset straight into morning.
 - **The cup show (12 Nov 2026),** approved from `cup-storyboard.png` (`cupshow.js`, hooked into `matchCard`, `afterMatch` and `finishCup` in `tourney.js`). Every cup but the team exhibition plays it, and a tap finishes a line or moves on while Skip ends the show:
   - The first match opens with the lights down, two spotlights sweeping the stands, then the cup's name on a gold ribbon with fireworks. Mira the announcer welcomes everyone with the purse and gives the rules. Tala stands with the Snabit at the entrance tunnel and gives one tip about the first opponent, worked out from the elements and stats (`CUPLINE.advice`). Knockouts then show the draw, eight tiles lighting up with lines to a trophy, the player's in gold and Rook's in orange.
   - Every match starts with a VS card: the two Snabits slide in from each side, VS slams down and Mira calls their names.
@@ -138,7 +152,8 @@ Gid caught AI slop in the storyboard lines on 12 Nov 2026 because the skills wer
 - **Summon and fusion music** (`musCue` in `music.js`): a build-up timed to the scene into a crash, a major chord and a four-note fanfare, and each family has a cry when it appears (`cry()` in `chibi-hook.js`). `summon-music-preview.mp3` has both scores and the eight cries.
 - **Meditate at the pond** (`pondMeditate` in `ranch.js`): eyes shut, a growing glow, a dragonfly that lands on its head, a leaping koi and a petal gust, pebbles circling it on a great, two wobbling pebbles on a success, and the frog on a fail. `meditate.mp4` and `meditate-sheet.png` show all three.
 - **Battles keep drawing if an effect fails.** A beam's end glow could get a negative size from the far side, which threw and froze the arena for the rest of the session. That's fixed, and a frame that throws now drops the effect in progress.
-- **Cups come home at night too.** Going to the stadium fades out first. After the prize ceremony the Snabit walks into the ranch at night, then black and morning, then Tala's notes.
+- **Cups come home at night too.** Going to the stadium fades out first. After the prize ceremony the Snabit walks into the ranch at night and goes to bed, then black and morning, then Tala's notes.
+- **The cup opening fades in smoothly.** The lights dim without a black gap, each beat dissolves into the next and the fireworks skip the glow blur, since Gid read the old opening as a stutter.
 - **Nena's shop (12 Nov 2026).** Town has Nena's shop and the Workshop. The shop is a place you walk into, with shelves, hats and wings on the wall, a sign, and a counter with the skill chips in a glass case. Snacks and medicine, things to wear, skill chips and selling are all bought from her, and she answers each sale in the box at the top of the panel.
 - **The lab (12 Nov 2026)** is a place too: Freezer pods with sleeping shapes, a screen, flasks and the fusion pads under a ring. Dr. Ines greets you and runs fusion and rebirth, and Benji runs the Freezer. Out > Lab and Out > Freezer both open it.
 - **Music crossfades slowly.** The old tune keeps playing while it fades out over 2 seconds, and the new one comes up over 2.5 seconds after a short pause. The training tune "Work It Out" plays at the training places until night falls, "The Long Road" plays on trips and missions, and the town tune plays in the shop and the lab.
@@ -150,7 +165,7 @@ Gid caught AI slop in the storyboard lines on 12 Nov 2026 because the skills wer
 - **Save files.** Settings has Save to a file and Load a save file, and the title screen has Load a save file. The file is `snabits-save.json`, the whole save gzipped into one line, about 4 KB for 20 Snabits, and files from before still load. Phones keep each save as a new file, since a web page can't write over an existing download. Loading asks first since it replaces the game on that device. The game also asks the browser to keep its storage. A refresh never loses the game, but clearing the site's data does. Cloud save with a short code waits for the PvP server, so both share it.
 - **Install as an app.** The game has a manifest and icons (a happy Chomp on a night-blue tile), so Chrome can install it from its menu. When Chrome offers the install, an Install Snabits button shows on the title screen and in Settings.
 - **The ranch keeps its own day (12 Nov 2026)** instead of following the phone's clock. Each week starts in the morning and stays bright while the player plans it (`ranchHour()`, `dayFade()` in `ranch.js`, and the music follows the same hour).
-  - After a drill: sunset, a moment of night with the moon, stars and lit windows, black, then the next morning at home, and Tala's notes for the week come up.
+  - After a drill: one fade to black, then the next morning at home, and Tala's notes for the week come up.
   - A rest week: it falls asleep, the screen fades slowly to black, then the morning light comes up.
   - Trips, missions and cups end the same way, with the night at the ranch before the morning.
   - Skip speeds all of them up.
@@ -189,6 +204,8 @@ Gid caught AI slop in the storyboard lines on 12 Nov 2026 because the skills wer
 - Remove the gallery button from the Snaboscope.
 - Cloud save with a short code, built together with the PvP server.
 - Gid's answer on the Bitter root: keep it as discipline or make it a recovery item.
+- Ideas from the procedural-creatures skill, proposed only: stepping IK legs for Stilt and Skit, a swinging chain for tentacles, tails and Booly's wisp, and more genes read from the photo.
+- The last balance run had Pinch winning 59% and Moko 43%, a little wider than the 45% to 56% after the stat rework.
 - Later, for the cozy side: furniture and wall colours to buy and place.
 
 ## What decides a monster's look
