@@ -276,7 +276,7 @@ function panel(html){ el("r-panel").innerHTML=html; el("ranch").classList.toggle
 function weekCard(){
   const s=RS, w=el("r-week"); if(!w) return;
   const ph=agePhase(s), mo=Math.floor(s.used/4);
-  const rows=[["Next official cup",nextCupText().replace(/^The next official cup is in /,"").replace(/\.$/,"")||"This week"],
+  const nc=nextCupFor(s), rows=[["Next cup",nc?`${nc.c.name.replace(/ \([A-S]\)$/,"")}, ${nc.k?`in ${nc.k} week${nc.k>1?"s":""}`:"this week"}`:"None soon"],["Fight shape",fightCond(s).name],
     ["Age",`${ph[2]} · ${mo} of ${s.m.lifespan} months`],
     s.stage!=="Mega"?["Evolves at",`${evoTotal()} earned points · has ${tpTotal()}`]:null,
     ["Wild fights",`${typeof wildLeft==="function"?wildLeft(s):3} left this week`],
@@ -298,7 +298,7 @@ function menu(which){
       HEAVY.map((h,k)=>`<button class="rb" data-d="${6+k}" ${noTrain||noHeavy?"disabled":""}>${h[0]}<small class="fx"><span>${STATS[h[1]]} ↑</span><span>${STATS[h[2]]} +</span><span>${STATS[h[3]]} −2</span></small></button>`).join(""));
     el("r-panel").querySelectorAll("[data-d]").forEach(b=>b.onclick=()=>runDrill(+b.dataset.d));
   }
-  if(which==="Rest"){ panel(`<button class="rb" id="r-rest">Rest this week<small>Fatigue −35, stress −7. Uses the week.</small></button><div style="flex-basis:100%;font-size:12px;opacity:.7">${condition()}</div>`); el("r-rest").onclick=runRest; }
+  if(which==="Rest"){ panel(`<button class="rb" id="r-rest">Rest this week<small>Fatigue −${has("Better hut")?65:55}, stress −25. Uses the week.</small></button><div style="flex-basis:100%;font-size:12px;opacity:.7">${condition()}</div>`); el("r-rest").onclick=runRest; }
   if(which==="Feed"){
     const fed=fedToday(s), snacked=s.snackWeek===PLAYER.week;
     panel(`<div class="full sec">Today's meal${fed?"<small>Fed today</small>":"<small>1 a day</small>"}</div>`+MEALS.map((ml,i)=>`<button class="rb" data-ml="${i}" ${fed||PLAYER.bits<ml[1]?"disabled":""}>${ml[0]}${s.known[i]==="like"?" ♥":s.known[i]==="dis"?" ✕":""}<small>${ml[1]} bits · ${itemDesc(ml[0])}</small></button>`).join("")+
@@ -460,11 +460,13 @@ async function toBed(mood){
 const headY=()=>{ const h=RS.cam&&typeof chibiHeadY==="function"?chibiHeadY(RS):null; return h!=null?h:GROUND-(RS.P.base-RS.P.topY+1)*RS.P.scale-RS.jy; };
 
 /* ---------- drills ---------- */
-function rollDrill(){
-  const s=RS, h=hearts();
+/* MR2: a monster that likes the drill is keener and more likely to have a great week, one that dislikes it is more likely to slack off */
+function rollDrill(i){
+  const s=RS, h=hearts(), tz=i==null?null:taste("drill",i<6?i:HEAVY[i-6][1]);
   if(spoiled()&&Math.random()<0.2+(s.slackBonus||0)) return "slack";
+  if(tz==="dis"&&Math.random()<0.25) return "slack";
   const pl=typeof placeLv==="function"&&s.drillPlace?placeLv(s.drillPlace):0;
-  const great=10+2*h+(s.fatigue<20?5:0)+(s.weatherBonus?10:0)+(has("Training gear")?5:0)+4*pl, fail=Math.max(5,25-5*h)+(s.fatigue>50?15:0)-(s.stress<10&&s.fatigue<30?5:0);
+  const great=10+2*h+(tz==="like"?12:0)+(s.fatigue<20?5:0)+(s.weatherBonus?10:0)+(has("Training gear")?5:0)+4*pl, fail=Math.max(5,25-5*h)+(s.fatigue>50?15:0)-(s.stress<10&&s.fatigue<30?5:0);
   const r=Math.random()*100; return r<great?"great":r<great+fail?"fail":"success";
 }
 // heavy drills: [name, main stat, minor stat, dropped stat, mess]
@@ -472,7 +474,7 @@ const HEAVY=[["Marathon",0,5,1,"mud"],["Quarry",1,0,5,"dust"],["Fortress",2,1,3,
 async function runDrill(i){
   await scene(async()=>{
     RS.drillPlace=i<6?DRILL_PLACE[i]:null;
-    const s=RS, res=rollDrill(), heavy=i>=6, H=heavy?HEAVY[i-6]:null, main=heavy?H[1]:i, name=heavy?H[0]:DRILLS[i];
+    const s=RS, res=rollDrill(i), heavy=i>=6, H=heavy?HEAVY[i-6]:null, main=heavy?H[1]:i, name=heavy?H[0]:DRILLS[i];
     s.lastTrained=main; s.weekAct=STATS[main];
     const place=heavy?HEAVY_PLACE[i-6]:smoothRanch()?DRILL_PLACE[i]:null;
     say(place?`${name} at ${PLACE_NAME[place]}. Let's see how it does.`:`${name}. Let's see how it does.`);
@@ -486,8 +488,10 @@ async function runDrill(i){
     else { gains[main]=Math.max(vet?0:1,Math.round(rp(main)*(heavy?1.5:1)*mult*age*(1+0.15*(!heavy&&typeof placeLv==="function"?placeLv(DRILL_PLACE[i]):0)))); if(heavy) gains[H[2]]=Math.max(vet?0:1,Math.round(rp(H[2])/2*mult*age)); }
     if(heavy) gains[H[3]]=(gains[H[3]]||0)-2;
     const shp=shapeOf(s.weight)[0], fm=shp==="Thin"?1.25:shp==="Chubby"?1.25:shp==="Heavy"?1.5:1, sm=shp==="Thin"?1.5:shp==="Slim"?1.25:shp==="Chubby"?0.75:shp==="Heavy"?0.5:1, hv=heavy?2:1;
-    s.fatigue+=Math.round((res==="great"||res==="slack"?5:10)*fm*hv*tireMul(s)); s.stress+=Math.round(((res==="great"?9:5)*hv)*sm*(s.variant==="Pampered"?0.75:1)); s.weight-=hv;
-    const tz=heavy?null:taste("drill",i), tFirst=tz?tasteFound(tz):false;
+    // one rest clears a month of 2 heavy drills and 1 light drill: heavy 20 fatigue and 10 stress, light 10 and 5, less on a great or a slack
+    const baseF=heavy?(res==="great"?14:res==="slack"?8:20):(res==="great"?6:res==="slack"?4:10), baseS=heavy?(res==="great"?7:res==="slack"?4:10):(res==="great"?3:res==="slack"?2:5);
+    s.fatigue+=Math.round(baseF*fm*tireMul(s)); s.stress+=Math.round(baseS*sm*(s.variant==="Pampered"?0.75:1)); s.weight-=hv;
+    const tz=taste("drill",heavy?H[1]:i), tFirst=tz?tasteFound(tz):false;   // a heavy drill counts as its stat's drill
     if(tz==="like"){ s.stress-=4; s.spoil+=2; spark(s.x,headY()-4,"heart",3); } if(tz==="dis"){ s.stress+=8; s.spoil-=2; spark(s.x,headY()-6,"q"); }
     const tLine=!tz?"":tz==="like"?(tFirst?`It loves ${name}. I'll remember that.`:`${name} is its favourite.`):(tFirst?`It really doesn't like ${name}. I'll remember that.`:`It grumbled through ${name} again.`);
     for(const k in gains) s.tp[k]=Math.max(0,s.tp[k]+gains[k]);
@@ -617,7 +621,7 @@ async function runRest(){
   await scene(async()=>{ const s=RS; say(smoothRanch()?"A quiet week in the barn.":"A quiet week in the hut.");
     if(smoothRanch()){ if(!s.room){ await walkTo(HUTX(),110); s.room="barn"; s.x=24; s.camJump=true; } await walkTo(202,60); s.pose="sleep"; for(let k=0;k<3;k++){ spark(s.x+8,headY(),"z"); await rwait(500);} await dayFade("sleep"); s.pose="happy"; await rwait(500); }
     else { await walkTo(HUTX(),40); s.hidden=true; for(let k=0;k<3;k++){ spark(HUTX()+4,GROUND-34,"z"); await rwait(450);} await dayFade("sleep"); s.hidden=false; s.pose="happy"; await rwait(500); }
-    s.fatigue-=has("Better hut")?45:35; s.stress-=7; s.weight+=1; const wasHurt=s.injured; s.injured=false; await endWeek(1,wasHurt?"The rest healed it up.":"It looks rested.");
+    s.fatigue-=has("Better hut")?65:55; s.stress-=25;   // a full week of rest clears a normal month of training, or a whole skill trip s.weight+=1; const wasHurt=s.injured; s.injured=false; await endWeek(1,wasHurt?"The rest healed it up.":"It looks rested.");
   },true);
 }
 async function runMeal(i){
@@ -744,9 +748,9 @@ async function endWeek(weeks,line){
   s.log=(s.log||[]).concat(Array(Math.max(1,weeks)).fill(s.weekAct||"Rest")).slice(-8); s.weekAct=null;
   let notes=[line];
   const strain=s.fatigue+2*s.stress;
-  if(strain>=90){ s.used+=2; notes.push("It's under a lot of strain. That cost it 2 weeks of its prime."); }
-  else if(strain>=70){ s.used+=1; notes.push("The strain cost it a week of its prime."); }
-  s.strainRun=strain>=70?s.strainRun+1:0;
+  if(strain>=140){ s.used+=2; notes.push("It's under a lot of strain. That cost it 2 weeks of its prime."); }
+  else if(strain>=110){ s.used+=1; notes.push("The strain cost it a week of its prime."); }
+  s.strainRun=strain>=110?s.strainRun+1:0;
   if(s.sick) s.sick--;
   if(s.strainRun>=2&&!s.sick){ s.sick=1; s.strainRun=0; notes.push("It's caught a cold. No training next week unless it gets medicine."); }
   for(const it of Object.values(s.worn||{})){ const tz=it&&taste("item",it); if(!tz) continue; s.stress+=tz==="like"?-3:4;
@@ -764,6 +768,7 @@ async function endWeek(weeks,line){
   { const fest=typeof festivalOf==="function"&&festivalOf(PLAYER.week); if(fest){ addItem(fest[1]); s.stress-=10; notes.push(`The ${fest[0]} is on in town this week. Nena gave every ranch ${/^[AEIOU]/.test(fest[1])?"an":"a"} ${fest[1]}, and the music took 10 stress off.`); } }
   notes.push(condition());
   if(s.stress>50) notes.push("It seems tense lately, maybe give it a rest.");
+  { const nx=fightDayLine(s,1); if(nx) notes.push(nx+(fightCond(s).name==="Top shape"?"":" A rest this week would have it fresh for it.")); }   // Tala looks ahead to next week's special fight
   if(s.petWeek!==PLAYER.week-1&&s.playWeek!==PLAYER.week-1) s.neglect=(s.neglect||0)+1;
   if(s.variant==="Scruffy"){ s.cleanRun=(s.petWeek===PLAYER.week-1||s.playWeek===PLAYER.week-1)?(s.cleanRun||0)+1:0; if(s.cleanRun>=4){ s.variant=null; notes.push("It's groomed itself back to looking smart."); } }
   if(s.stage!=="Mega"){

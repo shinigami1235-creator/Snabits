@@ -66,7 +66,8 @@ function shopList(line,rows,back,exit=()=>openShop("Anything else?")){
   el("r-panel").querySelectorAll("[data-s]").forEach(b=>b.onclick=()=>{ const r=rows[+b.dataset.s]; r.buy?r.buy():buy(r.name,r.price,back); });
   el("sh-back").onclick=exit;
 }
-function openMarket(){ shopList("Snacks, medicine and toys are on these shelves.",Object.entries(MARKET).map(([k,p])=>({name:k,price:p,desc:`${itemDesc(k)} You have ${PLAYER.bag[k]||0}.`})),openMarket); }
+const RANK_STOCK=()=>Object.assign({},rankIdx()>=3?{"Stat seed":2500,"Element stone":2500,"Lucky bit":2000}:{},rankIdx()>=5?{"Life seed":6000}:{});   // fusion catalysts from grade B, Life seeds at S
+function openMarket(){ shopList("Snacks, medicine and toys are on these shelves.",Object.entries(Object.assign({},MARKET,RANK_STOCK())).map(([k,p])=>({name:k,price:p,desc:`${itemDesc(k)} You have ${PLAYER.bag[k]||0}.`})),openMarket); }
 function openItemShop(){ const st=weekStock();
   shopList("These are the things to wear this week. I get new ones every week.",st.worn.map(k=>({name:k,price:WORN[k].price,desc:`Worn on the ${WORN[k].slot}. ${itemDesc(k)}`})).concat([st.held,st.held2].filter(Boolean).map(h=>({name:h,price:HELD[h].price,desc:"Held. "+itemDesc(h)}))),openItemShop); }
 function openSkillShop(){ const st=weekStock();

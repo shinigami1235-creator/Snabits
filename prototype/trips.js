@@ -36,7 +36,7 @@ function tutorLine(s,reg){
 function openTrips(){
   const s=RS;
   if(s.sick||s.injured){ say("It isn't well enough to travel. Rest it or give it medicine first."); return; }
-  const regs=TRIP_REGIONS().filter(r=>r.n!=="The Rift"||s.grade==="A"||s.grade==="S");
+  const regs=TRIP_REGIONS().filter((r,i)=>r.n==="The Rift"?(s.grade==="A"||s.grade==="S"):i<tripRegionCount());   // more regions open as the ranch climbs the grades
   panel(`<div style="flex-basis:100%;font-size:13px">Kiko takes it to one region for 4 weeks and trains two stats each week, for ${tripCost({}).toLocaleString()} bits a trip. Under each region he says whether it can learn a skill there.</div>`+
     regs.map((r,i)=>{ const [a,b]=TRIP_STATS[r.n]; return `<button class="rb" data-t="${i}">${r.n} · ${tripCost(r).toLocaleString()} bits<small>${r.el}, ${STATS[a]} and ${STATS[b]}. ${tutorLine(s,r)}</small></button>`; }).join("")+
     `<button class="rb" id="tr-back">Back</button>`);
@@ -56,18 +56,18 @@ async function runTrip(reg){
     s.tripLabel=`${reg.n} · Week 1 of 4`; drawUI();
     await stageCard(reg.n,`We'll train ${STATS[main]} the most here, and ${STATS[second]} a little too.`,"guide");
     const areas=TRIP_AREAS[reg.el], tName=TEACHER[reg.el][0], tThe=/^The /.test(tName)?tName:"the "+tName, Cap=t=>t[0].toUpperCase()+t.slice(1), lc=t=>t[0].toLowerCase()+t.slice(1);
-    let teacher=null;
+    let teacher=null, okWeeks=0;
     for(let w=0;w<4;w++){
       const age=ageMult(s), A=areas[w], [tn,kind,stat]=A.tasks[Math.floor(Math.random()*A.tasks.length)];
       let pc=Math.min(95,60+8*hearts()-(s.fatigue>50?15:0))/100; if(stat>=0) pc=(pc+taskChance(s,stat))/2;
-      const ok=Math.random()<pc;
+      const ok=Math.random()<pc; if(ok) okWeeks++;
       const a=Math.max(1,Math.round(rp(main)*age*(ok?1:0.5))), b=Math.max(1,Math.round(rp(second)/2*age*(ok?1:0.5)));
       s.tripLabel=`${A.name} · Week ${w+1} of 4`; drawUI(); banner(A.name,"#fff");
       if(kind==="lesson"){ teacher=prop({k:"teacher",el:reg.el,x:186,y:GROUND,keep:true}); K(`${Cap(tThe)} lives up here and will train ${nm} this week.`); }
       else K(`${nm}, ${lc(tn)}.`);
       await rwait(900); banner("");
       await playTask(kind,ok,{look:A.look,fall:FALLER[reg.el],teacher});
-      s.tp[main]+=a; s.tp[second]+=b; gain[0]+=a; gain[1]+=b; s.fatigue+=Math.round(18*tireMul(s)); s.stress+=7;   // MR2's errantry: +18 fatigue and +7 stress every week, so it comes home very tired
+      s.tp[main]+=a; s.tp[second]+=b; gain[0]+=a; gain[1]+=b; s.fatigue+=Math.round(14*tireMul(s)); s.stress+=6;   // four weeks of this brings it home worn out, and one full rest puts it right
       drawUI(); popStat(main,"+"+a); popStat(second,"+"+b);
       let line=`Week ${w+1}, ${A.name}: ${STATS[main]} +${a}, ${STATS[second]} +${b}.${ok?"":" It was a rough week."}`;
       await stageResult(ok,ok?`That was a good week. ${STATS[main]} went up by ${a} and ${STATS[second]} by ${b}.`:`That was a rough week, so ${STATS[main]} only went up by ${a} and ${STATS[second]} by ${b}.`,"guide");
@@ -92,6 +92,23 @@ async function runTrip(reg){
     }
     s.stageRegions=s.stageRegions||{}; s.stageRegions[reg.n]=(s.stageRegions[reg.n]||0)+4;
     fixEquip(s); clampAll();
+    /* MR2's strays: after a good trip a wild Snabit of the region may pick a fight on the last day. It fights on its own,
+       and a win brings home a reward. Now and then it's the region's champion, tougher and worth twice as much. */
+    if(okWeeks>=3&&Math.random()<0.6){
+      const champ=Math.random()<0.15, foe=gradedOpponent(s.grade,Math.max(1,s.level||1),Math.random,reg.el),
+        prize=Math.round(Math.max(300,GRADE_INFO[s.grade].purse*0.75)*(champ?2:1));
+      if(champ) foe.boss=`${reg.n} Champion`;
+      const fp=prop({k:"foe",x:196,y:GROUND,grid:foe.fm.grid,pal:foe.fm.pal,fm:foe.fm});
+      banner(champ?foe.boss:"A stray","#ffd23f");
+      K(champ?`That's the strongest Snabit in ${reg.n}. Beat it and there's ${prize.toLocaleString()} bits in it.`:`A stray ${foe.m.name} wants a fight. Strays carry a ${prize.toLocaleString()} bit reward.`);
+      await rwait(1800); banner("");
+      await sceneFade(true,400); let won=false;
+      await new Promise(done=>arenaFight({s:fightSnapshot(s),foe,mode:"auto",title:champ?"Boss":"Wild",noDraw:true,onEnd:r=>{ won=!!(r&&r.winner===0); done(); }}));
+      unprop(fp); s.trip=true; s.camJump=true; s.pose=won?"happy":"tired"; await sceneFade(false,500);
+      if(won){ PLAYER.bits+=prize; drawUI(); spark(s.x,headY()-6,"sparkle",8); await hop(14,360); K(`${nm} won, and that's ${prize.toLocaleString()} bits.`); weeks.push(`On the last day it beat ${champ?`the ${foe.boss}`:`a stray ${foe.m.name}`} and brought home ${prize.toLocaleString()} bits.`); }
+      else { K(`The stray was too much for ${nm} this time.`); weeks.push(`On the last day a stray ${foe.m.name} beat it.`); }
+      await rwait(1200);
+    }
     await tripHome(`That's the end of the four weeks. Time to take ${nm} home.`,`We're back at the ranch. ${nm} worked hard, so give it a good rest.`,learned.length?"happy":"idle");
     if(learned.length) spark(s.x,headY()-6,"sparkle",10); await rwait(400);
     RS.weekAct="Trip"; await endWeek(4,`Welcome back, ${nm}! Its ${STATS[main]} went up by ${gain[0]} and its ${STATS[second]} by ${gain[1]}${learned.length?`, and it learned ${learned.join(" and ")}`:""}.`);

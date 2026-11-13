@@ -166,6 +166,8 @@ function openGoals() {
     ${row('Beat Rook', `${St.rookW} of 5 wins against him, ${St.rookL} loss${St.rookL === 1 ? '' : 'es'}.`, St.rookW >= 5)}
     ${dx ? row('Fill the bestiary', `${dx.seen} of ${dx.total} seen, ${dx.raised} raised.${dx.next ? ' ' + dx.next : ''}`, dx.seen >= dx.total) : ''}
     ${row('Win contests', `${St.contests} of 12 won. There's one in the first week of every month.`, St.contests >= 12)}
-    </div>`);
+    </div>
+    <div class="full lab-info"><b>What each grade opens</b>, counted from the ranch's best Snabit, now grade ${bestGrade()}:</div>
+    <div class="full goal-list">${PERKS.map(([g, t], i) => row(`Grade ${g}`, t, i <= GRADES.indexOf(bestGrade()))).join('')}</div>`);
   el('gl-back').onclick = () => menu('Out');
 }

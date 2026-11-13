@@ -183,7 +183,7 @@ function render(full){
     const res=scan(still,still.width,still.height); show(res);
     if(!full) return;
     if(typeof WILD!=="undefined"&&WILD){ wildCard(res,card); return null; }
-    const m=hatch(res);
+    const m=typeof scanBoost==="function"?scanBoost(hatch(res)):hatch(res);
     const name=m.name, kind=(m.el2?`${m.el1} / ${m.el2}`:m.el1)+" "+m.family;
     const tint=COL[res.main.g]==="#1b1b1f"?"#8888aa":COL[res.main.g];
     card.innerHTML=`<div class="sheet-head">

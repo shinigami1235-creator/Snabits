@@ -8,14 +8,14 @@ const FAM_COUSINS={Squib:["Booly","Moko","Skit"],Booly:["Squib","Moko","Stilt"],
   Skit:["Stilt","Antik","Pinch"],Stilt:["Skit","Antik","Booly"],Antik:["Skit","Stilt","Chomp"],
   Pinch:["Chomp","Skit","Squib"],Chomp:["Pinch","Antik","Moko"]};
 
-function wildLeft(s){ return s.wildWeek===PLAYER.week?WILD_PER_WEEK-(s.wildCount||0):WILD_PER_WEEK; }
+function wildLeft(s){ const n=typeof wildPerWeek==="function"?wildPerWeek():WILD_PER_WEEK; return s.wildWeek===PLAYER.week?n-(s.wildCount||0):n; }
 function wildBlock(s){
   if(s.away) return "It's out on a mission.";
   if(s.dead) return "";
   if(s.injured) return "It's hurt. Rest it or give it medicine first.";
   if(s.sick) return "It has a cold. No wild fights until it's better.";
   if(s.fatigue>=90) return "It's worn out. Let it rest first.";
-  if(wildLeft(s)<=0) return `That's ${WILD_PER_WEEK} wild fights this week. They come back next week.`;
+  if(wildLeft(s)<=0) return `That's ${typeof wildPerWeek==="function"?wildPerWeek():WILD_PER_WEEK} wild fights this week. They come back next week.`;
   return null;
 }
 function startWild(){

@@ -3,9 +3,23 @@
 const SAVE_KEY="snabits.save.v1";
 const GRADES=["E","D","C","B","A","S"];
 const GRADE_INFO={E:{lv:[1,10],earned:[0,40],purse:200},D:{lv:[8,18],earned:[40,120],purse:500},C:{lv:[15,28],earned:[100,220],purse:1200},
-  B:{lv:[25,38],earned:[200,320],purse:3000},A:{lv:[35,48],earned:[300,420],purse:7000},S:{lv:[45,60],earned:[400,520],purse:15000}};
+  B:{lv:[25,38],earned:[200,320],purse:3000},A:{lv:[35,48],earned:[300,420],purse:5000},S:{lv:[45,60],earned:[400,520],purse:8000}};   // MR2 tops out at 5,000G, so the loan is paid over a career rather than by one cup
 const expNeed=L=>10+6*L;
-const freezerMax=()=>PLAYER&&PLAYER.upgrades&&PLAYER.upgrades["Big Freezer"]?30:20;
+/* What the ranch earns as its best Snabit climbs the grades, the way MR2 opens new places and monsters as your breeder rank goes up */
+const rankIdx=()=>typeof bestGrade==="function"?GRADES.indexOf(bestGrade()):0;
+const PERKS=[
+  ["E","Trips to 4 regions, 3 wild fights a week, a Freezer for 20"],
+  ["D","Trips to 7 regions, 4 wild fights a week, rival matches with Rook, new scans start a little stronger"],
+  ["C","Trips to 10 regions, 5 more Freezer spaces, Nena keeps a second held item, hidden abilities turn up more often in scans"],
+  ["B","Trips to all 12 regions, 5 wild fights a week, Nena sells fusion catalysts, new scans start stronger again"],
+  ["A","Trips to The Rift, 5 more Freezer spaces, hidden abilities turn up twice as often in scans"],
+  ["S","Invites to the Majors and the Legend Cup, Nena sells Life seeds, new scans start at their strongest"]];
+const tripRegionCount=()=>[4,7,10,12,12,12][rankIdx()];
+const wildPerWeek=()=>3+(rankIdx()>=1?1:0)+(rankIdx()>=3?1:0);
+/* new scans start with a little more in every stat as the ranch climbs, and hidden abilities come up more often */
+function scanBoost(m){ const g=rankIdx(), add=[0,2,4,6,8,10][g]; if(add) m.stats=m.stats.map(v=>v+add);
+  if(!m.hidden&&g>=2&&Math.random()<m.hiddenChance*(g>=4?1:0.5)&&typeof EL_ABILITY!=="undefined"){ m.hidden=true; m.ability=EL_ABILITY[m.el1][1]; } return m; }
+const freezerMax=()=>(PLAYER&&PLAYER.upgrades&&PLAYER.upgrades["Big Freezer"]?30:20)+(rankIdx()>=2?5:0)+(rankIdx()>=4?5:0);
 const tierOf=n=>{ const l=SKILLS[n].lv; return l<=8?1:l<=20?2:3; };
 
 /* Items the bag can hold. Snacks are in ranch.js; these are the finds. */
@@ -239,6 +253,7 @@ function playerFighter(s){
   if(s.variant==="Bulky"){ f.maxhp=Math.round(f.maxhp*1.1); f.hp=f.maxhp; }
   if(s.variant==="Feral") f.critBonus=0.05;
   if(typeof applyGear==="function") applyGear(s,f);
+  if(s.fatigue!=null&&typeof fightCond==="function"){ const c=fightCond(s); if(c.mult!==1){ for(const k in f.base) f.base[k]=Math.max(1,Math.round(f.base[k]*c.mult)); f.cond=c.name; } }   // fight-day condition
   f.skills=f.skills.map(k=>u[k.name]>=MASTERY&&k.power?{...k,power:Math.round(k.power*1.1),mastered:true}:k);
   return f;
 }

@@ -18,8 +18,9 @@ function cupsOfWeek(w){
   if(mo%3===2&&wk===3){ for(const g of GRADES) add({grade:g,name:`Official ${g} Cup`,format:"elim",size:8,official:true}); return out; }
   if(mo===3&&wk===3){ for(const g of GRADES.slice(1)) add({grade:g,name:`Summer Qualifier (${g})`,format:"elim",size:8,qualifier:true}); return out; }
   if(mo===4&&wk===3){ for(const g of GRADES.slice(1)) add({grade:g,name:`Summer Exhibition (${g})`,format:"team5",size:10,exhibition:true}); return out; }
-  if(wk===1) add({grade:"F",name:"Open Cup",format:"robin",size:4,open:true,prize:prize("F","Open"+mo)});
-  const grades=wk===0?["E","C","A"]:wk===1?["D","B"]:wk===2?["E","C","A","S"]:["D","B","S"];
+  if(wk===2&&mo%2===0) add({grade:"F",name:"Open Cup",format:"robin",size:4,open:true,prize:prize("F","Open"+mo)});
+  // one regular cup a month for each grade, on a fixed week, so a cup is something to plan the month around
+  const grades=wk===0?["E","B"]:wk===1?["D","A"]:wk===2?["C","S"]:[];
   for(const g of grades){ const name=CUP_NAMES[g][(mo+wk)%3]+` (${g})`, elim=(mo+wk)%4===0; add({grade:g,name,format:elim?"elim":"robin",size:elim?8:4,official:false,prize:prize(g,name+mo)}); }
   return out;
 }
@@ -36,15 +37,41 @@ function cupBlock(c,s){
 }
 function cupsThisWeek(s){
   const out=cupsOfWeek(PLAYER.week).filter(c=>!cupBlock(c,s));
-  out.push({grade:s.grade,name:"Friendly match",format:"single",size:2,official:false,small:true});
+  const {mo,wk}=weekParts(PLAYER.week);
+  if(wk===3&&mo%3===1) out.push({grade:s.grade,name:"Friendly match",format:"single",size:2,official:false,small:true});   // the friendly is on the last week of each season's middle month
   if(weekParts(PLAYER.week).wk===2&&typeof story==="function"&&story().seen.gradeD) out.push({grade:s.grade,name:"Rival match: Rook",format:"single",size:2,official:false,small:true,rival:true});
   return out;
+}
+/* how fit it is on fight day, from fatigue and stress: top shape fights a little above itself, worn out a good deal below */
+function fightCond(s){
+  const f=s.fatigue||0, st=s.stress||0;
+  if(f<=15&&st<=15) return {name:"Top shape",mult:1.05,good:true};
+  if(f<=35&&st<=30) return {name:"Good",mult:1};
+  if(f<=60&&st<=50) return {name:"Worn",mult:0.95};
+  return {name:"Exhausted",mult:0.88,bad:true};
+}
+function fightCondLine(s){ const c=fightCond(s), nm=displayName(s);
+  return c.good?`${nm} is in top shape, so it'll fight a little above itself.`:c.name==="Good"?`${nm} is in good shape.`:c.name==="Worn"?`${nm} is worn out and will fight a little below its best.`:`${nm} is exhausted and will fight well below its best. It needs a rest.`; }
+/* the next cup this Snabit can enter, and how many weeks away */
+function nextCupFor(s){
+  for(let k=0;k<20;k++){ const x=PLAYER.week+k; const c=cupsOfWeek(x).find(c=>!cupBlock(c,s)&&!c.open&&(c.official||c.grade===s.grade||c.major||c.legend)); if(c) return {c,k}; }
+  return null;
+}
+/* Tala's word about what's special this week or next */
+function fightDayLine(s,ahead){
+  const w=PLAYER.week+(ahead||0), {mo,wk}=weekParts(w), list=cupsOfWeek(w).filter(c=>!cupBlock(c,s)), nm=displayName(s), when=ahead?"next week":"this week";
+  const off=list.find(c=>c.official&&c.grade===s.grade&&s.grade!=="S");
+  if(off) return `The ${off.name.replace(/ \([A-S]\)$/,"")} is ${when}. If ${nm} wins it, it moves up to grade ${GRADES[GRADES.indexOf(s.grade)+1]}.`;
+  const maj=list.find(c=>c.major||c.legend); if(maj) return `The ${maj.name} is ${when}, the biggest cup ${nm} can enter.`;
+  if(wk===2&&typeof story==="function"&&story().seen.gradeD) return `Rook is at the stadium ${when} for a rival match.`;
+  const mine=list.find(c=>!c.open&&!c.small&&c.grade===s.grade); if(mine) return `The ${mine.name.replace(/ \([A-S]\)$/,"")} is ${when}.`;
+  return "";
 }
 function nextCupText(){
   const w=PLAYER.week; for(let k=1;k<16;k++){ const x=w+k, {mo,wk}=weekParts(x); if(wk===3&&mo%3===2) return `The next official cup is in ${k} week${k>1?"s":""}.`; }
   return "";
 }
-function cupPurse(c){ if(c.rival) return Math.round(GRADE_INFO[c.grade].purse/4); return c.legend?60000:c.major?30000:c.open?400:c.small?Math.round(GRADE_INFO[c.grade].purse/10):c.exhibition?Math.round(GRADE_INFO[c.grade].purse*1.5):GRADE_INFO[c.grade].purse; }
+function cupPurse(c){ if(c.rival) return Math.round(GRADE_INFO[c.grade].purse/4); return c.legend?30000:c.major?15000:c.open?400:c.small?Math.round(GRADE_INFO[c.grade].purse/10):c.exhibition?Math.round(GRADE_INFO[c.grade].purse*1.5):GRADE_INFO[c.grade].purse; }
 function cupFee(c){ return c.exhibition?2000:c.grade!=="E"&&!c.small&&!c.open?Math.round(cupPurse(c)/10):0; }
 function cupFormat(c){ return c.format==="team5"?"Team exhibition, 5 bouts":c.format==="robin"?`Round robin, ${c.size} monsters`:c.format==="elim"?"Knockout, 8 monsters":c.format==="bo3"?"Knockout of 8, best of 3":"One match"; }
 function openCups(){

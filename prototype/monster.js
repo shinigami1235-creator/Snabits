@@ -211,6 +211,6 @@ function hatch(res,now=new Date(),ov={}){
   const hidden=R()<hiddenChance;
   const ability=hidden?EL_ABILITY[el1][1]:(R()<0.5?F.ability:EL_ABILITY[el1][0]);
   const pool=buildPool(el1,el2,res.pool), skills=pool.slice(0,2);
-  const lifespan=Math.round(15+10*bri); // months
+  const lifespan=Math.round(36+12*bri); // months: 3 to 4 years, so a well-raised Snabit reaches S around the middle of its life, the way MR2's do
   return {pool,name:speciesName(family,el1,el2),family,band,shape,el1,el2,mono:res.mono,parts,grid,pal,stats,talent,pers,ability,hidden,hiddenChance,skills,lifespan};
 }

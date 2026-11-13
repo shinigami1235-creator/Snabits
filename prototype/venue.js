@@ -39,6 +39,7 @@ function venueLobby(){
     <div class="v-card"><h3>${displayName(s)}</h3><div style="font:500 14px var(--pix);color:var(--mute)">Grade ${s.grade} · ${s.wins} wins · ${s.losses} losses${(s.cups||[]).length?` · ${(s.cups||[]).length} cups`:""}</div></div>
     <div class="v-row"><button class="btn2" id="v-cal">Calendar</button><button class="btn2" id="v-home">Back to the ranch</button></div>`);
   venueSay(`These are the cups ${displayName(s)} can enter this week. ${next}`);
+  const tl=[fightDayLine(s)||fightDayLine(s,1),fightCondLine(s)].filter(Boolean).join(" "); if(tl) el("v-ann").insertAdjacentHTML("afterend",`<div class="v-card v-ann"><span class="who" style="background:var(--sky)">Tala</span>${tl}</div>`);
   el("v-cal").onclick=()=>venueCalendar(0);
   el("v-body").querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>venueEntry(list[+b.dataset.c]));
   el("v-home").onclick=closeVenue;
