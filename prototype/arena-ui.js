@@ -65,30 +65,50 @@ function atStyle(){
   document.head.appendChild(st);
 }
 
+/* Practice battle, from the title screen or #arena. Your side can be a family preset, a Snabit from your ranch as it is now,
+   or a fresh scan trained up to level 30. Nothing here touches the save. */
+let AT_PICK={me:{kind:"fam",fam:"Chomp"},foe:"Random"};
 function openArenaTest(){
   atStyle();
   let d=document.getElementById("atest"); if(!d){ d=document.createElement("div"); d.id="atest"; document.body.appendChild(d); }
-  d.style.display="flex";
-  const fams=Object.keys(FAM_MOVES), pick={me:"Chomp",foe:"Booly"};
-  const draw=()=>{ d.innerHTML=`<div class="pick"><h2>Test arena</h2><p>Both Snabits are level 30 at grade B, so every family move is learned. Nothing here touches your save.</p>
-    <h2 style="font-size:15px">Your Snabit</h2><div class="fams" id="at-me">${fams.map(f=>`<button class="btn ${f===pick.me?"on":""}" data-f="${f}">${f}</button>`).join("")}</div>
-    <h2 style="font-size:15px">Opponent</h2><div class="fams" id="at-foe">${fams.map(f=>`<button class="btn ${f===pick.foe?"on":""}" data-f="${f}">${f}</button>`).join("")}</div>
+  d.style.display="flex"; window.PRACTICE=false;
+  const fams=Object.keys(FAM_MOVES), pick=AT_PICK, roster=(typeof PLAYER!=="undefined"&&PLAYER&&PLAYER.roster?PLAYER.roster:[]).map(atRanchOf);
+  const on=q=>JSON.stringify(q)===JSON.stringify(pick.me)?"on":"";
+  const draw=()=>{ d.innerHTML=`<div class="pick"><h2>Practice battle</h2><p>Pick who fights. Presets and scans fight at level 30 with every family move learned, and your own Snabits fight as they are now. Nothing here touches your save.</p>
+    ${roster.length?`<h2 style="font-size:15px">Your Snabits</h2><div class="fams" id="at-ros">${roster.map((s,k)=>`<button class="btn ${on({kind:"ros",k})}" data-k="${k}" style="font-size:12px">${typeof displayName==="function"?displayName(s):s.m.name}<br>Lv ${s.level}</button>`).join("")}</div>`:""}
+    <h2 style="font-size:15px">A new scan</h2><div class="fams"><button class="btn ${pick.me.kind==="scan"?"on":""}" id="at-scan" style="grid-column:1/5">${pick.me.kind==="scan"?`${pick.me.m.name} at level 30 · scan again`:"Scan a photo"}</button></div>
+    <h2 style="font-size:15px">Presets</h2><div class="fams" id="at-me">${fams.map(f=>`<button class="btn ${on({kind:"fam",fam:f})}" data-f="${f}">${f}</button>`).join("")}</div>
+    <h2 style="font-size:15px">Opponent</h2><div class="fams" id="at-foe">${["Random",...fams].map(f=>`<button class="btn ${f===pick.foe?"on":""}" data-f="${f}">${f}</button>`).join("")}</div>
     <button class="btn go" id="at-go">Fight</button><button class="btn" id="at-quit" style="width:100%;height:44px;margin-top:8px">Back to the title</button></div>`;
-    d.querySelectorAll("#at-me [data-f]").forEach(b=>b.onclick=()=>{ pick.me=b.dataset.f; draw(); });
+    d.querySelectorAll("#at-ros [data-k]").forEach(b=>b.onclick=()=>{ pick.me={kind:"ros",k:+b.dataset.k}; draw(); });
+    d.querySelectorAll("#at-me [data-f]").forEach(b=>b.onclick=()=>{ pick.me={kind:"fam",fam:b.dataset.f}; draw(); });
     d.querySelectorAll("#at-foe [data-f]").forEach(b=>b.onclick=()=>{ pick.foe=b.dataset.f; draw(); });
+    document.getElementById("at-scan").onclick=()=>{ window.PRACTICE=true; d.style.display="none"; if(typeof obShow==="function") obShow(false); openScope(); };
     document.getElementById("at-go").onclick=()=>atStart(pick.me,pick.foe);
-    document.getElementById("at-quit").onclick=()=>{ atStop(); d.style.display="none"; location.hash=""; if(typeof showTitle==="function") showTitle(); }; };
+    document.getElementById("at-quit").onclick=()=>{ atStop(); d.style.display="none"; if(/arena/.test(location.hash)) history.replaceState(null,"",location.pathname); if(typeof showTitle==="function") showTitle(); }; };
   atStop(); draw();
 }
-function atMake(fam,R){
-  let o; for(let k=0;k<500;k++){ o=gradedOpponent("B",30,R,null,260); if(o.m.family===fam) break; }
-  const f=makeFighter(o.fm,o.skills,30); f.family=fam; f.moves=arMoves(fam,30,o.m.pool.filter(n=>SKILLS[n].lv<=30),o.m.el1);
-  return {f,o,spec:typeof chibiSpec==="function"?chibiSpec(o.fm):null};
+/* a roster entry as a full ranch state: the one open now, or rebuilt from its save */
+const atRanchOf=e=>typeof RS!=="undefined"&&RS&&RS.id===e.id?RS:newRanch(e);
+/* the scan card's button for practice: back to the picker with this Snabit chosen */
+function atFromScan(m){ window.PRACTICE=false; AT_PICK.me={kind:"scan",m}; if(typeof camStop==="function") try{ camStop(); }catch(e){} openArenaTest(); }
+/* a fighter from a pick: a family preset, a ranch Snabit as it is, or a monster trained up to level 30 */
+function atMake(src,R,level,grade){
+  if(typeof src==="string") src=src==="Random"?{kind:"fam",fam:Object.keys(FAM_MOVES)[Math.floor(R()*8)]}:{kind:"fam",fam:src};
+  if(src.kind==="ros"){ const s=PLAYER.roster[src.k]&&atRanchOf(PLAYER.roster[src.k]); if(s){ const fm=fightMon(s), f=makeFighter(fm,s.equip,s.level); f.family=s.m.family;
+    f.moves=arMoves(s.m.family,s.level,(s.skillsKnown||s.equip||[]).filter(n=>SKILLS[n]),s.m.el1); f.name=typeof displayName==="function"?displayName(s):f.name; return {f,spec:chibiSpec(fm),level:s.level,grade:s.grade}; } src={kind:"fam",fam:"Chomp"}; }
+  // a ranch Snabit's opponent matches its level and grade; presets and scans fight at level 30 with grade B training
+  const lv=level||30, g=grade||"B", earned=grade?undefined:260; let o;
+  if(src.kind==="scan") o=gradedOpponent(g,lv,R,null,earned,src.m);
+  else for(let k=0;k<500;k++){ o=gradedOpponent(g,lv,R,null,earned); if(o.m.family===src.fam) break; }
+  const f=makeFighter(o.fm,o.skills,lv); f.family=o.m.family; f.moves=arMoves(o.m.family,lv,o.m.pool.filter(n=>SKILLS[n].lv<=lv),o.m.el1);
+  if(src.kind==="scan") f.name=src.m.name;
+  return {f,o,spec:typeof chibiSpec==="function"?chibiSpec(o.fm):null,level:lv};
 }
 function atStop(){ if(AT){ cancelAnimationFrame(AT.raf); AT=null; } }
-function atStart(meFam,foeFam){
+function atStart(meFam,foeFam){   // picks: see atMake
   atStop();
-  const R=Math.random, A=atMake(meFam,R), B=atMake(foeFam,R), ar=new Arena(A.f,B.f,R,["human","smart"]); ar.live=true;   // each move pauses the fight while it plays
+  const R=Math.random, A=atMake(meFam,R), B=atMake(foeFam,R,A.level,A.grade), ar=new Arena(A.f,B.f,R,["human","smart"]); ar.live=true;   // each move pauses the fight while it plays
   const order=["Close","Near","Mid","Far","Any"];
   const moves=A.f.moves.slice().sort((a,b)=>order.indexOf(a.range)-order.indexOf(b.range)||a.cost-b.cost);
   AT={ar,A,B,moves,sel:0,top:0,auto:false,last:performance.now(),acc:0,te:0,freeze:0,trauma:0,raf:0,side:[A.spec,B.spec].map(spec=>({spec,x:null,shown:"idle",from:"idle",t0:0,dir:1})),fx:[],done:false,me:meFam,foe:foeFam};
@@ -235,15 +255,16 @@ function atDraw(now,dte){
   [0,1].forEach(i=>{ const S=AT.side[i], O=AT.side[1-i], sp=S.spec; if(!sp) return;
     S.dir=O.dx>S.dx?1:-1; S.foe=O;
     const h=CHIBI.height(sp.stage,sp.marks,sp.family), u=Math.min(0.5,96/(h+20))*scale;
-    const st=atSideState(S,te), moving=Math.abs(S.dx-(S.lastX??S.dx))>0.15;
-    let pose=st.pose||(moving||ar.p[i].wantDir?"walk":"idle");
+    // walking comes from the engine, so the pose doesn't flicker between walk and idle on fast screens
+    const st=atSideState(S,te), moving=!ar.turn&&ar.p[i].walkT!=null&&ar.t-ar.p[i].walkT<0.25;
+    let pose=st.pose||(moving?"walk":"idle");
     if(pose!==S.shown){ S.from=S.shown||"idle"; S.shown=pose; S.t0=te; }
     const k=(te-S.t0)/110, P=k>=0&&k<1&&CHIBI.POSES.includes(S.from)&&CHIBI.POSES.includes(pose)?CHIBI.blend(S.from,pose,k):pose;
     // a contact move reaches the opponent, but never further than a short lunge when it's out of reach
     const reach=Math.max(-70,Math.min(70,(O.dx-S.dx)-S.dir*min58(scale)));
     const x=S.dx+reach*st.f+st.off[0], y=floor+st.arc+st.lift+st.off[1], mir=S.dir>0?-1:1;
     if(moving!==!!S.moving&&S.ko==null&&typeof spawnPuff==="function") spawnPuff(x-S.dir*10,y-2,moving?5:7,S.dir>0?Math.PI:0,1.2,0.08,5*scale,"rgba(235,228,214,1)",320);
-    S.moving=moving; S.lastX=S.dx;
+    S.moving=moving;
     c.fillStyle="rgba(0,0,0,.2)"; c.beginPath(); c.ellipse(x,floor+2,24*scale*(st.alpha),6*scale,0,0,7); c.fill();
     c.save(); c.globalAlpha=st.alpha; if(st.flash===2) c.filter="brightness(0) invert(1)"; else if(st.flash===1) c.filter="brightness(1.5)"; else if(st.flash===3) c.filter="brightness(1.18)";
     c.translate(x,y); c.rotate(st.rot); c.scale(mir*u*st.sx,u*st.sy); c.translate(-100,-188);

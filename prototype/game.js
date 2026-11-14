@@ -163,8 +163,8 @@ function giveExp(s,amt){
 }
 
 /* A computer monster for a grade: a random scan, levelled and trained, and evolved if its training has reached its species' total. */
-function gradedOpponent(grade,level,rand,wantEl,earned){
-  let m=randomOpponent(rand);
+function gradedOpponent(grade,level,rand,wantEl,earned,base){
+  let m=base||randomOpponent(rand);   // base: train up a given monster instead of a random one
   if(wantEl) for(let k=0;k<300&&m.el1!==wantEl;k++) m=randomOpponent(rand);
   const G=GRADE_INFO[grade], roll=Math.round(G.earned[0]+rand()*(G.earned[1]-G.earned[0])), total=earned!=null?earned:roll;
   const focus=Math.floor(rand()*6), second=(focus+1+Math.floor(rand()*5))%6, tp=[0,0,0,0,0,0];

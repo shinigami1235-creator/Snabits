@@ -20,7 +20,7 @@
   <button id="shutter" aria-label="Scan"></button>
   <button class="big" id="scanbtn" style="display:none">Scan</button>
   <label class="small" id="newbtn" for="take" style="display:none">New photo</label>
-  <label class="small" for="pick">From gallery</label>
+  <label class="small" for="pick">Gallery</label>
   <button class="small musbtn" onclick="musToggle()">♪ On</button>
   <button class="small" id="ranchbtn" style="display:none" onclick="if(typeof WILD!=='undefined'&&WILD)endWild();openRanch()">Ranch</button>
   <input type="file" id="pick" accept="image/*">
@@ -200,6 +200,7 @@ function render(full){
         <p class="why">Drag the circle to try another spot.</p>
       </div>`;
     paintMon(document.getElementById("bit"),m,{stage:"Bit"});
+    if(window.PRACTICE){ const a=card.querySelector(".sheet-actions"); if(a){ a.innerHTML=`<button class="big" id="practicebtn">Practice with it</button>`; document.getElementById("practicebtn").onclick=()=>atFromScan(m); } return m; }
     lastMon=m; const fb=document.getElementById("fightbtn"); if(fb) fb.onclick=()=>openBattle(lastMon); const rb=document.getElementById("raisebtn"); if(rb) rb.onclick=()=>openRanch(lastMon);
     if(typeof obSheet==="function") obSheet(m);
     return m;
@@ -278,8 +279,16 @@ document.addEventListener("visibilitychange",()=>{ if(!document.hidden&&mode==="
 let light=false;
 function lightCan(){ const t=stream&&stream.getVideoTracks()[0]; try{ return !!(t&&t.getCapabilities&&t.getCapabilities().torch); }catch(e){ return false; } }
 function lightShow(){ const b=document.getElementById("lightbtn"); if(!b) return; b.style.display=mode==="live"&&lightCan()?"":"none"; b.textContent=light?"Light on":"Light off"; b.classList.toggle("on",light); }
-document.getElementById("lightbtn").onclick=async()=>{ const t=stream&&stream.getVideoTracks()[0]; if(!t) return;
-  try{ await t.applyConstraints({advanced:[{torch:!light}]}); light=!light; }catch(e){} lightShow(); };
+/* Phones differ in how they take the torch setting, so each form is tried in turn and the track's own setting confirms it */
+async function setTorch(on){ const t=stream&&stream.getVideoTracks()[0]; if(!t) return false;
+  const isOn=()=>{ try{ return !!(t.getSettings&&t.getSettings().torch); }catch(e){ return false; } };
+  const tries=[()=>t.applyConstraints({advanced:[{torch:on}]}),()=>t.applyConstraints({torch:on}),
+    async()=>{ if(window.ImageCapture){ const ic=new ImageCapture(t); await ic.getPhotoCapabilities(); } return t.applyConstraints({advanced:[{torch:on}]}); }];
+  for(const f of tries){ try{ await f(); await new Promise(r=>setTimeout(r,120)); if(isOn()===on) return true; }catch(e){} }
+  return false; }
+document.getElementById("lightbtn").onclick=async()=>{ const want=!light;
+  if(await setTorch(want)){ light=want; lightShow(); return; }
+  const b=document.getElementById("lightbtn"); b.textContent="Phone blocked it"; setTimeout(lightShow,2500); };   // the browser asked and the phone said no
 /* Opens the Snaboscope (the camera screen) from anywhere: the ranch, the title or the first-scan tutorial. */
 function openScope(){
   const r=document.getElementById("ranch"); if(r&&r.style.display!=="none"){ saveGame(); r.style.display="none"; if(RS) RS.open=false; }
