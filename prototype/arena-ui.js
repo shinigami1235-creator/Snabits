@@ -171,7 +171,7 @@ const AT_ICON=(()=>{ const sv=b=>`<svg viewBox="0 0 24 24" fill="none" stroke="c
 function atIcon(m){
   const n=m.name, k=m.skill&&typeof MOVE_KIND!=="undefined"?MOVE_KIND[n]:null;
   if(m.swap) return AT_ICON.swap; if(m.support&&(m.heal||m.regen||m.rest||m.cleanse)) return AT_ICON.heal; if(m.support&&(m.inflict||m.lower||m.taunt)) return AT_ICON.eye; if(m.buff||m.support) return AT_ICON.shield;
-  if(m.step||m.dash==="in"&&!m.dmg) return m.step<0?AT_ICON.out:AT_ICON["in"];
+  if((m.step||m.dash==="in")&&!m.dmg) return m.step<0?AT_ICON.out:AT_ICON["in"];
   if(/Web|Silk|Cocoon|Trap|Reel/.test(n)) return AT_ICON.web; if(/Stare|Glare|Eye|Hypno|Mind|Dread/.test(n)) return AT_ICON.eye;
   if(/Bite|Chomp|Crunch|Gnash|Jaw|Fang/.test(n)||k==="bite") return AT_ICON.bite;
   if(/Kick|Stride|Stampede|Sweep|Stomp/.test(n)||k==="stomp") return AT_ICON.kick;
@@ -208,19 +208,19 @@ function atEvent(e,now){
   if(typeof atFx==="function") atFx(e,now);
   if(e.t==="start"){
     if(m.swap){ S.pose={p:"crouch",until:te+220}; AT.turn={t0:te,C:220,D:560}; if(e.pred==="dodge"||e.pred==="phase") atPlanDodge(e.i,te+220,"tackle",e.pred); return; }
-    if(m.step||m.dash&&!m.dmg){ S.pose={p:"crouch",until:te+140}; AT.turn={t0:te,C:140,D:420}; return; }
+    if((m.step||m.dash)&&!m.dmg){ S.pose={p:"crouch",until:te+140}; AT.turn={t0:te,C:140,D:420}; return; }
     let kind;
     if(m.buff) kind={bunker:"bunker",phase:"phase",brace:"shield",riposte:"shield",bubble:"shield",feedback:"shield",unblink:"buff"}[m.buff]||"buff";
     else if(m.support){ kind=typeof supportKind==="function"?supportKind(m.name):"buff"; if(kind==="mistcast") kind="mist"; if(m.protect) S.protName=m.name; }
     else if(m.lower&&!m.dmg) kind="glare";
     else if(m.shove) kind="tackle";
-    else kind=typeof animFor==="function"?animFor({name:m.name,kind:m.cast?"Cast":"Strike",el:m.el},sp):"tackle";
+    else kind=typeof AR_KIND!=="undefined"&&AR_KIND[m.base||m.name]&&ANIM[AR_KIND[m.base||m.name]]?AR_KIND[m.base||m.name]:typeof animFor==="function"?animFor({name:m.name,kind:m.cast?"Cast":"Strike",el:m.el},sp):"tackle";
     if(!ANIM[kind]) kind="tackle";
     // the whole animation plays at its own pace now; a slow, heavy move gets a little longer windup on top
     const K=ANIM[kind], rate=Math.max(0.75,Math.min(1.25,K.C/Math.max(300,m.wind*900))), tier=m.dmg?atMoveTier(e.i,m):"light", ch=AT_CHARGE[tier];
     AT.turn={t0:te,C:ch+K.C/rate,D:ch+Math.min(K.D/rate,K.C/rate+700)};
     const col=m.el&&typeof ELC==="function"?hexRgb(ELC(m.el)):AT_FAMCOL[AT.ar.p[e.i].f.family]||[255,214,90];
-    S.anim={kind,t0:te+ch,tier,rate,el:m.el||null,name:m.name,src:typeof sourceFor==="function"?sourceFor({name:m.name,kind:m.cast?"Cast":"Strike"},sp):"mouth",col,pw:m.dmg>=70?1.35:m.dmg>=40?1.05:0.8,contact:/^(tackle|bite|stomp|punch|claw|shadowstrike|shadowclaw|fly)$/.test(kind)};
+    S.anim={kind,t0:te+ch,tier,rate,el:m.el||null,name:m.name,src:typeof sourceFor==="function"?sourceFor({name:m.name,kind:m.cast?"Cast":"Strike"},sp):"mouth",col,pw:m.dmg>=70?1.35:m.dmg>=40?1.05:0.8,contact:!!K.contact||/^(tackle|bite|stomp|punch|claw|shadowstrike|shadowclaw|fly)$/.test(kind)};
     if(tier==="special"&&!S.anim.contact&&!m.lower) S.anim.mega=/^(beam|bolt|spear|volley|drain|gust)$/.test(kind)?"beam":kind==="lightning"?"bolt":/^(meteor|icefall|boulder|rockpath)$/.test(kind)?"fall":kind==="pillar"&&m.el==="Frost"?"glacier":/^(tornado|firespin)$/.test(kind)?(m.el==="Blaze"?"inferno":"funnel"):kind==="wave"?"tsunami":kind==="push"?"shock":kind==="lift"?"nightmare":/^(pillar|mist|mistcast)$/.test(kind)?"rise":null;
     if(S.anim.mega) AT.turn.D=Math.max(AT.turn.D,ch+(K.C+900)/rate);   // the fight waits for a special's release to finish
     if(e.pred==="dodge"||e.pred==="phase") atPlanDodge(e.i,te+ch+K.C/rate,kind,e.pred);
@@ -231,11 +231,11 @@ function atEvent(e,now){
   if(e.t==="swap"){ AT.side[e.i].hop={t0:te,h:78,d:480}; AT.side[1-e.i].hop={t0:te,h:8,d:480};   // the swapper leaps over, the other ducks
     try{ sfx("whoosh"); }catch(err){} }
   if(e.t==="hit"){ const o=AT.side[1-e.i], mt=S.anim&&S.anim.tier||"light", tier=e.crit?(mt==="special"?"special":mt==="heavy"?"special":"heavy"):mt==="light"&&e.dmg>=25?"medium":mt, T=AT_TIER[tier];
-    if(e.h===0||!o.react||te-o.react.t0>120){ o.react={kind:"hit",t0:te,tier}; AT.freeze=Math.max(AT.freeze,now+T.stop); AT.trauma=Math.min(1,AT.trauma+T.trauma);
+    if(e.h===0||!o.react||te-o.react.t0>120){ o.react={kind:"hit",t0:te,tier}; if(mt==="special") AT.freeze=Math.max(AT.freeze,now+T.stop); AT.trauma=Math.min(1,AT.trauma+T.trauma);
       AT.hitJuice={i:1-e.i,t0:te,tier,col:S.anim?S.anim.col:[255,236,160]};
-      if(S.anim) AT.strikes.push({t0:/bite/.test(S.anim.kind)?te-0.16*560:te,d:/bite/.test(S.anim.kind)?560:340,kind:/bite/.test(S.anim.kind)?"jaws":/claw/.test(S.anim.kind)?"slash":"lines",i:1-e.i,col:S.anim.col,big:{light:1,medium:1.15,heavy:1.4,special:1.9}[tier],dir:S.dir,ranged:!S.anim.contact,body:sp.pal&&sp.pal.body}); AT.punch={t0:te,amt:T.punch,i:1-e.i};
+      if(S.anim&&!(ANIM[S.anim.kind]&&ANIM[S.anim.kind].marks)) AT.strikes.push({t0:/bite/.test(S.anim.kind)?te-0.16*560:te,d:/bite/.test(S.anim.kind)?560:340,kind:/bite/.test(S.anim.kind)?"jaws":/claw/.test(S.anim.kind)?"slash":"lines",i:1-e.i,col:S.anim.col,big:{light:1,medium:1.15,heavy:1.4,special:1.9}[tier],dir:S.dir,ranged:!S.anim.contact,body:sp.pal&&sp.pal.body}); AT.punch={t0:te,amt:T.punch,i:1-e.i};
       if(T.screen) AT.flash={t0:now+T.stop*0.4,a:T.screen};
-      if(T.slow) AT.slow={from:now+T.stop,until:now+T.stop+T.slow*(AT.ar.over?2.2:1),k:AT.ar.over?0.22:0.32};
+      if(T.slow&&mt==="special") AT.slow={from:now+T.stop,until:now+T.stop+T.slow*(AT.ar.over?2.2:1),k:AT.ar.over?0.22:0.32};
       if(tier==="heavy"||tier==="special") AT.dust={i:1-e.i,t0:te,n:tier==="special"?14:8};
       AT.spark={i:1-e.i,n:T.sparks,col:S.anim?S.anim.col:[255,236,160]}; if(S.anim&&S.anim.contact) S.recoil={t0:te,amt:tier==="heavy"?10:6};
       try{ sfx(tier==="heavy"?"heavy":tier==="medium"?"hit":"tap"); if(S.anim) elSfx(S.anim.el,"hit"); }catch(err){} }

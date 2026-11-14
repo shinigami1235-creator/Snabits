@@ -745,9 +745,10 @@ const CHIBI = (() => {
         for (let i = 0; i < n; i++) c.quadraticCurveTo(R - (i + 0.5) * w, g.bot + 9, R - (i + 1) * w, g.bot); c.closePath(); },
       behind(c, g, x) { const n = by(g.stage, 3, 4, 5), w = g.bw / n, tl = this.tl(g.stage), lw = by(g.stage, 9, 10, 11);
         for (let i = 0; i < n; i++) { const tx = g.left + (i + 0.5) * w, sw = Math.sin(x.t / 260 + i * 1.3) * 4 + x.walk * 3, curl = (i < n / 2 ? -1 : 1) * 7;
-          const mat = i < n / 2 ? x.L.legL : x.L.legR;
-          limb(c, [tx, g.bot - 4, tx + sw, g.bot + tl * 0.55, tx + curl + sw * 0.5, 182], lw, x.parts, mat, x.t);
-          blob(c, tx + curl + sw * 0.5, 182, lw * 0.55, lw * 0.55, x.parts, mat, x.t, 'hand'); } },
+          const mat = i < n / 2 ? x.L.legL : x.L.legR, L = x.P.lash && i === 0 ? x.P.lash : 0;
+          const ex = tx + curl + sw * 0.5 - L * 70, ey = 182 - L * (182 - g.bot + g.bh * 0.35);
+          limb(c, [tx, g.bot - 4, tx + sw - L * 30, g.bot + tl * 0.55 - L * 30, ex, ey], lw, x.parts, mat, x.t);
+          blob(c, ex, ey, lw * 0.55, lw * 0.55, x.parts, mat, x.t, 'hand'); } },
       inside(c, g, x) { if (g.stage === 'Mega') { c.fillStyle = rgb(lt(x.body, 0.38)); c.fillRect(g.left, g.bot - 12, g.bw, 20); } },
       hl: g => [g.left + g.bw * 0.12, g.bot - g.bh * 0.3, g.left + g.bw * 0.14, g.top + g.bh * 0.22, g.cx - g.bw * 0.14, g.top + g.bh * 0.08],
       face: (c, g, x, look) => faceTwo(c, g, x, look, { ey: 0.48, ex: 0.17, my: 0.72, s: by(g.stage, 0.8, 0.94, 1) })
@@ -845,7 +846,7 @@ const CHIBI = (() => {
       arms: 'stub', armW: st => by(st, 0, 5, 6), handR: st => by(st, 0, 4.5, 5), shoulderY: 0.58, armK: 0.7,
       behind(c, g, x) { const ll = this.ll(g.stage), lw = by(g.stage, 6, 7, 8);
         [[-1, x.L.legL, 0], [1, x.L.legR, 1]].forEach(([side, mat, i]) => {
-          const lift = [Math.max(0, x.walk), Math.max(0, -x.walk)][i] * 8, hx = g.cx + side * g.bw * 0.2, kx = g.cx + side * g.bw * 0.42, ky = g.bot + ll * 0.48 - lift * 0.5, fx = g.cx + side * g.bw * 0.26 + x.P.feet[i * 2], fy = 181 - lift;
+          const lift = [Math.max(0, x.walk), Math.max(0, -x.walk)][i] * 8, hx = g.cx + side * g.bw * 0.2, fy0 = x.P.feet[i * 2 + 1] || 0, kx = g.cx + side * g.bw * 0.42 + x.P.feet[i * 2] * 0.45, ky = g.bot + ll * 0.48 - lift * 0.5 + fy0 * 0.55, fx = g.cx + side * g.bw * 0.26 + x.P.feet[i * 2], fy = 181 - lift + fy0;
           limb(c, [hx, g.bot - 6, (hx + kx) / 2 + side * 2, (g.bot + ky) / 2, kx, ky], lw, x.parts, mat, x.t);
           limb(c, [kx, ky, (kx + fx) / 2 + side * 2, (ky + fy) / 2, fx, fy], lw, x.parts, mat, x.t);
           if (g.stage === 'Mega' && !mat) { c.fillStyle = rgb(x.acc); c.beginPath(); c.arc(kx, ky, lw * 0.75, 0, 7); c.fill();
@@ -866,9 +867,10 @@ const CHIBI = (() => {
         for (const [side, mat] of [[-1, x.L.legL], [1, x.L.legR]]) for (let k = n - 1; k >= 0; k--) {
           const f = n === 1 ? 0.5 : k / (n - 1), hx = g.cx + side * g.bw * (0.2 + f * 0.22), hy = g.bot - g.bh * 0.45;
           const kx = g.cx + side * (g.bw * 0.46 + 4 + f * 26), ky = g.top + g.bh * 0.35 - f * 22;
-          const lift = Math.max(0, Math.sin(x.t / 100 + k * 1.7 + side)) * 5 * Math.abs(x.walk), fx = g.cx + side * (g.bw * 0.34 + f * (g.bw * 0.3 + 30)), fy = 184 - lift;
-          limb(c, [hx, hy, (hx + kx) / 2, ky - 8, kx, ky], lw, x.parts, mat, x.t);
-          limb(c, [kx, ky, kx + side * 8, (ky + fy) / 2, fx, fy], lw, x.parts, mat, x.t);
+          const J = x.P.jab && side === -1 && k === (x.P.jabK != null ? x.P.jabK % n : n - 1) ? x.P.jab : 0;
+          const lift = Math.max(0, Math.sin(x.t / 100 + k * 1.7 + side)) * 5 * Math.abs(x.walk), fx = g.cx + side * (g.bw * 0.34 + f * (g.bw * 0.3 + 30)) + side * J * 46, fy = 184 - lift - J * (184 - g.top - g.bh * 0.3);
+          limb(c, [hx, hy, (hx + kx) / 2, ky - 8 - J * 14, kx + side * J * 10, ky - J * 18], lw, x.parts, mat, x.t);
+          limb(c, [kx + side * J * 10, ky - J * 18, kx + side * (8 + J * 24), (ky + fy) / 2 - J * 10, fx, fy], lw, x.parts, mat, x.t);
           c.fillStyle = rgb(dk(x.parts, 0.2)); c.beginPath(); c.arc(fx, fy, lw * 0.5, 0, 7); c.fill(); } },
       face: (c, g, x, look) => faceTwo(c, g, x, look, { ey: 0.42, ex: 0.13, my: 0.72, s: by(g.stage, 0.72, 0.8, 0.86), extraEyes: g.stage === 'Mega' ? 0.27 : 0, chelicerae: g.stage === 'Mega' })
     },

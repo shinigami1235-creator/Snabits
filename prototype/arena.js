@@ -7,7 +7,7 @@ const arBand=gap=>gap<10?"Close":gap<25?"Near":gap<45?"Mid":"Far";
 /* hitting from further away is harder to set up, so it pays a little more */
 const AR_BAND_DMG={Close:0.8,Near:0.95,Mid:1.2,Far:1.5,Any:1};
 /* a family's damage, tuned so every family wins about half its fights in the balance sim */
-const AR_FAM_DMG={Chomp:0.86,Pinch:0.9,Stilt:0.92,Skit:1.08,Antik:1.0,Squib:1.1,Moko:1.16,Booly:1.23};
+const AR_FAM_DMG={Chomp:0.86,Pinch:0.94,Stilt:0.92,Skit:1.08,Antik:0.95,Squib:1.1,Moko:1.22,Booly:1.23};
 
 /* [name, learned at, range, damage, accuracy, sharpness, wither, push, cost, windup, extras] */
 const FAM_MOVES={
@@ -15,17 +15,17 @@ const FAM_MOVES={
     ["Body Slam",14,"Close",46,70,5,5,25,26,0.7],["Jaw Lock",20,"Close",25,80,0,12,0,20,0.4,{hold:2}],["Charge",30,"Mid",60,65,10,0,20,34,1.0,{dash:"in"}],["Gnash",40,"Close",15,80,20,1,0,38,0.6,{hits:4}]],
   Pinch:[["Pinch",1,"Close",25,88,10,0,4,10,0.3],["Claw Jab",3,"Near",32,80,8,0,6,14,0.4],["Bunker Down",5,"Any",0,100,0,0,0,20,0.2,{buff:"bunker"}],["Scuttle Under",8,"Close",15,80,0,0,0,12,0.3,{swap:1}],
     ["Riposte",14,"Close",0,100,0,0,0,18,0.1,{buff:"riposte"}],["Shell Ram",20,"Near",45,70,5,0,20,24,0.6],["Vice Grip",30,"Close",36,75,5,15,0,28,0.5,{hold:1.5}],["Crab Hammer",40,"Close",72,60,20,0,15,40,1.0]],
-  Stilt:[["Kick",1,"Near",30,85,8,0,8,10,0.3],["Hop Back",3,"Any",0,100,0,0,0,8,0.2,{step:-25}],["High Kick",5,"Near",74,65,15,0,12,32,0.8],["Vault",8,"Close",18,75,5,0,0,12,0.3,{swap:1}],
+  Stilt:[["Kick",1,"Near",30,85,8,0,8,10,0.3],["Kick Off",3,"Close",20,85,8,0,0,12,0.3,{step:-25}],["High Kick",5,"Near",74,65,15,0,12,32,0.8],["Vault",8,"Close",18,75,5,0,0,12,0.3,{swap:1}],
     ["Sweep",14,"Close",30,80,5,0,0,16,0.4,{slow:3}],["Long Stride",20,"Mid",40,70,10,0,0,22,0.6,{dash:"near"}],["Axe Kick",30,"Near",75,70,20,0,10,36,0.9],["Stampede",40,"Near",20,75,10,0,10,38,0.6,{hits:3}]],
-  Skit:[["Nip",1,"Close",24,90,10,0,0,8,0.2],["Skitter",3,"Any",0,100,0,0,0,6,0.1,{step:15}],["Web",5,"Mid",42,80,5,0,0,18,0.5,{slow:3}],["Web Swing",8,"Close",15,80,0,0,0,12,0.3,{swap:1}],
+  Skit:[["Nip",1,"Close",24,90,10,0,0,8,0.2],["Skitter Bite",3,"Near",18,85,8,0,0,12,0.25,{dash:"in"}],["Web",5,"Mid",42,80,5,0,0,18,0.5,{slow:3}],["Web Swing",8,"Close",15,80,0,0,0,12,0.3,{swap:1}],
     ["Reel In",14,"Mid",20,75,0,0,-25,18,0.5],["Trap Line",20,"Mid",0,100,0,0,0,20,0.4,{slow:4}],["Leg Flurry",30,"Close",14,80,10,0,0,30,0.5,{hits:4}],["Cocoon",40,"Mid",30,60,0,0,0,34,0.9,{hold:2}]],
   Antik:[["Zap",1,"Mid",25,85,5,6,0,10,0.3,{cast:1}],["Static Screen",5,"Mid",45,75,5,8,0,22,0.6,{cast:1}],["Static Hop",8,"Close",15,75,0,8,0,12,0.3,{swap:1}],["Signal Jam",12,"Far",15,80,0,25,0,18,0.5,{cast:1}],
     ["Scan Beam",18,"Far",46,70,10,0,0,28,1.0,{cast:1}],["Feedback",24,"Any",0,100,0,0,0,16,0.2,{buff:"feedback"}],["Short Circuit",30,"Close",50,75,5,15,30,30,0.6,{cast:1}],["Broadcast",40,"Far",80,60,10,15,0,42,1.4,{cast:1}]],
-  Squib:[["Squirt",1,"Mid",31,90,5,0,4,8,0.3,{cast:1}],["Jet Back",3,"Any",0,100,0,0,0,10,0.1,{step:-30}],["Ink Jet",5,"Far",52,75,5,0,0,18,0.5,{cast:1}],["Slip Past",8,"Close",10,85,0,0,0,10,0.2,{swap:1}],
+  Squib:[["Squirt",1,"Mid",31,90,5,0,4,8,0.3,{cast:1}],["Jet Back",3,"Any",0,100,0,0,0,14,0.15,{step:-30,selfHeal:0.06}],["Ink Jet",5,"Far",52,75,5,0,0,18,0.5,{cast:1}],["Slip Past",8,"Close",10,85,0,0,0,10,0.2,{swap:1}],
     ["Tentacle Lash",14,"Near",48,75,10,0,10,20,0.5],["Bubble Wall",20,"Any",0,100,0,0,0,22,0.3,{buff:"bubble"}],["Undertow",30,"Far",35,70,0,0,-30,26,0.7,{cast:1}],["Riptide",40,"Mid",90,65,10,10,15,38,1.0,{cast:1}]],
-  Moko:[["Stare",1,"Far",36,90,5,10,0,10,0.3,{cast:1}],["Glare",5,"Far",0,85,0,6,0,16,0.4,{cast:1,lower:1}],["Blink",8,"Close",0,90,0,0,0,12,0.2,{swap:1}],["Mind Prick",12,"Far",56,80,10,18,0,20,0.4,{cast:1}],
+  Moko:[["Stare",1,"Far",36,90,5,10,0,10,0.3,{cast:1}],["Glare",5,"Far",0,85,0,6,0,16,0.4,{cast:1,lower:1}],["Blink",8,"Close",16,90,0,6,0,14,0.2,{swap:1,cast:1}],["Mind Prick",12,"Far",56,80,10,18,0,20,0.4,{cast:1}],
     ["Dread",18,"Near",28,80,0,20,35,24,0.5,{cast:1}],["Unblinking",24,"Any",0,100,0,0,0,18,0.2,{buff:"unblink"}],["Eye Beam",30,"Far",96,70,12,10,0,36,1.1,{cast:1}],["Hypnotize",40,"Mid",0,65,0,15,0,34,0.8,{cast:1,hold:2}]],
-  Booly:[["Wisp Shot",1,"Far",36,85,5,0,0,10,0.3,{cast:1}],["Boo!",3,"Close",5,90,0,5,35,10,0.2,{cast:1}],["Phase Shift",5,"Any",0,100,0,0,0,18,0.2,{buff:"phase"}],["Phase Through",8,"Close",0,95,0,0,0,10,0.2,{swap:1}],
+  Booly:[["Wisp Shot",1,"Far",36,85,5,0,0,10,0.3,{cast:1}],["Boo!",3,"Close",5,90,0,5,35,10,0.2,{cast:1}],["Phase Shift",5,"Any",0,100,0,0,0,18,0.2,{buff:"phase"}],["Soul Pass",8,"Close",14,95,0,0,0,14,0.2,{swap:1,cast:1,drain:1}],
     ["Haunt",14,"Near",30,80,0,20,20,18,0.4,{cast:1}],["Will-o'-Wisp",20,"Far",56,75,5,0,0,24,0.6,{cast:1}],["Poltergeist",30,"Mid",60,70,5,0,15,30,0.7,{cast:1}],["Spirit Lance",40,"Far",92,70,15,0,0,38,1.2,{cast:1}]],
 };
 const SHARED_MOVES=[["Dash In",1,"Any",0,100,0,0,0,10,0.2,{step:20}],["Leap Back",1,"Any",0,100,0,0,0,10,0.2,{step:-20}],["Brace",1,"Any",0,100,0,0,0,6,0.1,{buff:"brace"}]];
@@ -55,7 +55,7 @@ function arFromSkill(n){
 /* every move a Snabit can use in the arena: its family's up to its level, the shared moves, and its element skills */
 function arMoves(fam,level,known,el){
   const fm=(FAM_MOVES[fam]||[]).map(arMove).filter(m=>m.lv<=level), sh=SHARED_MOVES.map(arMove);
-  if(el&&EL_PREFIX[el]&&fm[0]){ fm[0].name=`${EL_PREFIX[el]} ${fm[0].name}`; fm[0].el=el; }
+  if(el&&EL_PREFIX[el]&&fm[0]){ fm[0].base=fm[0].name; fm[0].name=`${EL_PREFIX[el]} ${fm[0].name}`; fm[0].el=el; }
   const elm=(known||[]).map(arFromSkill).filter(Boolean), seen=new Set();
   // a skill with the same name as a family move (Crunch, High Kick) shows once, as the family move
   return fm.concat(sh,elm).filter(m=>!seen.has(m.name)&&seen.add(m.name));
@@ -201,7 +201,13 @@ class Arena{
     const o=this.p[1-p.i], d=this.dirTo(p), R=this.rand;
     if(m.buff){ this.ev.push({t:"buff",i:p.i,m}); p.buff[m.buff]=AR_BUFF_T[m.buff]||1.5; return; }
     if(m.support){ this.support(p,m,roll); return; }
-    if(m.step&&!m.dmg){ this.ev.push({t:"step",i:p.i,m}); const s=m.step*d, lo=o.x<p.x?o.x+AR.BODY:0, hi=o.x>p.x?o.x-AR.BODY:AR.LEN; p.x=Math.max(lo,Math.min(hi,p.x+s)); return; }
+    if(m.step&&!m.dmg){ this.stepMove(p,m); if(m.selfHeal) this.heal(p,p.maxhp*m.selfHeal,"heal"); return; }
+    if(m.step){ this.strike(p,m,roll); if(!this.over) this.stepMove(p,m); return; }   // hit, then hop back
+    this.strike(p,m,roll);
+  }
+  stepMove(p,m){ const o=this.p[1-p.i], d=this.dirTo(p); this.ev.push({t:"step",i:p.i,m}); const s=m.step*d, lo=o.x<p.x?o.x+AR.BODY:0, hi=o.x>p.x?o.x-AR.BODY:AR.LEN; p.x=Math.max(lo,Math.min(hi,p.x+s)); }
+  strike(p,m,roll){
+    const o=this.p[1-p.i], d=this.dirTo(p), R=this.rand;
     if(m.dash){ const want=m.dash==="near"?14:AR.BODY+2; p.x=o.x-d*want; p.x=Math.max(0,Math.min(AR.LEN,p.x)); }
     else if(!this.inRange(m)){ this.ev.push({t:"miss",i:p.i,m,why:"out"}); return; }   // it stepped out of reach during the windup
     if(o.buff.bubble&&(m.range==="Mid"||m.range==="Far")){ delete o.buff.bubble; this.ev.push({t:"miss",i:p.i,m,why:"block"}); return; }
@@ -245,6 +251,7 @@ class Arena{
       else o.x=p.x+d*Math.max(AR.BODY,Math.abs(o.x-p.x)+s);   // a pull drags it in, but never through the puller
     }
     if(tg===o){ if(m.hold) o.hold=m.hold; if(m.slow) o.slow=m.slow; }
+    if(m.selfHeal) this.heal(p,p.maxhp*m.selfHeal,"heal");
     this.checkEnd();
   }
   // Shove is free, with a 1.5 second wait between shoves
@@ -275,7 +282,8 @@ class Arena{
     if(m.foresight&&!p.buff.foresight&&p.f.moves.some(x=>x.cast&&x.dmg>=60)) v+=14;
     if(m.statusBlock&&!p.buff.ward) v+=p.st?25:6;
     return v*Math.pow(0.7,p.uses[m.name]||0); }
-  value(p,m){ const o=this.p[1-p.i]; if(m.buff||m.support) return this.supValue(p,m); if(!m.dmg&&!m.wither&&!m.push&&!m.hold) return 0;
+  value(p,m){ const o=this.p[1-p.i]; if(m.buff||m.support) return this.supValue(p,m);
+    if(!m.dmg&&m.selfHeal){ const miss=1-p.hp/p.maxhp, wi=AR.BANDS.indexOf(this.prefer(p)), bi=AR.BANDS.indexOf(this.band()); return (miss>0.3?60*m.selfHeal/0.06*miss:0)+(wi>bi?8:0); } if(!m.dmg&&!m.wither&&!m.push&&!m.hold) return 0;
     const atk=m.cast?this.eff(p,"mnd"):this.eff(p,"pow"); let v=m.dmg*(m.hits||1)*atk/50+m.wither*1.2+(m.hold?8:0);
     if(m.status&&!o.st) v+=m.status[1]*0.25; if((m.ifPoison&&this.has(o,"Poison"))||(m.ifStatus&&o.st)) v*=1.8;
     if(m.drain) v*=1+m.drain*(1-p.hp/p.maxhp); if(m.recoil) v*=1-m.recoil*(1-p.hp/p.maxhp)*1.5;
@@ -285,7 +293,7 @@ class Arena{
     return v*Math.min(1,this.hitChance(p,m)+0.1); }
   smart(p){
     const o=this.p[1-p.i], band=this.band(), want=this.prefer(p), wi=AR.BANDS.indexOf(want), bi=AR.BANDS.indexOf(band), d=this.dirTo(p);
-    const ready=p.f.moves.filter(m=>this.inRange(m)&&!m.step&&this.allowed(p,m));
+    const ready=p.f.moves.filter(m=>this.inRange(m)&&!(m.step&&!m.dmg&&!m.selfHeal)&&this.allowed(p,m));
     const back=d>0?p.x:AR.LEN-p.x;   // room behind it
     // pinned against a wall at Close when it wants space: swap out, or shove
     if(band==="Close"&&wi>0&&back<8){ const sw=ready.find(m=>m.swap&&p.focus>=this.cost(p,m)); if(sw&&this.start(p,sw)) return; if(this.shove(p)) return; }

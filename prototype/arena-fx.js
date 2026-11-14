@@ -97,7 +97,7 @@ function atFx(e,now){
    a bite or a punch up close gets ducked or hopped back from, a shot gets jumped over or leaned away from, something from above gets
    sidestepped, and a phased Snabit lets it pass straight through */
 function atPlanDodge(i,at,kind,why){
-  const S=AT.side[1-i], r=atH(at), contact=/^(tackle|bite|punch|claw|shadowstrike|shadowclaw|stomp|fly)$/.test(kind);
+  const S=AT.side[1-i], r=atH(at), contact=!!(ANIM[kind]&&ANIM[kind].contact)||/^(tackle|bite|punch|claw|shadowstrike|shadowclaw|stomp|fly)$/.test(kind);
   let style=why==="phase"?"phase":contact?(r<0.7?"back":"leap"):/^(meteor|icefall|boulder|rockpath|pillar|lift)$/.test(kind)?"back":/^(beam|lightning|wave|tornado|firespin|push)$/.test(kind)?(r<0.5?"leap":"sway"):(r<0.55?"leap":"duck");
   // backed against a wall there's no room to hop back, so it jumps instead
   if(style==="back"){ const q=AT.ar.p[1-i], o=AT.ar.p[i], room=q.x>o.x?AR.LEN-q.x:q.x; if(room<14) style="leap"; }
@@ -340,3 +340,122 @@ function atChips(c,i,x,y,bw){
       if(it.k!=null){ c.fillStyle="rgba(0,0,0,.28)"; c.beginPath(); c.roundRect(cx+it.w*it.k,yy,it.w*(1-it.k),12,[0,4,4,0]); c.fill(); }
       c.fillStyle=it.fg; c.fillText(it.t,cx+it.w/2,yy+9); cx+=it.w+3; } });
 }
+
+/* ---------- physical attacks with their own limbs ----------
+   Kicks lift a real foot (Stilt's long legs, any family's feet), Skit stabs with a spider leg, Squib lashes a tentacle,
+   Pinch snaps its claws, hammers come down from overhead, sweeps go in low, and moves that hit several times play every hit.
+   Each kind draws its own hit marks, so the arena's generic marks are skipped for them (marks:true). Forward is local -x. */
+const atPose=(base,o)=>({...CHIBI.blend(base,base,0),...o});
+const AT_P={
+  kickWind:atPose("idle",{feet:[6,-4,-2,0],tilt:7,lean:-5,eyes:"fierce",open:0.2}),
+  kickMid:atPose("idle",{feet:[-30,-46,4,0],tilt:-6,lean:-2,eyes:"fierce",open:0.4}),
+  kick:atPose("idle",{feet:[-62,-92,8,0],tilt:-18,lean:-9,eyes:"fierce",open:0.6}),
+  highKick:atPose("idle",{feet:[-54,-124,10,0],tilt:-24,lean:-10,eyes:"fierce",open:0.7}),
+  kickR:atPose("idle",{feet:[2,0,-58,-84],tilt:-12,lean:-6,eyes:"fierce",open:0.6}),
+  axeUp:atPose("idle",{feet:[-26,-118,8,0],tilt:-26,lean:-12,eyes:"fierce",open:0.4}),
+  axeDown:atPose("idle",{feet:[-50,-26,10,0],tilt:14,lean:10,eyes:"fierce",open:0.8,sx:1.06,sy:0.92}),
+  sweep:atPose("crouch",{feet:[-58,6,12,0],sx:1.14,sy:0.8,tilt:-10,eyes:"fierce",open:0.5}),
+  jabA:atPose("tackle",{jab:1,jabK:0,tilt:4,lean:4}), jabB:atPose("tackle",{jab:1,jabK:1,tilt:6,lean:5}), jabC:atPose("tackle",{jab:1,jabK:2,tilt:3,lean:3}), jabRest:atPose("tackle",{jab:0.25,jabK:0}),
+  lashWind:atPose("idle",{lash:-0.3,tilt:6,lean:-3,eyes:"fierce"}), lash:atPose("attack",{lash:1,tilt:-6,lean:4}),
+  clawOpen:atPose("attack",{arm:[[22,-14,40,-22],[22,-14,40,-22]],open:0.5}), clawSnap:atPose("attack",{arm:[[22,-2,36,-4],[22,-2,36,-4]],open:0.9})
+};
+// reach: lunge out to f, hold, ease home. pose(t) picks the frame
+const atReach=(t,C,f,hold,back)=>t<C?f*eo(t/C):t<C+hold?f:f*(1-eio(Math.min(1,(t-C-hold)/back)));
+const atDir=x=>x.target.x>x.self.x?1:-1;
+function atKickMark(c,P,k,col,big,d,hi){
+  const cx=P.x-d*10, cy=P.y+(hi?-26:0), R=(48+20*eo(Math.min(1,k*1.6)))*big, a0=hi?-2.6:-2.2, a1=a0+2.2*eo(Math.min(1,k*2.2));
+  c.save(); c.translate(cx,cy); if(d<0) c.scale(-1,1); c.globalAlpha=1-Math.max(0,(k-0.4)/0.6); c.lineCap="round";
+  c.strokeStyle=atRgba(col,0.85); c.lineWidth=18*big*(1-k*0.5); c.beginPath(); c.arc(0,0,R,a0,a1); c.stroke();
+  c.strokeStyle="rgba(255,255,255,.95)"; c.lineWidth=7*big*(1-k*0.5); c.beginPath(); c.arc(0,0,R,a0+0.15,a1); c.stroke();
+  if(k<0.5){ const s=(1-k*2)*big; c.fillStyle="#fff"; c.beginPath(); for(let n=0;n<10;n++){ const a=n*Math.PI/5, r=n%2?10*s:30*s; c.lineTo(Math.cos(a)*r+18*big,Math.sin(a)*r); } c.closePath(); c.fill(); }
+  c.restore();
+}
+function atStab(c,P,k,d,j,big){ // a spider leg's tip driven into the target
+  const y=P.y-14+((j*37)%3-1)*14, tip={x:P.x-d*(6+(j%2)*8),y}, base={x:tip.x-d*70*big,y:y-30*big+((j*13)%2)*16};
+  c.save(); c.globalAlpha=1-Math.max(0,(k-0.45)/0.55); const g=Math.min(1,k*4), tx=base.x+(tip.x-base.x)*g, ty=base.y+(tip.y-base.y)*g;
+  c.fillStyle="#2a2433"; c.strokeStyle="rgba(255,255,255,.8)"; c.lineWidth=1.5; c.beginPath(); c.moveTo(base.x,base.y-6*big); c.lineTo(tx,ty); c.lineTo(base.x,base.y+6*big); c.closePath(); c.fill(); c.stroke();
+  if(k>0.2&&k<0.6){ const s=(0.6-k)/0.4*big; c.fillStyle="#fff"; c.beginPath(); for(let n=0;n<8;n++){ const a=n*Math.PI/4, r=n%2?5*s:18*s; c.lineTo(tip.x+Math.cos(a)*r,tip.y+Math.sin(a)*r); } c.closePath(); c.fill(); }
+  c.restore();
+}
+function atPincer(c,P,k,col,d,big){ // two curved claw blades close on the target and snap
+  const close=Math.min(1,k/0.4), open=1-eo(close), x=P.x-d*8, y=P.y-6;
+  c.save(); c.globalAlpha=k<0.7?1:1-(k-0.7)/0.3;
+  for(const sd of [-1,1]){ c.save(); c.translate(x-d*36*big,y); c.rotate(sd*(0.15+0.75*open)*d); c.scale(d*big,big);
+    c.fillStyle=atRgba(col,1); c.strokeStyle=atRgba(col.map(v=>v*0.55),1); c.lineWidth=3; c.beginPath(); c.moveTo(-6,0); c.quadraticCurveTo(26,sd*-30,58,sd*-4); c.quadraticCurveTo(30,sd*-10,-6,sd*10); c.closePath(); c.fill(); c.stroke();
+    c.fillStyle="rgba(255,255,255,.55)"; c.beginPath(); c.ellipse(24,sd*-14,9,3,sd*-0.4,0,7); c.fill(); c.restore(); }
+  if(close>=1&&k<0.75){ const s=(0.75-k)/0.35*big; c.fillStyle="#fff"; c.beginPath(); for(let n=0;n<10;n++){ const a=n*Math.PI/5, r=n%2?8*s:26*s; c.lineTo(x+Math.cos(a)*r,y+Math.sin(a)*r); } c.closePath(); c.fill(); }
+  c.restore();
+}
+function atLash(c,P,k,col,d,big){ // a whip trail across the target with a crack where it ends
+  const g=eo(Math.min(1,k*2.4)), n=24, pts=[];
+  for(let i=0;i<=n;i++){ const t=i/n*g; pts.push([P.x-d*(70-140*t)*big,P.y-60*big+Math.sin(t*Math.PI)*-28*big+t*90*big]); }
+  c.save(); c.globalAlpha=1-Math.max(0,(k-0.5)/0.5); c.lineCap="round";
+  for(let i=1;i<pts.length;i++){ const w=(3+12*(i/n))*big; c.strokeStyle=atRgba(col,0.9); c.lineWidth=w; c.beginPath(); c.moveTo(pts[i-1][0],pts[i-1][1]); c.lineTo(pts[i][0],pts[i][1]); c.stroke(); }
+  c.strokeStyle="rgba(255,255,255,.9)"; c.lineWidth=3*big; c.beginPath(); pts.forEach((q,i)=>c[i?"lineTo":"moveTo"](q[0],q[1])); c.stroke();
+  if(g>0.9&&k<0.7){ const e=pts[pts.length-1], s=(0.7-k)/0.3*big; c.fillStyle="#fff"; c.beginPath(); for(let m=0;m<10;m++){ const a=m*Math.PI/5, r=m%2?6*s:22*s; c.lineTo(e[0]+Math.cos(a)*r,e[1]+Math.sin(a)*r); } c.closePath(); c.fill(); }
+  c.restore();
+}
+function atSmash(c,P,k,col,big){ // streaks coming down on it, then cracks in the floor and dust
+  c.save(); c.globalAlpha=1-Math.max(0,(k-0.5)/0.5); c.lineCap="round";
+  if(k<0.45) for(let i=0;i<5;i++){ const x=P.x+(i-2)*16*big, y0=P.y-110*big, y1=y0+(80+i%2*20)*big*eo(k/0.45); c.strokeStyle=i%2?"rgba(255,255,255,.9)":atRgba(col,0.9); c.lineWidth=(5-Math.abs(i-2))*big; c.beginPath(); c.moveTo(x,y0); c.lineTo(x,y1); c.stroke(); }
+  if(k>0.3){ c.strokeStyle="rgba(70,40,20,.75)"; c.lineWidth=3*big; for(const a of [-2.7,-2.2,-0.9,-0.4,Math.PI]){ c.beginPath(); c.moveTo(P.x,P.foot); c.lineTo(P.x+Math.cos(a)*60*big,P.foot+Math.sin(a)*8+6); c.stroke(); } if(k<0.4) dust(c,{x:P.x,foot:P.foot},Math.min(1,(k-0.3)/0.4)); }
+  c.restore();
+}
+function atSweepMark(c,P,k,col,d,big){ const g=eo(Math.min(1,k*2.2)); c.save(); c.globalAlpha=1-Math.max(0,(k-0.45)/0.55); c.lineCap="round"; c.translate(P.x,P.foot-10); c.scale(d,0.32);
+  c.strokeStyle=atRgba(col,0.85); c.lineWidth=22*big; c.beginPath(); c.arc(0,0,70*big,Math.PI*0.9,Math.PI*0.9+g*Math.PI*1.2); c.stroke();
+  c.strokeStyle="rgba(255,255,255,.95)"; c.lineWidth=8*big; c.beginPath(); c.arc(0,0,70*big,Math.PI*0.95,Math.PI*0.9+g*Math.PI*1.2); c.stroke(); c.restore(); }
+const atBig=x=>(x.pw||1)*0.9;
+Object.assign(ANIM,{
+  kick:{C:300,D:900,contact:true,marks:true,
+    atk:t=>({f:atReach(t,300,0.5,260,380),pose:t<140?AT_P.kickWind:t<300?AT_P.kickMid:t<580?AT_P.kick:"idle"}),
+    fx(c,t,x){ if(t>=280&&t<620) atKickMark(c,x.target,(t-280)/340,x.col,atBig(x),atDir(x),false); }},
+  highkick:{C:340,D:960,contact:true,marks:true,
+    atk:t=>({f:atReach(t,340,0.5,260,380),pose:t<150?AT_P.kickWind:t<340?AT_P.kickMid:t<620?AT_P.highKick:"idle",arc:t<340?-18*Math.sin(t/340*Math.PI):0}),
+    fx(c,t,x){ if(t>=320&&t<680) atKickMark(c,x.target,(t-320)/360,x.col,atBig(x)*1.2,atDir(x),true); }},
+  axekick:{C:440,D:1020,contact:true,marks:true,
+    atk:t=>({f:atReach(t,440,0.56,240,340),pose:t<300?AT_P.axeUp:t<680?AT_P.axeDown:"idle",arc:t<300?-22*eo(t/300):t<440?-22*(1-ei((t-300)/140)):0}),
+    def(t){ if(t<440||t>700) return null; const a=1-eo((t-440)/260); return {sx:1+0.3*a,sy:1-0.35*a}; },
+    fx(c,t,x){ if(t>=300&&t<760) atSmash(c,x.target,(t-300)/460,x.col,atBig(x)); }},
+  sweep:{C:300,D:880,contact:true,marks:true,
+    atk:t=>({f:atReach(t,300,0.56,240,340),pose:t<120?"crouch":t<540?AT_P.sweep:"idle",rot:t>=180&&t<540?-0.08:0}),
+    def(t){ if(t<300||t>700) return null; const k=(t-300)/400; return {rot:-0.35*Math.sin(k*Math.PI),arc:-30*Math.sin(k*Math.PI),pose:"hit"}; },
+    fx(c,t,x){ if(t>=240&&t<600) atSweepMark(c,x.target,(t-240)/360,x.col,atBig(x),atDir(x)); }},
+  pinch:{C:380,D:920,contact:true,marks:true,
+    atk:t=>({f:atReach(t,380,0.66,220,320),pose:t<380?AT_P.clawOpen:t<600?AT_P.clawSnap:"idle"}),
+    fx(c,t,x){ if(t>=230&&t<700) atPincer(c,x.target,(t-230)/470,x.col,atDir(x),atBig(x)); }},
+  vicegrip:{C:380,D:1250,contact:true,marks:true,
+    atk:t=>({f:atReach(t,380,0.7,560,300),pose:t<380?AT_P.clawOpen:t<940?AT_P.clawSnap:"idle",off:[t>380&&t<940?Math.sin(t/30)*2:0,0]}),
+    def(t){ if(t<380||t>940) return null; return {sx:0.9+0.03*Math.sin(t/40),sy:1.06,pose:"hurt",off:[Math.sin(t/25)*2,0]}; },
+    fx(c,t,x){ if(t>=230&&t<1100) atPincer(c,x.target,Math.min(0.55,(t-230)/470)+(t>940?(t-940)/320:0),x.col,atDir(x),atBig(x)); }},
+  hammer:{C:440,D:1000,contact:true,marks:true,
+    atk:t=>({f:atReach(t,440,0.7,220,340),pose:t<300?"slamup":t<660?"slam":"idle",arc:t<300?-30*eo(t/300):t<440?-30*(1-ei((t-300)/140)):0}),
+    def(t){ if(t<440||t>720) return null; const a=1-eo((t-440)/280); return {sx:1+0.45*a,sy:1-0.5*a}; },
+    fx(c,t,x){ if(t>=300&&t<780) atSmash(c,x.target,(t-300)/480,x.col,atBig(x)*1.2); }},
+  lash:{C:340,D:880,contact:true,marks:true,
+    atk:t=>({f:atReach(t,340,0.5,220,320),pose:t<200?AT_P.lashWind:t<560?AT_P.lash:"idle"}),
+    fx(c,t,x){ if(t>=240&&t<640) atLash(c,x.target,(t-240)/400,x.col,atDir(x),atBig(x)); }},
+  jawlock:{C:300,D:1200,contact:true,
+    atk:t=>({f:atReach(t,300,0.78,580,300),pose:t<150?"crouch":t<300?"bitewide":t<880?"chomp":"idle",off:[t>300&&t<880?Math.sin(t/28)*3:0,0]}),
+    def(t){ if(t<300||t>880) return null; return {pose:"hurt",off:[Math.sin(t/24)*3,0]}; },
+    fx(c,t,x){ if(t>300&&t<880&&Math.floor(t/120)%2===0) chompMarks(c,x.target,((t-300)%240)/240); }}
+});
+/* moves that hit several times: lunge in, then one strike per hit 105 ms apart, each with its own mark */
+function atFlurry(n,frames,mark,F=0.7){ const C=280, gap=105, end=C+n*gap;
+  return {C,D:end+380,contact:true,marks:true,
+    atk:t=>{ const j=Math.floor((t-C)/gap); return {f:t<C?F*eo(t/C):t<end?F+0.06*Math.sin(((t-C)%gap)/gap*Math.PI):F*(1-eio(Math.min(1,(t-end)/340))),pose:t<C*0.6?"crouch":t<end?frames[((j%frames.length)+frames.length)%frames.length]:"idle"}; },
+    def(t){ if(t<C||t>end+60) return null; const p=((t-C)%gap)/gap; return {off:[(1-p)*6,0],pose:"hit"}; },
+    fx(c,t,x){ for(let j=0;j<n;j++){ const t0=C+j*gap-30, k=(t-t0)/300; if(k>=0&&k<1) mark(c,x,k,j); } }}; }
+Object.assign(ANIM,{
+  legflurry:atFlurry(4,[AT_P.jabA,AT_P.jabRest,AT_P.jabB,AT_P.jabRest,AT_P.jabC],(c,x,k,j)=>atStab(c,x.target,k,atDir(x),j,atBig(x)*1.3),0.48),
+  gnash:atFlurry(4,["bitewide","chomp"],(c,x,k,j)=>chompMarks(c,{x:x.target.x+((j%2)*2-1)*8,y:x.target.y+(j-1.5)*6},k)),
+  stampede:atFlurry(3,[AT_P.kick,AT_P.kickR],(c,x,k,j)=>atKickMark(c,x.target,k,x.col,atBig(x)*0.8,atDir(x),j%2===1),0.5),
+  kickflurry:atFlurry(4,[AT_P.kick,AT_P.kickR],(c,x,k,j)=>atKickMark(c,x.target,k,x.col,atBig(x)*0.75,atDir(x),j%2===1),0.5),
+  punchflurry:atFlurry(3,["punchwind","punch"],(c,x,k,j)=>{ if(typeof burst==="function") burst(c,{x:x.target.x+((j%2)*2-1)*10,y:x.target.y+(j-1)*12},k,x.col); })
+});
+/* which animation a family move plays in the arena, by its own name (a Blaze Snabit's "Flame Kick" is still Kick) */
+const AR_KIND={Lunge:"bite","Jaw Lock":"jawlock",Gnash:"gnash",
+  Pinch:"pinch","Claw Jab":"claw","Vice Grip":"vicegrip","Crab Hammer":"hammer",
+  Kick:"kick","High Kick":"highkick","Axe Kick":"axekick",Sweep:"sweep","Long Stride":"kick",Stampede:"stampede","Kick Off":"kick",
+  Nip:"bite","Skitter Bite":"bite",Web:"web","Reel In":"web","Trap Line":"web",Cocoon:"web","Leg Flurry":"legflurry",
+  "Tentacle Lash":"lash",Riptide:"wave","Eye Beam":"beam","Scan Beam":"beam",Stare:"beam","Spirit Lance":"spear",Poltergeist:"push","Boo!":"push",Dread:"push",
+  "Flurry Kick":"kickflurry","Comet Punch":"punchflurry",Barrage:"punchflurry"};
