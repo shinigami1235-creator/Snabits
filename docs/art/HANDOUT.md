@@ -47,7 +47,13 @@ The tests are in `tools/tests` (see Where everything is). Run the regression set
 - **Chomp** was approved first: a squat box with small teeth at Bit, tiger stripes as the Brawl pattern.
 - **Every family looks clearly different.** Pinch is a crab shell. Antik is an old TV with its face on the screen.
 - **Booly's trait is a wisp:** a blue ghost flame circling its head, so it reads as more than a plain ghost. Yurei (a forehead triangle and a misty bottom) and Sheet (bedsheet folds and a patch) were tried and dropped.
-- **New bodies, drawn but not in the game yet:** Quad (four-legged), Bipped (upright), Flask, Teep (teapot) and Lern (paper lantern). Quad and Flask still need names, and Gid hasn't said whether they join the photo's family pick or come in as rare finds.
+- **The five new families (14 Nov 2026)** are in the game and as common as the first eight, so the bestiary has 13 families and 156 kinds. They come from photos whose main colour sits gathered in one spot (`pickFamily` in `monster.js`, the `solid` split), and in a 3,000-photo test Plod was the rarest at about 1 in 65.
+  - **Plod** replaced Quad. Gid asked for Chomp's shape with a new look and picked trunk and ears (concept B): flapping ears, a swinging trunk, four stumpy legs and tusks at Mega. The tank, with the ability Steady (pushes on it are halved) and the signature Trunk Slam.
+  - **Bipped** is the boxer, with Counterpunch (after a dodge its next Strike hits 20% harder) and One-Two.
+  - **Fizz** is the old Flask, renamed by Gid. It throws potions, with Volatile (its statuses last 30% longer) and Potion Toss, whose status follows its element (`POTION_BY_EL` in `skills.js`).
+  - **Teep** is the teapot and the steady caster, with Steeping (focus fills 10% faster while it stands still) and Steam Jet.
+  - **Lern** is the paper lantern and the quick caster, with Bright (Blind can't land on it and its hit chance can't be lowered) and Flash.
+  - Each has 8 arena moves (`FAM_MOVES`), a walk speed, a summon entrance (`ENTER` in `summon.js`), a cry and a pixel body. Gid OK'd the entrance and signature stills. Bipped's entrance throws two jabs, since a wave hid its stub arms behind its body.
 - **Your own monster is seen from behind in battle,** and the opponent faces you. Beams and eye or mouth attacks from behind start just past the body's edge on the enemy's side.
 - **Hits show an ouch face:** squeezed eyes and gritted teeth.
 - **Flashes are for big hits only.** The white body flash, the dark impact frame, the crowd cheer and the lightning screen flash only happen on crits and super-effective hits. Ordinary hits get a short freeze, a small shake and a slight brighten.
@@ -112,7 +118,7 @@ The tests are in `tools/tests` (see Where everything is). Run the regression set
   - Out > Goals shows the loan, the next grade step, the record against Rook, the bestiary and contests.
 - **The intro (12 Nov 2026):** Snabits are camouflaged in the colour of whatever they hide in, and only a Snaboscope can uncover them (Gid's call). Tala is putting up a job request on the town board for help on her ranch, sees the player and offers them the job. The first Snaboscope trip has no scan limit: after each scan you keep it, scan again, or choose from the last six.
 - **The camera picks the main back lens.** Phones with several back lenses could give the game the macro or ultra-wide one, which is blurry past a few centimetres. After the first open it lists the lenses, skips any labelled macro, wide, tele or depth, prefers camera 0 and then the biggest sensor, asks for 1920 by 1080 and turns on continuous autofocus. Flip steps through every back lens and then the front one.
-- **The bestiary** (`dex.js`): the 8 families in the 12 elements, 96 kinds. A kind is seen once it's scanned or fought and raised once it lives on the ranch, with a star per stage reached. Unseen kinds show as dark shapes. Prizes at 10, 25, 40, 60, 80 and 96 seen and 3, 8, 15 and 24 raised.
+- **The bestiary** (`dex.js`): the 13 families in the 12 elements, 156 kinds. A kind is seen once it's scanned or fought and raised once it lives on the ranch, with a star per stage reached. Unseen kinds show as dark shapes. Prizes at 10, 30, 60, 95, 125 and 156 seen and 3, 10, 20 and 36 raised.
 - **Contests** (`contests.js`): one in the first week of every month, taking turns between Strength (Power and Constitution, at the quarry), Speed (Speed and Stamina, on the long road), Smarts (Mind and Insight, in the study room) and Style (loyalty, what it wears and its cups, on the court). Junior for E and D, Senior for C and B, Pro for A and S. Three rounds scored out of 10 against four other entrants. Prizes for the top three, a thing to wear at 1, 3, 6 and 12 wins, and 15 stress off.
 - **Festivals:** the Blossom Festival, the Lantern Festival, the Harvest Fair and the Snow Fair, one a season in week 2. Each gives a free item and takes 10 stress off. The calendar shows festivals, contests and rival matches.
 - **Upgrades:** the barn gets a Cozy rug (petting takes 3 more stress off), a Toy chest (playing takes 5 more off) and Potted plants (stress -2 a week), each drawn in the barn. Each of the six training places has two levels, drawn as bunting and then lamps and a scoreboard, giving 15% then 30% more from that drill and more great results.
@@ -206,7 +212,7 @@ The tests are in `tools/tests` (see Where everything is). Run the regression set
 
 ## Where the art is now (12 Nov 2026)
 
-- All 8 game families draw at Bit, Byte and Mega in 32 poses, covering the ranch moods and every battle frame. All 56 hybrids draw too.
+- All 13 game families draw at Bit, Byte and Mega in 32 poses, covering the ranch moods and every battle frame. All 56 hybrids draw too.
 - All six marks and all nine care variants draw on every family (`marksBehind`, `marksOver` and the `variant` functions in `chibi.js`).
 - All 12 elements have their face marks and Mega patterns.
 - Worn items sit on each family's own spots. Families without feet (Squib, Pinch, Skit, Booly) skip boots.
@@ -225,6 +231,8 @@ The tests are in `tools/tests` (see Where everything is). Run the regression set
 ## Next
 
 - Gid plays fights on his phone and sends notes. The last round (14 Nov 2026) asked for statuses, heals, shields and dodges, then freeze frames only on specials, movement moves that also hit or heal, real limbs for physical moves, and an end to stuttering. All are done. Still open from that round: whether High Kick, Axe Kick, Leg Flurry, Vice Grip and Tentacle Lash should keep their heavy charge-up.
+- Only the five new families use their abilities in the arena. The first eight families' abilities still work in the old turn battle only.
+- Balance (14 Nov 2026): the sim (`arena/sim2.py`) puts all 13 families between 46% and 55% wins at level 30, tuned with `AR_FAM_DMG` in `arena.js`.
 - Field skills (Heat Haze, Monsoon, Blizzard, Charge Up, Moonrise) aren't in the arena yet. The old battle's field looks (`fieldFx` in `moves.js`) would suit a 12 second field over the whole arena.
 - The team exhibition and friend rooms on the new arena. Ask Gid before starting it.
 - Cloud save with a short code, built together with the PvP server.
