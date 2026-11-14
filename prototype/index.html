@@ -64,7 +64,7 @@
 <script src="wild.js"></script>
 <script src="music.js"></script>
 <script src="chibi.js"></script>
-<script src="chibi-hook.js"></script><script src="scenes.js"></script><script src="npcs.js"></script><script src="areas.js"></script><script src="story.js"></script><script src="dex.js"></script><script src="contests.js"></script><script src="moves.js"></script><script src="summon.js"></script><script src="cupshow.js"></script>
+<script src="chibi-hook.js"></script><script src="scenes.js"></script><script src="npcs.js"></script><script src="areas.js"></script><script src="story.js"></script><script src="dex.js"></script><script src="contests.js"></script><script src="moves.js"></script><script src="summon.js"></script><script src="cupshow.js"></script><script src="arena.js"></script><script src="arena-ui.js"></script>
 <script>if(hasSave()){ document.getElementById("ranchbtn").style.display=""; document.getElementById("msgranch").style.display=""; }</script>
 <script>
 const GROUPS=["red","orange","yellow","green","cyan","blue","violet","pink","brown","white","silver","black"];
@@ -327,7 +327,7 @@ function setWildUI(on){
 }
 function wildRescan(){ if(stream){ aim={x:.5,y:.5}; placeRing(); setMode("live"); } else setMode(still.width?"aim":"start"); }
 try{ const mm=randomOpponent(Math.random); paintMon(document.getElementById("msgmon"),mm,{stage:"Bit"}); }catch(e){}
-if(/(^#|&)test(&|$)/.test(location.hash)) startCam(); else showTitle();
+if(/(^#|&)test(&|$)/.test(location.hash)) startCam(); else if(/(^#|&)arena(&|$)/.test(location.hash)) openArenaTest(); else showTitle();   // #arena opens the test arena
 </script>
 </body>
 </html>
