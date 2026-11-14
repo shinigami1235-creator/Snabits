@@ -51,7 +51,7 @@ function hashStr(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt
 /* Family from where the main colour sits in the 3x3 grid. */
 function pickFamily(cells){
   let t=0,cx=0,cy=0; cells.forEach((v,i)=>{t+=v;cx+=v*((i%3)+0.5)/3;cy+=v*(Math.floor(i/3)+0.5)/3;});
-  if(t<=0) return "Antik";
+  if(t<=0) return {family:"Antik",band:"middle",shape:"compact"};
   cx/=t; cy/=t; let vx=0,vy=0;
   cells.forEach((v,i)=>{vx+=v*(((i%3)+0.5)/3-cx)**2; vy+=v*((Math.floor(i/3)+0.5)/3-cy)**2;});
   vx/=t; vy/=t;
