@@ -65,6 +65,8 @@ class Arena{
   dirTo(p){ const o=this.p[1-p.i]; return o.x>p.x?1:-1; }
   inRange(m){ return m.range==="Any"||m.range===this.band(); }
   speed(p){ const o=this.p[1-p.i]; return 12*(FAM_WALK[p.f.family]||1)*(1+edge(this.eff(p,"spd"),this.eff(o,"spd"),0.6,-0.35,0.45))*(p.slow>0?0.5:1); }
+  // the chance a move lands right now: its accuracy, plus focus held, plus Spirit against the target's Speed
+  hitChance(p,m){ const o=this.p[1-p.i]; return Math.max(0,Math.min(1,m.acc/100+p.focus/99*0.15+edge(this.eff(p,"spr"),this.eff(o,"spd"),0.4,-0.2,0.1)-(o.buff.phase?0.3:0)+(p.buff.unblink?0.1:0))); }
   regen(p){ const o=this.p[1-p.i]; return 5.5*(1+edge(this.eff(p,"sta"),this.eff(o,"sta"),0.5,-0.3,0.4)); }
   walk(p,dir){ if(p.hold>0||p.stun>0) return; const o=this.p[1-p.i], nx=p.x+dir*this.speed(p)*AR.DT;
     const lo=o.x<p.x?o.x+AR.BODY:0, hi=o.x>p.x?o.x-AR.BODY:AR.LEN, x0=p.x; p.x=Math.max(lo,Math.min(hi,nx)); if(Math.abs(p.x-x0)>0.01) p.walkT=this.t; }
@@ -100,7 +102,7 @@ class Arena{
     if(m.dash){ const want=m.dash==="near"?14:AR.BODY+2; p.x=o.x-d*want; p.x=Math.max(0,Math.min(AR.LEN,p.x)); }
     else if(!this.inRange(m)){ this.ev.push({t:"miss",i:p.i,m,why:"out"}); return; }   // it stepped out of reach during the windup
     if(o.buff.bubble&&(m.range==="Mid"||m.range==="Far")){ delete o.buff.bubble; this.ev.push({t:"miss",i:p.i,m,why:"block"}); return; }
-    let acc=m.acc/100+p.focus/99*0.15+edge(this.eff(p,"spr"),this.eff(o,"spd"),0.4,-0.2,0.1)-(o.buff.phase?0.3:0)+(p.buff.unblink?0.1:0);
+    const acc=this.hitChance(p,m);
     if(R()>acc){ this.ev.push({t:"miss",i:p.i,m}); return; }
     if(m.swap){ const x=p.x; p.x=o.x; o.x=x; this.ev.push({t:"swap",i:p.i,m}); }
     for(let h=0;h<(m.hits||1);h++) if(m.dmg){
