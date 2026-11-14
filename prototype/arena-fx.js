@@ -145,23 +145,33 @@ const AT_DECO={
   Poison:(o,h)=>{ const y0=188-h; o.fillStyle="rgba(70,20,110,.32)"; for(const [x,y,r] of [[76,0.4,9],[122,0.55,12],[96,0.72,8],[134,0.3,7]]){ o.beginPath(); o.arc(x,y0+h*y,r,0,7); o.fill(); } },
   Curse:(o,h)=>{ const y0=188-h, g=o.createLinearGradient(0,188,0,y0); g.addColorStop(0,"rgba(30,10,50,.6)"); g.addColorStop(0.55,"rgba(30,10,50,0)"); o.fillStyle=g; o.fillRect(-40,y0-20,280,h+40); },
   Burn:(o,h)=>{ const y0=188-h; o.fillStyle="rgba(40,20,10,.3)"; for(const [x,y,r] of [[84,0.78,8],[116,0.66,6],[128,0.84,7]]){ o.beginPath(); o.arc(x,y0+h*y,r,0,7); o.fill(); } } };
-function atBody(c,i,spec,P,te,look){
-  const T=atTintOf(i,te);
-  if(!T){ CHIBI.draw(c,spec,P,te,look); return; }
+/* draws a Snabit onto a spare canvas, colours it there with source-atop (only its own pixels change) and copies it back.
+   This replaces canvas filters, which stalled the fight for hundreds of milliseconds a frame on phones and in Chrome. */
+function atLayer(c,draw,col,a,deco){
   const cv=c.canvas, off=AT.off||(AT.off=document.createElement("canvas"));
   if(off.width!==cv.width||off.height!==cv.height){ off.width=cv.width; off.height=cv.height; }
   const o=off.getContext("2d"), M=c.getTransform(), pts=[[-70,-140],[270,-140],[-70,225],[270,225]].map(([x,y])=>M.transformPoint({x,y}));
   const bx=Math.max(0,Math.floor(Math.min(...pts.map(q=>q.x)))), by=Math.max(0,Math.floor(Math.min(...pts.map(q=>q.y)))),
     bx2=Math.min(cv.width,Math.ceil(Math.max(...pts.map(q=>q.x)))), by2=Math.min(cv.height,Math.ceil(Math.max(...pts.map(q=>q.y))));
-  if(bx2<=bx||by2<=by){ CHIBI.draw(c,spec,P,te,look); return; }
+  if(bx2<=bx||by2<=by){ draw(c); return; }
   o.setTransform(1,0,0,1,0,0); o.globalCompositeOperation="source-over"; o.globalAlpha=1; o.clearRect(bx,by,bx2-bx,by2-by);
-  o.setTransform(M); CHIBI.draw(o,spec,P,te,look);
+  o.setTransform(M); draw(o);
   o.globalCompositeOperation="source-atop";
-  if(T.deco&&AT_DECO[T.deco]){ o.save(); AT_DECO[T.deco](o,Math.min(200,CHIBI.height(spec.stage,spec.marks,spec.family))); o.restore(); }
-  if(T.col&&T.a>0){ o.setTransform(1,0,0,1,0,0); o.fillStyle=atRgba(T.col,Math.min(0.85,T.a)); o.fillRect(bx,by,bx2-bx,by2-by); }
+  if(deco){ o.save(); deco(o); o.restore(); }
+  if(col&&a>0){ o.setTransform(1,0,0,1,0,0); o.fillStyle=atRgba(col,Math.min(1,a)); o.fillRect(bx,by,bx2-bx,by2-by); }
   o.globalCompositeOperation="source-over";
   c.save(); c.setTransform(1,0,0,1,0,0); c.drawImage(off,bx,by,bx2-bx,by2-by,bx,by,bx2-bx,by2-by); c.restore();
 }
+/* a Snabit with its status tint, or flashing white when hit (flash 2 is solid white, 1 bright, 3 a little bright) */
+function atBody(c,i,spec,P,te,look,flash){
+  let T=atTintOf(i,te); const draw=o=>CHIBI.draw(o,spec,P,te,look);
+  if(flash){ const a=flash===2?1:flash===1?0.42:0.18; T={col:[255,255,255],a,deco:T&&T.deco}; }
+  if(!T){ draw(c); return; }
+  const deco=T.deco&&AT_DECO[T.deco]?o=>AT_DECO[T.deco](o,Math.min(200,CHIBI.height(spec.stage,spec.marks,spec.family))):null;
+  atLayer(c,draw,T.col,T.a,deco);
+}
+/* the faint copy left behind a fast move, drawn see-through */
+function atGhost(c,spec,P,te,look){ CHIBI.draw(c,spec,P,te,look); }
 /* a status can shake or sway the body: Shock jolts, Dread shivers, Poison sways queasily, Daze wobbles */
 function atStatusMove(i,te){
   const p=AT.ar.p[i], S=AT.side[i], n=p.st&&p.st.name; let dx=0, dy=0, rot=0;

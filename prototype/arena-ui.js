@@ -655,13 +655,13 @@ function atDraw(now,dte){
     S.trail=(S.trail||[]).filter(g=>te-g.t<120);
     if((lunging(i)||S.ghost!=null&&te-S.ghost<40)&&S.lastX!=null&&Math.hypot(x-S.lastX,y-(S.lastY||y))>3) S.trail.push({x,y,P,t:te,rot:st.rot,sx:st.sx,sy:st.sy});
     S.lastX=x; S.lastY=y;
-    for(const g of S.trail){ c.save(); c.globalAlpha=0.32*(1-(te-g.t)/120); c.filter="brightness(1.9) saturate(.5)";
-      c.translate(g.x,g.y); c.rotate(g.rot); c.scale(mir*u*g.sx,u*g.sy); c.translate(-100,-188); CHIBI.draw(c,sp,g.P,te,[0.6*S.dir*mir,0]); c.restore(); }
+    for(const g of S.trail){ c.save(); c.globalAlpha=0.32*(1-(te-g.t)/120);
+      c.translate(g.x,g.y); c.rotate(g.rot); c.scale(mir*u*g.sx,u*g.sy); c.translate(-100,-188); atGhost(c,sp,g.P,te,[0.6*S.dir*mir,0]); c.restore(); }
     // phased out: two faint copies of it drift either side
     if(fp.buff.phase) for(const o of [-1,1]){ c.save(); c.globalAlpha=0.2; c.translate(x+o*16*Math.sin(te/170+o),y); c.rotate(st.rot); c.scale(mir*u*st.sx,u*st.sy); c.translate(-100,-188); CHIBI.draw(c,sp,P,te,[0.6*S.dir*mir,0]); c.restore(); }
-    c.save(); c.globalAlpha=st.alpha; if(st.flash===2) c.filter="brightness(0) invert(1)"; else if(st.flash===1) c.filter="brightness(1.5)"; else if(st.flash===3) c.filter="brightness(1.18)";
+    c.save(); c.globalAlpha=st.alpha;
     c.translate(x,y); c.rotate(st.rot); c.scale(mir*u*st.sx,u*st.sy); c.translate(-100,-188);
-    atBody(c,i,{...sp,capture:(S.cap={})},P,dte2,[0.6*S.dir*mir,0]); c.restore();
+    atBody(c,i,{...sp,capture:(S.cap={})},P,dte2,[0.6*S.dir*mir,0],st.flash); c.restore();
     const cp=S.cap||{}, d=q=>q?toWorld.transformPoint(q):null;
     placed[i]={x,y:y-h*u*0.45,foot:y,lift:st.lift,back:false,r:CHIBI.width(sp.stage,sp.family)*u*0.55,eyes:cp.eyes&&cp.eyes.map(d),mouth:d(cp.mouth),hands:(cp.hands||[]).map(d),top:d(cp.top)||{x,y:y-50},center:d(cp.center),doff:st.doff};
   });
