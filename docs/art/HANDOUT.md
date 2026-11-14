@@ -180,7 +180,7 @@ The tests are in `tools/tests` (see Where everything is). Run the regression set
 - **No canvas filters in the fight (14 Nov 2026).** Gid saw stuttering. The lunge afterimages and the white hit flash used canvas filters, which held frames back for 200 to 650 ms during every move. The hit flash now tints the body on a spare canvas (`atLayer` in `arena-fx.js`), the afterimages are plain see-through copies, and fights hold 60 frames a second with specials and every status on screen. Recordings from the test browser still repeat some frames, since it records at 25 frames a second.
 - **The scan card shows the ability, the starting skills and the stats.** Growth ranks, the faster and slower stats and the skill count only show with `#debug`, or for a Snabit Dr. Ines has read, on the ranch and the info page too.
 - **The Snaboscope** stops the camera when the ranch opens and reopens it fresh, reopens a picture that hasn't moved for 2 seconds, and gives up on a lens after 6 seconds. A Light button turns on the phone's flash where the camera has one. The Gallery button only shows with `#debug` (14 Nov 2026).
-- **Summon and fusion music** (`musCue` in `music.js`): a build-up timed to the scene into a crash, a major chord and a four-note fanfare, and each family has a cry when it appears (`cry()` in `chibi-hook.js`). `summon-music-preview.mp3` has both scores and the eight cries.
+- **Summon and fusion music** (`musCue` in `music.js`): a build-up timed to the scene into a crash, a major chord and a four-note fanfare, and each family has a cry when it appears (`cry()` in `chibi-hook.js`). `summon-music-preview.mp3` has both scores and the first eight cries. The new five cry too: Plod trumpets, Bipped calls hey-yo, Fizz pops and bubbles, Teep whistles like a kettle and Lern chimes.
 - **Meditate at the pond** (`pondMeditate` in `ranch.js`): eyes shut, a growing glow, a dragonfly that lands on its head, a leaping koi and a petal gust, pebbles circling it on a great, two wobbling pebbles on a success, and the frog on a fail. `meditate.mp4` and `meditate-sheet.png` show all three.
 - **Battles keep drawing if an effect fails.** A beam's end glow could get a negative size from the far side, which threw and froze the arena for the rest of the session. That's fixed, and a frame that throws now drops the effect in progress.
 - **Cups come home at night too.** Going to the stadium fades out first. After the prize ceremony the Snabit walks into the ranch at night and goes to bed, then black and morning, then Tala's notes.
@@ -190,7 +190,7 @@ The tests are in `tools/tests` (see Where everything is). Run the regression set
 - **Music crossfades slowly.** The old tune keeps playing while it fades out over 2 seconds, and the new one comes up over 2.5 seconds after a short pause. The training tune "Work It Out" plays at the training places until night falls, "The Long Road" plays on trips and missions, and the town tune plays in the shop and the lab.
 - **The camera is a plain camera (12 Nov 2026)** with corner marks and an aim ring with a cross in the middle. The live colour bars, element chips and the percentage explanation on the card only show with `#debug`. The summon, the entrances and the fusion were approved from the storyboards and play in the game:
   - Summon, after the shutter and after Scan for gallery photos: a flash and an iris snap, the photo shrinks to a card, a scan line turns it into blocks of its own colours, the blocks spin into a disc on a glowing MR2-style platform with a pillar of light, fall into an egg that cracks, a burst, then the entrance and its name, and the card slides up. The build-up to the burst plays 1.35 times slower than first built so players can take in the effects, which brings the whole summon to about 6.3 seconds. A tap skips it, and dragging the circle afterwards makes a new result without replaying it. Wild battle scans skip it.
-  - Entrances: Chomp drops in and chomps twice, Squib floats down, Antik flickers on like an old TV, Moko blinks its eye open, Pinch scuttles in and clacks its claws, Stilt unfolds its legs, Skit drops on a silk thread, Booly fades in from mist. Hybrids use their body family's entrance, and pixel art pops in.
+  - Entrances: Chomp drops in and chomps twice, Squib floats down, Antik flickers on like an old TV, Moko blinks its eye open, Pinch scuttles in and clacks its claws, Stilt unfolds its legs, Skit drops on a silk thread, Booly fades in from mist. Plod stomps in and lands in dust, Bipped walks in and throws two jabs, Fizz shakes and pops up in bubbles, Teep rattles with steam and hops, Lern floats down dim and lights up. Hybrids use their body family's entrance, and pixel art pops in.
   - Fusion, in the lab: both parents hop, a beam links them, they break into square bits of their own drawings, the bits orbit in two rings and mix colours, crush into a flash, then fly out and build the new Snabit from the feet up before melting into the drawing. The ranch then opens on the new Snabit and Tala says what it kept.
   - Sounds come from the battle sound effects at the snap, the lift-off, the charge, the burst and the crush.
 - **Save files.** Settings has Save to a file and Load a save file, and the title screen has Load a save file. The file is `snabits-save.json`, the whole save gzipped into one line, about 4 KB for 20 Snabits, and files from before still load. Phones keep each save as a new file, since a web page can't write over an existing download. Loading asks first since it replaces the game on that device. The game also asks the browser to keep its storage. A refresh never loses the game, but clearing the site's data does. Cloud save with a short code waits for the PvP server, so both share it.
@@ -244,7 +244,7 @@ The tests are in `tools/tests` (see Where everything is). Run the regression set
 
 | Source | What it sets | Where |
 |---|---|---|
-| The photo | Body and parts colours, element (12 kinds), family (8), size and shape, height (85% to 115%), its like and dislike | `monster.js` `hatch()`, `sizeK()` in `chibi-hook.js`, `tastePick()` in `ranch.js` |
+| The photo | Body and parts colours, element (12 kinds), family (13), size and shape, height (85% to 115%), its like and dislike | `monster.js` `hatch()`, `sizeK()` in `chibi-hook.js`, `tastePick()` in `ranch.js` |
 | Family | Base silhouette, signature part, signature skill, entrance and height per stage | `FAMILY` in `monster.js`, `FAMILY_SIG` in `skills.js`, `ENTER` in `summon.js`, `SIZE_CM` in `chibi-hook.js` |
 | Training | The evolution mark, picked by the stat trained most | `MARK` in `ranch.js` |
 | Mega | A second mark | `mark2` |
@@ -263,6 +263,11 @@ The tests are in `tools/tests` (see Where everything is). Run the regression set
 | Stilt | Pill on long legs | Long jointed legs | High Kick | 70 / 140 / 240 cm |
 | Skit | Flat body | Spider legs, no arms | Web in its element | 35 / 70 / 110 cm |
 | Booly | Floating cone | Ghost tail and a blue wisp | Phase Shift | 55 / 110 / 190 cm |
+| Plod | Rounded box on four legs | Trunk and flapping ears | Trunk Slam | see `SIZE_CM` |
+| Bipped | Upright pill | Stub arms and two legs | One-Two | see `SIZE_CM` |
+| Fizz | Potion flask | Cork and bubbles | Potion Toss | see `SIZE_CM` |
+| Teep | Teapot | Spout, lid and handle | Steam Jet | see `SIZE_CM` |
+| Lern | Paper lantern | Handle and glow | Flash | see `SIZE_CM` |
 
 | Stat trained most | Mark | What it adds |
 |---|---|---|
