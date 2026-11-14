@@ -30,6 +30,13 @@ async def main():
         rate = sum(hits.values()) / n
         print(f'clutter: {sum(hits.values())} of {n} set an egg off ({100 * rate:.1f}%)', json.dumps(hits))
         C.ok(rate < 0.05, f'eggs fire on under 5% of cluttered pictures (got {100 * rate:.1f}%)')
+        # one bright object held up to the camera: a match here is often the egg doing its job (a red ball on a white table is a red sun on snow), so this is counted, not judged
+        close = {}; m = 0
+        for s in range(0, N // 2, 50):
+            for g in await pg.evaluate(JS, [b64(images.closeup(5000 + k)) for k in range(s, min(N // 2, s + 50))]):
+                m += 1
+                if g: close[g] = close.get(g, 0) + 1
+        print(f'one object close up: {sum(close.values())} of {m} set an egg off ({100 * sum(close.values()) / m:.1f}%)', json.dumps(close))
         plain = await pg.evaluate(JS, [b64(images.plain(k)) for k in range(40)])
         print('plain two-tone pictures with an object:', sum(1 for g in plain if g), 'of 40', [g for g in plain if g])
         await b.close()

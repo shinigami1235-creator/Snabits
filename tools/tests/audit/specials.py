@@ -162,6 +162,13 @@ async def main():
             ph = await pg.evaluate("""()=>{ const R=rng(5), a=randomOpponent(R,'Chomp'), b=randomOpponent(R,'Phoenix'), A=makeFighter(a,['Inferno'],30), B2=makeFighter(b,b.skills,30);
                 A.skills[0]={...A.skills[0],sure:true}; A.energy=10; A.hp=1; B2.hp=1; const f=new Fight(A,B2,R); f.play(0,GUARD); return {over:f.over,winner:f.winner,a:A.hp,b:B2.hp,reborn:!!B2.reborn}; }""")
             C.ok(ph['reborn'] and ph['over'] and ph['winner'] == 1 and ph['b'] > 0, f'recoil that knocks the attacker out as a Phoenix rises ends the fight for the Phoenix ({ph})')
+            # a scan on a ranch at grade C or better can turn up a hidden ability, but never in place of a special's own
+            hb = await pg.evaluate("""()=>{ const hex=h=>[1,3,5].map(k=>parseInt(COL[h].slice(k,k+2),16)), r=(g,w)=>({g,w,raw:w,cd:0.3,rgb:hex(g)}), g0=RS.grade; RS.grade='A'; let bad=0, hid=0, plain=0;
+                for(let k=0;k<400;k++){ const ranked=[r('red',80),r('blue',12),r('white',8)], res={ranked,main:ranked[0],second:null,mono:true,tie:false,colours:3,pool:7,cells:[.2,.9,.3,.5,.8,.4,.1,.6,.7],sat:.5,bright:.2,contrast:.2,photoKey:'h'+k};
+                  const m=scanBoost(hatch(res,new Date(k*60000),{family:EGG_SPECIAL[k%6]})); if(m.ability[0]!==FAMILY[m.family].ability[0]) bad++; if(m.hidden) hid++;
+                  if(scanBoost(hatch(res,new Date(k*60000),{family:'Chomp'})).hidden) plain++; }
+                RS.grade=g0; return {bad,hid,plain}; }""")
+            C.ok(hb['bad'] == 0 and hb['hid'] == 0 and hb['plain'] > 40, f'400 special scans at grade A all keep their own ability, while ordinary scans still roll hidden ones ({hb})')
             # fusion keeps a special family's own ability, whatever the parents had
             fz = await pg.evaluate("""()=>{ const sp=PLAYER.roster.filter(e=>FAMILY[e.m.family].special), co=PLAYER.roster.filter(e=>e.m.costume); let n=0, bad=[];
                 for(let k=0;k<120;k++){ const a=sp[k%sp.length], b=co[k%co.length], c=k%2?fuseChild(a,b,null,rng(k)):fuseChild(b,a,null,rng(k)); if(FAMILY[c.m.family].special){ n++; if(c.m.ability[0]!==FAMILY[c.m.family].ability[0]) bad.push(c.m.family+':'+c.m.ability[0]); } }

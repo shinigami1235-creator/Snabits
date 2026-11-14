@@ -77,6 +77,24 @@ def clutter(seed):
                 g=r.gauss(0,n); p=px[i,j]; px[i,j]=tuple(max(0,min(255,int(v+g))) for v in p)
     return im
 
+def closeup(seed):
+    """one object held up to the camera, the way the game asks for a scan: a table, wall or floor behind it with a soft
+    gradient and grain, and one strongly coloured thing near the middle, sometimes with a second smaller thing beside it"""
+    r=random.Random(seed); back=r.choice([(236,234,228),(200,170,130),(120,90,60),(60,60,64),(150,152,156),(214,222,230),(24,24,28),(170,190,150)])
+    im=Image.new('RGB',(W,H),back); d=ImageDraw.Draw(im); px=im.load(); g=r.uniform(-30,30)
+    for j in range(H):
+        k=g*(j/H-0.5)
+        for i in range(0,W,6): d.rectangle([i,j,i+6,j+1],fill=tuple(max(0,min(255,int(v+k+r.gauss(0,5)))) for v in back)) if j%2==0 else None
+    def bright():
+        h=r.random(); s=r.uniform(0.6,1); v=r.uniform(0.6,1); i=int(h*6); f=h*6-i; p=v*(1-s); q=v*(1-f*s); u=v*(1-(1-f)*s)
+        R,G,B=[(v,u,p),(q,v,p),(p,v,u),(p,q,v),(u,p,v),(v,p,q)][i%6]; return (int(R*255),int(G*255),int(B*255))
+    cx=W*r.uniform(0.35,0.65); cy=H*r.uniform(0.35,0.65); rw=W*r.uniform(0.2,0.45); rh=rw*r.uniform(0.6,1.6); c=bright()
+    (d.ellipse if r.random()<0.6 else d.rectangle)([cx-rw,cy-rh,cx+rw,cy+rh],fill=c)
+    d.ellipse([cx-rw*0.5,cy-rh*0.6,cx-rw*0.1,cy-rh*0.2],fill=tuple(min(255,v+50) for v in c))   # a highlight
+    if r.random()<0.4:
+        x=W*r.uniform(0.05,0.8); y=H*r.uniform(0.05,0.85); w=W*r.uniform(0.08,0.2); d.ellipse([x,y,x+w,y+w*r.uniform(0.6,1.5)],fill=bright())
+    return im.filter(ImageFilter.GaussianBlur(r.uniform(0.5,3)))
+
 def save_all(folder):
     os.makedirs(folder,exist_ok=True); out={}
     for k,f in EGGS.items(): p=os.path.join(folder,'egg-'+k.replace(' ','_')+'.png'); f().save(p); out[k]=p
