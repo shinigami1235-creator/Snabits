@@ -20,7 +20,6 @@ function board(s){
 }
 function openBoard(){
   const s=RS;
-  if(s.sick||s.injured){ say("It isn't well enough to go out. Rest it or give it medicine first."); return; }
   panel(`<div class="full lab-head"><b>Missions</b><button class="small" id="r-bback">Back</button></div><div class="full lab-info">Kiko takes it out, and you watch each stop. The weeks pass once it's home.</div>`+
     board(s).map((b,i)=>{ const K=KINDS[b.kind], reg=REGIONS.find(x=>x.n===b.reg);
       return `<button class="rb mis" data-b="${i}"><span class="mis-t">${b.kind}<span class="elc" style="${chipStyle(ELC(reg.el))}">${reg.el}</span></span><span class="mis-r">${b.reg}</span><small>${K.stops} stops · ${K.weeks} wk · Lv ${b.level}</small></button>`; }).join(""));

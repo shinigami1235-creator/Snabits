@@ -35,7 +35,6 @@ function tutorLine(s,reg){
 }
 function openTrips(){
   const s=RS;
-  if(s.sick||s.injured){ say("It isn't well enough to travel. Rest it or give it medicine first."); return; }
   const regs=TRIP_REGIONS().filter((r,i)=>r.n==="The Rift"?(s.grade==="A"||s.grade==="S"):i<tripRegionCount());   // more regions open as the ranch climbs the grades
   panel(`<div style="flex-basis:100%;font-size:13px">Kiko takes it to one region for 4 weeks and trains two stats each week, for ${tripCost({}).toLocaleString()} bits a trip. Under each region he says whether it can learn a skill there.</div>`+
     regs.map((r,i)=>{ const [a,b]=TRIP_STATS[r.n]; return `<button class="rb" data-t="${i}">${r.n} · ${tripCost(r).toLocaleString()} bits<small>${r.el}, ${STATS[a]} and ${STATS[b]}. ${tutorLine(s,r)}</small></button>`; }).join("")+

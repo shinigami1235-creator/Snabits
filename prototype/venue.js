@@ -36,16 +36,27 @@ function venueLobby(){
     <div class="v-card"><h3>This week</h3><div class="v-list">${list.map((c,i)=>`<button class="v-cup" data-c="${i}">${gradeTag(c.major||c.legend?"S":c.small?"F":c.grade)}
       <span><b>${c.name.replace(/ \([A-S]\)$/,"")}</b><small>${cupFormat(c)}${c.official&&c.grade===s.grade&&s.grade!=="S"?". Winning moves it up a grade":""}${c.prize?`. Prize: ${c.prize}`:""}</small></span>
       <span class="pr">${cupPurse(c).toLocaleString()} bits${cupFee(c)?`<small>${cupFee(c)} to enter</small>`:""}</span></button>`).join("")}</div></div>
+    <div class="v-card"><h3>Coming up</h3><div class="v-cal v-soon">${upcomingHtml(s)}</div></div>
     <div class="v-card"><h3>${displayName(s)}</h3><div style="font:500 14px var(--pix);color:var(--mute)">Grade ${s.grade} · ${s.wins} wins · ${s.losses} losses${(s.cups||[]).length?` · ${(s.cups||[]).length} cups`:""}</div></div>
     <div class="v-row"><button class="btn2" id="v-cal">Calendar</button><button class="btn2" id="v-home">Back to the ranch</button></div>`);
   venueSay(`These are the cups ${displayName(s)} can enter this week. ${next}`);
-  const tl=[fightDayLine(s)||fightDayLine(s,1),fightCondLine(s)].filter(Boolean).join(" "); if(tl) el("v-ann").insertAdjacentHTML("afterend",`<div class="v-card v-ann"><span class="who" style="background:var(--sky)">Tala</span>${tl}</div>`);
+  const up=list.concat(cupsOfWeek(PLAYER.week+1)).find(c=>c.official&&c.grade===s.grade), adv=up&&typeof cupAdvice==="function"?cupAdvice(up,s):null;
+  const tl=[fightDayLine(s)||fightDayLine(s,1),adv?adv.t:null,fightCondLine(s)].filter(Boolean).join(" "); if(tl) el("v-ann").insertAdjacentHTML("afterend",`<div class="v-card v-ann"><span class="who" style="background:var(--sky)">Tala</span>${tl}</div>`);
   el("v-cal").onclick=()=>venueCalendar(0);
   el("v-body").querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>venueEntry(list[+b.dataset.c]));
   el("v-home").onclick=closeVenue;
 }
+/* the rest of this month and the whole of next month, so a player can see the grade-up cup coming and plan the rest before it */
+function upcomingHtml(s){
+  const end=Math.floor(PLAYER.week/4)*4+8, rows=[];
+  for(let w=PLAYER.week+1;w<end;w++){ const {mo,wk}=weekParts(w), list=cupsOfWeek(w).filter(c=>!c.exhibition||!cupBlock(c,s)), k=w-PLAYER.week;
+    const show=list.filter(c=>!cupBlock(c,s));   // only cups it can enter; the Calendar button shows the rest
+    rows.push(`<div class="wk"><h4>${SEASON[Math.floor(mo/3)]} · Month ${mo%3+1} · Week ${wk+1} <small>in ${k} week${k>1?"s":""}</small></h4>${show.length?show.map(c=>{ const why=cupBlock(c,s);
+      return `<div class="cu ${why?"no":""} ${c.official?"up":""}">${gradeTag(c.major||c.legend?"S":c.grade)}<span><b>${c.name.replace(/ \([A-SF]\)$/,"")}</b><br><small style="margin:0">${c.official&&c.grade===s.grade&&s.grade!=="S"?"Grade-up cup. ":""}${cupFormat(c)}${c.prize?` · ${c.prize}`:""}</small></span><small>${cupPurse(c).toLocaleString()} bits${why?`<br>${why}`:""}</small></div>`; }).join(""):'<div class="none">No cups this week.</div>'}</div>`); }
+  return rows.join("");
+}
 function venueEntry(c){
-  const s=RS, fee=cupFee(c), purse=cupPurse(c);
+  const s=RS, fee=cupFee(c), purse=cupPurse(c), adv=typeof cupAdvice==="function"?cupAdvice(c,s):null;
   el("v-name").textContent=c.name.replace(/ \([A-S]\)$/,""); el("v-sub").textContent=`Grade ${c.major||c.legend?"S":c.grade} · ${cupFormat(c)}`;
   vBody(`<div class="v-card v-ann" id="v-ann"></div>
     <div class="v-card"><h3>Prizes</h3><div class="v-podium">
@@ -54,7 +65,10 @@ function venueEntry(c){
     </div></div>
     <div class="v-row"><button class="btn2" id="v-back">Back</button><button class="big" id="v-enter">Enter${fee?` · ${fee} bits`:""}</button></div>`);
   venueSay(`${c.official?"An official cup. ":""}${c.official&&c.grade===s.grade&&s.grade!=="S"?`Win it and ${displayName(s)} moves up to grade ${GRADES[GRADES.indexOf(s.grade)+1]}. `:""}The cup takes the week.${fee&&PLAYER.bits<fee?` We have ${PLAYER.bits} bits, short of the ${fee} entry.`:""}`);
-  el("v-enter").onclick=()=>startCup(c);
+  if(adv) el("v-ann").insertAdjacentHTML("afterend",`<div class="v-card v-ann"><span class="who" style="background:var(--sky)">Tala</span>${adv.t}</div>`);
+  let sure=!(adv&&adv.weak);
+  if(!sure) el("v-enter").textContent=`Enter anyway${fee?` · ${fee} bits`:""}`;
+  el("v-enter").onclick=()=>{ if(!sure){ sure=true; el("v-enter").textContent=`Yes, enter${fee?` · ${fee} bits`:""}`; return; } startCup(c); };
   el("v-back").onclick=venueLobby;
 }
 
@@ -80,7 +94,10 @@ function boardHtml(){
   if(c.format==="robin"){
     const mark=r=>r==="w"?["w","○"]:r==="l"?["l","✕"]:r==="d"?["d","△"]:["",""];
     return `<table class="rr"><tr><th></th>${F.map((e,i)=>`<th>${i+1}</th>`).join("")}<th>Pts</th></tr>
-      ${F.map((e,i)=>`<tr><td class="nm ${e.me?"self":""}"><span class="sd">${i+1}</span>${e.name}</td>${F.map((e2,j)=>i===j?'<td class="x"></td>':`<td class="${mark(CUP.res[i][j])[0]}">${mark(CUP.res[i][j])[1]}</td>`).join("")}<td class="pt">${CUP.pts[i]}</td></tr>`).join("")}</table>`;
+      ${F.map((e,i)=>`<tr><td class="nm ${e.me?"self":""}"><span class="sd">${i+1}</span>${e.name}</td>${F.map((e2,j)=>i===j?'<td class="x"></td>':`<td class="${mark(CUP.res[i][j])[0]}">${mark(CUP.res[i][j])[1]}</td>`).join("")}<td class="pt">${CUP.pts[i]}</td></tr>`).join("")}</table>
+      <div class="rr-rounds">${CUP.rounds.map((pairs,r)=>{ const done=pairs.filter(([a,b])=>CUP.res[a][b]); if(!done.length) return "";
+        const side=(i,j)=>`<span class="${F[i].me?"self":""}"><i class="${mark(CUP.res[i][j])[0]}">${mark(CUP.res[i][j])[1]}</i>${F[i].name}</span>`;
+        return `<div><b>Round ${r+1}</b>${done.map(([a,b])=>`<p>${side(a,b)}<em>vs</em>${side(b,a)}</p>`).join("")}</div>`; }).join("")}</div>`;
   }
   if(c.format==="single") return "";
   if(c.format==="team5") return `<div class="team5">${CUP.bouts.map((b,k)=>`<div class="t5row"><span class="${F[b.a].me?"self":""} ${b.res==="w"?"win":b.res==="l"?"out":""}">${F[b.a].name}</span><i>${b.res?b.res==="w"?"◀":"▶":"vs"}</i><span class="${b.res==="l"?"win":b.res==="w"?"out":""}">${F[b.b].name}</span></div>`).join("")}</div>

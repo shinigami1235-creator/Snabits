@@ -254,6 +254,7 @@ function playerFighter(s){
   if(s.variant==="Feral") f.critBonus=0.05;
   if(typeof applyGear==="function") applyGear(s,f);
   if(s.fatigue!=null&&typeof fightCond==="function"){ const c=fightCond(s); if(c.mult!==1){ for(const k in f.base) f.base[k]=Math.max(1,Math.round(f.base[k]*c.mult)); f.cond=c.name; } }   // fight-day condition
+  if(s.sick||s.injured) for(const k in f.base) f.base[k]=Math.max(1,Math.round(f.base[k]*0.9));   // a cold or a hurt fights 10% below
   f.skills=f.skills.map(k=>u[k.name]>=MASTERY&&k.power?{...k,power:Math.round(k.power*1.1),mastered:true}:k);
   return f;
 }

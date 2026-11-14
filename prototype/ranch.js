@@ -292,9 +292,9 @@ function menu(which){
   if(!which){ panel(""); return; }
   s.lastMenu=which;
   if(which==="Train"){
-    const heavy=hearts()>=2, noTrain=s.sick||s.injured, noHeavy=!heavy||s.fatigue>=90||s.fatigue+2*s.stress>=90;
+    const heavy=hearts()>=2, noTrain=false, noHeavy=!heavy||s.fatigue>=90||s.fatigue+2*s.stress>=90;
     panel(DRILLS.map((d,i)=>`<button class="rb" data-d="${i}" ${noTrain?"disabled":""}>${d}<small>${STATS[i]}<span class="dbg-only">, rank ${rankOf(FAMILY[s.m.family].base[i])}</span></small></button>`).join("")+
-      `<div style="flex-basis:100%;font-size:12px;opacity:.7">${s.injured?"It's hurt. A rest week or medicine fixes it.":s.sick?"It's sick this week, so it can't train. Rest or medicine fixes it.":!heavy?"Heavy drills open at 2 hearts.":noHeavy?"It's too worn out for heavy drills.":"Heavy drills push one stat hard, raise a second and lower a third."}</div>`+
+      `<div style="flex-basis:100%;font-size:12px;opacity:.7">${s.injured?"It's hurt, so drills give less until a rest week or medicine. ":s.sick?"It has a cold, so drills give less until a rest week or medicine. ":""}${!heavy?"Heavy drills open at 2 hearts.":noHeavy?"It's too worn out for heavy drills.":"Heavy drills push one stat hard, raise a second and lower a third."}</div>`+
       HEAVY.map((h,k)=>`<button class="rb" data-d="${6+k}" ${noTrain||noHeavy?"disabled":""}>${h[0]}<small class="fx"><span>${STATS[h[1]]} ↑</span><span>${STATS[h[2]]} +</span><span>${STATS[h[3]]} −2</span></small></button>`).join(""));
     el("r-panel").querySelectorAll("[data-d]").forEach(b=>b.onclick=()=>runDrill(+b.dataset.d));
   }
@@ -314,14 +314,14 @@ function menu(which){
     el("r-skills").onclick=()=>openInfo("skills"); el("r-items").onclick=openItems; el("r-wear").onclick=openWear;
     el("r-pet").onclick=()=>runCare("pet"); el("r-play").onclick=()=>runCare("play");
     if(s.mess) el("r-clean").onclick=()=>runCare("clean");
-    if(el("r-med")) el("r-med").onclick=()=>{ if(PLAYER.bag.Medicine) PLAYER.bag.Medicine--; else if(PLAYER.bits<80){say("We can't afford medicine right now.");return;} else PLAYER.bits-=80; s.sick=0; s.injured=false; say("Medicine's in. It's well enough to train."); drawUI(); menu("Care"); };
+    if(el("r-med")) el("r-med").onclick=()=>{ if(PLAYER.bag.Medicine) PLAYER.bag.Medicine--; else if(PLAYER.bits<80){say("We can't afford medicine right now.");return;} else PLAYER.bits-=80; s.sick=0; s.injured=false; say("Medicine's in, and it's well again."); drawUI(); menu("Care"); };
   }
   if(which==="Out"){
     if(s.away){ missionStatus(); return; }
     panel(`<button class="rb full feat" id="r-wild">Wild battle<small>${typeof wildLeft==="function"?wildLeft(s):3} left this week</small></button><button class="rb" id="r-mis">Missions<small>1 to 3 weeks away</small></button><button class="rb" id="r-cup">Tournaments<small>Grade ${s.grade}</small></button><button class="rb" id="r-lab">Fusion lab<small>Fusion and rebirth</small></button><button class="rb" id="r-town">Town<small>Shops, Town Hall and upgrades</small></button><button class="rb" id="r-ct">Contests<small>${typeof contestOf==="function"&&contestOf(PLAYER.week)?"One is on this week":"First week of each month"}</small></button><button class="rb" id="r-goals">Goals<small>The loan, grades and what's next</small></button><button class="rb" id="r-dex">Bestiary<small>Every Snabit kind you've seen</small></button><button class="rb" id="r-frz">Freezer<small>${PLAYER.roster.length-1} frozen</small></button><button class="rb" id="r-ghost">Friend battle<small>Room or ghost code</small></button><button class="rb" id="r-prac">Practice fight<small>Won't shape its habits</small></button><button class="rb" id="r-trip">Skill trip<small>4 weeks in a region</small></button><button class="rb full" id="r-team">Team battle<small>6 on 6 · ${typeof teamReady==="function"?Math.min(6,teamReady().length):0} of 6 ready</small></button>`);
     { const P=el("r-panel"); ["r-wild","r-mis","r-trip","r-cup","r-ct","r-town","r-lab","r-frz","r-goals","r-dex","r-ghost","r-prac","r-team"].forEach(id=>{ const b=el(id); if(b) P.appendChild(b); }); }   // going out, then town, then records, then friends
     // anything that can't go ahead says why on the button itself, since the speech box is hidden behind this panel on a phone
-    const ill=s.sick?"It has a cold. Rest it or give it medicine first.":s.injured?"It's hurt. Rest it or give it medicine first.":null;
+    const ill=null;   // a cold or a hurt never locks anything, it only weakens drills and fights
     const block=(id,why)=>{ const bt=el(id); if(!why||!bt) return; bt.disabled=true; bt.classList.add("blocked"); const sm=bt.querySelector("small"); if(sm) sm.textContent=why; };
     block("r-wild",typeof wildBlock==="function"?wildBlock(s):null); block("r-mis",ill); block("r-cup",ill); block("r-ct",ill); block("r-trip",ill||(tripsLocked()?"Opens at 1 heart.":null));
     el("r-wild").onclick=startWild; el("r-mis").onclick=openBoard; el("r-cup").onclick=openCups; el("r-lab").onclick=()=>openLab(); el("r-frz").onclick=openFreezer; el("r-trip").onclick=()=>{ if(tripsLocked()){ say("Skill trips open at 1 heart."); return; } openTrips(); }; el("r-town").onclick=openTown; el("r-goals").onclick=openGoals; el("r-ct").onclick=openContests; el("r-dex").onclick=()=>openDex(); el("r-ghost").onclick=()=>openRooms(); el("r-team").onclick=openTeam;
@@ -482,7 +482,7 @@ async function runDrill(i){
     if(res==="slack") await SLACK(i); else await (heavy?HEAVY_FN[i-6]:SCENE_FN[i])(res);
     if(place){ s.props=[]; s.upside=false; s.parted=false; if(s.waterY==null) s.jy=0; } else { s.bg=null; s.x=150; s.props=s.props.filter(p=>p.k==="bowl"); s.upside=false; s.parted=false; s.jy=0; }
     const age=ageMult(s), vet=age<0.5, base=FAMILY[s.m.family].base;
-    const rp=k=>RANK_PTS[rankOf(base[k])], mult=res==="great"?2:res==="slack"?0.5:1;
+    const rp=k=>RANK_PTS[rankOf(base[k])], mult=(res==="great"?2:res==="slack"?0.5:1)*(s.sick||s.injured?0.7:1);   // a cold or a hurt cuts drill gains by 30% and locks nothing
     const gains={};
     if(res==="fail") gains[main]=1;
     else { gains[main]=Math.max(vet?0:1,Math.round(rp(main)*(heavy?1.5:1)*mult*age*(1+0.15*(!heavy&&typeof placeLv==="function"?placeLv(DRILL_PLACE[i]):0)))); if(heavy) gains[H[2]]=Math.max(vet?0:1,Math.round(rp(H[2])/2*mult*age)); }
@@ -621,7 +621,8 @@ async function runRest(){
   await scene(async()=>{ const s=RS; say(smoothRanch()?"A quiet week in the barn.":"A quiet week in the hut.");
     if(smoothRanch()){ if(!s.room){ await walkTo(HUTX(),110); s.room="barn"; s.x=24; s.camJump=true; } await walkTo(202,60); s.pose="sleep"; for(let k=0;k<3;k++){ spark(s.x+8,headY(),"z"); await rwait(500);} await dayFade("sleep"); s.pose="happy"; await rwait(500); }
     else { await walkTo(HUTX(),40); s.hidden=true; for(let k=0;k<3;k++){ spark(HUTX()+4,GROUND-34,"z"); await rwait(450);} await dayFade("sleep"); s.hidden=false; s.pose="happy"; await rwait(500); }
-    s.fatigue-=has("Better hut")?65:55; s.stress-=25;   // a full week of rest clears a normal month of training, or a whole skill trip s.weight+=1; const wasHurt=s.injured; s.injured=false; await endWeek(1,wasHurt?"The rest healed it up.":"It looks rested.");
+    // a full week of rest clears a normal month of training, or a whole skill trip, and cures a cold or a hurt
+    s.fatigue-=has("Better hut")?65:55; s.stress-=25; s.weight+=1; const wasHurt=s.injured||s.sick; s.injured=false; s.sick=0; await endWeek(1,wasHurt?"The rest made it well again.":"It looks rested.");
   },true);
 }
 async function runMeal(i){
@@ -752,7 +753,7 @@ async function endWeek(weeks,line){
   else if(strain>=110){ s.used+=1; notes.push("The strain cost it a week of its prime."); }
   s.strainRun=strain>=110?s.strainRun+1:0;
   if(s.sick) s.sick--;
-  if(s.strainRun>=2&&!s.sick){ s.sick=1; s.strainRun=0; notes.push("It's caught a cold. No training next week unless it gets medicine."); }
+  if(s.strainRun>=2&&!s.sick){ s.sick=1; s.strainRun=0; notes.push("It's caught a cold. Drills give less and it fights below its best until a rest week or medicine."); }
   for(const it of Object.values(s.worn||{})){ const tz=it&&taste("item",it); if(!tz) continue; s.stress+=tz==="like"?-3:4;
     if(tasteFound(tz)) notes.push(tz==="like"?`It keeps admiring its ${it}. It loves wearing that.`:`It keeps tugging at the ${it}. It doesn't like wearing it.`); }
   if(has("Potted plants")) s.stress-=2;

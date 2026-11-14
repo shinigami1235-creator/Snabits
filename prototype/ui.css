@@ -200,8 +200,7 @@ body[data-mode="aim"] #bars{bottom:calc(var(--safe-b) + 150px)}
 #r-sub{display:flex;gap:6px;align-items:center;flex-wrap:wrap;font:500 13px var(--pix);color:var(--mute)}
 #r-sub>span{background:var(--panel);border-radius:5px;padding:2px 8px}
 #r-sub .ht{color:var(--pink);letter-spacing:1px;font-family:var(--body)}
-#ranch>#r-view{flex:none;height:clamp(200px,36dvh,310px)}
-#ranch.menu-open>#r-view{flex:1 1 auto;height:auto;min-height:140px;max-height:340px}
+#ranch>#r-view,#ranch.menu-open>#r-view{flex:none;height:clamp(190px,32dvh,290px)}   /* one height whatever menu is open, so the scene never jumps */
 #ranch.menu-open #r-say{display:none}
 #r-week{flex:1 1 auto;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:6px;align-content:start}
 #ranch.menu-open #r-week{display:none}
@@ -530,3 +529,12 @@ body.ob-tut #ranchbtn,body.ob-tut #msgranch{display:none!important}
 html:not(.dbg) .gr,html:not(.dbg) .dbg-only{display:none!important}
 html:not(.dbg) .i-r{visibility:hidden}
 html:not(.dbg) .i-stat{grid-template-columns:104px 0 1fr 36px}
+/* round by round results under the round robin table */
+.rr-rounds{display:flex;flex-direction:column;gap:6px;margin-top:8px;font:500 13px var(--pix)}
+.rr-rounds b{display:block;color:var(--gold);font-size:12px;margin-bottom:2px}
+.rr-rounds p{display:flex;align-items:center;gap:6px;margin:2px 0}.rr-rounds p em{color:var(--mute);font-style:normal;font-size:11px}
+.rr-rounds span{display:flex;align-items:center;gap:4px;flex:1}.rr-rounds p span:last-child{justify-content:flex-end;flex-direction:row-reverse}
+.rr-rounds span.self{color:var(--gold)}
+.rr-rounds i{font-style:normal;font-weight:700;width:16px;text-align:center}.rr-rounds i.w{color:var(--mint)}.rr-rounds i.l{color:var(--coral)}.rr-rounds i.d{color:var(--mute)}
+.v-soon{max-height:300px;overflow:auto}.v-cal .cu.up b{color:var(--gold)}
+.v-cal .wk h4 small{color:var(--mute);font-weight:500;margin-left:4px}

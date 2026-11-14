@@ -26,7 +26,7 @@ function styleScore(s, R) {
 
 function openContests() {
   const s = RS, c = contestOf(PLAYER.week), [k, nx] = nextContest(), T = CONTEST_TIER(s.grade);
-  const ill = s.sick ? 'It has a cold. Rest it or give it medicine first.' : s.injured ? "It's hurt. Rest it or give it medicine first." : null;
+  const ill = null;
   panel(`<div class="full lab-head"><b>Contests</b><button class="small" id="ct-back">Back</button></div>
     <div class="full lab-info">${c ? `The ${T[0]} ${c.name} is on this week, judged on ${c.judged}. First place wins ${T[2].toLocaleString()} bits and ${/^[AEIOU]/.test(T[3]) ? 'an' : 'a'} ${T[3]}. It takes the week.` : `The next contest is the ${nx.name} in ${k} week${k > 1 ? 's' : ''}, judged on ${nx.judged}.`}</div>
     ${c ? `<button class="rb full feat" id="ct-go" ${ill ? 'disabled' : ''}>Enter the ${T[0]} ${c.name}<small>${ill || `${story().contests} contest${story().contests === 1 ? '' : 's'} won so far`}</small></button>` : ''}`);

@@ -15,7 +15,7 @@ function cupsOfWeek(w){
   const prize=(g,name)=>{ const P=PRIZE_POOL[g]; return P[hashStr(name)%P.length]; };
   if(mo%3===1&&wk===1) add({grade:"S",name:`${season} Major`,format:"bo3",size:8,major:true,season});
   if(mo===3&&wk===3) add({grade:"S",name:"Legend Cup",format:"robin",size:6,legend:true});
-  if(mo%3===2&&wk===3){ for(const g of GRADES) add({grade:g,name:`Official ${g} Cup`,format:"elim",size:8,official:true}); return out; }
+  if(mo%3===2&&wk===3){ for(const g of GRADES) add({grade:g,name:`Official ${g} Cup`,format:"robin",size:6,official:true}); return out; }   // grade-up cups: week 4 of every quarter, always round robin
   if(mo===3&&wk===3){ for(const g of GRADES.slice(1)) add({grade:g,name:`Summer Qualifier (${g})`,format:"elim",size:8,qualifier:true}); return out; }
   if(mo===4&&wk===3){ for(const g of GRADES.slice(1)) add({grade:g,name:`Summer Exhibition (${g})`,format:"team5",size:10,exhibition:true}); return out; }
   if(wk===2&&mo%2===0) add({grade:"F",name:"Open Cup",format:"robin",size:4,open:true,prize:prize("F","Open"+mo)});
@@ -71,28 +71,54 @@ function nextCupText(){
   const w=PLAYER.week; for(let k=1;k<16;k++){ const x=w+k, {mo,wk}=weekParts(x); if(wk===3&&mo%3===2) return `The next official cup is in ${k} week${k>1?"s":""}.`; }
   return "";
 }
-function cupPurse(c){ if(c.rival) return Math.round(GRADE_INFO[c.grade].purse/4); return c.legend?30000:c.major?15000:c.open?400:c.small?Math.round(GRADE_INFO[c.grade].purse/10):c.exhibition?Math.round(GRADE_INFO[c.grade].purse*1.5):GRADE_INFO[c.grade].purse; }
+function cupPurse(c){ if(c.rival) return Math.round(GRADE_INFO[c.grade].purse/4); return c.legend?30000:c.major?15000:c.open?150:c.official?Math.round(GRADE_INFO[c.grade].purse*1.5):c.small?Math.round(GRADE_INFO[c.grade].purse/10):c.exhibition?Math.round(GRADE_INFO[c.grade].purse*1.5):GRADE_INFO[c.grade].purse; }
 function cupFee(c){ return c.exhibition?2000:c.grade!=="E"&&!c.small&&!c.open?Math.round(cupPurse(c)/10):0; }
 function cupFormat(c){ return c.format==="team5"?"Team exhibition, 5 bouts":c.format==="robin"?`Round robin, ${c.size} monsters`:c.format==="elim"?"Knockout, 8 monsters":c.format==="bo3"?"Knockout of 8, best of 3":"One match"; }
 function openCups(){
   const s=RS;
-  if(s.sick||s.injured){ say("It isn't fit to fight. Rest it or give it medicine first."); return; }
   CUP=null;
   const go=()=>{ openVenue(); venueLobby(); const d=el("r-dusk"); if(d){ d.style.transition="none"; d.style.backgroundColor="transparent"; } };
   if(typeof smoothRanch==="function"&&smoothRanch()&&!s.busy) sceneFade(true,500).then(go,go); else go();
 }
+/* How strong a cup's field is. Regular cups of a grade are for monsters new to it, while the official cup that moves a monster up
+   is fought at the top of the grade and the bottom of the next one. */
+function cupTier(c,s){
+  const cg=c.grade==="F"?s.grade:c.grade, gi=GRADES.indexOf(cg), G=GRADE_INFO[cg], N=GRADE_INFO[GRADES[gi+1]]||{lv:[G.lv[1],G.lv[1]+6],earned:[G.earned[1],G.earned[1]+80]};
+  const at=(r,k)=>Math.round(r[0]+(r[1]-r[0])*k);
+  if(c.official||c.qualifier) return {cg,lv:[at(G.lv,0.6),N.lv[0]+1],earned:[at(G.earned,0.65),at(N.earned,0.2)]};
+  return {cg,lv:[G.lv[0],at(G.lv,0.6)],earned:[G.earned[0],at(G.earned,0.6)]};
+}
+function cupOpponent(c,s,R){
+  const big=c.major||c.legend;
+  if(big) return gradedOpponent("S",clamp(s.level+Math.floor(R()*5)-1,50,70),R,null,Math.round(c.legend?560+R()*80:480+R()*120));
+  const T=cupTier(c,s), lv=clamp(s.level+Math.floor(R()*3)-1,T.lv[0],T.lv[1]);
+  return gradedOpponent(T.cg,lv,R,null,Math.round(T.earned[0]+R()*(T.earned[1]-T.earned[0])));
+}
+/* Tala's read on a cup: fights against a sample of the field it would face, as a share of wins */
+function cupOdds(c,s){
+  if(c.rival||c.format==="team5") return null;
+  const R=rng(hashStr(s.id+"|odds|"+c.name+"|"+PLAYER.week)); let won=0, n=0;
+  for(let k=0;k<8;k++){ const o=cupOpponent(c,s,R); for(let j=0;j<3;j++){ const f=simFight(playerFighter(s),makeFighter(o.fm,o.skills,o.level),R,s,15,true); if(f.winner===0) won++; n++; } }
+  return won/n;
+}
+function cupAdvice(c,s){
+  const p=cupOdds(c,s); if(p==null) return null;
+  const nm=displayName(s), up=c.official&&c.grade===s.grade&&s.grade!=="S";
+  if(p>=0.6) return {ok:true,t:up?`${nm} is strong enough for it, so I'd enter.`:`${nm} should do well here, so I'd enter.`};
+  if(p>=0.4) return {t:`It's a close one. ${nm} can win it if it's in good shape on the day.`};
+  return {weak:true,t:up?`Are you sure? The monsters there are a good deal stronger than ${nm}, so it may not win a match. The next one is in three months, and a few more weeks of training would help.`:`Are you sure? The monsters in this cup are a good deal stronger than ${nm}, so it may not win a match.`};
+}
 function startCup(c){
   const fee=cupFee(c);
   if(fee&&PLAYER.bits<fee){ venueSay(`The ${c.name} costs ${fee} bits to enter, and we have ${PLAYER.bits}.`); return; } PLAYER.bits-=fee; drawUI();
-  const s=RS, R=rng(hashStr(s.id+"|cup|"+PLAYER.week+"|"+c.name)), cg=c.grade==="F"?s.grade:c.grade, G=GRADE_INFO[cg];
-  const lvl=()=>clamp(s.level+Math.floor(R()*4)-1,G.lv[0],G.lv[1]);
+  const s=RS, R=rng(hashStr(s.id+"|cup|"+PLAYER.week+"|"+c.name)), cg=c.grade==="F"?s.grade:c.grade;
   const field=[{me:true,name:displayName(s)}];
-  const big=c.major||c.legend, bigLv=()=>clamp(s.level+Math.floor(R()*5)-1,50,70);
-  while(field.length<c.size){ const o=big?gradedOpponent("S",bigLv(),R,null,Math.round(c.legend?560+R()*80:480+R()*120)):gradedOpponent(cg,lvl(),R); field.push({o,name:o.stage==="Bit"?o.m.name:`${o.m.name}, ${MARK[o.mark][0]} Byte`,breeder:BREEDERS[Math.floor(R()*BREEDERS.length)]}); }
+  const big=c.major||c.legend;
+  while(field.length<c.size){ const o=cupOpponent(c,s,R); field.push({o,name:o.stage==="Bit"?o.m.name:`${o.m.name}, ${MARK[o.mark][0]} Byte`,breeder:BREEDERS[Math.floor(R()*BREEDERS.length)]}); }
   if(typeof rookEntrant==="function"&&story().seen.intro&&(c.official||c.major||c.legend||c.rival)) field[c.format==="single"?1:field.length-1]=rookEntrant(big?"S":cg);   // in a knockout he waits in the other half, for the final
   CUP={c,field,R,pts:field.map(()=>0),hp:field.map(()=>0),res:field.map(()=>field.map(()=>null)),log:[],round:0,alive:field.map((_,i)=>i),done:false,myWins:0,fights:0,out:false};
   CUP.hist=[CUP.alive.slice()];
-  if(c.format==="robin"){ // circle method, 4 entrants, 3 rounds
+  if(c.format==="robin"){ // circle method: every entrant meets every other once
     const n=c.size, ids=[...Array(n).keys()], rounds=[];
     for(let r=0;r<n-1;r++){ const pairs=[]; for(let k=0;k<n/2;k++) pairs.push([ids[k],ids[n-1-k]]); rounds.push(pairs); ids.splice(1,0,ids.pop()); }
     CUP.rounds=rounds;

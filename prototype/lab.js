@@ -39,7 +39,7 @@ function openItems(){
 function useItem(k){
   const s=RS, bag=PLAYER.bag;
   if(k==="Life fruit"){ if(s.fruitUsed){ say("It's already had a Life fruit. They only work once."); return; } bag[k]--; s.fruitUsed=true; s.used=Math.max(0,s.used-12); say("It ate the Life fruit. That's 3 more months."); }
-  else if(k==="Medicine"){ if(!s.sick&&!s.injured){ say("It's healthy, so medicine would be wasted."); return; } bag[k]--; s.sick=0; s.injured=false; say("Medicine's in. It's well enough to train."); }
+  else if(k==="Medicine"){ if(!s.sick&&!s.injured){ say("It's healthy, so medicine would be wasted."); return; } bag[k]--; s.sick=0; s.injured=false; say("Medicine's in, and the cold is gone."); }
   else if(k.startsWith("Skill chip: ")){ const n=k.slice(12), sk=SKILLS[n], own=!sk.el||sk.el===s.m.el1||sk.el===s.m.el2;
     if(knownSkills(s).includes(n)){ say(`It already knows ${n}.`); return; }
     if(tierOf(n)>=2&&!own){ say(`${n} is a Tier 2 ${sk.el} skill, and a skill like that from another element has to be learned on a trip.`); return; }

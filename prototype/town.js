@@ -20,7 +20,7 @@ const HELD={
 };
 const MARKET={"Berry":15,"Cool leaf":20,"Candy":15,"Energy nut":30,"Honey cake":40,"Bitter root":25,"Slim tea":30,"Medicine":80,"Ball":60};
 const UP_NAME={"Better hut":"Better barn"};   // shown name; the save key stays "Better hut"
-const UPGRADES={"Kitchen":[1500,"A liked meal also takes 5 fatigue off"],"Better hut":[2000,"A bigger bed in the barn, so a rest week takes 45 fatigue off instead of 35"],"Training gear":[3000,"Great drills +5%"],"Big Freezer":[5000,"Holds 30 monsters instead of 20"]};
+const UPGRADES={"Kitchen":[1500,"A liked meal also takes 5 fatigue off"],"Better hut":[2000,"A bigger bed in the barn, so a rest week takes 65 fatigue off instead of 55"],"Training gear":[3000,"Great drills +5%"],"Big Freezer":[5000,"Holds 30 monsters instead of 20"]};
 const has=u=>!!(PLAYER.upgrades&&PLAYER.upgrades[u]);
 const priceOf=k=>MARKET[k]||(WORN[k]&&WORN[k].price)||(HELD[k]&&HELD[k].price)||(k.startsWith("Skill chip: ")?300:ITEMS[k]&&ITEMS[k].rarity===2?1500:0);
 const wornText=k=>{ const w=WORN[k], p=[];
