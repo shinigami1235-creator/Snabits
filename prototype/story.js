@@ -8,9 +8,10 @@ const bestGrade = () => { const gs = [RS && RS.grade].concat((PLAYER.roster || [
 const loanLeft = () => Math.max(0, LOAN - story().paid);
 
 /* Rook's Snabit: always the same monster, trained up to whatever grade it's facing */
-function rookMon(grade) {
-  const G = GRADE_INFO[grade], lv = Math.round(G.lv[0] + (G.lv[1] - G.lv[0]) * 0.7);
-  const o = gradedOpponent(grade, lv, rng(hashStr('rook-partner')), 'Shade', Math.round(G.earned[0] + (G.earned[1] - G.earned[0]) * 0.75));
+// k: how far up its grade Rook's Snabit is trained. He brings a greener one to the Official B Cup, the slowest step of the climb
+function rookMon(grade, k = 0.7) {
+  const G = GRADE_INFO[grade], lv = Math.round(G.lv[0] + (G.lv[1] - G.lv[0]) * k);
+  const o = gradedOpponent(grade, lv, rng(hashStr('rook-partner')), 'Shade', Math.round(G.earned[0] + (G.earned[1] - G.earned[0]) * (k + 0.05)));
   return o;
 }
 const rookName = g => `Rook's ${rookMon(g || 'E').m.name}`;
@@ -142,7 +143,7 @@ function openHall(msg) {
 const loanStep = () => { const p = story().paid / LOAN; return p >= 1 ? 4 : p >= 0.75 ? 3 : p >= 0.5 ? 2 : p >= 0.25 ? 1 : 0; };
 
 /* ---------- Rook at the cups ---------- */
-function rookEntrant(grade) { const o = rookMon(grade); return { o, name: `Rook's ${o.m.name}`, breeder: 'Rook', rook: true }; }
+function rookEntrant(grade, k) { const o = rookMon(grade, k); return { o, name: `Rook's ${o.m.name}`, breeder: 'Rook', rook: true }; }
 function rookResult(won) { const St = story(); if (won) St.rookW++; else St.rookL++; }
 
 /* ---------- festivals: one a season, a gift from town and a lighter week ---------- */
