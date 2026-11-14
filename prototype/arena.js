@@ -6,29 +6,31 @@ const AR_SHOVE={name:"Shove",range:"Close",dmg:0,acc:95,sharp:0,wither:0,push:18
 const arBand=gap=>gap<10?"Close":gap<25?"Near":gap<45?"Mid":"Far";
 /* hitting from further away is harder to set up, so it pays a little more */
 const AR_BAND_DMG={Close:0.8,Near:0.95,Mid:1.2,Far:1.5,Any:1};
+/* a family's damage, tuned so every family wins about half its fights in the balance sim */
+const AR_FAM_DMG={Chomp:0.87,Pinch:0.91,Stilt:0.94,Skit:1.08,Antik:1.04,Squib:1.06,Moko:1.1,Booly:1.14};
 
 /* [name, learned at, range, damage, accuracy, sharpness, wither, push, cost, windup, extras] */
 const FAM_MOVES={
-  Chomp:[["Bite",1,"Close",27,85,10,2,4,10,0.3],["Lunge",3,"Near",35,75,8,0,0,16,0.5,{dash:"in"}],["Crunch",5,"Close",70,70,12,0,6,30,0.8],["Leapfrog Bite",8,"Close",20,70,5,0,0,14,0.4,{swap:1}],
-    ["Body Slam",14,"Close",50,70,5,5,25,26,0.7],["Jaw Lock",20,"Close",25,80,0,12,0,20,0.4,{hold:2}],["Charge",30,"Mid",60,65,10,0,20,34,1.0,{dash:"in"}],["Gnash",40,"Close",15,80,20,1,0,38,0.6,{hits:4}]],
+  Chomp:[["Bite",1,"Close",24,85,10,2,4,10,0.3],["Lunge",3,"Near",35,75,8,0,0,16,0.5,{dash:"in"}],["Crunch",5,"Close",64,70,12,0,6,30,0.8],["Leapfrog Bite",8,"Close",20,70,5,0,0,14,0.4,{swap:1}],
+    ["Body Slam",14,"Close",46,70,5,5,25,26,0.7],["Jaw Lock",20,"Close",25,80,0,12,0,20,0.4,{hold:2}],["Charge",30,"Mid",60,65,10,0,20,34,1.0,{dash:"in"}],["Gnash",40,"Close",15,80,20,1,0,38,0.6,{hits:4}]],
   Pinch:[["Pinch",1,"Close",25,88,10,0,4,10,0.3],["Claw Jab",3,"Near",32,80,8,0,6,14,0.4],["Bunker Down",5,"Any",0,100,0,0,0,20,0.2,{buff:"bunker"}],["Scuttle Under",8,"Close",15,80,0,0,0,12,0.3,{swap:1}],
-    ["Riposte",14,"Close",0,100,0,0,0,18,0.1,{buff:"riposte"}],["Shell Ram",20,"Near",45,70,5,0,20,24,0.6],["Vice Grip",30,"Close",40,75,5,15,0,28,0.5,{hold:1.5}],["Crab Hammer",40,"Close",80,60,20,0,15,40,1.0]],
-  Stilt:[["Kick",1,"Near",30,85,8,0,8,10,0.3],["Hop Back",3,"Any",0,100,0,0,0,8,0.2,{step:-25}],["High Kick",5,"Near",80,65,15,0,12,32,0.8],["Vault",8,"Close",18,75,5,0,0,12,0.3,{swap:1}],
+    ["Riposte",14,"Close",0,100,0,0,0,18,0.1,{buff:"riposte"}],["Shell Ram",20,"Near",45,70,5,0,20,24,0.6],["Vice Grip",30,"Close",36,75,5,15,0,28,0.5,{hold:1.5}],["Crab Hammer",40,"Close",72,60,20,0,15,40,1.0]],
+  Stilt:[["Kick",1,"Near",30,85,8,0,8,10,0.3],["Hop Back",3,"Any",0,100,0,0,0,8,0.2,{step:-25}],["High Kick",5,"Near",74,65,15,0,12,32,0.8],["Vault",8,"Close",18,75,5,0,0,12,0.3,{swap:1}],
     ["Sweep",14,"Close",30,80,5,0,0,16,0.4,{slow:3}],["Long Stride",20,"Mid",40,70,10,0,0,22,0.6,{dash:"near"}],["Axe Kick",30,"Near",75,70,20,0,10,36,0.9],["Stampede",40,"Near",20,75,10,0,10,38,0.6,{hits:3}]],
-  Skit:[["Nip",1,"Close",22,90,10,0,0,8,0.2],["Skitter",3,"Any",0,100,0,0,0,6,0.1,{step:15}],["Web",5,"Mid",40,80,5,0,0,18,0.5,{slow:3}],["Web Swing",8,"Close",15,80,0,0,0,12,0.3,{swap:1}],
+  Skit:[["Nip",1,"Close",24,90,10,0,0,8,0.2],["Skitter",3,"Any",0,100,0,0,0,6,0.1,{step:15}],["Web",5,"Mid",42,80,5,0,0,18,0.5,{slow:3}],["Web Swing",8,"Close",15,80,0,0,0,12,0.3,{swap:1}],
     ["Reel In",14,"Mid",20,75,0,0,-25,18,0.5],["Trap Line",20,"Mid",0,100,0,0,0,20,0.4,{slow:4}],["Leg Flurry",30,"Close",14,80,10,0,0,30,0.5,{hits:4}],["Cocoon",40,"Mid",30,60,0,0,0,34,0.9,{hold:2}]],
   Antik:[["Zap",1,"Mid",25,85,5,6,0,10,0.3,{cast:1}],["Static Screen",5,"Mid",45,75,5,8,0,22,0.6,{cast:1}],["Static Hop",8,"Close",15,75,0,8,0,12,0.3,{swap:1}],["Signal Jam",12,"Far",15,80,0,25,0,18,0.5,{cast:1}],
-    ["Scan Beam",18,"Far",50,70,10,0,0,28,1.0,{cast:1}],["Feedback",24,"Any",0,100,0,0,0,16,0.2,{buff:"feedback"}],["Short Circuit",30,"Close",50,75,5,15,30,30,0.6,{cast:1}],["Broadcast",40,"Far",80,60,10,15,0,42,1.4,{cast:1}]],
-  Squib:[["Squirt",1,"Mid",28,90,5,0,4,8,0.3,{cast:1}],["Jet Back",3,"Any",0,100,0,0,0,10,0.1,{step:-30}],["Ink Jet",5,"Far",48,75,5,0,0,18,0.5,{cast:1}],["Slip Past",8,"Close",10,85,0,0,0,10,0.2,{swap:1}],
-    ["Tentacle Lash",14,"Near",45,75,10,0,10,20,0.5],["Bubble Wall",20,"Any",0,100,0,0,0,22,0.3,{buff:"bubble"}],["Undertow",30,"Far",35,70,0,0,-30,26,0.7,{cast:1}],["Riptide",40,"Mid",85,65,10,10,15,38,1.0,{cast:1}]],
-  Moko:[["Stare",1,"Far",32,90,5,10,0,10,0.3,{cast:1}],["Glare",5,"Far",0,85,0,6,0,16,0.4,{cast:1,lower:1}],["Blink",8,"Close",0,90,0,0,0,12,0.2,{swap:1}],["Mind Prick",12,"Far",50,80,10,18,0,20,0.4,{cast:1}],
-    ["Dread",18,"Near",25,80,0,20,35,24,0.5,{cast:1}],["Unblinking",24,"Any",0,100,0,0,0,18,0.2,{buff:"unblink"}],["Eye Beam",30,"Far",92,70,12,10,0,36,1.1,{cast:1}],["Hypnotize",40,"Mid",0,65,0,15,0,34,0.8,{cast:1,hold:2}]],
-  Booly:[["Wisp Shot",1,"Far",32,85,5,0,0,10,0.3,{cast:1}],["Boo!",3,"Close",5,90,0,5,35,10,0.2,{cast:1}],["Phase Shift",5,"Any",0,100,0,0,0,18,0.2,{buff:"phase"}],["Phase Through",8,"Close",0,95,0,0,0,10,0.2,{swap:1}],
-    ["Haunt",14,"Near",26,80,0,20,20,18,0.4,{cast:1}],["Will-o'-Wisp",20,"Far",50,75,5,0,0,24,0.6,{cast:1}],["Poltergeist",30,"Mid",55,70,5,0,15,30,0.7,{cast:1}],["Spirit Lance",40,"Far",88,70,15,0,0,38,1.2,{cast:1}]],
+    ["Scan Beam",18,"Far",46,70,10,0,0,28,1.0,{cast:1}],["Feedback",24,"Any",0,100,0,0,0,16,0.2,{buff:"feedback"}],["Short Circuit",30,"Close",50,75,5,15,30,30,0.6,{cast:1}],["Broadcast",40,"Far",80,60,10,15,0,42,1.4,{cast:1}]],
+  Squib:[["Squirt",1,"Mid",31,90,5,0,4,8,0.3,{cast:1}],["Jet Back",3,"Any",0,100,0,0,0,10,0.1,{step:-30}],["Ink Jet",5,"Far",52,75,5,0,0,18,0.5,{cast:1}],["Slip Past",8,"Close",10,85,0,0,0,10,0.2,{swap:1}],
+    ["Tentacle Lash",14,"Near",48,75,10,0,10,20,0.5],["Bubble Wall",20,"Any",0,100,0,0,0,22,0.3,{buff:"bubble"}],["Undertow",30,"Far",35,70,0,0,-30,26,0.7,{cast:1}],["Riptide",40,"Mid",90,65,10,10,15,38,1.0,{cast:1}]],
+  Moko:[["Stare",1,"Far",36,90,5,10,0,10,0.3,{cast:1}],["Glare",5,"Far",0,85,0,6,0,16,0.4,{cast:1,lower:1}],["Blink",8,"Close",0,90,0,0,0,12,0.2,{swap:1}],["Mind Prick",12,"Far",56,80,10,18,0,20,0.4,{cast:1}],
+    ["Dread",18,"Near",28,80,0,20,35,24,0.5,{cast:1}],["Unblinking",24,"Any",0,100,0,0,0,18,0.2,{buff:"unblink"}],["Eye Beam",30,"Far",96,70,12,10,0,36,1.1,{cast:1}],["Hypnotize",40,"Mid",0,65,0,15,0,34,0.8,{cast:1,hold:2}]],
+  Booly:[["Wisp Shot",1,"Far",36,85,5,0,0,10,0.3,{cast:1}],["Boo!",3,"Close",5,90,0,5,35,10,0.2,{cast:1}],["Phase Shift",5,"Any",0,100,0,0,0,18,0.2,{buff:"phase"}],["Phase Through",8,"Close",0,95,0,0,0,10,0.2,{swap:1}],
+    ["Haunt",14,"Near",30,80,0,20,20,18,0.4,{cast:1}],["Will-o'-Wisp",20,"Far",56,75,5,0,0,24,0.6,{cast:1}],["Poltergeist",30,"Mid",60,70,5,0,15,30,0.7,{cast:1}],["Spirit Lance",40,"Far",92,70,15,0,0,38,1.2,{cast:1}]],
 };
 const SHARED_MOVES=[["Dash In",1,"Any",0,100,0,0,0,10,0.2,{step:20}],["Leap Back",1,"Any",0,100,0,0,0,10,0.2,{step:-20}],["Brace",1,"Any",0,100,0,0,0,6,0.1,{buff:"brace"}]];
 /* how fast each family gets around: Booly floats and Squib jets, while Chomp and Pinch plod */
-const FAM_WALK={Chomp:0.85,Pinch:0.85,Stilt:1.05,Skit:1.15,Antik:1,Squib:1.15,Moko:1,Booly:1.25};
+const FAM_WALK={Chomp:0.8,Pinch:0.85,Stilt:1.05,Skit:1.15,Antik:1,Squib:1.15,Moko:1.05,Booly:1.25};
 /* a family's first move takes its element, the way Skit's Web already does: a Blaze Chomp bites with Flame Bite */
 const EL_PREFIX={Blaze:"Flame",Frost:"Frost",Tide:"Aqua",Spark:"Volt",Wild:"Leaf",Venom:"Toxic",Charm:"Heart",Stone:"Rock",Light:"Shine",Steel:"Iron",Shade:"Shadow",Void:"Void"};
 const arMove=r=>({name:r[0],lv:r[1],range:r[2],dmg:r[3],acc:r[4],sharp:r[5]/100,wither:r[6],push:r[7],cost:r[8],wind:r[9],...(r[10]||{})});
@@ -65,8 +67,9 @@ class Arena{
   dirTo(p){ const o=this.p[1-p.i]; return o.x>p.x?1:-1; }
   inRange(m){ return m.range==="Any"||m.range===this.band(); }
   speed(p){ const o=this.p[1-p.i]; return 12*(FAM_WALK[p.f.family]||1)*(1+edge(this.eff(p,"spd"),this.eff(o,"spd"),0.6,-0.35,0.45))*(p.slow>0?0.5:1); }
-  // the chance a move lands right now: its accuracy, plus focus held, plus Spirit against the target's Speed
-  hitChance(p,m){ const o=this.p[1-p.i]; return Math.max(0,Math.min(1,m.acc/100+p.focus/99*0.15+edge(this.eff(p,"spr"),this.eff(o,"spd"),0.4,-0.2,0.1)-(o.buff.phase?0.3:0)+(p.buff.unblink?0.1:0))); }
+  // the chance a move lands right now: its accuracy, a little more with focus held, Insight against the target's Speed, and less if the target is on the move
+  hitChance(p,m){ const o=this.p[1-p.i], moving=o.walkT!=null&&this.t-o.walkT<0.3;
+    return Math.max(0.05,Math.min(0.97,m.acc/100+p.focus/99*0.06+edge(this.eff(p,"spr"),this.eff(o,"spd"),0.4,-0.25,0.12)-(moving?0.08:0)-(o.buff.phase?0.3:0)+(p.buff.unblink?0.1:0))); }
   regen(p){ const o=this.p[1-p.i]; return 5.5*(1+edge(this.eff(p,"sta"),this.eff(o,"sta"),0.5,-0.3,0.4)); }
   walk(p,dir){ if(p.hold>0||p.stun>0) return; const o=this.p[1-p.i], nx=p.x+dir*this.speed(p)*AR.DT;
     const lo=o.x<p.x?o.x+AR.BODY:0, hi=o.x>p.x?o.x-AR.BODY:AR.LEN, x0=p.x; p.x=Math.max(lo,Math.min(hi,nx)); if(Math.abs(p.x-x0)>0.01) p.walkT=this.t; }
@@ -106,7 +109,7 @@ class Arena{
     if(m.swap){ const x=p.x; p.x=o.x; o.x=x; this.ev.push({t:"swap",i:p.i,m}); }
     for(let h=0;h<(m.hits||1);h++) if(m.dmg){
       const atk=this.eff(p,m.cast?"mnd":"pow"), con=this.eff(o,"grd"), dfs=m.cast?(con+3*(o.f.level+5))/4:(con+o.f.level+5)/2;
-      let dmg=m.dmg*atk/dfs*(p.f.level/50+0.4)/2*0.55*AR_BAND_DMG[m.range];
+      let dmg=m.dmg*atk/dfs*(p.f.level/50+0.4)/2*0.55*AR_BAND_DMG[m.range]*(AR_FAM_DMG[p.f.family]||1);
       if(m.el&&typeof vs==="function"){ const mm=vs(m.el,o.f.el1)*(o.f.el2?vs(m.el,o.f.el2):1); dmg*=mm; if(m.el===p.f.el1||m.el===p.f.el2) dmg*=1.2; }
       const crit=R()<m.sharp+edge(this.eff(p,"pow"),con,0.2,0,0.12); if(crit) dmg*=1.5;
       if(o.buff.brace) dmg*=0.6; if(o.buff.bunker) dmg*=0.8;
