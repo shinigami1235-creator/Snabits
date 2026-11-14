@@ -31,3 +31,7 @@ function iconize() {
   for (const [id, n] of [['at-l', 'Left'], ['at-r', 'Right'], ['at-up', 'Up'], ['at-dn', 'Down'], ['at-auto', 'Auto']]) put(document.getElementById(id), n, false, 28);
   const sh = document.getElementById('at-shove'); if (sh) { const skip = /Skip/.test(sh.textContent); if (skip) { if (sh.dataset.ic !== 'Skip') { sh.dataset.ic = 'Skip'; sh.innerHTML = ICON('Skip', 22) + '<span>Skip</span>'; sh.style.gap = '6px'; } } else put(sh, 'Shove', false, 28); }
 }
+
+/* the screens redraw their buttons often, so icons go back on whenever the page changes, at most once a frame */
+(() => { let due = false; const go = () => { due = false; try { iconize(); } catch (e) {} };
+  new MutationObserver(() => { if (!due) { due = true; requestAnimationFrame(go); } }).observe(document.body, { childList: true, subtree: true }); go(); })();

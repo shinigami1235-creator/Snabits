@@ -742,7 +742,7 @@ const CHIBI = (() => {
   const BLACK = [38, 32, 40];
   function costumeBehind(c, m, g, head, t) {
     const k = m.costume; if (!k) return; const [hx, hy, hw] = head;
-    if (k === 'Panda') for (const sd of [-1, 1]) { c.fillStyle = rgb(BLACK); c.beginPath(); c.arc(hx + sd * hw * 0.62, hy + 6, hw * 0.24, 0, 7); c.fill(); }
+    if (k === 'Panda') for (const sd of [-1, 1]) { c.fillStyle = rgb(BLACK); c.beginPath(); c.arc(hx + sd * hw * 0.74, hy + 3, hw * 0.27, 0, 7); c.fill(); }
     if (k === 'Bee' || k === 'Ladybug') for (const sd of [-1, 1]) { const sw = Math.sin(t / 300 + sd) * 2; c.strokeStyle = rgb(BLACK); c.lineWidth = 2.4; c.lineCap = 'round';
       c.beginPath(); c.moveTo(hx + sd * 6, hy + 6); c.quadraticCurveTo(hx + sd * 10, hy - 10, hx + sd * 16 + sw, hy - 16); c.stroke(); c.fillStyle = rgb(BLACK); c.beginPath(); c.arc(hx + sd * 16 + sw, hy - 16, 3.5, 0, 7); c.fill(); }
     if (k === 'Bee') for (const sd of [-1, 1]) { const fl = Math.sin(t / 45) * 0.25; c.save(); c.translate(g.cx + sd * g.bw * 0.3, g.top + g.bh * 0.25); c.rotate(sd * (-0.6 + fl));
@@ -755,7 +755,7 @@ const CHIBI = (() => {
   function costumeOn(c, m, g, body, t) {
     const k = m.costume; if (!k) return; const W = g.bw, H = g.bh, L = g.left, T = g.top;
     if (k === 'Panda') { c.fillStyle = 'rgba(250,250,247,.88)'; c.fillRect(L - 4, T - 4, W + 8, H + 8);
-      c.fillStyle = rgb(BLACK); for (const sd of [-1, 1]) { c.beginPath(); c.ellipse(g.cx + sd * W * 0.2, T + H * 0.42, W * 0.12, H * 0.13, sd * -0.5, 0, 7); c.fill(); }
+      c.fillStyle = rgb(BLACK); for (const sd of [-1, 1]) { c.beginPath(); c.ellipse(g.cx + sd * W * 0.2, T + H * 0.38, W * 0.15, H * 0.17, sd * -0.45, 0, 7); c.fill(); }
       c.fillRect(L - 4, T + H * 0.8, W + 8, H * 0.3); }
     if (k === 'Bee') { c.fillStyle = 'rgba(246,200,40,.9)'; c.fillRect(L - 4, T - 4, W + 8, H + 8); c.fillStyle = rgb(BLACK);
       for (const f of [0.62, 0.84]) c.fillRect(L - 4, T + H * f, W + 8, H * 0.11); }
@@ -1106,27 +1106,43 @@ const CHIBI = (() => {
       head: g => [g.cx, g.top + 2, g.bw * 0.52],
       face: (c, g, x, look) => faceTwo(c, g, x, look, { ey: 0.48, ex: 0.19, my: 0.7, fang: true, s: by(g.stage, 0.76, 0.84, 0.92) })
     },
-    /* Phoenix: a teardrop bird made of flame, with a flickering crest, flame wings and long tail plumes */
+    /* Phoenix: a plump firebird with a crest of flame feathers, flame wings, and long tail plumes with golden eye-spots */
     Phoenix: {
-      special: true, dims: { Bit: [58, 64], Byte: [72, 80], Mega: [84, 96] },
-      bottom() { return 174; }, height(st) { return this.dims[st][1] + 34; },
+      special: true, dims: { Bit: [64, 58], Byte: [80, 72], Mega: [94, 84] },
+      bottom() { return 172; }, height(st) { return this.dims[st][1] + by(st, 30, 38, 46); },
       glow: st => st !== 'Bit',
-      path(c, g) { const r = g.bw / 2; c.beginPath(); c.moveTo(g.cx, g.top); c.bezierCurveTo(g.cx + r * 0.9, g.top + g.bh * 0.25, g.cx + r * 1.08, g.bot - g.bh * 0.35, g.cx + r, g.bot - g.bh * 0.3);
-        c.arc(g.cx, g.bot - g.bh * 0.3 - 0.01, r, 0, Math.PI, false); c.bezierCurveTo(g.cx - r * 1.08, g.bot - g.bh * 0.35, g.cx - r * 0.9, g.top + g.bh * 0.25, g.cx, g.top); c.closePath(); },
-      behind(c, g, x) { const f = (k, a) => Math.sin(x.t / 140 + k) * a, hot = ['#ffe27a', '#ffae3b', '#f2542d'];
-        const flame = (px, py, len, w, ang, k) => { for (let j = 0; j < 3; j++) { const L = len * (1 - j * 0.25), W = w * (1 - j * 0.3); c.save(); c.translate(px, py); c.rotate(ang + f(k + j, 0.08));
-          c.fillStyle = j ? hot[2 - j] : rgb(x.parts); c.beginPath(); c.moveTo(-W, 0); c.quadraticCurveTo(-W * 0.6, -L * 0.6, f(k, 3), -L); c.quadraticCurveTo(W * 0.6, -L * 0.6, W, 0); c.closePath(); c.fill(); c.restore(); } };
-        const n = by(g.stage, 2, 3, 5); for (let i = 0; i < n; i++) flame(g.cx + (i - (n - 1) / 2) * 7, g.bot - 4, g.bh * by(g.stage, 0.5, 0.6, 0.75) * (1 - Math.abs(i - (n - 1) / 2) * 0.12), 7, Math.PI + (i - (n - 1) / 2) * 0.35, i);
-        const wn = by(g.stage, 2, 3, 4); for (const sd of [-1, 1]) for (let i = 0; i < wn; i++) flame(g.cx + sd * g.bw * 0.4, g.top + g.bh * 0.55, g.bh * by(g.stage, 0.38, 0.46, 0.55) * (1 - i * 0.12), 8, sd * (1.0 + i * 0.32) + f(i, 0.1) * sd, i + 3);
-        for (const sd of [-1, 1]) { const fx = g.cx + sd * g.bw * 0.18; x.feet.push([fx, 183, 6]); c.strokeStyle = '#e9ad2e'; c.lineWidth = 3; c.lineCap = 'round';
+      path(c, g) { c.beginPath(); c.ellipse(g.cx, g.top + g.bh / 2, g.bw / 2, g.bh / 2, 0, 0, 7); },
+      behind(c, g, x) { const T = x.t, hot = ['#ffe27a', '#ffae3b', '#f2542d'];
+        // tail plumes sweep out behind the body to both sides, each ending in a golden eye-spot
+        const n = by(g.stage, 2, 4, 6);
+        for (let i = 0; i < n; i++) { const sd = i % 2 ? 1 : -1, k = Math.floor(i / 2), sw = Math.sin(T / 360 + i) * 4, L = g.bw * (0.55 + k * 0.16), y0 = g.bot - 10;
+          const ex = g.cx + sd * L, ey = y0 + 8 - k * 14 + sw;
+          c.fillStyle = rgb(dk(x.parts, 0.25)); c.beginPath(); c.moveTo(g.cx, y0 - 6); c.quadraticCurveTo(g.cx + sd * L * 0.5, y0 + 20, ex, ey + 4); c.quadraticCurveTo(g.cx + sd * L * 0.5, y0 + 8, g.cx, y0 + 6); c.closePath(); c.fill();
+          c.fillStyle = rgb(x.parts); c.beginPath(); c.moveTo(g.cx, y0 - 8); c.quadraticCurveTo(g.cx + sd * L * 0.5, y0 + 16, ex, ey); c.quadraticCurveTo(g.cx + sd * L * 0.5, y0 + 4, g.cx, y0 + 4); c.closePath(); c.fill();
+          c.fillStyle = '#ffd45e'; c.beginPath(); c.ellipse(ex, ey, 7, 5.5, sd * 0.3, 0, 7); c.fill(); c.fillStyle = rgb(dk(x.parts, 0.2)); c.beginPath(); c.arc(ex, ey, 2.6, 0, 7); c.fill(); }
+        // flame wings: layered feathers, darker at the root and yellow at the tips, flickering
+        const wn = by(g.stage, 3, 4, 5), wl = g.bh * by(g.stage, 0.62, 0.72, 0.82);
+        for (const sd of [-1, 1]) for (let i = wn - 1; i >= 0; i--) { const a = sd * (0.75 + i * 0.3) + Math.sin(T / 150 + i * 1.3) * 0.07 * sd, L = wl * (1 - i * 0.1);
+          c.save(); c.translate(g.cx + sd * g.bw * 0.4, g.top + g.bh * 0.46); c.rotate(a);
+          for (let j = 0; j < 3; j++) { const W = 7 - j * 2, LL = L * (1 - j * 0.3); c.fillStyle = j ? hot[2 - j] : rgb(x.parts);
+            c.beginPath(); c.moveTo(-W, 0); c.quadraticCurveTo(-W * 0.8, -LL * 0.6, Math.sin(T / 110 + i + j) * 2, -LL); c.quadraticCurveTo(W * 0.8, -LL * 0.6, W, 0); c.closePath(); c.fill(); }
+          c.restore(); }
+        for (const sd of [-1, 1]) { const fx = g.cx + sd * g.bw * 0.16; x.feet.push([fx, 183, 6]); c.strokeStyle = '#e9ad2e'; c.lineWidth = 3; c.lineCap = 'round';
           c.beginPath(); c.moveTo(fx, g.bot - 4); c.lineTo(fx, 181); c.stroke(); for (const k of [-1, 0, 1]) { c.beginPath(); c.moveTo(fx, 181); c.lineTo(fx + k * 5, 184); c.stroke(); } } },
-      inside(c, g, x) { const gr = c.createLinearGradient(0, g.bot, 0, g.top); gr.addColorStop(0, 'rgba(255,226,122,.55)'); gr.addColorStop(0.5, 'rgba(255,226,122,0)'); c.fillStyle = gr; c.fillRect(g.left, g.top, g.bw, g.bh); },
-      front(c, g, x) { const s = by(g.stage, 0.8, 0.88, 0.96), y0 = g.top + g.bh * 0.5; if (!x.back) { c.fillStyle = '#f6c445'; c.beginPath(); c.moveTo(g.cx - 6 * s, y0); c.lineTo(g.cx + 6 * s, y0); c.lineTo(g.cx, y0 + 9 * s); c.closePath(); c.fill(); }
-        const n = by(g.stage, 1, 3, 5); for (let i = 0; i < n; i++) { const k = i - (n - 1) / 2, L = by(g.stage, 14, 18, 24) * (1 - Math.abs(k) * 0.18), sw = Math.sin(x.t / 120 + i) * 2;
-          c.fillStyle = ['#f2542d', '#ffae3b', '#ffe27a'][i % 3]; c.beginPath(); c.moveTo(g.cx + k * 6 - 4, g.top + 6); c.quadraticCurveTo(g.cx + k * 8 + sw, g.top - L * 0.5, g.cx + k * 10 + sw, g.top - L); c.quadraticCurveTo(g.cx + k * 6 + 4, g.top - L * 0.4, g.cx + k * 6 + 4, g.top + 6); c.closePath(); c.fill(); } },
-      hl: g => [g.left + g.bw * 0.14, g.top + g.bh * 0.66, g.left + g.bw * 0.12, g.top + g.bh * 0.4, g.left + g.bw * 0.3, g.top + g.bh * 0.24],
-      head: g => [g.cx, g.top - 4, g.bw * 0.46],
-      face: (c, g, x, look) => faceTwo(c, g, x, look, { ey: 0.4, ex: 0.18, my: 0.62, s: by(g.stage, 0.74, 0.82, 0.9) })
+      inside(c, g, x) { const gr = c.createLinearGradient(0, g.bot, 0, g.top); gr.addColorStop(0, 'rgba(255,226,122,.7)'); gr.addColorStop(0.45, 'rgba(255,226,122,0)'); c.fillStyle = gr; c.fillRect(g.left, g.top, g.bw, g.bh);
+        if (x.back) return; c.fillStyle = rgba([255, 226, 150], 0.55); c.beginPath(); c.ellipse(g.cx, g.bot - g.bh * 0.12, g.bw * 0.26, g.bh * 0.22, 0, 0, 7); c.fill();
+        },
+      front(c, g, x) { const s = by(g.stage, 0.8, 0.88, 0.96), y0 = g.top + g.bh * 0.5;
+        if (!x.back) { c.fillStyle = '#c98a14'; c.beginPath(); c.moveTo(g.cx - 6 * s, y0 + 1); c.lineTo(g.cx + 6 * s, y0 + 1); c.lineTo(g.cx, y0 + 10 * s); c.closePath(); c.fill();
+          c.fillStyle = '#f6c445'; c.beginPath(); c.moveTo(g.cx - 6 * s, y0); c.lineTo(g.cx + 6 * s, y0); c.lineTo(g.cx, y0 + 8 * s); c.closePath(); c.fill(); }
+        // the crest: tall flame feathers that sway, red at the base and yellow at the tip
+        const n = by(g.stage, 3, 4, 5);
+        for (let i = 0; i < n; i++) { const k = i - (n - 1) / 2, L = by(g.stage, 18, 24, 30) * (1 - Math.abs(k) * 0.16), sw = Math.sin(x.t / 130 + i) * 2.5, bx = g.cx + k * 6, by0 = g.top + 5;
+          for (let j = 0; j < 3; j++) { const LL = L * (1 - j * 0.32), W = 5 - j * 1.4; c.fillStyle = ['#e2412d', '#ff9a2e', '#ffe27a'][j];
+            c.beginPath(); c.moveTo(bx - W, by0); c.quadraticCurveTo(bx + k * 3 - W * 0.4 + sw * 0.5, by0 - LL * 0.6, bx + k * 5 + sw, by0 - LL); c.quadraticCurveTo(bx + k * 3 + W * 0.4 + sw * 0.5, by0 - LL * 0.6, bx + W, by0); c.closePath(); c.fill(); } } },
+      hl: g => [g.left + g.bw * 0.13, g.top + g.bh * 0.55, g.left + g.bw * 0.14, g.top + g.bh * 0.24, g.left + g.bw * 0.36, g.top + g.bh * 0.09],
+      head: g => [g.cx, g.top - 6, g.bw * 0.46],
+      face: (c, g, x, look) => faceTwo(c, g, x, look, { ey: 0.38, ex: 0.19, my: 0.64, s: by(g.stage, 0.76, 0.84, 0.92) })
     },
     /* Kitsune: a fox with tall pointed ears, red face marks, and tails that grow from one to three to nine */
     Kitsune: {

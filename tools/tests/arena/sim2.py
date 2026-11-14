@@ -3,7 +3,7 @@ from playwright.async_api import async_playwright
 SIM=r"""
 ()=>{
 const R=rng(42), FAMS=Object.keys(FAM_MOVES);
-const make=(fam,lv,scale=1)=>{ let o; for(let k=0;k<400;k++){ o=gradedOpponent("B",lv,R,null,260); if(o.m.family===fam) break; }
+const make=(fam,lv,scale=1)=>{ const o=gradedOpponent("B",lv,R,null,260,randomOpponent(R,fam));
   const f=makeFighter(o.fm,o.skills,o.level); for(const k in f.base) f.base[k]=Math.max(1,Math.round(f.base[k]*scale)); f.maxhp=Math.round(f.maxhp*(0.5+0.5*scale)); f.hp=f.maxhp;
   f.family=fam; f.moves=arMoves(fam,lv,o.m.pool.filter(n=>SKILLS[n].lv<=lv)); return {f,o}; };
 const out={fam:{},len:[],ko:0,n:0};

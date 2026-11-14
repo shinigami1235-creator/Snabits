@@ -60,3 +60,14 @@ body.theme-wood .rs i{background:#4f9be0;border-radius:4px}body.theme-wood .rs .
 body.theme-wood #r-panel .rb{background:var(--paper);color:var(--inkb);border:2px solid var(--brown);border-radius:12px;box-shadow:0 4px 0 var(--brown)}
 body.theme-wood #r-panel .rb small{color:var(--mutb)}body.theme-wood #r-panel .rb:disabled{opacity:.5}
 body.theme-wood #r-panel .rb.on{background:var(--gold);box-shadow:0 4px 0 var(--gold-d)}
+/* inside the parchment panels and pop-ups the text turns brown-ink, so every screen that uses the shared colours follows */
+body.theme-wood #r-panel,body.theme-wood #r-foot>div,body.theme-wood .set-card{--text:#3a2618;--mute:#7a6248;--dim:#8f7a5e;--panel:#ead6ae;--panel2:#f3e4c4;--line:#8d6440;--line2:#8d6440;--ink2:#e3cd9f;color:var(--text)}
+body.theme-wood #r-foot>div{background:var(--paper);border:2px solid var(--brown);border-radius:16px;box-shadow:0 5px 0 var(--brown)}
+body.theme-wood .lab-info,body.theme-wood #r-panel .mis-r,body.theme-wood #r-panel>div[style*="flex-basis"]{color:var(--mutb)}
+body.theme-wood .dex-t{background:rgba(255,255,255,.45);border:1px solid #d4bb8c}body.theme-wood .dex-t small{color:var(--mutb)}
+body.theme-wood .dex-tabs button.on{background:var(--gold);color:var(--inkb)}
+body.theme-wood .rb.feat{background:#efe0f7;border-color:#8a6ab8}
+/* full pages that keep light text (the info page, the venue) sit on the same wood, with darker wood cards */
+body.theme-wood #info,body.theme-wood #venue{--ink:#2e2018;--ink2:#3b2a1f;--panel:#3b2a1f;--panel2:#4a3526;--line:#6b4a33;--line2:#7a5638;background-color:#2e2018;background-image:repeating-linear-gradient(0deg,rgba(0,0,0,.2) 0 2px,transparent 2px 64px)}
+body.theme-wood #atest .pick{color:#fff4dc}body.theme-wood #atest .pick p{color:#d8c3a0}
+body.theme-wood #atest .fams .btn.on{background:var(--gold);color:var(--inkb);border-color:var(--brown)}

@@ -3,14 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#11121a">
+<meta name="theme-color" content="#2e2018">
 <title>Snabits</title>
 <link rel="stylesheet" href="ui.css">
+<link rel="stylesheet" href="theme.css">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 </head>
-<body>
+<body class="theme-wood">
 <div id="stage"><video id="video" playsinline muted autoplay></video><canvas id="still"></canvas><div id="ring"></div><div id="corners"><i></i><i></i><i></i><i></i></div></div>
 <div id="top"><span class="chip" id="main">Snaboscope</span><span class="chip" id="second" style="display:none"></span><span id="kind"></span><button class="small" id="lightbtn" style="display:none;margin-left:auto" aria-label="Light">Light off</button></div>
 <div id="bars"></div>
@@ -64,7 +65,7 @@
 <script src="wild.js"></script>
 <script src="music.js"></script>
 <script src="chibi.js"></script>
-<script src="chibi-hook.js"></script><script src="scenes.js"></script><script src="npcs.js"></script><script src="areas.js"></script><script src="story.js"></script><script src="dex.js"></script><script src="contests.js"></script><script src="moves.js"></script><script src="summon.js"></script><script src="cupshow.js"></script><script src="arena.js"></script><script src="arena-ui.js"></script><script src="arena-fx.js"></script>
+<script src="chibi-hook.js"></script><script src="scenes.js"></script><script src="npcs.js"></script><script src="areas.js"></script><script src="story.js"></script><script src="dex.js"></script><script src="contests.js"></script><script src="moves.js"></script><script src="summon.js"></script><script src="cupshow.js"></script><script src="arena.js"></script><script src="arena-ui.js"></script><script src="arena-fx.js"></script><script src="icons.js"></script>
 <script>if(hasSave()){ document.getElementById("ranchbtn").style.display=""; document.getElementById("msgranch").style.display=""; }</script>
 <script>
 const GROUPS=["red","orange","yellow","green","cyan","blue","violet","pink","brown","white","silver","black"];
@@ -118,7 +119,12 @@ function scan(source,sw,sh){
   const cells=Array(9).fill(0);
   for(let j=0;j<H;j++)for(let i=0;i<W;i++) if(lab[j*W+i]===main.g) cells[Math.min(2,Math.floor(3*j/H))*3+Math.min(2,Math.floor(3*i/W))]++;
   const vm=vsum/n, photoKey=cellRGB.map(c=>c.slice(0,3).map(v=>Math.round(v/c[3]/32)).join("")).join("-");
-  return {ranked,main,second:mono?null:second,mono,tie,colours,pool:colours+4,cells,sat:ssum/n,bright:vm,contrast:Math.sqrt(Math.max(0,v2/n-vm*vm)),photoKey};
+  // where each colour sits on a 12 by 12 grid, for the colour easter eggs (eggOf in monster.js)
+  const g12={}, cellN=new Array(144).fill(0);
+  for(const g of GROUPS) if(raw[g]>=2) g12[g]=new Array(144).fill(0);
+  for(let j=0;j<H;j++)for(let i=0;i<W;i++){ const ci=Math.min(11,Math.floor(12*j/H))*12+Math.min(11,Math.floor(12*i/W)); cellN[ci]++; const G=g12[lab[j*W+i]]; if(G) G[ci]++; }
+  for(const g in g12) for(let k=0;k<144;k++) g12[g][k]/=Math.max(1,cellN[k]);
+  return {ranked,main,second:mono?null:second,mono,tie,colours,pool:colours+4,cells,sat:ssum/n,bright:vm,contrast:Math.sqrt(Math.max(0,v2/n-vm*vm)),photoKey,raw,g12};
 }
 
 function chip(el,g){el.textContent=EL[g];el.style.background=COL[g];el.style.color=TXT[g]||"#fff";el.style.display="";}
@@ -189,7 +195,7 @@ function render(full){
     card.innerHTML=`<div class="sheet-head">
         <canvas id="bit" class="mon-tile"></canvas>
         <div class="sheet-id"><h2>${name}</h2><div class="sheet-kind"><span class="elc" style="${chipStyle(COL[res.main.g])}">${m.el1}</span>${m.el2?`<span class="elc" style="${chipStyle(COL[res.second.g])}">${m.el2}</span>`:""}<span class="fam">${m.family}</span></div>
-          <div class="sheet-meta">${m.pers[0]} · ${m.lifespan} months</div></div></div>
+          <div class="sheet-meta">${m.special?"Special · ":""}${m.costume?m.costume+" costume · ":""}${m.pers[0]} · ${m.lifespan} months</div></div></div>
       <div class="sheet-actions"><button class="big" id="raisebtn">Raise it</button><button class="btn2" id="fightbtn">Quick fight</button></div>
       <div class="sheet-body">
         <p class="abil">${m.hidden?"<b class=\"hid\">Hidden ability</b> ":""}<b>${m.ability[0]}</b> ${m.ability[1]}.</p>

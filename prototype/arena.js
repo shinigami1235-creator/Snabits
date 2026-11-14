@@ -7,7 +7,7 @@ const arBand=gap=>gap<10?"Close":gap<25?"Near":gap<45?"Mid":"Far";
 /* hitting from further away is harder to set up, so it pays a little more */
 const AR_BAND_DMG={Close:0.8,Near:0.95,Mid:1.2,Far:1.5,Any:1};
 /* a family's damage, tuned so every family wins about half its fights in the balance sim */
-const AR_FAM_DMG={Chomp:0.86,Pinch:0.94,Stilt:0.92,Skit:1.08,Antik:0.95,Squib:1.1,Moko:1.28,Booly:1.23,Plod:0.87,Bipped:0.93,Fizz:1.2,Teep:0.95,Lern:1.4};
+const AR_FAM_DMG={Chomp:0.88,Pinch:0.97,Stilt:0.95,Skit:1.15,Antik:0.95,Squib:1.1,Moko:1.31,Booly:1.23,Plod:0.87,Bipped:0.93,Fizz:1.2,Teep:0.95,Lern:1.43,Eagle:0.91,Vampire:0.95,Phoenix:0.88,Kitsune:1.06,Naga:0.78,Yeti:0.73};
 
 /* [name, learned at, range, damage, accuracy, sharpness, wither, push, cost, windup, extras] */
 const FAM_MOVES={
@@ -38,10 +38,23 @@ const FAM_MOVES={
     ["Tea Time",14,"Any",0,100,0,0,0,22,0.4,{support:1,heal:0.2}],["Scald",20,"Mid",46,80,8,0,6,24,0.6,{cast:1,status:["Burn",25]}],["Whistle",30,"Far",22,85,0,25,0,24,0.5,{cast:1,status:["Daze",35]}],["Boiling Point",40,"Mid",92,65,12,0,15,40,1.2,{cast:1}]],
   Lern:[["Ember",1,"Far",32,88,5,0,0,10,0.3,{cast:1}],["Float Back",3,"Any",0,100,0,0,0,10,0.15,{step:-28}],["Flash",5,"Mid",34,95,5,8,0,20,0.4,{cast:1,status:["Blind",50]}],["Lantern Swing",8,"Close",16,85,0,0,0,12,0.3,{swap:1}],
     ["Paper Fold",14,"Any",0,100,0,0,0,18,0.2,{buff:"phase"}],["Spark Shower",20,"Mid",16,80,5,0,0,24,0.6,{cast:1,hits:3}],["Beacon",30,"Far",68,75,10,8,0,32,0.9,{cast:1}],["Sky Lantern",40,"Far",94,65,12,0,0,40,1.3,{cast:1}]],
+  /* the special Snabits */
+  Eagle:[["Peck",1,"Close",24,92,10,0,4,9,0.2],["Swoop",3,"Near",32,85,10,0,8,14,0.4,{dash:"in"}],["Talon Dive",5,"Close",62,80,18,0,18,28,0.7],["Updraft",8,"Any",0,100,0,0,0,10,0.15,{step:-30}],
+    ["Wing Gust",14,"Mid",36,85,5,0,28,22,0.5,{cast:1}],["Keen Sight",20,"Any",0,100,0,0,0,16,0.2,{buff:"unblink"}],["Feather Volley",30,"Far",18,85,8,0,0,28,0.6,{cast:1,hits:3}],["Sky Strike",40,"Far",88,70,15,0,20,40,1.0,{dash:"in"}]],
+  Vampire:[["Nip",1,"Close",22,92,8,0,0,9,0.2,{drain:0.3}],["Bat Swarm",3,"Mid",26,85,5,0,0,14,0.4,{cast:1}],["Night Bite",5,"Close",50,85,10,0,6,26,0.6,{drain:0.5}],["Mist Step",8,"Close",12,85,0,0,0,12,0.3,{swap:1}],
+    ["Hypnotic Gaze",14,"Mid",18,85,0,12,0,20,0.5,{cast:1,status:["Daze",40]}],["Cloak",20,"Any",0,100,0,0,0,18,0.2,{buff:"phase"}],["Blood Moon",30,"Far",62,75,8,8,0,32,0.9,{cast:1,drain:0.3}],["Crimson Feast",40,"Close",80,75,12,0,10,40,1.0,{drain:0.6}]],
+  Phoenix:[["Ember Peck",1,"Close",24,90,8,0,4,9,0.2,{status:["Burn",15]}],["Flame Wing",3,"Near",32,85,8,0,10,14,0.4],["Sun Flare",5,"Mid",54,80,8,0,0,26,0.7,{cast:1,status:["Burn",35]}],["Blaze Swap",8,"Close",12,85,0,0,0,12,0.3,{swap:1}],
+    ["Warm Glow",14,"Any",0,100,0,0,0,22,0.4,{support:1,heal:0.2}],["Fire Ring",20,"Near",44,80,8,0,20,24,0.5,{cast:1}],["Ash Storm",30,"Far",20,80,5,0,0,30,0.7,{cast:1,hits:3,status:["Blind",20]}],["Supernova",40,"Far",92,70,10,0,15,42,1.1,{cast:1}]],
+  Kitsune:[["Fox Swipe",1,"Close",22,92,10,0,4,9,0.2],["Foxfire",3,"Mid",18,90,5,0,0,16,0.5,{cast:1,hits:3,status:["Daze",20]}],["Trick Step",5,"Any",0,100,0,0,0,10,0.15,{step:-26}],["Tail Swap",8,"Close",14,85,0,0,0,12,0.3,{swap:1}],
+    ["Mirage",14,"Any",0,100,0,0,0,18,0.2,{buff:"phase"}],["Spirit Lantern",20,"Far",46,85,5,10,0,24,0.6,{cast:1}],["Nine Tails",30,"Near",14,85,8,0,0,30,0.7,{hits:5}],["Kitsunebi",40,"Far",86,75,10,8,0,40,1.0,{cast:1,status:["Daze",30]}]],
+  Naga:[["Fang",1,"Close",26,90,8,0,4,10,0.25],["Tail Whip",3,"Near",30,85,5,0,18,14,0.4],["Venom Coil",5,"Close",44,85,8,0,0,24,0.6,{status:["Poison",50],hold:1.2}],["Slither Swap",8,"Close",14,85,0,0,0,12,0.3,{swap:1}],
+    ["Hood Flare",14,"Mid",14,90,0,14,0,18,0.4,{cast:1,status:["Dread",35]}],["Shed Skin",20,"Any",0,100,0,0,0,20,0.3,{support:1,cleanse:1,heal:0.1}],["Acid Spit",30,"Far",56,80,8,0,0,30,0.8,{cast:1,status:["Poison",40]}],["Serpent King",40,"Close",88,70,12,0,25,40,1.0]],
+  Yeti:[["Snow Paw",1,"Close",28,88,8,0,10,10,0.3],["Snowball",3,"Mid",26,88,5,0,8,14,0.4,{cast:1}],["Avalanche",5,"Close",66,75,10,0,22,30,0.9],["Big Toss",8,"Close",16,80,0,0,0,12,0.35,{swap:1}],
+    ["Frost Breath",14,"Near",34,85,5,0,0,22,0.5,{cast:1,status:["Freeze",20]}],["Thick Coat",20,"Any",0,100,0,0,0,18,0.2,{buff:"bunker"}],["Glacier Slam",30,"Near",62,75,10,0,20,34,0.9],["Blizzard Roar",40,"Far",84,70,8,10,15,42,1.1,{cast:1,status:["Freeze",25]}]]
 };
 const SHARED_MOVES=[["Dash In",1,"Any",0,100,0,0,0,10,0.2,{step:20}],["Leap Back",1,"Any",0,100,0,0,0,10,0.2,{step:-20}],["Brace",1,"Any",0,100,0,0,0,6,0.1,{buff:"brace"}]];
 /* how fast each family gets around: Booly floats and Squib jets, while Chomp and Pinch plod */
-const FAM_WALK={Chomp:0.8,Pinch:0.85,Stilt:1.05,Skit:1.15,Antik:1,Squib:1.15,Moko:1.05,Booly:1.25,Plod:0.75,Bipped:1.05,Fizz:1,Teep:0.85,Lern:1.15};
+const FAM_WALK={Chomp:0.8,Pinch:0.85,Stilt:1.05,Skit:1.15,Antik:1,Squib:1.15,Moko:1.05,Booly:1.25,Plod:0.75,Bipped:1.05,Fizz:1,Teep:0.85,Lern:1.15,Eagle:1.2,Vampire:1,Phoenix:1.05,Kitsune:1.15,Naga:0.95,Yeti:0.8};
 /* a family's first move takes its element, the way Skit's Web already does: a Blaze Chomp bites with Flame Bite */
 const EL_PREFIX={Blaze:"Flame",Frost:"Frost",Tide:"Aqua",Spark:"Volt",Wild:"Leaf",Venom:"Toxic",Charm:"Heart",Stone:"Rock",Light:"Shine",Steel:"Iron",Shade:"Shadow",Void:"Void"};
 const arMove=r=>({name:r[0],lv:r[1],range:r[2],dmg:r[3],acc:r[4],sharp:r[5]/100,wither:r[6],push:r[7],cost:r[8],wind:r[9],...(r[10]||{})});
@@ -52,7 +65,7 @@ const AR_RANGE={bite:"Close",punch:"Close",claw:"Close",shadowstrike:"Close",sha
   tackle:"Near",push:"Near",spear:"Near",rockpath:"Near",fly:"Near",
   bolt:"Mid",volley:"Mid",drain:"Mid",mist:"Mid",gust:"Mid",boulder:"Mid",firespin:"Mid",
   beam:"Far",lightning:"Far",pillar:"Far",tornado:"Far",meteor:"Far",icefall:"Far",wave:"Far",lift:"Far"};
-const AR_SKILL_KEYS=["drain","recoil","steal","lower","lowerChance","selfLower","sure","noDodge","pierce","ifPoison","ifStatus","hitsRange","atkStat","hpScale",
+const AR_SKILL_KEYS=["push","drain","recoil","steal","lower","lowerChance","selfLower","sure","noDodge","pierce","ifPoison","ifStatus","hitsRange","atkStat","hpScale",
   "heal","regen","rest","raise","protect","counter","counterMul","mirror","castWard","bulwark","endure","statusBlock","cleanse","afterimage","inflict","taunt","erase","foresight"];
 function arFromSkill(n){
   const s=SKILLS[n]; if(!s||s.field) return null;
@@ -141,19 +154,21 @@ class Arena{
     if(!m.dash&&!this.inRange(m)) return "out";
     if(o.buff.bubble&&(m.range==="Mid"||m.range==="Far")) return "block";
     if(o.buff.protect&&(m.dmg||m.status)) return "block";
+    if(o.f.ability==="Illusion"&&!o.illusion&&m.dmg) return "phase";   // Kitsune's Illusion: a fox-fire copy takes the first attack
     if(roll>this.hitChance(p,m)) return o.buff.phase&&!m.noDodge?"phase":"dodge";
     return o.buff.mirror&&m.cast&&m.dmg?"mirror":"hit"; }
   /* on screen: the move lands at its contact frame, then the turn ends when the animation finishes */
   land(){ if(!this.turn||this.turn.done) return; this.turn.done=true; this.resolve(this.p[this.turn.i],this.turn.m,this.turn.roll); }
   endTurn(){ if(!this.turn) return; const p=this.p[this.turn.i]; if(!this.turn.done) this.land(); this.turn=null; this.afterTurn(p); }
   afterTurn(p){ p.cool=0.6; for(const q of this.p) q.think=Math.max(q.think,0.35+this.rand()*0.35); }
-  checkEnd(){ const [a,b]=this.p; if(a.hp<=0||b.hp<=0){ this.over=true; this.winner=a.hp<=0&&b.hp<=0?null:a.hp<=0?1:0; } }
+  checkEnd(){ for(const q of this.p) if(q.hp<=0&&q.f.ability==="Rebirth"&&!q.reborn){ q.reborn=1; q.hp=Math.round(q.maxhp*0.25); q.st=null; this.ev.push({t:"ability",i:q.i,name:"Rebirth"}); this.ev.push({t:"heal",i:q.i,amt:q.hp,src:"rebirth"}); }   // Phoenix
+    const [a,b]=this.p; if(a.hp<=0||b.hp<=0){ this.over=true; this.winner=a.hp<=0&&b.hp<=0?null:a.hp<=0?1:0; } }
   heal(f,amt,src,from){ const n=Math.max(0,Math.min(Math.round(amt),f.maxhp-f.hp)); if(f.hp<=0) return 0; f.hp+=n; this.ev.push({t:"heal",i:f.i,amt:n,src,from}); return n; }
   inflict(f,name,pct,from){
     if(f.hp<=0||f.st||f.buff.ward||!AR_STATUS[name]) return false;
-    if(name==="Freeze"&&f.thawT>0) return false;
+    if(name==="Freeze"&&(f.thawT>0||f.f.ability==="Thick Fur")) return false;
     if(name==="Poison"&&(f.f.el1==="Steel"||f.f.el2==="Steel")) return false;
-    if(name==="Blind"&&f.f.ability==="Bright") return false;   // Lern's Bright
+    if(name==="Blind"&&f.f.ability==="Bright"){ this.ev.push({t:"ability",i:f.i,name:"Bright"}); return false; }   // Lern's Bright
     if(this.rand()*100>=pct) return false;
     f.st={name,t:AR_STATUS[name].d*(from&&from.f.ability==="Volatile"?1.3:1),from:from?from.i:null,tick:0}; this.ev.push({t:"status",i:f.i,name}); return true; }   // Volatile: Fizz's statuses last 30% longer
   // raise (sign 1) or lower (sign -1) stats for a while; Bulwark keeps its stats from being lowered
@@ -225,7 +240,8 @@ class Arena{
     else if(!this.inRange(m)){ this.ev.push({t:"miss",i:p.i,m,why:"out"}); return; }   // it stepped out of reach during the windup
     if(o.buff.bubble&&(m.range==="Mid"||m.range==="Far")){ delete o.buff.bubble; this.ev.push({t:"miss",i:p.i,m,why:"block"}); return; }
     if(o.buff.protect&&(m.dmg||m.status)){ delete o.buff.protect; this.ev.push({t:"block",i:p.i,m}); return; }
-    if(roll>this.hitChance(p,m)){ this.ev.push({t:"miss",i:p.i,m,why:o.buff.phase&&!m.noDodge?"phase":"dodge"}); if(o.f.ability==="Counterpunch") o.cpunch=1; return; }   // Bipped's Counterpunch
+    if(o.f.ability==="Illusion"&&!o.illusion&&m.dmg){ o.illusion=1; this.ev.push({t:"ability",i:o.i,name:"Illusion"}); this.ev.push({t:"miss",i:p.i,m,why:"phase"}); return; }
+    if(roll>this.hitChance(p,m)){ this.ev.push({t:"miss",i:p.i,m,why:o.buff.phase&&!m.noDodge?"phase":"dodge"}); if(o.f.ability==="Counterpunch"){ o.cpunch=1; this.ev.push({t:"ability",i:o.i,name:"Counterpunch"}); } return; }   // Bipped's Counterpunch
     // a mirror sends a Cast back at whoever threw it
     let tg=o; if(o.buff.mirror&&m.cast&&m.dmg){ delete o.buff.mirror; this.ev.push({t:"mirror",i:o.i,m}); tg=p; }
     const hitBy=tg===p?o:p;   // whose hit it counts as on screen
@@ -237,10 +253,12 @@ class Arena{
       let dmg=m.dmg*atk/dfs*(p.f.level/50+0.4)/2*0.55*AR_BAND_DMG[m.range]*(AR_FAM_DMG[p.f.family]||1);
       if(m.el&&typeof vs==="function"){ const mm=vs(m.el,tg.f.el1)*(tg.f.el2?vs(m.el,tg.f.el2):1); dmg*=mm; if(m.el===p.f.el1||m.el===p.f.el2) dmg*=1.2; }
       if(m.hpScale) dmg*=0.4+0.6*p.hp/p.maxhp;
+      if(tg.f.ability==="Thick Fur"&&(m.el==="Blaze"||m.el==="Frost")){ dmg*=0.75; if(h===0) this.ev.push({t:"ability",i:tg.i,name:"Thick Fur"}); }   // Yeti
       if(m.ifPoison&&this.has(tg,"Poison")||m.ifStatus&&tg.st) dmg*=2;
       if(m.el==="Spark"&&this.has(tg,"Soak")) dmg*=1.25;
       let shatter=false; if(this.has(tg,"Freeze")){ dmg*=1.25; shatter=true; }
-      const crit=sure||!tg.buff.bulwark&&R()<m.sharp+edge(this.eff(p,"pow"),con,0.2,0,0.12); if(crit) dmg*=1.5;
+      const sky=p.f.ability==="Sky High"&&!p.sky&&tg===o; if(sky){ p.sky=1; this.ev.push({t:"ability",i:p.i,name:"Sky High"}); }   // Eagle's Sky High
+      const crit=sky||sure||!tg.buff.bulwark&&R()<m.sharp+edge(this.eff(p,"pow"),con,0.2,0,0.12); if(crit) dmg*=1.5;
       if(p.cpunch&&!m.cast&&tg===o) dmg*=1.2;
       if(tg.buff.brace) dmg*=0.6; if(tg.buff.bunker) dmg*=0.8; if(tg.buff.castWard&&m.cast) dmg*=0.5;
       dmg=Math.max(1,Math.round(dmg*(0.9+R()*0.1)));
@@ -253,6 +271,8 @@ class Arena{
     }
     if(p.cpunch&&!m.cast&&m.dmg) p.cpunch=0;
     if(m.drain&&total&&tg===o) this.heal(p,total*m.drain,"drain",o.i);
+    if(p.f.ability==="Bloodsuck"&&!m.cast&&total&&tg===o&&p.hp<p.maxhp){ this.ev.push({t:"ability",i:p.i,name:"Bloodsuck"}); this.heal(p,total*0.15,"drain",o.i); }   // Vampire
+    if(tg===o&&o.f.ability==="Coil"&&!m.cast&&m.range==="Close"&&total&&o.hp>0&&R()<0.25&&!p.st){ this.ev.push({t:"ability",i:o.i,name:"Coil"}); this.inflict(p,"Root",100,o); }   // Naga
     if(m.recoil&&total){ const r=Math.max(1,Math.round(total*m.recoil)); p.hp=Math.max(0,p.hp-r); this.ev.push({t:"recoil",i:p.i,dmg:r}); }
     if(m.steal&&tg===o){ const f=Math.min(o.focus,m.steal*6); o.focus-=f; p.focus=Math.min(99,p.focus+f); this.ev.push({t:"steal",i:p.i,amt:Math.round(f)}); }
     if(m.status&&tg.hp>0) this.inflict(tg,m.status[0],m.status[1]*this.statusOdds(p,tg),hitBy===p?p:o);

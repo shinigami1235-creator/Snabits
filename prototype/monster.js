@@ -14,6 +14,13 @@ const FAMILY = {
   Fizz:  {body:[3,[2,2,2,4,6,7,7,7,6,4]], legs:"twolegs", base:[45,30,45,75,55,50], ability:["Volatile","Statuses it lands last 30% longer"]},
   Teep:  {body:[5,[4,6,7,7,7,7,6,5]], legs:"stubby", base:[55,35,60,65,50,35], ability:["Steeping","Focus fills 10% faster while it stands still"]},
   Lern:  {body:[3,[2,4,5,6,6,6,6,6,5,4,2]], legs:"twolegs", base:[45,35,40,65,65,50], ability:["Bright","Blind can't land on it, and its hit chance can't be lowered"]},
+  /* special Snabits: only a colour easter egg finds them (EGGS below), they always have their own ability, and only fusion changes their element */
+  Eagle:  {special:1, body:[3,[3,5,6,7,7,7,7,6,5]], legs:"twolegs", base:[50,62,45,35,55,73], ability:["Sky High","The first hit it lands in a fight is always a critical"]},
+  Vampire:{special:1, body:[3,[3,5,6,6,6,6,6,6,6,5]], legs:"stubby", base:[55,55,50,60,55,45], ability:["Bloodsuck","Its Strikes heal it for 15% of the damage they deal"]},
+  Phoenix:{special:1, body:[3,[2,4,6,7,7,7,7,6,4]], legs:"twolegs", base:[50,45,45,75,55,50], ability:["Rebirth","The first time it would faint in a fight, it rises again with a quarter of its HP"]},
+  Kitsune:{special:1, body:[3,[3,5,6,6,6,6,6,6,5]], legs:"stubby", base:[45,40,45,70,65,55], ability:["Illusion","The first attack aimed at it in a fight hits a fox-fire copy and misses"]},
+  Naga:   {special:1, body:[3,[3,5,6,6,6,6,5,4]], legs:"tentacles", base:[55,60,55,50,50,50], ability:["Coil","A Close Strike that hits it has a 25% chance to Root the attacker"]},
+  Yeti:   {special:1, body:[4,[4,6,7,7,7,7,7,7,6]], legs:"stubby", base:[70,65,75,30,45,35], ability:["Thick Fur","Blaze and Frost hit it 25% softer, and it can't be Frozen"]},
 };
 /* Stamina: energy each turn and less fatigue. Power: Strike damage and crits. Constitution: HP and cutting all damage.
    Mind: Cast damage and landing statuses. Insight: hit rate and shrugging off statuses. Speed: going first, dodging and follow-up attacks. */
@@ -182,9 +189,44 @@ function speciesName(family,el1,el2){
 }
 
 /* Main entry: res is the scan result with colours, cells and photo numbers. */
+/* ---------- colour easter eggs ----------
+   A photo with the right mix of colours, in the right places, finds a special Snabit or puts a costume on the one it makes.
+   res.raw gives each colour's share of the picture in percent, and res.g12 gives where each colour sits on a 12 by 12 grid
+   (the share of each cell that colour fills). Specials are checked first since their mixes are the stricter ones. */
+const EGG_SPECIAL=["Eagle","Vampire","Phoenix","Kitsune","Naga","Yeti"];
+const COSTUMES=["Panda","Bee","Ladybug","Watermelon","Candy cane"];
+function eggStats(res,g){ const G=res.g12&&res.g12[g]; if(!G) return null; let t=0,cx=0,cy=0;
+  for(let i=0;i<144;i++){ const v=G[i]; t+=v; cx+=v*((i%12)+0.5)/12; cy+=v*(Math.floor(i/12)+0.5)/12; }
+  if(t<=0) return null; cx/=t; cy/=t; let vv=0; for(let i=0;i<144;i++){ const v=G[i]; vv+=v*((((i%12)+0.5)/12-cx)**2+((Math.floor(i/12)+0.5)/12-cy)**2); }
+  const rows=Array.from({length:12},(_,r)=>{ let a=0; for(let c=0;c<12;c++) a+=G[r*12+c]; return a/12; }), cols=Array.from({length:12},(_,c)=>{ let a=0; for(let r=0;r<12;r++) a+=G[r*12+c]; return a/12; });
+  return {cx,cy,spread:Math.sqrt(vv/t),rows,cols}; }
+/* how many times a colour's band profile crosses its own average: stripes cross often, one block crosses once or twice */
+const eggCross=a=>{ const m=a.reduce((x,y)=>x+y,0)/a.length; let n=0; for(let i=1;i<a.length;i++) if((a[i-1]-m)*(a[i]-m)<0) n++; return n; };
+function eggOf(res){
+  if(!res||!res.raw||!res.g12) return null;
+  const R=g=>res.raw[g]||0, S=g=>eggStats(res,g), sum=(...g)=>g.reduce((a,k)=>a+R(k),0);
+  const striped=g=>{ const s=S(g); return !!s&&(eggCross(s.rows)>=3||eggCross(s.cols)>=3); };
+  // specials
+  { const bl=R("blue")>=R("violet")?"blue":"violet";   // navy reads as blue or violet depending on the light
+    if(R("red")>=14&&R("white")>=14&&R(bl)>=7&&sum("red","white",bl)>=65){ const b=S(bl); if(b&&(Math.abs(b.cx-0.5)>0.1||Math.abs(b.cy-0.5)>0.1)&&b.spread<0.3&&striped("red")) return {special:"Eagle"}; } }   // the blue corner can be in any corner, whichever way the phone is held
+  if(R("black")>=45&&R("white")>=10&&R("red")>=3&&R("red")<=20&&sum("black","white","red")>=85) return {special:"Vampire"};
+  if(R("red")>=10&&R("orange")>=10&&R("yellow")>=10&&sum("red","orange","yellow")>=65){ const r=S("red"),y=S("yellow"); if(r&&y&&r.cy>y.cy+0.12) return {special:"Phoenix"}; }
+  if(R("white")>=55&&R("red")>=6&&R("red")<=35&&sum("white","red")>=85){ const r=S("red"); if(r&&Math.abs(r.cx-0.5)<0.12&&Math.abs(r.cy-0.5)<0.12&&r.spread<0.2) return {special:"Kitsune"}; }
+  if(R("green")>=40&&R("yellow")>=8&&sum("green","yellow")>=65){ const g=S("green"); if(g&&(Math.max(...g.rows)>0.55||Math.max(...g.cols)>0.55)) return {special:"Naga"}; }
+  if(sum("white","silver")>=72&&sum("cyan","blue")>=3&&sum("cyan","blue")<=22){ const w=S("white"); if(w&&w.spread>0.2) return {special:"Yeti"}; }
+  // costumes
+  if(R("black")>=28&&R("white")>=28&&sum("black","white")>=82) return {costume:"Panda"};
+  if(R("yellow")>=25&&R("black")>=18&&sum("yellow","black")>=65&&striped("black")) return {costume:"Bee"};
+  if(R("red")>=40&&R("black")>=8&&R("black")<=35&&sum("red","black")>=72){ const k=S("black"); if(k&&k.spread>0.22) return {costume:"Ladybug"}; }
+  if(R("green")>=12&&sum("red","pink")>=25&&R("black")>=0.3&&R("black")<=15){ const g=S("green"),r=S(R("red")>=R("pink")?"red":"pink");
+    if(g&&r&&g.spread>r.spread+0.04&&Math.abs(r.cx-0.5)<0.15&&Math.abs(r.cy-0.5)<0.15) return {costume:"Watermelon"}; }
+  if(R("red")>=25&&R("white")>=25&&sum("red","white")>=72&&(striped("red")||striped("white"))) return {costume:"Candy cane"};
+  return null;
+}
+
 function hatch(res,now=new Date(),ov={}){
   const el1=EL[res.main.g], el2=res.second?EL[res.second.g]:null;
-  const pf=pickFamily(res.cells), family=ov.family||pf.family, band=pf.band, shape=pf.shape;
+  const pf=pickFamily(res.cells), egg=ov.family?null:eggOf(res), family=ov.family||(egg&&egg.special)||pf.family, band=pf.band, shape=pf.shape;
   const F=FAMILY[family];
   const sat=res.sat, con=res.contrast, bri=res.bright;
   const parts={
@@ -219,8 +261,10 @@ function hatch(res,now=new Date(),ov={}){
   // ability
   let hiddenChance=(res.mono?0.12:0.03)*(bri<0.3?2:1);
   const hidden=R()<hiddenChance;
-  const ability=hidden?EL_ABILITY[el1][1]:(R()<0.5?F.ability:EL_ABILITY[el1][0]);
-  const pool=buildPool(el1,el2,res.pool), skills=pool.slice(0,2);
+  const ability=F.special?F.ability:hidden?EL_ABILITY[el1][1]:(R()<0.5?F.ability:EL_ABILITY[el1][0]);
+  const costume=ov.costume||(egg&&egg.costume)||null;
+  const base0=buildPool(el1,el2,res.pool), cs=costume&&typeof COSTUME_SKILLS!=="undefined"?Object.keys(COSTUME_SKILLS).filter(n=>COSTUME_SKILLS[n].costume===costume):[];
+  const pool=cs.length?[base0[0],cs[0],...base0.slice(1),...cs.slice(1)]:base0, skills=pool.slice(0,2);   // a costume's first skill comes with it
   const lifespan=Math.round(36+12*bri); // months: 3 to 4 years, so a well-raised Snabit reaches S around the middle of its life, the way MR2's do
-  return {pool,name:speciesName(family,el1,el2),family,band,shape,el1,el2,mono:res.mono,parts,grid,pal,stats,talent,pers,ability,hidden,hiddenChance,skills,lifespan};
+  return {pool,name:speciesName(family,el1,el2),family,costume,special:!!F.special,band,shape,el1,el2,mono:res.mono,parts,grid,pal,stats,talent,pers,ability,hidden,hiddenChance,skills,lifespan};
 }
