@@ -539,3 +539,5 @@ html:not(.dbg) .i-stat{grid-template-columns:104px 0 1fr 36px}
 .rr-rounds i{font-style:normal;font-weight:700;width:16px;text-align:center}.rr-rounds i.w{color:var(--mint)}.rr-rounds i.l{color:var(--coral)}.rr-rounds i.d{color:var(--mute)}
 .v-soon{max-height:300px;overflow:auto}.v-cal .cu.up b{color:var(--gold)}
 .v-cal .wk h4 small{color:var(--mute);font-weight:500;margin-left:4px}
+/* the Gallery button is for testing only; it shows with #debug at the end of the address */
+html:not(.dbg) #bottom label[for=pick]{display:none}

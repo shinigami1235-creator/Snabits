@@ -166,6 +166,9 @@ function giveExp(s,amt){
 function gradedOpponent(grade,level,rand,wantEl,earned,base){
   let m=base||randomOpponent(rand);   // base: train up a given monster instead of a random one
   if(wantEl) for(let k=0;k<300&&m.el1!==wantEl;k++) m=randomOpponent(rand);
+  // random photos give some families far more often than others (Squib and Pinch about 1 in 100), so pick the family evenly first
+  else if(!base){ const fams=["Chomp","Pinch","Stilt","Skit","Antik","Squib","Moko","Booly"], want=fams[Math.floor(rand()*fams.length)];
+    for(let k=0;k<1500&&m.family!==want;k++) m=randomOpponent(rand); }
   const G=GRADE_INFO[grade], roll=Math.round(G.earned[0]+rand()*(G.earned[1]-G.earned[0])), total=earned!=null?earned:roll;
   const focus=Math.floor(rand()*6), second=(focus+1+Math.floor(rand()*5))%6, tp=[0,0,0,0,0,0];
   for(let k=0;k<total;k++){ const r=rand(); tp[r<0.4?focus:r<0.6?second:Math.floor(rand()*6)]++; }
@@ -174,6 +177,8 @@ function gradedOpponent(grade,level,rand,wantEl,earned,base){
   if(total>=evo[0]){ s.stage="Byte"; s.mark=focus; s.grid=scale2x(addMark(m.grid,focus)); }
   const fm=fightMon(s), open=m.pool.filter(n=>SKILLS[n].lv<=level);
   const lo=aiLoadout(m,level,rand); while(lo.length<slotsFor(s)&&open.some(n=>!lo.includes(n))) lo.push(open.find(n=>!lo.includes(n)));
+  // from level 5 a computer Snabit knows its family's signature skill too, and brings it in place of its last pick
+  for(const n of (typeof sigSkills==="function"?sigSkills({m,level}):[])) if(SKILLS[n]&&!lo.includes(n)){ if(lo.length<slotsFor(s)) lo.push(n); else lo[lo.length-1]=n; }
   return {m,fm,level,skills:lo.filter(Boolean),stage:s.stage,mark:s.mark,earned:total};
 }
 
