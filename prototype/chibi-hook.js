@@ -1,7 +1,7 @@
 /* Puts the chibi drawings (chibi.js) into the ranch and battle screens while the pixel art stays the default.
    It's on by default. #art=pixel in the address, or localStorage "snabits-art" set to "pixel", brings back the pixel art.
    Only families listed in CHIBI_FAMS are drawn smooth; the rest keep their pixels. */
-const CHIBI_FAMS = ['Chomp', 'Squib', 'Antik', 'Moko', 'Pinch', 'Stilt', 'Skit', 'Booly'];
+const CHIBI_FAMS = ['Chomp', 'Squib', 'Antik', 'Moko', 'Pinch', 'Stilt', 'Skit', 'Booly', 'Plod', 'Bipped', 'Fizz', 'Teep', 'Lern'];
 const CHIBI_ART = !/(^#|&)art=pixel(&|$)/.test(location.hash) && (() => { try { return localStorage.getItem('snabits-art') !== 'pixel'; } catch (e) { return true; } })();
 
 /* m is a hatched monster or a fight snapshot; s is the ranch state when there is one */
@@ -298,7 +298,8 @@ function sfx(kind) {
 }
 
 /* Each family has its own cry when it appears: Chomp goes "nom nom", Squib bubbles, Antik beeps, Moko mews,
-   Pinch clicks then squeaks, Stilt whistles "wheee-oo", Skit chitters and Booly lets out a wobbly "booo". Bigger stages cry lower. */
+   Pinch clicks then squeaks, Stilt whistles "wheee-oo", Skit chitters and Booly lets out a wobbly "booo". Plod trumpets, Bipped calls "hey-yo",
+   Fizz pops and bubbles, Teep whistles like a kettle and Lern chimes. Bigger stages cry lower. */
 function cry(fam, stage) {
   try { const d = sfxBus(); if (!d) return; MC = AC;
     const f = typeof FAMILY !== 'undefined' && FAMILY[fam] && FAMILY[fam].of ? FAMILY[fam].of[0] : fam;
@@ -319,6 +320,11 @@ function cry(fam, stage) {
       case 'Stilt': voice(t, 'sine', [[0, 700], [0.22, 1500], [0.34, 1500], [0.55, 900]], 0.13, 8); break;
       case 'Skit': for (let i = 0; i < 6; i++) voice(t + i * 0.05, 'triangle', [[0, 1800 + (i % 2) * 400], [0.035, 2300 + (i % 2) * 300]], 0.07); break;
       case 'Booly': voice(t, 'sine', [[0, 520], [0.15, 600], [0.6, 360]], 0.15, 22); dNoise(d, t, 0.6, 0.05, 'bandpass', 900, 0.8); break;
+      case 'Plod': voice(t, 'sawtooth', [[0, 300], [0.15, 620], [0.45, 560], [0.62, 400]], 0.05, 10); break;   // a little trumpet
+      case 'Bipped': voice(t, 'triangle', [[0, 600], [0.1, 760]], 0.12); voice(t + 0.16, 'triangle', [[0, 900], [0.14, 700]], 0.12); break;   // "hey-yo"
+      case 'Fizz': dNoise(d, t, 0.04, 0.3, 'bandpass', 1800, 2); for (let i = 0; i < 5; i++) voice(t + 0.08 + i * 0.05, 'sine', [[0, 700 + i * 160], [0.04, 1300 + i * 200]], 0.08); break;   // a pop, then bubbles
+      case 'Teep': voice(t, 'sine', [[0, 1300], [0.2, 1900], [0.55, 2000]], 0.08, 18); dNoise(d, t, 0.55, 0.05, 'highpass', 4500); break;   // a kettle whistle
+      case 'Lern': [1046, 1318, 1568].forEach((f, i) => voice(t + i * 0.09, 'triangle', [[0, f], [0.3, f]], 0.08)); break;   // a soft chime
       default: voice(t, 'triangle', [[0, 800], [0.12, 1200], [0.22, 1000]], 0.13);
     } } catch (err) {}
 }

@@ -15,7 +15,7 @@ function makeFighter(m,loadout,level=LEVEL){
   const s=m.stats, fl=m.flat||[0,0,0,0,0,0], st=i=>Math.floor(s[i]*level/50+5+fl[i]);
   const maxhp=Math.floor(s[2]*1.5*level/50+3*level+55+fl[2]*1.5);   // Constitution sets HP
   const names=(loadout||m.skills);
-  return {m,name:m.name,el1:m.el1,el2:m.el2,mono:m.mono,ability:m.ability[0],level,maxhp,hp:maxhp,energy:3,
+  return {m,name:m.name,el1:m.el1,el2:m.el2,mono:m.mono,ability:m.ability[0],level,maxhp,hp:maxhp,energy:m.ability[0]==="Steeping"?4:3,
     base:{sta:st(0),pow:st(1),grd:st(2),mnd:st(3),spr:st(4),spd:st(5)},stage:{sta:0,pow:0,grd:0,mnd:0,spr:0,spd:0},
     status:null,guard:false,protect:false,protectLast:false,counter:false,charging:null,hitWhileCharging:false,
     regen:0,mirror:false,sleep:false,taunt:0,lastSkill:null,thawed:false,firstHitTaken:false,lastStand:false,unseen:false,
@@ -64,6 +64,7 @@ class Fight{
     if(f.hp<=0||f.status) return false;
     if(f.statusBlock){ this.say(`${f.name} stays calm and shrugs it off.`); return false; }
     if(f.ability==="Sanctuary"&&f.hp===f.maxhp){ this.pop(i,"Sanctuary"); return false; }
+    if(f.ability==="Bright"&&name==="Blind"){ this.pop(i,"Bright"); return false; }
     if(name==="Crack"&&f.ability==="Unbreakable"){ this.pop(i,"Unbreakable"); return false; }
     if(name==="Freeze"&&f.thawed) return false;
     if(name==="Poison"&&(f.el1==="Steel"||f.el2==="Steel")&&!(fromIdx!=null&&this.p[fromIdx].ability==="Corrosion")){ this.say(`${f.name} is made of metal and can't be poisoned.`); return false; }
@@ -272,7 +273,7 @@ class Fight{
     if(me.hp<=0){ this.ko(i,tgt); return; }
     this.lastStand(tgt);
     if(s.basic&&me.ability==="Web"&&tgt!==i&&R()<0.3){ this.pop(i,"Web"); this.stageChange(def,{spd:-1},true); }
-    if(s.status&&tgt!==i){ let ch=s.status[1]*this.statusOdds(me,def); if(s.status[0]==="Freeze"&&((this.field&&this.field.name==="Snow")||me.ability==="Permafrost")) ch*=2; if(R()*100<ch) this.inflict(def,s.status[0],i); }
+    if(s.status&&tgt!==i){ let ch=s.status[1]*this.statusOdds(me,def)*(me.ability==="Volatile"?1.3:1); if(s.status[0]==="Freeze"&&((this.field&&this.field.name==="Snow")||me.ability==="Permafrost")) ch*=2; if(R()*100<ch) this.inflict(def,s.status[0],i); }
     if(s.lower&&s.lowerChance&&tgt!==i&&R()*100<s.lowerChance) this.stageChange(def,s.lower,true);
     if(this.field&&this.field.name==="Static"&&R()<0.1) this.inflict(def,"Shock",i);
   }

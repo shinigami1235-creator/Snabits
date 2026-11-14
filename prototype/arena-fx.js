@@ -462,10 +462,50 @@ Object.assign(ANIM,{
   kickflurry:atFlurry(4,[AT_P.kick,AT_P.kickR],(c,x,k,j)=>atKickMark(c,x.target,k,x.col,atBig(x)*0.75,atDir(x),j%2===1),0.5),
   punchflurry:atFlurry(3,["punchwind","punch"],(c,x,k,j)=>{ if(typeof burst==="function") burst(c,{x:x.target.x+((j%2)*2-1)*10,y:x.target.y+(j-1)*12},k,x.col); })
 });
+/* the signature moves of the five families added 14 Nov 2026 */
+function atBottle(c,p,rot,col,s=1){ c.save(); c.translate(p.x,p.y); c.rotate(rot); c.scale(s,s);
+  c.fillStyle="rgba(235,245,255,.85)"; c.beginPath(); c.arc(0,3,7,0,7); c.fill(); c.fillRect(-2.5,-8,5,7);
+  c.fillStyle=rgbS(col,0.95); c.beginPath(); c.arc(0,4,5.4,0,Math.PI); c.lineTo(-5.4,4); c.fill(); c.fillRect(-5.2,2,10.4,2.5);
+  c.fillStyle="#8a5a32"; c.fillRect(-3,-11,6,4); c.fillStyle="rgba(255,255,255,.8)"; c.fillRect(-4.5,0,1.6,4); c.restore(); }
+function atSplash(c,p,k,col,big=1){ c.save(); c.translate(p.x,p.y); c.globalAlpha=1-k;
+  for(let i=0;i<9;i++){ const a=-Math.PI*0.15-i*Math.PI*0.7/8-Math.PI*0.08, r=(8+k*30)*big; c.fillStyle=rgbS(col.map(v=>Math.min(255,v+40)),1);
+    c.beginPath(); c.arc(Math.cos(a)*r,Math.sin(a)*r+k*k*20,(4-k*2.5)*big,0,7); c.fill(); }
+  c.fillStyle=rgbS(col,0.5); c.beginPath(); c.ellipse(0,6,(14+k*16)*big,(5+k*3)*big,0,0,7); c.fill(); c.restore(); }
+Object.assign(ANIM,{
+  onetwo:atFlurry(2,["punchwind","punch"],(c,x,k,j)=>{ if(typeof burst==="function") burst(c,{x:x.target.x+(j?8:-8),y:x.target.y+(j?6:-6)},k,x.col); },0.66),
+  punchflurry5:atFlurry(5,["punchwind","punch"],(c,x,k,j)=>{ if(typeof burst==="function") burst(c,{x:x.target.x+((j%2)*2-1)*10,y:x.target.y+(j-2)*7},k,x.col); }),
+  /* Fizz throws a bottle of its own colour in an arc; it bursts in a splash with bubbles */
+  potion:{C:640,D:1000,
+    atk:t=>({f:0,pose:t<240?"slamup":t<700?"push":"idle"}),
+    fx(c,t,x){ const o=x.from[0], tg=x.target; if(t<240) atBottle(c,{x:o.x,y:o.y-10*eo(t/240)},-0.4*eo(t/240),x.col);
+      else if(t<640){ const k=(t-240)/400, p=lerpP({x:o.x,y:o.y-10},tg,k,60*atBig(x)); atBottle(c,p,(t-240)/70,x.col); }
+      else if(t<1000) atSplash(c,tg,(t-640)/360,x.col,atBig(x)); }},
+  /* Teep: a jet of steam from the spout, puffs that grow and drift as they go */
+  steam:{C:420,D:1020,
+    atk:t=>({f:0,pose:t<180?"cast":t<860?"push":"idle"}),
+    fx(c,t,x){ const o=x.from[0], tg=x.target; if(t<180){ c.fillStyle="rgba(255,255,255,.7)"; c.beginPath(); c.arc(o.x,o.y,3+t/30,0,7); c.fill(); return; }
+      const w=Math.min(1,(t-180)/120)*Math.min(1,(900-t)/160); if(w<=0) return;
+      for(let i=0;i<14;i++){ const k=((t-180)/520+i/14)%1, p=lerpP(o,tg,k,0,Math.sin(i*2.1+t/90)*6*k), r=(4+k*14)*atBig(x);
+        c.fillStyle=`rgba(255,255,255,${0.75*w*(1-k*0.6)})`; c.beginPath(); c.arc(p.x,p.y-k*8,r,0,7); c.fill(); }
+      c.fillStyle=rgbS(x.col,0.25*w); c.beginPath(); c.arc(tg.x,tg.y,18*atBig(x),0,7); c.fill(); }},
+  /* Lern: it glows brighter and brighter, then bursts in rays that wash over the target */
+  flash:{C:380,D:900,
+    atk:t=>({f:0,pose:t<300?"cast":t<700?"push":"idle"}),
+    fx(c,t,x){ const s=x.self, tg=x.target;
+      if(t<380){ const k=t/380, g=c.createRadialGradient(s.x,s.y,1,s.x,s.y,20+50*k); g.addColorStop(0,`rgba(255,250,220,${0.9*k})`); g.addColorStop(1,"rgba(255,240,180,0)"); c.fillStyle=g; c.fillRect(s.x-80,s.y-80,160,160); return; }
+      const k=(t-380)/520; if(k>1) return; c.save(); c.globalAlpha=1-k; c.strokeStyle="rgba(255,248,200,.9)"; c.lineCap="round";
+      for(let i=0;i<12;i++){ const a=i*Math.PI/6+0.2, r0=10+k*30, r1=r0+40*(1-k*0.5); c.lineWidth=5*(1-k)+1; c.beginPath(); c.moveTo(s.x+Math.cos(a)*r0,s.y+Math.sin(a)*r0); c.lineTo(s.x+Math.cos(a)*r1,s.y+Math.sin(a)*r1); c.stroke(); }
+      const g=c.createRadialGradient(tg.x,tg.y,2,tg.x,tg.y,60*atBig(x)); g.addColorStop(0,"rgba(255,255,235,.85)"); g.addColorStop(1,"rgba(255,255,235,0)"); c.fillStyle=g; c.fillRect(tg.x-70,tg.y-70,140,140); c.restore(); }}
+});
 /* which animation a family move plays in the arena, by its own name (a Blaze Snabit's "Flame Kick" is still Kick) */
 const AR_KIND={Lunge:"bite","Jaw Lock":"jawlock",Gnash:"gnash",
   Pinch:"pinch","Claw Jab":"claw","Vice Grip":"vicegrip","Crab Hammer":"hammer",
   Kick:"kick","High Kick":"highkick","Axe Kick":"axekick",Sweep:"sweep","Long Stride":"kick",Stampede:"stampede","Kick Off":"kick",
   Nip:"bite","Skitter Bite":"bite",Web:"web","Reel In":"web","Trap Line":"web",Cocoon:"web","Leg Flurry":"legflurry",
   "Tentacle Lash":"lash",Riptide:"wave","Eye Beam":"beam","Scan Beam":"beam",Stare:"beam","Spirit Lance":"spear",Poltergeist:"push","Boo!":"push",Dread:"push",
-  "Flurry Kick":"kickflurry","Comet Punch":"punchflurry",Barrage:"punchflurry"};
+  "Flurry Kick":"kickflurry","Comet Punch":"punchflurry",Barrage:"punchflurry",
+  "Trunk Swat":"lash",Stomp:"stomp","Trunk Slam":"hammer",Trumpet:"push","Quake Stomp":"rockpath","Mammoth Charge":"tackle",
+  Jab:"punch","Dash Punch":"punch","One-Two":"onetwo",Uppercut:"punch",Haymaker:"punch","Flurry Punch":"punchflurry5",
+  Bubble:"bolt","Cork Pop":"push","Potion Toss":"potion","Acid Splash":"volley","Boil Over":"pillar","Explosive Brew":"meteor",
+  Splash:"bolt","Lid Bonk":"tackle","Steam Jet":"steam",Scald:"bolt",Whistle:"push","Boiling Point":"pillar",
+  Ember:"bolt",Flash:"flash","Spark Shower":"volley",Beacon:"beam","Sky Lantern":"meteor"};

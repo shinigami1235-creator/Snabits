@@ -8,6 +8,12 @@ const FAMILY = {
   Stilt:  {body:[2,[2,3,3,3,3,3,3,3,2]], legs:"longlegs", base:[60,50,35,45,45,65], ability:["Long Stride","Acts first on the turn it switches in"]},
   Skit: {body:[7,[3,5,6,6,6,6,5]], legs:"spider", eyes:"spider", arms:0, base:[45,55,40,45,55,60], ability:["Web","Its basic attack has a 30% chance to drop the target's Speed 1 step"]},
   Booly:  {body:[3,[2,3,4,4,5,5,6,6,6,7,7,7]], legs:"ghost", base:[55,35,40,70,60,40], ability:["Slippery","10% chance to dodge any Strike"]},
+  /* the five families added 14 Nov 2026 */
+  Plod:  {body:[4,[4,6,7,7,7,7,7,7,6]], legs:"stubby", base:[60,55,75,30,40,40], ability:["Steady","Knockback and pushes on it are halved"]},
+  Bipped:{body:[2,[3,4,4,4,4,3,3,3,3,3]], legs:"twolegs", base:[50,60,45,45,45,55], ability:["Counterpunch","After it dodges a hit, its next Strike hits 20% harder"]},
+  Fizz:  {body:[3,[2,2,2,4,6,7,7,7,6,4]], legs:"twolegs", base:[45,30,45,75,55,50], ability:["Volatile","Statuses it lands last 30% longer"]},
+  Teep:  {body:[5,[4,6,7,7,7,7,6,5]], legs:"stubby", base:[55,35,60,65,50,35], ability:["Steeping","Focus fills 10% faster while it stands still"]},
+  Lern:  {body:[3,[2,4,5,6,6,6,6,6,5,4,2]], legs:"twolegs", base:[45,35,40,65,65,50], ability:["Bright","Blind can't land on it, and its hit chance can't be lowered"]},
 };
 /* Stamina: energy each turn and less fatigue. Power: Strike damage and crits. Constitution: HP and cutting all damage.
    Mind: Cast damage and landing statuses. Insight: hit rate and shrugging off statuses. Speed: going first, dodging and follow-up attacks. */
@@ -46,7 +52,11 @@ function pickFamily(cells){
   const lr=Math.log((vx+1e-6)/(vy+1e-6));
   const shape = lr>0.42?"wide":lr<0.02?"tall":"compact";
   const map = {top:{wide:"Squib",tall:"Booly",compact:"Moko"},middle:{wide:"Skit",tall:"Stilt",compact:"Antik"},bottom:{wide:"Pinch",tall:"Chomp",compact:cx<0.5?"Chomp":"Skit"}};
-  return {family:map[band][shape], band, shape};
+  /* when the main colour gathers in one spot, like a single object in the middle of the shot, the five newer families
+     (most of them everyday objects) take that place in the grid instead */
+  const near = {top:{wide:"Teep",tall:"Lern",compact:"Fizz"},middle:{wide:"Plod",tall:"Bipped",compact:"Fizz"},bottom:{wide:"Plod",tall:"Bipped",compact:cx<0.5?"Teep":"Lern"}};
+  const solid = vx+vy<0.137;   // an evenly spread colour sits near 0.148 and one spot near 0, so about 5 in 13 random photos land here
+  return {family:(solid?near:map)[band][shape], band, shape};
 }
 
 /* Build the 20x20 label grid. Labels: 1 body, 2 parts, 3 eye white, 4 dark (mouth, brow), 5 accent tip, 6 pupil, 7 teeth. */

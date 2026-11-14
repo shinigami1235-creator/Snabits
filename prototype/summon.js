@@ -67,6 +67,24 @@ const SUMMON = (() => {
       return { alpha: a, dy: -Math.sin(tt / 380) * H * 0.012, pose: tt < 760 ? 'hover' : tt < 1050 ? 'swipeup' : 'happy',
         under(c, x, y, h) { const r = rng(5); for (let k = 0; k < 7; k++) { const p = seg(tt, k * 60, 900 + k * 60), ang = r() * 7;
           c.fillStyle = `rgba(240,240,255,${0.55 * (1 - p) * (p > 0)})`; c.beginPath(); c.arc(x + Math.cos(ang) * h * 0.5 * p, y - h * 0.45 + Math.sin(ang) * h * 0.35 * p, h * (0.12 + 0.18 * p), 0, 7); c.fill(); } } }; },
+    /* the five families added 14 Nov 2026 */
+    Plod(tt, H, W) { const k = seg(tt, 0, 900), st = Math.floor(tt / 225), bump = tt < 900 ? Math.abs(Math.sin(tt / 225 * Math.PI)) : 0, land = tt - 1000, sp = spring(land, 0.16);
+      return { dx: W * 0.55 * (1 - k), dy: -bump * H * 0.02, sx: 1 + (tt > 1000 ? sp : 0), sy: 1 - (tt > 1000 ? sp : 0), pose: tt < 900 ? 'walk' : tt < 1000 ? 'crouch' : 'happy', t: tt * 1.4,
+        under(c, x, y, h) { if (tt > 1000 && tt < 1400) { const p = seg(tt, 1000, 1400); c.fillStyle = `rgba(200,180,150,${0.5 * (1 - p)})`; for (const sd of [-1, 1]) { c.beginPath(); c.ellipse(x + sd * h * (0.3 + p * 0.4), y, h * 0.16 * (1 + p), h * 0.05, 0, 0, 7); c.fill(); } } } }; },
+    Bipped(tt, H, W) { const k = out3(seg(tt, 0, 700));   // it walks in and throws two jabs at the air, like a boxer warming up
+      return { dx: -W * 0.55 * (1 - k), pose: tt < 700 ? 'walk' : tt < 1150 ? (Math.floor((tt - 700) / 150) % 2 ? 'punch' : 'punchwind') : 'happy', t: tt * 1.6 }; },
+    Fizz(tt, H, W) { const shake = tt < 650 ? Math.sin(tt / 28) * W * 0.01 * seg(tt, 0, 650) : 0, pop = tt > 650 ? spring(tt - 650, H * 0.12, 200, 90) : 0;
+      return { dx: shake, dy: -pop, sy: tt < 650 ? 1 - 0.18 * seg(tt, 0, 650) : 1 + (tt < 760 ? 0.12 : 0), sx: tt < 650 ? 1 + 0.1 * seg(tt, 0, 650) : 1, pose: tt < 650 ? 'crouch' : tt < 1000 ? 'jump' : 'happy',
+        over(c, x, y, h) { const r = rng(9); for (let k = 0; k < 10; k++) { const p = seg(tt, 600 + k * 40, 1300 + k * 40); if (p <= 0 || p >= 1) continue;
+          c.fillStyle = `rgba(255,255,255,${0.8 * (1 - p)})`; c.beginPath(); c.arc(x + (r() - 0.5) * h * 0.6, y - h * (0.9 + p * 0.6), h * 0.03 * (1 + r()), 0, 7); c.fill(); } } }; },
+    Teep(tt, H, W) { const k = seg(tt, 0, 900);   // it rattles like a kettle on the boil, then hops
+      return { dx: tt < 900 ? Math.sin(tt / 40) * W * 0.008 * k : 0, dy: tt > 900 && tt < 1150 ? -Math.sin(seg(tt, 900, 1150) * Math.PI) * H * 0.06 : 0, pose: tt < 900 ? 'idle' : 'happy',
+        over(c, x, y, h) { for (let i = 0; i < 6; i++) { const p = ((tt / 700) + i / 6) % 1; if (tt > 1200) continue;
+          c.fillStyle = `rgba(255,255,255,${0.7 * (1 - p) * Math.min(1, tt / 300)})`; c.beginPath(); c.arc(x - h * 0.55 - p * h * 0.15, y - h * (0.75 + p * 0.5), h * (0.04 + p * 0.08), 0, 7); c.fill(); } } }; },
+    Lern(tt, H) { const k = out3(seg(tt, 0, 800)), lit = tt > 850;
+      return { dy: -H * 0.35 * (1 - k) - Math.sin(tt / 400) * H * 0.01, pose: tt < 800 ? 'hover' : tt < 1100 ? 'idle' : 'happy', filter: lit ? null : 'brightness(0.45)',
+        under(c, x, y, h) { if (!lit) return; const a = 1 - seg(tt, 850, 1500) * 0.6, g = c.createRadialGradient(x, y - h * 0.5, 2, x, y - h * 0.5, h * 0.9);
+          g.addColorStop(0, `rgba(255,230,160,${0.55 * a})`); g.addColorStop(1, 'rgba(255,230,160,0)'); c.fillStyle = g; c.fillRect(x - h, y - h * 1.4, h * 2, h * 1.8); } }; },
     pop(tt) { const k = back(seg(tt, 0, 420)); return { sx: k, sy: k, pose: 'idle' }; }
   };
 

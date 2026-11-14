@@ -7,7 +7,7 @@ const arBand=gap=>gap<10?"Close":gap<25?"Near":gap<45?"Mid":"Far";
 /* hitting from further away is harder to set up, so it pays a little more */
 const AR_BAND_DMG={Close:0.8,Near:0.95,Mid:1.2,Far:1.5,Any:1};
 /* a family's damage, tuned so every family wins about half its fights in the balance sim */
-const AR_FAM_DMG={Chomp:0.86,Pinch:0.94,Stilt:0.92,Skit:1.08,Antik:0.95,Squib:1.1,Moko:1.22,Booly:1.23};
+const AR_FAM_DMG={Chomp:0.86,Pinch:0.94,Stilt:0.92,Skit:1.08,Antik:0.95,Squib:1.1,Moko:1.28,Booly:1.23,Plod:0.87,Bipped:0.93,Fizz:1.2,Teep:0.95,Lern:1.4};
 
 /* [name, learned at, range, damage, accuracy, sharpness, wither, push, cost, windup, extras] */
 const FAM_MOVES={
@@ -27,10 +27,21 @@ const FAM_MOVES={
     ["Dread",18,"Near",28,80,0,20,35,24,0.5,{cast:1}],["Unblinking",24,"Any",0,100,0,0,0,18,0.2,{buff:"unblink"}],["Eye Beam",30,"Far",96,70,12,10,0,36,1.1,{cast:1}],["Hypnotize",40,"Mid",0,65,0,15,0,34,0.8,{cast:1,hold:2}]],
   Booly:[["Wisp Shot",1,"Far",36,85,5,0,0,10,0.3,{cast:1}],["Boo!",3,"Close",5,90,0,5,35,10,0.2,{cast:1}],["Phase Shift",5,"Any",0,100,0,0,0,18,0.2,{buff:"phase"}],["Soul Pass",8,"Close",14,95,0,0,0,14,0.2,{swap:1,cast:1,drain:1}],
     ["Haunt",14,"Near",30,80,0,20,20,18,0.4,{cast:1}],["Will-o'-Wisp",20,"Far",56,75,5,0,0,24,0.6,{cast:1}],["Poltergeist",30,"Mid",60,70,5,0,15,30,0.7,{cast:1}],["Spirit Lance",40,"Far",92,70,15,0,0,38,1.2,{cast:1}]],
+  /* the five families added 14 Nov 2026: Plod the slow tank, Bipped the boxer, Fizz the potion thrower, Teep the steady caster, Lern the quick caster */
+  Plod:[["Trunk Swat",1,"Close",25,88,8,0,8,10,0.3],["Stomp",3,"Near",32,80,5,0,6,14,0.5,{slow:2}],["Trunk Slam",5,"Close",66,70,12,0,25,30,0.8],["Trunk Toss",8,"Close",15,80,0,0,0,12,0.35,{swap:1}],
+    ["Trumpet",14,"Mid",18,85,0,15,30,20,0.5,{cast:1}],["Thick Hide",20,"Any",0,100,0,0,0,18,0.2,{buff:"bunker"}],["Quake Stomp",30,"Mid",58,70,8,0,15,32,0.9],["Mammoth Charge",40,"Far",80,65,10,0,30,40,1.1,{dash:"in"}]],
+  Bipped:[["Jab",1,"Close",22,92,10,0,4,8,0.2],["Dash Punch",3,"Near",30,80,8,0,6,14,0.4,{dash:"in"}],["One-Two",5,"Close",28,85,10,0,6,22,0.4,{hits:2}],["Hip Toss",8,"Close",15,80,0,0,0,12,0.3,{swap:1}],
+    ["Uppercut",14,"Close",48,75,15,0,15,24,0.6],["Guard Up",20,"Any",0,100,0,0,0,16,0.1,{buff:"riposte"}],["Haymaker",30,"Close",78,65,15,0,20,36,0.9],["Flurry Punch",40,"Close",14,85,10,0,0,38,0.6,{hits:5}]],
+  Fizz:[["Bubble",1,"Mid",28,90,5,0,0,10,0.3,{cast:1}],["Cork Pop",3,"Close",22,85,5,0,30,12,0.3,{cast:1}],["Potion Toss",5,"Mid",40,85,5,0,0,22,0.6,{cast:1,status:["Poison",45]}],["Cork Swap",8,"Close",14,85,0,0,0,12,0.3,{swap:1}],
+    ["Brew Up",14,"Any",0,100,0,0,0,20,0.3,{support:1,heal:0.18}],["Acid Splash",20,"Near",44,80,8,0,0,22,0.5,{cast:1,status:["Crack",25]}],["Boil Over",30,"Mid",66,75,8,0,10,32,0.8,{cast:1,status:["Burn",25]}],["Explosive Brew",40,"Far",94,65,10,0,20,40,1.2,{cast:1}]],
+  Teep:[["Splash",1,"Near",26,90,5,0,4,10,0.3,{cast:1}],["Lid Bonk",3,"Close",28,85,8,0,8,12,0.3],["Steam Jet",5,"Far",50,80,8,0,0,24,0.7,{cast:1,status:["Blind",30]}],["Spin Pour",8,"Close",14,85,0,0,0,12,0.3,{swap:1,cast:1}],
+    ["Tea Time",14,"Any",0,100,0,0,0,22,0.4,{support:1,heal:0.2}],["Scald",20,"Mid",46,80,8,0,6,24,0.6,{cast:1,status:["Burn",25]}],["Whistle",30,"Far",22,85,0,25,0,24,0.5,{cast:1,status:["Daze",35]}],["Boiling Point",40,"Mid",92,65,12,0,15,40,1.2,{cast:1}]],
+  Lern:[["Ember",1,"Far",32,88,5,0,0,10,0.3,{cast:1}],["Float Back",3,"Any",0,100,0,0,0,10,0.15,{step:-28}],["Flash",5,"Mid",34,95,5,8,0,20,0.4,{cast:1,status:["Blind",50]}],["Lantern Swing",8,"Close",16,85,0,0,0,12,0.3,{swap:1}],
+    ["Paper Fold",14,"Any",0,100,0,0,0,18,0.2,{buff:"phase"}],["Spark Shower",20,"Mid",16,80,5,0,0,24,0.6,{cast:1,hits:3}],["Beacon",30,"Far",68,75,10,8,0,32,0.9,{cast:1}],["Sky Lantern",40,"Far",94,65,12,0,0,40,1.3,{cast:1}]],
 };
 const SHARED_MOVES=[["Dash In",1,"Any",0,100,0,0,0,10,0.2,{step:20}],["Leap Back",1,"Any",0,100,0,0,0,10,0.2,{step:-20}],["Brace",1,"Any",0,100,0,0,0,6,0.1,{buff:"brace"}]];
 /* how fast each family gets around: Booly floats and Squib jets, while Chomp and Pinch plod */
-const FAM_WALK={Chomp:0.8,Pinch:0.85,Stilt:1.05,Skit:1.15,Antik:1,Squib:1.15,Moko:1.05,Booly:1.25};
+const FAM_WALK={Chomp:0.8,Pinch:0.85,Stilt:1.05,Skit:1.15,Antik:1,Squib:1.15,Moko:1.05,Booly:1.25,Plod:0.75,Bipped:1.05,Fizz:1,Teep:0.85,Lern:1.15};
 /* a family's first move takes its element, the way Skit's Web already does: a Blaze Chomp bites with Flame Bite */
 const EL_PREFIX={Blaze:"Flame",Frost:"Frost",Tide:"Aqua",Spark:"Volt",Wild:"Leaf",Venom:"Toxic",Charm:"Heart",Stone:"Rock",Light:"Shine",Steel:"Iron",Shade:"Shadow",Void:"Void"};
 const arMove=r=>({name:r[0],lv:r[1],range:r[2],dmg:r[3],acc:r[4],sharp:r[5]/100,wither:r[6],push:r[7],cost:r[8],wind:r[9],...(r[10]||{})});
@@ -56,6 +67,7 @@ function arFromSkill(n){
 function arMoves(fam,level,known,el){
   const fm=(FAM_MOVES[fam]||[]).map(arMove).filter(m=>m.lv<=level), sh=SHARED_MOVES.map(arMove);
   if(el&&EL_PREFIX[el]&&fm[0]){ fm[0].base=fm[0].name; fm[0].name=`${EL_PREFIX[el]} ${fm[0].name}`; fm[0].el=el; }
+  for(const m of fm) if(m.name==="Potion Toss"&&el&&typeof POTION_BY_EL!=="undefined"&&POTION_BY_EL[el]) m.status=[POTION_BY_EL[el],45];   // the bottle holds its element's status
   const elm=(known||[]).map(arFromSkill).filter(Boolean), seen=new Set();
   // a skill with the same name as a family move (Crunch, High Kick) shows once, as the family move
   return fm.concat(sh,elm).filter(m=>!seen.has(m.name)&&seen.add(m.name));
@@ -141,17 +153,18 @@ class Arena{
     if(f.hp<=0||f.st||f.buff.ward||!AR_STATUS[name]) return false;
     if(name==="Freeze"&&f.thawT>0) return false;
     if(name==="Poison"&&(f.f.el1==="Steel"||f.f.el2==="Steel")) return false;
+    if(name==="Blind"&&f.f.ability==="Bright") return false;   // Lern's Bright
     if(this.rand()*100>=pct) return false;
-    f.st={name,t:AR_STATUS[name].d,from:from?from.i:null,tick:0}; this.ev.push({t:"status",i:f.i,name}); return true; }
+    f.st={name,t:AR_STATUS[name].d*(from&&from.f.ability==="Volatile"?1.3:1),from:from?from.i:null,tick:0}; this.ev.push({t:"status",i:f.i,name}); return true; }   // Volatile: Fizz's statuses last 30% longer
   // raise (sign 1) or lower (sign -1) stats for a while; Bulwark keeps its stats from being lowered
   stage(f,what,sign){ if(typeof what==="number") what={pow:what};
     for(const [k,n] of Object.entries(what)){ if(!AR_STATS.includes(k)) continue;
-      if(sign<0&&f.buff.bulwark){ this.ev.push({t:"stage",i:f.i,k,n:0}); continue; }
+      if(sign<0&&(f.buff.bulwark||k==="spr"&&f.f.ability==="Bright")){ this.ev.push({t:"stage",i:f.i,k,n:0}); continue; }
       const was=f.stg[k]; f.stg[k]=Math.max(-3,Math.min(3,was+sign*n)); f.stgT[k]=AR_STAGE_T; this.ev.push({t:"stage",i:f.i,k,n:f.stg[k]-was}); } }
   step(){
     if(this.over||this.turn) return;
     for(const p of this.p) p.px=p.x;   // where it stood last step, so the screen can glide between steps
-    for(const p of this.p){ if(!p.buff.brace) p.focus=Math.min(99,p.focus+this.regen(p)*AR.DT);
+    for(const p of this.p){ if(!p.buff.brace) p.focus=Math.min(99,p.focus+this.regen(p)*AR.DT*(p.f.ability==="Steeping"&&(p.walkT==null||this.t-p.walkT>0.5)?1.1:1));   // Teep's Steeping
       for(const k of ["cool","hold","slow","stun","sleep","thawT","shoveCool","think"]) p[k]=Math.max(0,p[k]-AR.DT);
       for(const k in p.buff){ p.buff[k]-=AR.DT; if(p.buff[k]<=0){ delete p.buff[k]; this.ev.push({t:"unbuff",i:p.i,k}); } }
       for(const k in p.stgT){ p.stgT[k]-=AR.DT; if(p.stgT[k]<=0){ delete p.stgT[k]; p.stg[k]=0; this.ev.push({t:"stage",i:p.i,k,n:0,end:1}); } }
@@ -212,7 +225,7 @@ class Arena{
     else if(!this.inRange(m)){ this.ev.push({t:"miss",i:p.i,m,why:"out"}); return; }   // it stepped out of reach during the windup
     if(o.buff.bubble&&(m.range==="Mid"||m.range==="Far")){ delete o.buff.bubble; this.ev.push({t:"miss",i:p.i,m,why:"block"}); return; }
     if(o.buff.protect&&(m.dmg||m.status)){ delete o.buff.protect; this.ev.push({t:"block",i:p.i,m}); return; }
-    if(roll>this.hitChance(p,m)){ this.ev.push({t:"miss",i:p.i,m,why:o.buff.phase&&!m.noDodge?"phase":"dodge"}); return; }
+    if(roll>this.hitChance(p,m)){ this.ev.push({t:"miss",i:p.i,m,why:o.buff.phase&&!m.noDodge?"phase":"dodge"}); if(o.f.ability==="Counterpunch") o.cpunch=1; return; }   // Bipped's Counterpunch
     // a mirror sends a Cast back at whoever threw it
     let tg=o; if(o.buff.mirror&&m.cast&&m.dmg){ delete o.buff.mirror; this.ev.push({t:"mirror",i:o.i,m}); tg=p; }
     const hitBy=tg===p?o:p;   // whose hit it counts as on screen
@@ -228,6 +241,7 @@ class Arena{
       if(m.el==="Spark"&&this.has(tg,"Soak")) dmg*=1.25;
       let shatter=false; if(this.has(tg,"Freeze")){ dmg*=1.25; shatter=true; }
       const crit=sure||!tg.buff.bulwark&&R()<m.sharp+edge(this.eff(p,"pow"),con,0.2,0,0.12); if(crit) dmg*=1.5;
+      if(p.cpunch&&!m.cast&&tg===o) dmg*=1.2;
       if(tg.buff.brace) dmg*=0.6; if(tg.buff.bunker) dmg*=0.8; if(tg.buff.castWard&&m.cast) dmg*=0.5;
       dmg=Math.max(1,Math.round(dmg*(0.9+R()*0.1)));
       if(tg.buff.endure&&dmg>=tg.hp){ dmg=Math.max(0,tg.hp-1); delete tg.buff.endure; this.ev.push({t:"endure",i:tg.i}); }
@@ -237,6 +251,7 @@ class Arena{
       if(tg===o&&!m.cast){ const ct=o.buff.counter?o.counterMul:o.buff.riposte?1.5:0;
         if(ct){ const back=Math.round(dmg*ct); p.hp=Math.max(0,p.hp-back); o.dealt+=back; this.ev.push({t:"counter",i:o.i,dmg:back}); if(o.buff.counter) delete o.buff.counter; } }
     }
+    if(p.cpunch&&!m.cast&&m.dmg) p.cpunch=0;
     if(m.drain&&total&&tg===o) this.heal(p,total*m.drain,"drain",o.i);
     if(m.recoil&&total){ const r=Math.max(1,Math.round(total*m.recoil)); p.hp=Math.max(0,p.hp-r); this.ev.push({t:"recoil",i:p.i,dmg:r}); }
     if(m.steal&&tg===o){ const f=Math.min(o.focus,m.steal*6); o.focus-=f; p.focus=Math.min(99,p.focus+f); this.ev.push({t:"steal",i:p.i,amt:Math.round(f)}); }
@@ -245,7 +260,7 @@ class Arena{
     if(m.selfLower) this.stage(p,m.selfLower,-1);
     if(m.wither){ const w=m.wither*(1+edge(this.eff(p,"mnd"),this.eff(o,"spr"),0.5,-0.3,0.5)); if(o.buff.unblink){} else if(o.buff.feedback) p.focus=Math.max(0,p.focus-w); else o.focus=Math.max(0,o.focus-w); }
     if(m.push&&tg===o&&!o.buff.brace&&!o.buff.bunker){
-      const k=1+edge(this.eff(p,m.cast?"mnd":"pow"),this.eff(o,"grd"),0.5,-0.4,0.4), s=m.push*k*(this.has(o,"Root")?0.5:1);
+      const k=1+edge(this.eff(p,m.cast?"mnd":"pow"),this.eff(o,"grd"),0.5,-0.4,0.4), s=m.push*k*(this.has(o,"Root")?0.5:1)*(o.f.ability==="Steady"&&m.push>0?0.5:1);   // Plod's Steady
       if(s>0){ const want=o.x+d*s, wall=d>0?AR.LEN:0, past=Math.abs(want-wall)*(d>0?want>wall:want<wall); o.x=Math.max(0,Math.min(AR.LEN,want));
         if(past>5){ const slam=Math.round(o.maxhp*0.03); o.hp=Math.max(0,o.hp-slam); p.dealt+=slam; o.stun=0.5; this.ev.push({t:"slam",i:o.i,dmg:slam}); } }
       else o.x=p.x+d*Math.max(AR.BODY,Math.abs(o.x-p.x)+s);   // a pull drags it in, but never through the puller
