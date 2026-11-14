@@ -288,15 +288,30 @@ function sfx(kind) {
     if (typeof AC === 'undefined' || !AC || typeof MUS === 'undefined' || !MUS.on || !MUS.nb || CB.now != null) return;
     if (!SFXBUS) { SFXBUS = AC.createGain(); SFXBUS.gain.value = 0.55; SFXBUS.connect(AC.destination); }
     const t = AC.currentTime + 0.005, d = SFXBUS;
-    if (kind === 'tap') { dKick(d, t, 0.35); dNoise(d, t, 0.05, 0.2, 'bandpass', 2400, 1.4); }
-    if (kind === 'hit') { dKick(d, t, 0.7); dNoise(d, t, 0.09, 0.35, 'bandpass', 1600, 1); }
-    if (kind === 'heavy') { dKick(d, t, 1); dKick(d, t + 0.03, 0.6); dNoise(d, t, 0.22, 0.5, 'lowpass', 900); dNoise(d, t, 0.06, 0.4, 'highpass', 4000); }
-    if (kind === 'ko') { dKick(d, t, 1); dNoise(d, t, 0.5, 0.45, 'lowpass', 500); }
-    if (kind === 'whoosh') dNoise(d, t, 0.16, 0.18, 'bandpass', 900, 0.7);
+    if (kind === 'tap') { dKick(d, t, 0.35); dNoise(d, t, 0.05, 0.2, 'bandpass', 2400, 1.4); smp('hitL', 0.55); }
+    if (kind === 'hit') { dKick(d, t, 0.7); dNoise(d, t, 0.09, 0.35, 'bandpass', 1600, 1); smp('hitM', 0.6); }
+    if (kind === 'heavy') { dKick(d, t, 1); dKick(d, t + 0.03, 0.6); dNoise(d, t, 0.22, 0.5, 'lowpass', 900); dNoise(d, t, 0.06, 0.4, 'highpass', 4000); smp('hitH', 0.8); }
+    if (kind === 'ko') { dKick(d, t, 1); dNoise(d, t, 0.5, 0.45, 'lowpass', 500); smp('ko', 0.75); }
+    if (kind === 'whoosh') { dNoise(d, t, 0.16, 0.18, 'bandpass', 900, 0.7); smp('whoosh', 0.4); }
     if (kind === 'charge') { const o = AC.createOscillator(), g = AC.createGain(); o.type = 'triangle'; o.frequency.setValueAtTime(300, t); o.frequency.exponentialRampToValueAtTime(900, t + 0.22);
       g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.12, t + 0.05); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.26); o.connect(g); g.connect(d); o.start(t); o.stop(t + 0.28); }
   } catch (err) {}
 }
+/* Recorded sounds layered under the synth ones: real impacts under hits, whooshes under strikes, a deeper boom on a knockout
+   and a soft click on buttons. They're CC0 (sfx/CREDITS.txt), loaded once the sound is unlocked, and each play picks one of
+   the takes at random and nudges its pitch a few percent, so repeated hits don't all sound the same. */
+const SMP = { files: { hitL: 2, hitM: 2, hitH: 2, ko: 1, whoosh: 3, click: 2 }, buf: {}, asked: false };
+function smpLoad() {
+  if (SMP.asked || typeof AC === 'undefined' || !AC || typeof fetch !== 'function') return; SMP.asked = true;
+  for (const [k, n] of Object.entries(SMP.files)) for (let i = 1; i <= n; i++)
+    fetch(`sfx/${k}_${i}.wav`).then(r => r.ok ? r.arrayBuffer() : Promise.reject()).then(a => AC.decodeAudioData(a)).then(b => (SMP.buf[k] = SMP.buf[k] || []).push(b)).catch(() => {});
+}
+function smp(k, v = 1, delay = 0, rate = 1) {
+  try { const d = sfxBus(), L = SMP.buf[k]; if (!d || !L || !L.length) return false;
+    const s = AC.createBufferSource(), g = AC.createGain(); s.buffer = L[Math.floor(Math.random() * L.length)]; s.playbackRate.value = rate * (0.95 + Math.random() * 0.1);
+    g.gain.value = v; s.connect(g); g.connect(d); s.start(AC.currentTime + 0.005 + delay); return true; } catch (err) { return false; }
+}
+addEventListener('pointerdown', e => { smpLoad(); const b = e.target && e.target.closest && e.target.closest('button,.rb,.btn,[role=button]'); if (b && !b.disabled) smp('click', 0.3); }, { capture: true });
 
 /* Each family has its own cry when it appears: Chomp goes "nom nom", Squib bubbles, Antik beeps, Moko mews,
    Pinch clicks then squeaks, Stilt whistles "wheee-oo", Skit chitters and Booly lets out a wobbly "booo". Plod trumpets, Bipped calls "hey-yo",
@@ -425,10 +440,16 @@ const KSND = {
   foxfire: (d, t) => { for (let i = 0; i < 3; i++) sTone(d, t + 0.42 + i * 0.105, 'sine', 1400 + i * 200, 900, 0.18, 0.05); dNoise(d, t, 0.4, 0.04, 'highpass', 5000); },
   venomcoil: (d, t) => { dNoise(d, t + 0.3, 0.6, 0.12, 'highpass', 5000, 1.2); sTone(d, t + 0.4, 'sawtooth', 140, 110, 0.5, 0.04); },
   special: (d, t) => { sTone(d, t, 'sawtooth', 110, 440, 1.2, 0.035); sTone(d, t, 'sawtooth', 165, 660, 1.2, 0.025); dNoise(d, t + 0.2, 1.0, 0.1, 'bandpass', 1200, 0.6); dKick(d, t + 1.25, 0.8); },
+  shield: (d, t) => { sTone(d, t, 'sine', 300, 600, 0.35, 0.05); sTone(d, t + 0.05, 'triangle', 900, 1200, 0.3, 0.025); },   // a hum that swells as the shield goes up
+  buff: (d, t) => { sTone(d, t, 'sawtooth', 220, 660, 0.3, 0.03); dNoise(d, t, 0.3, 0.06, 'bandpass', 1800, 1.2); },   // a quick rising sweep as it powers up
+  heal: (d, t) => [1319, 1568, 1976].forEach((f, k) => sTone(d, t + k * 0.06, 'sine', f, f * 1.01, 0.3, 0.03)),   // a soft sparkle before the heal lands
+  mistcast: (d, t) => { dNoise(d, t, 0.6, 0.1, 'highpass', 3500, 0.7); sTone(d, t, 'sine', 620, 420, 0.5, 0.03); },   // a hiss of mist
+  debuff: (d, t) => { sTone(d, t, 'triangle', 900, 300, 0.35, 0.04); dNoise(d, t + 0.05, 0.25, 0.06, 'lowpass', 900); },   // a falling sweep toward the target
   avalanche: (d, t) => { dNoise(d, t, 0.5, 0.1, 'bandpass', 700, 0.7); dKick(d, t + 0.55, 0.9); dNoise(d, t + 0.55, 0.7, 0.3, 'lowpass', 400); dNoise(d, t + 0.6, 0.4, 0.1, 'highpass', 3000); }
 };
+const SWING = new Set(['tackle', 'bite', 'punch', 'claw', 'kick', 'highkick', 'axekick', 'sweep', 'hammer', 'lash', 'shadowclaw', 'shadowstrike', 'talondive', 'nightbite', 'pinch', 'vicegrip', 'jawlock', 'onetwo', 'spear', 'fly']);   // moves that swing through the air get a recorded whoosh too
 function kindSfx(kind, delay = 0) {
-  try { const d = sfxBus(); if (!d || !KSND[kind]) return; MC = AC; KSND[kind](d, AC.currentTime + 0.02 + delay); } catch (err) {}
+  try { const d = sfxBus(); if (!d || !KSND[kind]) return; MC = AC; KSND[kind](d, AC.currentTime + 0.02 + delay); if (SWING.has(kind)) smp('whoosh', 0.3, delay + 0.05); } catch (err) {}
 }
 
 /* ---------- effects that fly between the two sides ---------- */

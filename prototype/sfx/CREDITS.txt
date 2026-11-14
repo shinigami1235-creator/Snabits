@@ -1,0 +1,15 @@
+Recorded sounds layered under the game's own synth sounds. All are CC0 (public domain), so credit is optional.
+Each was trimmed to start on the hit, levelled to the same loudness and saved as 22 kHz mono WAV.
+
+hitL_1.wav    soft_impact3 by peoplearehappy        https://freesound.org/people/peoplearehappy/sounds/841274/
+hitL_2.wav    impact by SamsterBirdies              https://freesound.org/people/SamsterBirdies/sounds/745291/
+hitM_1.wav    impactSoft_heavy_000 by Kenney        https://kenney.nl/assets/impact-sounds
+hitM_2.wav    impactSoft_heavy_001 by Kenney        https://kenney.nl/assets/impact-sounds
+hitH_1.wav    impactPunch_heavy_000 by Kenney       https://kenney.nl/assets/impact-sounds
+hitH_2.wav    impactPunch_heavy_001 by Kenney       https://kenney.nl/assets/impact-sounds
+ko_1.wav      lowFrequency_explosion_000 by Kenney  https://kenney.nl/assets/sci-fi-sounds (first 1.3 s, faded out)
+whoosh_1.wav  Whoosh by qubodup                     https://freesound.org/people/qubodup/sounds/60013/
+whoosh_2.wav  broomstick whoosh 3 by Sadiquecat     https://freesound.org/people/Sadiquecat/sounds/816262/
+whoosh_3.wav  swoosh v2 by migoreng1                https://freesound.org/people/migoreng1/sounds/786514/
+click_1.wav   Classic Click by adh.dreaming         https://freesound.org/people/adh.dreaming/sounds/671105/
+click_2.wav   click_001 by Kenney                   https://kenney.nl/assets/interface-sounds

@@ -142,6 +142,20 @@ const TRACKS={
       "G6 - - - E6 - - - C6 - - - E6 - G6 -",
       "F#6 - - - E6 - - - D6 - - - C6 - A5 -",
       "D6 - - - - - - - . . A5 - B5 - C6 -"]}}},
+  /* a short tune for the drill itself: it counts in with a snare roll, loops its 8 bars while the drill plays, and a sting
+     for the result (musSting) cuts it off. D major at 140, brighter and quicker than anything on the ranch */
+  drill:{name:"Drill Time",bpm:140,lead:"sqep",lv:0.17,comp:"skank",bassK:"slap",startAt:7*16+12,xfade:0.6,
+    dr:{k:"x...x...x...x...",s:"....c.......c..x",h:"x.x.x.x.x.x.x.xo"},
+    bs:"R.R.O.R.R.R.5.O.",cp:"..C...C...C...C.",form:["A","A"],
+    sec:{A:{ch:["D","G","Bm","A","D","G","Em|A","D"],mel:[
+      "A4 - D5 - F#5 - A5 - - - F#5 - D5 - A4 -",
+      "B4 - D5 - G5 - - - B5 - - - G5 - D5 -",
+      "F#5 - - - D5 - B4 - D5 - F#5 - B5 - - -",
+      "A5 - - - G5 - F#5 - E5 - - - C#5 - E5 -",
+      "F#5 - A5 - D6 - - - A5 - F#5 - D5 - F#5 -",
+      "G5 - B5 - D6 - - - B5 - G5 - D5 - B4 -",
+      "E5 - G5 - B5 - - - A5 - - - C#6 - E6 -",
+      "D6 - - - - - - - . . F#5 - E5 - C#5 -"]}}},
   cup:{name:"Ring of Eight",bpm:136,lead:"crystal",lv:0.18,comp:"pad",bassK:"pick",
     dr:{k:"x...x...x...x...",s:"....x.......x...",h:"x.o.x.o.x.o.x.o."},
     bs:"R.R.O.R.R.R.O.5.",cp:"L---------------",ar:"0123212301232123",form:["A","B","A","B"],
@@ -298,6 +312,7 @@ function musWant(){
   if(shown("venue")) return "cup";
   if(shown("ob")) return "town";
   if(typeof RS!=="undefined"&&RS&&shown("ranch")){
+    if(RS.drillMus) return RS.drillDone?null:"drill";   // a drill: its own short tune, then quiet after the result's sting until the next morning
     if(RS.trip) return RS.night?"night":"travel";
     if(RS.inTown||RS.visit) return "town";
     if(RS.training&&ranchHour()<19) return "train";
@@ -305,12 +320,16 @@ function musWant(){
   }
   return "scan";
 }
-function musPlay(key){
-  const now=AC.currentTime;
-  if(MUS.tr){const o=MUS.tr;o.g.gain.cancelScheduledValues(now);o.g.gain.setValueAtTime(o.g.gain.value,now);o.g.gain.linearRampToValueAtTime(0,now+2);MUS.fading=(MUS.fading||[]).concat(o);setTimeout(()=>{o.g.disconnect();MUS.fading=MUS.fading.filter(x=>x!==o);},2600);}
-  MUS.cur=key;MUS.tr=null;if(!key||!TRACKS[key])return;
-  const g=AC.createGain();g.gain.setValueAtTime(0,now);g.gain.setValueAtTime(0,now+.4);g.gain.linearRampToValueAtTime(1,now+2.9);g.connect(MUS.bus);
-  MUS.tr={def:TRACKS[key],g,n:0,t:now+.1};
+/* Every change of tune crossfades: the old one keeps playing as it fades out while the new one fades in. Most changes take
+   2 to 3 seconds; a tune with its own xfade (the drill) or a sting (xf) swaps faster so it lands with what's on screen. */
+function musPlay(key,xf){
+  const now=AC.currentTime, D=key&&TRACKS[key], out=xf||(D&&D.xfade)||2;
+  if(MUS.tr){const o=MUS.tr;o.g.gain.cancelScheduledValues(now);o.g.gain.setValueAtTime(o.g.gain.value,now);o.g.gain.linearRampToValueAtTime(0,now+out);MUS.fading=(MUS.fading||[]).concat(o);setTimeout(()=>{o.g.disconnect();MUS.fading=MUS.fading.filter(x=>x!==o);},out*1000+600);}
+  MUS.cur=key;MUS.tr=null;if(!D)return;
+  const g=AC.createGain(), quick=!!(xf||D.xfade);g.gain.setValueAtTime(0,now);
+  if(quick) g.gain.linearRampToValueAtTime(1,now+out); else {g.gain.setValueAtTime(0,now+.4);g.gain.linearRampToValueAtTime(1,now+2.9);}
+  g.connect(MUS.bus);
+  MUS.tr={def:D,g,n:D.startAt||0,t:now+.1};
 }
 function musTick(){
   if(!AC||AC.state!=="running")return; MC=AC;
@@ -350,6 +369,28 @@ function musJingle(kind){
   }
   setTimeout(()=>g.disconnect(),len+500);
   MUS.jingleT=performance.now()+len; if(MUS.tr) musPlay(null); MUS.cur=null; return true;
+}
+/* The drill's result, played over the drill tune as it cuts away: a fanfare for a great week, three notes up for a success,
+   a deflating wah-wah for a fail and a lazy slide down for a slacked-off one. All in D, the drill tune's key. */
+function musSting(res){
+  if(!AC||!MUS.bus||!MUS.on) return false; MC=AC;
+  const g=AC.createGain(); g.gain.value={success:1.9,fail:1.7,slack:3.6}[res]||1; g.connect(MUS.bus); const t=AC.currentTime+.04; let len;   // levelled so all four sit near the win jingle
+  if(res==="great"){
+    [62,66,69,74].forEach((m,i)=>{iLead(g,t+i*.07,m+12,.08,.11,"square",3200,[0]);iEP(g,t+i*.07,m,.08,.08);});
+    const h=t+.3; dKick(g,h,.9); dNoise(g,h,1.4,.2,"highpass",4200); iPow(g,h,[50,57,62,66],.9,.12); iBass(g,h,38,.9,.3,"slap");
+    iLead(g,h,78,.85,.13,"square",3400,[0]); iBell(g,h,90,1,.06); [86,90,93].forEach((m,i)=>iBell(g,h+.45+i*.07,m,.5,.04)); len=1900;
+  } else if(res==="success"){
+    [69,74,78].forEach((m,i)=>iLead(g,t+i*.09,m,.09,.11,"triangle",4200,[0]));
+    for(const m of[62,66,69])iEP(g,t+.27,m,.55,.07); iBell(g,t+.27,86,.6,.05); dKick(g,t+.27,.6); len=1200;
+  } else if(res==="fail"){
+    [[64,0],[63,.24]].forEach(([m,dt])=>{ iLead(g,t+dt,m,.2,.12,"square",1100,[0]); dRim(g,t+dt,.14); });
+    iLead(g,t+.5,62,.7,.12,"square",900,[-8,8]); iBass(g,t+.5,38,.6,.25,"pick"); len=1500;
+  } else {
+    const o=mo("sine",mf(81),t),g2=MC.createGain(); o.frequency.exponentialRampToValueAtTime(mf(64),t+.6); g2.gain.setValueAtTime(.0001,t); g2.gain.exponentialRampToValueAtTime(.22,t+.04); g2.gain.exponentialRampToValueAtTime(.0001,t+.75); o.connect(g2); g2.connect(g); o.start(t); o.stop(t+.8);
+    dRim(g,t+.8,.12); iEP(g,t+.8,62,.4,.06); len=1300;
+  }
+  setTimeout(()=>g.disconnect(),len+600);
+  MUS.jingleT=performance.now()+len; if(MUS.tr) musPlay(null,.25); MUS.cur=null; return true;
 }
 /* The summon and fusion score, laid out to the scene's own clock: a build-up that speeds up and climbs until the burst
    (a heartbeat kick, a pad stepping through four chords, bells that get faster and higher, a rising hiss and a snare roll),
