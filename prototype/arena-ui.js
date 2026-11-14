@@ -126,8 +126,9 @@ function atStart(meFam,foeFam){   // picks: see atMake
 function atSize(){ const cv=document.getElementById("at-cv"), scr=cv.parentElement, W=scr.clientWidth||390;
   const pad=parseFloat(getComputedStyle(scr).paddingTop)||0, H=Math.round(Math.max(200,Math.min(700,scr.clientHeight-pad-6))), dpr=Math.min(2,devicePixelRatio||1);
   cv.style.height=H+"px"; cv.width=W*dpr; cv.height=H*dpr; AT.W=W; AT.H=H; AT.dpr=dpr; AT.WW=Math.round(W*1.6); AT.bg=null;
-  // the feet stand just above the skill rows; the arena is drawn tall enough to fill the screen when the camera pulls all the way back
-  const hb=document.getElementById("at-hbot"); AT.floorS=H-(hb?hb.offsetHeight:90)-22; AT.zMin=W/AT.WW; AT.HH=Math.ceil(H/AT.zMin); AT.FY=Math.round(AT.floorS/AT.zMin); }
+  // feet a little below the middle, so the fight sits in the centre of the screen with the clock in view.
+  // the arena is drawn tall enough to fill the screen when the camera pulls all the way back
+  const hb=document.getElementById("at-hbot"); AT.floorS=Math.round(Math.min(H-(hb?hb.offsetHeight:90)-22,H*0.6)); AT.zMin=W/AT.WW; AT.HH=Math.ceil(H/AT.zMin); AT.FY=Math.round(AT.floorS/AT.zMin); }
 window.addEventListener("resize",()=>{ if(AT&&document.getElementById("at-cv")) atSize(); });
 /* the range cells on the fight screen: yours and the opponent's, lit where the two of you stand now */
 function atRows(){
@@ -336,6 +337,10 @@ function atStage(c,W,H,FY){
   for(let r=0,y=crowd-8;y>ctop+6;r++,y-=15) for(let x=0;x<W;x+=13){ c.fillStyle=cols[((x*131+r*977)>>3)%cols.length]; c.beginPath(); c.arc(x+(r%2?6:0),y,4.5,0,7); c.fill(); }
   for(let k=0;k<6;k++){ c.fillStyle=["#e2483f","#3b6fb8","#f2c14e","#4caf6a","#c08cff","#ff8a3d"][k]; c.fillRect(6+k*(W-12)/6,crowd,(W-12)/6-5,12); }
   const fl=c.createLinearGradient(0,sand,0,H); fl.addColorStop(0,"#d9a866"); fl.addColorStop(1,"#b98245"); c.fillStyle=fl; c.fillRect(0,sand,W,H-sand);
+  // sand grain, and a painted ring line in front of the fighters
+  for(let k=0;k<W*(H-sand)/700;k++){ const x=(k*7919)%W, y=sand+((k*104729)%(H-sand)); c.fillStyle=k%3?"rgba(120,78,36,.18)":"rgba(255,240,210,.22)"; c.fillRect(x,y,3,2); }
+  c.strokeStyle="rgba(255,248,232,.55)"; c.lineWidth=5; c.beginPath(); c.moveTo(12,FY+120); c.lineTo(W-12,FY+120); c.stroke();
+  c.strokeStyle="rgba(255,248,232,.3)"; c.beginPath(); c.ellipse(W/2,FY+120,90,26,0,0,Math.PI); c.stroke();
   for(const x of [0,W-12]){ c.fillStyle="#6b5a8a"; c.fillRect(x,sand-30,12,H-sand+30); c.fillStyle="#8a78ab"; c.fillRect(x,sand-30,12,5); for(let y=sand-18;y<H;y+=14){ c.fillStyle="rgba(0,0,0,.18)"; c.fillRect(x,y,12,2);} }
 }
 function atResult(){
