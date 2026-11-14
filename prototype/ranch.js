@@ -837,6 +837,7 @@ async function endWeek(weeks,line){
   if(PLAYER.week>s.born&&(PLAYER.week-s.born)%52===0){ const g=COMMON_FINDS[Math.floor(Math.random()*COMMON_FINDS.length)]; addItem(g); s.spoil+=5; notes.push(`It's its birthday! There was cake, and a ${g} as a present.`); }
   { const mo=Math.floor(PLAYER.week/4)%12, wk=PLAYER.week%4; if(mo%3===2&&wk===2&&typeof rookMon==="function"&&story().seen.intro){ const r=rookMon(s.grade); notes.push(`Rook dropped by with ${r.m.name} to show off before the official cup. It's a ${r.m.el1} ${r.m.family}, so plan for that.`); } }
   { const fest=typeof festivalOf==="function"&&festivalOf(PLAYER.week); if(fest){ addItem(fest[1]); s.stress-=10; notes.push(`The ${fest[0]} is on in town this week. Nena gave every ranch ${/^[AEIOU]/.test(fest[1])?"an":"a"} ${fest[1]}, and the music took 10 stress off.`); } }
+  clampAll();   // the festival, a visitor, the plants and worn things move stress after the clamp at the top
   notes.push(condition());
   if(s.stress>50) notes.push("It seems tense lately, maybe give it a rest.");
   { const nx=fightDayLine(s,1); if(nx) notes.push(nx+(fightCond(s).name==="Top shape"?"":" A rest this week would have it fresh for it.")); }   // Tala looks ahead to next week's special fight
