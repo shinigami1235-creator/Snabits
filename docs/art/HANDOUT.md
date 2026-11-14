@@ -77,7 +77,7 @@ Gid caught AI slop in the storyboard lines on 12 Nov 2026 because the skills wer
   - Laps: a swimming pool. It swims across and back cut at the waterline. A great starts with a dive off the board, and a fail ends bobbing in a red and white swim ring.
   - Boulder push: a rocky trail under a layered cliff with pines.
   - Brace: a batting cage, with a pitching machine firing the balls at its body.
-  - Puzzle box: a study room with a chalkboard, a sunny window and shelves.
+  - Puzzle box: a study room with a chalkboard, a sunny window and shelves. It slides tiles on a wooden cube while three shapes light up in a thought bubble. A great opens it in one go with a lightbulb, confetti and a wind-up mouse, a success takes one wrong try, and a fail snaps the lid on its face and leaves it frustrated with a black scribble over its head (`studyPuzzle` in `ranch.js`, `puzzle.mp4`). Training places zoom in at most 1.1 times so the props show.
   - Meditate: a lotus pond at dawn with bamboo and a stone lantern. It sits on a stone in the pond while ripples spread and the koi gather round. A great makes it float up as the lotuses bloom, and a fail has it doze off until a frog hops onto its head.
   - Dodgeball: an indoor court with painted lines, bleachers and a ball launcher.
   - The heavy drills keep their places (the long road, the quarry, the old fortress, the library, the waterfall shrine and the obstacle course) and use the same fades, music and nightfall.
@@ -199,6 +199,7 @@ Gid caught AI slop in the storyboard lines on 12 Nov 2026 because the skills wer
 
 ## Next
 
+- **The new arena (in progress, 14 Nov 2026).** Gid approved a real-time arena: a line between two walls, the Snabits facing the camera and looking at each other, four range bands (Close, Near, Mid, Far), focus that fills over time, Shove at Close, swap moves, push and pull, and a scrolling move list in place of the 4-slot loadout. The plan and every family's moveset are in the doc https://claude.ai/artifact/D3krLg77oc8unWRzAbfRLC, the mockup is `docs/art/arena-mockup.png`, and the engine is `prototype/arena.js` (not loaded by the game yet). Stamina fills focus, Mind adds Wither strength, Insight resists Wither. Order of work: Gid approves the doc, balance the ranged families (they won 34% to 45% in the first run), a test arena page he plays on his phone, then the full switch.
 - Computer opponents don't use signature skills yet.
 - An NPC who reveals a Snabit's growth ranks and lifespan for a fee.
 - Remove the gallery button from the Snaboscope.
