@@ -679,6 +679,8 @@ function awayProps(c, p, t, front) {
       c.strokeStyle = '#8a8496'; c.lineWidth = 0.8; c.beginPath(); c.moveTo(-6, -3); c.quadraticCurveTo(-10, -1, -11, -5); c.stroke();
       c.save(); c.translate(-1, -8); c.scale(Math.cos(p.kr || 0), 1); c.fillStyle = '#e0b84a'; c.beginPath(); c.ellipse(-2, -2, 2, 1.4, 0, 0, 7); c.ellipse(2, -2, 2, 1.4, 0, 0, 7); c.fill(); c.fillRect(-0.5, -2, 1, 2.5); c.restore();
       c.restore(); } return;
+    case 'spiral': if (!front) return; c.save(); c.translate(x, y); c.rotate(p.rot || 0); c.strokeStyle = '#1d1d26'; c.lineWidth = 1.3; c.lineCap = 'round';   // a frustrated scribble
+      c.beginPath(); for (let a = 0; a < 15; a += 0.3) { const r = 1 + a * 0.55; c.lineTo(Math.cos(a) * r, Math.sin(a) * r * 0.75); } c.stroke(); c.restore(); return;
     case 'book': if (front) return; c.fillStyle = '#8a3b3b'; c.beginPath(); c.roundRect(x - 13, y - 3, 26, 4, 1); c.fill();      // an open book to fall asleep on
       c.fillStyle = '#f4efe4'; c.beginPath(); c.moveTo(x, y - 2); c.quadraticCurveTo(x - 6, y - 5, x - 12, y - 3); c.lineTo(x - 12, y - 1); c.lineTo(x, y); c.closePath(); c.fill();
       c.beginPath(); c.moveTo(x, y - 2); c.quadraticCurveTo(x + 6, y - 5, x + 12, y - 3); c.lineTo(x + 12, y - 1); c.lineTo(x, y); c.closePath(); c.fill(); return;

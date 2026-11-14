@@ -415,7 +415,7 @@ async function pondMeditate(r){
 }
 /* Puzzle box in the study room: it slides the tiles on a wooden puzzle cube while the shapes it's after light up in a thought bubble.
    A great opens it in one go with a lightbulb, confetti and a wind-up toy hopping out. A success takes two wrong tries first.
-   A fail has the lid snap shut on its face, and it ends up asleep on an open book. */
+   A fail has the lid snap shut on its face, the box pops off, and it's left frustrated with a scribble over its head. */
 async function studyPuzzle(r){
   const s=RS, made=[], add=o=>{ made.push(prop(o)); return o; }, W=ms=>rwait(ms);
   try{
@@ -439,8 +439,8 @@ async function studyPuzzle(r){
         await W(250); box.lid=0; box.sh=2; spark(box.x,GROUND-22,"smoke",3); box.onHead=true; s.pose="hurt"; bub.a=0;
         for(let f=0;f<44;f++){ box.x=s.x+Math.sin(f/2)*1.5; box.y=headY()+18; s.x=96+Math.sin(f/3)*3; await W(28); }
         box.onHead=false; box.vy=-3; for(let f=0;f<26;f++){ box.x+=1.6; box.y+=box.vy; box.vy+=0.35; if(box.y>GROUND){ box.y=GROUND; box.vy=0; } await W(26); }
-        s.x=96; s.pose="sad"; await W(700);
-        const bk=add({k:"book",x:s.x+16,y:GROUND+2}); await walkTo(s.x+12,30); s.pose="sleep"; for(let k=0;k<3;k++){ spark(s.x+6,headY(),"z"); await W(450); }
+        s.x=96; s.pose="hurt"; const sp=add({k:"spiral",x:s.x,y:headY()-10,rot:0});   // frustrated, with a black scribble over its head
+        for(let f=0;f<56;f++){ sp.rot+=0.22; sp.x=s.x; sp.y=headY()-10; if(f%14===0) box.sh=1.2; else box.sh*=0.6; await W(28); }
         return;
       }
       for(let k=0;k<3;k++){ await slide(true); await light(k); }
