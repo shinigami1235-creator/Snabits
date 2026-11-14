@@ -188,6 +188,9 @@ const lifeWeeks=()=>RS.m.lifespan*4;
 const AGE_PHASES=[[0.2,0.8,"Young"],[0.7,1.2,"Prime"],[1,0.8,"Elder"],[Infinity,0.25,"Veteran"]];
 function agePhase(s=RS){ const f=s.used/(s.m.lifespan*4); return AGE_PHASES.find(p=>f<p[0]); }
 function ageMult(s=RS){ return agePhase(s)[1]; }
+/* how old it is. Its lifespan and life stage stay hidden: the player finds out from Tala and from how training takes */
+function ageText(s){ const mo=Math.floor((s.used||0)/4); return mo<1?"Under a month old":`${mo} month${mo>1?"s":""} old`; }
+const AGE_NOTE={Prime:"It's in its prime now, so training sticks better than it did.",Elder:"It's getting on in years, and training doesn't take as well as it used to."};
 function dateShort(){const w=PLAYER.week, y=Math.floor(w/48)+1, mo=Math.floor(w/4)%12;return `${SEASON[Math.floor(mo/3)]} · Month ${mo%3+1} · Week ${w%4+1}${y>1?` · Year ${y}`:""}`;}
 function dateText(){const w=PLAYER.week, y=Math.floor(w/48)+1, mo=Math.floor(w/4)%12, s=Math.floor(mo/3);return `Year ${y}, ${SEASON[s]}, month ${mo%3+1}, week ${w%4+1}`;}
 
@@ -253,12 +256,12 @@ function drawUI(){
   el("r-shape").textContent=shapeOf(s.weight)[0]+(smoothRanch()&&typeof heightCm==="function"?" · "+heightText(heightCm(s.m,s.stage)):"");
   el("r-coins").textContent=PLAYER.bits+" bits";
   el("r-lv").textContent=`${s.stage} · Lv ${s.level} · Grade ${s.grade}`;
-  el("r-form").textContent=conditionShort()+" · "+agePhase(s)[2];
+  el("r-form").textContent=conditionShort();
   el("r-stats").innerHTML=STATS.map((st,i)=>{const fam=FAMILY[m.family].base[i], v=shownStat(i);
     return `<div class="rs" id="rs${i}"><span>${st} <small class="gr r${rankOf(fam)}">${rankOf(fam)}</small></span><span class="bg"><i style="width:${Math.min(100,v/2)}%"></i></span><span>${v}${s.tp[i]?` <small style="opacity:.6">(+${s.tp[i]})</small>`:""}</span></div>`;}).join("");
   sayBox(s.say,s.sayWho);
   const n=el("r-nums"); n.style.display=s.showNums?"block":"none";
-  n.textContent=`Fatigue ${s.fatigue}, stress ${s.stress}, Strain ${s.fatigue+2*s.stress}. Spoil ${s.spoil}, Fear ${s.fear}, loyalty ${loyalty()}. Weight ${s.weight}. Weeks lived ${s.used} of ${lifeWeeks()} (${s.m.lifespan} months). Earned points ${tpTotal()}${s.stage==="Bit"?` of ${evoTotal()} for Byte`:""}.`;
+  n.textContent=`Fatigue ${s.fatigue}, stress ${s.stress}, Strain ${s.fatigue+2*s.stress}. Spoil ${s.spoil}, Fear ${s.fear}, loyalty ${loyalty()}. Weight ${s.weight}. Weeks lived ${s.used}. Earned points ${tpTotal()}${s.stage==="Bit"?` of ${evoTotal()} for Byte`:""}.`;
   el("r-learned").textContent=s.learned.length?"Stat skills: "+s.learned.join(", "):"";
   el("r-menu").querySelectorAll(".rb").forEach(b=>{ b.disabled=s.busy||s.dead||(!!s.away&&b.dataset.m!=="Out")||(b.dataset.m==="Out"&&!s.away&&typeof outLocked==="function"&&outLocked()); b.title=b.disabled&&b.dataset.m==="Out"?"Opens after the first month":""; });
   if(!el("r-panel").innerHTML) weekCard();
@@ -276,9 +279,8 @@ function panel(html){ el("r-panel").innerHTML=html; el("ranch").classList.toggle
 /* With no menu open, the space under the stats shows what's coming up. */
 function weekCard(){
   const s=RS, w=el("r-week"); if(!w) return;
-  const ph=agePhase(s), mo=Math.floor(s.used/4);
   const nc=nextCupFor(s), rows=[["Next cup",nc?`${nc.c.name.replace(/ \([A-S]\)$/,"")}, ${nc.k?`in ${nc.k} week${nc.k>1?"s":""}`:"this week"}`:"None soon"],["Fight shape",fightCond(s).name],
-    ["Age",`${ph[2]} · ${mo} of ${s.m.lifespan} months`],
+    ["Age",ageText(s)],
     s.stage!=="Mega"?["Evolves at",`${evoTotal()} earned points · has ${tpTotal()}`]:null,
     ["Wild fights",`${typeof wildLeft==="function"?wildLeft(s):3} left this week`],
     s.away?["Out on a mission","Back when it's done"]:null].filter(Boolean);
@@ -827,6 +829,7 @@ async function endWeek(weeks,line){
     if(evoReady()){ say(notes.filter(Boolean).join(" ")); drawUI(); await rwait(1400); notes=[await evolveNow()]; }
     else if(!s.hinted&&tpTotal()>=evoTotal()-10){ s.hinted=true; notes.push(MARK_HINT[s.stage==="Bit"?topMark():s.tp.map((v,i)=>[v,i]).filter(x=>x[1]!==s.mark).sort((a,b)=>b[0]-a[0])[0][1]]); }
   }
+  { const ph=agePhase(s)[2]; if(s.phaseSeen&&s.phaseSeen!==ph&&AGE_NOTE[ph]) notes.push(AGE_NOTE[ph]); s.phaseSeen=ph; }
   const past=s.used-lifeWeeks();
   if(past>=0&&past<weeks) notes.push("It's reached the end of its lifespan. It's a veteran now. It still fights as hard as ever, but training barely changes it.");
   say(notes.filter(Boolean).join(" ")); drawUI(); saveGame();

@@ -100,7 +100,7 @@ function atBegin(A,B,opts){
   AT={ar,A,B,moves,auto:false,last:performance.now(),acc:0,te:0,freeze:0,trauma:0,raf:0,side:[A.spec,B.spec].map(spec=>({spec,x:null,shown:"idle",from:"idle",t0:0,dir:1})),fx:[],done:false,me:meFam,foe:foeFam,opts};
   CB.parts=[]; CB.puffs=[];
   AT.special=[A,B].map(X=>{ const t=X.f.moves.filter(m=>m.dmg>=70).sort((a,b)=>b.dmg-a.dmg)[0]; return t?t.name:null; });
-  AT.rings=[]; AT.stars=[]; AT.strikes=[];
+  AT.rings=[]; AT.stars=[]; AT.strikes=[]; AT.streams=[]; AT.sp=[];
   // each range has its own box; ▲ ▼ swap which of that range's moves sits in the selected box. Moves usable at any range join every box's list
   AT.lists={}; AT.idx={}; for(const b of AR.BANDS){ AT.lists[b]=moves.filter(m=>m.range===b).concat(moves.filter(m=>m.range==="Any")); AT.idx[b]=0; }
   // the opponent's strongest move at each range, so you can see where it's dangerous
@@ -143,16 +143,16 @@ function atSize(){ const cv=document.getElementById("at-cv"), scr=cv.parentEleme
 window.addEventListener("resize",()=>{ if(AT&&document.getElementById("at-cv")) atSize(); });
 /* the range cells on the fight screen: yours and the opponent's, lit where the two of you stand now */
 function atRows(){
-  const ar=AT.ar, p=ar.p[0], band=ar.band(), key=band+"|"+AR.BANDS.map(b=>AT.idx[b]).join(",")+"|"+(p.focus>=((AT.lists[band][AT.idx[band]]||{}).cost||0))+"|"+!!(ar.turn||p.cool>0);
+  const ar=AT.ar, p=ar.p[0], band=ar.band(), key=band+"|"+AR.BANDS.map(b=>AT.idx[b]).join(",")+"|"+(p.focus>=ar.cost(p,AT.lists[band][AT.idx[band]]||{cost:0}))+"|"+!!(ar.turn||p.cool>0)+"|"+!!(p.st&&p.st.name==="Curse");
   if(key===AT.rowsHtml) return; AT.rowsHtml=key;
   for(const b of AR.BANDS){ const m=AT.lists[b][AT.idx[b]], c=document.getElementById("at-y-"+b), f=document.getElementById("at-f-"+b), fm=AT.foeBest[b];
-    if(c){ c.className="sc"+(b===band?" lit":"")+(m?"":" none"); c.innerHTML=m?atIcon(m)+`<i>${m.cost}</i>`:""; }
+    if(c){ c.className="sc"+(b===band?" lit":"")+(m?"":" none"); c.innerHTML=m?atIcon(m)+`<i>${ar.cost(p,m)}</i>`:""; }
     if(f){ f.className="sc foe"+(b===band?" lit":"")+(fm?"":" none"); f.innerHTML=fm?atIcon(fm):""; } }
   const fm=AT.foeBest[band]; document.getElementById("at-mv0").textContent=(AT.lists[band][AT.idx[band]]||{name:"Nothing in reach"}).name;
   document.getElementById("at-mv1").textContent=fm?fm.name:"Nothing in reach";
   const m=AT.lists[band][AT.idx[band]], atk=document.getElementById("at-atk");
-  document.getElementById("at-atk-n").textContent=m?m.name:"Nothing in reach"; document.getElementById("at-atk-c").textContent=m?`${band} · ${m.cost} focus`:"";
-  atk.classList.toggle("poor",!!m&&p.focus<m.cost); atk.classList.toggle("wait",!!(ar.turn||p.cool>0));
+  document.getElementById("at-atk-n").textContent=m?m.name:"Nothing in reach"; document.getElementById("at-atk-c").textContent=m?`${band} · ${ar.cost(p,m)} focus`:"";
+  atk.classList.toggle("poor",!!m&&p.focus<ar.cost(p,m)); atk.classList.toggle("wait",!!(ar.turn||p.cool>0));
 }
 const AT_ICON=(()=>{ const sv=b=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${b}</svg>`;
   return { bite:sv('<path d="M3 8h18l-3 4-3-3-3 3-3-3-3 3z"/><path d="M3 16h18l-3-3-3 3-3-3-3 3-3-3z" opacity=".55"/>'),
@@ -165,11 +165,12 @@ const AT_ICON=(()=>{ const sv=b=>`<svg viewBox="0 0 24 24" fill="none" stroke="c
     "in":sv('<path d="M4 6l6 6-6 6M12 6l6 6-6 6"/>'), out:sv('<path d="M20 6l-6 6 6 6M12 6l-6 6 6 6"/>'),
     swap:sv('<path d="M4 8h14l-4-4M20 16H6l4 4"/>'), web:sv('<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6L5.6 18.4"/>'),
     eye:sv('<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>'),
+    heal:sv('<path d="M12 21s-7-4.5-9.5-9A5 5 0 0112 6a5 5 0 019.5 6c-2.5 4.5-9.5 9-9.5 9z"/><path d="M12 10v6M9 13h6"/>'),
     shove:sv('<path d="M9 11V5a2 2 0 014 0v6M13 10V4a2 2 0 014 0v8M9 10a2 2 0 00-4 0v4c0 4 3 7 7 7h1c3 0 6-3 6-6v-4"/><path d="M1 12h2" />'),
     auto:sv('<rect x="5" y="8" width="14" height="11" rx="3"/><path d="M12 8V4M9 13h.01M15 13h.01M9 17h6M2 12v3M22 12v3"/>') }; })();
 function atIcon(m){
   const n=m.name, k=m.skill&&typeof MOVE_KIND!=="undefined"?MOVE_KIND[n]:null;
-  if(m.swap) return AT_ICON.swap; if(m.buff||m.support) return AT_ICON.shield;
+  if(m.swap) return AT_ICON.swap; if(m.support&&(m.heal||m.regen||m.rest||m.cleanse)) return AT_ICON.heal; if(m.support&&(m.inflict||m.lower||m.taunt)) return AT_ICON.eye; if(m.buff||m.support) return AT_ICON.shield;
   if(m.step||m.dash==="in"&&!m.dmg) return m.step<0?AT_ICON.out:AT_ICON["in"];
   if(/Web|Silk|Cocoon|Trap|Reel/.test(n)) return AT_ICON.web; if(/Stare|Glare|Eye|Hypno|Mind|Dread/.test(n)) return AT_ICON.eye;
   if(/Bite|Chomp|Crunch|Gnash|Jaw|Fang/.test(n)||k==="bite") return AT_ICON.bite;
@@ -204,12 +205,14 @@ const AT_CHARGE={light:0,heavy:430,special:1250};
 /* what the engine reports becomes the game's own battle animation */
 function atEvent(e,now){
   const S=AT.side[e.i], m=e.m, te=AT.te, sp=S.spec;
+  if(typeof atFx==="function") atFx(e,now);
   if(e.t==="start"){
-    if(m.swap){ S.pose={p:"crouch",until:te+220}; AT.turn={t0:te,C:220,D:560}; return; }
+    if(m.swap){ S.pose={p:"crouch",until:te+220}; AT.turn={t0:te,C:220,D:560}; if(e.pred==="dodge"||e.pred==="phase") atPlanDodge(e.i,te+220,"tackle",e.pred); return; }
     if(m.step||m.dash&&!m.dmg){ S.pose={p:"crouch",until:te+140}; AT.turn={t0:te,C:140,D:420}; return; }
     let kind;
     if(m.buff) kind={bunker:"bunker",phase:"phase",brace:"shield",riposte:"shield",bubble:"shield",feedback:"shield",unblink:"buff"}[m.buff]||"buff";
-    else if(m.lower) kind="glare";
+    else if(m.support){ kind=typeof supportKind==="function"?supportKind(m.name):"buff"; if(kind==="mistcast") kind="mist"; if(m.protect) S.protName=m.name; }
+    else if(m.lower&&!m.dmg) kind="glare";
     else if(m.shove) kind="tackle";
     else kind=typeof animFor==="function"?animFor({name:m.name,kind:m.cast?"Cast":"Strike",el:m.el},sp):"tackle";
     if(!ANIM[kind]) kind="tackle";
@@ -220,6 +223,7 @@ function atEvent(e,now){
     S.anim={kind,t0:te+ch,tier,rate,el:m.el||null,name:m.name,src:typeof sourceFor==="function"?sourceFor({name:m.name,kind:m.cast?"Cast":"Strike"},sp):"mouth",col,pw:m.dmg>=70?1.35:m.dmg>=40?1.05:0.8,contact:/^(tackle|bite|stomp|punch|claw|shadowstrike|shadowclaw|fly)$/.test(kind)};
     if(tier==="special"&&!S.anim.contact&&!m.lower) S.anim.mega=/^(beam|bolt|spear|volley|drain|gust)$/.test(kind)?"beam":kind==="lightning"?"bolt":/^(meteor|icefall|boulder|rockpath)$/.test(kind)?"fall":kind==="pillar"&&m.el==="Frost"?"glacier":/^(tornado|firespin)$/.test(kind)?(m.el==="Blaze"?"inferno":"funnel"):kind==="wave"?"tsunami":kind==="push"?"shock":kind==="lift"?"nightmare":/^(pillar|mist|mistcast)$/.test(kind)?"rise":null;
     if(S.anim.mega) AT.turn.D=Math.max(AT.turn.D,ch+(K.C+900)/rate);   // the fight waits for a special's release to finish
+    if(e.pred==="dodge"||e.pred==="phase") atPlanDodge(e.i,te+ch+K.C/rate,kind,e.pred);
     if(ch){ S.charge={t0:te,d:ch,tier,col:S.anim.col,el:m.el||null,body:sp.pal&&sp.pal.body}; if(tier==="special") AT.cine={t0:te,d:ch,i:e.i,name:m.name,col:S.anim.col}; }
     try{ sfx(ch?"charge":m.cast?"charge":"whoosh"); if(typeof elSfx==="function") elSfx(m.el,"cast"); if(typeof kindSfx==="function"&&!ch) kindSfx(kind); }catch(err){}
   }
@@ -236,8 +240,9 @@ function atEvent(e,now){
       AT.spark={i:1-e.i,n:T.sparks,col:S.anim?S.anim.col:[255,236,160]}; if(S.anim&&S.anim.contact) S.recoil={t0:te,amt:tier==="heavy"?10:6};
       try{ sfx(tier==="heavy"?"heavy":tier==="medium"?"hit":"tap"); if(S.anim) elSfx(S.anim.el,"hit"); }catch(err){} }
     AT.fx.push({i:1-e.i,t0:now+e.h*90,txt:String(e.dmg),crit:e.crit,size:{light:16,medium:19,heavy:24,special:32}[tier]}); if(e.crit&&e.h===0) AT.fx.push({i:1-e.i,t0:now,txt:"Critical!",crit:true,size:13,lift:30}); }
-  if(e.t==="miss"){ const o=AT.side[1-e.i]; if(e.why!=="out") o.react={kind:"dodge",t0:te};
-    AT.fx.push({i:1-e.i,t0:now,txt:e.why==="out"?"Out of reach":e.why==="block"?"Blocked":"Miss"}); }
+  if(e.t==="miss"){ const o=AT.side[1-e.i];
+    if((e.why==="dodge"||e.why==="phase")&&!o.dodgeAt&&!(o.react&&o.react.kind==="dodge")) atPlanDodge(e.i,te+150,S.anim?S.anim.kind:"bolt",e.why);
+    AT.fx.push({i:1-e.i,t0:now,txt:{out:"Out of reach",block:"Blocked",dodge:"Dodged",phase:"Phased",resist:"Resisted"}[e.why]||"Miss",col:e.why==="resist"?"#c9cbd6":null}); }
   if(e.t==="slam"){ S.react={kind:"hit",t0:te,tier:"heavy"}; AT.trauma=Math.min(1,AT.trauma+0.5); AT.fx.push({i:e.i,t0:now,txt:`Wall ${e.dmg}`,crit:true});
     try{ sfx("heavy"); }catch(err){} }
   if(e.t==="buff") AT.fx.push({i:e.i,t0:now,txt:m.name,buff:true});
@@ -567,8 +572,9 @@ function atSideState(S,te){
   const O=S.foe.anim; if(O&&!S.anim){ const t=(te-O.t0)*O.rate, K=ANIM[O.kind]; if(t<=K.D&&K.def){ const d=K.def(t,{foeH:60,perp:[0,-1]}); if(d) Object.assign(out,d); } }
   if(S.pose&&te<S.pose.until&&!S.anim) out.pose=S.pose.p;
   if(S.recoil){ const k=(te-S.recoil.t0)/170; if(k>1) S.recoil=null; else out.off[0]-=S.dir*S.recoil.amt*Math.sin(k*Math.PI); }
-  const R=S.react;
-  if(R){ const dur=R.kind==="hit"?(R.tier==="heavy"?560:420):380, k=(te-R.t0)/dur;
+  const dg=atDodge(S,te), R=S.react;
+  if(dg){ out.off[0]+=S.dir*dg.dx; out.off[1]+=dg.dy; out.rot+=S.dir*dg.rot; out.sx*=dg.sx; out.sy*=dg.sy; out.pose=dg.pose; if(dg.alpha!=null) out.alpha*=dg.alpha; out.doff=[S.dir*dg.dx,dg.dy]; }
+  else if(R){ const dur=R.kind==="hit"?(R.tier==="heavy"?560:420):380, k=(te-R.t0)/dur;
     if(k>1) S.react=null;
     else if(R.kind==="hit"){ const T=AT_TIER[R.tier], dt=te-R.t0; out.pose="hit"; out.flash=T.white?(dt<18?2:dt<T.flash?1:0):dt<T.flash?3:0;
       out.off[0]-=S.dir*({light:14,medium:20,heavy:30,special:46}[R.tier]||14)*(k<0.25?eo(k/0.25):1-eo((k-0.25)/0.75)); out.rot-=S.dir*0.12*(R.tier==="heavy"?1.6:1)*Math.sin(Math.min(1,k*1.5)*Math.PI);
@@ -630,29 +636,40 @@ function atDraw(now,dte){
     const h=CHIBI.height(sp.stage,sp.marks,sp.family), u=Math.min(0.5,96/(h+20))*scale;
     // walking comes from the engine, so the pose doesn't flicker between walk and idle on fast screens
     const st=atSideState(S,te), moving=!ar.turn&&ar.p[i].walkT!=null&&ar.t-ar.p[i].walkT<0.25;
-    let pose=st.pose||(moving?"walk":"idle");
+    const fp=ar.p[i], frozen=ar.has(fp,"Freeze");
+    let pose=atStatusPose(i,st.pose||(moving?"walk":"idle"));
     if(pose!==S.shown){ S.from=S.shown||"idle"; S.shown=pose; S.t0=te; }
-    const k=(te-S.t0)/110, P=k>=0&&k<1&&CHIBI.POSES.includes(S.from)&&CHIBI.POSES.includes(pose)?CHIBI.blend(S.from,pose,k):pose;
+    const k=(te-S.t0)/110; let P=k>=0&&k<1&&CHIBI.POSES.includes(S.from)&&CHIBI.POSES.includes(pose)?CHIBI.blend(S.from,pose,k):pose, dte2=te;
+    // frozen solid: it holds whatever pose it was caught in until the ice goes
+    if(frozen){ if(!S.frz) S.frz={P,te}; P=S.frz.P; dte2=S.frz.te; } else S.frz=null;
+    P=atStatusEyes(i,P);
+    const sm=atStatusMove(i,te); st.off[0]+=sm[0]; st.off[1]+=sm[1]; st.rot+=sm[2];
+    if(fp.buff.phase) st.alpha*=0.6+0.2*Math.sin(te/60);
     // a contact move reaches the opponent, but never further than a short lunge when it's out of reach
     const reach=Math.max(-(SEP+40),Math.min(SEP+40,(O.dx-S.dx)-S.dir*SEP*0.42));
     const x=S.dx+reach*st.f+st.off[0], y=floor+st.arc+st.lift+st.off[1], mir=S.dir>0?-1:1;
     if(moving!==!!S.moving&&S.ko==null&&typeof spawnPuff==="function") spawnPuff(x-S.dir*10,y-2,moving?5:7,S.dir>0?Math.PI:0,1.2,0.08,5*scale,"rgba(235,228,214,1)",320);
     S.moving=moving;
     c.fillStyle="rgba(0,0,0,.2)"; c.beginPath(); c.ellipse(x,floor+2,24*scale*(st.alpha),6*scale,0,0,7); c.fill();
+    atFxBack(c,i,{i,x,foot:floor,by:y,H:h*u,r:CHIBI.width(sp.stage,sp.family)*u*0.55},te);
     S.trail=(S.trail||[]).filter(g=>te-g.t<120);
-    if(lunging(i)&&S.lastX!=null&&Math.abs(x-S.lastX)>3) S.trail.push({x,y,P,t:te,rot:st.rot,sx:st.sx,sy:st.sy});
-    S.lastX=x;
+    if((lunging(i)||S.ghost!=null&&te-S.ghost<40)&&S.lastX!=null&&Math.hypot(x-S.lastX,y-(S.lastY||y))>3) S.trail.push({x,y,P,t:te,rot:st.rot,sx:st.sx,sy:st.sy});
+    S.lastX=x; S.lastY=y;
     for(const g of S.trail){ c.save(); c.globalAlpha=0.32*(1-(te-g.t)/120); c.filter="brightness(1.9) saturate(.5)";
       c.translate(g.x,g.y); c.rotate(g.rot); c.scale(mir*u*g.sx,u*g.sy); c.translate(-100,-188); CHIBI.draw(c,sp,g.P,te,[0.6*S.dir*mir,0]); c.restore(); }
+    // phased out: two faint copies of it drift either side
+    if(fp.buff.phase) for(const o of [-1,1]){ c.save(); c.globalAlpha=0.2; c.translate(x+o*16*Math.sin(te/170+o),y); c.rotate(st.rot); c.scale(mir*u*st.sx,u*st.sy); c.translate(-100,-188); CHIBI.draw(c,sp,P,te,[0.6*S.dir*mir,0]); c.restore(); }
     c.save(); c.globalAlpha=st.alpha; if(st.flash===2) c.filter="brightness(0) invert(1)"; else if(st.flash===1) c.filter="brightness(1.5)"; else if(st.flash===3) c.filter="brightness(1.18)";
     c.translate(x,y); c.rotate(st.rot); c.scale(mir*u*st.sx,u*st.sy); c.translate(-100,-188);
-    CHIBI.draw(c,{...sp,capture:(S.cap={})},P,te,[0.6*S.dir*mir,0]); c.restore();
+    atBody(c,i,{...sp,capture:(S.cap={})},P,dte2,[0.6*S.dir*mir,0]); c.restore();
     const cp=S.cap||{}, d=q=>q?toWorld.transformPoint(q):null;
-    placed[i]={x,y:y-h*u*0.45,foot:y,lift:st.lift,back:false,r:CHIBI.width(sp.stage,sp.family)*u*0.55,eyes:cp.eyes&&cp.eyes.map(d),mouth:d(cp.mouth),hands:(cp.hands||[]).map(d),top:d(cp.top)||{x,y:y-50},center:d(cp.center)};
+    placed[i]={x,y:y-h*u*0.45,foot:y,lift:st.lift,back:false,r:CHIBI.width(sp.stage,sp.family)*u*0.55,eyes:cp.eyes&&cp.eyes.map(d),mouth:d(cp.mouth),hands:(cp.hands||[]).map(d),top:d(cp.top)||{x,y:y-50},center:d(cp.center),doff:st.doff};
   });
-  // the game's own attack effects, from the attacker's eyes, mouth or hands to the target
+  AT.lastPlaced=placed;
+  [0,1].forEach(i=>{ const P=placed[i]; if(P){ const cn=P.center||P; atFxFront(c,i,{i,x:P.x,cx:cn.x,cy:cn.y,foot:P.foot,H:P.foot-P.top.y,r:P.r,eyes:P.eyes},te,dte); } });
+  // the game's own attack effects, from the attacker's eyes, mouth or hands to the target. A dodging target is aimed at where it stood, so the attack whiffs
   [0,1].forEach(i=>{ const A=AT.side[i].anim; if(!A||te<A.t0||!placed[i]||!placed[1-i]||!ANIM[A.kind].fx) return;
-    const T0=placed[1-i], tgt={...T0,x:T0.center?T0.center.x:T0.x,y:T0.center?T0.center.y:T0.y};
+    const T1=placed[1-i], dx=T1.doff?T1.doff[0]:0, dy=T1.doff?T1.doff[1]:0, T0={...T1,x:T1.x-dx,foot:T1.foot-dy,top:{x:T1.top.x-dx,y:T1.top.y-dy},center:T1.center&&{x:T1.center.x-dx,y:T1.center.y-dy}}, tgt={...T0,x:T0.center?T0.center.x:T0.x,y:T0.center?T0.center.y:T0.y};
     if(/bite/.test(A.kind)&&!A.mega){ const t=(te-A.t0)*A.rate, C=ANIM[A.kind].C;
       if(t>=C-200&&t<C){ c.save(); c.translate(tgt.x,tgt.y); atJaws(c,(t-(C-200))/200*0.159,({light:1,heavy:1.4,special:1.9}[A.tier]||1)*scale/2.3,A.col,AT.side[i].dir,AT.side[i].spec.pal&&AT.side[i].spec.pal.body); c.restore(); } }
     if(A.mega){ const t=(te-A.t0)*A.rate, C=ANIM[A.kind].C, s2=scale/2.3;
@@ -691,23 +708,28 @@ function atDraw(now,dte){
     c.fillStyle=`rgba(${r.col},${0.9*(1-k)})`; c.beginPath(); c.arc(r.x,r.y,R1*0.9,0,7); c.fill(); }
   AT.strikes=AT.strikes.filter(k=>te-k.t0<k.d); for(const k of AT.strikes){ const P=placed[k.i]; if(!P) continue;
     atStrike(c,k,(te-k.t0)/k.d,P.center||P,k.big*scale/2.3); }
-  drawSparks(c,dte); drawPuffs(c);
+  atStreams(c,placed,te); drawSparks(c,dte); drawPuffs(c); atParts(c,dte);
   // damage numbers and words over the head
   AT.fx=AT.fx.filter(f=>now-f.t0<900); c.textAlign="center"; for(const f of AT.fx){ if(now<f.t0) continue; const k=(now-f.t0)/900, p=placed[f.i]; if(!p) continue;
-    const pop=1+0.7*Math.max(0,1-(now-f.t0)/170); c.font=`800 ${Math.round((f.size||(f.crit?19:15))*pop/z)}px system-ui`; c.globalAlpha=1-k*k; c.lineWidth=4; c.strokeStyle="#14151d"; c.fillStyle=f.buff?"#8fd3ff":f.crit?"#ffc93c":"#ffffff";
-    const y=p.top.y-(52+(f.lift||0)+k*26)/z; c.strokeText(f.txt,p.x,y); c.fillText(f.txt,p.x,y); c.globalAlpha=1; }
+    const pop=1+0.7*Math.max(0,1-(now-f.t0)/170); c.font=`800 ${Math.round((f.size||(f.crit?19:15))*pop/z)}px system-ui`; c.globalAlpha=1-k*k; c.lineWidth=4; c.strokeStyle="#14151d"; c.fillStyle=f.col||(f.buff?"#8fd3ff":f.crit?"#ffc93c":"#ffffff");
+    // words that pop up together stack instead of landing on each other, and all of them sit above the status chips
+    if(f.stack==null) f.stack=f.side?0:AT.fx.filter(g=>g!==f&&g.i===f.i&&!g.side&&g.stack!=null&&Math.abs(g.t0-f.t0)<450).length;
+    const sd=AT.side[f.i]&&AT.side[f.i].dir||1, cn=p.center||p, y=f.side?cn.y-(k*34)/z:p.top.y-(80+Math.min(f.lift||0,12)+f.stack*24+k*26)/z, fx=f.side?p.x-sd*(p.r+16):p.x+(f.dx||0)*(1+k*0.6); c.strokeText(f.txt,fx,y); c.fillText(f.txt,fx,y); c.globalAlpha=1; }
   // name and HP over each head, so your eyes stay on the fight; the white part is the damage just taken, draining after a moment
   c.setTransform(dpr,0,0,dpr,0,0);
   [0,1].forEach(i=>{ const P=placed[i], p=ar.p[i], S=AT.side[i]; if(!P) return;
     const f=p.hp/p.maxhp; S.hpLag=S.hpLag==null?f:f>S.hpLag?f:S.hpLag+(f-S.hpLag)*(1-Math.exp(-Math.max(0,dte)/380));
+    S.hpUp=S.hpUp==null||f<S.hpUp?f:S.hpUp+(f-S.hpUp)*(1-Math.exp(-Math.max(0,dte)/420));   // a heal fills in over a moment
     const bw=104, bh=13, x=Math.max(6,Math.min(W-bw-6,(P.x-AT.cam)*z+sx-bw/2)), y=Math.max(52,(P.top.y-FY)*z+AT.floorS+sy-38);
     c.fillStyle="rgba(20,21,29,.85)"; c.beginPath(); c.roundRect(x-2,y-2,bw+4,bh+4,6); c.fill();
     c.fillStyle="#fff"; c.beginPath(); c.roundRect(x,y,bw*S.hpLag,bh,4); c.fill();
     const g=c.createLinearGradient(0,y,0,y+bh), col=f>0.5?["#7be3a3","#41b872"]:f>0.25?["#ffd75a","#f2a92c"]:["#ff9a8a","#e2483f"]; g.addColorStop(0,col[0]); g.addColorStop(1,col[1]);
-    c.fillStyle=g; c.beginPath(); c.roundRect(x,y,Math.max(0,bw*f),bh,4); c.fill();
+    if(f-S.hpUp>0.002){ c.fillStyle="#b6ffc8"; c.beginPath(); c.roundRect(x,y,Math.max(0,bw*f),bh,4); c.fill(); }
+    c.fillStyle=g; c.beginPath(); c.roundRect(x,y,Math.max(0,bw*Math.min(f,S.hpUp)),bh,4); c.fill();
     c.font="700 10px system-ui"; c.textAlign="center"; c.lineWidth=3; c.strokeStyle="#14151d"; c.fillStyle="#fff";
     c.strokeText(`${p.hp}/${p.maxhp}`,x+bw/2,y+bh-2.5); c.fillText(`${p.hp}/${p.maxhp}`,x+bw/2,y+bh-2.5);
-    const nm=p.f.name.split(",")[0]; c.font="700 11px system-ui"; c.fillStyle=i?"#ffb4a8":"#ffe07a"; c.strokeText(nm,x+bw/2,y-6); c.fillText(nm,x+bw/2,y-6); });
+    const nm=p.f.name.split(",")[0]; c.font="700 11px system-ui"; c.fillStyle=i?"#ffb4a8":"#ffe07a"; c.strokeText(nm,x+bw/2,y-6); c.fillText(nm,x+bw/2,y-6);
+    atChips(c,i,x,y-33,bw); });
   { const chg=[0,1].map(i=>AT.side[i].charge).find(ch=>ch&&te-ch.t0<ch.d); if(chg){ const k=Math.min(1,(te-chg.t0)/chg.d), g=c.createRadialGradient(W/2,H*0.45,H*0.25,W/2,H*0.45,H*0.75);
       g.addColorStop(0,"rgba(0,0,0,0)"); g.addColorStop(1,`rgba(8,6,20,${(chg.tier==="special"?0.75:0.45)*k})`); c.fillStyle=g; c.fillRect(0,0,W,H); } }
   if(cine){ const inn=Math.min(1,ck/0.14), out=ck>0.74?Math.min(1,(ck-0.74)/0.12):0, x=-W*(1-eo(inn))+W*1.1*out*out, y=H*0.2, col=cine.col;
@@ -724,12 +746,12 @@ function atHud(){
   ar.p.forEach((p,i)=>{ document.getElementById("at-fo"+i).style.width=(100*p.focus/99)+"%";
     document.getElementById("at-fn"+i).textContent=Math.floor(p.focus); });
   document.getElementById("at-hit0").textContent=pc(ar.p[0],m.name?m:null); document.getElementById("at-hit1").textContent=pc(ar.p[1],fm);
-  document.getElementById("at-fn0").classList.toggle("ok",ar.p[0].focus>=m.cost);
+  const mc=ar.cost(ar.p[0],m); document.getElementById("at-fn0").classList.toggle("ok",ar.p[0].focus>=mc);
   // a white line on your focus bar shows what the selected move costs, and the bar lights up once you can afford it
   const sw=ar.p[0].x>ar.p[1].x, hb=document.getElementById("at-hbot");
   if(hb.classList.contains("atsw")!==sw){ hb.classList.toggle("atsw",sw); hb.classList.remove("flash"); void hb.offsetWidth; hb.classList.add("flash"); }
-  const nd=document.getElementById("at-need"), at=`calc(${100*Math.min(99,m.cost)/99}% - 1px)`; nd.style.left=sw?"auto":at; nd.style.right=sw?at:"auto";
-  document.getElementById("at-fb0").classList.toggle("ok",ar.p[0].focus>=m.cost&&ar.inRange(m));
+  const nd=document.getElementById("at-need"), at=`calc(${100*Math.min(99,mc)/99}% - 1px)`; nd.style.left=sw?"auto":at; nd.style.right=sw?at:"auto";
+  document.getElementById("at-fb0").classList.toggle("ok",ar.p[0].focus>=mc&&ar.inRange(m));
   document.getElementById("at-clock").textContent=Math.max(0,Math.ceil(AR.TIME-ar.t));
   const sh=document.getElementById("at-shove"), can=arBand(g)==="Close"&&!(ar.p[0].shoveCool>0); if(!(AT.opts&&AT.opts.mode==="auto")) sh.classList.toggle("off",!can);
 

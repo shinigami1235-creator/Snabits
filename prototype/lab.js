@@ -17,7 +17,7 @@ async function openFreezer(){
     row.style.cssText="display:flex;gap:10px;align-items:center;background:#1e1e26;border-radius:10px;padding:6px 8px";
     row.appendChild(sprite(e.m,st.grid,48,st));
     const t=document.createElement("div"); t.style.cssText="flex:1;font-size:13px";
-    t.innerHTML=`<b>${entryName(e)}</b><br><span style="opacity:.7">Lv ${st.level||1}, grade ${st.grade||"E"}, ${Math.floor((st.used||0)/4)} of ${e.m.lifespan} months</span>`;
+    t.innerHTML=`<b>${entryName(e)}</b><br><span style="opacity:.7">Lv ${st.level||1}, grade ${st.grade||"E"}, ${ageText(st)}</span>`;
     row.appendChild(t);
     const b=document.createElement("button"); b.className="small";
     b.textContent=PLAYER.active===e.id?"At the ranch":"Bring out"; b.disabled=PLAYER.active===e.id;
@@ -81,14 +81,14 @@ async function openLab(line){
     <label class="fld full">Catalyst<select id="l-c"><option value="">None</option>${cats.map(c=>`<option ${c===LAB.cat?"selected":""}>${c}</option>`).join("")}</select></label>
     ${info}<button class="big full" id="l-fuse" ${e1&&e2?"":"disabled"}>Fuse · 500 bits</button>
     ${st?`<button class="rb full" id="l-read" ${st.read?"disabled":""}>Growth reading for ${displayName(st)}<small>${st.read?"Already read":"300 bits. Dr. Ines reads how each stat grows"}</small></button>`:""}
-    <button class="rb full" id="l-reb" ${PLAYER.bag["Rebirth seed"]&&st?"":"disabled"}>Rebirth ${st?displayName(st):""}<small>${PLAYER.bag["Rebirth seed"]?(elder?"Uses the Rebirth seed":"Only an Elder or Veteran can be reborn"):"Needs a Rebirth seed"}</small></button>
+    <button class="rb full" id="l-reb" ${PLAYER.bag["Rebirth seed"]&&st?"":"disabled"}>Rebirth ${st?displayName(st):""}<small>${PLAYER.bag["Rebirth seed"]?"Uses the Rebirth seed":"Needs a Rebirth seed"}</small></button>
     ${RS?`<button class="rb" id="l-frz">Freezer<small>Benji looks after it</small></button><button class="rb" id="l-back">Leave the lab</button>`:`<button class="rb full" id="l-back">Back</button>`}`);
   el("l-a").onchange=e=>{LAB.a=e.target.value;openLab(line);}; el("l-b").onchange=e=>{LAB.b=e.target.value||null;openLab(line);}; el("l-c").onchange=e=>{LAB.cat=e.target.value||null;};
   el("l-fuse").onclick=()=>doFuse(e1,e2,LAB.cat);
   const rd=el("l-read"); if(rd) rd.onclick=()=>{ if(!st) return; if(PLAYER.bits<300){ openLab("A reading is 300 bits. Come back when you have it."); return; }
     PLAYER.bits-=300; st.read=true; syncRead(); saveGame();
     openLab(`${displayName(st)}'s ${STATS[st.m.pers[1]]} grows fastest and its ${STATS[st.m.pers[2]]} slowest. It has ${st.m.pool.length} skills it can learn, and its growth ranks are on its info page now.`); };
-  el("l-reb").onclick=()=>{ if(!elder){ openLab("Rebirth only works on an Elder, in the last 30% of its lifespan."); return; } rebirthPick(); };
+  el("l-reb").onclick=()=>{ if(!elder){ openLab("It isn't old enough yet. Rebirth only takes on a Snabit that has started to slow down with age."); return; } rebirthPick(); };
   if(el("l-frz")) el("l-frz").onclick=openFreezer;
   el("l-back").onclick=()=>{ if(RS) menu("Out"); else openScope(); };
 }

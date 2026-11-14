@@ -44,7 +44,7 @@ function tasteLine(s, t) {
 }
 function infoStatus(s) {
   const m = s.m, base = FAMILY[m.family].base, h = hearts(), cm = typeof heightCm === 'function' ? heightCm(m, s.stage) : null;
-  const life = lifeWeeks(), stats = STATS.map((st, i) => { const v = shownStat(i), r = rankOf(base[i]);
+  const stats = STATS.map((st, i) => { const v = shownStat(i), r = rankOf(base[i]);
     return `<div class="i-stat"><span>${st}</span><span class="i-r" style="background:${INFO_RANK_COL[r]};color:${'DE'.includes(r) ? '#fff' : '#1a1208'}">${r}</span><span class="i-bar"><i style="width:${Math.min(100, v / 2)}%;background:${INFO_STAT_COL[i]}"></i></span><span class="i-n">${v}</span></div>`; }).join('');
   const P = m.pers, lean = Math.max(4, Math.min(96, 50 + (s.fear - s.spoil)));
   const raised = spoiled() ? 'Spoiled' : scared() ? 'Strict' : 'Balanced';
@@ -56,7 +56,7 @@ function infoStatus(s) {
       <b>${s.stage === 'Bit' ? m.family : `${s.variant && s.variant !== 'Scruffy' ? s.variant + ' ' : ''}${MARK[s.mark][0]} ${m.family}`}</b>
       <div class="i-chips">${elChip(m.el1)}${m.el2 && m.el2 !== m.el1 ? elChip(m.el2) : ''}<span class="i-fam">${m.family}</span></div>
       <span class="i-big">${s.stage} · Lv ${s.level} · Grade ${s.grade}</span>
-      <span>${agePhase(s)[2]}, week ${Math.min(s.used, life)} of ${life}</span>
+      <span>${ageText(s)}</span>
       <span>${cm ? heightText(cm) + ' · ' : ''}${shapeOf(s.weight)[0]} build</span>
       <span class="i-hearts">${'♥'.repeat(h)}${'♡'.repeat(5 - h)}</span></div></div>
     <div class="i-card">${stats}</div>
@@ -176,7 +176,6 @@ function infoRecord(s) {
       ${line('Trips', regions)}
       ${line('Marks', looks.join('; '))}
       ${line('Born', born)}
-      ${line('Lifespan', `${s.m.lifespan} months`)}
     </div>
     <div class="i-card"><div class="i-sec">Last ${Math.max(1, log.length)} week${log.length === 1 ? '' : 's'}</div>
       ${log.length ? `<div class="i-log">${log.map((a, k) => `<div><span style="background:${INFO_ACT_COL[a] || '#3a3f58'};color:${['Rest', 'Trip', 'Mission'].includes(a) ? '#f5f0e2' : '#11121a'}">${a}</span><small>W${weekNo + k + 1}</small></div>`).join('')}</div>` : '<div class="i-q">Nothing logged yet. Each week it trains, rests or travels shows up here.</div>'}</div>`;
