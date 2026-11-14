@@ -70,6 +70,7 @@ class Arena{
   start(p,m){ if(p.focus<m.cost||p.act||p.cool>0||p.stun>0) return false; p.focus-=m.cost; p.act={m,left:m.wind}; this.ev.push({t:"start",i:p.i,m}); return true; }
   step(){
     if(this.over) return;
+    for(const p of this.p) p.px=p.x;   // where it stood last step, so the screen can glide between steps
     for(const p of this.p){ if(!p.buff.brace) p.focus=Math.min(99,p.focus+this.regen(p)*AR.DT);
       for(const k of ["cool","hold","slow","stun","shoveCool"]) p[k]=Math.max(0,p[k]-AR.DT);
       for(const k in p.buff){ p.buff[k]-=AR.DT; if(p.buff[k]<=0) delete p.buff[k]; } }

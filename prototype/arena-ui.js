@@ -54,8 +54,9 @@ function atStyle(){
 #atest .rpad{display:flex;flex-direction:column;gap:6px}
 #atest .cur{font-size:13px;font-weight:700;text-align:center;min-height:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#atest .cur small{color:#8b8fa8;font-weight:500}
 #atest .slots{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-#atest .slot{position:relative;height:62px;border-radius:12px;background:#1d1f2b;border:3px solid #2c2f40;display:flex;align-items:center;justify-content:center}
-#atest .slot svg{width:30px;height:30px}#atest .slot .c{position:absolute;right:5px;bottom:2px;font-size:11px;font-weight:700;color:#ffc93c}
+#atest .slot{position:relative;height:70px;border-radius:12px;background:#1d1f2b;border:3px solid #2c2f40;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:0 4px}
+#atest .slot .n{font-size:11px;font-weight:700;line-height:1.1;text-align:center;max-width:100%;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+#atest .slot svg{width:24px;height:24px;flex:none}#atest .slot .c{position:absolute;right:5px;bottom:2px;font-size:11px;font-weight:700;color:#ffc93c}
 #atest .slot .rd{position:absolute;left:5px;top:5px;width:9px;height:9px;border-radius:50%}
 #atest .slot.out{opacity:.32}#atest .slot.poor .c{color:#ff8a7a}#atest .slot.sel{border-color:#ffc93c;background:#2a2617}
 #atest .arr{height:36px;font-size:15px}
@@ -90,14 +91,15 @@ function atStart(meFam,foeFam){
   const R=Math.random, A=atMake(meFam,R), B=atMake(foeFam,R), ar=new Arena(A.f,B.f,R,["human","smart"]);
   const order=["Close","Near","Mid","Far","Any"];
   const moves=A.f.moves.slice().sort((a,b)=>order.indexOf(a.range)-order.indexOf(b.range)||a.cost-b.cost);
-  AT={ar,A,B,moves,sel:0,top:0,auto:false,last:performance.now(),acc:0,raf:0,side:[{},{}].map(()=>({x:null,pose:"idle",until:0,lunge:0,flash:0,jump:0})),fx:[],shots:[],done:false,me:meFam,foe:foeFam};
+  AT={ar,A,B,moves,sel:0,top:0,auto:false,last:performance.now(),acc:0,te:0,freeze:0,trauma:0,raf:0,side:[A.spec,B.spec].map(spec=>({spec,x:null,shown:"idle",from:"idle",t0:0,dir:1})),fx:[],done:false,me:meFam,foe:foeFam};
+  CB.parts=[]; CB.puffs=[];
   const d=document.getElementById("atest");
   d.innerHTML=`<div class="scr"><canvas id="at-cv"></canvas><div class="clock2" id="at-clock">60</div></div>
     <div class="stat"><div><div class="nm">${A.f.name}</div><div class="hpb"><i id="at-hp0"></i></div><div class="hpt" id="at-l0"></div><div class="fob" id="at-fb0"><i id="at-fo0"></i><span class="need" id="at-need"></span><b id="at-fn0"></b></div></div>
       <div class="r"><div class="nm">${B.f.name}</div><div class="hpb"><i id="at-hp1"></i></div><div class="hpt" id="at-l1"></div><div class="fob" id="at-fb1"><i id="at-fo1"></i><b id="at-fn1"></b></div></div></div>
     <div class="pad"><div class="lpad"><button class="btn ico" id="at-shove" aria-label="Shove">${AT_ICON.shove}</button><button class="btn ico" id="at-auto" aria-label="Auto">${AT_ICON.auto}</button>
       <button class="btn ico walk" id="at-l" aria-label="Walk left">◀</button><button class="btn ico walk" id="at-r" aria-label="Walk right">▶</button></div>
-      <div class="rpad"><div class="cur" id="at-cur"></div><button class="btn arr" id="at-up" aria-label="Previous moves">▲</button><div class="slots" id="at-rows"></div><button class="btn arr" id="at-dn" aria-label="Next moves">▼</button></div></div>`;
+      <div class="rpad"><button class="btn arr" id="at-up" aria-label="Previous moves">▲</button><div class="slots" id="at-rows"></div><button class="btn arr" id="at-dn" aria-label="Next moves">▼</button></div></div>`;
   const hold=(id,dir)=>{ const b=document.getElementById(id), on=e=>{ e.preventDefault(); ar.p[0].wantDir=dir; b.classList.add("on"); }, off=()=>{ if(ar.p[0].wantDir===dir) ar.p[0].wantDir=0; b.classList.remove("on"); };
     b.addEventListener("pointerdown",on); b.addEventListener("pointerup",off); b.addEventListener("pointercancel",off); b.addEventListener("pointerleave",off); };
   hold("at-l",-1); hold("at-r",1);
@@ -113,14 +115,13 @@ function atStart(meFam,foeFam){
 }
 function atSize(){ const cv=document.getElementById("at-cv"), W=cv.clientWidth||390, H=Math.round(Math.max(220,Math.min(520,(window.innerHeight||844)-375))), dpr=Math.min(2,devicePixelRatio||1);
   cv.width=W*dpr; cv.height=H*dpr; cv.style.height=H+"px"; AT.W=W; AT.H=H; AT.dpr=dpr; }
-/* four move slots at a time as icons; ▲ ▼ cycle through the rest. The selected move's name sits above them */
+/* four move slots at a time, each with its icon, name, range dot and cost; ▲ ▼ cycle through the rest */
 function atRows(){
   const ar=AT.ar, p=ar.p[0], M=AT.moves, n=M.length, rows=document.getElementById("at-rows"); if(!rows) return;
   const ks=[0,1,2,3].map(j=>(AT.top+j)%n);
   const html=ks.map(k=>{ const m=M[k], on=ar.inRange(m);
-    return `<div class="slot ${on?"":"out"} ${k===AT.sel?"sel":""} ${p.focus<m.cost?"poor":""}" data-k="${k}"><span class="rd" style="background:${AT_RC[m.range]}"></span>${atIcon(m)}<span class="c">${m.cost}</span></div>`; }).join("");
+    return `<div class="slot ${on?"":"out"} ${k===AT.sel?"sel":""} ${p.focus<m.cost?"poor":""}" data-k="${k}"><span class="rd" style="background:${AT_RC[m.range]}"></span>${atIcon(m)}<span class="c">${m.cost}</span><span class="n">${m.name}</span></div>`; }).join("");
   if(html!==AT.rowsHtml){ rows.innerHTML=html; AT.rowsHtml=html; }
-  const m=M[AT.sel], cur=document.getElementById("at-cur"), t=`${m.name} <small>· ${m.range} · ${m.cost} focus</small>`; if(cur.innerHTML!==t) cur.innerHTML=t;
 }
 const AT_ICON=(()=>{ const sv=b=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${b}</svg>`;
   return { bite:sv('<path d="M3 8h18l-3 4-3-3-3 3-3-3-3 3z"/><path d="M3 16h18l-3-3-3 3-3-3-3 3-3-3z" opacity=".55"/>'),
@@ -148,26 +149,114 @@ function atIcon(m){
   return AT_ICON.strike;
 }
 function atLoop(now){
-  if(!AT) return; const ar=AT.ar;
-  AT.acc+=Math.min(0.25,(now-AT.last)/1000); AT.last=now;
+  if(!AT) return; const ar=AT.ar, real=Math.min(0.25,(now-AT.last)/1000); AT.last=now;
+  // hitstop: the fight and its animations pause for a moment when a hit lands
+  const frozen=now<AT.freeze; if(!frozen){ AT.acc+=real; AT.te+=real*1000; }
   while(AT.acc>=AR.DT&&!ar.over){ AT.acc-=AR.DT; ar.ev=[]; ar.step(); for(const e of ar.ev) atEvent(e,now); }
-  atHud(); atRows(); atDraw(now);
-  if(ar.over&&!AT.done){ AT.done=true; setTimeout(atResult,900); }
+  if(ar.over) for(const i of [0,1]) if(ar.winner===1-i&&AT.side[i].ko==null) AT.side[i].ko=AT.te;
+  atHud(); atRows(); atDraw(now,frozen?0:real*1000);
+  if(ar.over&&!AT.done){ AT.done=true; setTimeout(atResult,1300); }
   AT.raf=requestAnimationFrame(atLoop);
 }
+const AT_TIER={light:{stop:30,trauma:0.1,sparks:4,flash:45},medium:{stop:55,trauma:0.22,sparks:7,flash:55},heavy:{stop:100,trauma:0.6,sparks:18,flash:100,white:1}};
+/* what the engine reports becomes the game's own battle animation */
 function atEvent(e,now){
-  const S=AT.side, m=e.m, cast=m&&(m.cast||m.range==="Mid"||m.range==="Far");
-  if(e.t==="start"){ S[e.i].pose=m&&m.dmg?(cast?"cast":"crouch"):"jump"; S[e.i].until=now+Math.max(200,m.wind*1000); }
-  if(e.t==="hit"||e.t==="miss"){ const o=1-e.i;
-    if(e.t==="hit"&&e.h>0){} else if(cast) AT.shots.push({from:e.i,t0:now,dur:260,col:atCol(m),big:m.dmg>=60});
-    else { S[e.i].lunge=now; S[e.i].pose=m.dmg>=50?"slam":"attack"; S[e.i].until=now+260; }
-    if(e.t==="hit"){ S[o].pose="hit"; S[o].until=now+320; S[o].flash=now; AT.fx.push({i:o,t0:now,txt:String(e.dmg),crit:e.crit}); if(typeof sfx==="function") try{ sfx(e.crit?"crit":"hit"); }catch(err){} }
-    else AT.fx.push({i:o,t0:now,txt:e.why==="out"?"Out of reach":e.why==="block"?"Blocked":"Miss"}); }
-  if(e.t==="swap"){ S[0].jump=now; S[1].jump=now; }
-  if(e.t==="slam"){ S[e.i].pose="hit"; S[e.i].until=now+500; AT.fx.push({i:e.i,t0:now,txt:`Wall ${e.dmg}`,crit:true}); }
-  if(e.t==="buff"){ AT.fx.push({i:e.i,t0:now,txt:m.name,buff:true}); }
+  const S=AT.side[e.i], m=e.m, te=AT.te, sp=S.spec;
+  if(e.t==="start"){
+    if(m.swap){ S.pose={p:"crouch",until:te+m.wind*1000}; return; }
+    if(m.step||m.dash&&!m.dmg){ S.pose={p:"crouch",until:te+m.wind*1000}; return; }
+    let kind;
+    if(m.buff) kind={bunker:"bunker",phase:"phase",brace:"shield",riposte:"shield",bubble:"shield",feedback:"shield",unblink:"buff"}[m.buff]||"buff";
+    else if(m.lower) kind="glare";
+    else kind=typeof animFor==="function"?animFor({name:m.name,kind:m.cast?"Cast":"Strike",el:m.el},sp):"tackle";
+    if(!ANIM[kind]) kind="tackle";
+    const K=ANIM[kind], rate=Math.max(0.6,Math.min(3,K.C/Math.max(120,m.wind*1000)));
+    const col=m.el&&typeof ELC==="function"?hexRgb(ELC(m.el)):AT_FAMCOL[AT.ar.p[e.i].f.family]||[255,214,90];
+    S.anim={kind,t0:te,rate,el:m.el||null,name:m.name,src:typeof sourceFor==="function"?sourceFor({name:m.name,kind:m.cast?"Cast":"Strike"},sp):"mouth",col,pw:m.dmg>=70?1.35:m.dmg>=40?1.05:0.8,contact:/^(tackle|bite|stomp|punch|claw|shadowstrike|fly)$/.test(kind)};
+    try{ sfx(m.cast?"charge":"whoosh"); if(typeof elSfx==="function") elSfx(m.el,"cast"); if(typeof kindSfx==="function") kindSfx(kind); }catch(err){}
+  }
+  if(e.t==="step"){ S.hop={t0:te,h:16}; }
+  if(e.t==="swap"){ AT.side[0].hop={t0:te,h:46}; AT.side[1].hop={t0:te,h:30}; try{ sfx("whoosh"); }catch(err){} }
+  if(e.t==="hit"){ const o=AT.side[1-e.i], tier=e.crit?"heavy":e.dmg>=25?"medium":"light", T=AT_TIER[tier];
+    if(e.h===0||!o.react||te-o.react.t0>120){ o.react={kind:"hit",t0:te,tier}; AT.freeze=Math.max(AT.freeze,now+T.stop); AT.trauma=Math.min(1,AT.trauma+T.trauma);
+      AT.spark={i:1-e.i,n:T.sparks,col:S.anim?S.anim.col:[255,236,160]}; if(S.anim&&S.anim.contact) S.recoil={t0:te,amt:tier==="heavy"?10:6};
+      try{ sfx(tier==="heavy"?"heavy":tier==="medium"?"hit":"tap"); if(S.anim) elSfx(S.anim.el,"hit"); }catch(err){} }
+    AT.fx.push({i:1-e.i,t0:now+e.h*90,txt:String(e.dmg),crit:e.crit}); }
+  if(e.t==="miss"){ const o=AT.side[1-e.i]; if(e.why!=="out") o.react={kind:"dodge",t0:te};
+    AT.fx.push({i:1-e.i,t0:now,txt:e.why==="out"?"Out of reach":e.why==="block"?"Blocked":"Miss"}); }
+  if(e.t==="slam"){ S.react={kind:"hit",t0:te,tier:"heavy"}; AT.trauma=Math.min(1,AT.trauma+0.5); AT.fx.push({i:e.i,t0:now,txt:`Wall ${e.dmg}`,crit:true});
+    try{ sfx("heavy"); }catch(err){} }
+  if(e.t==="buff") AT.fx.push({i:e.i,t0:now,txt:m.name,buff:true});
 }
-function atCol(m){ const c=m.el&&typeof ELC==="function"?ELC(m.el):null; return c&&c!=="#888"?c:({Antik:"#ffe07a",Squib:"#7fd3f2",Moko:"#ff9ad6",Booly:"#9fb8ff",Skit:"#f4efe4"}[AT.ar.p[0].f.family]||"#ffffff"); }
+const AT_FAMCOL={Antik:[255,224,122],Squib:[127,211,242],Moko:[255,154,214],Booly:[159,184,255],Skit:[244,239,228],Chomp:[255,214,90],Pinch:[255,138,122],Stilt:[255,179,92]};
+/* one side's pose and offset this frame, the way the battle's sideState works */
+function atSideState(S,te){
+  const out={f:0,arc:0,lift:0,rot:0,sx:1,sy:1,pose:null,flash:0,off:[0,0],alpha:1};
+  const A=S.anim; if(A){ const t=(te-A.t0)*A.rate, K=ANIM[A.kind]; if(t>K.D) S.anim=null; else Object.assign(out,K.atk(t,{foeH:60,perp:[0,-1]})); }
+  const O=S.foe.anim; if(O&&!S.anim){ const t=(te-O.t0)*O.rate, K=ANIM[O.kind]; if(t<=K.D&&K.def){ const d=K.def(t,{foeH:60,perp:[0,-1]}); if(d) Object.assign(out,d); } }
+  if(S.pose&&te<S.pose.until&&!S.anim) out.pose=S.pose.p;
+  if(S.recoil){ const k=(te-S.recoil.t0)/170; if(k>1) S.recoil=null; else out.off[0]-=S.dir*S.recoil.amt*Math.sin(k*Math.PI); }
+  const R=S.react;
+  if(R){ const dur=R.kind==="hit"?(R.tier==="heavy"?560:420):380, k=(te-R.t0)/dur;
+    if(k>1) S.react=null;
+    else if(R.kind==="hit"){ const T=AT_TIER[R.tier], dt=te-R.t0; out.pose="hit"; out.flash=T.white?(dt<18?2:dt<T.flash?1:0):dt<T.flash?3:0;
+      out.off[0]-=S.dir*(R.tier==="heavy"?16:9)*(k<0.25?eo(k/0.25):1-eo((k-0.25)/0.75)); out.rot-=S.dir*0.12*(R.tier==="heavy"?1.6:1)*Math.sin(Math.min(1,k*1.5)*Math.PI); }
+    else { const s2=Math.sin(k*Math.PI); out.pose="dodge"; out.off[0]-=S.dir*22*s2; out.off[1]-=12*s2; } }
+  if(S.hop){ const k=(te-S.hop.t0)/380; if(k>1) S.hop=null; else { out.arc-=Math.sin(k*Math.PI)*S.hop.h; if(!out.pose) out.pose="jump"; } }
+  if(S.ko!=null){ out.pose="ko"; const k=(te-S.ko-500)/220; if(k>0){ out.alpha=Math.max(0,1-k); } }
+  return out;
+}
+function atDraw(now,dte){
+  const cv=document.getElementById("at-cv"); if(!cv) return; const c=cv.getContext("2d"), W=AT.W, H=AT.H, dpr=AT.dpr, ar=AT.ar, te=AT.te;
+  CB.te=te;   // the battle helpers (sparks, dust, bursts) run on this clock
+  if(!AT.bg){ const b=document.createElement("canvas"); b.width=W*dpr; b.height=H*dpr; const x=b.getContext("2d"); x.scale(dpr,dpr); atStage(x,W,H); AT.bg=b; }
+  const shake=AT.trauma*AT.trauma*7; AT.trauma=Math.max(0,AT.trauma-dte/700);
+  const sx=shake?Math.sin(te/23)*shake:0, sy=shake?Math.cos(te/31)*shake*0.6:0;
+  c.setTransform(dpr,0,0,dpr,0,0); c.clearRect(0,0,W,H); c.drawImage(AT.bg,sx,sy,W,H);
+  const floor=H-44, X=x=>34+x/AR.LEN*(W-68), scale=Math.min(1.5,Math.max(1,H/300)), alpha=Math.min(1,AT.acc/AR.DT);
+  // glide between engine steps, then ease toward that so pushes and swaps slide instead of jumping
+  ar.p.forEach((p,i)=>{ const S=AT.side[i], want=X(p.px==null?p.x:p.px+(p.x-p.px)*alpha);
+    S.x=S.x==null?want:S.x+(want-S.x)*(1-Math.exp(-dte/45)); });
+  { const a=AT.side[0], b=AT.side[1], min=58*scale, gap=Math.abs(b.x-a.x);
+    if(gap<min){ const mid=Math.max(34+min/2,Math.min(W-34-min/2,(a.x+b.x)/2)), s=b.x>=a.x?1:-1; a.dx=mid-s*min/2; b.dx=mid+s*min/2; } else { a.dx=a.x; b.dx=b.x; } }
+  // the gap between them on the floor
+  { const a=Math.min(AT.side[0].dx,AT.side[1].dx), b=Math.max(AT.side[0].dx,AT.side[1].dx), y=floor+16, band=arBand(ar.gap());
+    c.strokeStyle=AT_RC[band]; c.lineWidth=3; c.setLineDash([6,5]); c.beginPath(); c.moveTo(a,y); c.lineTo(b,y); c.stroke(); c.setLineDash([]);
+    c.font="700 12px system-ui"; c.textAlign="center"; c.lineWidth=4; c.strokeStyle="#14151d"; c.fillStyle=AT_RC[band]; c.strokeText(band,(a+b)/2,y+15); c.fillText(band,(a+b)/2,y+15); }
+  const placed=[null,null];
+  [0,1].forEach(i=>{ const S=AT.side[i], O=AT.side[1-i], sp=S.spec; if(!sp) return;
+    S.dir=O.dx>S.dx?1:-1; S.foe=O;
+    const h=CHIBI.height(sp.stage,sp.marks,sp.family), u=Math.min(0.5,96/(h+20))*scale;
+    const st=atSideState(S,te), moving=Math.abs(S.dx-(S.lastX??S.dx))>0.15;
+    let pose=st.pose||(moving||ar.p[i].wantDir?"walk":"idle");
+    if(pose!==S.shown){ S.from=S.shown||"idle"; S.shown=pose; S.t0=te; }
+    const k=(te-S.t0)/110, P=k>=0&&k<1&&CHIBI.POSES.includes(S.from)&&CHIBI.POSES.includes(pose)?CHIBI.blend(S.from,pose,k):pose;
+    // a contact move reaches the opponent, but never further than a short lunge when it's out of reach
+    const reach=Math.max(-70,Math.min(70,(O.dx-S.dx)-S.dir*min58(scale)));
+    const x=S.dx+reach*st.f+st.off[0], y=floor+st.arc+st.lift+st.off[1], mir=S.dir>0?-1:1;
+    if(moving!==!!S.moving&&S.ko==null&&typeof spawnPuff==="function") spawnPuff(x-S.dir*10,y-2,moving?5:7,S.dir>0?Math.PI:0,1.2,0.08,5*scale,"rgba(235,228,214,1)",320);
+    S.moving=moving; S.lastX=S.dx;
+    c.fillStyle="rgba(0,0,0,.2)"; c.beginPath(); c.ellipse(x,floor+2,24*scale*(st.alpha),6*scale,0,0,7); c.fill();
+    c.save(); c.globalAlpha=st.alpha; if(st.flash===2) c.filter="brightness(0) invert(1)"; else if(st.flash===1) c.filter="brightness(1.5)"; else if(st.flash===3) c.filter="brightness(1.18)";
+    c.translate(x,y); c.rotate(st.rot); c.scale(mir*u*st.sx,u*st.sy); c.translate(-100,-188);
+    CHIBI.draw(c,{...sp,capture:(S.cap={})},P,te,[0.6*S.dir*mir,0]); c.restore();
+    const cp=S.cap||{}, d=q=>q?{x:q.x/dpr,y:q.y/dpr}:null;
+    placed[i]={x,y:y-h*u*0.45,foot:y,lift:st.lift,back:false,r:CHIBI.width(sp.stage,sp.family)*u*0.55,eyes:cp.eyes&&cp.eyes.map(d),mouth:d(cp.mouth),hands:(cp.hands||[]).map(d),top:d(cp.top)||{x,y:y-50},center:d(cp.center)};
+  });
+  // the game's own attack effects, from the attacker's eyes, mouth or hands to the target
+  [0,1].forEach(i=>{ const A=AT.side[i].anim; if(!A||!placed[i]||!placed[1-i]||!ANIM[A.kind].fx) return;
+    const T0=placed[1-i], tgt={...T0,x:T0.center?T0.center.x:T0.x,y:T0.center?T0.center.y:T0.y};
+    try{ ANIM[A.kind].fx(c,(te-A.t0)*A.rate,{self:placed[i],target:tgt,targetLift:tgt.lift||0,col:A.col,el:A.el,name:A.name,from:originOf(placed[i],A.src,tgt),pw:A.pw,W,H}); }catch(err){ AT.side[i].anim=null; } });
+  if(AT.spark&&placed[AT.spark.i]){ const p=placed[AT.spark.i], src=placed[1-AT.spark.i], c0=p.center||p;
+    spawnSparks(c0,Math.atan2(c0.y-src.y,c0.x-src.x),AT.spark.n,AT.spark.col); AT.burst={i:AT.spark.i,t0:te,col:AT.spark.col}; AT.spark=null; }
+  if(AT.burst&&placed[AT.burst.i]&&te-AT.burst.t0<260){ const p=placed[AT.burst.i]; burst(c,p.center||p,(te-AT.burst.t0)/260,AT.burst.col); }
+  drawSparks(c,dte); drawPuffs(c);
+  // damage numbers and words over the head
+  AT.fx=AT.fx.filter(f=>now-f.t0<900); c.textAlign="center"; for(const f of AT.fx){ if(now<f.t0) continue; const k=(now-f.t0)/900, p=placed[f.i]; if(!p) continue;
+    c.font=`700 ${f.crit?19:15}px system-ui`; c.globalAlpha=1-k*k; c.lineWidth=4; c.strokeStyle="#14151d"; c.fillStyle=f.buff?"#8fd3ff":f.crit?"#ffc93c":"#ffffff";
+    const y=p.top.y-14-k*26; c.strokeText(f.txt,p.x,y); c.fillText(f.txt,p.x,y); c.globalAlpha=1; }
+}
+
 function atHud(){
   const ar=AT.ar, g=ar.gap(), m=AT.moves[AT.sel];
   ar.p.forEach((p,i)=>{ document.getElementById("at-hp"+i).style.width=(100*p.hp/p.maxhp)+"%"; document.getElementById("at-fo"+i).style.width=(100*p.focus/99)+"%";
@@ -178,36 +267,7 @@ function atHud(){
   document.getElementById("at-clock").textContent=Math.max(0,Math.ceil(AR.TIME-ar.t));
   const sh=document.getElementById("at-shove"), can=arBand(g)==="Close"&&!(ar.p[0].shoveCool>0); sh.classList.toggle("off",!can);
 }
-function atDraw(now){
-  const cv=document.getElementById("at-cv"); if(!cv) return; const c=cv.getContext("2d"), W=AT.W, H=AT.H, dpr=AT.dpr, ar=AT.ar;
-  c.setTransform(dpr,0,0,dpr,0,0);
-  if(!AT.bg){ const b=document.createElement("canvas"); b.width=W*dpr; b.height=H*dpr; const x=b.getContext("2d"); x.scale(dpr,dpr); atStage(x,W,H); AT.bg=b; }
-  c.drawImage(AT.bg,0,0,W,H);
-  const floor=H-44, X=x=>34+x/AR.LEN*(W-68);
-  ar.p.forEach((p,i)=>{ const S=AT.side[i]; S.x=S.x==null?X(p.x):S.x+(X(p.x)-S.x)*0.25; });
-  { // the steps are smaller than the drawings, so at Close the two are drawn just touching rather than overlapping
-    const a=AT.side[0], b=AT.side[1], min=58*Math.min(1.5,Math.max(1,H/300)), gap=Math.abs(b.x-a.x); if(gap<min){ const mid=Math.max(34+min/2,Math.min(W-34-min/2,(a.x+b.x)/2)), s=b.x>=a.x?1:-1; a.dx=mid-s*min/2; b.dx=mid+s*min/2; } else { a.dx=a.x; b.dx=b.x; } }
-  [0,1].forEach(i=>{ const p=ar.p[i], S=AT.side[i], sp=i?AT.B.spec:AT.A.spec, foe=AT.side[1-i], dir=foe.dx>S.dx?1:-1;
-    let pose=now<S.until?S.pose:(p.wantDir||Math.abs(S.x-X(p.x))>1.5?"walk":"idle"); if(ar.over&&ar.winner===1-i) pose="ko";
-    let x=S.dx; if(now-S.lunge<260) x+=dir*Math.sin((now-S.lunge)/260*Math.PI)*16;
-    let y=floor; if(now-S.jump<420) y-=Math.sin((now-S.jump)/420*Math.PI)*34;
-    c.fillStyle="rgba(0,0,0,.2)"; c.beginPath(); c.ellipse(S.dx,floor+2,24,6,0,0,7); c.fill();
-    if(sp&&typeof CHIBI!=="undefined"){ const h=CHIBI.height(sp.stage,sp.marks,sp.family), u=Math.min(0.5,96/(h+20))*Math.min(1.5,Math.max(1,H/300));
-      c.save(); c.setTransform(dpr*u,0,0,dpr*u,dpr*(x-100*u),dpr*(y-188*u)); CHIBI.draw(c,sp,pose,now,[dir,0]); c.restore(); }
-    if(now-S.flash<120){ c.fillStyle="rgba(255,255,255,.35)"; c.beginPath(); c.ellipse(x,y-34,30,34,0,0,7); c.fill(); } });
-  { // the gap between them on the floor, with its band
-    const a=Math.min(AT.side[0].dx,AT.side[1].dx), b=Math.max(AT.side[0].dx,AT.side[1].dx), y=floor+16, band=arBand(ar.gap());
-    c.strokeStyle=AT_RC[band]; c.lineWidth=3; c.setLineDash([6,5]); c.beginPath(); c.moveTo(a,y); c.lineTo(b,y); c.stroke(); c.setLineDash([]);
-    c.font="700 12px system-ui"; c.textAlign="center"; c.lineWidth=4; c.strokeStyle="#14151d"; c.fillStyle=AT_RC[band]; c.strokeText(band,(a+b)/2,y+15); c.fillText(band,(a+b)/2,y+15); }
-  // shots fly from one Snabit to the other
-  AT.shots=AT.shots.filter(s=>now-s.t0<s.dur); for(const s of AT.shots){ const k=(now-s.t0)/s.dur, a=AT.side[s.from], b=AT.side[1-s.from], x=a.dx+(b.dx-a.dx)*k, y=floor-40;
-    if(s.big){ c.strokeStyle=s.col; c.lineWidth=6; c.globalAlpha=0.8; c.beginPath(); c.moveTo(a.dx,y); c.lineTo(x,y); c.stroke(); c.globalAlpha=1; }
-    c.fillStyle=s.col; c.beginPath(); c.arc(x,y,s.big?9:6,0,7); c.fill(); c.fillStyle="rgba(255,255,255,.6)"; c.beginPath(); c.arc(x-2,y-2,2.4,0,7); c.fill(); }
-  // damage numbers and words
-  AT.fx=AT.fx.filter(f=>now-f.t0<900); c.textAlign="center"; for(const f of AT.fx){ const k=(now-f.t0)/900, S=AT.side[f.i];
-    c.font=`700 ${f.crit?17:14}px system-ui`; c.globalAlpha=1-k*k; c.lineWidth=4; c.strokeStyle="#14151d"; c.fillStyle=f.buff?"#8fd3ff":f.crit?"#ffc93c":"#ffffff";
-    const y=floor-84-k*26; c.strokeText(f.txt,S.dx,y); c.fillText(f.txt,S.dx,y); c.globalAlpha=1; }
-}
+const min58=scale=>58*scale*0.92;
 function atStage(c,W,H){
   const sky=c.createLinearGradient(0,0,0,H*0.45); sky.addColorStop(0,"#2a1f4a"); sky.addColorStop(1,"#3a2b5e"); c.fillStyle=sky; c.fillRect(0,0,W,H);
   const cols=["#ffb35c","#8fd3ff","#ff8a7a","#c7a6ff","#5ad18a","#ffe07a","#f4efe4"], top=Math.round(H*0.36);
