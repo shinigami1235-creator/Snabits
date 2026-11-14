@@ -279,7 +279,6 @@ Worn items: Head (Cap, Top hat, Crown, Party hat, Bow), Face (Sunglasses, Monocl
 
 ## Loose ends
 
-- GitHub Pages is still set to "Deploy from a branch", so the title says "Version dev" and the build number and the Update bar don't work yet. Gid needs to open the repo's Settings → Pages and set Source to GitHub Actions.
 - Every app Gid hosts on `shinigami1235-creator.github.io` shares one browser storage, so clearing that site's data wipes the saves of all of them at once. A custom domain for Snabits would keep its save separate.
 - The local git remote on Gid's laptop still points at the old repo name. Pushes work through GitHub's redirect, and changing the remote needs Gid's OK.
 - The design doc's old real-time mission table should come out once Gid says so.
