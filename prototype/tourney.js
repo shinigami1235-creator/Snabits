@@ -196,14 +196,14 @@ function finishCup(){
   const prize=c.format==="team5"?(place===1?purse+(own?Math.round(purse/2):0):0):place===1?purse:place===2?Math.round(purse/2):place===3?Math.round(purse/4):0;
   const lines=[];
   if(place===null) lines.push(`It dropped out of the ${c.name}.`);
-  else if(c.format==="elim"&&place>1) lines.push(`It went out in the ${place===2?"final":place===3?"semi-final":"quarter-final"} of the ${c.name}.`);
+  else if((c.format==="elim"||c.format==="bo3")&&place>1) lines.push(`It went out in the ${place===2?"final":place===3?"semi-final":"quarter-final"} of the ${c.name}.`);
   else if(c.format==="team5"){ const n=CUP.bouts.filter(b=>b.res==="w").length; lines.push(`The Hill League ${place===1?"won":"lost"} the exhibition ${Math.max(n,5-n)} bouts to ${Math.min(n,5-n)}, and ${displayName(s)} ${own?"won":"lost"} its own bout.`); }
   else lines.push(`${place===1?"It won":"It finished "+["","first","second","third","fourth","fifth"][Math.min(place,5)]+" in"} the ${c.name}.`);
   if(prize){ PLAYER.bits+=prize; lines.push(`It brings home ${prize} bits.`); }
   if(place===1&&c.prize){ addItem(c.prize); lines.push(`The prize table also had ${/^[AEIOU]/.test(c.prize)?"an":"a"} ${c.prize}.`); }
   if(place===1&&c.qualifier){ s.exQual=`${weekParts(PLAYER.week).yr}:${c.grade}`; lines.push("It's in this year's Summer Exhibition, next month."); }
   // MR2's numbers: a cup wears it out but takes a lot of stress off, most of all with a win
-  const last=place===null||(c.format==="robin"&&place===c.size)||(c.format==="elim"&&place===5)||((c.format==="single"||c.format==="team5")&&place===2);
+  const last=place===null||(c.format==="robin"&&place===c.size)||((c.format==="elim"||c.format==="bo3")&&place===5)||((c.format==="single"||c.format==="team5")&&place===2);
   if(CUP.fights){ const tm=tireMul(s); if(place===1){ s.stress-=45; s.fatigue+=Math.round(30*tm); } else if(last){ s.stress-=30; s.fatigue+=Math.round(50*tm); } else { s.stress-=38; s.fatigue+=Math.round(40*tm); } clampAll(); }
   if(place===1&&!c.small){ s.cups=(s.cups||[]).concat(c.name); s.stageCups=(s.stageCups||0)+1;
     if(c.official&&c.grade===s.grade&&s.grade!=="S"){ s.grade=GRADES[GRADES.indexOf(s.grade)+1]; lines.push(`It moves up to grade ${s.grade}.`); }
