@@ -738,6 +738,12 @@ const CHIBI = (() => {
   const by = (stage, a, b, cc) => stage === 'Bit' ? a : stage === 'Byte' ? b : cc;
   const legPair = (c, x, sideList, fn) => sideList.forEach(fn);
 
+  /* a stumpy pillar leg for Plod; back legs sit higher and darker so the body reads as having depth; dark = how much darker the leg is */
+  function PLODLEG(c, g, x, lx, mat, i, back, dark = 0) {
+    const lw = by(g.stage, 13, 15, 18) * (back ? 0.85 : 1), lift = Math.max(0, Math.sin(x.t / 150 + i * Math.PI / 2)) * 5 * Math.abs(x.walk);
+    const col = dk(x.parts, (back ? 0.18 : 0) + dark), fy = (back ? 177 : 182) - lift;
+    limb(c, [lx, g.bot - 12, lx, (g.bot + fy) / 2, lx, fy - 2], lw, col, mat, x.t); blob(c, lx, fy, lw * 0.66, lw * 0.42, col, mat, x.t, 'foot'); x.feet.push([lx, fy, lw * 0.58]);
+  }
   const FAM = {
     /* round dome with a scalloped hem, standing on tentacles */
     Squib: {
@@ -901,26 +907,25 @@ const CHIBI = (() => {
       hl: g => [g.cx - g.bw * 0.34, g.top + g.bh * 0.5, g.cx - g.bw * 0.32, g.top + g.bh * 0.16, g.cx - g.bw * 0.06, g.top + g.bh * 0.05],
       face: (c, g, x, look) => faceTwo(c, g, x, look, { ey: 0.47, ex: 0.17, my: 0.66, s: by(g.stage, 0.76, 0.86, 0.94) })
     },
-    /* four-legged: a loaf of a body on four short legs, with a curled tail */
-    Quad: {
-      dims: { Bit: [80, 56], Byte: [104, 70], Mega: [124, 84] }, ll: st => by(st, 8, 11, 13),
-      bottom(st) { return 183 - this.ll(st); }, height(st) { return this.dims[st][1] + this.ll(st) + 10; },
-      path(c, g) { roundBox(c, g.left, g.top, g.bw, g.bh, g.bh * 0.5); },
-      leg(c, g, x, lx, mat, i, back) {           // back legs stand a little higher and darker so the body reads as having depth
-        const lw = by(g.stage, 12, 14, 16) * (back ? 0.85 : 1), lift = Math.max(0, Math.sin(x.t / 120 + i * Math.PI / 2)) * 5 * Math.abs(x.walk);
-        const col = back ? dk(x.parts, 0.18) : x.parts, fy = (back ? 177 : 182) - lift;
-        limb(c, [lx, g.bot - 14, lx, (g.bot + fy) / 2, lx, fy - 2], lw, col, mat, x.t);
-        blob(c, lx, fy, lw * 0.72, lw * 0.48, col, mat, x.t, 'foot'); x.feet.push([lx, fy, lw * 0.62]);
-      },
-      behind(c, g, x) {
-        const tx = g.left + g.bw - 6, ty = g.top + g.bh * 0.4, sw = Math.sin(x.t / 260) * 4, tw = by(g.stage, 6, 7, 8);
-        limb(c, [tx, ty, tx + 26, ty - 2 + sw, tx + 22, ty - 22 + sw], tw, x.parts, x.L.tail, x.t);
-        c.fillStyle = rgb(g.stage === 'Mega' ? x.acc : x.parts); c.beginPath(); c.arc(tx + 22, ty - 22 + sw, tw * (g.stage === 'Mega' ? 1.15 : 0.7), 0, 7); c.fill();
-        this.leg(c, g, x, g.cx - g.bw * 0.34, x.L.legL, 1, true); this.leg(c, g, x, g.cx + g.bw * 0.34, x.L.legR, 3, true);
-      },
-      front(c, g, x) { this.leg(c, g, x, g.cx - g.bw * 0.2, x.L.legL, 0, false); this.leg(c, g, x, g.cx + g.bw * 0.2, x.L.legR, 2, false); },
-      inside(c, g, x) { if (g.stage === 'Mega') { c.fillStyle = rgb(lt(x.body, 0.5)); c.beginPath(); c.ellipse(g.cx, g.bot - 4, g.bw * 0.26, g.bh * 0.24, 0, 0, 7); c.fill(); } },
-      face: (c, g, x, look) => faceTwo(c, g, x, look, { ey: 0.38, ex: 0.17, my: 0.62, s: by(g.stage, 0.8, 0.92, 1) })
+    /* Plod (Gid picked this look on 14 Nov 2026 over a long neck and a woolly body): a round dome on four pillar legs,
+       big ears that flap, a trunk that swings, and tusks at Mega */
+    Plod: {
+      dims: { Bit: [72, 62], Byte: [94, 78], Mega: [114, 94] }, ll: st => by(st, 8, 10, 12),
+      bottom(st) { return 183 - this.ll(st); }, height(st) { return this.dims[st][1] + this.ll(st) + 8; },
+      path(c, g) { c.beginPath(); c.roundRect(g.left, g.top, g.bw, g.bh, [g.bw * 0.5, g.bw * 0.5, g.bh * 0.22, g.bh * 0.22]); },
+      behind(c, g, x) { const fl = Math.sin(x.t / 380) * 0.12, er = g.bh * 0.32;
+        for (const sd of [-1, 1]) { const ex = g.cx + sd * g.bw * 0.44, ey = g.top + g.bh * 0.4;
+          c.save(); c.translate(ex, ey); c.rotate(sd * (0.15 + fl)); c.fillStyle = rgb(dk(x.body, 0.3)); c.beginPath(); c.ellipse(sd * er * 0.5, 3, er * 0.68, er, 0, 0, 7); c.fill();
+          c.fillStyle = rgb(x.body); c.beginPath(); c.ellipse(sd * er * 0.5, 0, er * 0.68, er, 0, 0, 7); c.fill();
+          c.fillStyle = rgb(lt(x.acc, 0.2)); c.beginPath(); c.ellipse(sd * er * 0.5, 2, er * 0.42, er * 0.68, 0, 0, 7); c.fill(); c.restore(); }
+        PLODLEG(c, g, x, g.cx - g.bw * 0.3, x.L.legL, 1, true); PLODLEG(c, g, x, g.cx + g.bw * 0.3, x.L.legR, 3, true); },
+      front(c, g, x) { PLODLEG(c, g, x, g.cx - g.bw * 0.16, x.L.legL, 0, false); PLODLEG(c, g, x, g.cx + g.bw * 0.16, x.L.legR, 2, false);
+        const sw = Math.sin(x.t / 420) * 6, tw = by(g.stage, 9, 11, 13), y0 = g.top + g.bh * 0.5, y1 = g.bot + by(g.stage, 2, 6, 8);
+        if (g.stage === 'Mega') for (const sd of [-1, 1]) { c.strokeStyle = '#f6efe0'; c.lineWidth = 5; c.lineCap = 'round'; c.beginPath(); c.moveTo(g.cx + sd * 12, y0 + 18); c.quadraticCurveTo(g.cx + sd * 22, y0 + 34, g.cx + sd * 14, y0 + 40); c.stroke(); }
+        limb(c, [g.cx, y0, g.cx + sw * 0.4, (y0 + y1) / 2, g.cx + sw, y1], tw, x.body, x.L.tail, x.t);
+        c.fillStyle = rgb(dk(x.body, 0.4)); for (const sd of [-1, 1]) { c.beginPath(); c.arc(g.cx + sw + sd * tw * 0.2, y1 + 1, 1.6, 0, 7); c.fill(); } },
+      hl: g => [g.left + g.bw * 0.16, g.top + g.bh * 0.5, g.left + g.bw * 0.16, g.top + g.bh * 0.12, g.left + g.bw * 0.42, g.top + g.bh * 0.04],
+      face: (c, g, x, look) => faceTwo(c, g, x, look, { ey: 0.38, ex: 0.2, my: 0.62, s: by(g.stage, 0.8, 0.9, 0.98) })
     },
     /* upright: a big round head on a small body, with arms and legs */
     Bipped: {
@@ -943,8 +948,8 @@ const CHIBI = (() => {
       head: g => [g.cx, g.top + 3, g.bw * 0.56],
       face: (c, g, x, look) => faceTwo(c, { cx: g.cx, top: g.top, bh: g.bw, bw: g.bw, stage: g.stage }, x, look, { ey: 0.5, ex: 0.19, my: 0.73, s: by(g.stage, 0.8, 0.88, 0.94) })
     },
-    /* a round-bottom flask with the monster's colour as the liquid inside, corked at the top */
-    Flask: {
+    /* Fizz: a round-bottom flask with the monster's colour as the liquid inside, corked at the top */
+    Fizz: {
       dims: { Bit: [60, 60], Byte: [76, 76], Mega: [90, 90] }, glass: true, patternAfter: true,
       nh: st => by(st, 10, 16, 20), ch: st => by(st, 8, 10, 12),
       bottom() { return 178; }, height(st) { return this.dims[st][1] + this.nh(st) + this.ch(st) + 10; },

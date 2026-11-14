@@ -18,7 +18,7 @@ function chibiSpec(m, s) {
    How tall each family stands at Bit, Byte and Mega, in cm. A person is about 160 cm. Each monster is 85% to 115% of
    that from its photo, so two monsters of the same kind still differ, and it keeps its size for life. */
 const SIZE_CM = { Chomp: [50, 100, 170], Squib: [40, 85, 150], Antik: [60, 120, 200], Moko: [50, 95, 160], Pinch: [45, 90, 150],
-  Stilt: [70, 140, 240], Skit: [35, 70, 110], Booly: [55, 110, 190], Quad: [50, 100, 170], Bipped: [60, 120, 190], Flask: [45, 90, 150], Teep: [40, 80, 140], Lern: [45, 90, 160] };
+  Stilt: [70, 140, 240], Skit: [35, 70, 110], Booly: [55, 110, 190], Plod: [50, 100, 170], Bipped: [60, 120, 190], Fizz: [45, 90, 150], Teep: [40, 80, 140], Lern: [45, 90, 160] };
 function sizeK(m) {
   if (!m) return 1; if (m.sizeK) return m.sizeK;
   const t = JSON.stringify([m.pal, m.stats, m.lifespan, m.family]); let h = 2166136261;
