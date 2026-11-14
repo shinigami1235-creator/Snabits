@@ -178,5 +178,5 @@ function infoRecord(s) {
       ${line('Born', born)}
     </div>
     <div class="i-card"><div class="i-sec">Last ${Math.max(1, log.length)} week${log.length === 1 ? '' : 's'}</div>
-      ${log.length ? `<div class="i-log">${log.map((a, k) => `<div><span style="background:${INFO_ACT_COL[a] || '#3a3f58'};color:${['Rest', 'Trip', 'Mission'].includes(a) ? '#f5f0e2' : '#11121a'}">${a}</span><small>W${weekNo + k + 1}</small></div>`).join('')}</div>` : '<div class="i-q">Nothing logged yet. Each week it trains, rests or travels shows up here.</div>'}</div>`;
+      ${log.length ? `<div class="i-log">${log.map((a, k) => `<div><span style="background:${INFO_ACT_COL[a] || '#3a3f58'};color:${['Rest', 'Trip', 'Mission'].includes(a) || !INFO_ACT_COL[a] ? '#f5f0e2' : '#11121a'}">${a}</span><small>W${weekNo + k + 1}</small></div>`).join('')}</div>` : '<div class="i-q">Nothing logged yet. Each week it trains, rests or travels shows up here.</div>'}</div>`;
 }
