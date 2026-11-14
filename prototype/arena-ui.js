@@ -346,11 +346,29 @@ function atInferno(c,t,C,src,tg,s,te){
       const ww=w*k, hh=h*k, sw=Math.sin(te/70+ph)*ww*0.6, g=c.createLinearGradient(0,y,0,y-hh); g.addColorStop(0,c0); g.addColorStop(0.6,c1); g.addColorStop(1,"rgba(255,150,40,0)");
       c.fillStyle=g; c.beginPath(); c.moveTo(x-ww,y); c.bezierCurveTo(x-ww*1.15,y-hh*0.5,x+sw-ww*0.35,y-hh*0.72,x+sw,y-hh); c.bezierCurveTo(x+sw+ww*0.35,y-hh*0.72,x+ww*1.15,y-hh*0.5,x+ww,y); c.closePath(); c.fill(); } };
   const dir=tg.x>src.x?1:-1; c.save();
-  if(t<C){ const k=(t-start)/400, front=src.x+(tg.x-src.x)*Math.pow(k,1.3);
-    c.globalCompositeOperation="lighter"; const g=c.createRadialGradient(front,foot,0,front,foot,90*s); g.addColorStop(0,"rgba(255,200,90,.7)"); g.addColorStop(1,"rgba(255,120,40,0)"); c.fillStyle=g; c.beginPath(); c.ellipse(front,foot,90*s,26*s,0,0,7); c.fill();
-    c.globalCompositeOperation="source-over";
-    for(let n=0;n<26;n++){ const f=n/25, x=src.x+dir*40*s+(front-src.x-dir*40*s)*f, age=1-f, h=(70+70*Math.abs(Math.sin(n*1.7+te/90)))*s*(0.45+0.55*f)*(f>0.88?1.5:1);
-      flame(x,foot,(15+6*f)*s,h,n); }
+  if(t<C){ const k=(t-start)/400, front=src.x+(tg.x-src.x)*Math.pow(k,1.25);
+    // chunky cartoon fire in the monsters' solid style: a rounded flame with side lobes, layered red, orange, yellow and a pale-hot core
+    const blaze=(x,y,w,h,ph)=>{ if(h<6||w<3) return;
+      for(const [m,col,dy] of [[1,"#e2483f",0],[0.74,"#ff8a3d",0.04],[0.5,"#ffd23f",0.08],[0.26,"#fff3c0",0.1]]){
+        const ww=w*m, hh=h*m, by=y+h*dy*0.2, sw=Math.sin(te/85+ph)*ww*0.45, lob=Math.sin(te/110+ph*1.7)*0.12;
+        c.fillStyle=col; c.beginPath(); c.moveTo(x-ww,by);
+        c.bezierCurveTo(x-ww*1.35,by-hh*0.35,x-ww*(0.55+lob),by-hh*0.48,x-ww*0.7,by-hh*0.62);
+        c.bezierCurveTo(x-ww*0.55,by-hh*0.82,x+sw-ww*0.15,by-hh*0.86,x+sw,by-hh);
+        c.bezierCurveTo(x+sw+ww*0.2,by-hh*0.8,x+ww*(0.75-lob),by-hh*0.7,x+ww*0.6,by-hh*0.5);
+        c.bezierCurveTo(x+ww*1.3,by-hh*0.38,x+ww*1.25,by-hh*0.05,x+ww,by);
+        c.quadraticCurveTo(x,by+ww*0.35,x-ww,by); c.closePath(); c.fill(); } };
+    c.globalCompositeOperation="lighter"; const g=c.createRadialGradient(front,foot,0,front,foot,120*s); g.addColorStop(0,"rgba(255,190,80,.75)"); g.addColorStop(1,"rgba(255,110,40,0)");
+    c.fillStyle=g; c.beginPath(); c.ellipse((src.x+front)/2,foot,Math.abs(front-src.x)/2+110*s,32*s,0,0,7); c.fill(); c.globalCompositeOperation="source-over";
+    const n=Math.max(1,Math.round(Math.abs(front-src.x)/(40*s)));
+    for(let j=0;j<n;j++){ const f=j/n, x=src.x+(front-src.x)*f, life=Math.min(1,(1-f)*4)*(f<0.25?0.4+f*2.4:1), h=(70+40*Math.sin(j*2.3+te/120))*s*life, w=(24+6*Math.sin(j*1.3))*s*Math.min(1,life*1.3);
+      blaze(x,foot+((j*7)%5)*s,w,h,j*1.9); }
+    // the leading edge: a billowing ball of fire rolling along the floor
+    const roll=te/90*dir;
+    for(let j=0;j<5;j++){ const a=roll+j*1.26, rx=front+Math.cos(a)*26*s, ry=foot-58*s+Math.sin(a)*22*s, r=(30+6*Math.sin(te/70+j))*s;
+      c.fillStyle=j%2?"#ff8a3d":"#e2483f"; c.beginPath(); c.arc(rx,ry,r,0,7); c.fill(); }
+    c.fillStyle="#ffd23f"; c.beginPath(); c.arc(front,foot-58*s,30*s,0,7); c.fill(); c.fillStyle="#fff3c0"; c.beginPath(); c.arc(front-dir*4*s,foot-62*s,15*s,0,7); c.fill();
+    blaze(front,foot,46*s,190*s,9);
+    for(let j=0;j<8;j++){ const ph=((te/420)+j*0.37)%1; c.fillStyle=`rgba(255,${190+j*6},90,${1-ph})`; c.beginPath(); c.arc(front-dir*ph*120*s+((j*29)%40-20)*s,foot-80*s-ph*120*s,(3+j%3)*s,0,7); c.fill(); }
     c.restore(); return; }
   const k=(t-C)/(end-C), grow=Math.min(1,k/0.1), die=k>0.6?1-(k-0.6)/0.4:1, A=grow*die;
   if(k<0.03){ AT.flash={t0:performance.now(),a:0.4}; AT.trauma=Math.max(AT.trauma,0.85); } AT.trauma=Math.max(AT.trauma,0.28*A);
