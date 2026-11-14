@@ -25,7 +25,9 @@ function atStyle(){
 #atest .hbot{position:absolute;left:4px;right:4px;bottom:4px;display:grid;grid-template-columns:1fr 62px 1fr;gap:4px;pointer-events:none}
 #atest .side{background:rgba(20,21,29,.88);border:2px solid #3a3d52;border-radius:10px;padding:4px}
 #atest .mv{font-size:12px;font-weight:700;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:16px}#atest .foe .mv{color:#ffb4a8}
-#atest .strip{display:grid;grid-template-columns:repeat(4,1fr);gap:3px;margin-top:3px}
+#atest .strip{display:flex;gap:3px;margin-top:3px}#atest .strip .sc{flex:1}
+#atest .hbot.atsw .me{order:3}#atest .hbot.atsw .mid{order:2}#atest .hbot.atsw .foe{order:1}#atest .hbot.atsw .strip{flex-direction:row-reverse}#atest .hbot.atsw .mid b{flex-direction:row-reverse}
+#atest .hbot.atsw .me .fob i{left:auto;right:0}#atest .hbot.atsw .foe .fob i{right:auto;left:0}#atest .hbot.flash{animation:atsw .35s}@keyframes atsw{0%{opacity:.2}100%{opacity:1}}
 #atest .sc{position:relative;height:38px;border-radius:7px;background:#232533;border-top:3px solid var(--rc);display:flex;align-items:center;justify-content:center;color:#7d8199}
 #atest .sc svg{width:20px;height:20px}#atest .sc i{position:absolute;right:2px;bottom:0;font-style:normal;font-size:8px;color:#ffc93c;font-weight:700}#atest .sc.none{opacity:.35}
 #atest .sc.lit{background:#ffc93c;color:#14151d}#atest .sc.lit i{color:#14151d}#atest .sc.foe.lit{background:#ff8a7a}
@@ -100,17 +102,17 @@ function atStart(meFam,foeFam){   // picks: see atMake
   AT.foeBest={}; for(const b of AR.BANDS){ const c=B.f.moves.filter(m=>m.range===b&&m.dmg).sort((x,y)=>y.dmg*(y.hits||1)*y.acc-x.dmg*(x.hits||1)*x.acc); AT.foeBest[b]=c[0]||null; }
   const d=document.getElementById("atest");
   // MR2's way: each Snabit's four range cells sit on the fight screen and meet in the middle, Close at the centre.
-  // Your Snabit always stands on the left, so ◀ backs off and ▶ closes in; after a swap the arena turns round to keep it so.
+  // ◀ ▶ walk left and right on screen. After a swap the two really trade places, and your row and numbers move to your side.
   const cells=side=>(side?AR.BANDS:AR.BANDS.slice().reverse()).map(b=>`<div class="sc${side?" foe":""}" style="--rc:${AT_RC[b]}" id="at-${side?"f":"y"}-${b}"></div>`).join("");
   d.innerHTML=`<div class="scr"><canvas id="at-cv"></canvas>
       <div class="htop"><div class="clock2" id="at-clock">60</div></div>
       <div class="hbot" id="at-hbot"><div class="side me"><div class="mv" id="at-mv0"></div><div class="strip">${cells(0)}</div><div class="fob" id="at-fb0"><i id="at-fo0"></i><span class="need" id="at-need"></span></div></div>
         <div class="mid"><div><span>Hit</span><b><i id="at-hit0"></i><em id="at-hit1"></em></b></div><div><span>Focus</span><b><i id="at-fn0"></i><em id="at-fn1"></em></b></div></div>
         <div class="side foe"><div class="mv" id="at-mv1"></div><div class="strip">${cells(1)}</div><div class="fob"><i id="at-fo1"></i></div></div></div></div>
-    <div class="ctl3"><button class="btn walk" id="at-l" aria-label="Back off">◀</button>
-      <button class="btn arr" id="at-up" aria-label="Previous move for this range">▲</button><button class="btn arr" id="at-dn" aria-label="Next move for this range">▼</button><button class="btn walk" id="at-r" aria-label="Close in">▶</button>
+    <div class="ctl3"><button class="btn walk" id="at-l" aria-label="Walk left">◀</button>
+      <button class="btn arr" id="at-up" aria-label="Previous move for this range">▲</button><button class="btn arr" id="at-dn" aria-label="Next move for this range">▼</button><button class="btn walk" id="at-r" aria-label="Walk right">▶</button>
       <button class="btn ico" id="at-shove" aria-label="Shove">${AT_ICON.shove}</button><button class="btn atk" id="at-atk"><span id="at-atk-n">Attack</span><small id="at-atk-c"></small></button><button class="btn ico" id="at-auto" aria-label="Auto">${AT_ICON.auto}</button></div>`;
-  const hold=(id,rel)=>{ const b=document.getElementById(id), on=e=>{ e.preventDefault(); ar.p[0].wantRel=rel; b.classList.add("on"); }, off=()=>{ if(ar.p[0].wantRel===rel) ar.p[0].wantRel=0; b.classList.remove("on"); };
+  const hold=(id,dir)=>{ const b=document.getElementById(id), on=e=>{ e.preventDefault(); ar.p[0].wantDir=dir; b.classList.add("on"); }, off=()=>{ if(ar.p[0].wantDir===dir) ar.p[0].wantDir=0; b.classList.remove("on"); };
     b.addEventListener("pointerdown",on); b.addEventListener("pointerup",off); b.addEventListener("pointercancel",off); b.addEventListener("pointerleave",off); };
   hold("at-l",-1); hold("at-r",1);
   document.getElementById("at-shove").onclick=()=>ar.shove(ar.p[0]);
@@ -204,7 +206,8 @@ function atEvent(e,now){
     try{ sfx(m.cast?"charge":"whoosh"); if(typeof elSfx==="function") elSfx(m.el,"cast"); if(typeof kindSfx==="function") kindSfx(kind); }catch(err){}
   }
   if(e.t==="step"){ S.hop={t0:te,h:16}; }
-  if(e.t==="swap"){ AT.side[0].hop={t0:te,h:46}; AT.side[1].hop={t0:te,h:30}; try{ sfx("whoosh"); }catch(err){} }
+  if(e.t==="swap"){ AT.side[e.i].hop={t0:te,h:78,d:480}; AT.side[1-e.i].hop={t0:te,h:8,d:480};   // the swapper leaps over, the other ducks
+    try{ sfx("whoosh"); }catch(err){} }
   if(e.t==="hit"){ const o=AT.side[1-e.i], tier=e.crit?"heavy":e.dmg>=25?"medium":"light", T=AT_TIER[tier];
     if(e.h===0||!o.react||te-o.react.t0>120){ o.react={kind:"hit",t0:te,tier}; AT.freeze=Math.max(AT.freeze,now+T.stop); AT.trauma=Math.min(1,AT.trauma+T.trauma);
       AT.spark={i:1-e.i,n:T.sparks,col:S.anim?S.anim.col:[255,236,160]}; if(S.anim&&S.anim.contact) S.recoil={t0:te,amt:tier==="heavy"?10:6};
@@ -230,7 +233,7 @@ function atSideState(S,te){
     else if(R.kind==="hit"){ const T=AT_TIER[R.tier], dt=te-R.t0; out.pose="hit"; out.flash=T.white?(dt<18?2:dt<T.flash?1:0):dt<T.flash?3:0;
       out.off[0]-=S.dir*(R.tier==="heavy"?16:9)*(k<0.25?eo(k/0.25):1-eo((k-0.25)/0.75)); out.rot-=S.dir*0.12*(R.tier==="heavy"?1.6:1)*Math.sin(Math.min(1,k*1.5)*Math.PI); }
     else { const s2=Math.sin(k*Math.PI); out.pose="dodge"; out.off[0]-=S.dir*22*s2; out.off[1]-=12*s2; } }
-  if(S.hop){ const k=(te-S.hop.t0)/380; if(k>1) S.hop=null; else { out.arc-=Math.sin(k*Math.PI)*S.hop.h; if(!out.pose) out.pose="jump"; } }
+  if(S.hop){ const k=(te-S.hop.t0)/(S.hop.d||380); if(k>1) S.hop=null; else { out.arc-=Math.sin(k*Math.PI)*S.hop.h; if(!out.pose) out.pose="jump"; } }
   if(S.ko!=null){ out.pose="ko"; const k=(te-S.ko-500)/220; if(k>0){ out.alpha=Math.max(0,1-k); } }
   return out;
 }
@@ -244,22 +247,17 @@ function atDraw(now,dte){
   const sx=shake?Math.sin(te/23)*shake:0, sy=shake?Math.cos(te/31)*shake*0.6:0;
   const floor=FY, scale=2.3, SEP=(58*scale-AR.BODY/AR.LEN*(WW-140))/(1-AR.BODY/AR.LEN), K=(WW-140-SEP)/AR.LEN, X=(x,right)=>70+x*K+(right?SEP:0), alpha=Math.min(1,AT.acc/AR.DT);
   // glide between engine steps, then ease toward that so pushes and swaps slide instead of jumping
-  // your Snabit always stands on the left: when it ends up on the right (a swap), the arena turns round in a quick flip
-  const wantMir=ar.p[0].x>ar.p[1].x;
-  if(AT.mirror==null) AT.mirror=wantMir;
-  if(wantMir!==AT.mirror&&!AT.flip) AT.flip={t0:te};
-  let flipK=0; if(AT.flip){ flipK=(te-AT.flip.t0)/360; if(flipK>=0.5&&AT.mirror!==wantMir){ AT.mirror=wantMir; AT.snap=true; } if(flipK>=1){ AT.flip=null; flipK=0; } }
-  const shown=ar.p.map(p=>{ const e=p.px==null?p.x:p.px+(p.x-p.px)*alpha; return AT.mirror?AR.LEN-e:e; });
+  // while a move plays the clock is stopped, so swaps and knockback show at once instead of waiting for the next step
+  const shown=ar.p.map(p=>ar.turn||p.px==null?p.x:p.px+(p.x-p.px)*alpha);
   ar.p.forEach((p,i)=>{ const S=AT.side[i], want=X(shown[i],shown[i]>shown[1-i]||shown[i]===shown[1-i]&&i===1);
-    S.x=S.x==null||AT.snap?want:S.x+(want-S.x)*(1-Math.exp(-dte/45)); });
+    const hop=S.hop&&te-S.hop.t0<520; S.x=S.x==null?want:S.x+(want-S.x)*(1-Math.exp(-dte/(hop?95:45))); });
   AT.side.forEach(S=>{ S.dx=S.x; });
   // the camera zooms with the gap, MR2 style: in close when they're face to face, pulled back to both walls when they're far apart
   { const a=AT.side[0].dx, b=AT.side[1].dx, V=Math.max(W/1.35,Math.min(WW,Math.abs(b-a)+110*scale)), z=W/V;
-    AT.zoom=AT.zoom==null||AT.snap?z:AT.zoom+(z-AT.zoom)*(1-Math.exp(-dte/260));
-    const v=W/AT.zoom, want=Math.max(0,Math.min(WW-v,(a+b)/2-v/2)); AT.cam=AT.cam==null||AT.snap?want:AT.cam+(want-AT.cam)*(1-Math.exp(-dte/140)); AT.cam=Math.max(0,Math.min(WW-v,AT.cam)); AT.snap=false; }
+    AT.zoom=AT.zoom==null?z:AT.zoom+(z-AT.zoom)*(1-Math.exp(-dte/260));
+    const v=W/AT.zoom, want=Math.max(0,Math.min(WW-v,(a+b)/2-v/2)); AT.cam=AT.cam==null?want:AT.cam+(want-AT.cam)*(1-Math.exp(-dte/140)); AT.cam=Math.max(0,Math.min(WW-v,AT.cam)); }
   const z=AT.zoom;
   c.setTransform(dpr,0,0,dpr,0,0); c.clearRect(0,0,W,H);
-  if(flipK){ const k=Math.max(0.04,Math.abs(Math.cos(Math.PI*flipK))); c.translate(W/2,0); c.scale(k,1); c.translate(-W/2,0); }   // the turn-around
   c.translate(sx,AT.floorS+sy); c.scale(z,z); c.translate(-AT.cam,-FY); c.drawImage(AT.bg,0,0,WW,HH);
   const toWorld=c.getTransform().inverse();   // the drawing records its eyes, hands and head in canvas pixels; this turns them back into arena units
   // the gap between them on the floor
@@ -301,7 +299,7 @@ function atDraw(now,dte){
     const y=p.top.y-(52+k*26)/z; c.strokeText(f.txt,p.x,y); c.fillText(f.txt,p.x,y); c.globalAlpha=1; }
   // name and HP over each head, so your eyes stay on the fight; the white part is the damage just taken, draining after a moment
   c.setTransform(dpr,0,0,dpr,0,0);
-  if(!flipK) [0,1].forEach(i=>{ const P=placed[i], p=ar.p[i], S=AT.side[i]; if(!P) return;
+  [0,1].forEach(i=>{ const P=placed[i], p=ar.p[i], S=AT.side[i]; if(!P) return;
     const f=p.hp/p.maxhp; S.hpLag=S.hpLag==null?f:f>S.hpLag?f:S.hpLag+(f-S.hpLag)*(1-Math.exp(-Math.max(0,dte)/380));
     const bw=104, bh=13, x=Math.max(6,Math.min(W-bw-6,(P.x-AT.cam)*z+sx-bw/2)), y=Math.max(52,(P.top.y-FY)*z+AT.floorS+sy-38);
     c.fillStyle="rgba(20,21,29,.85)"; c.beginPath(); c.roundRect(x-2,y-2,bw+4,bh+4,6); c.fill();
@@ -321,7 +319,9 @@ function atHud(){
   document.getElementById("at-hit0").textContent=pc(ar.p[0],m.name?m:null); document.getElementById("at-hit1").textContent=pc(ar.p[1],fm);
   document.getElementById("at-fn0").classList.toggle("ok",ar.p[0].focus>=m.cost);
   // a white line on your focus bar shows what the selected move costs, and the bar lights up once you can afford it
-  document.getElementById("at-need").style.left=`calc(${100*Math.min(99,m.cost)/99}% - 1px)`;
+  const sw=ar.p[0].x>ar.p[1].x, hb=document.getElementById("at-hbot");
+  if(hb.classList.contains("atsw")!==sw){ hb.classList.toggle("atsw",sw); hb.classList.remove("flash"); void hb.offsetWidth; hb.classList.add("flash"); }
+  const nd=document.getElementById("at-need"), at=`calc(${100*Math.min(99,m.cost)/99}% - 1px)`; nd.style.left=sw?"auto":at; nd.style.right=sw?at:"auto";
   document.getElementById("at-fb0").classList.toggle("ok",ar.p[0].focus>=m.cost&&ar.inRange(m));
   document.getElementById("at-clock").textContent=Math.max(0,Math.ceil(AR.TIME-ar.t));
   const sh=document.getElementById("at-shove"), can=arBand(g)==="Close"&&!(ar.p[0].shoveCool>0); sh.classList.toggle("off",!can);
