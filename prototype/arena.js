@@ -89,8 +89,7 @@ class Arena{
       for(const k in p.buff){ p.buff[k]-=AR.DT; if(p.buff[k]<=0) delete p.buff[k]; } }
     // the two sides decide in a random order each step, so neither always gets the first move
     for(const p of this.rand()<0.5?this.p:[this.p[1],this.p[0]]){ if(this.turn||this.over) break; if(p.stun) continue;
-      // a player walks toward (+1) or away from (-1) the opponent, so the buttons mean the same thing after a swap
-      if(p.ai==="human"){ const o=this.p[1-p.i], d=p.wantRel?p.wantRel*(o.x>p.x?1:-1):p.wantDir; if(d&&!p.hold) this.walk(p,d); } else (p.ai==="naive"?this.naive(p):this.smart(p)); }
+      if(p.ai==="human"){ if(p.wantDir&&!p.hold) this.walk(p,p.wantDir); } else (p.ai==="naive"?this.naive(p):this.smart(p)); }
     if(this.turn||this.over) return;
     this.t+=AR.DT;
     if(this.t>=AR.TIME){ this.over=true; const r=this.p.map(p=>p.hp/p.maxhp); this.winner=r[0]===r[1]?null:r[0]>r[1]?0:1; this.judged=true; }

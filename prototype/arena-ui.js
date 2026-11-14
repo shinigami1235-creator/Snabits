@@ -17,10 +17,6 @@ function atStyle(){
 #atest .scr canvas{position:absolute;left:0;right:0;top:var(--safe-t,0px);width:100%;display:block}
 #atest .scr::after{content:"";position:absolute;left:0;right:0;top:0;height:calc(var(--safe-t,0px) + 56px);background:linear-gradient(rgba(20,21,29,.7),transparent);pointer-events:none}
 #atest .htop{position:absolute;z-index:1;left:50%;width:54px;margin-left:-27px;top:calc(var(--safe-t,0px) + 8px);pointer-events:none}
-#atest .hb .nm{font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 2px #14151d}#atest .hb.r{text-align:right}
-#atest .hpb{height:16px;border-radius:5px;background:rgba(20,21,29,.85);border:2px solid #3a3d52;margin-top:3px;position:relative;overflow:hidden}
-#atest .hpb i{position:absolute;top:0;bottom:0;left:0;background:linear-gradient(#7be3a3,#41b872)}#atest .r .hpb i{left:auto;right:0}
-#atest .hpb b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;text-shadow:0 1px 2px #14151d,0 0 3px #14151d}
 #atest .clock2{font:700 22px var(--pix),system-ui;color:#ffc93c;background:rgba(20,21,29,.85);border:2px solid #ffc93c;border-radius:10px;text-align:center;padding:4px 0}
 #atest .hbot{position:absolute;left:4px;right:4px;bottom:4px;display:grid;grid-template-columns:1fr 62px 1fr;gap:4px;pointer-events:none}
 #atest .side{background:rgba(20,21,29,.88);border:2px solid #3a3d52;border-radius:10px;padding:4px}
@@ -94,7 +90,7 @@ function atStart(meFam,foeFam){   // picks: see atMake
   const R=Math.random, A=atMake(meFam,R), B=atMake(foeFam,R,A.level,A.grade), ar=new Arena(A.f,B.f,R,["human","smart"]); ar.live=true;   // each move pauses the fight while it plays
   const order=["Close","Near","Mid","Far","Any"];
   const moves=A.f.moves.slice().sort((a,b)=>order.indexOf(a.range)-order.indexOf(b.range)||a.cost-b.cost);
-  AT={ar,A,B,moves,sel:0,top:0,auto:false,last:performance.now(),acc:0,te:0,freeze:0,trauma:0,raf:0,side:[A.spec,B.spec].map(spec=>({spec,x:null,shown:"idle",from:"idle",t0:0,dir:1})),fx:[],done:false,me:meFam,foe:foeFam};
+  AT={ar,A,B,moves,auto:false,last:performance.now(),acc:0,te:0,freeze:0,trauma:0,raf:0,side:[A.spec,B.spec].map(spec=>({spec,x:null,shown:"idle",from:"idle",t0:0,dir:1})),fx:[],done:false,me:meFam,foe:foeFam};
   CB.parts=[]; CB.puffs=[];
   AT.special=[A,B].map(X=>{ const t=X.f.moves.filter(m=>m.dmg>=70).sort((a,b)=>b.dmg-a.dmg)[0]; return t?t.name:null; });
   AT.rings=[]; AT.stars=[]; AT.strikes=[];
@@ -128,7 +124,7 @@ function atStart(meFam,foeFam){   // picks: see atMake
   AT.raf=requestAnimationFrame(atLoop);
 }
 function atSize(){ const cv=document.getElementById("at-cv"), scr=cv.parentElement, W=scr.clientWidth||390;
-  const pad=parseFloat(getComputedStyle(scr).paddingTop)||0, H=Math.round(Math.max(200,Math.min(700,scr.clientHeight-pad-6))), dpr=Math.min(2,devicePixelRatio||1);
+  const pad=parseFloat(getComputedStyle(scr).paddingTop)||0, H=Math.round(Math.max(200,Math.min(1600,scr.clientHeight-pad-6))), dpr=Math.min(2,devicePixelRatio||1);
   cv.style.height=H+"px"; cv.width=W*dpr; cv.height=H*dpr; AT.W=W; AT.H=H; AT.dpr=dpr; AT.WW=Math.round(W*1.6); AT.bg=null;
   // feet a little below the middle, so the fight sits in the centre of the screen with the clock in view.
   // the arena is drawn tall enough to fill the screen when the camera pulls all the way back
@@ -531,6 +527,8 @@ function atDraw(now,dte){
     // a special's release frames the target, so a glacier or a funnel at the far wall stays on screen
     const rel=[0,1].find(i=>{ const A=AT.side[i].anim; return A&&A.mega&&te>=A.t0&&(te-A.t0)*A.rate<ANIM[A.kind].C+700; });
     if(rel!=null&&!cine){ mid=AT.side[rel].dx*0.25+AT.side[1-rel].dx*0.75; z*=0.92; }
+    // outside a special's close-up, both Snabits always stay in the shot however the camera leans
+    if(!cine||ck>=0.86){ const need=Math.max(Math.abs(a-mid),Math.abs(b-mid))+60*scale; z=Math.min(z,W/(2*need)); }
     AT.zoom=AT.zoom==null?z:AT.zoom+(z-AT.zoom)*(1-Math.exp(-dte/(fast?90:260)));
     const v=W/AT.zoom, want=Math.max(0,Math.min(WW-v,mid-v/2)); AT.cam=AT.cam==null?want:AT.cam+(want-AT.cam)*(1-Math.exp(-dte/(fast?70:140))); AT.cam=Math.max(0,Math.min(WW-v,AT.cam)); }
   const pk=AT.punch?Math.max(0,1-(te-AT.punch.t0)/260):0, z=AT.zoom*(1+(AT.punch?AT.punch.amt:0)*Math.sin(Math.min(1,pk)*Math.PI*0.5)*pk), zc=W/2;
@@ -658,7 +656,6 @@ function atHud(){
   const sh=document.getElementById("at-shove"), can=arBand(g)==="Close"&&!(ar.p[0].shoveCool>0); sh.classList.toggle("off",!can);
 
 }
-const min58=scale=>58*scale*0.92;
 function atStage(c,W,H,FY){
   const sand=FY-230, crowd=sand-12, ctop=Math.max(0,crowd-380);
   const sky=c.createLinearGradient(0,0,0,ctop+40); sky.addColorStop(0,"#140f26"); sky.addColorStop(1,"#2a1f4a"); c.fillStyle=sky; c.fillRect(0,0,W,ctop+40);
