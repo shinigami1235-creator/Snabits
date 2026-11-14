@@ -193,7 +193,7 @@ function finishCup(){
   else place=CUP.alive[0]===0?1:CUP.round>=3?2:CUP.round===2?3:5;
   const purse=cupPurse(c);
   const own=c.format==="team5"&&CUP.bouts[0].res==="w";
-  const prize=c.format==="team5"?(place===1?purse+(own?Math.round(purse/2):0):0):place===1?purse:place===2?Math.round(purse/2):place===3?Math.round(purse/4):0;
+  const prize=c.format==="team5"?(place===1?purse+(own?Math.round(purse/2):0):0):place===1?purse:c.small?0:place===2?Math.round(purse/2):place===3?Math.round(purse/4):0;   // a one-match cup pays the winner only, as its card and the ceremony say
   const lines=[];
   if(place===null) lines.push(`It dropped out of the ${c.name}.`);
   else if((c.format==="elim"||c.format==="bo3")&&place>1) lines.push(`It went out in the ${place===2?"final":place===3?"semi-final":"quarter-final"} of the ${c.name}.`);
