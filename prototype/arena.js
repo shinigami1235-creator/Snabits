@@ -382,7 +382,9 @@ function arFoe(o){
   return f;
 }
 /* a fight worked out off screen, in the shape the old simFight gave: winner, judged, how long it ran, and both sides' HP */
-function arSim(a,b,rand,noDraw){
-  const ar=new Arena(a,b,rand); ar.noDraw=!!noDraw; ar.run();
+function arSim(a,b,rand,noDraw,shown){
+  const ar=new Arena(a,b,rand); ar.noDraw=!!noDraw;
+  // shown: stepped the way the fight screen steps it (one move at a time, the clock stopped while it plays), so the same seed gives the fight the screen will show
+  if(shown){ ar.live=true; while(!ar.over){ ar.step(); if(ar.turn) ar.endTurn(); } } else ar.run();
   return {winner:ar.winner,judged:!!ar.judged,turn:Math.round(ar.t),secs:Math.round(ar.t),ar,p:ar.p.map(x=>Object.assign(x.f,{hp:x.hp,maxhp:x.maxhp}))};
 }

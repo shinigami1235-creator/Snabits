@@ -74,10 +74,14 @@ async function runMission(b){
   if(s.busy) return;
   const res=resolveMission(s,b), foe=endFoe(s,res), snap=fightSnapshot(s);
   // the end fight, worked out now so the scene can show it and it can be watched again
-  const f=new Fight(playerFighter(snap),makeFighter(foe.fm,foe.skills,foe.level),rng(res.endSeed+1));
-  if(foe.boss){ const bb=f.p[1]; bb.maxhp=Math.round(bb.maxhp*1.25); bb.hp=bb.maxhp; bb.name=foe.boss; }
-  while(!f.over&&f.turn<15) f.play(habitPick(f,0,snap),f.aiPick(f.p[1],f.p[0]));
-  if(!f.over) judge(f,true);
+  // on the arena the result comes from the arena too, with the seed the screen will use, so the report matches the fight that plays
+  const onArena=typeof arSim==="function"&&typeof arenaGame==="function"&&typeof CHIBI_ART!=="undefined"&&CHIBI_ART&&chibiSpec(fightMon(snap),snap);
+  let f;
+  if(onArena) f=arSim(arPlayer(snap),arFoe(foe),rng(res.endSeed+1),true,true);
+  else { f=new Fight(playerFighter(snap),makeFighter(foe.fm,foe.skills,foe.level),rng(res.endSeed+1));
+    if(foe.boss){ const bb=f.p[1]; bb.maxhp=Math.round(bb.maxhp*1.25); bb.hp=bb.maxhp; bb.name=foe.boss; }
+    while(!f.over&&f.turn<15) f.play(habitPick(f,0,snap),f.aiPick(f.p[1],f.p[0]));
+    if(!f.over) judge(f,true); }
   const won=f.winner===0;
   res.learnt.push(...afterFight(s,f.p[0],true));
   if(won){ res.exp+=4+2*foe.level;
