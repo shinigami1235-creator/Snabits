@@ -20,6 +20,23 @@ function atSfx(kind,el){
     else if(kind==="tick"&&typeof elSfx==="function") elSfx(el,"cast");
     else if(kind==="up") [440,554,659].forEach((f,k)=>sTone(d,t+k*0.05,"square",f,f,0.1,0.03));
     else if(kind==="down") [659,523,392].forEach((f,k)=>sTone(d,t+k*0.05,"square",f,f,0.1,0.03));
+    else if(kind==="cleanse") [1047,1319,1568,2093].forEach((f,k)=>sTone(d,t+k*0.04,"sine",f,f,0.25,0.05));
+    else if(kind==="thaw") for(let k=0;k<5;k++) sTone(d,t+k*0.09,"sine",1800-k*120,900,0.06,0.05);
+    else if(kind==="endure"){ sTone(d,t,"triangle",196,190,0.9,0.1); sTone(d,t,"triangle",392,388,0.7,0.05); }
+    else if(kind==="recoil"){ dKick(d,t,0.35); dNoise(d,t,0.08,0.15,"lowpass",600); }
+    else if(kind==="steal") [880,660,440].forEach((f,k)=>sTone(d,t+k*0.05,"sine",f,f*0.9,0.08,0.05));
+    else if(kind==="sleep") [523,392].forEach((f,k)=>sTone(d,t+k*0.25,"sine",f,f,0.4,0.05));
+    else if(kind==="wake"){ sTone(d,t,"sine",400,900,0.1,0.07); }
+    else if(kind==="step") dNoise(d,t,0.12,0.12,"lowpass",900);
+    else if(kind==="ko"){ dKick(d,t,1); dNoise(d,t,0.5,0.4,"lowpass",500); sTone(d,t+0.1,"triangle",440,110,0.8,0.08); }
+    else if(kind==="ab:Sky High"){ sTone(d,t,"sawtooth",2400,1400,0.35,0.035); dNoise(d,t,0.3,0.1,"bandpass",2200,2); }
+    else if(kind==="ab:Bloodsuck"){ sTone(d,t,"sine",500,180,0.4,0.08); dKick(d,t+0.15,0.35); dKick(d,t+0.32,0.3); }
+    else if(kind==="ab:Rebirth"){ dNoise(d,t,0.9,0.18,"lowpass",900); [392,523,659,784,1047].forEach((f,k)=>sTone(d,t+0.2+k*0.08,"triangle",f,f,0.6,0.06)); }
+    else if(kind==="ab:Illusion"){ [1568,1318,1046,1318,1568].forEach((f,k)=>sTone(d,t+k*0.05,"sine",f,f*1.02,0.25,0.05)); dNoise(d,t,0.4,0.06,"highpass",6000); }
+    else if(kind==="ab:Coil"){ dNoise(d,t,0.5,0.14,"highpass",5200,1.2); sTone(d,t+0.05,"sine",260,200,0.4,0.05); }
+    else if(kind==="ab:Thick Fur"){ dNoise(d,t,0.18,0.25,"lowpass",500); sTone(d,t,"sine",180,120,0.2,0.08); }
+    else if(kind==="ab:Bright") [1318,1760].forEach((f,k)=>sTone(d,t+k*0.07,"triangle",f,f,0.3,0.06));
+    else if(kind.slice(0,3)==="ab:"){ sTone(d,t,"triangle",660,990,0.2,0.06); }
   }catch(err){}
 }
 
@@ -63,12 +80,13 @@ const atP=i=>{ const P=AT.lastPlaced&&AT.lastPlaced[i]; if(!P) return null; cons
 /* ---------- events from the engine ---------- */
 function atFx(e,now){
   const te=AT.te, S=AT.side[e.i], P=atP(e.i), name=e.name, D=AT_ST[name], say=(i,txt,o={})=>AT.fx.push({i,t0:now,txt,...o});
+  if(e.t==="ability"){ atAbility(e,now); return; }
   if(e.t==="status"){ S.stOn={name,t0:te}; S.frz=null; say(e.i,name,{col:atRgba(D.c,1),size:17,lift:12}); atSfx("status",D.el); if(P) atBurstEl(P,D.el,14,2.6);
     if(name==="Freeze"&&P) atShards(P.cx,P.cy,[200,240,255],6,false); }
   if(e.t==="cure"){ S.stOff={name,t0:te,why:e.why}; S.frz=null;
     if(e.why==="shatter"&&P){ atShards(P.cx,P.cy,[190,235,255],16,true); atSfx("shatter"); say(e.i,"Shattered",{col:"#bfeaff",size:14,lift:30}); AT.trauma=Math.min(1,AT.trauma+0.25); }
-    else if(name==="Freeze"&&P){ for(let k=0;k<8;k++) atPart({k:"drop",x:P.cx+(atH(k)-0.5)*P.r*1.6,y:P.cy+(atH(k+3)-0.5)*P.H*0.5,vy:0.05,g:0.0007,life:900,s:4,c:[160,215,255],floor:P.foot}); }
-    else if(e.why==="cleanse"&&P){ for(let k=0;k<10;k++) atPart({k:"plus",x:P.cx+(atH(k)-0.5)*P.r*2,y:P.cy+(atH(k+4)-0.5)*P.H*0.6,vy:-0.05,life:700,s:5,c:[255,255,255]}); say(e.i,"Cured",{col:"#ffffff",size:14,lift:20}); }
+    else if(name==="Freeze"&&P){ atSfx("thaw"); for(let k=0;k<8;k++) atPart({k:"drop",x:P.cx+(atH(k)-0.5)*P.r*1.6,y:P.cy+(atH(k+3)-0.5)*P.H*0.5,vy:0.05,g:0.0007,life:900,s:4,c:[160,215,255],floor:P.foot}); }
+    else if(e.why==="cleanse"&&P){ atSfx("cleanse"); for(let k=0;k<10;k++) atPart({k:"plus",x:P.cx+(atH(k)-0.5)*P.r*2,y:P.cy+(atH(k+4)-0.5)*P.H*0.6,vy:-0.05,life:700,s:5,c:[255,255,255]}); say(e.i,"Cured",{col:"#ffffff",size:14,lift:20}); }
     else if(P&&D){ for(let k=0;k<6;k++) atPart({k:"smoke",x:P.cx+(atH(k)-0.5)*P.r,y:P.cy,vy:-0.04,life:600,s:9,c:D.c}); } }
   if(e.t==="tick"){ S.tickAt=te; S.tickName=name; say(e.i,String(e.dmg),{col:atRgba(D.c,1),size:15,side:1}); atSfx("tick",D.el); }
   if(e.t==="jolt"){ S.joltAt=te; if(typeof elSfx==="function") try{ elSfx("Spark","hit"); }catch(err){} if(P) for(let k=0;k<8;k++){ const a=k*0.8; atPart({k:"spark",x:P.cx,y:P.cy,vx:Math.cos(a)*0.25,vy:Math.sin(a)*0.25,life:260,c:[255,240,120]}); } }
@@ -80,14 +98,14 @@ function atFx(e,now){
     atSfx("shatter"); say(1-e.i,"Blocked",{col:"#9fd8ff",size:17}); AT.trauma=Math.min(1,AT.trauma+0.2); }
   if(e.t==="mirror"){ S.mirrorAt=te; say(e.i,"Reflected",{col:"#ffc8f0",size:16}); atSfx("shield"); }
   if(e.t==="counter"){ say(e.i,"Counter",{col:"#ffb35c",size:14,lift:26}); say(1-e.i,String(e.dmg),{col:"#ffb35c",size:19}); AT.side[1-e.i].react={kind:"hit",t0:te+60,tier:"medium"}; AT.trauma=Math.min(1,AT.trauma+0.3); try{ sfx("hit"); }catch(err){} }
-  if(e.t==="endure"){ say(e.i,"Endured",{col:"#ffd75a",size:18,lift:24}); AT.flash={t0:now,a:0.35}; }
-  if(e.t==="recoil"){ say(e.i,String(e.dmg),{col:"#ffb070",size:15,side:1}); S.recoilAt=te; }
-  if(e.t==="steal"){ const o=1-e.i; say(o,`Focus −${e.amt}`,{col:"#8fd3ff",size:13,lift:10}); AT.streams.push({from:o,to:e.i,t0:te,d:480,col:[120,190,255],n:6}); }
+  if(e.t==="endure"){ atSfx("endure"); say(e.i,"Endured",{col:"#ffd75a",size:18,lift:24}); AT.flash={t0:now,a:0.35}; }
+  if(e.t==="recoil"){ atSfx("recoil"); say(e.i,String(e.dmg),{col:"#ffb070",size:15,side:1}); S.recoilAt=te; }
+  if(e.t==="steal"){ atSfx("steal"); const o=1-e.i; say(o,`Focus −${e.amt}`,{col:"#8fd3ff",size:13,lift:10}); AT.streams.push({from:o,to:e.i,t0:te,d:480,col:[120,190,255],n:6}); }
   if(e.t==="stage"&&!e.end){ if(e.n===0){ say(e.i,"No effect",{col:"#c9cbd6",size:12,lift:16}); return; }
     const up=e.n>0; say(e.i,`${AT_STAT_SHORT[e.k]} ${up?"▲":"▼"}${Math.abs(e.n)>1?Math.abs(e.n):""}`,{col:up?"#ff9a70":"#8fb8ff",size:14,lift:16}); atSfx(up?"up":"down");
     if(P) for(let k=0;k<6;k++) atPart({k:"arrow",x:P.cx-P.r*0.8+k*P.r*0.32,y:up?P.foot-10:P.top+10,vy:up?-0.09:0.09,life:800,s:7,c:up?[255,110,80]:[90,150,255],down:!up,t0:te+k*40}); }
-  if(e.t==="sleep") say(e.i,"Asleep",{col:"#cfe0ff",size:14,lift:16});
-  if(e.t==="wake") say(e.i,"Woke up",{col:"#cfe0ff",size:13,lift:30});
+  if(e.t==="sleep"){ atSfx("sleep"); say(e.i,"Asleep",{col:"#cfe0ff",size:14,lift:16}); }
+  if(e.t==="wake"){ atSfx("wake"); say(e.i,"Woke up",{col:"#cfe0ff",size:13,lift:30}); }
   if(e.t==="taunt") say(e.i,"Taunted",{col:"#ff8a7a",size:15,lift:16});
   if(e.t==="erase"){ say(e.i,"Buffs gone",{col:"#c7a6ff",size:14,lift:16}); if(P) for(let k=0;k<10;k++) atPart({k:"smoke",x:P.cx+(atH(k)-0.5)*P.r*2,y:P.cy+(atH(k+2)-0.5)*P.H*0.5,vy:-0.03,life:700,s:10,c:[150,110,210]}); }
   if(e.t==="daze") say(e.i,"Dazed",{col:"#ff9ccc",size:15,lift:30});
@@ -509,3 +527,81 @@ const AR_KIND={Lunge:"bite","Jaw Lock":"jawlock",Gnash:"gnash",
   Bubble:"bolt","Cork Pop":"push","Potion Toss":"potion","Acid Splash":"volley","Boil Over":"pillar","Explosive Brew":"meteor",
   Splash:"bolt","Lid Bonk":"tackle","Steam Jet":"steam",Scald:"bolt",Whistle:"push","Boiling Point":"pillar",
   Ember:"bolt",Flash:"flash","Spark Shower":"volley",Beacon:"beam","Sky Lantern":"meteor"};
+
+/* ---------- the special Snabits' signature moves ---------- */
+function atBat(c,x,y,s,flap){ c.save(); c.translate(x,y); c.scale(s,s); c.fillStyle="#2a1d33"; const w=Math.sin(flap)*0.5+0.6;
+  c.beginPath(); c.ellipse(0,0,4,5,0,0,7); c.fill();
+  for(const sd of [-1,1]){ c.beginPath(); c.moveTo(0,-1); c.quadraticCurveTo(sd*7,-8*w,sd*14,-3*w); c.quadraticCurveTo(sd*10,0,sd*12,3); c.quadraticCurveTo(sd*7,1,sd*4,4); c.closePath(); c.fill(); }
+  c.fillStyle="#ff4a5c"; c.fillRect(-2,-2,1.4,1.4); c.fillRect(0.8,-2,1.4,1.4); c.restore(); }
+function atWisp(c,x,y,r,col){ const g=c.createRadialGradient(x,y,1,x,y,r*2.2); g.addColorStop(0,"rgba(255,255,255,.95)"); g.addColorStop(0.35,atRgba(col,0.85)); g.addColorStop(1,atRgba(col,0)); c.fillStyle=g; c.beginPath(); c.arc(x,y,r*2.2,0,7); c.fill(); }
+Object.assign(ANIM,{
+  /* Eagle: it climbs out of sight, then dives on the target talons first */
+  talondive:{C:560,D:1150,contact:true,marks:true,
+    atk:t=>t<300?{f:-0.05*eo(t/300),arc:-90*eo(t/300),pose:"jump"}:t<560?{f:0.85*ei((t-300)/260),arc:-90*(1-ei((t-300)/260)),pose:"tackle"}:{f:0.85*(1-eio(Math.min(1,(t-560-180)/400))),arc:0,pose:t<800?"land":"idle"},
+    def(t){ if(t<560||t>820) return null; const a=1-eo((t-560)/260); return {sx:1+0.3*a,sy:1-0.3*a,pose:"hit"}; },
+    fx(c,t,x){ if(t>320&&t<560){ const k=(t-320)/240; c.strokeStyle="rgba(255,255,255,.7)"; c.lineWidth=3; c.lineCap="round"; for(let i=0;i<4;i++){ const px=x.target.x-(1-k)*40+(i-1.5)*8, py=x.target.y-80*(1-k)-30; c.beginPath(); c.moveTo(px,py); c.lineTo(px-6,py-26); c.stroke(); } }
+      if(t>=540&&t<860){ const k=(t-540)/320; for(let i=0;i<3;i++) slash(c,{x:x.target.x+(i-1)*9,y:x.target.y+(i-1)*4},k,x.col,0.9); } }},
+  /* Vampire: a bite, then little bats carry the stolen life back to it */
+  nightbite:{C:320,D:1150,contact:true,
+    atk:t=>({f:atReach(t,320,0.74,200,320),pose:t<160?"crouch":t<320?"bitewide":t<520?"chomp":"idle"}),
+    fx(c,t,x){ if(t>320&&t<520) chompMarks(c,x.target,(t-320)/200);
+      for(let i=0;i<5;i++){ const k=(t-460-i*70)/520; if(k<0||k>1) continue; const p=lerpP(x.target,x.self,eio(k),40+i*8,Math.sin(i*1.7)*12); atBat(c,p.x,p.y,0.9,t/40+i); } }},
+  /* Phoenix: a ball of flame gathers, flies in an arc with a fiery tail and bursts in a ring of fire */
+  sunflare:{C:640,D:1200,
+    atk:t=>({f:0,pose:t<380?"cast":t<900?"push":"idle"}),
+    fx(c,t,x){ const s=x.self, tg=x.target;
+      if(t<380){ const k=t/380; atWisp(c,s.x,s.y-6,6+10*k,[255,150,40]); return; }
+      if(t<640){ const k=(t-380)/260; for(let j=0;j<8;j++){ const kk=Math.max(0,k-j*0.04), p=lerpP(s,tg,eio(kk),70); atWisp(c,p.x,p.y,(12-j)*0.9*atBig(x),j<3?[255,220,90]:[255,110,40]); } return; }
+      const k=(t-640)/560; if(k>1) return; c.save(); c.globalAlpha=1-k;
+      for(let i=0;i<14;i++){ const a=i/14*Math.PI*2, r=(10+k*46)*atBig(x), px=tg.x+Math.cos(a)*r, py=tg.y+Math.sin(a)*r*0.5;
+        c.fillStyle=i%2?"#ffd45e":"#ff7a2e"; c.beginPath(); c.moveTo(px-5,py+4); c.quadraticCurveTo(px,py-14*(1-k),px+5,py+4); c.closePath(); c.fill(); }
+      atWisp(c,tg.x,tg.y,16*(1-k)*atBig(x)+4,[255,190,80]); c.restore(); }},
+  /* Kitsune: three fox-fires circle it, then fly at the target one after another */
+  foxfire:{C:560,D:1150,
+    atk:t=>({f:0,pose:t<420?"cast":t<900?"push":"idle"}),
+    fx(c,t,x){ const s=x.self, tg=x.target, col=[150,200,255];
+      for(let i=0;i<3;i++){ const go=420+i*105, a=t/160+i*2.1;
+        if(t<go){ atWisp(c,s.x+Math.cos(a)*26,s.y-8+Math.sin(a)*12,6,col); continue; }
+        const k=(t-go)/240; if(k<1){ const p=lerpP({x:s.x+Math.cos(a)*26,y:s.y-8},tg,eio(k),30,Math.sin(i*2)*14); atWisp(c,p.x,p.y,6,col); }
+        else if(k<2.2){ c.save(); c.globalAlpha=1-(k-1)/1.2; atWisp(c,tg.x+(i-1)*8,tg.y+(i-1)*5,6+(k-1)*14,col); c.restore(); } } }},
+  /* Naga: it lunges and its coils wrap the target and squeeze */
+  venomcoil:{C:360,D:1250,contact:true,
+    atk:t=>({f:atReach(t,360,0.72,520,320),pose:t<180?"crouch":t<880?"push":"idle",off:[t>360&&t<880?Math.sin(t/35)*2:0,0]}),
+    def(t){ if(t<360||t>880) return null; return {sx:0.88+0.04*Math.sin(t/45),sy:1.05,pose:"hurt"}; },
+    fx(c,t,x){ if(t<300||t>960) return; const tg=x.target, k=Math.min(1,(t-300)/200), out=t>880?1-(t-880)/80:1;
+      c.save(); c.globalAlpha=out; c.lineCap="round";
+      for(let i=0;i<3;i++){ const y=tg.y-14+i*14, w=(30-i*2)*atBig(x)*(1.25-0.25*k);
+        c.strokeStyle=atRgba(x.col.map(v=>Math.max(0,v-50)),1); c.lineWidth=9; c.beginPath(); c.ellipse(tg.x,y+2,w,7,0,0.2,Math.PI*2*k); c.stroke();
+        c.strokeStyle=atRgba(x.col,1); c.lineWidth=6; c.beginPath(); c.ellipse(tg.x,y,w,7,0,0.2,Math.PI*2*k); c.stroke(); }
+      if(t>500) for(let i=0;i<3;i++){ const ph=((t-500)/400+i/3)%1; c.fillStyle=`rgba(170,90,230,${1-ph})`; c.beginPath(); c.arc(tg.x+(i-1)*14,tg.y-30-ph*24,3+ph*3,0,7); c.fill(); }
+      c.restore(); }},
+  /* Yeti: it leaps and slams down, snow chunks fly and a white cloud bursts out */
+  avalanche:{C:560,D:1200,contact:true,marks:true,
+    atk:t=>({f:atReach(t,560,0.72,240,360),arc:t<560?-60*Math.sin(t/560*Math.PI):0,pose:t<200?"crouch":t<560?"slamup":t<800?"slam":"idle"}),
+    def(t){ if(t<560||t>860) return null; const a=1-eo((t-560)/300); return {sx:1+0.4*a,sy:1-0.45*a,pose:"hit"}; },
+    fx(c,t,x){ if(t<520) return; const k=(t-520)/680; if(k>1) return; const tg=x.target, B=atBig(x);
+      c.save(); c.globalAlpha=1-k; for(let i=0;i<10;i++){ const a=-Math.PI*(0.1+0.8*i/9), r=(14+k*60)*B; c.fillStyle=i%3?"#f4f8ff":"#cfe4f5";
+        c.beginPath(); c.arc(tg.x+Math.cos(a)*r,tg.foot!=null?tg.y+Math.sin(a)*r*0.7+k*k*30:tg.y+Math.sin(a)*r*0.7+k*k*30,(6-k*3)*B,0,7); c.fill(); }
+      c.fillStyle="rgba(240,248,255,.7)"; c.beginPath(); c.ellipse(tg.x,tg.y+24,(30+k*50)*B,(10+k*8)*B,0,0,7); c.fill(); c.restore(); }}
+});
+Object.assign(AR_KIND,{Peck:"punch",Swoop:"tackle","Talon Dive":"talondive","Wing Gust":"push","Feather Volley":"volley","Sky Strike":"talondive",
+  Nip:"bite","Bat Swarm":"volley","Night Bite":"nightbite","Hypnotic Gaze":"glare","Blood Moon":"beam","Crimson Feast":"nightbite",
+  "Ember Peck":"punch","Flame Wing":"tackle","Sun Flare":"sunflare","Fire Ring":"firespin","Ash Storm":"volley",Supernova:"meteor",
+  "Fox Swipe":"claw",Foxfire:"foxfire","Spirit Lantern":"bolt","Nine Tails":"lash",Kitsunebi:"foxfire",
+  Fang:"bite","Tail Whip":"lash","Venom Coil":"venomcoil","Hood Flare":"glare","Acid Spit":"bolt","Serpent King":"jawlock",
+  "Snow Paw":"punch",Snowball:"bolt",Avalanche:"avalanche","Frost Breath":"steam","Glacier Slam":"hammer","Blizzard Roar":"icefall",
+  "Bamboo Smack":"hammer",Stinger:"punch",Swarm:"volley","Shell Bash":"tackle","Seed Spit":"volley","Melon Smash":"hammer","Cane Hook":"lash"});
+if(typeof MOVE_KIND!=="undefined") Object.assign(MOVE_KIND,{"Talon Dive":"fly","Night Bite":"bite","Sun Flare":"bolt",Foxfire:"volley","Venom Coil":"bite",Avalanche:"stomp",
+  "Bamboo Smack":"stomp","Roly-Poly":"heal",Stinger:"punch",Swarm:"volley","Shell Bash":"tackle","Lucky Spots":"buff","Seed Spit":"volley","Melon Smash":"stomp","Cane Hook":"claw","Sugar Rush":"buff"});
+
+/* ---------- abilities: when one works, its name shows over the Snabit with its own colour, particles and sound ---------- */
+const AT_ABIL={ "Sky High":{c:[255,236,170],k:"feather"}, Bloodsuck:{c:[230,50,70],k:"suck"}, Rebirth:{c:[255,170,60],k:"flame"}, Illusion:{c:[160,200,255],k:"wisp"},
+  Coil:{c:[120,200,90],k:"ring"}, "Thick Fur":{c:[220,236,255],k:"snow"}, Bright:{c:[255,246,190],k:"shine"}, Counterpunch:{c:[255,160,80],k:"ring"}, Steady:{c:[200,170,130],k:"ring"} };
+function atAbility(e,now){ const A=AT_ABIL[e.name]||{c:[255,214,90],k:"ring"}, P=atP(e.i);
+  AT.fx.push({i:e.i,t0:now,txt:e.name,col:atRgba(A.c,1),size:15,lift:44});
+  if(P){ atPart({k:"ring",x:P.cx,y:P.foot,life:520,s:P.r*2.4,c:A.c}); atPart({k:"ring",x:P.cx,y:P.foot,life:700,s:P.r*3.2,c:A.c,t0:AT.te+90});
+    for(let k=0;k<10;k++){ const a=k/10*Math.PI*2, v=0.05+atH(k+AT.te)*0.06;
+      if(A.k==="flame") atPart({k:"el",el:"Blaze",x:P.cx+Math.cos(a)*P.r*0.6,y:P.foot-4,vx:Math.cos(a)*0.02,vy:-0.09-v,life:700,s:3,seed:k});
+      else if(A.k==="snow"||A.k==="feather"||A.k==="shine") atPart({k:"el",el:A.k==="snow"?"Frost":"Light",x:P.cx+Math.cos(a)*P.r*0.5,y:P.top+10,vx:Math.cos(a)*v,vy:0.03,life:800,s:2.6,seed:k});
+      else atPart({k:"spark",x:P.cx,y:P.cy,vx:Math.cos(a)*v*1.6,vy:Math.sin(a)*v*1.6,life:420,c:A.c}); } }
+  atSfx("ab:"+e.name); }

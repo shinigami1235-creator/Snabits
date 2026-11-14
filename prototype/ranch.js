@@ -34,7 +34,7 @@ function tastePick(r,avoid){
 const taste=(k,v,s=RS)=>{ const hit=T=>T&&T.k===k&&(k==="battle"||T.v===v); return hit(s.likeT)?"like":hit(s.disT)?"dis":null; };
 function tasteFound(t,s=RS){ s.found=s.found||{}; const first=!s.found[t]; s.found[t]=true; return first; }
 const tasteName=T=>!T?"":T.k==="meal"?MEALS[T.v][0]:T.k==="drill"?DRILLS[T.v]:T.k==="battle"?"Battles":T.v;
-const EVO_TOTAL={Squib:[90,220],Stilt:[90,220],Skit:[100,240],Antik:[110,250],Chomp:[110,250],Pinch:[120,260],Moko:[130,280],Booly:[130,280],Plod:[120,260],Bipped:[110,250],Fizz:[110,250],Teep:[120,260],Lern:[130,280]};
+const EVO_TOTAL={Squib:[90,220],Stilt:[90,220],Skit:[100,240],Antik:[110,250],Chomp:[110,250],Pinch:[120,260],Moko:[130,280],Booly:[130,280],Plod:[120,260],Bipped:[110,250],Fizz:[110,250],Teep:[120,260],Lern:[130,280],Eagle:[120,270],Vampire:[130,280],Phoenix:[140,300],Kitsune:[130,280],Naga:[130,280],Yeti:[130,280]};
 const STAT_SKILLS=[[["Second Wind",30],["Endure",80],["Body Slam",150],["Regrow",240]],[["Haymaker",30],["Pump Up",80],["Crush",150],["Rampage",240]],[["Harden",30],["Shield Bash",80],["Retaliate",150],["Bulwark",240]],[["Concentrate",30],["Mind Spike",80],["Foresight",150],["Brainstorm",240]],[["Calm",30],["Still Water",80],["Spirit Ward",150],["Soul Flare",240]],[["Dart",30],["Agility",80],["Barrage",150],["Afterimage",240]]];
 const CONDITION=[[20,"It's full of energy!"],[50,"It's in good shape."],[70,"It seems a little tired."],[90,"It's really tired. It needs a rest."],[999,"It's exhausted!"]];
 const condition=()=>CONDITION.find(c=>RS.fatigue<c[0])[1];
@@ -274,7 +274,23 @@ function sayBox(t,who){ const b=el("r-say"), N=who&&typeof NPC!=="undefined"&&NP
   b.innerHTML=`<span class="who"${N?` style="background:${N.tag}"`:""}>${N?N.name:"Tala"}</span>${t||""}`;
   if(N){ if(typeof npcFace==="function") npcFace(b,who,t); } else if(typeof talaFace==="function") talaFace(b,t); }
 function say(t,who){ RS.say=t; RS.sayWho=who||null; sayBox(t,who); }
-function banner(t,col){ const b=el("r-banner"); b.textContent=t; b.style.color=col||"#fff"; b.classList.toggle("on",!!t); }
+/* small ranch sounds for the drills, trips and care: a pop for hearts, a twinkle for sparkles, a thud for dust, a ding for a bright idea,
+   and a stinger for each drill result. Each kind waits 120 ms before it can sound again, so a burst of particles is one sound. */
+const RSFX_T={};
+function rsfx(kind){ try{ if(typeof sfxBus!=="function"||typeof sTone!=="function") return; const d=sfxBus(); if(!d) return; MC=AC; const now=AC.currentTime;
+  if(RSFX_T[kind]&&now-RSFX_T[kind]<0.12) return; RSFX_T[kind]=now; const t=now+0.01;
+  const S={heart:()=>[1047,1319].forEach((f,k)=>sTone(d,t+k*0.07,"sine",f,f,0.14,0.05)),
+    sparkle:()=>[2093,2637,3136].forEach((f,k)=>sTone(d,t+k*0.05,"triangle",f,f,0.12,0.03)),
+    star:()=>sTone(d,t,"triangle",1760,1760,0.3,0.05), bulb:()=>{ sTone(d,t,"sine",1568,1568,0.4,0.07); sTone(d,t+0.08,"sine",2349,2349,0.5,0.05); },
+    dust:()=>dNoise(d,t,0.14,0.12,"lowpass",500), q:()=>sTone(d,t,"sine",500,900,0.14,0.05), sweat:()=>sTone(d,t,"sine",1400,700,0.08,0.04),
+    drip:()=>sTone(d,t,"sine",1600,600,0.1,0.05), crumb:()=>dNoise(d,t,0.05,0.1,"bandpass",3000,2), smoke:()=>dNoise(d,t,0.3,0.12,"lowpass",700),
+    hop:()=>sTone(d,t,"sine",300,700,0.12,0.06),
+    great:()=>{ [784,988,1175,1568].forEach((f,k)=>sTone(d,t+k*0.07,"triangle",f,f,0.25,0.07)); dNoise(d,t+0.28,0.4,0.06,"highpass",5000); },
+    success:()=>[784,1047].forEach((f,k)=>sTone(d,t+k*0.1,"triangle",f,f,0.25,0.07)),
+    fail:()=>{ sTone(d,t,"triangle",440,330,0.25,0.07); sTone(d,t+0.22,"triangle",330,220,0.4,0.07); },
+    slack:()=>{ sTone(d,t,"sine",600,200,0.35,0.07); dKick(d,t+0.3,0.3); } };
+  if(S[kind]) S[kind](); }catch(e){} }
+function banner(t,col){ const b=el("r-banner"); if(t) rsfx({"Great!":"great",Success:"success",Fail:"fail","Slacked off":"slack"}[t]||"star"); b.textContent=t; b.style.color=col||"#fff"; b.classList.toggle("on",!!t); }
 function panel(html){ el("r-panel").innerHTML=html; el("ranch").classList.toggle("menu-open",!!html); if(!html&&RS&&RS.id) weekCard(); }
 /* With no menu open, the space under the stats shows what's coming up. */
 function weekCard(){
@@ -353,6 +369,7 @@ function walkTo(x,speed=45,pose="walk",id=RS.cur){
       setTimeout(step,16);}; step(); });
 }
 function hop(h,ms,id=RS.cur){
+  if(h>=8) rsfx("hop");
   return new Promise((res,rej)=>{ const t0=performance.now(), k=rk();
     const f=()=>{ if(id!==RACT){RS.jy=0;return rej(RSTOP);} const p=Math.min(1,(performance.now()-t0)*k/ms); RS.jy=Math.sin(p*Math.PI)*h; if(p<1) requestAnimationFrame(f); else {RS.jy=0;res();} }; f(); });
 }
@@ -466,7 +483,7 @@ async function studyPuzzle(r){
   } finally { made.forEach(unprop); s.pose="idle"; }
 }
 function unprop(o){ RS.props=RS.props.filter(p=>p!==o); }
-function spark(x,y,kind,n=1){ for(let i=0;i<n;i++){ const p={x,y,kind,life:0,max:40,vx:rnd(-.4,.4),vy:-rnd(.3,.8),g:0};
+function spark(x,y,kind,n=1){ rsfx(kind); for(let i=0;i<n;i++){ const p={x,y,kind,life:0,max:40,vx:rnd(-.4,.4),vy:-rnd(.3,.8),g:0};
   if(kind==="dust"){p.vy=-rnd(.1,.4);p.vx=rnd(-.6,.6);p.max=24;}
   if(kind==="star"){p.vx=rnd(-1,1);p.vy=-rnd(.6,1.4);p.g=0.04;p.max=50;}
   if(kind==="crumb"){p.vx=rnd(-.6,.6);p.vy=-rnd(.2,.8);p.g=.08;p.max=30;}

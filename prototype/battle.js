@@ -66,7 +66,7 @@ class Fight{
     if(f.ability==="Sanctuary"&&f.hp===f.maxhp){ this.pop(i,"Sanctuary"); return false; }
     if(f.ability==="Bright"&&name==="Blind"){ this.pop(i,"Bright"); return false; }
     if(name==="Crack"&&f.ability==="Unbreakable"){ this.pop(i,"Unbreakable"); return false; }
-    if(name==="Freeze"&&f.thawed) return false;
+    if(name==="Freeze"&&(f.thawed||f.ability==="Thick Fur")) return false;
     if(name==="Poison"&&(f.el1==="Steel"||f.el2==="Steel")&&!(fromIdx!=null&&this.p[fromIdx].ability==="Corrosion")){ this.say(`${f.name} is made of metal and can't be poisoned.`); return false; }
     const wild=fromIdx!=null&&this.p[fromIdx].ability==="Wildfire";
     f.status={name,turns:name==="Freeze"?1:3,from:fromIdx,wild};
@@ -211,6 +211,7 @@ class Fight{
       if(def.ability==="Unseen"&&!def.unseen){ def.unseen=true; if(R()<0.3){ this.pop(tgt,"Unseen"); this.say("It misses."); this.events.push({t:"miss",who:tgt}); return; } }
       if(R()>acc){ this.say("It misses."); this.events.push({t:"miss",who:tgt}); return; }
     }
+    if(def.ability==="Illusion"&&!def.illusion&&tgt!==i&&power){ def.illusion=true; this.pop(tgt,"Illusion"); this.say(`${me.name} hits a fox-fire copy.`); this.events.push({t:"miss",who:tgt}); return; }   // Kitsune
     if(s.kind==="Strike"&&def.ability==="Slippery"&&me.ability!=="Keen Eye"&&tgt!==i&&R()<0.1){ this.pop(tgt,"Slippery"); this.say(`${def.name} slips away.`); this.events.push({t:"miss",who:tgt}); return; }
     // element
     const el=s.basic?null:s.el;
@@ -233,13 +234,15 @@ class Fight{
       let d=pw*atk/dfs*(me.level/50+0.4)/2;
       const stab=el&&(el===me.el1||el===me.el2)?(me.mono?1.4:1.2):1;
       const powEdge=edge(this.eff(me,"pow"),this.eff(def,"grd"),0.2,0,0.12);   // Power: more crits against a softer target
-      const crit=seen||(def.ability!=="Shell"&&!def.bulwark&&R()<(0.05+(s.crit||0)+(me.critBonus||0)+powEdge));
+      const sky=me.ability==="Sky High"&&!me.skyUsed&&tgt!==i; if(sky){ me.skyUsed=true; this.pop(i,"Sky High"); }   // Eagle
+      const crit=sky||seen||(def.ability!=="Shell"&&!def.bulwark&&R()<(0.05+(s.crit||0)+(me.critBonus||0)+powEdge));
       d*=m*stab*(crit?1.5:1)*(0.9+R()*0.1);
       if(this.field&&el) d*=(FIELD_FX[this.field.name][el]||1);
       if(def.guard) d*=0.5;
       if(def.castWard&&s.kind==="Cast") d*=0.5;
       if(def.status&&def.status.name==="Soak"&&el==="Spark") d*=1.25;
       if(def.ability==="Plated"&&s.kind==="Strike") d*=0.9;
+      if(def.ability==="Thick Fur"&&(el==="Blaze"||el==="Frost")) d*=0.75;   // Yeti
       if(def.status&&def.status.name==="Freeze"&&me.ability==="Permafrost") d*=1.2;
       if(def.ability==="Wobble"&&!def.firstHitTaken){ d*=0.7; this.pop(tgt,"Wobble"); }
       def.firstHitTaken=true;
@@ -258,11 +261,13 @@ class Fight{
         if(def.ability==="Hothead"&&R()<0.2){ this.pop(tgt,"Hothead"); this.inflict(me,"Burn",tgt); }
         if(def.ability==="Static Skin"&&R()<0.2){ this.pop(tgt,"Static Skin"); this.inflict(me,"Shock",tgt); }
         if(me.ability==="Toxic Touch"&&R()<0.2){ this.pop(i,"Toxic Touch"); this.inflict(def,"Poison",i); }
+        if(def.ability==="Coil"&&R()<0.25){ this.pop(tgt,"Coil"); this.inflict(me,"Root",tgt); }   // Naga
       }
     }
     if(hits>1) this.say(`Hit ${landed} time${landed>1?"s":""}.`);
     if(m>1) this.say(m>2?"Doubly super effective.":"Super effective."); else if(m<1) this.say("Not very effective.");
     // after-hit effects on the user
+    if(me.ability==="Bloodsuck"&&s.kind==="Strike"&&total&&tgt!==i){ const h=Math.round(total*0.15); me.hp=Math.min(me.maxhp,me.hp+h); this.pop(i,"Bloodsuck"); this.events.push({t:"heal",who:i,amt:h}); }   // Vampire
     if(s.drain&&total){ const h=Math.round(total*s.drain); me.hp=Math.min(me.maxhp,me.hp+h); this.events.push({t:"heal",who:i,amt:h}); }
     if(s.recoil&&total){ const r=Math.max(1,Math.round(total*s.recoil)); me.hp=Math.max(0,me.hp-r); this.say(`${me.name} is hurt by the recoil.`); this.events.push({t:"hit",who:i,dmg:r,eff:1,dot:true}); }
     if(def.counter&&s.kind==="Strike"&&tgt!==i&&total&&def.hp>0){ def.counter=false; const back=Math.round(total*(def.counterMul||1.5)); me.hp=Math.max(0,me.hp-back); this.say(`${def.name} counters.`); this.events.push({t:"hit",who:i,dmg:back,eff:1}); }
@@ -280,6 +285,7 @@ class Fight{
   lastStand(i){ const f=this.p[i]; if(f.ability==="Last Stand"&&!f.lastStand&&f.hp>0&&f.hp<f.maxhp/4){ f.lastStand=true; const h=Math.round(f.maxhp*0.3); f.hp=Math.min(f.maxhp,f.hp+h); this.pop(i,"Last Stand"); this.say(`${f.name} gets a second wind.`); this.events.push({t:"heal",who:i,amt:h}); } }
   ko(i,by){
     const f=this.p[i];
+    if(f.ability==="Rebirth"&&!f.reborn){ f.reborn=true; f.hp=Math.round(f.maxhp/4); f.status=null; this.pop(i,"Rebirth"); this.say(`${f.name} rises from the flames.`); this.events.push({t:"heal",who:i,amt:f.hp}); return; }   // Phoenix
     if(f.ability==="Haunt"&&by!=null&&by!==i&&this.p[by].hp>0){ const d=Math.round(this.p[by].maxhp/4); this.p[by].hp=Math.max(0,this.p[by].hp-d); this.pop(i,"Haunt"); this.say(`${f.name}'s Haunt drains ${this.p[by].name}.`); this.events.push({t:"hit",who:by,dmg:d,eff:1,dot:true}); }
     this.over=true; this.winner=1-i;
     if(by!=null&&this.p[by].hp<=0){ this.winner=null; this.say("Both monsters faint."); this.events.push({t:"ko",who:by}); }
@@ -312,7 +318,7 @@ class Fight{
 }
 
 /* A random computer opponent, built the same way a scan builds one. */
-function randomOpponent(rand=Math.random){
+function randomOpponent(rand=Math.random,fam=null){   // fam: make it that family, the way the practice presets and the balance sim need
   const g=["red","orange","yellow","green","cyan","blue","violet","pink","brown","white","silver","black"];
   const pick=()=>g[Math.floor(rand()*g.length)];
   const main=pick(); let second=pick(); while(second===main) second=pick(); let third=pick(); while(third===main||third===second) third=pick();
@@ -323,7 +329,7 @@ function randomOpponent(rand=Math.random){
   const cells=Array.from({length:9},()=>rand());
   const colours=3+Math.floor(rand()*6);
   return hatch({ranked,main:ranked[0],second:mono?null:ranked[1],mono,tie:false,colours,pool:colours+4,cells,
-    sat:0.2+rand()*0.6,bright:0.3+rand()*0.6,contrast:0.1+rand()*0.25,photoKey:"cpu"+Math.floor(rand()*1e9)},new Date(),rand);
+    sat:0.2+rand()*0.6,bright:0.3+rand()*0.6,contrast:0.1+rand()*0.25,photoKey:"cpu"+Math.floor(rand()*1e9)},new Date(),fam?{family:fam}:{});
 }
 /* The computer's loadout: its best unlocked damaging skill plus one more. */
 function aiLoadout(m,level=LEVEL,rand=Math.random){

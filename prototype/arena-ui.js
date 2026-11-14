@@ -81,7 +81,7 @@ function atMake(src,R,level,grade){
   // a ranch Snabit's opponent matches its level and grade; presets and scans fight at level 30 with grade B training
   const lv=level||30, g=grade||"B", earned=grade?undefined:260; let o;
   if(src.kind==="scan") o=gradedOpponent(g,lv,R,null,earned,src.m);
-  else for(let k=0;k<500;k++){ o=gradedOpponent(g,lv,R,null,earned); if(o.m.family===src.fam) break; }
+  else o=gradedOpponent(g,lv,R,null,earned,randomOpponent(R,src.fam));
   const f=makeFighter(o.fm,o.skills,lv); f.family=o.m.family; f.moves=arMoves(o.m.family,lv,o.m.pool.filter(n=>SKILLS[n].lv<=lv),o.m.el1);
   if(src.kind==="scan") f.name=src.m.name;
   return {f,o,spec:typeof chibiSpec==="function"?chibiSpec(o.fm):null,level:lv};
@@ -193,7 +193,7 @@ function atLoop(now){
     if(!ar.turn.done&&t>=AT.turn.C) run(()=>ar.land());
     if(ar.turn&&t>=AT.turn.D){ run(()=>ar.endTurn()); AT.turn=null; } }
   while(AT.acc>=AR.DT&&!ar.over&&!ar.turn){ AT.acc-=AR.DT; ar.step(); flush(); }
-  if(ar.over) for(const i of [0,1]) if(ar.winner===1-i&&AT.side[i].ko==null) AT.side[i].ko=AT.te;
+  if(ar.over) for(const i of [0,1]) if(ar.winner===1-i&&AT.side[i].ko==null){ AT.side[i].ko=AT.te; if(typeof atSfx==="function") atSfx("ko"); }
   atHud(); atRows(); atDraw(now,frozen?0:step*1000);
   if(ar.over&&!AT.done){ AT.done=true; setTimeout(atResult,1300); }
   AT.raf=requestAnimationFrame(atLoop);
@@ -225,9 +225,9 @@ function atEvent(e,now){
     if(S.anim.mega) AT.turn.D=Math.max(AT.turn.D,ch+(K.C+900)/rate);   // the fight waits for a special's release to finish
     if(e.pred==="dodge"||e.pred==="phase") atPlanDodge(e.i,te+ch+K.C/rate,kind,e.pred);
     if(ch){ S.charge={t0:te,d:ch,tier,col:S.anim.col,el:m.el||null,body:sp.pal&&sp.pal.body}; if(tier==="special") AT.cine={t0:te,d:ch,i:e.i,name:m.name,col:S.anim.col}; }
-    try{ sfx(ch?"charge":m.cast?"charge":"whoosh"); if(typeof elSfx==="function") elSfx(m.el,"cast"); if(typeof kindSfx==="function"&&!ch) kindSfx(kind); }catch(err){}
+    try{ sfx(ch?"charge":m.cast?"charge":"whoosh"); if(typeof elSfx==="function") elSfx(m.el,"cast"); if(typeof kindSfx==="function"){ kindSfx(kind,(ch||0)/1000/(S.anim.rate||1)); if(tier==="special") kindSfx("special"); } }catch(err){}
   }
-  if(e.t==="step"){ S.hop={t0:te,h:16}; }
+  if(e.t==="step"){ S.hop={t0:te,h:16}; if(typeof atSfx==="function") atSfx("step"); }
   if(e.t==="swap"){ AT.side[e.i].hop={t0:te,h:78,d:480}; AT.side[1-e.i].hop={t0:te,h:8,d:480};   // the swapper leaps over, the other ducks
     try{ sfx("whoosh"); }catch(err){} }
   if(e.t==="hit"){ const o=AT.side[1-e.i], mt=S.anim&&S.anim.tier||"light", tier=e.crit?(mt==="special"?"special":mt==="heavy"?"special":"heavy"):mt==="light"&&e.dmg>=25?"medium":mt, T=AT_TIER[tier];
@@ -562,7 +562,7 @@ function atMegaBeam(c,t,C,o,tg,col,s){
   c.restore();
   if(Math.random()<0.5&&typeof spawnSparks==="function") spawnSparks(tg,Math.atan2(dy,dx)+Math.PI,2,col);
 }
-const AT_FAMCOL={Antik:[255,224,122],Squib:[127,211,242],Moko:[255,154,214],Booly:[159,184,255],Skit:[244,239,228],Chomp:[255,214,90],Pinch:[255,138,122],Stilt:[255,179,92],Plod:[190,196,214],Bipped:[255,170,110],Fizz:[200,140,255],Teep:[140,226,200],Lern:[255,236,150]};
+const AT_FAMCOL={Antik:[255,224,122],Squib:[127,211,242],Moko:[255,154,214],Booly:[159,184,255],Skit:[244,239,228],Chomp:[255,214,90],Pinch:[255,138,122],Stilt:[255,179,92],Plod:[190,196,214],Bipped:[255,170,110],Fizz:[200,140,255],Teep:[140,226,200],Lern:[255,236,150],Eagle:[250,250,240],Vampire:[200,40,60],Phoenix:[255,150,50],Kitsune:[150,200,255],Naga:[150,220,90],Yeti:[210,236,255]};
 /* one side's pose and offset this frame, the way the battle's sideState works */
 function atSideState(S,te){
   const out={f:0,arc:0,lift:0,rot:0,sx:1,sy:1,pose:null,flash:0,off:[0,0],alpha:1};

@@ -1,0 +1,37 @@
+<!doctype html><html><body style="margin:0;background:#f6f3ec"><canvas id="c"></canvas>
+<script src="../../prototype/chibi.js"></script><script>
+/* Concept sheet for the easter-egg Snabits and costumes. Open with #specials or #costumes at the end of the address. */
+const SP=[
+ ['Eagle','Red, white and blue in stripes',[[46,84,170],[150,40,48],[255,214,90]],[[214,40,52],[250,250,250],[40,70,160]]],
+ ['Vampire','Mostly black, then white, a little red',[[236,228,240],[52,40,62],[200,40,60]],[[30,26,34],[245,245,245],[200,30,40]]],
+ ['Phoenix','Red low, orange, yellow high, like a flame',[[240,96,48],[200,52,40],[255,226,122]],[[220,50,40],[245,140,40],[250,220,70]]],
+ ['Kitsune','White with a red dot in the centre',[[240,140,62],[150,70,40],[214,58,58]],[[250,250,250],[214,40,52],[250,250,250]]],
+ ['Naga','Green in a band, with yellow',[[96,170,92],[54,110,60],[246,206,60]],[[80,160,80],[246,206,60],[40,90,50]]],
+ ['Yeti','White and silver with a touch of cyan',[[236,240,246],[170,186,204],[120,210,240]],[[245,245,245],[180,186,196],[120,214,224]]]];
+const CO=[['Panda','Chomp','Black and white, close to half and half',[[30,26,34],[245,245,245]]],['Bee','Bipped','Yellow and black stripes',[[246,206,60],[30,26,34]]],
+ ['Ladybug','Plod','Red with black spots',[[214,40,52],[30,26,34]]],['Watermelon','Teep','Green around red with black dots',[[80,160,80],[226,64,72],[30,26,34]]],
+ ['Candy cane','Squib','Red and white stripes',[[214,40,52],[245,245,245]]]];
+const VIEW=location.hash.slice(1)||'specials', cv=document.getElementById('c'), x=cv.getContext('2d'), CW=190, CH=210, D=2;
+const pal=p=>({body:p[0],parts:p[1],accent:p[2]});
+function cell(cx,cy,m,pose,t,label){ x.save(); x.translate(cx,cy); x.fillStyle='#fffdf7'; x.strokeStyle='#e4dccb'; x.lineWidth=1.5; x.beginPath(); x.roundRect(4,4,CW-8,CH-8,14); x.fill(); x.stroke();
+  x.fillStyle='#8a7d68'; x.font='600 12px system-ui'; x.textAlign='center'; x.fillText(label,CW/2,24); x.translate(CW/2-95,26); x.scale(0.95,0.95); CHIBI.draw(x,m,pose,t); x.restore(); }
+function swatch(px,py,cols){ cols.forEach((c,i)=>{ x.fillStyle=`rgb(${c})`; x.strokeStyle='#cfc4ae'; x.beginPath(); x.roundRect(px+i*26,py,22,22,5); x.fill(); x.stroke(); }); }
+if(VIEW==='specials'){
+  const cols=[['Bit','idle'],['Byte','idle'],['Mega','idle'],['Mega','punch'],['Mega','cast'],['Mega','idle',1]];
+  cv.width=(250+cols.length*CW)*D; cv.height=(40+SP.length*CH)*D; x.scale(D,D); x.fillStyle='#f6f3ec'; x.fillRect(0,0,cv.width,cv.height);
+  x.fillStyle='#3b3226'; x.font='800 20px system-ui'; x.textAlign='left'; x.fillText('Special Snabits, first six',16,28);
+  SP.forEach(([f,egg,p,sw],r)=>{ const y=40+r*CH; x.fillStyle='#3b3226'; x.font='800 18px system-ui'; x.textAlign='left'; x.fillText(f,16,y+44);
+    x.fillStyle='#6b604e'; x.font='13px system-ui'; const words=egg.split(' '); let line='',ly=y+68; for(const w of words){ if(x.measureText(line+w).width>210){ x.fillText(line,16,ly); ly+=17; line=''; } line+=w+' '; } x.fillText(line,16,ly);
+    swatch(16,ly+12,sw);
+    cols.forEach(([st,pose,back],i)=>cell(250+i*CW,y,{family:f,stage:st,el:null,marks:[],worn:{},pal:pal(p),back:!!back},pose,400+i*170,back?'Mega from behind':st+(pose!=='idle'?', '+pose:''))); });
+}
+if(VIEW==='costumes'){
+  cv.width=(250+3*CW)*D; cv.height=(40+CO.length*CH)*D; x.scale(D,D); x.fillStyle='#f6f3ec'; x.fillRect(0,0,cv.width,cv.height);
+  x.fillStyle='#3b3226'; x.font='800 20px system-ui'; x.textAlign='left'; x.fillText('Costumes on the families you have',16,28);
+  const P0={Chomp:[[232,140,52],[128,68,30],[255,236,214]],Bipped:[[70,130,220],[36,70,156],[200,240,255]],Plod:[[160,122,86],[96,72,54],[226,206,176]],Teep:[[246,206,60],[196,120,34],[255,250,225]],Squib:[[120,214,224],[70,130,200],[240,252,255]]};
+  CO.forEach(([k,f,egg,sw],r)=>{ const y=40+r*CH; x.fillStyle='#3b3226'; x.font='800 18px system-ui'; x.fillText(k,16,y+44); x.fillStyle='#6b604e'; x.font='13px system-ui'; x.fillText(egg,16,y+68); swatch(16,y+80,sw);
+    cell(250,y,{family:f,stage:'Byte',el:null,marks:[],worn:{},pal:pal(P0[f])},'idle',300,f+' as it is');
+    cell(250+CW,y,{family:f,stage:'Byte',el:null,marks:[],worn:{},pal:pal(P0[f]),costume:k},'idle',300,f+' in '+k);
+    cell(250+2*CW,y,{family:f,stage:'Mega',el:null,marks:[],worn:{},pal:pal(P0[f]),costume:k},'punch',500,'Mega, punch'); });
+}
+</script></body></html>

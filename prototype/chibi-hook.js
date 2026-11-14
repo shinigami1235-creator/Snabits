@@ -1,7 +1,7 @@
 /* Puts the chibi drawings (chibi.js) into the ranch and battle screens while the pixel art stays the default.
    It's on by default. #art=pixel in the address, or localStorage "snabits-art" set to "pixel", brings back the pixel art.
    Only families listed in CHIBI_FAMS are drawn smooth; the rest keep their pixels. */
-const CHIBI_FAMS = ['Chomp', 'Squib', 'Antik', 'Moko', 'Pinch', 'Stilt', 'Skit', 'Booly', 'Plod', 'Bipped', 'Fizz', 'Teep', 'Lern'];
+const CHIBI_FAMS = ['Chomp', 'Squib', 'Antik', 'Moko', 'Pinch', 'Stilt', 'Skit', 'Booly', 'Plod', 'Bipped', 'Fizz', 'Teep', 'Lern', 'Eagle', 'Vampire', 'Phoenix', 'Kitsune', 'Naga', 'Yeti'];
 const CHIBI_ART = !/(^#|&)art=pixel(&|$)/.test(location.hash) && (() => { try { return localStorage.getItem('snabits-art') !== 'pixel'; } catch (e) { return true; } })();
 
 /* m is a hatched monster or a fight snapshot; s is the ranch state when there is one */
@@ -11,14 +11,15 @@ function chibiSpec(m, s) {
   const stage = src.stage || 'Bit', marks = [];
   if (stage !== 'Bit' && src.mark != null && MARK[src.mark]) marks.push(MARK[src.mark][0]);
   if (stage === 'Mega' && src.mark2 != null && MARK[src.mark2]) marks.push(MARK[src.mark2][0]);
-  return { family: fam, stage, marks, pal: src.pal || base.pal, el: base.el1, worn: src.worn || {}, variant: src.variant || null, cm: heightCm(base, stage) };
+  return { family: fam, stage, marks, pal: src.pal || base.pal, el: base.el1, worn: src.worn || {}, variant: src.variant || null, costume: base.costume || null, cm: heightCm(base, stage) };
 }
 
 /* ---------- size ----------
    How tall each family stands at Bit, Byte and Mega, in cm. A person is about 160 cm. Each monster is 85% to 115% of
    that from its photo, so two monsters of the same kind still differ, and it keeps its size for life. */
 const SIZE_CM = { Chomp: [50, 100, 170], Squib: [40, 85, 150], Antik: [60, 120, 200], Moko: [50, 95, 160], Pinch: [45, 90, 150],
-  Stilt: [70, 140, 240], Skit: [35, 70, 110], Booly: [55, 110, 190], Plod: [50, 100, 170], Bipped: [60, 120, 190], Fizz: [45, 90, 150], Teep: [40, 80, 140], Lern: [45, 90, 160] };
+  Stilt: [70, 140, 240], Skit: [35, 70, 110], Booly: [55, 110, 190], Plod: [50, 100, 170], Bipped: [60, 120, 190], Fizz: [45, 90, 150], Teep: [40, 80, 140], Lern: [45, 90, 160],
+  Eagle: [50, 105, 180], Vampire: [50, 100, 170], Phoenix: [50, 105, 185], Kitsune: [45, 95, 165], Naga: [55, 110, 200], Yeti: [65, 130, 230] };
 function sizeK(m) {
   if (!m) return 1; if (m.sizeK) return m.sizeK;
   const t = JSON.stringify([m.pal, m.stats, m.lifespan, m.family]); let h = 2166136261;
@@ -325,6 +326,12 @@ function cry(fam, stage) {
       case 'Fizz': dNoise(d, t, 0.04, 0.3, 'bandpass', 1800, 2); for (let i = 0; i < 5; i++) voice(t + 0.08 + i * 0.05, 'sine', [[0, 700 + i * 160], [0.04, 1300 + i * 200]], 0.08); break;   // a pop, then bubbles
       case 'Teep': voice(t, 'sine', [[0, 1300], [0.2, 1900], [0.55, 2000]], 0.08, 18); dNoise(d, t, 0.55, 0.05, 'highpass', 4500); break;   // a kettle whistle
       case 'Lern': [1046, 1318, 1568].forEach((f, i) => voice(t + i * 0.09, 'triangle', [[0, f], [0.3, f]], 0.08)); break;   // a soft chime
+      case 'Eagle': voice(t, 'sawtooth', [[0, 1800], [0.08, 2600], [0.4, 1500], [0.6, 1200]], 0.045, 30); break;   // a screech
+      case 'Vampire': voice(t, 'triangle', [[0, 220], [0.25, 180], [0.5, 330], [0.7, 260]], 0.07, 6); dNoise(d, t + 0.4, 0.3, 0.06, 'bandpass', 3000, 4); break;   // a low "bleh" and a cape swish
+      case 'Phoenix': voice(t, 'triangle', [[0, 880], [0.15, 1320], [0.3, 1760], [0.6, 1980]], 0.07, 14); dNoise(d, t, 0.6, 0.08, 'lowpass', 1200); break;   // a rising call over a roar of flame
+      case 'Kitsune': voice(t, 'sine', [[0, 1200], [0.06, 1600], [0.18, 1300]], 0.09); voice(t + 0.24, 'sine', [[0, 1300], [0.06, 1700], [0.2, 1250]], 0.09); break;   // a fox's yip yip
+      case 'Naga': dNoise(d, t, 0.7, 0.12, 'highpass', 5200, 1.2); voice(t + 0.1, 'sine', [[0, 300], [0.5, 240]], 0.05); break;   // a long hiss
+      case 'Yeti': voice(t, 'sawtooth', [[0, 140], [0.2, 190], [0.5, 120]], 0.07, 4); dKick(d, t + 0.05, 0.6); break;   // a deep roar
       default: voice(t, 'triangle', [[0, 800], [0.12, 1200], [0.22, 1000]], 0.13);
     } } catch (err) {}
 }
@@ -357,16 +364,71 @@ function elSfx(el, phase) {
     } } catch (err) {}
 }
 /* and the bigger effects get their own shape of sound: a hum for beams, a crack for lightning, wind for storms */
-function kindSfx(kind) {
-  try { const d = sfxBus(); if (!d) return; const t = AC.currentTime + 0.02;
-    if (kind === 'beam') { sTone(d, t, 'sawtooth', 180, 140, 0.55, 0.04); sTone(d, t, 'sine', 360, 300, 0.55, 0.05); }
-    else if (kind === 'lightning') { dNoise(d, t + 0.18, 0.12, 0.45, 'highpass', 2500); dNoise(d, t + 0.2, 0.6, 0.25, 'lowpass', 300); }
-    else if (kind === 'tornado') { for (let i = 0; i < 6; i++) dNoise(d, t + i * 0.09, 0.2, 0.08 + i * 0.015, 'bandpass', 500 + i * 180, 3); }
-    else if (kind === 'meteor' || kind === 'icefall') { dNoise(d, t, 0.6, 0.1, 'bandpass', 1500, 1.5); dKick(d, t + 0.55, 0.9); dNoise(d, t + 0.55, 0.4, 0.3, 'lowpass', 500); }
-    else if (kind === 'volley') { for (let i = 0; i < 4; i++) dNoise(d, t + i * 0.07, 0.04, 0.16, 'bandpass', 2600, 2); }
-    else if (kind === 'pillar') { sTone(d, t, 'sawtooth', 80, 320, 0.5, 0.05); dNoise(d, t, 0.5, 0.15, 'lowpass', 900); }
-    else if (kind === 'wave') { dNoise(d, t, 0.7, 0.25, 'lowpass', 700); dNoise(d, t + 0.3, 0.4, 0.15, 'highpass', 3000); }
-  } catch (err) {}
+/* The sound of each kind of move as it starts (or, after a charge, as it's released). The hit itself adds its own thud and
+   the element's sound, so these are the motion: the swish of a kick, the snap of jaws, the whistle of a dive. */
+const KSND = {
+  tackle: (d, t) => { dNoise(d, t, 0.22, 0.16, 'lowpass', 600); dKick(d, t + 0.18, 0.25); },
+  bite: (d, t) => { sTone(d, t + 0.22, 'square', 900, 300, 0.05, 0.05); dNoise(d, t + 0.25, 0.08, 0.25, 'bandpass', 2600, 2); },
+  stomp: (d, t) => { dKick(d, t + 0.4, 0.6); dNoise(d, t + 0.4, 0.35, 0.22, 'lowpass', 300); },
+  punch: (d, t) => dNoise(d, t + 0.05, 0.12, 0.2, 'bandpass', 1500, 1.2),
+  claw: (d, t) => { for (let i = 0; i < 3; i++) dNoise(d, t + 0.2 + i * 0.04, 0.08, 0.16, 'highpass', 3000 + i * 600, 2); },
+  lift: (d, t) => sTone(d, t, 'sine', 300, 900, 0.5, 0.05),
+  push: (d, t) => { dNoise(d, t, 0.45, 0.22, 'lowpass', 500); dNoise(d, t + 0.1, 0.3, 0.1, 'bandpass', 900, 0.8); },
+  bolt: (d, t) => { sTone(d, t, 'sine', 500, 1400, 0.25, 0.05); dNoise(d, t, 0.25, 0.08, 'bandpass', 2000, 2); },
+  beam: (d, t) => { sTone(d, t, 'sawtooth', 180, 140, 0.55, 0.04); sTone(d, t, 'sine', 360, 300, 0.55, 0.05); },
+  spear: (d, t) => { sTone(d, t, 'triangle', 1800, 900, 0.2, 0.05); dNoise(d, t, 0.18, 0.1, 'highpass', 4000); },
+  volley: (d, t) => { for (let i = 0; i < 4; i++) dNoise(d, t + i * 0.07, 0.04, 0.16, 'bandpass', 2600, 2); },
+  shadowclaw: (d, t) => { sTone(d, t, 'sawtooth', 120, 70, 0.4, 0.05); for (let i = 0; i < 3; i++) dNoise(d, t + 0.2 + i * 0.05, 0.08, 0.14, 'highpass', 2500, 2); },
+  lightning: (d, t) => { dNoise(d, t + 0.18, 0.12, 0.45, 'highpass', 2500); dNoise(d, t + 0.2, 0.6, 0.25, 'lowpass', 300); },
+  pillar: (d, t) => { sTone(d, t, 'sawtooth', 80, 320, 0.5, 0.05); dNoise(d, t, 0.5, 0.15, 'lowpass', 900); },
+  rockpath: (d, t) => { for (let i = 0; i < 5; i++) { dKick(d, t + i * 0.08, 0.3); dNoise(d, t + i * 0.08, 0.1, 0.14, 'lowpass', 700); } },
+  boulder: (d, t) => { dNoise(d, t, 0.8, 0.2, 'lowpass', 220); dKick(d, t + 0.6, 0.7); },
+  cast: (d, t) => [784, 988, 1175].forEach((f, k) => sTone(d, t + k * 0.05, 'triangle', f, f, 0.2, 0.04)),
+  tornado: (d, t) => { for (let i = 0; i < 6; i++) dNoise(d, t + i * 0.09, 0.2, 0.08 + i * 0.015, 'bandpass', 500 + i * 180, 3); },
+  firespin: (d, t) => { for (let i = 0; i < 8; i++) dNoise(d, t + i * 0.06, 0.08, 0.12, 'bandpass', 1200 + (i % 3) * 600, 3); dNoise(d, t, 0.6, 0.1, 'lowpass', 600); },
+  gust: (d, t) => dNoise(d, t, 0.5, 0.18, 'bandpass', 700, 0.6),
+  shadowstrike: (d, t) => { sTone(d, t, 'sine', 90, 50, 0.5, 0.12); dNoise(d, t + 0.3, 0.2, 0.2, 'lowpass', 400); },
+  web: (d, t) => { sTone(d, t, 'sine', 1400, 300, 0.12, 0.08); dNoise(d, t, 0.1, 0.1, 'highpass', 3500); },
+  fly: (d, t) => { for (let i = 0; i < 4; i++) dNoise(d, t + i * 0.12, 0.08, 0.14, 'lowpass', 900); },
+  icefall: (d, t) => { dNoise(d, t, 0.6, 0.1, 'bandpass', 1500, 1.5); for (let i = 0; i < 4; i++) sTone(d, t + 0.5 + i * 0.05, 'triangle', 2600 - i * 300, 1800, 0.12, 0.04); },
+  meteor: (d, t) => { dNoise(d, t, 0.6, 0.1, 'bandpass', 1500, 1.5); dKick(d, t + 0.55, 0.9); dNoise(d, t + 0.55, 0.4, 0.3, 'lowpass', 500); },
+  wave: (d, t) => { dNoise(d, t, 0.7, 0.25, 'lowpass', 700); dNoise(d, t + 0.3, 0.4, 0.15, 'highpass', 3000); },
+  drain: (d, t) => sTone(d, t, 'sine', 900, 250, 0.6, 0.06),
+  mist: (d, t) => dNoise(d, t, 0.8, 0.12, 'highpass', 3500, 0.7),
+  glare: (d, t) => { sTone(d, t, 'sawtooth', 110, 105, 0.6, 0.04); sTone(d, t, 'sawtooth', 117, 112, 0.6, 0.04); },
+  phase: (d, t) => sTone(d, t, 'sine', 1200, 400, 0.3, 0.05),
+  bunker: (d, t) => { dKick(d, t + 0.1, 0.4); sTone(d, t + 0.1, 'square', 220, 180, 0.08, 0.05); },
+  gather: (d, t) => sTone(d, t, 'triangle', 200, 600, 0.6, 0.05),
+  takeoff: (d, t) => { for (let i = 0; i < 5; i++) dNoise(d, t + i * 0.1, 0.07, 0.14, 'lowpass', 1000); sTone(d, t, 'sine', 300, 800, 0.5, 0.03); },
+  kick: (d, t) => dNoise(d, t + 0.12, 0.14, 0.2, 'bandpass', 1100, 1),
+  highkick: (d, t) => dNoise(d, t + 0.14, 0.16, 0.22, 'bandpass', 1500, 1),
+  axekick: (d, t) => { dNoise(d, t + 0.2, 0.2, 0.22, 'bandpass', 900, 1); dNoise(d, t + 0.44, 0.15, 0.3, 'highpass', 2500); },
+  sweep: (d, t) => dNoise(d, t + 0.1, 0.25, 0.2, 'lowpass', 800),
+  pinch: (d, t) => { sTone(d, t + 0.36, 'square', 1500, 1200, 0.03, 0.06); sTone(d, t + 0.42, 'square', 1700, 1300, 0.03, 0.06); },
+  vicegrip: (d, t) => { sTone(d, t + 0.36, 'square', 1500, 1200, 0.03, 0.06); sTone(d, t + 0.5, 'sawtooth', 160, 140, 0.4, 0.04); },
+  hammer: (d, t) => { dNoise(d, t + 0.15, 0.25, 0.18, 'bandpass', 700, 0.8); dKick(d, t + 0.44, 0.6); },
+  lash: (d, t) => { sTone(d, t + 0.25, 'sawtooth', 2400, 400, 0.06, 0.05); dNoise(d, t + 0.3, 0.05, 0.3, 'highpass', 3500); },
+  jawlock: (d, t) => { sTone(d, t + 0.28, 'square', 900, 300, 0.05, 0.05); sTone(d, t + 0.35, 'sawtooth', 120, 90, 0.5, 0.05); },
+  legflurry: (d, t) => { for (let i = 0; i < 4; i++) dNoise(d, t + 0.28 + i * 0.105, 0.05, 0.16, 'highpass', 2800, 2); },
+  gnash: (d, t) => { for (let i = 0; i < 4; i++) sTone(d, t + 0.28 + i * 0.105, 'square', 800, 300, 0.04, 0.04); },
+  stampede: (d, t) => { for (let i = 0; i < 3; i++) dKick(d, t + 0.28 + i * 0.105, 0.4); },
+  kickflurry: (d, t) => { for (let i = 0; i < 4; i++) dNoise(d, t + 0.28 + i * 0.105, 0.06, 0.16, 'bandpass', 1300, 1); },
+  punchflurry: (d, t) => { for (let i = 0; i < 3; i++) dNoise(d, t + 0.28 + i * 0.105, 0.05, 0.18, 'bandpass', 1800, 1.4); },
+  onetwo: (d, t) => { for (let i = 0; i < 2; i++) dNoise(d, t + 0.28 + i * 0.105, 0.05, 0.2, 'bandpass', 1800, 1.4); },
+  punchflurry5: (d, t) => { for (let i = 0; i < 5; i++) dNoise(d, t + 0.28 + i * 0.105, 0.05, 0.18, 'bandpass', 1600 + i * 100, 1.4); },
+  potion: (d, t) => { sTone(d, t + 0.1, 'sine', 1800, 1700, 0.12, 0.05); [0.66, 0.7].forEach(x => sTone(d, t + x, 'triangle', 3200, 2400, 0.08, 0.05)); dNoise(d, t + 0.66, 0.3, 0.16, 'bandpass', 900, 1.5); },
+  steam: (d, t) => { dNoise(d, t + 0.15, 0.7, 0.12, 'highpass', 4000, 0.8); sTone(d, t + 0.15, 'sine', 1800, 2200, 0.5, 0.025); },
+  flash: (d, t) => { sTone(d, t, 'sine', 600, 1800, 0.36, 0.04); [1568, 2093, 2637].forEach((f, k) => sTone(d, t + 0.38 + k * 0.03, 'triangle', f, f, 0.4, 0.04)); },
+  talondive: (d, t) => { sTone(d, t, 'sine', 600, 1200, 0.3, 0.03); sTone(d, t + 0.3, 'sawtooth', 2200, 900, 0.26, 0.03); dNoise(d, t + 0.3, 0.26, 0.14, 'bandpass', 2000, 1.5); },
+  nightbite: (d, t) => { sTone(d, t + 0.28, 'square', 900, 300, 0.05, 0.05); for (let i = 0; i < 5; i++) dNoise(d, t + 0.46 + i * 0.07, 0.04, 0.08, 'bandpass', 3000 + i * 300, 3); },
+  sunflare: (d, t) => { dNoise(d, t, 0.4, 0.1, 'lowpass', 700); sTone(d, t + 0.38, 'sawtooth', 300, 700, 0.26, 0.04); dKick(d, t + 0.64, 0.6); dNoise(d, t + 0.64, 0.5, 0.25, 'bandpass', 900, 0.8); },
+  foxfire: (d, t) => { for (let i = 0; i < 3; i++) sTone(d, t + 0.42 + i * 0.105, 'sine', 1400 + i * 200, 900, 0.18, 0.05); dNoise(d, t, 0.4, 0.04, 'highpass', 5000); },
+  venomcoil: (d, t) => { dNoise(d, t + 0.3, 0.6, 0.12, 'highpass', 5000, 1.2); sTone(d, t + 0.4, 'sawtooth', 140, 110, 0.5, 0.04); },
+  special: (d, t) => { sTone(d, t, 'sawtooth', 110, 440, 1.2, 0.035); sTone(d, t, 'sawtooth', 165, 660, 1.2, 0.025); dNoise(d, t + 0.2, 1.0, 0.1, 'bandpass', 1200, 0.6); dKick(d, t + 1.25, 0.8); },
+  avalanche: (d, t) => { dNoise(d, t, 0.5, 0.1, 'bandpass', 700, 0.7); dKick(d, t + 0.55, 0.9); dNoise(d, t + 0.55, 0.7, 0.3, 'lowpass', 400); dNoise(d, t + 0.6, 0.4, 0.1, 'highpass', 3000); }
+};
+function kindSfx(kind, delay = 0) {
+  try { const d = sfxBus(); if (!d || !KSND[kind]) return; MC = AC; KSND[kind](d, AC.currentTime + 0.02 + delay); } catch (err) {}
 }
 
 /* ---------- effects that fly between the two sides ---------- */

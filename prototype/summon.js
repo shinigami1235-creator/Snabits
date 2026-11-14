@@ -85,6 +85,34 @@ const SUMMON = (() => {
       return { dy: -H * 0.35 * (1 - k) - Math.sin(tt / 400) * H * 0.01, pose: tt < 800 ? 'hover' : tt < 1100 ? 'idle' : 'happy', filter: lit ? null : 'brightness(0.45)',
         under(c, x, y, h) { if (!lit) return; const a = 1 - seg(tt, 850, 1500) * 0.6, g = c.createRadialGradient(x, y - h * 0.5, 2, x, y - h * 0.5, h * 0.9);
           g.addColorStop(0, `rgba(255,230,160,${0.55 * a})`); g.addColorStop(1, 'rgba(255,230,160,0)'); c.fillStyle = g; c.fillRect(x - h, y - h * 1.4, h * 2, h * 1.8); } }; },
+    /* the special Snabits */
+    Eagle(tt, H, W) { const k = seg(tt, 0, 700), e = out3(k), land = tt - 700, sp = spring(land, 0.2);   // it swoops down in an arc and lands with its wings out
+      return { dx: W * 0.45 * (1 - e), dy: -H * 0.45 * (1 - e) + Math.sin(k * Math.PI) * H * 0.06, sx: 1 + (tt > 700 ? sp : 0), sy: 1 - (tt > 700 ? sp : 0), pose: tt < 700 ? 'jump' : tt < 860 ? 'land' : 'happy',
+        over(c, x, y, h) { for (let i = 0; i < 6; i++) { const p = seg(tt, 600 + i * 50, 1500 + i * 50); if (p <= 0 || p >= 1) continue; c.save(); c.translate(x + (i - 2.5) * h * 0.16 + Math.sin(p * 9 + i) * 8, y - h * 0.9 + p * h * 0.8); c.rotate(Math.sin(p * 7 + i));
+          c.fillStyle = `rgba(250,248,240,${1 - p})`; c.beginPath(); c.ellipse(0, 0, h * 0.05, h * 0.018, 0, 0, 7); c.fill(); c.restore(); } } }; },
+    Vampire(tt, H) { const a = seg(tt, 250, 800);   // a swirl of bats, then it is there, cape first
+      return { alpha: a, pose: tt < 800 ? 'idle' : tt < 1150 ? 'swipeup' : 'happy',
+        over(c, x, y, h) { for (let i = 0; i < 9; i++) { const p = seg(tt, i * 40, 900 + i * 40); if (p <= 0 || p >= 1) continue; const ang = i * 0.7 + p * 5, r = h * (0.15 + p * 0.9);
+          const bx = x + Math.cos(ang) * r, by2 = y - h * 0.5 + Math.sin(ang) * r * 0.5, w = Math.sin(tt / 40 + i) * 0.5 + 0.6, s2 = h * 0.0016;
+          c.save(); c.translate(bx, by2); c.scale(s2 * 6, s2 * 6); c.globalAlpha = 1 - p * 0.6; c.fillStyle = '#2a1d33'; c.beginPath(); c.ellipse(0, 0, 4, 5, 0, 0, 7); c.fill();
+          for (const sd of [-1, 1]) { c.beginPath(); c.moveTo(0, -1); c.quadraticCurveTo(sd * 7, -8 * w, sd * 14, -3 * w); c.quadraticCurveTo(sd * 8, 2, 0, 4); c.closePath(); c.fill(); } c.restore(); } } }; },
+    Phoenix(tt, H) { const k = back(seg(tt, 200, 700));   // a pillar of flame, and it rises out of it
+      return { sx: Math.max(0.05, k), sy: Math.max(0.05, k), dy: -H * 0.05 * Math.sin(seg(tt, 700, 1100) * Math.PI), pose: tt < 900 ? 'hover' : 'happy',
+        under(c, x, y, h) { const a = 1 - seg(tt, 700, 1300); if (a <= 0) return; for (let i = 0; i < 12; i++) { const ph = ((tt / 500) + i / 12) % 1, px = x + (i - 5.5) * h * 0.06 + Math.sin(tt / 90 + i) * 4;
+          c.fillStyle = `rgba(${i % 2 ? '255,214,94' : '255,120,46'},${a * (1 - ph)})`; c.beginPath(); c.ellipse(px, y - ph * h * 1.3, h * 0.06 * (1 - ph * 0.5), h * 0.12 * (1 - ph * 0.5), 0, 0, 7); c.fill(); } } }; },
+    Kitsune(tt, H) { const a = tt > 500 ? 1 : 0;   // three fox-fires circle, a puff of smoke, and it is sitting there
+      return { alpha: a, sx: a ? 1 + spring(tt - 500, 0.15) : 1, sy: a ? 1 - spring(tt - 500, 0.15) : 1, pose: tt < 1000 ? 'idle' : 'happy',
+        over(c, x, y, h) { for (let i = 0; i < 3; i++) { const ang = tt / 150 + i * 2.1, r = h * (0.5 - 0.3 * seg(tt, 0, 500)), fade = 1 - seg(tt, 900, 1300); if (fade <= 0) continue;
+            const g = c.createRadialGradient(x + Math.cos(ang) * r, y - h * 0.5 + Math.sin(ang) * r * 0.4, 1, x + Math.cos(ang) * r, y - h * 0.5 + Math.sin(ang) * r * 0.4, h * 0.1);
+            g.addColorStop(0, `rgba(255,255,255,${fade})`); g.addColorStop(0.4, `rgba(150,200,255,${0.8 * fade})`); g.addColorStop(1, 'rgba(150,200,255,0)'); c.fillStyle = g; c.fillRect(x - h, y - h * 1.2, h * 2, h * 1.4); }
+          const pf = seg(tt, 450, 900); if (pf > 0 && pf < 1) for (let i = 0; i < 8; i++) { const ang = i / 8 * 7; c.fillStyle = `rgba(240,240,250,${0.7 * (1 - pf)})`; c.beginPath(); c.arc(x + Math.cos(ang) * h * 0.4 * pf, y - h * 0.4 + Math.sin(ang) * h * 0.25 * pf, h * (0.1 + 0.12 * pf), 0, 7); c.fill(); } } }; },
+    Naga(tt, H) { const k = out3(seg(tt, 0, 900));   // it rises out of the ground, coil by coil
+      return { dy: H * 0.3 * (1 - k), pose: tt < 900 ? 'idle' : 'happy',
+        under(c, x, y, h) { const a = 1 - seg(tt, 800, 1200); if (a <= 0) return; c.fillStyle = `rgba(120,90,60,${0.6 * a})`; c.beginPath(); c.ellipse(x, y + 2, h * 0.6, h * 0.08, 0, 0, 7); c.fill(); } }; },
+    Yeti(tt, H) { const k = seg(tt, 0, 520), land = tt - 520, sp = spring(land, 0.3);   // it drops in heavily and snow bursts out
+      return { dy: -H * 0.45 * (1 - k * k), sx: 1 + (tt > 520 ? sp : 0), sy: 1 - (tt > 520 ? sp : 0), pose: tt < 520 ? 'jump' : tt < 700 ? 'land' : 'happy',
+        under(c, x, y, h) { const p = seg(tt, 520, 1300); if (p <= 0 || p >= 1) return; for (let i = 0; i < 10; i++) { const ang = Math.PI + i / 9 * Math.PI, r = h * (0.2 + p * 0.8);
+          c.fillStyle = `rgba(245,250,255,${1 - p})`; c.beginPath(); c.arc(x + Math.cos(ang) * r, y + Math.sin(ang) * r * 0.4 + p * p * h * 0.2, h * (0.06 - p * 0.03), 0, 7); c.fill(); } } }; },
     pop(tt) { const k = back(seg(tt, 0, 420)); return { sx: k, sy: k, pose: 'idle' }; }
   };
 

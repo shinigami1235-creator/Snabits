@@ -152,12 +152,19 @@ const SIG_SKILLS={
   "One-Two":{el:null,kind:"Strike",cost:3,power:35,hits:2,acc:95},
   "Steam Jet":{el:null,kind:"Cast",cost:3,power:55,acc:90,status:["Blind",30]},
   "Flash":{el:null,kind:"Cast",cost:2,power:35,acc:100,status:["Blind",50]},
+  // the special Snabits' own moves
+  "Talon Dive":{el:null,kind:"Strike",cost:4,power:80,acc:95,crit:0.15},
+  "Night Bite":{el:null,kind:"Strike",cost:4,power:55,acc:100,drain:0.5},
+  "Sun Flare":{el:null,kind:"Cast",cost:5,power:75,acc:95,status:["Burn",35]},
+  "Foxfire":{el:null,kind:"Cast",cost:3,power:24,hits:3,acc:95,status:["Daze",20]},
+  "Venom Coil":{el:null,kind:"Strike",cost:4,power:50,acc:95,status:["Poison",50]},
+  "Avalanche":{el:null,kind:"Strike",cost:5,power:90,acc:85,lower:{spd:1},lowerChance:40},
 };
 /* Fizz's Potion Toss carries a status from its element, the way Skit's webs do */
 const POTION_BY_EL={Blaze:"Burn",Frost:"Freeze",Tide:"Soak",Venom:"Poison",Spark:"Shock",Wild:"Root",Stone:"Crack",Light:"Blind",Shade:"Curse",Charm:"Daze",Steel:"Crack",Brawl:"Daze",Void:"Dread"};
 SIG_SKILLS["Potion Toss"]={el:null,kind:"Cast",cost:3,power:45,acc:95,status:["Poison",40]};
 for(const [el,[n,st]] of Object.entries(WEB_BY_EL)) SIG_SKILLS[n]={el,kind:"Cast",cost:3,power:40,acc:95,lower:{spd:1},lowerChance:100,...(st?{status:[st,30]}:{})};
-const FAMILY_SIG={Pinch:"Bunker Down",Chomp:"Crunch",Squib:"Ink Jet",Antik:"Static Screen",Moko:"Glare",Stilt:"High Kick",Booly:"Phase Shift",Plod:"Trunk Slam",Bipped:"One-Two",Fizz:"Potion Toss",Teep:"Steam Jet",Lern:"Flash"};
+const FAMILY_SIG={Pinch:"Bunker Down",Chomp:"Crunch",Squib:"Ink Jet",Antik:"Static Screen",Moko:"Glare",Stilt:"High Kick",Booly:"Phase Shift",Plod:"Trunk Slam",Bipped:"One-Two",Fizz:"Potion Toss",Teep:"Steam Jet",Lern:"Flash",Eagle:"Talon Dive",Vampire:"Night Bite",Phoenix:"Sun Flare",Kitsune:"Foxfire",Naga:"Venom Coil",Yeti:"Avalanche"};
 function sigSkills(s){
   const out=[], fam=FAMILY[s.m.family]&&FAMILY[s.m.family].of?FAMILY[s.m.family].of[0]:s.m.family; if((s.level||1)>=5){ if(fam==="Skit") out.push(WEB_BY_EL[s.m.el1][0]); else if(FAMILY_SIG[fam]) out.push(FAMILY_SIG[fam]); }
   const w=s.worn||{}; if(w.back==="Bat wings"||w.back==="Angel wings") out.push("Fly");
@@ -195,6 +202,19 @@ const STAT_SKILL_DATA={
 };
 for(const [n,d] of Object.entries(STAT_SKILL_DATA)) SKILLS[n]={el:null,lv:0,...d};
 for(const [n,d] of Object.entries(SIG_SKILLS)) SKILLS[n]={lv:0,sig:true,...d};
+/* costume skills: a costume brings its first skill with it and teaches the second at level 6. They never appear in scan pools. */
+const COSTUME_SKILLS={
+  "Bamboo Smack":{costume:"Panda",lv:1,el:null,kind:"Strike",cost:3,power:60,acc:95},
+  "Roly-Poly":{costume:"Panda",lv:6,el:null,kind:"Support",cost:3,heal:0.2,raise:{grd:1}},
+  "Stinger":{costume:"Bee",lv:1,el:null,kind:"Strike",cost:2,power:40,acc:100,status:["Poison",40]},
+  "Swarm":{costume:"Bee",lv:6,el:null,kind:"Cast",cost:4,power:14,hits:4,acc:90},
+  "Shell Bash":{costume:"Ladybug",lv:1,el:null,kind:"Strike",cost:3,power:50,acc:100,push:20},
+  "Lucky Spots":{costume:"Ladybug",lv:6,el:null,kind:"Support",cost:2,raise:{pow:1,spd:1}},
+  "Seed Spit":{costume:"Watermelon",lv:1,el:null,kind:"Cast",cost:3,power:12,hits:5,acc:90},
+  "Melon Smash":{costume:"Watermelon",lv:6,el:null,kind:"Strike",cost:4,power:75,acc:90,status:["Soak",30]},
+  "Cane Hook":{costume:"Candy cane",lv:1,el:null,kind:"Strike",cost:2,power:40,acc:100,push:-22},
+  "Sugar Rush":{costume:"Candy cane",lv:6,el:null,kind:"Support",cost:2,raise:{spd:2}}};
+for(const [n,d] of Object.entries(COSTUME_SKILLS)) SKILLS[n]={sig:true,...d};
 
 /* Pool order: the scan's pool size (6 to 12) takes skills from the front of this list. */
 function buildPool(el1,el2,size){
@@ -255,7 +275,7 @@ const ARMLESS_NAME={"Jab":"Headbutt","Iron Palm":"Shoulder Ram","Focus Punch":"F
 function hasArms(fam,stage){
   const of=typeof FAMILY!=="undefined"&&FAMILY[fam]&&FAMILY[fam].of;
   if(of){ if(of.includes("Squib")||of[1]==="Skit") return false; fam=of[1]; }
-  if(fam==="Squib"||fam==="Skit"||fam==="Plod"||fam==="Teep") return false;
+  if(fam==="Squib"||fam==="Skit"||fam==="Plod"||fam==="Teep"||fam==="Eagle"||fam==="Phoenix"||fam==="Naga") return false;
   if(fam==="Pinch"||fam==="Bipped") return true;
   return !!stage&&stage!=="Bit";
 }
