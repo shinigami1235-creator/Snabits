@@ -6,7 +6,7 @@ const GRADE_INFO={E:{lv:[1,10],earned:[0,40],purse:200},D:{lv:[8,18],earned:[40,
   B:{lv:[25,38],earned:[200,320],purse:3000},A:{lv:[35,48],earned:[300,420],purse:5000},S:{lv:[45,60],earned:[400,520],purse:8000}};   // MR2 tops out at 5,000G, so the loan is paid over a career rather than by one cup
 const expNeed=L=>10+6*L;
 /* What the ranch earns as its best Snabit climbs the grades, the way MR2 opens new places and monsters as your breeder rank goes up */
-const rankIdx=()=>typeof bestGrade==="function"?GRADES.indexOf(bestGrade()):0;
+const rankIdx=()=>PLAYER&&typeof bestGrade==="function"?GRADES.indexOf(bestGrade()):0;   // no save loaded yet (a scan from the practice arena): grade E
 const PERKS=[
   ["E","Trips to 4 regions, 3 wild fights a week, a Freezer for 20"],
   ["D","Trips to 7 regions, 4 wild fights a week, rival matches with Rook, new scans start a little stronger"],
