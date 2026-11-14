@@ -35,6 +35,10 @@ async def main():
             await pg.evaluate("([a,b])=>atStart(a,b)", [f, g]); ok = await fight_out(pg)
             r = await pg.evaluate("()=>AT&&AT.ar?[AT.ar.winner,Math.round(AT.ar.t),AT.ar.p.map(p=>p.hp)]:null")
             C.ok(ok and r and all(isinstance(v, (int, float)) for v in r[2]), f'{f} against {g} on the practice arena ends ({r})')
+        # a picture with none of its main colour in any cell still hatches (pickFamily's empty case)
+        pf = await pg.evaluate("""()=>{ const hex=h=>[1,3,5].map(k=>parseInt(COL[h].slice(k,k+2),16)), r=(g,w)=>({g,w,raw:w,cd:0.3,rgb:hex(g)}), ranked=[r('red',60),r('blue',25),r('white',10)];
+            const m=hatch({ranked,main:ranked[0],second:ranked[1],mono:false,tie:false,colours:5,pool:9,cells:Array(9).fill(0),sat:.5,bright:.6,contrast:.2,photoKey:'empty'}); return [pickFamily(Array(9).fill(0)).family,m.family,m.band,m.shape]; }""")
+        C.ok(pf == ['Antik', 'Antik', 'middle', 'compact'], f'an empty colour grid hatches an Antik ({pf})')
         bt = await pg.evaluate("()=>__audit.bad.concat(__badText()||[])"); C.ok(not bt, f'no NaN or undefined on the arena screens ({bt})')
         snd = await pg.evaluate("()=>__snd"); C.ok(not snd, f'no sound threw ({snd[:3]})')
         C.ok(not errs, f'no console or page errors on the practice arena ({errs[:3]})'); await b.close()

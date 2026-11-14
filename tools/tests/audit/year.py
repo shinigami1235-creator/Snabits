@@ -176,9 +176,9 @@ async def main():
         got = await pg.evaluate(SNAP); A = json.loads(want); Bq = json.loads(got);
         for d in (A, Bq): d.pop('day'); d['st'].pop('hungerDay', None)
         C.ok(json.dumps(A, sort_keys=True) == json.dumps(Bq, sort_keys=True), 'the save file brings back the game as it was saved')
+        snd = await pg.evaluate("()=>__snd"); C.ok(not snd, f'no sound threw ({snd[:3]})')
         bad_text = await pg.evaluate("()=>__audit.bad"); C.ok(not bad_text, f'no NaN or undefined in the text on screen all year {bad_text}')
         C.ok(not await pg.evaluate("()=>/Something broke/.test(card.innerText)"), 'the error card never showed')
-        print('taps the pump made:', json.dumps(await pg.evaluate("()=>__audit.clicks")))
         await b.close()
     sys.exit(C.done(errs))
 asyncio.run(main())
