@@ -107,8 +107,8 @@ function atStart(meFam,foeFam){   // picks: see atMake
       <div class="hbot" id="at-hbot"><div class="side me"><div class="mv" id="at-mv0"></div><div class="strip">${cells(0)}</div><div class="fob" id="at-fb0"><i id="at-fo0"></i><span class="need" id="at-need"></span></div></div>
         <div class="mid"><div><span>Hit</span><b><i id="at-hit0"></i><em id="at-hit1"></em></b></div><div><span>Focus</span><b><i id="at-fn0"></i><em id="at-fn1"></em></b></div></div>
         <div class="side foe"><div class="mv" id="at-mv1"></div><div class="strip">${cells(1)}</div><div class="fob"><i id="at-fo1"></i></div></div></div></div>
-    <div class="ctl3"><button class="btn walk" id="at-l" aria-label="Back off">◀</button><button class="btn walk" id="at-r" aria-label="Close in">▶</button>
-      <button class="btn arr" id="at-up" aria-label="Previous move for this range">▲</button><button class="btn arr" id="at-dn" aria-label="Next move for this range">▼</button>
+    <div class="ctl3"><button class="btn walk" id="at-l" aria-label="Back off">◀</button>
+      <button class="btn arr" id="at-up" aria-label="Previous move for this range">▲</button><button class="btn arr" id="at-dn" aria-label="Next move for this range">▼</button><button class="btn walk" id="at-r" aria-label="Close in">▶</button>
       <button class="btn ico" id="at-shove" aria-label="Shove">${AT_ICON.shove}</button><button class="btn atk" id="at-atk"><span id="at-atk-n">Attack</span><small id="at-atk-c"></small></button><button class="btn ico" id="at-auto" aria-label="Auto">${AT_ICON.auto}</button></div>`;
   const hold=(id,rel)=>{ const b=document.getElementById(id), on=e=>{ e.preventDefault(); ar.p[0].wantRel=rel; b.classList.add("on"); }, off=()=>{ if(ar.p[0].wantRel===rel) ar.p[0].wantRel=0; b.classList.remove("on"); };
     b.addEventListener("pointerdown",on); b.addEventListener("pointerup",off); b.addEventListener("pointercancel",off); b.addEventListener("pointerleave",off); };
@@ -242,17 +242,17 @@ function atDraw(now,dte){
   if(!AT.bg){ const b=document.createElement("canvas"); b.width=WW*dpr; b.height=HH*dpr; const x=b.getContext("2d"); x.scale(dpr,dpr); atStage(x,WW,HH,FY); AT.bg=b; }
   const shake=AT.trauma*AT.trauma*7; AT.trauma=Math.max(0,AT.trauma-dte/700);
   const sx=shake?Math.sin(te/23)*shake:0, sy=shake?Math.cos(te/31)*shake*0.6:0;
-  const floor=FY, X=x=>70+x/AR.LEN*(WW-140), scale=2.3, alpha=Math.min(1,AT.acc/AR.DT);
+  const floor=FY, scale=2.3, SEP=(58*scale-AR.BODY/AR.LEN*(WW-140))/(1-AR.BODY/AR.LEN), K=(WW-140-SEP)/AR.LEN, X=(x,right)=>70+x*K+(right?SEP:0), alpha=Math.min(1,AT.acc/AR.DT);
   // glide between engine steps, then ease toward that so pushes and swaps slide instead of jumping
   // your Snabit always stands on the left: when it ends up on the right (a swap), the arena turns round in a quick flip
   const wantMir=ar.p[0].x>ar.p[1].x;
   if(AT.mirror==null) AT.mirror=wantMir;
   if(wantMir!==AT.mirror&&!AT.flip) AT.flip={t0:te};
   let flipK=0; if(AT.flip){ flipK=(te-AT.flip.t0)/360; if(flipK>=0.5&&AT.mirror!==wantMir){ AT.mirror=wantMir; AT.snap=true; } if(flipK>=1){ AT.flip=null; flipK=0; } }
-  ar.p.forEach((p,i)=>{ const S=AT.side[i], e=p.px==null?p.x:p.px+(p.x-p.px)*alpha, want=X(AT.mirror?AR.LEN-e:e);
+  const shown=ar.p.map(p=>{ const e=p.px==null?p.x:p.px+(p.x-p.px)*alpha; return AT.mirror?AR.LEN-e:e; });
+  ar.p.forEach((p,i)=>{ const S=AT.side[i], want=X(shown[i],shown[i]>shown[1-i]||shown[i]===shown[1-i]&&i===1);
     S.x=S.x==null||AT.snap?want:S.x+(want-S.x)*(1-Math.exp(-dte/45)); });
-  { const a=AT.side[0], b=AT.side[1], min=58*scale, gap=Math.abs(b.x-a.x);
-    if(gap<min){ const mid=Math.max(70+min/2,Math.min(WW-70-min/2,(a.x+b.x)/2)), s=b.x>=a.x?1:-1; a.dx=mid-s*min/2; b.dx=mid+s*min/2; } else { a.dx=a.x; b.dx=b.x; } }
+  AT.side.forEach(S=>{ S.dx=S.x; });
   // the camera zooms with the gap, MR2 style: in close when they're face to face, pulled back to both walls when they're far apart
   { const a=AT.side[0].dx, b=AT.side[1].dx, V=Math.max(W/1.35,Math.min(WW,Math.abs(b-a)+110*scale)), z=W/V;
     AT.zoom=AT.zoom==null||AT.snap?z:AT.zoom+(z-AT.zoom)*(1-Math.exp(-dte/260));
