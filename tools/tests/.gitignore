@@ -1,0 +1,8 @@
+*.png
+*.mp4
+*.webm
+*.log
+vf/
+vp/
+fr/
+g_*/

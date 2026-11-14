@@ -576,6 +576,9 @@ const CHIBI = (() => {
     if (mk.includes('Haloed')) halo(c, head, (m.worn || {}).head, t, Math.max(haloUp, mk.includes('Horned') ? 16 : 0, mk.includes('Sage') ? 20 : 0));
   }
   const bellyOn = (c, m, g, body) => { if (m.stage === 'Bit' || m.back || !(m.marks || []).includes('Stout')) return;
+    // Booly's mouth sits low on its cone, so a pale oval there read as a beard: its belly is a soft glow down at the base instead
+    if (m.family === 'Booly') { const cy = g.top + g.bh * 0.97, rx = g.bw * 0.42, gr = c.createRadialGradient(g.cx, cy, 2, g.cx, cy, rx);
+      gr.addColorStop(0, rgb(lt(body, 0.32))); gr.addColorStop(1, 'rgba(255,255,255,0)'); c.save(); c.fillStyle = gr; c.translate(g.cx, cy); c.scale(1, 0.42); c.translate(-g.cx, -cy); c.beginPath(); c.arc(g.cx, cy, rx, 0, 7); c.fill(); c.restore(); return; }
     c.fillStyle = rgb(lt(body, 0.6)); c.beginPath(); c.ellipse(g.cx, g.top + g.bh * 0.82, g.bw * 0.34, g.bh * 0.24, 0, 0, 7); c.fill(); };
   /* variant pieces: behind the body, on it, and in front */
   function variantBehind(c, pathFn, g, body, t) {
