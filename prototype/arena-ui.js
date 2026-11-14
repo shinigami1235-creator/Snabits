@@ -207,7 +207,7 @@ function atEvent(e,now){
     AT.turn={t0:te,C:ch+K.C/rate,D:ch+Math.min(K.D/rate,K.C/rate+700)};
     const col=m.el&&typeof ELC==="function"?hexRgb(ELC(m.el)):AT_FAMCOL[AT.ar.p[e.i].f.family]||[255,214,90];
     S.anim={kind,t0:te+ch,tier,rate,el:m.el||null,name:m.name,src:typeof sourceFor==="function"?sourceFor({name:m.name,kind:m.cast?"Cast":"Strike"},sp):"mouth",col,pw:m.dmg>=70?1.35:m.dmg>=40?1.05:0.8,contact:/^(tackle|bite|stomp|punch|claw|shadowstrike|shadowclaw|fly)$/.test(kind)};
-    if(tier==="special"&&!S.anim.contact&&!m.lower) S.anim.mega=/^(beam|bolt|spear|volley|drain|gust)$/.test(kind)?"beam":kind==="lightning"?"bolt":/^(meteor|icefall|boulder|rockpath)$/.test(kind)?"fall":kind==="pillar"&&m.el==="Frost"?"glacier":/^(tornado|firespin)$/.test(kind)?(m.el==="Blaze"?"inferno":"funnel"):/^(pillar|wave|mist|mistcast)$/.test(kind)?"rise":null;
+    if(tier==="special"&&!S.anim.contact&&!m.lower) S.anim.mega=/^(beam|bolt|spear|volley|drain|gust)$/.test(kind)?"beam":kind==="lightning"?"bolt":/^(meteor|icefall|boulder|rockpath)$/.test(kind)?"fall":kind==="pillar"&&m.el==="Frost"?"glacier":/^(tornado|firespin)$/.test(kind)?(m.el==="Blaze"?"inferno":"funnel"):kind==="wave"?"tsunami":kind==="push"?"shock":kind==="lift"?"nightmare":/^(pillar|mist|mistcast)$/.test(kind)?"rise":null;
     if(S.anim.mega) AT.turn.D=Math.max(AT.turn.D,ch+(K.C+900)/rate);   // the fight waits for a special's release to finish
     if(ch){ S.charge={t0:te,d:ch,tier,col:S.anim.col,el:m.el||null,body:sp.pal&&sp.pal.body}; if(tier==="special") AT.cine={t0:te,d:ch,i:e.i,name:m.name,col:S.anim.col}; }
     try{ sfx(ch?"charge":m.cast?"charge":"whoosh"); if(typeof elSfx==="function") elSfx(m.el,"cast"); if(typeof kindSfx==="function"&&!ch) kindSfx(kind); }catch(err){}
@@ -376,6 +376,70 @@ function atInferno(c,t,C,src,tg,s,te){
   if(k>0.5){ const sm=(k-0.5)/0.5; for(let n=0;n<7;n++){ const ph=Math.min(1,sm*1.2+n*0.05), x=tg.x+((n*41)%140-70)*s, y=foot-80*s-ph*230*s, r=(34+ph*44)*s;
       const g=c.createRadialGradient(x,y,0,x,y,r); g.addColorStop(0,`rgba(70,60,62,${0.5*(1-ph)})`); g.addColorStop(1,"rgba(70,60,62,0)"); c.fillStyle=g; c.beginPath(); c.arc(x,y,r,0,7); c.fill(); }
     c.fillStyle=`rgba(40,22,16,${0.45*sm*(k<0.95?1:(1-k)/0.05)})`; c.beginPath(); c.ellipse(tg.x,foot+3*s,150*s,30*s,0,0,7); c.fill(); }
+  c.restore();
+}
+/* Tsunami: a wall of water rises behind the attacker, rolls across with a curling crest of foam and crashes onto the target */
+function atTsunami(c,t,C,src,tg,s,te){
+  const foot=tg.foot||tg.y+40*s, start=C-620, end=C+700; if(t<start||t>end) return;
+  const dir=tg.x>src.x?1:-1, k=Math.min(1,(t-start)/(C-start)), rise=Math.min(1,(t-start)/220);
+  c.save();
+  if(t<C+80){ const front=src.x-dir*120*s+(tg.x+dir*30*s-(src.x-dir*120*s))*Math.pow(k,1.4), back=front-dir*520*s, H=(240+150*k)*s*rise, curl=H*0.45;
+    const g=c.createLinearGradient(0,foot-H,0,foot); g.addColorStop(0,"#7fd3f2"); g.addColorStop(0.45,"#3f8fd8"); g.addColorStop(1,"#1f4f9a");
+    c.fillStyle=g; c.beginPath(); c.moveTo(back,foot);
+    for(let j=0;j<=12;j++){ const f=j/12, x=back+(front-back)*f, y=foot-H*(0.35+0.65*Math.pow(f,1.6))+Math.sin(f*9+te/90)*6*s; c.lineTo(x,y); }
+    c.quadraticCurveTo(front+dir*curl*0.9,foot-H-curl*0.25,front+dir*curl*0.85,foot-H+curl*0.55);
+    c.quadraticCurveTo(front+dir*curl*0.3,foot-H+curl*0.2,front+dir*curl*0.15,foot-H*0.55);
+    c.quadraticCurveTo(front+dir*curl*0.2,foot-H*0.2,front+dir*60*s,foot); c.closePath(); c.fill();
+    c.strokeStyle="rgba(255,255,255,.9)"; c.lineWidth=9*s; c.lineCap="round"; c.beginPath(); c.moveTo(front-dir*90*s,foot-H*0.96);
+    c.quadraticCurveTo(front+dir*curl*0.9,foot-H-curl*0.25,front+dir*curl*0.85,foot-H+curl*0.55); c.stroke();
+    c.fillStyle="rgba(255,255,255,.85)"; for(let j=0;j<16;j++){ const ph=((te/400)+j*0.29)%1; c.beginPath(); c.arc(front+dir*(curl*0.6+ph*60*s)+((j*31)%40-20)*s,foot-H-curl*0.1+ph*ph*140*s-20*s,(3+j%4)*s,0,7); c.fill(); }
+    c.strokeStyle="rgba(200,240,255,.5)"; c.lineWidth=3*s; for(let j=1;j<4;j++){ c.beginPath(); c.moveTo(back+(front-back)*0.2,foot-H*0.25*j); c.lineTo(back+(front-back)*0.85,foot-H*0.28*j); c.stroke(); }
+    AT.trauma=Math.max(AT.trauma,0.25*k); }
+  if(t>=C){ const q=(t-C)/(end-C), a=1-q;
+    if(q<0.03){ AT.flash={t0:performance.now(),a:0.4}; AT.trauma=1; }
+    for(let j=0;j<28;j++){ const ang=-Math.PI*(0.05+0.9*j/27), v=(160+((j*53)%120))*s, x=tg.x+Math.cos(ang)*v*q*1.6, y=foot-40*s+Math.sin(ang)*v*q*1.8+q*q*260*s;
+      c.fillStyle=`rgba(${j%3?"120,200,245":"240,250,255"},${a})`; c.beginPath(); c.arc(x,y,(6+(j%4)*3)*s*(1-q*0.5),0,7); c.fill(); }
+    c.fillStyle=`rgba(90,170,230,${0.55*a})`; c.beginPath(); c.ellipse(tg.x,foot,(160+120*q)*s,(26+10*q)*s,0,0,7); c.fill();
+    c.fillStyle=`rgba(240,250,255,${0.8*a})`; c.beginPath(); c.ellipse(tg.x,foot-4*s,(120+140*q)*s,(12+6*q)*s,0,0,7); c.fill(); }
+  c.restore();
+}
+/* Overload, Radiance, Heat Wave: shockwaves roll out from the attacker along the ground and blast the target back.
+   Spark rings crackle, Light rings throw rays, Blaze rings shimmer with heat */
+function atShock(c,t,C,src,tg,col,s,el,te){
+  const foot=tg.foot||tg.y+40*s, start=C-360, end=C+520; if(t<start||t>end) return;
+  const dir=tg.x>src.x?1:-1, dist=Math.abs(tg.x-src.x), cy=(src.foot||foot)-80*s;
+  c.save(); c.globalCompositeOperation="lighter";
+  const g0=c.createRadialGradient(src.x,cy,0,src.x,cy,120*s); g0.addColorStop(0,atRgb([255,255,255],0.7)); g0.addColorStop(0.4,atRgb(col,0.5)); g0.addColorStop(1,atRgb(col,0)); c.fillStyle=g0; c.beginPath(); c.arc(src.x,cy,120*s,0,7); c.fill();
+  for(let r=0;r<4;r++){ const born=start+r*110, age=(t-born)/(C-start+260); if(age<0||age>1) continue;
+    const x=src.x+dir*(40*s+(dist+120*s)*age), h=(110+70*age)*s, w=(26+30*age)*s, a=(1-age)*(age<0.1?age/0.1:1);
+    c.save(); c.translate(x,cy);
+    if(el==="Spark"){ c.strokeStyle=atRgb([255,245,170],a); c.lineWidth=5*s; c.beginPath(); const seed=Math.floor(te/50)+r*7;
+      for(let j=0;j<=16;j++){ const q=-Math.PI/2+Math.PI*j/16, jj=((seed*31+j*17)%10)/10-0.5; c[j?"lineTo":"moveTo"](dir*Math.cos(q)*w*(1+jj*0.5),Math.sin(q)*h*(1+jj*0.15)); } c.stroke(); }
+    const g=c.createLinearGradient(-dir*w,0,dir*w,0); g.addColorStop(0,atRgb(col,0)); g.addColorStop(0.7,atRgb(col,0.55*a)); g.addColorStop(1,atRgb([255,255,255],0.85*a));
+    c.fillStyle=g; c.beginPath(); c.ellipse(0,0,w,h,0,-Math.PI/2,Math.PI/2,dir<0); c.fill();
+    if(el==="Light"){ c.fillStyle=atRgb([255,250,200],0.35*a); for(let j=0;j<6;j++){ const q=-0.9+j*0.36; c.beginPath(); c.moveTo(0,0); c.lineTo(dir*Math.cos(q-0.05)*h*2,Math.sin(q-0.05)*h*2); c.lineTo(dir*Math.cos(q+0.05)*h*2,Math.sin(q+0.05)*h*2); c.closePath(); c.fill(); } }
+    if(el==="Blaze"){ c.strokeStyle=atRgb([255,190,90],0.5*a); c.lineWidth=3*s; for(let j=-2;j<=2;j++){ c.beginPath(); for(let y=-h;y<=h;y+=8*s) c.lineTo(dir*(w*0.6+Math.sin(y/14+te/60+j)*6*s)-dir*j*12*s,y); c.stroke(); } }
+    c.restore(); }
+  if(t>=C){ const q=(t-C)/(end-C); if(q<0.03){ AT.flash={t0:performance.now(),a:0.35}; AT.trauma=Math.max(AT.trauma,0.8); }
+    for(let j=0;j<14;j++){ const ang=(j/14)*Math.PI*2, r=q*170*s; c.strokeStyle=atRgb(j%2?col:[255,255,255],1-q); c.lineWidth=4*s; c.beginPath(); c.moveTo(tg.x+Math.cos(ang)*r*0.4,tg.y+Math.sin(ang)*r*0.4); c.lineTo(tg.x+Math.cos(ang)*r,tg.y+Math.sin(ang)*r); c.stroke(); } }
+  c.restore();
+}
+/* Nightmare: the target's shadow turns into a pool of dark, tendrils curl up round it and eyes blink open in the dark */
+function atNightmare(c,t,C,tg,col,s,te){
+  const foot=tg.foot||tg.y+40*s, start=C-450, end=C+650; if(t<start||t>end) return;
+  const k=Math.min(1,(t-start)/450), fade=t>end-220?(end-t)/220:1, A=k*fade;
+  c.save(); c.fillStyle=`rgba(14,6,26,${0.5*A})`; c.fillRect(-5000,-5000,10000,10000);
+  const pool=c.createRadialGradient(tg.x,foot,0,tg.x,foot,170*s); pool.addColorStop(0,`rgba(20,6,34,${0.95*A})`); pool.addColorStop(0.7,`rgba(60,20,90,${0.7*A})`); pool.addColorStop(1,"rgba(60,20,90,0)");
+  c.fillStyle=pool; c.beginPath(); c.ellipse(tg.x,foot,170*s*k,42*s*k,0,0,7); c.fill();
+  for(let j=0;j<7;j++){ const side=j%2?1:-1, bx=tg.x+side*(25+j*12)*s, grow=Math.min(1,Math.max(0,(t-start-j*45)/260)), H=(150+40*(j%3))*s*grow;
+    c.strokeStyle=`rgba(40,14,60,${0.95*fade})`; c.lineWidth=(16-j)*s; c.lineCap="round"; c.beginPath(); c.moveTo(bx,foot);
+    for(let y=0;y<=H;y+=10*s){ const f=y/H; c.lineTo(bx-side*f*f*60*s+Math.sin(f*6+te/120+j)*12*s*f,foot-y); } c.stroke();
+    c.strokeStyle=`rgba(170,90,230,${0.5*fade})`; c.lineWidth=3*s; c.stroke(); }
+  const eyes=[[-240,-200],[200,-250],[-120,-310],[280,-120],[-320,-90],[90,-340],[10,-230]];
+  eyes.forEach(([dx,dy],j)=>{ const open=Math.max(0,Math.min(1,(t-start-120-j*70)/160)), blink=Math.abs(Math.sin(te/400+j))>0.97?0.1:1, h=7*s*open*blink, x=tg.x+dx*s, y=foot+dy*s;
+    if(open<=0) return; const E=2; c.fillStyle=`rgba(255,214,90,${0.95*fade})`; for(const ox of [-14,14]){ c.beginPath(); c.ellipse(x+ox*s*E,y,10*s*E,h*E,0,0,7); c.fill(); }
+    c.fillStyle=`rgba(20,6,34,${fade})`; for(const ox of [-14,14]){ c.beginPath(); c.ellipse(x+ox*s*E,y,3*s*E,h*0.9*E,0,0,7); c.fill(); } });
+  if(t>=C&&t<C+60){ AT.trauma=Math.max(AT.trauma,0.7); }
   c.restore();
 }
 /* Maelstrom and Null Storm: a spinning funnel, narrow at the ground and wide at the top; water gets foam and spray */
@@ -586,6 +650,9 @@ function atDraw(now,dte){
       else if(A.mega==="fall") atMegaFall(c,t,C,{...tgt,foot:T0.foot},A.col,s2,A.kind,AT.side[i].dir,te);
       else if(A.mega==="glacier") atGlacier(c,t,C,{...tgt,foot:T0.foot},s2,te);
       else if(A.mega==="inferno") atInferno(c,t,C,{x:placed[i].x,foot:placed[i].foot},{...tgt,foot:T0.foot},s2,te);
+      else if(A.mega==="tsunami") atTsunami(c,t,C,{x:placed[i].x,foot:placed[i].foot},{...tgt,foot:T0.foot},s2,te);
+      else if(A.mega==="shock") atShock(c,t,C,{x:placed[i].x,y:placed[i].y,foot:placed[i].foot},{...tgt,foot:T0.foot},A.col,s2,A.el,te);
+      else if(A.mega==="nightmare") atNightmare(c,t,C,{...tgt,foot:T0.foot},A.col,s2,te);
       else if(A.mega==="funnel") atFunnel(c,t,C,{...tgt,foot:T0.foot},A.col,s2,A.el,te);
       else atMegaRise(c,t,C,{...tgt,foot:T0.foot},A.col,s2,A.kind,te);
       return; }
