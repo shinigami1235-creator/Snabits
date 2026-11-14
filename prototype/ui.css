@@ -50,6 +50,7 @@ body[data-mode="live"] #corners,body[data-mode="aim"] #corners{display:block}
 #card.card-in{animation:cardIn .5s cubic-bezier(.2,.9,.3,1.15)}
 @keyframes cardIn{from{translate:0 60%;opacity:0}to{translate:0 0;opacity:1}}
 #top{position:fixed;left:0;right:0;top:0;padding:calc(var(--safe-t) + 12px) 14px 10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;pointer-events:none}
+#top #lightbtn{pointer-events:auto}   /* the bar lets taps through to the camera, but the light button has to take them */
 .chip{font:700 14px var(--pix);padding:3px 10px;border-radius:5px;background:#222;color:#fff;border:0}
 #kind{font:700 14px var(--pix);padding:3px 10px;border-radius:5px;background:#3a3f55;color:var(--text)}
 #bars{position:fixed;left:14px;right:14px;bottom:calc(var(--safe-b) + 118px);display:grid;gap:5px;pointer-events:none;

@@ -60,6 +60,23 @@ function atStyle(){
 #atest .slot .rd{position:absolute;left:5px;top:5px;width:9px;height:9px;border-radius:50%}
 #atest .slot.out{opacity:.32}#atest .slot.wait{filter:saturate(.4) brightness(.8)}#atest .slot.poor .c{color:#ff8a7a}#atest .slot.sel{border-color:#ffc93c;background:#2a2617}
 #atest .arr{height:36px;font-size:15px}
+#atest .scr{flex:1 1 auto;min-height:200px}#atest .scr canvas{position:absolute;left:0;right:0;top:var(--safe-t,0px);width:100%}
+#atest .rng{position:relative;margin:6px 12px 0;padding:4px 0 2px;background:#1a1c27;border-radius:10px}
+#atest .rg-row,#atest .rg-lab{display:grid;grid-template-columns:36px repeat(4,1fr);align-items:center}
+#atest .who{font-size:10px;color:#8b8fa8;text-align:center;font-weight:700}
+#atest .rc{height:34px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;color:#c9cbd6;opacity:.45;border-left:1px solid #262836}
+#atest .rc svg{width:16px;height:16px}#atest .rc small{font-size:8px;line-height:1;max-width:100%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;padding:0 2px}
+#atest .rc.lit{opacity:1;color:#fff}#atest .rc.foe.lit{color:#ff8a7a}#atest .rc.none small{color:#5d6075}
+#atest .rg-lab span{font-size:9px;font-weight:700;text-align:center}
+#atest .mk{position:absolute;top:2px;bottom:14px;width:3px;margin-left:-1px;background:#ffc93c;border-radius:2px;box-shadow:0 0 6px #ffc93c;transition:left .1s linear}
+#atest .boxes{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:8px 12px 0}
+#atest .box{position:relative;height:84px;border-radius:12px;background:#1d1f2b;border:3px solid #2c2f40;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:0 3px;color:#e8e9f2}
+#atest .box svg{width:24px;height:24px;flex:none}#atest .box .bl{position:absolute;top:3px;left:0;right:0;text-align:center;font-size:9px;font-weight:700}
+#atest .box .n{font-size:10px;font-weight:700;line-height:1.1;text-align:center;max-width:100%;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;margin-top:8px}
+#atest .box .c{position:absolute;right:5px;bottom:2px;font-size:11px;font-weight:700;color:#ffc93c}
+#atest .box.out{opacity:.35}#atest .box.poor .c{color:#ff8a7a}#atest .box.sel{border-color:#ffc93c;background:#2a2617}#atest .box.wait{filter:saturate(.4) brightness(.8)}#atest .box.empty .n{color:#5d6075;margin:0}
+#atest .ctl2{display:grid;grid-template-columns:1.25fr 1.25fr 1fr 1fr 1fr 1fr;gap:6px;padding:8px 12px calc(env(safe-area-inset-bottom,0px) + 10px)}
+#atest .ctl2 .btn{height:58px;font-size:20px}#atest .ctl2 .walk{font-size:26px}#atest .ctl2 svg{width:24px;height:24px}#atest .ctl2 .off{opacity:.35}#atest .ctl2 .on{border-color:#ffc93c;color:#ffc93c}
 #atest .res{position:absolute;left:16px;right:16px;top:38%;background:#1d1f2b;border:2px solid #ffc93c;border-radius:14px;padding:16px;text-align:center}
 #atest .res h2{margin:0 0 6px;color:#ffc93c}#atest .res .row{display:flex;gap:8px;margin-top:12px}#atest .res .btn{flex:1;height:46px}`;
   document.head.appendChild(st);
@@ -113,35 +130,47 @@ function atStart(meFam,foeFam){   // picks: see atMake
   const moves=A.f.moves.slice().sort((a,b)=>order.indexOf(a.range)-order.indexOf(b.range)||a.cost-b.cost);
   AT={ar,A,B,moves,sel:0,top:0,auto:false,last:performance.now(),acc:0,te:0,freeze:0,trauma:0,raf:0,side:[A.spec,B.spec].map(spec=>({spec,x:null,shown:"idle",from:"idle",t0:0,dir:1})),fx:[],done:false,me:meFam,foe:foeFam};
   CB.parts=[]; CB.puffs=[];
+  // each range has its own box; ▲ ▼ swap which of that range's moves sits in the selected box. Moves usable at any range join every box's list
+  AT.lists={}; AT.idx={}; for(const b of AR.BANDS){ AT.lists[b]=moves.filter(m=>m.range===b).concat(moves.filter(m=>m.range==="Any")); AT.idx[b]=0; }
+  AT.selBand=ar.band();
+  // the opponent's strongest move at each range, so you can see where it's dangerous
+  AT.foeBest={}; for(const b of AR.BANDS){ const c=B.f.moves.filter(m=>m.range===b&&m.dmg).sort((x,y)=>y.dmg*(y.hits||1)*y.acc-x.dmg*(x.hits||1)*x.acc); AT.foeBest[b]=c[0]||null; }
   const d=document.getElementById("atest");
   d.innerHTML=`<div class="scr"><canvas id="at-cv"></canvas><div class="clock2" id="at-clock">60</div></div>
     <div class="stat"><div><div class="nm">${A.f.name}</div><div class="hpb"><i id="at-hp0"></i></div><div class="hpt" id="at-l0"></div><div class="fob" id="at-fb0"><i id="at-fo0"></i><span class="need" id="at-need"></span><b id="at-fn0"></b></div></div>
       <div class="r"><div class="nm">${B.f.name}</div><div class="hpb"><i id="at-hp1"></i></div><div class="hpt" id="at-l1"></div><div class="fob" id="at-fb1"><i id="at-fo1"></i><b id="at-fn1"></b></div></div></div>
-    <div class="pad"><div class="lpad"><button class="btn ico" id="at-shove" aria-label="Shove">${AT_ICON.shove}</button><button class="btn ico" id="at-auto" aria-label="Auto">${AT_ICON.auto}</button>
-      <button class="btn ico walk" id="at-l" aria-label="Walk left">◀</button><button class="btn ico walk" id="at-r" aria-label="Walk right">▶</button></div>
-      <div class="rpad"><button class="btn arr" id="at-up" aria-label="Previous moves">▲</button><div class="slots" id="at-rows"></div><button class="btn arr" id="at-dn" aria-label="Next moves">▼</button></div></div>`;
+    <div class="rng"><div class="rg-row"><span class="who">You</span>${AR.BANDS.map(b=>`<div class="rc" id="at-y-${b}"></div>`).join("")}</div>
+      <div class="rg-row"><span class="who">Foe</span>${AR.BANDS.map(b=>{ const m=AT.foeBest[b]; return `<div class="rc foe ${m?"":"none"}">${m?atIcon(m)+`<small>${m.name}</small>`:"<small>Nothing</small>"}</div>`; }).join("")}</div>
+      <div class="rg-lab"><span></span>${AR.BANDS.map(b=>`<span style="color:${AT_RC[b]}">${b}</span>`).join("")}</div><div class="mk" id="at-mark"></div></div>
+    <div class="boxes" id="at-boxes"></div>
+    <div class="ctl2"><button class="btn walk" id="at-l" aria-label="Walk left">◀</button><button class="btn walk" id="at-r" aria-label="Walk right">▶</button>
+      <button class="btn ico" id="at-shove" aria-label="Shove">${AT_ICON.shove}</button><button class="btn ico" id="at-auto" aria-label="Auto">${AT_ICON.auto}</button>
+      <button class="btn arr" id="at-up" aria-label="Previous move for this range">▲</button><button class="btn arr" id="at-dn" aria-label="Next move for this range">▼</button></div>`;
   const hold=(id,dir)=>{ const b=document.getElementById(id), on=e=>{ e.preventDefault(); ar.p[0].wantDir=dir; b.classList.add("on"); }, off=()=>{ if(ar.p[0].wantDir===dir) ar.p[0].wantDir=0; b.classList.remove("on"); };
     b.addEventListener("pointerdown",on); b.addEventListener("pointerup",off); b.addEventListener("pointercancel",off); b.addEventListener("pointerleave",off); };
   hold("at-l",-1); hold("at-r",1);
   document.getElementById("at-shove").onclick=()=>ar.shove(ar.p[0]);
   document.getElementById("at-auto").onclick=e=>{ AT.auto=!AT.auto; ar.p[0].ai=AT.auto?"smart":"human"; e.currentTarget.classList.toggle("on",AT.auto); };
-  const n=moves.length, cyc=k=>(k%n+n)%n;
-  document.getElementById("at-up").onclick=()=>{ AT.top=cyc(AT.top-2); AT.sel=AT.top; atRows(); };
-  document.getElementById("at-dn").onclick=()=>{ AT.top=cyc(AT.top+2); AT.sel=AT.top; atRows(); };
-  document.getElementById("at-rows").onclick=e=>{ const r=e.target.closest("[data-k]"); if(!r) return; const k=+r.dataset.k;
-    if(k!==AT.sel){ AT.sel=k; atRows(); return; } ar.start(ar.p[0],moves[k]); };
+  const cyc=dirn=>{ const b=AT.selBand, n=AT.lists[b].length; if(!n) return; AT.idx[b]=((AT.idx[b]+dirn)%n+n)%n; atRows(); };
+  document.getElementById("at-up").onclick=()=>cyc(-1); document.getElementById("at-dn").onclick=()=>cyc(1);
+  // a tap on a box uses its move when it can reach and you can afford it; otherwise it just selects that box for ▲ ▼
+  document.getElementById("at-boxes").onclick=e=>{ const r=e.target.closest("[data-b]"); if(!r) return; const b=r.dataset.b, m=AT.lists[b][AT.idx[b]];
+    AT.selBand=b; if(m&&ar.inRange(m)&&ar.p[0].focus>=m.cost) ar.start(ar.p[0],m); atRows(); };
   atRows(); atSize();
   AT.raf=requestAnimationFrame(atLoop);
 }
-function atSize(){ const cv=document.getElementById("at-cv"), W=cv.clientWidth||390, H=Math.round(Math.max(220,Math.min(520,(window.innerHeight||844)-375))), dpr=Math.min(2,devicePixelRatio||1);
-  cv.width=W*dpr; cv.height=H*dpr; cv.style.height=H+"px"; AT.W=W; AT.H=H; AT.dpr=dpr; }
-/* four move slots at a time, each with its icon, name, range dot and cost; ▲ ▼ cycle through the rest */
+function atSize(){ const cv=document.getElementById("at-cv"), scr=cv.parentElement, W=scr.clientWidth||390;
+  const pad=parseFloat(getComputedStyle(scr).paddingTop)||0, H=Math.round(Math.max(200,Math.min(700,scr.clientHeight-pad-6))), dpr=Math.min(2,devicePixelRatio||1);
+  cv.style.height=H+"px"; cv.width=W*dpr; cv.height=H*dpr; AT.W=W; AT.H=H; AT.dpr=dpr; AT.WW=Math.round(W*1.7); AT.bg=null; }
+window.addEventListener("resize",()=>{ if(AT&&document.getElementById("at-cv")) atSize(); });
+/* the four range boxes and the "You" row of the range panel */
 function atRows(){
-  const ar=AT.ar, p=ar.p[0], M=AT.moves, n=M.length, rows=document.getElementById("at-rows"); if(!rows) return;
-  const ks=[0,1,2,3].map(j=>(AT.top+j)%n);
-  const html=ks.map(k=>{ const m=M[k], on=ar.inRange(m);
-    return `<div class="slot ${on?"":"out"} ${k===AT.sel?"sel":""} ${p.focus<m.cost?"poor":""} ${ar.turn||p.cool>0?"wait":""}" data-k="${k}"><span class="rd" style="background:${AT_RC[m.range]}"></span>${atIcon(m)}<span class="c">${m.cost}</span><span class="n">${m.name}</span></div>`; }).join("");
-  if(html!==AT.rowsHtml){ rows.innerHTML=html; AT.rowsHtml=html; }
+  const ar=AT.ar, p=ar.p[0], wrap=document.getElementById("at-boxes"); if(!wrap) return;
+  const html=AR.BANDS.map(b=>{ const m=AT.lists[b][AT.idx[b]], on=m&&ar.inRange(m);
+    if(!m) return `<div class="box empty" data-b="${b}"><span class="bl" style="color:${AT_RC[b]}">${b}</span><span class="n">No move</span></div>`;
+    return `<div class="box ${on?"":"out"} ${b===AT.selBand?"sel":""} ${p.focus<m.cost?"poor":""} ${ar.turn||p.cool>0?"wait":""}" data-b="${b}"><span class="bl" style="color:${AT_RC[b]}">${b}${AT.lists[b].length>1?` ${AT.idx[b]+1}/${AT.lists[b].length}`:""}</span>${atIcon(m)}<span class="n">${m.name}</span><span class="c">${m.cost}</span></div>`; }).join("");
+  if(html!==AT.rowsHtml){ wrap.innerHTML=html; AT.rowsHtml=html;
+    for(const b of AR.BANDS){ const m=AT.lists[b][AT.idx[b]], c=document.getElementById("at-y-"+b); if(c) c.innerHTML=m?atIcon(m)+`<small>${m.name}</small>`:"<small>Nothing</small>"; } }
 }
 const AT_ICON=(()=>{ const sv=b=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${b}</svg>`;
   return { bite:sv('<path d="M3 8h18l-3 4-3-3-3 3-3-3-3 3z"/><path d="M3 16h18l-3-3-3 3-3-3-3 3-3-3z" opacity=".55"/>'),
@@ -237,16 +266,19 @@ function atSideState(S,te){
 function atDraw(now,dte){
   const cv=document.getElementById("at-cv"); if(!cv) return; const c=cv.getContext("2d"), W=AT.W, H=AT.H, dpr=AT.dpr, ar=AT.ar, te=AT.te;
   CB.te=te;   // the battle helpers (sparks, dust, bursts) run on this clock
-  if(!AT.bg){ const b=document.createElement("canvas"); b.width=W*dpr; b.height=H*dpr; const x=b.getContext("2d"); x.scale(dpr,dpr); atStage(x,W,H); AT.bg=b; }
+  const WW=AT.WW||W;   // the arena is wider than the screen and the camera follows the fight
+  if(!AT.bg){ const b=document.createElement("canvas"); b.width=WW*dpr; b.height=H*dpr; const x=b.getContext("2d"); x.scale(dpr,dpr); atStage(x,WW,H); AT.bg=b; }
   const shake=AT.trauma*AT.trauma*7; AT.trauma=Math.max(0,AT.trauma-dte/700);
   const sx=shake?Math.sin(te/23)*shake:0, sy=shake?Math.cos(te/31)*shake*0.6:0;
-  c.setTransform(dpr,0,0,dpr,0,0); c.clearRect(0,0,W,H); c.drawImage(AT.bg,sx,sy,W,H);
-  const floor=H-44, X=x=>34+x/AR.LEN*(W-68), scale=Math.min(1.5,Math.max(1,H/300)), alpha=Math.min(1,AT.acc/AR.DT);
+  const floor=H-58, X=x=>70+x/AR.LEN*(WW-140), scale=Math.min(1.85,Math.max(1.15,H/260)), alpha=Math.min(1,AT.acc/AR.DT);
   // glide between engine steps, then ease toward that so pushes and swaps slide instead of jumping
   ar.p.forEach((p,i)=>{ const S=AT.side[i], want=X(p.px==null?p.x:p.px+(p.x-p.px)*alpha);
     S.x=S.x==null?want:S.x+(want-S.x)*(1-Math.exp(-dte/45)); });
   { const a=AT.side[0], b=AT.side[1], min=58*scale, gap=Math.abs(b.x-a.x);
-    if(gap<min){ const mid=Math.max(34+min/2,Math.min(W-34-min/2,(a.x+b.x)/2)), s=b.x>=a.x?1:-1; a.dx=mid-s*min/2; b.dx=mid+s*min/2; } else { a.dx=a.x; b.dx=b.x; } }
+    if(gap<min){ const mid=Math.max(70+min/2,Math.min(WW-70-min/2,(a.x+b.x)/2)), s=b.x>=a.x?1:-1; a.dx=mid-s*min/2; b.dx=mid+s*min/2; } else { a.dx=a.x; b.dx=b.x; } }
+  // the camera keeps both in view, centred between them, and eases after them
+  { const want=Math.max(0,Math.min(WW-W,(AT.side[0].dx+AT.side[1].dx)/2-W/2)); AT.cam=AT.cam==null?want:AT.cam+(want-AT.cam)*(1-Math.exp(-dte/140)); }
+  c.setTransform(dpr,0,0,dpr,0,0); c.clearRect(0,0,W,H); c.drawImage(AT.bg,-AT.cam+sx,sy,WW,H); c.translate(-AT.cam,0);
   // the gap between them on the floor
   { const a=Math.min(AT.side[0].dx,AT.side[1].dx), b=Math.max(AT.side[0].dx,AT.side[1].dx), y=floor+16, band=arBand(ar.gap());
     c.strokeStyle=AT_RC[band]; c.lineWidth=3; c.setLineDash([6,5]); c.beginPath(); c.moveTo(a,y); c.lineTo(b,y); c.stroke(); c.setLineDash([]);
@@ -287,7 +319,7 @@ function atDraw(now,dte){
 }
 
 function atHud(){
-  const ar=AT.ar, g=ar.gap(), m=AT.moves[AT.sel];
+  const ar=AT.ar, g=ar.gap(), m=AT.lists[AT.selBand][AT.idx[AT.selBand]]||{cost:0,range:"Any"};
   ar.p.forEach((p,i)=>{ document.getElementById("at-hp"+i).style.width=(100*p.hp/p.maxhp)+"%"; document.getElementById("at-fo"+i).style.width=(100*p.focus/99)+"%";
     document.getElementById("at-l"+i).textContent=`HP ${p.hp} of ${p.maxhp}`; document.getElementById("at-fn"+i).textContent=`Focus ${Math.floor(p.focus)}`; });
   // a white line on your focus bar shows what the selected move costs, and the bar lights up once you can afford it
@@ -295,11 +327,16 @@ function atHud(){
   document.getElementById("at-fb0").classList.toggle("ok",ar.p[0].focus>=m.cost&&ar.inRange(m));
   document.getElementById("at-clock").textContent=Math.max(0,Math.ceil(AR.TIME-ar.t));
   const sh=document.getElementById("at-shove"), can=arBand(g)==="Close"&&!(ar.p[0].shoveCool>0); sh.classList.toggle("off",!can);
+  // the marker slides along the range panel with the real gap, and the column it's in lights up for both of you
+  const edges=[0,10,25,45,90], k=Math.min(3,edges.findIndex((e,i)=>g<edges[i+1])<0?3:edges.findIndex((e,i)=>g<edges[i+1])), frac=Math.max(0,Math.min(1,(g-edges[k])/(edges[k+1]-edges[k])));
+  document.getElementById("at-mark").style.left=`calc(36px + (100% - 36px) * ${((k+frac)/4).toFixed(4)})`;
+  const band=AR.BANDS[k]; if(AT.litBand!==band){ AT.litBand=band; document.querySelectorAll("#atest .rc").forEach(c=>c.classList.remove("lit"));
+    document.querySelectorAll(`#at-y-${band}, #atest .rg-row:nth-child(2) .rc:nth-child(${k+2})`).forEach(c=>c.classList.add("lit")); }
 }
 const min58=scale=>58*scale*0.92;
 function atStage(c,W,H){
   const sky=c.createLinearGradient(0,0,0,H*0.45); sky.addColorStop(0,"#2a1f4a"); sky.addColorStop(1,"#3a2b5e"); c.fillStyle=sky; c.fillRect(0,0,W,H);
-  const cols=["#ffb35c","#8fd3ff","#ff8a7a","#c7a6ff","#5ad18a","#ffe07a","#f4efe4"], top=Math.round(H*0.36);
+  const cols=["#ffb35c","#8fd3ff","#ff8a7a","#c7a6ff","#5ad18a","#ffe07a","#f4efe4"], top=Math.round(H*0.24);
   const rows=Math.max(5,Math.floor((top-14)/15)); for(let r=0;r<rows;r++) for(let x=0;x<W;x+=13){ const cx=x+(r%2?6:0), cy=14+r*15; c.fillStyle=cols[((x*131+r*977)>>3)%cols.length]; c.beginPath(); c.arc(cx,cy,4.5,0,7); c.fill(); }
   for(let k=0;k<6;k++){ c.fillStyle=["#e2483f","#3b6fb8","#f2c14e","#4caf6a","#c08cff","#ff8a3d"][k]; c.fillRect(6+k*(W-12)/6,top-8,(W-12)/6-5,8); }
   const fl=c.createLinearGradient(0,top,0,H); fl.addColorStop(0,"#d9a866"); fl.addColorStop(1,"#c08b4c"); c.fillStyle=fl; c.fillRect(0,top,W,H-top);
