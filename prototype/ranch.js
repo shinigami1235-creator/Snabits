@@ -413,6 +413,55 @@ async function pondMeditate(r){
       s.pose="happy"; await rwait(700); }
   } finally { made.forEach(unprop); s.koiPull=0; }
 }
+/* Puzzle box in the study room: it slides the tiles on a wooden puzzle cube while the shapes it's after light up in a thought bubble.
+   A great opens it in one go with a lightbulb, confetti and a wind-up toy hopping out. A success takes two wrong tries first.
+   A fail has the lid snap shut on its face, and it ends up asleep on an open book. */
+async function studyPuzzle(r){
+  const s=RS, made=[], add=o=>{ made.push(prop(o)); return o; }, W=ms=>rwait(ms);
+  try{
+    s.x=96; s.dir=1; s.jy=0; s.pose="sit";
+    const box=add({k:"pbox",x:s.x+28+(s.stage==="Bit"?0:14)+(s.stage==="Mega"?12:0),y:GROUND,tiles:[0,1,2,3,0,1,2,3,0],lid:0,gr:0,sh:0});
+    const bub=add({k:"bubble",x:s.x-16,y:headY()-14,lit:[0,0,0],a:0});
+    for(let f=0;f<=10;f++){ bub.a=f/10; await W(30); }
+    const slide=async(good,fast)=>{ s.pose="lean"; const i=Math.floor(Math.random()*9);
+      for(let f=0;f<6;f++){ box.gr+=0.35; await W(fast?18:30); }
+      box.tiles[i]=(box.tiles[i]+1)%4; spark(box.x+rnd(-6,6),GROUND-12,"dust"); if(typeof sfx==="function") try{ sfx("tick"); }catch(e){}
+      s.pose="sit"; await W(fast?140:300); };
+    const buzz=async()=>{ for(let f=0;f<10;f++){ box.sh=(f%2?-1:1)*1.6; await W(30); } box.sh=0; spark(s.x,headY()-8,"q"); s.pose="sad"; await W(650); s.pose="sit"; await W(200); };
+    const light=async k=>{ bub.lit[k]=1; spark(bub.x-8+k*8,bub.y,"sparkle"); await W(120); };
+    if(r==="great"){
+      for(let k=0;k<3;k++){ await slide(true,true); await light(k); }
+      spark(s.x,headY()-12,"bulb"); s.pose="happy"; await W(450);
+    } else {
+      for(let t=0;t<2;t++){ await slide(false); await slide(false); await buzz(); }
+      if(r==="fail"){                                                          // it leans right in, the lid snaps shut on its face
+        s.pose="lean"; for(let f=0;f<8;f++){ box.lid=f/8*0.6; await W(30); }
+        await W(250); box.lid=0; box.sh=2; spark(box.x,GROUND-22,"smoke",3); box.onHead=true; s.pose="hurt"; bub.a=0;
+        for(let f=0;f<44;f++){ box.x=s.x+Math.sin(f/2)*1.5; box.y=headY()+18; s.x=96+Math.sin(f/3)*3; await W(28); }
+        box.onHead=false; box.vy=-3; for(let f=0;f<26;f++){ box.x+=1.6; box.y+=box.vy; box.vy+=0.35; if(box.y>GROUND){ box.y=GROUND; box.vy=0; } await W(26); }
+        s.x=96; s.pose="sad"; await W(700);
+        const bk=add({k:"book",x:s.x+16,y:GROUND+2}); await walkTo(s.x+12,30); s.pose="sleep"; for(let k=0;k<3;k++){ spark(s.x+6,headY(),"z"); await W(450); }
+        return;
+      }
+      for(let k=0;k<3;k++){ await slide(true); await light(k); }
+    }
+    // the last tile clicks and the lid springs open
+    for(let f=0;f<=14;f++){ const k=f/14; box.lid=Math.min(1.25,k*1.4-Math.sin(k*Math.PI)*0.1); await W(22); }
+    for(let f=0;f<=6;f++){ box.lid=1.25-0.15*f/6; await W(22); }
+    spark(box.x,GROUND-24,r==="great"?"sparkle":"dust",r==="great"?8:4); s.pose="happy";
+    if(r==="great"){
+      const cols=["#e2483f","#3b6fb8","#f2c14e","#4caf6a","#c08cff"], cf=[];
+      for(let i=0;i<22;i++) cf.push(add({k:"conf",x:box.x,y:GROUND-22,vx:rnd(-2.2,2.2),vy:-rnd(2.2,4.4),rot:rnd(0,6),col:cols[i%5]}));
+      const toy=add({k:"toy",x:box.x,y:GROUND-20,kr:0,vy:-3.2});
+      for(let f=0;f<70;f++){
+        for(const q of cf){ q.x+=q.vx; q.y+=q.vy; q.vy=Math.min(q.vy+0.12,1.2); q.vx*=0.97; q.rot+=0.25; if(q.y>GROUND+6) q.y=GROUND+6; }
+        if(toy.vy!=null){ toy.y+=toy.vy; toy.vy+=0.3; toy.x+=0.9; if(toy.y>=GROUND){ toy.y=GROUND; toy.vy=null; } }
+        else { toy.x+=0.7; toy.y=GROUND-Math.abs(Math.sin(f/3))*3; }
+        toy.kr+=0.3; if(f===20||f===44) hop(10,320); await W(28); }
+      s.pose="happy"; await W(400);
+    } else { await hop(8,320); await W(600); }
+  } finally { made.forEach(unprop); s.pose="idle"; }
+}
 function unprop(o){ RS.props=RS.props.filter(p=>p!==o); }
 function spark(x,y,kind,n=1){ for(let i=0;i<n;i++){ const p={x,y,kind,life:0,max:40,vx:rnd(-.4,.4),vy:-rnd(.3,.8),g:0};
   if(kind==="dust"){p.vy=-rnd(.1,.4);p.vx=rnd(-.6,.6);p.max=24;}
@@ -588,6 +637,7 @@ const SCENE_FN=[
     if(r==="great"){ s.pose="happy"; spark(s.x,headY()-4,"heart",2); await rwait(900);} else { s.pose="idle"; await rwait(500); }
   },
   async r=>{ // Puzzle box
+    if(RS.bg==="study"){ await studyPuzzle(r); return; }
     const s=RS; await walkTo(118,50); const b=prop({k:"box",x:s.x+RS.P.scale*7+4,y:GROUND,open:false}); s.pose="idle";
     spark(s.x,headY()-6,"q"); await rwait(r==="great"?600:1200); if(r!=="great"){ spark(s.x,headY()-6,"q"); await rwait(700); }
     if(r==="fail"){ s.pose="hurt"; for(let k=0;k<6;k++){ spark(s.x+rnd(-4,4),headY()-2,"smoke"); await rwait(120);} b.vx=2.6; b.vy=-3.2; b.g=0.18; s.pose="tired"; await rwait(1200); unprop(b); return; }

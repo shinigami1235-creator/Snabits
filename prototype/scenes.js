@@ -658,6 +658,31 @@ function awayProps(c, p, t, front) {
     case 'koi': if (!front) return; c.save(); c.translate(x, y); c.rotate(p.rot || 0); c.scale(p.dir || 1, 1);   // a koi leaping out of the pond
       c.fillStyle = '#ffffff'; c.beginPath(); c.ellipse(0, 0, 7, 2.6, 0, 0, 7); c.fill(); c.fillStyle = '#ff8a3d'; c.beginPath(); c.ellipse(2, -0.6, 2.6, 1.5, 0, 0, 7); c.ellipse(-2.6, 0.4, 1.8, 1.2, 0, 0, 7); c.fill();
       c.fillStyle = '#ffffff'; c.beginPath(); c.moveTo(-6, 0); c.lineTo(-10.5, -3); c.lineTo(-10.5, 3); c.closePath(); c.fill(); c.fillStyle = '#1d1d26'; c.beginPath(); c.arc(4.8, -0.6, 0.7, 0, 7); c.fill(); c.restore(); return;
+    case 'pbox': if (front !== !!p.onHead) return; { const sx = x + (p.sh || 0), Y = y, cols = ['#e2483f', '#3b6fb8', '#f2c14e', '#4caf6a'];   // the Puzzle box cube
+      SC.depth(c, () => { c.beginPath(); c.roundRect(sx - 11, Y - 22, 22, 22, 2.5); }, '#c98a4c', 1.4, 0.28);
+      c.fillStyle = 'rgba(90,55,25,.35)'; c.beginPath(); c.roundRect(sx - 9, Y - 19, 16, 16, 1.5); c.fill();
+      for (let i = 0; i < 9; i++) { c.fillStyle = cols[p.tiles[i]]; c.beginPath(); c.roundRect(sx - 8.5 + (i % 3) * 5.1, Y - 18.5 + Math.floor(i / 3) * 5.1, 4.4, 4.4, 1); c.fill(); }
+      c.save(); c.translate(sx + 9, Y - 8); c.rotate(p.gr || 0); c.fillStyle = '#a3a9b3';                        // a brass gear on its side
+      for (let k = 0; k < 8; k++) { c.save(); c.rotate(k * Math.PI / 4); c.fillRect(-1, -5, 2, 2.2); c.restore(); } c.beginPath(); c.arc(0, 0, 3.6, 0, 7); c.fill();
+      c.fillStyle = '#6d727b'; c.beginPath(); c.arc(0, 0, 1.2, 0, 7); c.fill(); c.restore();
+      c.save(); c.translate(sx - 11, Y - 22); c.rotate(-(p.lid || 0) * 1.6);                                   // the lid, hinged at the back
+      SC.depth(c, () => { c.beginPath(); c.roundRect(-1, -4, 24, 4.5, 1.5); }, '#d9995a', 1, 0.25); c.restore(); } return;
+    case 'bubble': if (!front || !p.a) return; { c.save(); c.globalAlpha = p.a; c.fillStyle = '#ffffff';     // a thought bubble with the three shapes it's after
+      c.beginPath(); c.ellipse(x, y, 16, 9, 0, 0, 7); c.fill(); c.beginPath(); c.arc(x + 10, y + 11, 2.4, 0, 7); c.arc(x + 14, y + 16, 1.4, 0, 7); c.fill();
+      const on = '#f2b62e', off = '#c9c4bb';
+      c.fillStyle = p.lit[0] ? on : off; c.beginPath(); c.moveTo(x - 11, y + 3); c.lineTo(x - 7, y - 4); c.lineTo(x - 3, y + 3); c.closePath(); c.fill();
+      c.fillStyle = p.lit[1] ? on : off; c.beginPath(); c.arc(x, y, 3.6, 0, 7); c.fill();
+      c.fillStyle = p.lit[2] ? on : off; c.fillRect(x + 4.5, y - 3.5, 7, 7); c.restore(); } return;
+    case 'toy': if (!front) return; { c.save(); c.translate(x, y);                                             // a wind-up mouse with its key turning
+      c.fillStyle = '#b9b3c8'; c.beginPath(); c.ellipse(0, -4, 6, 4, 0, 0, 7); c.fill(); c.beginPath(); c.arc(4.5, -7, 1.8, 0, 7); c.fill();
+      c.fillStyle = '#ffb3cf'; c.beginPath(); c.arc(4.5, -7, 0.9, 0, 7); c.fill(); c.fillStyle = '#1d1d26'; c.beginPath(); c.arc(5.4, -4.6, 0.7, 0, 7); c.fill();
+      c.strokeStyle = '#8a8496'; c.lineWidth = 0.8; c.beginPath(); c.moveTo(-6, -3); c.quadraticCurveTo(-10, -1, -11, -5); c.stroke();
+      c.save(); c.translate(-1, -8); c.scale(Math.cos(p.kr || 0), 1); c.fillStyle = '#e0b84a'; c.beginPath(); c.ellipse(-2, -2, 2, 1.4, 0, 0, 7); c.ellipse(2, -2, 2, 1.4, 0, 0, 7); c.fill(); c.fillRect(-0.5, -2, 1, 2.5); c.restore();
+      c.restore(); } return;
+    case 'book': if (front) return; c.fillStyle = '#8a3b3b'; c.beginPath(); c.roundRect(x - 13, y - 3, 26, 4, 1); c.fill();      // an open book to fall asleep on
+      c.fillStyle = '#f4efe4'; c.beginPath(); c.moveTo(x, y - 2); c.quadraticCurveTo(x - 6, y - 5, x - 12, y - 3); c.lineTo(x - 12, y - 1); c.lineTo(x, y); c.closePath(); c.fill();
+      c.beginPath(); c.moveTo(x, y - 2); c.quadraticCurveTo(x + 6, y - 5, x + 12, y - 3); c.lineTo(x + 12, y - 1); c.lineTo(x, y); c.closePath(); c.fill(); return;
+    case 'conf': if (!front) return; c.save(); c.translate(x, y); c.rotate(p.rot || 0); c.fillStyle = p.col; c.fillRect(-1.6, -0.8, 3.2, 1.6); c.restore(); return;
     case 'drop': if (!front) return; c.fillStyle = `rgba(190,235,255,${p.a == null ? 0.9 : p.a})`; c.beginPath(); c.ellipse(x, y, 1.2, 1.7, 0, 0, 7); c.fill(); return;
     case 'petal': if (!front) return; c.fillStyle = 'rgba(255,190,214,.9)'; c.beginPath(); c.ellipse(x, y, 2, 1.2, (p.rot || 0) + t / 200, 0, 7); c.fill(); return;
     case 'frog': if (!front) return;                                             // the pond frog that sits on a sleeping head
