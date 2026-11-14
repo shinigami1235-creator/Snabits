@@ -10,6 +10,7 @@ const INFO_STAT_KEY = { hp: 'HP', sta: 'Stamina', pow: 'Power', grd: 'Constituti
 const elChip = (e, label) => `<span class="i-el" style="background:${INFO_EL[e] || '#a6a4b8'};color:${['Shade', 'Void', 'Blaze', 'Tide', 'Venom'].includes(e) ? '#fff' : '#1a1208'}">${label || e}</span>`;
 
 function openInfo(tab) {
+  if (typeof syncRead === 'function') syncRead();
   const s = RS; if (!s || s.busy) return;
   INFO.tab = tab || INFO.tab || 'status'; INFO.slot = 0; INFO.filter = 'All';
   let d = el('info');

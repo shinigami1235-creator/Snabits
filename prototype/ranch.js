@@ -193,6 +193,7 @@ function dateText(){const w=PLAYER.week, y=Math.floor(w/48)+1, mo=Math.floor(w/4
 
 /* ---------- open and close ---------- */
 function openRanch(m){
+  if(typeof syncRead==="function") setTimeout(syncRead,0);
   if(!PLAYER) loadGame();
   if(typeof camStop==="function") camStop();
   injectRanch();

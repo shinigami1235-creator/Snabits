@@ -80,10 +80,14 @@ async function openLab(line){
     <label class="fld">Second parent<select id="l-b"><option value="">Pick one</option>${opt(LAB.b,LAB.a)}</select></label>
     <label class="fld full">Catalyst<select id="l-c"><option value="">None</option>${cats.map(c=>`<option ${c===LAB.cat?"selected":""}>${c}</option>`).join("")}</select></label>
     ${info}<button class="big full" id="l-fuse" ${e1&&e2?"":"disabled"}>Fuse · 500 bits</button>
+    ${st?`<button class="rb full" id="l-read" ${st.read?"disabled":""}>Growth reading for ${displayName(st)}<small>${st.read?"Already read":"300 bits. Dr. Ines reads how each stat grows"}</small></button>`:""}
     <button class="rb full" id="l-reb" ${PLAYER.bag["Rebirth seed"]&&st?"":"disabled"}>Rebirth ${st?displayName(st):""}<small>${PLAYER.bag["Rebirth seed"]?(elder?"Uses the Rebirth seed":"Only an Elder or Veteran can be reborn"):"Needs a Rebirth seed"}</small></button>
     ${RS?`<button class="rb" id="l-frz">Freezer<small>Benji looks after it</small></button><button class="rb" id="l-back">Leave the lab</button>`:`<button class="rb full" id="l-back">Back</button>`}`);
   el("l-a").onchange=e=>{LAB.a=e.target.value;openLab(line);}; el("l-b").onchange=e=>{LAB.b=e.target.value||null;openLab(line);}; el("l-c").onchange=e=>{LAB.cat=e.target.value||null;};
   el("l-fuse").onclick=()=>doFuse(e1,e2,LAB.cat);
+  const rd=el("l-read"); if(rd) rd.onclick=()=>{ if(!st) return; if(PLAYER.bits<300){ openLab("A reading is 300 bits. Come back when you have it."); return; }
+    PLAYER.bits-=300; st.read=true; syncRead(); saveGame();
+    openLab(`${displayName(st)}'s ${STATS[st.m.pers[1]]} grows fastest and its ${STATS[st.m.pers[2]]} slowest. It has ${st.m.pool.length} skills it can learn, and its growth ranks are on its info page now.`); };
   el("l-reb").onclick=()=>{ if(!elder){ openLab("Rebirth only works on an Elder, in the last 30% of its lifespan."); return; } rebirthPick(); };
   if(el("l-frz")) el("l-frz").onclick=openFreezer;
   el("l-back").onclick=()=>{ if(RS) menu("Out"); else openScope(); };
@@ -160,3 +164,5 @@ async function doRebirth(keep){
     say(`It's a Bit again. It kept ${keep}, 20% of its training and a little more talent.`,"doc");
   });
 }
+/* a Snabit Dr. Ines has read shows its growth ranks */
+function syncRead(){ document.documentElement.classList.toggle("rd",!!(typeof RS!=="undefined"&&RS&&RS.read)); }

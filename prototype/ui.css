@@ -527,9 +527,10 @@ body.ob-tut #ranchbtn,body.ob-tut #msgranch{display:none!important}
 .goal-list .goal-bar{flex:0 0 14px;width:100%}
 .show-skip{position:fixed;top:calc(12px + env(safe-area-inset-top));right:12px;z-index:71}
 
-html:not(.dbg) .gr,html:not(.dbg) .dbg-only{display:none!important}
-html:not(.dbg) .i-r{visibility:hidden}
-html:not(.dbg) .i-stat{grid-template-columns:104px 0 1fr 36px}
+/* growth ranks show with #debug, or (class rd) for a Snabit Dr. Ines has read */
+html:not(.dbg):not(.rd) .gr,html:not(.dbg):not(.rd) .dbg-only{display:none!important}
+html:not(.dbg):not(.rd) .i-r{visibility:hidden}
+html:not(.dbg):not(.rd) .i-stat{grid-template-columns:104px 0 1fr 36px}
 /* round by round results under the round robin table */
 .rr-rounds{display:flex;flex-direction:column;gap:6px;margin-top:8px;font:500 13px var(--pix)}
 .rr-rounds b{display:block;color:var(--gold);font-size:12px;margin-bottom:2px}
