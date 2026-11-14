@@ -96,6 +96,8 @@ function atStart(meFam,foeFam){   // picks: see atMake
   const moves=A.f.moves.slice().sort((a,b)=>order.indexOf(a.range)-order.indexOf(b.range)||a.cost-b.cost);
   AT={ar,A,B,moves,sel:0,top:0,auto:false,last:performance.now(),acc:0,te:0,freeze:0,trauma:0,raf:0,side:[A.spec,B.spec].map(spec=>({spec,x:null,shown:"idle",from:"idle",t0:0,dir:1})),fx:[],done:false,me:meFam,foe:foeFam};
   CB.parts=[]; CB.puffs=[];
+  AT.special=[A,B].map(X=>{ const t=X.f.moves.filter(m=>m.dmg>=70).sort((a,b)=>b.dmg-a.dmg)[0]; return t?t.name:null; });
+  AT.rings=[]; AT.stars=[];
   // each range has its own box; ▲ ▼ swap which of that range's moves sits in the selected box. Moves usable at any range join every box's list
   AT.lists={}; AT.idx={}; for(const b of AR.BANDS){ AT.lists[b]=moves.filter(m=>m.range===b).concat(moves.filter(m=>m.range==="Any")); AT.idx[b]=0; }
   // the opponent's strongest move at each range, so you can see where it's dangerous
@@ -172,20 +174,26 @@ function atIcon(m){
 }
 function atLoop(now){
   if(!AT) return; const ar=AT.ar, real=Math.min(0.25,(now-AT.last)/1000); AT.last=now;
+  // a tap on Attack or Shove queues its start event between frames; play everything queued before moving on
+  const flush=()=>{ const ev=ar.ev; ar.ev=[]; for(const e of ev) atEvent(e,now); }; flush();
   // hitstop: the fight and its animations pause for a moment when a hit lands
-  const frozen=now<AT.freeze; if(!frozen){ AT.te+=real*1000; if(!ar.turn) AT.acc+=real; }
+  const frozen=now<AT.freeze, slow=AT.slow&&now>=AT.slow.from&&now<AT.slow.until?AT.slow.k:1, step=real*slow;
+  if(!frozen){ AT.te+=step*1000; if(!ar.turn) AT.acc+=step; }
   // a move in progress: it lands at its contact frame and the fight carries on once its animation ends
   if(ar.turn&&!AT.turn) AT.turn={t0:AT.te,C:200,D:500};   // never leave a turn hanging
-  if(ar.turn&&AT.turn){ const t=AT.te-AT.turn.t0, run=f=>{ ar.ev=[]; f(); for(const e of ar.ev) atEvent(e,now); };
+  if(ar.turn&&AT.turn){ const t=AT.te-AT.turn.t0, run=f=>{ flush(); f(); flush(); };
     if(!ar.turn.done&&t>=AT.turn.C) run(()=>ar.land());
     if(ar.turn&&t>=AT.turn.D){ run(()=>ar.endTurn()); AT.turn=null; } }
-  while(AT.acc>=AR.DT&&!ar.over&&!ar.turn){ AT.acc-=AR.DT; ar.ev=[]; ar.step(); for(const e of ar.ev) atEvent(e,now); }
+  while(AT.acc>=AR.DT&&!ar.over&&!ar.turn){ AT.acc-=AR.DT; ar.step(); flush(); }
   if(ar.over) for(const i of [0,1]) if(ar.winner===1-i&&AT.side[i].ko==null) AT.side[i].ko=AT.te;
-  atHud(); atRows(); atDraw(now,frozen?0:real*1000);
+  atHud(); atRows(); atDraw(now,frozen?0:step*1000);
   if(ar.over&&!AT.done){ AT.done=true; setTimeout(atResult,1300); }
   AT.raf=requestAnimationFrame(atLoop);
 }
-const AT_TIER={light:{stop:30,trauma:0.1,sparks:4,flash:45},medium:{stop:55,trauma:0.22,sparks:7,flash:55},heavy:{stop:100,trauma:0.6,sparks:18,flash:100,white:1}};
+const AT_TIER={light:{stop:45,trauma:0.14,sparks:6,flash:50,punch:0.035,ring:0.7},medium:{stop:80,trauma:0.32,sparks:10,flash:70,punch:0.07,ring:1,screen:0.18},
+  heavy:{stop:120,trauma:0.6,sparks:18,flash:100,white:1,punch:0.11,ring:1.4,screen:0.35},special:{stop:190,trauma:0.95,sparks:28,flash:140,white:1,punch:0.16,ring:2,screen:0.8,slow:420}};
+const atMoveTier=(i,m)=>m.dmg>=70&&AT.special&&AT.special[i]===m.name?"special":m.dmg>=40||m.cost>=24?"heavy":"light";
+const AT_CHARGE={light:0,heavy:430,special:1250};
 /* what the engine reports becomes the game's own battle animation */
 function atEvent(e,now){
   const S=AT.side[e.i], m=e.m, te=AT.te, sp=S.spec;
@@ -199,20 +207,25 @@ function atEvent(e,now){
     else kind=typeof animFor==="function"?animFor({name:m.name,kind:m.cast?"Cast":"Strike",el:m.el},sp):"tackle";
     if(!ANIM[kind]) kind="tackle";
     // the whole animation plays at its own pace now; a slow, heavy move gets a little longer windup on top
-    const K=ANIM[kind], rate=Math.max(0.75,Math.min(1.25,K.C/Math.max(300,m.wind*900)));
-    AT.turn={t0:te,C:K.C/rate,D:Math.min(K.D/rate,K.C/rate+700)};
+    const K=ANIM[kind], rate=Math.max(0.75,Math.min(1.25,K.C/Math.max(300,m.wind*900))), tier=m.dmg?atMoveTier(e.i,m):"light", ch=AT_CHARGE[tier];
+    AT.turn={t0:te,C:ch+K.C/rate,D:ch+Math.min(K.D/rate,K.C/rate+700)};
     const col=m.el&&typeof ELC==="function"?hexRgb(ELC(m.el)):AT_FAMCOL[AT.ar.p[e.i].f.family]||[255,214,90];
-    S.anim={kind,t0:te,rate,el:m.el||null,name:m.name,src:typeof sourceFor==="function"?sourceFor({name:m.name,kind:m.cast?"Cast":"Strike"},sp):"mouth",col,pw:m.dmg>=70?1.35:m.dmg>=40?1.05:0.8,contact:/^(tackle|bite|stomp|punch|claw|shadowstrike|fly)$/.test(kind)};
-    try{ sfx(m.cast?"charge":"whoosh"); if(typeof elSfx==="function") elSfx(m.el,"cast"); if(typeof kindSfx==="function") kindSfx(kind); }catch(err){}
+    S.anim={kind,t0:te+ch,tier,rate,el:m.el||null,name:m.name,src:typeof sourceFor==="function"?sourceFor({name:m.name,kind:m.cast?"Cast":"Strike"},sp):"mouth",col,pw:m.dmg>=70?1.35:m.dmg>=40?1.05:0.8,contact:/^(tackle|bite|stomp|punch|claw|shadowstrike|fly)$/.test(kind)};
+    if(ch){ S.charge={t0:te,d:ch,tier,col:S.anim.col}; if(tier==="special") AT.cine={t0:te,d:ch,i:e.i,name:m.name,col:S.anim.col}; }
+    try{ sfx(ch?"charge":m.cast?"charge":"whoosh"); if(typeof elSfx==="function") elSfx(m.el,"cast"); if(typeof kindSfx==="function"&&!ch) kindSfx(kind); }catch(err){}
   }
   if(e.t==="step"){ S.hop={t0:te,h:16}; }
   if(e.t==="swap"){ AT.side[e.i].hop={t0:te,h:78,d:480}; AT.side[1-e.i].hop={t0:te,h:8,d:480};   // the swapper leaps over, the other ducks
     try{ sfx("whoosh"); }catch(err){} }
-  if(e.t==="hit"){ const o=AT.side[1-e.i], tier=e.crit?"heavy":e.dmg>=25?"medium":"light", T=AT_TIER[tier];
+  if(e.t==="hit"){ const o=AT.side[1-e.i], mt=S.anim&&S.anim.tier||"light", tier=e.crit?(mt==="special"?"special":mt==="heavy"?"special":"heavy"):mt==="light"&&e.dmg>=25?"medium":mt, T=AT_TIER[tier];
     if(e.h===0||!o.react||te-o.react.t0>120){ o.react={kind:"hit",t0:te,tier}; AT.freeze=Math.max(AT.freeze,now+T.stop); AT.trauma=Math.min(1,AT.trauma+T.trauma);
+      AT.hitJuice={i:1-e.i,t0:te,tier,col:S.anim?S.anim.col:[255,236,160]}; AT.punch={t0:te,amt:T.punch,i:1-e.i};
+      if(T.screen) AT.flash={t0:now+T.stop*0.4,a:T.screen};
+      if(T.slow) AT.slow={from:now+T.stop,until:now+T.stop+T.slow*(AT.ar.over?2.2:1),k:AT.ar.over?0.22:0.32};
+      if(tier==="heavy"||tier==="special") AT.dust={i:1-e.i,t0:te,n:tier==="special"?14:8};
       AT.spark={i:1-e.i,n:T.sparks,col:S.anim?S.anim.col:[255,236,160]}; if(S.anim&&S.anim.contact) S.recoil={t0:te,amt:tier==="heavy"?10:6};
       try{ sfx(tier==="heavy"?"heavy":tier==="medium"?"hit":"tap"); if(S.anim) elSfx(S.anim.el,"hit"); }catch(err){} }
-    AT.fx.push({i:1-e.i,t0:now+e.h*90,txt:String(e.dmg),crit:e.crit}); }
+    AT.fx.push({i:1-e.i,t0:now+e.h*90,txt:String(e.dmg),crit:e.crit,size:{light:16,medium:19,heavy:24,special:32}[tier]}); if(e.crit&&e.h===0) AT.fx.push({i:1-e.i,t0:now,txt:"Critical!",crit:true,size:13,lift:30}); }
   if(e.t==="miss"){ const o=AT.side[1-e.i]; if(e.why!=="out") o.react={kind:"dodge",t0:te};
     AT.fx.push({i:1-e.i,t0:now,txt:e.why==="out"?"Out of reach":e.why==="block"?"Blocked":"Miss"}); }
   if(e.t==="slam"){ S.react={kind:"hit",t0:te,tier:"heavy"}; AT.trauma=Math.min(1,AT.trauma+0.5); AT.fx.push({i:e.i,t0:now,txt:`Wall ${e.dmg}`,crit:true});
@@ -223,7 +236,9 @@ const AT_FAMCOL={Antik:[255,224,122],Squib:[127,211,242],Moko:[255,154,214],Bool
 /* one side's pose and offset this frame, the way the battle's sideState works */
 function atSideState(S,te){
   const out={f:0,arc:0,lift:0,rot:0,sx:1,sy:1,pose:null,flash:0,off:[0,0],alpha:1};
-  const A=S.anim; if(A){ const t=(te-A.t0)*A.rate, K=ANIM[A.kind]; if(t>K.D) S.anim=null; else Object.assign(out,K.atk(t,{foeH:60,perp:[0,-1]})); }
+  const A=S.anim; if(A&&te<A.t0){ const ch=S.charge, k=ch?(te-ch.t0)/ch.d:1, sp=ch&&ch.tier==="special";
+      out.pose=sp?(k<0.55?"determined":"cast"):"effort"; out.off[0]+=Math.sin(te/16)*(1+2.5*k); out.sy=1-0.07*k; out.sx=1+0.05*k; out.flash=k>0.82&&Math.floor(te/45)%2?3:0; }
+  else if(A){ const t=(te-A.t0)*A.rate, K=ANIM[A.kind]; if(t>K.D) S.anim=null; else Object.assign(out,K.atk(t,{foeH:60,perp:[0,-1]})); }
   const O=S.foe.anim; if(O&&!S.anim){ const t=(te-O.t0)*O.rate, K=ANIM[O.kind]; if(t<=K.D&&K.def){ const d=K.def(t,{foeH:60,perp:[0,-1]}); if(d) Object.assign(out,d); } }
   if(S.pose&&te<S.pose.until&&!S.anim) out.pose=S.pose.p;
   if(S.recoil){ const k=(te-S.recoil.t0)/170; if(k>1) S.recoil=null; else out.off[0]-=S.dir*S.recoil.amt*Math.sin(k*Math.PI); }
@@ -231,7 +246,8 @@ function atSideState(S,te){
   if(R){ const dur=R.kind==="hit"?(R.tier==="heavy"?560:420):380, k=(te-R.t0)/dur;
     if(k>1) S.react=null;
     else if(R.kind==="hit"){ const T=AT_TIER[R.tier], dt=te-R.t0; out.pose="hit"; out.flash=T.white?(dt<18?2:dt<T.flash?1:0):dt<T.flash?3:0;
-      out.off[0]-=S.dir*(R.tier==="heavy"?16:9)*(k<0.25?eo(k/0.25):1-eo((k-0.25)/0.75)); out.rot-=S.dir*0.12*(R.tier==="heavy"?1.6:1)*Math.sin(Math.min(1,k*1.5)*Math.PI); }
+      out.off[0]-=S.dir*(R.tier==="heavy"?16:9)*(k<0.25?eo(k/0.25):1-eo((k-0.25)/0.75)); out.rot-=S.dir*0.12*(R.tier==="heavy"?1.6:1)*Math.sin(Math.min(1,k*1.5)*Math.PI);
+      const q=Math.max(0,1-dt/180), big=R.tier==="special"?1.8:R.tier==="heavy"?1.3:1; out.sx*=1+0.16*big*q; out.sy*=1-0.13*big*q; }
     else { const s2=Math.sin(k*Math.PI); out.pose="dodge"; out.off[0]-=S.dir*22*s2; out.off[1]-=12*s2; } }
   if(S.hop){ const k=(te-S.hop.t0)/(S.hop.d||380); if(k>1) S.hop=null; else { out.arc-=Math.sin(k*Math.PI)*S.hop.h; if(!out.pose) out.pose="jump"; } }
   if(S.ko!=null){ out.pose="ko"; const k=(te-S.ko-500)/220; if(k>0){ out.alpha=Math.max(0,1-k); } }
@@ -243,7 +259,7 @@ function atDraw(now,dte){
   const WW=AT.WW||W;   // the arena is wider than the screen and the camera follows the fight
   const HH=AT.HH, FY=AT.FY;
   if(!AT.bg){ const b=document.createElement("canvas"); b.width=WW*dpr; b.height=HH*dpr; const x=b.getContext("2d"); x.scale(dpr,dpr); atStage(x,WW,HH,FY); AT.bg=b; }
-  const shake=AT.trauma*AT.trauma*7; AT.trauma=Math.max(0,AT.trauma-dte/700);
+  const shake=AT.trauma*AT.trauma*7; AT.trauma=Math.max(0,AT.trauma-dte/700); const cine=AT.cine&&te-AT.cine.t0<AT.cine.d?AT.cine:null, ck=cine?(te-cine.t0)/cine.d:0;
   const sx=shake?Math.sin(te/23)*shake:0, sy=shake?Math.cos(te/31)*shake*0.6:0;
   const floor=FY, scale=2.3, SEP=(58*scale-AR.BODY/AR.LEN*(WW-140))/(1-AR.BODY/AR.LEN), K=(WW-140-SEP)/AR.LEN, X=(x,right)=>70+x*K+(right?SEP:0), alpha=Math.min(1,AT.acc/AR.DT);
   // glide between engine steps, then ease toward that so pushes and swaps slide instead of jumping
@@ -253,12 +269,25 @@ function atDraw(now,dte){
     const hop=S.hop&&te-S.hop.t0<520; S.x=S.x==null?want:S.x+(want-S.x)*(1-Math.exp(-dte/(hop?95:45))); });
   AT.side.forEach(S=>{ S.dx=S.x; });
   // the camera zooms with the gap, MR2 style: in close when they're face to face, pulled back to both walls when they're far apart
-  { const a=AT.side[0].dx, b=AT.side[1].dx, V=Math.max(W/1.35,Math.min(WW,Math.abs(b-a)+110*scale)), z=W/V;
-    AT.zoom=AT.zoom==null?z:AT.zoom+(z-AT.zoom)*(1-Math.exp(-dte/260));
-    const v=W/AT.zoom, want=Math.max(0,Math.min(WW-v,(a+b)/2-v/2)); AT.cam=AT.cam==null?want:AT.cam+(want-AT.cam)*(1-Math.exp(-dte/140)); AT.cam=Math.max(0,Math.min(WW-v,AT.cam)); }
-  const z=AT.zoom;
+  { const a=AT.side[0].dx, b=AT.side[1].dx, V=Math.max(W/1.35,Math.min(WW,Math.abs(b-a)+110*scale));
+    let z=W/V, mid=(a+b)/2, fast=false;
+    const hv=[0,1].find(i=>AT.side[i].charge&&te-AT.side[i].charge.t0<AT.side[i].charge.d&&AT.side[i].charge.tier==="heavy");
+    if(hv!=null){ z*=1.12; mid=mid*0.6+AT.side[hv].dx*0.4; }
+    if(cine&&ck<0.86){ z=Math.min(2.2,z*1.75); mid=AT.side[cine.i].dx; fast=true; } else if(cine) fast=true;
+    AT.zoom=AT.zoom==null?z:AT.zoom+(z-AT.zoom)*(1-Math.exp(-dte/(fast?90:260)));
+    const v=W/AT.zoom, want=Math.max(0,Math.min(WW-v,mid-v/2)); AT.cam=AT.cam==null?want:AT.cam+(want-AT.cam)*(1-Math.exp(-dte/(fast?70:140))); AT.cam=Math.max(0,Math.min(WW-v,AT.cam)); }
+  const pk=AT.punch?Math.max(0,1-(te-AT.punch.t0)/260):0, z=AT.zoom*(1+(AT.punch?AT.punch.amt:0)*Math.sin(Math.min(1,pk)*Math.PI*0.5)*pk), zc=W/2;
+  const tilt=cine?0.06*Math.sin(Math.min(1,ck/0.2)*Math.PI/2)*(ck<0.86?1:Math.max(0,1-(ck-0.86)/0.14)):0;
   c.setTransform(dpr,0,0,dpr,0,0); c.clearRect(0,0,W,H);
-  c.translate(sx,AT.floorS+sy); c.scale(z,z); c.translate(-AT.cam,-FY); c.drawImage(AT.bg,0,0,WW,HH);
+  if(tilt){ c.translate(W/2,AT.floorS); c.rotate(-tilt*(AT.side[cine.i].dir||1)); c.translate(-W/2,-AT.floorS); }
+  c.translate(sx,AT.floorS+sy); c.translate(zc,0); c.scale(z/AT.zoom,z/AT.zoom); c.translate(-zc,0); c.scale(AT.zoom,AT.zoom); c.translate(-AT.cam,-FY); c.drawImage(AT.bg,0,0,WW,HH);
+  // a special's charge dims the arena and throws speed lines out from the attacker
+  if(cine){ const fade=Math.min(1,ck/0.15)*(ck<0.86?1:Math.max(0,1-(ck-0.86)/0.14)), P=AT.lastPlaced&&AT.lastPlaced[cine.i];
+    c.fillStyle=`rgba(10,8,22,${0.72*fade})`; c.fillRect(0,0,WW,HH);
+    if(P){ const cx=P.center?P.center.x:P.x, cy=P.center?P.center.y:P.y, col=cine.col; c.save(); c.lineCap="round";
+      for(let k=0;k<28;k++){ const a=k/28*Math.PI*2+((k*37)%11)*0.03, ph=((te/260+k*0.37)%1), r0=90+ph*260, r1=r0+60+((k*53)%40);
+        c.strokeStyle=`rgba(${col[0]},${col[1]},${col[2]},${0.55*fade*(1-ph)})`; c.lineWidth=(3+((k*7)%4))/AT.zoom*1.4;
+        c.beginPath(); c.moveTo(cx+Math.cos(a)*r0,cy+Math.sin(a)*r0); c.lineTo(cx+Math.cos(a)*r1,cy+Math.sin(a)*r1); c.stroke(); } c.restore(); } }
   const toWorld=c.getTransform().inverse();   // the drawing records its eyes, hands and head in canvas pixels; this turns them back into arena units
   // the gap between them on the floor
   { const a=Math.min(AT.side[0].dx,AT.side[1].dx), b=Math.max(AT.side[0].dx,AT.side[1].dx), y=floor+16, band=arBand(ar.gap());
@@ -286,17 +315,36 @@ function atDraw(now,dte){
     placed[i]={x,y:y-h*u*0.45,foot:y,lift:st.lift,back:false,r:CHIBI.width(sp.stage,sp.family)*u*0.55,eyes:cp.eyes&&cp.eyes.map(d),mouth:d(cp.mouth),hands:(cp.hands||[]).map(d),top:d(cp.top)||{x,y:y-50},center:d(cp.center)};
   });
   // the game's own attack effects, from the attacker's eyes, mouth or hands to the target
-  [0,1].forEach(i=>{ const A=AT.side[i].anim; if(!A||!placed[i]||!placed[1-i]||!ANIM[A.kind].fx) return;
+  [0,1].forEach(i=>{ const A=AT.side[i].anim; if(!A||te<A.t0||!placed[i]||!placed[1-i]||!ANIM[A.kind].fx) return;
     const T0=placed[1-i], tgt={...T0,x:T0.center?T0.center.x:T0.x,y:T0.center?T0.center.y:T0.y};
     try{ ANIM[A.kind].fx(c,(te-A.t0)*A.rate,{self:placed[i],target:tgt,targetLift:tgt.lift||0,col:A.col,el:A.el,name:A.name,from:originOf(placed[i],A.src,tgt),pw:A.pw,W:WW,H:HH}); }catch(err){ AT.side[i].anim=null; } });
   if(AT.spark&&placed[AT.spark.i]){ const p=placed[AT.spark.i], src=placed[1-AT.spark.i], c0=p.center||p;
     spawnSparks(c0,Math.atan2(c0.y-src.y,c0.x-src.x),AT.spark.n,AT.spark.col); AT.burst={i:AT.spark.i,t0:te,col:AT.spark.col}; AT.spark=null; }
   if(AT.burst&&placed[AT.burst.i]&&te-AT.burst.t0<260){ const p=placed[AT.burst.i]; burst(c,p.center||p,(te-AT.burst.t0)/260,AT.burst.col); }
+  AT.lastPlaced=placed;
+  c.save(); c.globalCompositeOperation="lighter";
+  [0,1].forEach(i=>{ const S=AT.side[i], ch=S.charge, P=placed[i]; if(!ch||!P) return; const k=(te-ch.t0)/ch.d; if(k>1.15){ S.charge=null; return; }
+    const cx=P.center?P.center.x:P.x, cy=P.center?P.center.y:P.y, col=ch.col, sp=ch.tier==="special", R=(sp?95:70)*scale/2.3, kk=Math.min(1,k);
+    const g=c.createRadialGradient(cx,cy,4,cx,cy,R*(1.1+0.25*Math.sin(te/60))); g.addColorStop(0,`rgba(${col},${0.5*kk})`); g.addColorStop(1,`rgba(${col},0)`);
+    c.fillStyle=g; c.beginPath(); c.arc(cx,cy,R*1.5,0,7); c.fill();
+    for(let n=0;n<(sp?22:12);n++){ const ph=((te/(sp?520:380))+n*0.618)%1, a=n*2.399+te/900, r=R*1.9*(1-ph);
+      c.fillStyle=`rgba(${col},${0.85*ph})`; c.beginPath(); c.arc(cx+Math.cos(a)*r,cy+Math.sin(a)*r*0.8,(2+3*ph)*scale/2.3,0,7); c.fill(); }
+    if(k>0.92&&k<1.08){ const f=1-Math.abs(k-1)/0.08; c.fillStyle=`rgba(255,255,255,${0.6*f})`; c.beginPath(); c.arc(cx,cy,R*0.9,0,7); c.fill(); } });
+  c.restore();
+  if(AT.hitJuice&&placed[AT.hitJuice.i]){ const J=AT.hitJuice, P=placed[J.i], T=AT_TIER[J.tier], cx=P.center?P.center.x:P.x, cy=P.center?P.center.y:P.y;
+    AT.rings.push({x:cx,y:cy,t0:te,col:J.col,s:T.ring,d:J.tier==="special"?520:340}); if(J.tier==="special") AT.rings.push({x:cx,y:cy,t0:te+90,col:[255,255,255],s:T.ring*1.3,d:600});
+    AT.stars.push({x:cx,y:cy,t0:te,s:T.ring,col:J.col,rot:te%6}); AT.hitJuice=null; }
+  if(AT.dust&&placed[AT.dust.i]){ const P=placed[AT.dust.i], S=AT.side[AT.dust.i]; spawnPuff(P.x-S.dir*12,P.foot-2,AT.dust.n,S.dir>0?Math.PI:0,1.4,0.12,7*scale/2,"rgba(235,224,200,1)",420); AT.dust=null; }
+  AT.rings=AT.rings.filter(r=>te-r.t0<r.d); for(const r of AT.rings){ const k=(te-r.t0)/r.d; if(k<0) continue; const e2=1-Math.pow(1-k,3);
+    c.strokeStyle=`rgba(${r.col},${0.9*(1-k)})`; c.lineWidth=(10*(1-k)+1.5)*r.s; c.beginPath(); c.ellipse(r.x,r.y,(20+110*e2)*r.s,(16+80*e2)*r.s,0,0,7); c.stroke(); }
+  AT.stars=AT.stars.filter(r=>te-r.t0<150); for(const r of AT.stars){ const k=(te-r.t0)/150, R0=(46+30*k)*r.s, R1=R0*0.38;
+    c.fillStyle=`rgba(255,255,255,${1-k})`; c.beginPath(); for(let n=0;n<16;n++){ const a=r.rot+n*Math.PI/8, rr=n%2?R1:R0*(0.8+0.4*((n*7)%3)/2); c[n?"lineTo":"moveTo"](r.x+Math.cos(a)*rr,r.y+Math.sin(a)*rr); } c.closePath(); c.fill();
+    c.fillStyle=`rgba(${r.col},${0.9*(1-k)})`; c.beginPath(); c.arc(r.x,r.y,R1*0.9,0,7); c.fill(); }
   drawSparks(c,dte); drawPuffs(c);
   // damage numbers and words over the head
   AT.fx=AT.fx.filter(f=>now-f.t0<900); c.textAlign="center"; for(const f of AT.fx){ if(now<f.t0) continue; const k=(now-f.t0)/900, p=placed[f.i]; if(!p) continue;
-    c.font=`700 ${Math.round((f.crit?19:15)/z)}px system-ui`; c.globalAlpha=1-k*k; c.lineWidth=4; c.strokeStyle="#14151d"; c.fillStyle=f.buff?"#8fd3ff":f.crit?"#ffc93c":"#ffffff";
-    const y=p.top.y-(52+k*26)/z; c.strokeText(f.txt,p.x,y); c.fillText(f.txt,p.x,y); c.globalAlpha=1; }
+    const pop=1+0.7*Math.max(0,1-(now-f.t0)/170); c.font=`800 ${Math.round((f.size||(f.crit?19:15))*pop/z)}px system-ui`; c.globalAlpha=1-k*k; c.lineWidth=4; c.strokeStyle="#14151d"; c.fillStyle=f.buff?"#8fd3ff":f.crit?"#ffc93c":"#ffffff";
+    const y=p.top.y-(52+(f.lift||0)+k*26)/z; c.strokeText(f.txt,p.x,y); c.fillText(f.txt,p.x,y); c.globalAlpha=1; }
   // name and HP over each head, so your eyes stay on the fight; the white part is the damage just taken, draining after a moment
   c.setTransform(dpr,0,0,dpr,0,0);
   [0,1].forEach(i=>{ const P=placed[i], p=ar.p[i], S=AT.side[i]; if(!P) return;
@@ -309,6 +357,14 @@ function atDraw(now,dte){
     c.font="700 10px system-ui"; c.textAlign="center"; c.lineWidth=3; c.strokeStyle="#14151d"; c.fillStyle="#fff";
     c.strokeText(`${p.hp}/${p.maxhp}`,x+bw/2,y+bh-2.5); c.fillText(`${p.hp}/${p.maxhp}`,x+bw/2,y+bh-2.5);
     const nm=p.f.name.split(",")[0]; c.font="700 11px system-ui"; c.fillStyle=i?"#ffb4a8":"#ffe07a"; c.strokeText(nm,x+bw/2,y-6); c.fillText(nm,x+bw/2,y-6); });
+  { const chg=[0,1].map(i=>AT.side[i].charge).find(ch=>ch&&te-ch.t0<ch.d); if(chg){ const k=Math.min(1,(te-chg.t0)/chg.d), g=c.createRadialGradient(W/2,H*0.45,H*0.25,W/2,H*0.45,H*0.75);
+      g.addColorStop(0,"rgba(0,0,0,0)"); g.addColorStop(1,`rgba(8,6,20,${(chg.tier==="special"?0.75:0.45)*k})`); c.fillStyle=g; c.fillRect(0,0,W,H); } }
+  if(cine){ const inn=Math.min(1,ck/0.14), out=ck>0.74?Math.min(1,(ck-0.74)/0.12):0, x=-W*(1-eo(inn))+W*1.1*out*out, y=H*0.2, col=cine.col;
+    c.save(); c.translate(x,0); c.fillStyle="rgba(10,8,22,.92)"; c.beginPath(); c.moveTo(-20,y); c.lineTo(W+40,y-26); c.lineTo(W+40,y+48); c.lineTo(-20,y+74); c.closePath(); c.fill();
+    c.fillStyle=`rgb(${col})`; c.beginPath(); c.moveTo(-20,y+66); c.lineTo(W+40,y+40); c.lineTo(W+40,y+48); c.lineTo(-20,y+74); c.closePath(); c.fill();
+    c.font="900 30px system-ui"; c.textAlign="center"; c.lineWidth=6; c.strokeStyle="#0a0816"; c.fillStyle="#fff"; c.save(); c.translate(W/2,y+34); c.rotate(-0.08);
+    c.strokeText(cine.name,0,0); c.fillText(cine.name,0,0); c.font="700 11px system-ui"; c.fillStyle=`rgb(${col})`; c.fillText(ar.p[cine.i].f.name.split(",")[0]+"'s special",0,-27); c.restore(); c.restore(); }
+  if(AT.flash&&now>=AT.flash.t0){ const k=(now-AT.flash.t0)/150; if(k>1) AT.flash=null; else { c.fillStyle=`rgba(255,255,255,${AT.flash.a*(1-k)})`; c.fillRect(0,0,W,H); } }
 }
 
 function atHud(){
