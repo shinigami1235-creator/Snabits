@@ -2,6 +2,7 @@
    so cup fights between computer monsters can be simulated instantly. Not hooked into the game yet.
    Needs battle.js (edge, vs, makeFighter) and skills.js (SKILLS). The numbers follow the "Snabits arena and movesets" doc. */
 const AR={ LEN:100, BODY:6, DT:0.1, TIME:60, BANDS:["Close","Near","Mid","Far"] };
+const AR_SHOVE={name:"Shove",range:"Close",dmg:0,acc:95,sharp:0,wither:0,push:18,cost:0,wind:0.2,shove:true};
 const arBand=gap=>gap<10?"Close":gap<25?"Near":gap<45?"Mid":"Far";
 /* hitting from further away is harder to set up, so it pays a little more */
 const AR_BAND_DMG={Close:0.8,Near:0.95,Mid:1.2,Far:1.5,Any:1};
@@ -56,7 +57,7 @@ class Arena{
   /* a and b: fighters from makeFighter, each with .moves (arMoves) and .family; ai: "smart" or "naive" per side */
   constructor(a,b,rand,ai=["smart","smart"]){
     this.rand=rand; this.t=0; this.over=false; this.winner=null; this.log=[]; this.ev=[];   // ev: what happened this step, for the screen to animate
-    this.p=[a,b].map((f,i)=>({f,i,x:i?70:30,focus:30,act:null,cool:0,hold:0,slow:0,stun:0,shoveCool:0,buff:{},hp:f.maxhp,maxhp:f.maxhp,ai:ai[i],dealt:0}));
+    this.p=[a,b].map((f,i)=>({f,i,x:i?70:30,focus:30,act:null,cool:0,think:0.6,hold:0,slow:0,stun:0,shoveCool:0,buff:{},hp:f.maxhp,maxhp:f.maxhp,ai:ai[i],dealt:0}));
   }
   gap(){ return Math.abs(this.p[0].x-this.p[1].x)-AR.BODY; }
   band(){ return arBand(this.gap()); }
@@ -67,15 +68,27 @@ class Arena{
   regen(p){ const o=this.p[1-p.i]; return 5.5*(1+edge(this.eff(p,"sta"),this.eff(o,"sta"),0.5,-0.3,0.4)); }
   walk(p,dir){ if(p.hold>0||p.stun>0) return; const o=this.p[1-p.i], nx=p.x+dir*this.speed(p)*AR.DT;
     const lo=o.x<p.x?o.x+AR.BODY:0, hi=o.x>p.x?o.x-AR.BODY:AR.LEN; p.x=Math.max(lo,Math.min(hi,nx)); }
-  start(p,m){ if(p.focus<m.cost||p.act||p.cool>0||p.stun>0) return false; p.focus-=m.cost; p.act={m,left:m.wind}; this.ev.push({t:"start",i:p.i,m}); return true; }
+  /* Using a move takes a turn, the way MR2 does it: whoever acts first goes, the fight and the clock stop while the move plays out,
+     then both carry on from where they stand. On screen (live) the turn waits for the animation; in a simulation it resolves at once.
+     The computer needs a moment to react before it can act, and a Snabit can't act again until a short recovery has passed. */
+  start(p,m){ if(this.turn||this.over||p.focus<m.cost||p.cool>0||p.stun>0||p.ai!=="human"&&p.think>0) return false;
+    p.focus-=m.cost; this.ev.push({t:"start",i:p.i,m});
+    if(this.live) this.turn={i:p.i,m}; else { this.resolve(p,m); this.afterTurn(p); }
+    return true; }
+  /* on screen: the move lands at its contact frame, then the turn ends when the animation finishes */
+  land(){ if(!this.turn||this.turn.done) return; this.turn.done=true; this.resolve(this.p[this.turn.i],this.turn.m); }
+  endTurn(){ if(!this.turn) return; const p=this.p[this.turn.i]; if(!this.turn.done) this.land(); this.turn=null; this.afterTurn(p); }
+  afterTurn(p){ p.cool=0.6; for(const q of this.p) q.think=Math.max(q.think,0.35+this.rand()*0.35); }
   step(){
-    if(this.over) return;
+    if(this.over||this.turn) return;
     for(const p of this.p) p.px=p.x;   // where it stood last step, so the screen can glide between steps
     for(const p of this.p){ if(!p.buff.brace) p.focus=Math.min(99,p.focus+this.regen(p)*AR.DT);
-      for(const k of ["cool","hold","slow","stun","shoveCool"]) p[k]=Math.max(0,p[k]-AR.DT);
+      for(const k of ["cool","hold","slow","stun","shoveCool","think"]) p[k]=Math.max(0,p[k]-AR.DT);
       for(const k in p.buff){ p.buff[k]-=AR.DT; if(p.buff[k]<=0) delete p.buff[k]; } }
-    for(const p of this.p) if(!p.act&&!p.stun){ if(p.ai==="human"){ if(p.wantDir&&!p.hold) this.walk(p,p.wantDir); } else (p.ai==="naive"?this.naive(p):this.smart(p)); }
-    for(const p of this.p) if(p.act){ p.act.left-=AR.DT; if(p.act.left<=0){ const m=p.act.m; p.act=null; p.cool=0.3; this.resolve(p,m); if(this.over) return; } }
+    // the two sides decide in a random order each step, so neither always gets the first move
+    for(const p of this.rand()<0.5?this.p:[this.p[1],this.p[0]]){ if(this.turn||this.over) break; if(p.stun) continue;
+      if(p.ai==="human"){ if(p.wantDir&&!p.hold) this.walk(p,p.wantDir); } else (p.ai==="naive"?this.naive(p):this.smart(p)); }
+    if(this.turn||this.over) return;
     this.t+=AR.DT;
     if(this.t>=AR.TIME){ this.over=true; const r=this.p.map(p=>p.hp/p.maxhp); this.winner=r[0]===r[1]?null:r[0]>r[1]?0:1; this.judged=true; }
   }
@@ -109,7 +122,7 @@ class Arena{
     if(o.hp<=0||p.hp<=0){ this.over=true; this.winner=o.hp<=0&&p.hp<=0?null:o.hp<=0?p.i:o.i; }
   }
   // Shove is free, with a 1.5 second wait between shoves
-  shove(p){ const o=this.p[1-p.i]; if(this.band()!=="Close"||p.shoveCool>0) return false; p.shoveCool=1.5; p.cool=0.4; this.resolve(p,{name:"Shove",range:"Close",dmg:0,acc:95,sharp:0,wither:0,push:18,cost:0}); return true; }
+  shove(p){ if(this.band()!=="Close"||p.shoveCool>0) return false; const ok=this.start(p,AR_SHOVE); if(ok) p.shoveCool=1.5; return ok; }
   /* the range a Snabit fights best at: the band where its moves do the most damage for their focus */
   prefer(p){ if(p.pref) return p.pref; const sc={Close:0,Near:0,Mid:0,Far:0};
     for(const m of p.f.moves) if(m.range!=="Any"&&m.dmg) sc[m.range]+=m.dmg*(m.hits||1)*m.acc/100*(m.cast?this.eff(p,"mnd"):this.eff(p,"pow"))/m.cost;

@@ -58,7 +58,7 @@ function atStyle(){
 #atest .slot .n{font-size:11px;font-weight:700;line-height:1.1;text-align:center;max-width:100%;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 #atest .slot svg{width:24px;height:24px;flex:none}#atest .slot .c{position:absolute;right:5px;bottom:2px;font-size:11px;font-weight:700;color:#ffc93c}
 #atest .slot .rd{position:absolute;left:5px;top:5px;width:9px;height:9px;border-radius:50%}
-#atest .slot.out{opacity:.32}#atest .slot.poor .c{color:#ff8a7a}#atest .slot.sel{border-color:#ffc93c;background:#2a2617}
+#atest .slot.out{opacity:.32}#atest .slot.wait{filter:saturate(.4) brightness(.8)}#atest .slot.poor .c{color:#ff8a7a}#atest .slot.sel{border-color:#ffc93c;background:#2a2617}
 #atest .arr{height:36px;font-size:15px}
 #atest .res{position:absolute;left:16px;right:16px;top:38%;background:#1d1f2b;border:2px solid #ffc93c;border-radius:14px;padding:16px;text-align:center}
 #atest .res h2{margin:0 0 6px;color:#ffc93c}#atest .res .row{display:flex;gap:8px;margin-top:12px}#atest .res .btn{flex:1;height:46px}`;
@@ -88,7 +88,7 @@ function atMake(fam,R){
 function atStop(){ if(AT){ cancelAnimationFrame(AT.raf); AT=null; } }
 function atStart(meFam,foeFam){
   atStop();
-  const R=Math.random, A=atMake(meFam,R), B=atMake(foeFam,R), ar=new Arena(A.f,B.f,R,["human","smart"]);
+  const R=Math.random, A=atMake(meFam,R), B=atMake(foeFam,R), ar=new Arena(A.f,B.f,R,["human","smart"]); ar.live=true;   // each move pauses the fight while it plays
   const order=["Close","Near","Mid","Far","Any"];
   const moves=A.f.moves.slice().sort((a,b)=>order.indexOf(a.range)-order.indexOf(b.range)||a.cost-b.cost);
   AT={ar,A,B,moves,sel:0,top:0,auto:false,last:performance.now(),acc:0,te:0,freeze:0,trauma:0,raf:0,side:[A.spec,B.spec].map(spec=>({spec,x:null,shown:"idle",from:"idle",t0:0,dir:1})),fx:[],done:false,me:meFam,foe:foeFam};
@@ -120,7 +120,7 @@ function atRows(){
   const ar=AT.ar, p=ar.p[0], M=AT.moves, n=M.length, rows=document.getElementById("at-rows"); if(!rows) return;
   const ks=[0,1,2,3].map(j=>(AT.top+j)%n);
   const html=ks.map(k=>{ const m=M[k], on=ar.inRange(m);
-    return `<div class="slot ${on?"":"out"} ${k===AT.sel?"sel":""} ${p.focus<m.cost?"poor":""}" data-k="${k}"><span class="rd" style="background:${AT_RC[m.range]}"></span>${atIcon(m)}<span class="c">${m.cost}</span><span class="n">${m.name}</span></div>`; }).join("");
+    return `<div class="slot ${on?"":"out"} ${k===AT.sel?"sel":""} ${p.focus<m.cost?"poor":""} ${ar.turn||p.cool>0?"wait":""}" data-k="${k}"><span class="rd" style="background:${AT_RC[m.range]}"></span>${atIcon(m)}<span class="c">${m.cost}</span><span class="n">${m.name}</span></div>`; }).join("");
   if(html!==AT.rowsHtml){ rows.innerHTML=html; AT.rowsHtml=html; }
 }
 const AT_ICON=(()=>{ const sv=b=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">${b}</svg>`;
@@ -151,8 +151,13 @@ function atIcon(m){
 function atLoop(now){
   if(!AT) return; const ar=AT.ar, real=Math.min(0.25,(now-AT.last)/1000); AT.last=now;
   // hitstop: the fight and its animations pause for a moment when a hit lands
-  const frozen=now<AT.freeze; if(!frozen){ AT.acc+=real; AT.te+=real*1000; }
-  while(AT.acc>=AR.DT&&!ar.over){ AT.acc-=AR.DT; ar.ev=[]; ar.step(); for(const e of ar.ev) atEvent(e,now); }
+  const frozen=now<AT.freeze; if(!frozen){ AT.te+=real*1000; if(!ar.turn) AT.acc+=real; }
+  // a move in progress: it lands at its contact frame and the fight carries on once its animation ends
+  if(ar.turn&&!AT.turn) AT.turn={t0:AT.te,C:200,D:500};   // never leave a turn hanging
+  if(ar.turn&&AT.turn){ const t=AT.te-AT.turn.t0, run=f=>{ ar.ev=[]; f(); for(const e of ar.ev) atEvent(e,now); };
+    if(!ar.turn.done&&t>=AT.turn.C) run(()=>ar.land());
+    if(ar.turn&&t>=AT.turn.D){ run(()=>ar.endTurn()); AT.turn=null; } }
+  while(AT.acc>=AR.DT&&!ar.over&&!ar.turn){ AT.acc-=AR.DT; ar.ev=[]; ar.step(); for(const e of ar.ev) atEvent(e,now); }
   if(ar.over) for(const i of [0,1]) if(ar.winner===1-i&&AT.side[i].ko==null) AT.side[i].ko=AT.te;
   atHud(); atRows(); atDraw(now,frozen?0:real*1000);
   if(ar.over&&!AT.done){ AT.done=true; setTimeout(atResult,1300); }
@@ -163,14 +168,17 @@ const AT_TIER={light:{stop:30,trauma:0.1,sparks:4,flash:45},medium:{stop:55,trau
 function atEvent(e,now){
   const S=AT.side[e.i], m=e.m, te=AT.te, sp=S.spec;
   if(e.t==="start"){
-    if(m.swap){ S.pose={p:"crouch",until:te+m.wind*1000}; return; }
-    if(m.step||m.dash&&!m.dmg){ S.pose={p:"crouch",until:te+m.wind*1000}; return; }
+    if(m.swap){ S.pose={p:"crouch",until:te+220}; AT.turn={t0:te,C:220,D:560}; return; }
+    if(m.step||m.dash&&!m.dmg){ S.pose={p:"crouch",until:te+140}; AT.turn={t0:te,C:140,D:420}; return; }
     let kind;
     if(m.buff) kind={bunker:"bunker",phase:"phase",brace:"shield",riposte:"shield",bubble:"shield",feedback:"shield",unblink:"buff"}[m.buff]||"buff";
     else if(m.lower) kind="glare";
+    else if(m.shove) kind="tackle";
     else kind=typeof animFor==="function"?animFor({name:m.name,kind:m.cast?"Cast":"Strike",el:m.el},sp):"tackle";
     if(!ANIM[kind]) kind="tackle";
-    const K=ANIM[kind], rate=Math.max(0.6,Math.min(3,K.C/Math.max(120,m.wind*1000)));
+    // the whole animation plays at its own pace now; a slow, heavy move gets a little longer windup on top
+    const K=ANIM[kind], rate=Math.max(0.75,Math.min(1.25,K.C/Math.max(300,m.wind*900)));
+    AT.turn={t0:te,C:K.C/rate,D:Math.min(K.D/rate,K.C/rate+700)};
     const col=m.el&&typeof ELC==="function"?hexRgb(ELC(m.el)):AT_FAMCOL[AT.ar.p[e.i].f.family]||[255,214,90];
     S.anim={kind,t0:te,rate,el:m.el||null,name:m.name,src:typeof sourceFor==="function"?sourceFor({name:m.name,kind:m.cast?"Cast":"Strike"},sp):"mouth",col,pw:m.dmg>=70?1.35:m.dmg>=40?1.05:0.8,contact:/^(tackle|bite|stomp|punch|claw|shadowstrike|fly)$/.test(kind)};
     try{ sfx(m.cast?"charge":"whoosh"); if(typeof elSfx==="function") elSfx(m.el,"cast"); if(typeof kindSfx==="function") kindSfx(kind); }catch(err){}
