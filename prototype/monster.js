@@ -3,9 +3,9 @@ const FAMILY = {
   Squib:{body:[3,[3,5,6,6,7,7,7,7]], legs:"tentacles", base:[55,40,45,65,50,45], ability:["Wobble","The first hit it takes each fight deals 30% less"]},
   Antik:  {body:[4,[3,5,6,6,6,6,6,5,3]], legs:"twolegs", top:1, base:[45,65,60,35,45,50], ability:["Heavy Lifter","Held item bonuses +50%"]},
   Chomp:  {body:[3,[4,5,6,6,6,6,6,6,6,6,5]], legs:"stubby", mouth:3, base:[60,60,55,35,35,55], ability:["Big Bite","Strikes of 50 power or less, its basic attack included, hit 20% harder"]},
-  Moko:  {body:[3,[3,5,6,7,7,7,7,6,5,3]], legs:"tentacles", eyes:"cyclops", base:[50,35,40,70,60,45], ability:["Keen Eye","Its accuracy can't be lowered and dodge doesn't work against it"]},
+  Moko:  {body:[3,[3,5,6,7,7,7,7,6,5,3]], legs:"tentacles", eyes:"cyclops", base:[50,35,40,70,60,45], ability:["Keen Eye","Its accuracy can't be lowered, and dodging and Blind don't work against it"]},
   Pinch:  {body:[5,[5,6,6,6,6,6,6,5]], legs:"twolegs", arms:3, base:[45,55,70,35,50,45], ability:["Shell","Crits can't land on it"]},
-  Stilt:  {body:[2,[2,3,3,3,3,3,3,3,2]], legs:"longlegs", base:[60,50,35,45,45,65], ability:["Long Stride","Acts first on the turn it switches in"]},
+  Stilt:  {body:[2,[2,3,3,3,3,3,3,3,2]], legs:"longlegs", base:[60,50,35,45,45,65], ability:["Long Stride","Acts first at the start of a fight and on the turn it switches in"]},
   Skit: {body:[7,[3,5,6,6,6,6,5]], legs:"spider", eyes:"spider", arms:0, base:[45,55,40,45,55,60], ability:["Web","Its basic attack has a 30% chance to drop the target's Speed 1 step"]},
   Booly:  {body:[3,[2,3,4,4,5,5,6,6,6,7,7,7]], legs:"ghost", base:[55,35,40,70,60,40], ability:["Slippery","10% chance to dodge any Strike"]},
   /* the five families added 14 Nov 2026 */
@@ -27,18 +27,18 @@ const FAMILY = {
 const STATS = ["Stamina","Power","Constitution","Mind","Insight","Speed"];
 const LEAN = {Blaze:[1,2],Brawl:[0,3],Spark:[5,0],Wild:[0,5],Frost:[2,0],Tide:[4,1],Venom:[3,4],Charm:[3,1],Stone:[2,3],Light:[4,2],Steel:[1,5],Shade:[5,4]};
 const EL_ABILITY = {
-  Blaze:[["Hothead","Strike hits on it have a 20% chance to Burn the attacker"],["Wildfire","Burns it causes take 1/8 HP a turn instead of 1/16"]],
-  Brawl:[["Defiant","Each stat drop on it raises its Power 1 step"],["Last Stand","Once a fight, dropping under 25% HP heals it 30%"]],
+  Blaze:[["Hothead","Strike hits on it have a 10% chance to Burn the attacker"],["Wildfire","Burns it causes take 1/8 HP a turn instead of 1/16"]],
+  Brawl:[["Defiant","Each stat drop on it raises its Power 1 step"],["Last Stand","Once a fight, dropping under 25% HP heals it 20%"]],
   Spark:[["Static Skin","Strike hits on it have a 20% chance to Shock the attacker"],["Lightning Rod","Spark skills aimed at it heal it 25% instead"]],
-  Wild:[["Sunbather","Heals 1/16 HP a turn under Sunlit"],["Bloom","Wild skills +50% under a third of its HP"]],
+  Wild:[["Sunbather","Heals 1/16 HP a turn under Sunlit, and 1% every 4 seconds in the arena"],["Bloom","Wild skills +50% under a third of its HP"]],
   Frost:[["Insulated","Blaze hits on it count as neutral"],["Permafrost","Frozen targets take 20% more, and its Freeze chances double"]],
-  Tide:[["Rain Dancer","Speed +50% under Rain"],["Undertow","The opponent can't switch out while it's above half HP"]],
-  Venom:[["Toxic Touch","Its Strike hits have a 20% chance to Poison"],["Corrosion","Its Venom skills hit Steel for normal damage and can Poison it"]],
-  Charm:[["Beguile","Drops the opponent's Power 1 step when it switches in"],["Mirror Mind","Copies any stat raise the opponent gets"]],
+  Tide:[["Rain Dancer","Speed +50% under Rain, and +15% in the arena"],["Undertow","While it's above half HP, the opponent can't switch out and backs away from it a quarter slower"]],
+  Venom:[["Toxic Touch","Its Strike hits have a 10% chance to Poison"],["Corrosion","Its Venom skills hit Steel for normal damage and can Poison it"]],
+  Charm:[["Beguile","Drops the opponent's Power 1 step when a fight starts or it switches in"],["Mirror Mind","Copies any stat raise the opponent gets"]],
   Stone:[["Bedrock","Can't be knocked out in one hit from full HP"],["Unbreakable","Its Guard can't be lowered and Crack doesn't affect it"]],
-  Light:[["Halo","Heals 1/8 HP when it guards or switches out"],["Sanctuary","No status can land on it while its HP is full"]],
+  Light:[["Halo","Heals 1/8 HP when it guards, braces or switches out"],["Sanctuary","No status can land on it while its HP is full"]],
   Steel:[["Plated","Takes 10% less from Strike skills"],["Reflect","A Cast skill it resists bounces 30% of the damage back"]],
-  Shade:[["Night-born","Mind +20% under Moonlit, with glowing eyes"],["Haunt","When it's knocked out, the attacker loses a quarter of its max HP"]],
+  Shade:[["Night-born","Mind +20% under Moonlit, and +10% in the arena, with glowing eyes"],["Haunt","When it's knocked out, the attacker loses a quarter of its max HP"]],
 };
 const PERSONALITY = [["Bold",1,2],["Calm",4,1],["Hasty",5,4],["Careful",2,5],["Cheerful",3,2],["Gloomy",4,5],["Proud",1,4],["Timid",5,1]];
 

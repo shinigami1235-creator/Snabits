@@ -33,7 +33,7 @@ const FAM_MOVES={
   Bipped:[["Jab",1,"Close",22,92,10,0,4,8,0.2],["Dash Punch",3,"Near",30,80,8,0,6,14,0.4,{dash:"in"}],["One-Two",5,"Close",28,85,10,0,6,22,0.4,{hits:2}],["Hip Toss",8,"Close",15,80,0,0,0,12,0.3,{swap:1}],
     ["Uppercut",14,"Close",48,75,15,0,15,24,0.6],["Guard Up",20,"Any",0,100,0,0,0,16,0.1,{buff:"riposte"}],["Haymaker",30,"Close",78,65,15,0,20,36,0.9],["Flurry Punch",40,"Close",14,85,10,0,0,38,0.6,{hits:5}]],
   Fizz:[["Bubble",1,"Mid",28,90,5,0,0,10,0.3,{cast:1}],["Cork Pop",3,"Close",22,85,5,0,30,12,0.3,{cast:1}],["Potion Toss",5,"Mid",40,85,5,0,0,22,0.6,{cast:1,status:["Poison",45]}],["Cork Swap",8,"Close",14,85,0,0,0,12,0.3,{swap:1}],
-    ["Brew Up",14,"Any",0,100,0,0,0,20,0.3,{support:1,heal:0.18}],["Acid Splash",20,"Near",44,80,8,0,0,22,0.5,{cast:1,status:["Crack",25]}],["Boil Over",30,"Mid",66,75,8,0,10,32,0.8,{cast:1,status:["Burn",25]}],["Explosive Brew",40,"Far",94,65,10,0,20,40,1.2,{cast:1}]],
+    ["Brew Up",14,"Any",0,100,0,0,0,20,0.3,{support:1,heal:0.18}],["Beaker Splash",20,"Near",44,80,8,0,0,22,0.5,{cast:1,status:["Crack",25]}],["Boil Over",30,"Mid",66,75,8,0,10,32,0.8,{cast:1,status:["Burn",25]}],["Explosive Brew",40,"Far",94,65,10,0,20,40,1.2,{cast:1}]],
   Teep:[["Splash",1,"Near",26,90,5,0,4,10,0.3,{cast:1}],["Lid Bonk",3,"Close",28,85,8,0,8,12,0.3],["Steam Jet",5,"Far",50,80,8,0,0,24,0.7,{cast:1,status:["Blind",30]}],["Spin Pour",8,"Close",14,85,0,0,0,12,0.3,{swap:1,cast:1}],
     ["Tea Time",14,"Any",0,100,0,0,0,22,0.4,{support:1,heal:0.2}],["Scald",20,"Mid",46,80,8,0,6,24,0.6,{cast:1,status:["Burn",25]}],["Whistle",30,"Far",22,85,0,25,0,24,0.5,{cast:1,status:["Daze",35]}],["Boiling Point",40,"Mid",92,65,12,0,15,40,1.2,{cast:1}]],
   Lern:[["Ember",1,"Far",32,88,5,0,0,10,0.3,{cast:1}],["Float Back",3,"Any",0,100,0,0,0,10,0.15,{step:-28}],["Flash",5,"Mid",34,95,5,8,0,20,0.4,{cast:1,status:["Blind",50]}],["Lantern Swing",8,"Close",16,85,0,0,0,12,0.3,{swap:1}],
@@ -79,6 +79,7 @@ function arFromSkill(n){
 /* every move a Snabit can use in the arena: its family's up to its level, the shared moves, and its element skills */
 function arMoves(fam,level,known,el){
   const fm=(FAM_MOVES[fam]||[]).map(arMove).filter(m=>m.lv<=level), sh=SHARED_MOVES.map(arMove);
+  if(fm[0]) fm[0].basic=true;
   if(el&&EL_PREFIX[el]&&fm[0]){ fm[0].base=fm[0].name; fm[0].name=`${EL_PREFIX[el]} ${fm[0].name}`; fm[0].el=el; }
   for(const m of fm) if(m.name==="Potion Toss"&&el&&typeof POTION_BY_EL!=="undefined"&&POTION_BY_EL[el]) m.status=[POTION_BY_EL[el],45];   // the bottle holds its element's status
   const elm=(known||[]).map(arFromSkill).filter(Boolean), seen=new Set();
@@ -103,28 +104,40 @@ class Arena{
   constructor(a,b,rand,ai=["smart","smart"]){
     this.rand=rand; this.t=0; this.over=false; this.winner=null; this.log=[]; this.ev=[];   // ev: what happened this step, for the screen to animate
     this.p=[a,b].map((f,i)=>({f,i,x:i?70:30,focus:30,act:null,cool:0,think:0.6,hold:0,slow:0,stun:0,sleep:0,thawT:0,shoveCool:0,buff:{},hp:f.maxhp,maxhp:f.maxhp,ai:ai[i],dealt:0,
-      st:null,stg:{pow:0,grd:0,mnd:0,spr:0,spd:0},stgT:{},heals:0,uses:{},last:null,regenT:0,counterMul:1.5}));
+      st:null,stg:{pow:0,grd:0,mnd:0,spr:0,spd:0},stgT:{},heals:0,uses:{},last:null,regenT:0,counterMul:1.5,halo:0,sunT:0,abSeen:{}}));
+    for(const q of this.p){ const e0=q.f.ability==="Steeping"?4:3; if(q.f.energy>e0) q.focus+=10*(q.f.energy-e0);   // a Party hat starts it with more focus
+      if(q.f.ability==="Long Stride"){ q.think=0; q.stride=1; } }   // Stilt's Long Stride: it's ready to act the moment the fight starts
+    this.opened=false;
   }
+  // an ability showing on screen; once: only the first time it works in this fight
+  ab(q,name,once){ if(once){ if(q.abSeen[name]) return; q.abSeen[name]=1; } this.ev.push({t:"ability",i:q.i,name}); }
+  // how much stronger held items work: Antik's Heavy Lifter makes them 50% stronger
+  hm(q){ return q.f.ability==="Heavy Lifter"?1.5:1; }
   gap(){ return Math.abs(this.p[0].x-this.p[1].x)-AR.BODY; }
   band(){ return arBand(this.gap()); }
   has(p,name){ return !!(p.st&&p.st.name===name); }
   // a stat right now: its base, its raised or lowered stages, and any status that weakens it
-  eff(p,k){ let v=p.f.base[k]; const n=p.stg&&p.stg[k]; if(n) v*=arStageMul(n); const S=p.st&&AR_STATUS[p.st.name]; if(S&&S.stat&&S.stat[k]) v*=S.stat[k]; return v; }
+  eff(p,k){ let v=p.f.base[k]; if(k==="spd"&&p.f.ability==="Rain Dancer") v*=1.15; if(k==="mnd"&&p.f.ability==="Night-born") v*=1.1; const n=p.stg&&p.stg[k]; if(n) v*=arStageMul(n); const S=p.st&&AR_STATUS[p.st.name]; if(S&&S.stat&&S.stat[k]) v*=S.stat[k]; return v; }
   cost(p,m){ return this.has(p,"Curse")?Math.round(m.cost*1.25):m.cost; }
   // asleep, frozen or locked up by a shock or a wall slam: it can't act or walk
   canAct(p){ return !(p.stun>0||p.sleep>0||this.has(p,"Freeze")); }
   dirTo(p){ const o=this.p[1-p.i]; return o.x>p.x?1:-1; }
+  // Tide's Undertow: while it's above half HP, the other one backs away from it a quarter slower
+  undertow(p){ const o=this.p[1-p.i]; return o.f.ability==="Undertow"&&o.hp>o.maxhp/2; }
   inRange(m){ return m.range==="Any"||m.range===this.band(); }
   speed(p){ const o=this.p[1-p.i]; return 12*(FAM_WALK[p.f.family]||1)*(1+edge(this.eff(p,"spd"),this.eff(o,"spd"),0.6,-0.35,0.45))*(p.slow>0?0.5:1)*(this.has(p,"Soak")?0.85:1); }
   /* the chance a move lands right now: its accuracy, a little more with focus held, Insight against the target's Speed,
      less if the target is on the move or phased out, less again when blinded, and more against a target that can't get away */
   hitChance(p,m){ const o=this.p[1-p.i]; if(m.sure||p.buff.foresight&&m.cast) return 1;
-    const moving=o.walkT!=null&&this.t-o.walkT<0.3, stuck=!this.canAct(o)||o.hold>0, nd=!!m.noDodge;
-    return Math.max(0.05,Math.min(0.97,m.acc/100+p.focus/99*0.06+edge(this.eff(p,"spr"),this.eff(o,"spd"),0.4,-0.25,0.12)-(moving&&!nd?0.08:0)-(o.buff.phase&&!nd?0.3:0)
-      +(p.buff.unblink?0.1:0)-(this.has(p,"Blind")?0.2:0)+(stuck?0.25:0))); }
+    const ke=p.f.ability==="Keen Eye", moving=o.walkT!=null&&this.t-o.walkT<0.3, stuck=!this.canAct(o)||o.hold>0, nd=!!m.noDodge||ke;   // Moko's Keen Eye: dodging, phasing and Blind don't work against it
+    const ed=edge(this.eff(p,"spr"),this.eff(o,"spd"),0.4,-0.25,0.12);
+    return Math.max(0.05,Math.min(0.97,m.acc/100+p.focus/99*0.06+(ke?Math.max(0,ed):ed)-(moving&&!nd?0.08:0)-(o.buff.phase&&!nd?0.3:0)
+      +(p.buff.unblink?0.1:0)-(this.has(p,"Blind")&&!ke?0.2:0)+(stuck?0.25:0)+(p.f.accMod||0))); }
+  // Booly's Slippery: a tenth of the Strikes that would land on it slip past instead (worked out from the same roll, so the screen knows in time)
+  slips(p,m,roll){ const o=this.p[1-p.i]; return !m.cast&&!!m.dmg&&o.f.ability==="Slippery"&&p.f.ability!=="Keen Eye"&&roll<=this.hitChance(p,m)&&roll>this.hitChance(p,m)*0.9; }
   statusOdds(p,o){ return Math.max(0.5,Math.min(1.5,1+edge(this.eff(p,"mnd"),this.eff(o,"spr"),0.6,-0.5,0.5))); }
-  regen(p){ const o=this.p[1-p.i]; return 5.5*(1+edge(this.eff(p,"sta"),this.eff(o,"sta"),0.5,-0.3,0.4))*(this.has(p,"Curse")?0.7:1); }
-  walk(p,dir){ if(p.hold>0||!this.canAct(p)||this.has(p,"Root")) return; const o=this.p[1-p.i], nx=p.x+dir*this.speed(p)*AR.DT;
+  regen(p){ const o=this.p[1-p.i]; return 5.5*(1+edge(this.eff(p,"sta"),this.eff(o,"sta"),0.5,-0.3,0.4))*(this.has(p,"Curse")?0.7:1)*(p.f.energyBonus?1+0.5*this.hm(p):1); }   // an Energy cell fills focus 50% faster
+  walk(p,dir){ if(p.hold>0||!this.canAct(p)||this.has(p,"Root")) return; const o=this.p[1-p.i], ut=this.undertow(p)&&dir!==this.dirTo(p), nx=p.x+dir*this.speed(p)*AR.DT*(ut?0.75:1); if(ut) this.ab(o,"Undertow",true);
     const lo=o.x<p.x?o.x+AR.BODY:0, hi=o.x>p.x?o.x-AR.BODY:AR.LEN, x0=p.x; p.x=Math.max(lo,Math.min(hi,nx)); if(Math.abs(p.x-x0)>0.01) p.walkT=this.t; }
   // whether a status or a taunt stops this move: Dread bars the same move twice, Taunt bars support, Root bars stepping
   allowed(p,m){ if(m.shove) return true;
@@ -141,6 +154,7 @@ class Arena{
     if(this.has(p,"Daze")&&!m.shove&&this.rand()<0.5){ const alt=p.f.moves.filter(x=>x!==m&&!x.step&&this.cost(p,x)<=p.focus&&this.allowed(p,x));
       if(alt.length){ const to=alt[Math.floor(this.rand()*alt.length)]; this.ev.push({t:"daze",i:p.i,from:m.name,to:to.name}); m=to; }
       this.ev.push({t:"cure",i:p.i,name:"Daze"}); p.st=null; }
+    if(p.stride){ p.stride=0; this.ab(p,"Long Stride"); }
     p.focus-=this.cost(p,m); p.last=m.name; p.uses[m.name]=(p.uses[m.name]||0)+1;
     const roll=this.rand(); this.ev.push({t:"start",i:p.i,m,pred:this.predict(p,m,roll)});
     if(SKILLS[m.name]){ const o=this.p[1-p.i]; (p.f.used=p.f.used||{})[m.name]=(p.f.used[m.name]||0)+1; (o.f.seen=o.f.seen||{})[m.name]=1; }
@@ -156,38 +170,55 @@ class Arena{
     if(o.buff.protect&&(m.dmg||m.status)) return "block";
     if(o.f.ability==="Illusion"&&!o.illusion&&m.dmg) return "phase";   // Kitsune's Illusion: a fox-fire copy takes the first attack
     if(roll>this.hitChance(p,m)) return o.buff.phase&&!m.noDodge?"phase":"dodge";
+    if(this.slips(p,m,roll)) return "dodge";
     return o.buff.mirror&&m.cast&&m.dmg?"mirror":"hit"; }
   /* on screen: the move lands at its contact frame, then the turn ends when the animation finishes */
   land(){ if(!this.turn||this.turn.done) return; this.turn.done=true; this.resolve(this.p[this.turn.i],this.turn.m,this.turn.roll); }
   endTurn(){ if(!this.turn) return; const p=this.p[this.turn.i]; if(!this.turn.done) this.land(); this.turn=null; this.afterTurn(p); }
   afterTurn(p){ p.cool=0.6; for(const q of this.p) q.think=Math.max(q.think,0.35+this.rand()*0.35); }
-  checkEnd(){ for(const q of this.p) if(q.hp<=0&&q.f.ability==="Rebirth"&&!q.reborn){ q.reborn=1; q.hp=Math.round(q.maxhp*0.25); q.st=null; this.ev.push({t:"ability",i:q.i,name:"Rebirth"}); this.ev.push({t:"heal",i:q.i,amt:q.hp,src:"rebirth"}); }   // Phoenix
+  checkEnd(){
+    for(const q of this.p){ if(q.hp<=0) continue;
+      if(q.f.lifeSeed&&!q.seed&&q.hp<q.maxhp/2){ q.seed=1; this.ab(q,"Life seed"); this.heal(q,q.maxhp*0.25*this.hm(q),"seed"); }   // the held Life seed
+      if(q.f.ability==="Last Stand"&&!q.lastStand&&q.hp<q.maxhp/4){ q.lastStand=1; this.ab(q,"Last Stand"); this.heal(q,q.maxhp*0.2,"stand"); } }   // Brawl's Last Stand
+    for(const q of this.p){ const o=this.p[1-q.i]; if(q.hp<=0&&q.f.ability==="Haunt"&&!q.haunted&&o.hp>0){ q.haunted=1; this.ab(q,"Haunt"); const d=Math.round(o.maxhp/4); o.hp=Math.max(0,o.hp-d); q.dealt+=d; this.ev.push({t:"recoil",i:o.i,dmg:d}); } }   // Shade's Haunt
+    for(const q of this.p) if(q.hp<=0&&q.f.ability==="Rebirth"&&!q.reborn){ q.reborn=1; q.hp=Math.round(q.maxhp*0.25); q.st=null; this.ev.push({t:"ability",i:q.i,name:"Rebirth"}); this.ev.push({t:"heal",i:q.i,amt:q.hp,src:"rebirth"}); }   // Phoenix
     const [a,b]=this.p; if(a.hp<=0||b.hp<=0){ this.over=true; this.winner=a.hp<=0&&b.hp<=0?null:a.hp<=0?1:0; } }
   heal(f,amt,src,from){ const n=Math.max(0,Math.min(Math.round(amt),f.maxhp-f.hp)); if(f.hp<=0) return 0; f.hp+=n; this.ev.push({t:"heal",i:f.i,amt:n,src,from}); return n; }
   inflict(f,name,pct,from){
     if(f.hp<=0||f.st||f.buff.ward||!AR_STATUS[name]) return false;
     if(name==="Freeze"&&(f.thawT>0||f.f.ability==="Thick Fur")) return false;
-    if(name==="Poison"&&(f.f.el1==="Steel"||f.f.el2==="Steel")) return false;
+    if(name==="Poison"&&(f.f.el1==="Steel"||f.f.el2==="Steel")&&!(from&&from.f.ability==="Corrosion")) return false;   // Venom's Corrosion can Poison metal
+    if(name==="Freeze"&&from&&from.f.ability==="Permafrost") pct*=2;
     if(name==="Blind"&&f.f.ability==="Bright"){ this.ev.push({t:"ability",i:f.i,name:"Bright"}); return false; }   // Lern's Bright
     if(this.rand()*100>=pct) return false;
-    f.st={name,t:AR_STATUS[name].d*(from&&from.f.ability==="Volatile"?1.3:1),from:from?from.i:null,tick:0}; this.ev.push({t:"status",i:f.i,name}); return true; }   // Volatile: Fizz's statuses last 30% longer
+    if(f.f.ability==="Sanctuary"&&f.hp>=f.maxhp){ this.ab(f,"Sanctuary"); return false; }   // Light's Sanctuary: nothing lands while its HP is full
+    if(name==="Crack"&&f.f.ability==="Unbreakable"){ this.ab(f,"Unbreakable"); return false; }
+    if(from&&from!==f){ if(name==="Burn"&&from.f.ability==="Wildfire") this.ab(from,"Wildfire",true); if(from.f.ability==="Volatile") this.ab(from,"Volatile",true); }
+    f.st={name,wild:name==="Burn"&&!!from&&from.f.ability==="Wildfire",t:AR_STATUS[name].d*(from&&from.f.ability==="Volatile"?1.3:1),from:from?from.i:null,tick:0}; this.ev.push({t:"status",i:f.i,name}); return true; }   // Volatile: Fizz's statuses last 30% longer
   // raise (sign 1) or lower (sign -1) stats for a while; Bulwark keeps its stats from being lowered
-  stage(f,what,sign){ if(typeof what==="number") what={pow:what};
+  // src: whoever caused it, so Defiant only answers the opponent's drops
+  stage(f,what,sign,src){ if(typeof what==="number") what={pow:what};
     for(const [k,n] of Object.entries(what)){ if(!AR_STATS.includes(k)) continue;
-      if(sign<0&&(f.buff.bulwark||k==="spr"&&f.f.ability==="Bright")){ this.ev.push({t:"stage",i:f.i,k,n:0}); continue; }
-      const was=f.stg[k]; f.stg[k]=Math.max(-3,Math.min(3,was+sign*n)); f.stgT[k]=AR_STAGE_T; this.ev.push({t:"stage",i:f.i,k,n:f.stg[k]-was}); } }
+      const keep=k==="spr"&&(f.f.ability==="Bright"||f.f.ability==="Keen Eye")?f.f.ability:k==="grd"&&f.f.ability==="Unbreakable"?"Unbreakable":null;
+      if(sign<0&&(f.buff.bulwark||keep)){ if(keep&&keep!=="Bright") this.ab(f,keep); this.ev.push({t:"stage",i:f.i,k,n:0}); continue; }
+      const was=f.stg[k]; f.stg[k]=Math.max(-3,Math.min(3,was+sign*n)); f.stgT[k]=AR_STAGE_T; this.ev.push({t:"stage",i:f.i,k,n:f.stg[k]-was});
+      if(sign<0&&src&&src!==f&&f.f.ability==="Defiant"&&f.stg[k]<was&&f.stg.pow<3&&f.hp>0){ this.ab(f,"Defiant"); this.stage(f,{pow:1},1); }   // Brawl's Defiant
+      const o=this.p[1-f.i];
+      if(sign>0&&f.stg[k]>was&&o.f.ability==="Mirror Mind"&&o.hp>0&&!this.mirroring){ this.mirroring=1; this.ab(o,"Mirror Mind"); this.stage(o,{[k]:f.stg[k]-was},1); this.mirroring=0; } } }   // Charm's Mirror Mind
   step(){
     if(this.over||this.turn) return;
     for(const p of this.p) p.px=p.x;   // where it stood last step, so the screen can glide between steps
+    if(!this.opened){ this.opened=true; for(const q of this.p) if(q.f.ability==="Beguile"){ this.ab(q,"Beguile"); this.stage(this.p[1-q.i],{pow:1},-1,q); } }   // Charm's Beguile
     for(const p of this.p){ if(!p.buff.brace) p.focus=Math.min(99,p.focus+this.regen(p)*AR.DT*(p.f.ability==="Steeping"&&(p.walkT==null||this.t-p.walkT>0.5)?1.1:1));   // Teep's Steeping
       for(const k of ["cool","hold","slow","stun","sleep","thawT","shoveCool","think"]) p[k]=Math.max(0,p[k]-AR.DT);
       for(const k in p.buff){ p.buff[k]-=AR.DT; if(p.buff[k]<=0){ delete p.buff[k]; this.ev.push({t:"unbuff",i:p.i,k}); } }
       for(const k in p.stgT){ p.stgT[k]-=AR.DT; if(p.stgT[k]<=0){ delete p.stgT[k]; p.stg[k]=0; this.ev.push({t:"stage",i:p.i,k,n:0,end:1}); } }
+      if(p.f.ability==="Sunbather"&&p.hp>0){ p.sunT+=AR.DT; if(p.sunT>=4){ p.sunT-=4; if(p.hp<p.maxhp){ this.ab(p,"Sunbather",true); this.heal(p,p.maxhp*0.01,"sun"); } } }   // Wild's Sunbather: 1% every 4 seconds
       if(p.buff.regen){ p.regenT+=AR.DT; if(p.regenT>=1){ p.regenT-=1; this.heal(p,p.maxhp*0.025,"regen"); } } else p.regenT=0;
       // a status ticks once a second: damage over time, Root's drain back to the rooter, Shock's jolts
       const st=p.st; if(st){ const S=AR_STATUS[st.name]; st.t-=AR.DT; st.tick+=AR.DT;
         if(st.tick>=1){ st.tick-=1; const src=st.from!=null?this.p[st.from]:null;
-          if(S.dot){ const d=Math.max(1,Math.round(p.maxhp*S.dot)); p.hp=Math.max(0,p.hp-d); if(src) src.dealt+=d; this.ev.push({t:"tick",i:p.i,name:st.name,dmg:d}); if(S.leech&&src) this.heal(src,d,"leech",p.i); }
+          if(S.dot){ const d=Math.max(1,Math.round(p.maxhp*S.dot*(st.wild?2:1))); p.hp=Math.max(0,p.hp-d); if(src) src.dealt+=d; this.ev.push({t:"tick",i:p.i,name:st.name,dmg:d}); if(S.leech&&src) this.heal(src,d,"leech",p.i); }   // a Wildfire burn (st.wild) hurts twice as much
           if(S.jolt&&this.rand()<S.jolt){ p.stun=Math.max(p.stun,0.7); this.ev.push({t:"jolt",i:p.i}); } }
         if(st.t<=0&&p.st===st){ this.ev.push({t:"cure",i:p.i,name:st.name}); if(st.name==="Freeze") p.thawT=5; p.st=null; } } }
     this.checkEnd(); if(this.over) return;
@@ -205,7 +236,7 @@ class Arena{
       if(o.buff.protect){ delete o.buff.protect; this.ev.push({t:"block",i:p.i,m}); return; }
       if(roll>(m.acc||100)/100*(m.inflict?this.statusOdds(p,o):1)){ this.ev.push({t:"miss",i:p.i,m,why:"resist"}); return; }
       if(m.inflict&&!this.inflict(o,m.inflict,100,p)) this.ev.push({t:"miss",i:p.i,m,why:"resist"});
-      if(m.lower) this.stage(o,m.lower,-1);
+      if(m.lower) this.stage(o,m.lower,-1,p);
       if(m.taunt){ o.buff.taunt=6; this.ev.push({t:"taunt",i:o.i}); }
       if(m.erase){ for(const k in o.buff) if(k!=="taunt") delete o.buff[k]; for(const k of AR_STATS) if(o.stg[k]>0){ o.stg[k]=0; delete o.stgT[k]; } this.ev.push({t:"erase",i:o.i}); }
       return; }
@@ -227,13 +258,15 @@ class Arena{
   }
   resolve(p,m,roll=this.rand()){
     const o=this.p[1-p.i], d=this.dirTo(p), R=this.rand;
-    if(m.buff){ this.ev.push({t:"buff",i:p.i,m}); p.buff[m.buff]=AR_BUFF_T[m.buff]||1.5; return; }
+    if(m.buff){ this.ev.push({t:"buff",i:p.i,m}); p.buff[m.buff]=AR_BUFF_T[m.buff]||1.5;
+      if(m.buff==="brace"&&p.f.ability==="Halo"&&p.hp<p.maxhp){ this.ab(p,"Halo"); this.heal(p,p.maxhp/8*Math.pow(0.75,p.halo++),"halo"); }   // Light's Halo, a quarter weaker each time
+      return; }
     if(m.support){ this.support(p,m,roll); return; }
     if(m.step&&!m.dmg){ this.stepMove(p,m); if(m.selfHeal) this.heal(p,p.maxhp*m.selfHeal,"heal"); return; }
     if(m.step){ this.strike(p,m,roll); if(!this.over) this.stepMove(p,m); return; }   // hit, then hop back
     this.strike(p,m,roll);
   }
-  stepMove(p,m){ const o=this.p[1-p.i], d=this.dirTo(p); this.ev.push({t:"step",i:p.i,m}); const s=m.step*d, lo=o.x<p.x?o.x+AR.BODY:0, hi=o.x>p.x?o.x-AR.BODY:AR.LEN; p.x=Math.max(lo,Math.min(hi,p.x+s)); }
+  stepMove(p,m){ const o=this.p[1-p.i], d=this.dirTo(p); this.ev.push({t:"step",i:p.i,m}); const s=m.step*d*(m.step<0&&this.undertow(p)?0.75:1), lo=o.x<p.x?o.x+AR.BODY:0, hi=o.x>p.x?o.x-AR.BODY:AR.LEN; p.x=Math.max(lo,Math.min(hi,p.x+s)); }
   strike(p,m,roll){
     const o=this.p[1-p.i], d=this.dirTo(p), R=this.rand;
     if(m.dash){ const want=m.dash==="near"?14:AR.BODY+2; p.x=o.x-d*want; p.x=Math.max(0,Math.min(AR.LEN,p.x)); }
@@ -241,27 +274,37 @@ class Arena{
     if(o.buff.bubble&&(m.range==="Mid"||m.range==="Far")){ delete o.buff.bubble; this.ev.push({t:"miss",i:p.i,m,why:"block"}); return; }
     if(o.buff.protect&&(m.dmg||m.status)){ delete o.buff.protect; this.ev.push({t:"block",i:p.i,m}); return; }
     if(o.f.ability==="Illusion"&&!o.illusion&&m.dmg){ o.illusion=1; this.ev.push({t:"ability",i:o.i,name:"Illusion"}); this.ev.push({t:"miss",i:p.i,m,why:"phase"}); return; }
-    if(roll>this.hitChance(p,m)){ this.ev.push({t:"miss",i:p.i,m,why:o.buff.phase&&!m.noDodge?"phase":"dodge"}); if(o.f.ability==="Counterpunch"){ o.cpunch=1; this.ev.push({t:"ability",i:o.i,name:"Counterpunch"}); } return; }   // Bipped's Counterpunch
+    const slip=this.slips(p,m,roll); if(slip) this.ab(o,"Slippery");
+    if(slip||roll>this.hitChance(p,m)){ this.ev.push({t:"miss",i:p.i,m,why:o.buff.phase&&!m.noDodge&&!slip?"phase":"dodge"}); if(o.f.ability==="Counterpunch"){ o.cpunch=1; this.ev.push({t:"ability",i:o.i,name:"Counterpunch"}); } return; }   // Bipped's Counterpunch
+    if(m.el==="Spark"&&m.dmg&&o.f.ability==="Lightning Rod"){ this.ab(o,"Lightning Rod"); this.heal(o,o.maxhp*0.25,"rod"); return; }   // Spark's Lightning Rod soaks it up
     // a mirror sends a Cast back at whoever threw it
     let tg=o; if(o.buff.mirror&&m.cast&&m.dmg){ delete o.buff.mirror; this.ev.push({t:"mirror",i:o.i,m}); tg=p; }
     const hitBy=tg===p?o:p;   // whose hit it counts as on screen
     if(m.swap){ const x=p.x; p.x=o.x; o.x=x; this.ev.push({t:"swap",i:p.i,m}); }
     const nh=m.hitsRange?m.hitsRange[0]+Math.floor(R()*(m.hitsRange[1]-m.hitsRange[0]+1)):(m.hits||1);
-    let total=0, sure=p.buff.foresight&&m.cast; if(sure) delete p.buff.foresight;
+    let total=0, sure=p.buff.foresight&&m.cast, lastMul=1; if(sure) delete p.buff.foresight;
     for(let h=0;h<nh&&tg.hp>0;h++) if(m.dmg){
       const atk=this.eff(p,m.atkStat||(m.cast?"mnd":"pow")), con=m.pierce&&tg.stg.grd>0?tg.f.base.grd:this.eff(tg,"grd"), dfs=m.cast?(con+3*(tg.f.level+5))/4:(con+tg.f.level+5)/2;
       let dmg=m.dmg*atk/dfs*(p.f.level/50+0.4)/2*0.55*AR_BAND_DMG[m.range]*(AR_FAM_DMG[p.f.family]||1);
-      if(m.el&&typeof vs==="function"){ const mm=vs(m.el,tg.f.el1)*(tg.f.el2?vs(m.el,tg.f.el2):1); dmg*=mm; if(m.el===p.f.el1||m.el===p.f.el2) dmg*=1.2; }
+      if(m.el&&typeof vs==="function"){ const part=e=>{ if(!e) return 1; let v=vs(m.el,e); if(m.el==="Venom"&&e==="Steel"&&p.f.ability==="Corrosion"){ v=Math.max(1,v); if(h===0) this.ab(p,"Corrosion",true); } return v; };   // Venom's Corrosion
+        let mm=part(tg.f.el1)*part(tg.f.el2); if(m.el==="Blaze"&&mm>1&&tg.f.ability==="Insulated"){ mm=1; if(h===0) this.ab(tg,"Insulated"); }   // Frost's Insulated
+        lastMul=mm; dmg*=mm; if(m.el===p.f.el1||m.el===p.f.el2) dmg*=1.2; if(p.f.heldEl&&m.el===p.f.heldEl) dmg*=1+0.2*this.hm(p); }   // the held Element stone
+      if(p.f.ability==="Big Bite"&&!m.cast&&m.dmg<=50){ dmg*=1.2; if(h===0) this.ab(p,"Big Bite",true); }   // Chomp's Big Bite
+      if(p.f.ability==="Bloom"&&m.el==="Wild"&&p.hp<p.maxhp/3){ dmg*=1.5; if(h===0) this.ab(p,"Bloom",true); }   // Wild's Bloom
+      if(tg.f.ability==="Plated"&&!m.cast){ dmg*=0.9; if(h===0) this.ab(tg,"Plated",true); }   // Steel's Plated
+      if(tg.f.ability==="Wobble"&&!tg.wob){ tg.wob=1; dmg*=0.7; this.ab(tg,"Wobble"); }   // Squib's Wobble
       if(m.hpScale) dmg*=0.4+0.6*p.hp/p.maxhp;
       if(tg.f.ability==="Thick Fur"&&(m.el==="Blaze"||m.el==="Frost")){ dmg*=0.75; if(h===0) this.ev.push({t:"ability",i:tg.i,name:"Thick Fur"}); }   // Yeti
       if(m.ifPoison&&this.has(tg,"Poison")||m.ifStatus&&tg.st) dmg*=2;
       if(m.el==="Spark"&&this.has(tg,"Soak")) dmg*=1.25;
-      let shatter=false; if(this.has(tg,"Freeze")){ dmg*=1.25; shatter=true; }
+      let shatter=false; if(this.has(tg,"Freeze")){ dmg*=1.25*(p.f.ability==="Permafrost"?1.2:1); shatter=true; if(p.f.ability==="Permafrost") this.ab(p,"Permafrost",true); }
       const sky=p.f.ability==="Sky High"&&!p.sky&&tg===o; if(sky){ p.sky=1; this.ev.push({t:"ability",i:p.i,name:"Sky High"}); }   // Eagle's Sky High
-      const crit=sky||sure||!tg.buff.bulwark&&R()<m.sharp+edge(this.eff(p,"pow"),con,0.2,0,0.12); if(crit) dmg*=1.5;
+      const rolled=!tg.buff.bulwark&&R()<m.sharp+edge(this.eff(p,"pow"),con,0.2,0,0.12)+(p.f.critBonus||0), shell=tg.f.ability==="Shell"&&rolled&&!sky&&!sure;
+      const crit=sky||sure||rolled&&!shell; if(crit) dmg*=1.5; if(shell) this.ab(tg,"Shell",true);   // Pinch's Shell stops crits; Lucky bit and Sunglasses add to them
       if(p.cpunch&&!m.cast&&tg===o) dmg*=1.2;
       if(tg.buff.brace) dmg*=0.6; if(tg.buff.bunker) dmg*=0.8; if(tg.buff.castWard&&m.cast) dmg*=0.5;
       dmg=Math.max(1,Math.round(dmg*(0.9+R()*0.1)));
+      if(tg.f.ability==="Bedrock"&&tg.hp>=tg.maxhp&&dmg>=tg.hp){ dmg=tg.hp-1; this.ab(tg,"Bedrock"); }   // Stone's Bedrock
       if(tg.buff.endure&&dmg>=tg.hp){ dmg=Math.max(0,tg.hp-1); delete tg.buff.endure; this.ev.push({t:"endure",i:tg.i}); }
       tg.hp=Math.max(0,tg.hp-dmg); hitBy.dealt+=dmg; total+=dmg; this.ev.push({t:"hit",i:hitBy.i,m,dmg,crit,h}); if(SKILLS[m.name]) (tg.f.hitBy=tg.f.hitBy||{})[m.name]=1;
       if(shatter){ this.ev.push({t:"cure",i:tg.i,name:"Freeze",why:"shatter"}); tg.st=null; tg.thawT=5; }
@@ -273,14 +316,21 @@ class Arena{
     if(m.drain&&total&&tg===o) this.heal(p,total*m.drain,"drain",o.i);
     if(p.f.ability==="Bloodsuck"&&!m.cast&&total&&tg===o&&p.hp<p.maxhp){ this.ev.push({t:"ability",i:p.i,name:"Bloodsuck"}); this.heal(p,total*0.15,"drain",o.i); }   // Vampire
     if(tg===o&&o.f.ability==="Coil"&&!m.cast&&m.range==="Close"&&total&&o.hp>0&&R()<0.25&&!p.st){ this.ev.push({t:"ability",i:o.i,name:"Coil"}); this.inflict(p,"Root",100,o); }   // Naga
+    if(tg===o&&total&&!m.cast&&o.hp>0&&p.hp>0){   // abilities that answer a Strike that landed
+      if(o.f.ability==="Hothead"&&!p.st&&R()<0.1&&this.inflict(p,"Burn",100,o)) this.ab(o,"Hothead");
+      if(o.f.ability==="Static Skin"&&!p.st&&R()<0.2&&this.inflict(p,"Shock",100,o)) this.ab(o,"Static Skin");
+      if(p.f.ability==="Toxic Touch"&&!o.st&&R()<0.1&&this.inflict(o,"Poison",100,p)) this.ab(p,"Toxic Touch"); }
+    if(m.basic&&tg===o&&total&&o.hp>0&&p.f.ability==="Web"&&R()<0.3){ this.ab(p,"Web"); this.stage(o,{spd:1},-1,p); }   // Skit's Web
+    if(tg===o&&m.cast&&total&&lastMul<1&&o.f.ability==="Reflect"&&p.hp>0){ const back=Math.max(1,Math.round(total*0.3)); p.hp=Math.max(0,p.hp-back); o.dealt+=back; this.ab(o,"Reflect"); this.ev.push({t:"recoil",i:p.i,dmg:back}); }   // Steel's Reflect
     if(m.recoil&&total){ const r=Math.max(1,Math.round(total*m.recoil)); p.hp=Math.max(0,p.hp-r); this.ev.push({t:"recoil",i:p.i,dmg:r}); }
     if(m.steal&&tg===o){ const f=Math.min(o.focus,m.steal*6); o.focus-=f; p.focus=Math.min(99,p.focus+f); this.ev.push({t:"steal",i:p.i,amt:Math.round(f)}); }
     if(m.status&&tg.hp>0) this.inflict(tg,m.status[0],m.status[1]*this.statusOdds(p,tg),hitBy===p?p:o);
-    if(m.lower&&tg.hp>0&&R()*100<(m.lowerChance||100)) this.stage(tg,m.lower,-1);
+    if(m.lower&&tg.hp>0&&R()*100<(m.lowerChance||100)) this.stage(tg,m.lower,-1,hitBy);
     if(m.selfLower) this.stage(p,m.selfLower,-1);
     if(m.wither){ const w=m.wither*(1+edge(this.eff(p,"mnd"),this.eff(o,"spr"),0.5,-0.3,0.5)); if(o.buff.unblink){} else if(o.buff.feedback) p.focus=Math.max(0,p.focus-w); else o.focus=Math.max(0,o.focus-w); }
     if(m.push&&tg===o&&!o.buff.brace&&!o.buff.bunker){
       const k=1+edge(this.eff(p,m.cast?"mnd":"pow"),this.eff(o,"grd"),0.5,-0.4,0.4), s=m.push*k*(this.has(o,"Root")?0.5:1)*(o.f.ability==="Steady"&&m.push>0?0.5:1);   // Plod's Steady
+      if(o.f.ability==="Steady"&&m.push>0) this.ab(o,"Steady",true);
       if(s>0){ const want=o.x+d*s, wall=d>0?AR.LEN:0, past=Math.abs(want-wall)*(d>0?want>wall:want<wall); o.x=Math.max(0,Math.min(AR.LEN,want));
         if(past>5){ const slam=Math.round(o.maxhp*0.03); o.hp=Math.max(0,o.hp-slam); p.dealt+=slam; o.stun=0.5; this.ev.push({t:"slam",i:o.i,dmg:slam}); } }
       else o.x=p.x+d*Math.max(AR.BODY,Math.abs(o.x-p.x)+s);   // a pull drags it in, but never through the puller
@@ -303,7 +353,8 @@ class Arena{
     if(m.buff){ if(p.buff[m.buff]) return 0;
       if(m.buff==="bubble") v=ob&&(ob.range==="Mid"||ob.range==="Far")&&threat?24:0;
       else if(m.buff==="unblink") v=p.f.moves.some(x=>x.dmg>=60&&x.acc<80)?12:0;
-      else if(m.buff!=="brace") v=threat?14:0; }   // Brace lasts too short for the computer to time it
+      else if(m.buff!=="brace") v=threat?14:0;   // Brace lasts too short for the computer to time it
+      else if(p.f.ability==="Halo"&&miss>0.3&&p.halo<3) v=120*Math.min(0.125*Math.pow(0.75,p.halo),miss); }   // unless it heals with Halo, up to 3 times a fight
     if(m.heal) v+=miss>0.35?180*Math.min(m.heal*0.7*Math.pow(0.75,p.heals),miss):0;
     if(m.regen&&!p.buff.regen) v+=miss>0.2?m.regen*7:0;
     if(m.cleanse&&p.st) v+=40;

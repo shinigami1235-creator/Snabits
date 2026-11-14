@@ -36,6 +36,31 @@ function atSfx(kind,el){
     else if(kind==="ab:Coil"){ dNoise(d,t,0.5,0.14,"highpass",5200,1.2); sTone(d,t+0.05,"sine",260,200,0.4,0.05); }
     else if(kind==="ab:Thick Fur"){ dNoise(d,t,0.18,0.25,"lowpass",500); sTone(d,t,"sine",180,120,0.2,0.08); }
     else if(kind==="ab:Bright") [1318,1760].forEach((f,k)=>sTone(d,t+k*0.07,"triangle",f,f,0.3,0.06));
+    else if(kind==="ab:Wobble"){ const o=mo("sine",330,t),l=mo("sine",11,t),lg=MC.createGain(),g=MC.createGain(); lg.gain.value=60; l.connect(lg); lg.connect(o.frequency);
+      g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.08,t+0.03); g.gain.exponentialRampToValueAtTime(0.0001,t+0.45); o.connect(g); g.connect(d); o.start(t); l.start(t); o.stop(t+0.5); l.stop(t+0.5); }   // a jelly wobble
+    else if(kind==="ab:Big Bite"){ sTone(d,t,"square",700,250,0.06,0.06); dKick(d,t+0.02,0.4); dNoise(d,t+0.02,0.07,0.2,"bandpass",2400,2); }   // a snap of jaws
+    else if(kind==="ab:Keen Eye"){ sTone(d,t,"sine",2637,2700,0.18,0.05); sTone(d,t+0.06,"sine",3520,3600,0.25,0.035); }   // a glint
+    else if(kind==="ab:Long Stride"){ sTone(d,t,"sine",400,1200,0.18,0.06); dNoise(d,t,0.2,0.1,"bandpass",1600,1); }   // off the mark
+    else if(kind==="ab:Web"){ sTone(d,t,"sine",1200,250,0.2,0.07); dNoise(d,t+0.05,0.25,0.08,"lowpass",900); }   // a sticky thwip
+    else if(kind==="ab:Slippery"){ sTone(d,t,"sine",500,1400,0.22,0.07); }   // a slide whistle
+    else if(kind==="ab:Shell"||kind==="ab:Unbreakable"||kind==="ab:Bedrock"||kind==="ab:Plated"||kind==="ab:Steady"){ dKick(d,t,0.4); [523,1250,2100].forEach(f=>sTone(d,t,"square",f,f*0.98,0.18,0.025)); }   // a hard clank
+    else if(kind==="ab:Hothead"||kind==="ab:Wildfire"){ for(let k=0;k<4;k++) dNoise(d,t+k*0.03,0.05,0.18,"bandpass",1800+k*500,2); dNoise(d,t,0.35,0.12,"lowpass",700); }   // a flare of fire
+    else if(kind==="ab:Static Skin"){ sTone(d,t,"square",2400,200,0.1,0.05); dNoise(d,t,0.06,0.18,"highpass",5000); }   // a zap
+    else if(kind==="ab:Lightning Rod"){ sTone(d,t,"square",2400,200,0.1,0.04); [784,1047,1319].forEach((f,k)=>sTone(d,t+0.1+k*0.05,"triangle",f,f,0.25,0.05)); }   // a zap, then it charges up
+    else if(kind==="ab:Sunbather") [659,880].forEach((f,k)=>sTone(d,t+k*0.08,"sine",f,f,0.35,0.035));   // a warm two-note chime
+    else if(kind==="ab:Bloom"){ for(let k=0;k<3;k++) dNoise(d,t+k*0.05,0.06,0.1,"highpass",3000,0.8); [523,659,784].forEach((f,k)=>sTone(d,t+0.1+k*0.05,"triangle",f,f,0.25,0.04)); }   // leaves, then a lift
+    else if(kind==="ab:Permafrost") [2093,2637,3136].forEach((f,k)=>sTone(d,t+k*0.04,"sine",f,0,0.3,0.05));   // an icy chime
+    else if(kind==="ab:Undertow"){ dNoise(d,t,0.5,0.16,"lowpass",600); sTone(d,t,"sine",300,140,0.4,0.05); }   // a pull of water
+    else if(kind==="ab:Insulated"){ dNoise(d,t,0.3,0.12,"highpass",4000,0.8); sTone(d,t,"sine",300,250,0.25,0.05); }   // a hiss as the fire dies
+    else if(kind==="ab:Defiant") [392,523,659].forEach((f,k)=>sTone(d,t+k*0.06,"sawtooth",f,f,0.14,0.04));   // a power-up
+    else if(kind==="ab:Last Stand"){ dKick(d,t,0.6); dKick(d,t+0.22,0.5); [523,659,784,1047].forEach((f,k)=>sTone(d,t+0.35+k*0.06,"triangle",f,f,0.3,0.05)); }   // a heartbeat, then a second wind
+    else if(kind==="ab:Toxic Touch"||kind==="ab:Corrosion"||kind==="ab:Volatile") [0,1,2].forEach(k=>sTone(d,t+k*0.07,"sine",280+k*90,500+k*90,0.08,0.07));   // bubbles
+    else if(kind==="ab:Beguile"||kind==="ab:Mirror Mind") [1319,1047,1568,1319].forEach((f,k)=>sTone(d,t+k*0.06,"triangle",kind==="ab:Mirror Mind"?f*1.5:f,0,0.25,0.04));   // a little charm run
+    else if(kind==="ab:Halo"||kind==="ab:Sanctuary") [1047,1319,1568].forEach(f=>sTone(d,t,"triangle",f,0,0.6,0.04));   // a bell chord
+    else if(kind==="ab:Reflect"){ sTone(d,t,"triangle",2093,2093,0.3,0.05); sTone(d,t+0.05,"triangle",3136,3136,0.3,0.03); }   // a mirror ring
+    else if(kind==="ab:Haunt"){ const o=mo("sine",260,t),l=mo("sine",5,t),lg=MC.createGain(),g=MC.createGain(); lg.gain.value=25; l.connect(lg); lg.connect(o.frequency); o.frequency.exponentialRampToValueAtTime(150,t+0.8);
+      g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.07,t+0.1); g.gain.exponentialRampToValueAtTime(0.0001,t+0.9); o.connect(g); g.connect(d); o.start(t); l.start(t); o.stop(t+0.95); l.stop(t+0.95); }   // a ghostly wail
+    else if(kind==="ab:Life seed") [784,988,1175,1568].forEach((f,k)=>sTone(d,t+k*0.07,"sine",f,f,0.3,0.05));   // a sprouting chime
     else if(kind.slice(0,3)==="ab:"){ sTone(d,t,"triangle",660,990,0.2,0.06); }
   }catch(err){}
 }
@@ -92,8 +117,9 @@ function atFx(e,now){
   if(e.t==="jolt"){ S.joltAt=te; if(typeof elSfx==="function") try{ elSfx("Spark","hit"); }catch(err){} if(P) for(let k=0;k<8;k++){ const a=k*0.8; atPart({k:"spark",x:P.cx,y:P.cy,vx:Math.cos(a)*0.25,vy:Math.sin(a)*0.25,life:260,c:[255,240,120]}); } }
   if(e.t==="heal"){ const fromP=e.from!=null?atP(e.from):null, delay=fromP?480:0;
     if(fromP) AT.streams.push({from:e.from,to:e.i,t0:te,d:520,col:e.src==="leech"?[120,220,90]:[255,110,120],n:e.src==="leech"?5:9});
-    if(e.amt>0){ AT.fx.push({i:e.i,t0:now+delay,txt:"+"+e.amt,col:"#7dffa0",size:e.src==="regen"?15:20,side:e.src==="regen"?1:0,lift:4}); S.healAt=te+delay; S.healA=e.src==="regen"?0.16:0.4; if(!fromP||e.src!=="leech") setTimeout(()=>atSfx("heal"),delay); }
-    if(P&&e.src!=="leech") for(let k=0;k<(e.src==="regen"?3:10);k++) atPart({k:k%3?"el":"plus",el:"Light",x:P.cx+(atH(k+te)-0.5)*P.r*1.8,y:P.foot-10-atH(k*3+te)*P.H*0.5,vy:-0.06-atH(k)*0.04,life:900,s:k%3?2:6,c:[150,255,160],seed:k,t0:te+delay}); }
+    const small=e.src==="regen"||e.src==="sun";   // the slow trickles (Regen, Sunbather) get a small number and a lighter glow
+    if(e.amt>0){ AT.fx.push({i:e.i,t0:now+delay,txt:"+"+e.amt,col:"#7dffa0",size:small?15:20,side:small?1:0,lift:4}); S.healAt=te+delay; S.healA=small?0.16:0.4; if((!fromP||e.src!=="leech")&&!(e.src==="sun"&&S.sunSnd>te-6000)){ if(e.src==="sun") S.sunSnd=te; setTimeout(()=>atSfx("heal"),delay); } }
+    if(P&&e.src!=="leech") for(let k=0;k<(small?3:10);k++) atPart({k:k%3?"el":"plus",el:"Light",x:P.cx+(atH(k+te)-0.5)*P.r*1.8,y:P.foot-10-atH(k*3+te)*P.H*0.5,vy:-0.06-atH(k)*0.04,life:900,s:k%3?2:6,c:[150,255,160],seed:k,t0:te+delay}); }
   if(e.t==="block"){ const D2=AT.side[1-e.i]; D2.blockAt=te; const Q=atP(1-e.i); if(Q) atShards(Q.cx+(D2.dir||1)*Q.r*0.8,Q.cy,[150,210,255],12,false);
     atSfx("shatter"); say(1-e.i,"Blocked",{col:"#9fd8ff",size:17}); AT.trauma=Math.min(1,AT.trauma+0.2); }
   if(e.t==="mirror"){ S.mirrorAt=te; say(e.i,"Reflected",{col:"#ffc8f0",size:16}); atSfx("shield"); }
@@ -524,7 +550,7 @@ const AR_KIND={Lunge:"bite","Jaw Lock":"jawlock",Gnash:"gnash",
   "Flurry Kick":"kickflurry","Comet Punch":"punchflurry",Barrage:"punchflurry",
   "Trunk Swat":"lash",Stomp:"stomp","Trunk Slam":"hammer",Trumpet:"push","Quake Stomp":"rockpath","Mammoth Charge":"tackle",
   Jab:"punch","Dash Punch":"punch","One-Two":"onetwo",Uppercut:"punch",Haymaker:"punch","Flurry Punch":"punchflurry5",
-  Bubble:"bolt","Cork Pop":"push","Potion Toss":"potion","Acid Splash":"volley","Boil Over":"pillar","Explosive Brew":"meteor",
+  Bubble:"bolt","Cork Pop":"push","Potion Toss":"potion","Beaker Splash":"volley","Boil Over":"pillar","Explosive Brew":"meteor",
   Splash:"bolt","Lid Bonk":"tackle","Steam Jet":"steam",Scald:"bolt",Whistle:"push","Boiling Point":"pillar",
   Ember:"bolt",Flash:"flash","Spark Shower":"volley",Beacon:"beam","Sky Lantern":"meteor"};
 
@@ -596,7 +622,13 @@ if(typeof MOVE_KIND!=="undefined") Object.assign(MOVE_KIND,{"Talon Dive":"fly","
 
 /* ---------- abilities: when one works, its name shows over the Snabit with its own colour, particles and sound ---------- */
 const AT_ABIL={ "Sky High":{c:[255,236,170],k:"feather"}, Bloodsuck:{c:[230,50,70],k:"suck"}, Rebirth:{c:[255,170,60],k:"flame"}, Illusion:{c:[160,200,255],k:"wisp"},
-  Coil:{c:[120,200,90],k:"ring"}, "Thick Fur":{c:[220,236,255],k:"snow"}, Bright:{c:[255,246,190],k:"shine"}, Counterpunch:{c:[255,160,80],k:"ring"}, Steady:{c:[200,170,130],k:"ring"} };
+  Coil:{c:[120,200,90],k:"ring"}, "Thick Fur":{c:[220,236,255],k:"snow"}, Bright:{c:[255,246,190],k:"shine"}, Counterpunch:{c:[255,160,80],k:"ring"}, Steady:{c:[200,170,130],k:"ring"},
+  Wobble:{c:[74,146,240],k:"ring"}, "Big Bite":{c:[230,120,70],k:"ring"}, "Keen Eye":{c:[255,246,190],k:"shine"}, Shell:{c:[170,118,66],k:"ring"}, "Long Stride":{c:[255,224,60],k:"ring"},
+  Web:{c:[164,92,232],k:"ring"}, Slippery:{c:[140,86,190],k:"ring"}, Hothead:{c:[255,112,40],k:"flame"}, "Static Skin":{c:[255,224,60],k:"ring"}, "Lightning Rod":{c:[255,224,60],k:"shine"},
+  Sunbather:{c:[255,214,120],k:"shine"}, Bloom:{c:[96,180,72],k:"ring"}, Insulated:{c:[150,222,255],k:"snow"}, Defiant:{c:[230,90,60],k:"ring"}, "Last Stand":{c:[230,90,60],k:"flame"},
+  "Toxic Touch":{c:[164,92,232],k:"ring"}, Beguile:{c:[255,132,192],k:"ring"}, "Mirror Mind":{c:[255,132,192],k:"shine"}, Bedrock:{c:[170,118,66],k:"ring"}, Unbreakable:{c:[170,118,66],k:"ring"},
+  Halo:{c:[255,246,190],k:"shine"}, Sanctuary:{c:[255,246,190],k:"shine"}, Reflect:{c:[200,210,225],k:"shine"}, Haunt:{c:[140,86,190],k:"ring"}, "Life seed":{c:[120,210,110],k:"ring"},
+  Wildfire:{c:[255,112,40],k:"flame"}, Volatile:{c:[164,92,232],k:"ring"}, Permafrost:{c:[150,222,255],k:"snow"}, Corrosion:{c:[164,92,232],k:"ring"}, Plated:{c:[200,210,225],k:"ring"}, Undertow:{c:[74,146,240],k:"ring"} };
 function atAbility(e,now){ const A=AT_ABIL[e.name]||{c:[255,214,90],k:"ring"}, P=atP(e.i);
   AT.fx.push({i:e.i,t0:now,txt:e.name,col:atRgba(A.c,1),size:15,lift:44});
   if(P){ atPart({k:"ring",x:P.cx,y:P.foot,life:520,s:P.r*2.4,c:A.c}); atPart({k:"ring",x:P.cx,y:P.foot,life:700,s:P.r*3.2,c:A.c,t0:AT.te+90});

@@ -114,7 +114,7 @@ class Fight{
     if(this.over) return [];
     this.events=[]; this.turn++;
     if(this.turn===1) this.start();
-    else this.p.forEach((f,i)=>{ const o=this.p[1-i]; let gain=(o.ability==="Abyss"?1:2)+(f.energyBonus||0);
+    else this.p.forEach((f,i)=>{ const o=this.p[1-i]; let gain=(o.ability==="Abyss"?1:2)+(f.energyBonus||0)+(f.energyBonus&&f.heldMul>1&&this.turn%2?1:0);   // Heavy Lifter: an Energy cell gives an extra 1 every other turn
       if(this.rand()<0.25+edge(this.eff(f,"sta"),this.eff(o,"sta"),1.2,-0.25,0.5)) gain++;   // Stamina: a chance of one more energy a turn
       f.energy=Math.min(10,f.energy+gain); });
     const picks=[pickA,pickB];
@@ -246,21 +246,21 @@ class Fight{
       if(def.status&&def.status.name==="Freeze"&&me.ability==="Permafrost") d*=1.2;
       if(def.ability==="Wobble"&&!def.firstHitTaken){ d*=0.7; this.pop(tgt,"Wobble"); }
       def.firstHitTaken=true;
-      if(me.heldEl&&s.el&&s.el===me.heldEl) d*=1.2;
+      if(me.heldEl&&s.el&&s.el===me.heldEl) d*=1+0.2*(me.heldMul||1);
       d=Math.max(1,Math.round(d));
       if(def.endure&&d>=def.hp&&tgt!==i){ d=def.hp-1; this.say(`${def.name} endures the hit.`); }
       if(def.ability==="Bedrock"&&def.hp===def.maxhp&&d>=def.hp){ d=def.hp-1; this.pop(tgt,"Bedrock"); this.say(`${def.name} hangs on.`); }
       def.hp=Math.max(0,def.hp-d); total+=d; landed++;
-      if(def.lifeSeed&&def.hp>0&&def.hp<def.maxhp/2){ def.lifeSeed=false; const h=Math.round(def.maxhp/4); def.hp=Math.min(def.maxhp,def.hp+h); this.say(`${def.name}'s Life seed heals ${h}.`); } if(!s.basic&&tgt!==i){ def.hitBy=def.hitBy||{}; def.hitBy[s.name]=1; }
+      if(def.lifeSeed&&def.hp>0&&def.hp<def.maxhp/2){ def.lifeSeed=false; const h=Math.round(def.maxhp/4*(def.heldMul||1)); def.hp=Math.min(def.maxhp,def.hp+h); this.say(`${def.name}'s Life seed heals ${h}.`); } if(!s.basic&&tgt!==i){ def.hitBy=def.hitBy||{}; def.hitBy[s.name]=1; }
       if(def.charging) def.hitWhileCharging=true;
       this.events.push({t:"hit",who:tgt,dmg:d,eff:m,crit});
       if(crit) this.say("A critical hit.");
       if(def.hp<=0) break;
       // contact reactions
       if(s.kind==="Strike"&&tgt!==i){
-        if(def.ability==="Hothead"&&R()<0.2){ this.pop(tgt,"Hothead"); this.inflict(me,"Burn",tgt); }
+        if(def.ability==="Hothead"&&R()<0.1){ this.pop(tgt,"Hothead"); this.inflict(me,"Burn",tgt); }
         if(def.ability==="Static Skin"&&R()<0.2){ this.pop(tgt,"Static Skin"); this.inflict(me,"Shock",tgt); }
-        if(me.ability==="Toxic Touch"&&R()<0.2){ this.pop(i,"Toxic Touch"); this.inflict(def,"Poison",i); }
+        if(me.ability==="Toxic Touch"&&R()<0.1){ this.pop(i,"Toxic Touch"); this.inflict(def,"Poison",i); }
         if(def.ability==="Coil"&&R()<0.25){ this.pop(tgt,"Coil"); this.inflict(me,"Root",tgt); }   // Naga
       }
     }
@@ -282,7 +282,7 @@ class Fight{
     if(s.lower&&s.lowerChance&&tgt!==i&&R()*100<s.lowerChance) this.stageChange(def,s.lower,true);
     if(this.field&&this.field.name==="Static"&&R()<0.1) this.inflict(def,"Shock",i);
   }
-  lastStand(i){ const f=this.p[i]; if(f.ability==="Last Stand"&&!f.lastStand&&f.hp>0&&f.hp<f.maxhp/4){ f.lastStand=true; const h=Math.round(f.maxhp*0.3); f.hp=Math.min(f.maxhp,f.hp+h); this.pop(i,"Last Stand"); this.say(`${f.name} gets a second wind.`); this.events.push({t:"heal",who:i,amt:h}); } }
+  lastStand(i){ const f=this.p[i]; if(f.ability==="Last Stand"&&!f.lastStand&&f.hp>0&&f.hp<f.maxhp/4){ f.lastStand=true; const h=Math.round(f.maxhp*0.2); f.hp=Math.min(f.maxhp,f.hp+h); this.pop(i,"Last Stand"); this.say(`${f.name} gets a second wind.`); this.events.push({t:"heal",who:i,amt:h}); } }
   ko(i,by){
     const f=this.p[i];
     if(f.ability==="Rebirth"&&!f.reborn){ f.reborn=true; f.hp=Math.round(f.maxhp/4); f.status=null; this.pop(i,"Rebirth"); this.say(`${f.name} rises from the flames.`); this.events.push({t:"heal",who:i,amt:f.hp}); return; }   // Phoenix

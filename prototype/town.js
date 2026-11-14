@@ -52,7 +52,7 @@ function openTown(){
   el("tw-shop").onclick=()=>openShop(); el("tw-w").onclick=openWorkshop; el("tw-hall").onclick=()=>openHall(); el("tw-back").onclick=()=>menu("Out");
 }
 async function openShop(line){
-  if(RS&&RS.visit!=="shop") await visitPlace("shop");
+  const tk=visitTicket(); if(RS&&RS.visit!=="shop") await visitPlace("shop"); if(visitStale(tk)) return;
   if(RS) RS.inTown=true;
   const say0=SHOP_SAY||line||"Welcome! Feel free to look around. The skill chips are in the glass case."; SHOP_SAY=null;
   npcPanel(npcBox("shop",say0)+`<button class="rb" id="sh-m">Snacks and medicine<small>Food, medicine and toys</small></button><button class="rb" id="sh-i">Things to wear<small>New every week</small></button>
@@ -143,9 +143,10 @@ function applyGear(s,f){
     const add=([n,i])=>{ if(i===0){ f.maxhp=Math.max(10,f.maxhp+n*2); f.hp=f.maxhp; } else { const key=["","pow","grd","mnd","spr","spd"][i]; f.base[key]=Math.max(1,f.base[key]+n); } };
     if(g.up) add(g.up); if(g.down) add(g.down);
     if(g.energy) f.energy+=1; if(g.crit) f.critBonus=(f.critBonus||0)+g.crit; if(g.acc) f.accMod=(f.accMod||0)+g.acc; if(g.monocle) f.monocle=true; }
+  const hm=f.ability==="Heavy Lifter"?1.5:1; f.heldMul=hm;   // Antik's Heavy Lifter: held items work 50% better
   if(s.held==="Element stone") f.heldEl=s.m.el1;
   if(s.held==="Energy cell"){ f.energyBonus=1; f.maxhp=Math.round(f.maxhp*0.9); f.hp=f.maxhp; }
   if(s.held==="Life seed") f.lifeSeed=true;
-  if(s.held==="Lucky bit") f.critBonus=(f.critBonus||0)+0.05;
+  if(s.held==="Lucky bit") f.critBonus=(f.critBonus||0)+0.05*hm;
   return f;
 }
