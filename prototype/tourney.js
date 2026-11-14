@@ -198,7 +198,7 @@ function finishCup(){
   if(place===null) lines.push(`It dropped out of the ${c.name}.`);
   else if((c.format==="elim"||c.format==="bo3")&&place>1) lines.push(`It went out in the ${place===2?"final":place===3?"semi-final":"quarter-final"} of the ${c.name}.`);
   else if(c.format==="team5"){ const n=CUP.bouts.filter(b=>b.res==="w").length; lines.push(`The Hill League ${place===1?"won":"lost"} the exhibition ${Math.max(n,5-n)} bouts to ${Math.min(n,5-n)}, and ${displayName(s)} ${own?"won":"lost"} its own bout.`); }
-  else lines.push(`${place===1?"It won":"It finished "+["","first","second","third","fourth","fifth"][Math.min(place,5)]+" in"} the ${c.name}.`);
+  else lines.push(`${place===1?"It won":"It finished "+["","first","second","third","fourth","fifth","sixth"][Math.min(place,6)]+" in"} the ${c.name}.`);
   if(prize){ PLAYER.bits+=prize; lines.push(`It brings home ${prize} bits.`); }
   if(place===1&&c.prize){ addItem(c.prize); lines.push(`The prize table also had ${/^[AEIOU]/.test(c.prize)?"an":"a"} ${c.prize}.`); }
   if(place===1&&c.qualifier){ s.exQual=`${weekParts(PLAYER.week).yr}:${c.grade}`; lines.push("It's in this year's Summer Exhibition, next month."); }
