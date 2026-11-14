@@ -250,7 +250,8 @@ function rollFind(rand,boost=1){
 function addItem(name,n=1){ PLAYER.bag[name]=(PLAYER.bag[name]||0)+n; }
 
 /* A frozen copy of a monster for fights that must replay exactly. */
-function fightSnapshot(s){ return {worn:{...(s.worn||{})},held:s.held,m:s.m,variant:s.variant,pal:s.pal,mark2:s.mark2,uses:{...(s.uses||{})},tp:s.tp.slice(),stage:s.stage,mark:s.mark,grid:s.grid,level:s.level,equip:s.equip.slice(),habits:s.habits.slice(),lowLoyalty:RS===s&&hearts()<2}; }
+function fightSnapshot(s){ return {worn:{...(s.worn||{})},held:s.held,m:s.m,variant:s.variant,pal:s.pal,mark2:s.mark2,uses:{...(s.uses||{})},tp:s.tp.slice(),stage:s.stage,mark:s.mark,grid:s.grid,level:s.level,equip:s.equip.slice(),habits:s.habits.slice(),lowLoyalty:RS===s&&hearts()<2,
+  arPresets:s.arPresets,arPreset:s.arPreset,arHabit:{...(s.arHabit||{})}}; }   // and its arena move preset and habits, so mission and trip fights go the way cup fights on Auto do
 
 /* Skill use counts, mastery, the Skill book and learning a skill by being hit with it. */
 const MASTERY=60, CHAIN_USES=30;
