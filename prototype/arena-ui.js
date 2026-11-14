@@ -211,7 +211,7 @@ function atEvent(e,now){
     AT.turn={t0:te,C:ch+K.C/rate,D:ch+Math.min(K.D/rate,K.C/rate+700)};
     const col=m.el&&typeof ELC==="function"?hexRgb(ELC(m.el)):AT_FAMCOL[AT.ar.p[e.i].f.family]||[255,214,90];
     S.anim={kind,t0:te+ch,tier,rate,el:m.el||null,name:m.name,src:typeof sourceFor==="function"?sourceFor({name:m.name,kind:m.cast?"Cast":"Strike"},sp):"mouth",col,pw:m.dmg>=70?1.35:m.dmg>=40?1.05:0.8,contact:/^(tackle|bite|stomp|punch|claw|shadowstrike|shadowclaw|fly)$/.test(kind)};
-    if(tier==="special"&&!S.anim.contact&&ANIM[kind].fx&&!m.lower) S.anim.mega=true;
+    if(tier==="special"&&!S.anim.contact&&!m.lower) S.anim.mega=/^(beam|bolt|spear|volley|drain|gust)$/.test(kind)?"beam":kind==="lightning"?"bolt":/^(meteor|icefall|boulder|rockpath)$/.test(kind)?"fall":/^(pillar|tornado|firespin|wave|mist|mistcast)$/.test(kind)?"rise":null;
     if(ch){ S.charge={t0:te,d:ch,tier,col:S.anim.col}; if(tier==="special") AT.cine={t0:te,d:ch,i:e.i,name:m.name,col:S.anim.col}; }
     try{ sfx(ch?"charge":m.cast?"charge":"whoosh"); if(typeof elSfx==="function") elSfx(m.el,"cast"); if(typeof kindSfx==="function"&&!ch) kindSfx(kind); }catch(err){}
   }
@@ -221,7 +221,7 @@ function atEvent(e,now){
   if(e.t==="hit"){ const o=AT.side[1-e.i], mt=S.anim&&S.anim.tier||"light", tier=e.crit?(mt==="special"?"special":mt==="heavy"?"special":"heavy"):mt==="light"&&e.dmg>=25?"medium":mt, T=AT_TIER[tier];
     if(e.h===0||!o.react||te-o.react.t0>120){ o.react={kind:"hit",t0:te,tier}; AT.freeze=Math.max(AT.freeze,now+T.stop); AT.trauma=Math.min(1,AT.trauma+T.trauma);
       AT.hitJuice={i:1-e.i,t0:te,tier,col:S.anim?S.anim.col:[255,236,160]};
-      if(S.anim) AT.strikes.push({kind:/bite/.test(S.anim.kind)?"jaws":/claw/.test(S.anim.kind)?"slash":"lines",i:1-e.i,t0:te,col:S.anim.col,big:{light:1,medium:1.15,heavy:1.4,special:1.9}[tier],dir:S.dir,ranged:!S.anim.contact}); AT.punch={t0:te,amt:T.punch,i:1-e.i};
+      if(S.anim) AT.strikes.push({t0:/bite/.test(S.anim.kind)?te-0.16*560:te,d:/bite/.test(S.anim.kind)?560:340,kind:/bite/.test(S.anim.kind)?"jaws":/claw/.test(S.anim.kind)?"slash":"lines",i:1-e.i,col:S.anim.col,big:{light:1,medium:1.15,heavy:1.4,special:1.9}[tier],dir:S.dir,ranged:!S.anim.contact}); AT.punch={t0:te,amt:T.punch,i:1-e.i};
       if(T.screen) AT.flash={t0:now+T.stop*0.4,a:T.screen};
       if(T.slow) AT.slow={from:now+T.stop,until:now+T.stop+T.slow*(AT.ar.over?2.2:1),k:AT.ar.over?0.22:0.32};
       if(tier==="heavy"||tier==="special") AT.dust={i:1-e.i,t0:te,n:tier==="special"?14:8};
@@ -237,12 +237,7 @@ function atEvent(e,now){
 /* hit marks drawn over the target, k runs 0 to 1 over 340 ms */
 function atStrike(c,S,k,p,s){
   const col=S.col, a=1-Math.max(0,(k-0.45)/0.55); c.save(); c.translate(p.x,p.y); c.lineJoin="round";
-  if(S.kind==="jaws"){ const shut=Math.min(1,k/0.28), gap=(1-eo(shut))*52*s+2*s, w=78*s, n=6, bite=shut>=1?Math.min(1,(k-0.28)/0.12):0;
-    c.scale(1+0.12*bite*(1-k),1+0.12*bite*(1-k)); c.globalAlpha=a;
-    for(const sg of [-1,1]){ c.beginPath(); c.moveTo(-w,sg*(gap+30*s)); c.quadraticCurveTo(0,sg*(gap+56*s),w,sg*(gap+30*s)); c.lineTo(w,sg*gap);
-      for(let t=n;t>=0;t--){ const x=-w+2*w*t/n; c.lineTo(x,sg*gap); if(t>0) c.lineTo(x-w/n,sg*(gap-18*s)); }
-      c.closePath(); c.fillStyle="#fff"; c.fill(); c.lineWidth=4*s; c.strokeStyle="#1a1428"; c.stroke(); }
-    if(bite){ c.globalCompositeOperation="lighter"; c.fillStyle=`rgba(${col},${0.6*(1-k)})`; c.beginPath(); c.ellipse(0,0,w*1.1,24*s,0,0,7); c.fill(); } }
+  if(S.kind==="jaws"){ atJaws(c,k,s,col,S.dir); c.restore(); return; }
   else if(S.kind==="slash"){ const grow=Math.min(1,k/0.3), L=150*s;
     for(let n=-1;n<=1;n++){ const ox=n*26*s, x0=ox-L/2*S.dir, y0=-L/2, x1=ox+L/2*S.dir, y1=L/2, xm=x0+(x1-x0)*grow, ym=y0+(y1-y0)*grow;
       c.globalCompositeOperation="lighter"; c.strokeStyle=`rgba(${col},${0.7*a})`; c.lineWidth=18*s; c.lineCap="round"; c.beginPath(); c.moveTo(x0,y0); c.lineTo(xm,ym); c.stroke();
@@ -251,6 +246,87 @@ function atStrike(c,S,k,p,s){
     for(let j=0;j<n;j++){ const ang=j/n*Math.PI*2+((j*7)%5)*0.05, lean=Math.cos(ang)*S.dir>0?1.5:0.8, r1=R0+grow*(70+((j*13)%30))*s*lean;
       c.strokeStyle=j%2?`rgba(${col},${a})`:`rgba(255,255,255,${a})`; c.lineWidth=(j%2?5:3.5)*s; c.lineCap="round";
       c.beginPath(); c.moveTo(Math.cos(ang)*(R0+grow*30*s),Math.sin(ang)*(R0+grow*30*s)*0.8); c.lineTo(Math.cos(ang)*r1,Math.sin(ang)*r1*0.8); c.stroke(); } }
+  c.restore();
+}
+/* the bite: a dark maw with a coloured edge snaps shut over the target, fangs interlocking, then leaves bite marks for a moment.
+   k runs 0 to 1 over 560 ms: open and closing to 0.16, a hard snap and squeeze to 0.3, then the jaws fade and the marks stay */
+function atJaws(c,k,s,col,dir){
+  const W=60*s, H=36*s, n=6, shut=Math.min(1,k/0.16), snap=k>0.16&&k<0.3?Math.sin((k-0.16)/0.14*Math.PI):0;
+  const gap=(1-Math.pow(shut,2.2))*40*s-snap*6*s, open=(1-shut)*0.16, fade=k<0.32?1:Math.max(0,1-(k-0.32)/0.18);
+  if(fade>0){
+    if(shut<1){ c.strokeStyle=`rgba(255,255,255,${0.7*shut})`; c.lineWidth=4*s; c.lineCap="round";
+      for(const sg of [-1,1]) for(let j=0;j<2;j++){ c.beginPath(); c.arc(0,sg*(gap+H*1.2+j*14*s),W*(0.7-j*0.15),sg<0?Math.PI*1.15:Math.PI*0.15,sg<0?Math.PI*1.85:Math.PI*0.85); c.stroke(); } }
+    for(const sg of [-1,1]){ c.save(); c.globalAlpha=fade*(shut>=1?0.88:1)*Math.min(1,k/0.035); c.translate(-dir*W*0.95,sg*gap); c.rotate(sg*open*dir); c.translate(dir*W*0.95,0); c.scale(1,-sg);
+      const g=c.createLinearGradient(0,-H*1.2,0,0); g.addColorStop(0,"#2a1430"); g.addColorStop(1,"#4a1f3e");
+      c.beginPath(); c.moveTo(-W*1.05,-2*s); c.quadraticCurveTo(-W*0.3,-H*1.35,W*1.05,-H*0.45); c.quadraticCurveTo(W*1.12,-H*0.1,W*0.95,0); c.closePath();
+      c.fillStyle=g; c.fill(); c.lineWidth=6*s; c.strokeStyle=`rgb(${col})`; c.stroke(); c.lineWidth=2*s; c.strokeStyle="rgba(255,255,255,.35)"; c.stroke();
+      c.fillStyle="#d9577a"; c.beginPath(); c.moveTo(-W*0.98,-1*s); c.quadraticCurveTo(0,-9*s,W*0.95,-1*s); c.lineTo(W*0.95,2*s); c.lineTo(-W*0.98,2*s); c.closePath(); c.fill();
+      const off=sg<0?0:0.5, tw=1.9*W/(n+0.5);
+      for(let t=0;t<n;t++){ const x=-W*0.92+tw*(t+0.5+off), big=t===0||t===n-1, th=(big?34:21)*s, bw=tw*(big?0.62:0.5);
+        const tg=c.createLinearGradient(x,0,x,th); tg.addColorStop(0,"#ffffff"); tg.addColorStop(1,"#dcd6e8");
+        c.beginPath(); c.moveTo(x-bw,1*s); c.quadraticCurveTo(x-bw*0.35,th*0.55,x+bw*0.12,th); c.quadraticCurveTo(x+bw*0.45,th*0.5,x+bw,1*s); c.closePath();
+        c.fillStyle=tg; c.fill(); c.lineWidth=2.4*s; c.strokeStyle="#1a1428"; c.stroke(); }
+      c.restore(); }
+    if(snap){ c.save(); c.globalCompositeOperation="lighter"; const g=c.createRadialGradient(0,0,0,0,0,W*1.3); g.addColorStop(0,`rgba(255,255,255,${0.9*snap})`); g.addColorStop(0.4,`rgba(${col},${0.6*snap})`); g.addColorStop(1,`rgba(${col},0)`);
+      c.fillStyle=g; c.beginPath(); c.ellipse(0,0,W*1.4,H*0.9,0,0,7); c.fill(); c.restore(); } }
+  if(k>0.24){ const a=Math.min(1,(k-0.24)/0.06)*Math.max(0,1-(k-0.55)/0.45); c.fillStyle=`rgba(60,10,30,${0.75*a})`;
+    for(const sg of [-1,1]) for(let t=0;t<5;t++){ const x=-W*0.55+t*W*0.27+(sg>0?W*0.13:0); c.beginPath(); c.moveTo(x-5*s,sg*10*s); c.lineTo(x+5*s,sg*10*s); c.lineTo(x,sg*2*s); c.closePath(); c.fill(); } }
+}
+/* lightning specials: a jagged bolt cracks down from the sky onto the target three times, with a scorch glow on the ground */
+function atMegaBolt(c,t,C,tg,col,s,te){
+  const hits=[C-130,C,C+150], on=hits.find(h=>t>=h-30&&t<h+110); const foot=tg.foot||tg.y+40*s;
+  if(t>C-260&&t<C+420){ const g=c.createRadialGradient(tg.x,foot,0,tg.x,foot,90*s); g.addColorStop(0,`rgba(${col},${t<C?0.35:0.6})`); g.addColorStop(1,`rgba(${col},0)`);
+    c.save(); c.globalCompositeOperation="lighter"; c.fillStyle=g; c.beginPath(); c.ellipse(tg.x,foot,110*s,30*s,0,0,7); c.fill(); c.restore(); }
+  if(on==null) return;
+  const k=(t-(on-30))/140, a=k<0.25?1:Math.max(0,1-(k-0.25)/0.75), top=foot-900*s, seed=Math.floor(on/7)+Math.floor(te/55);
+  const pts=[[tg.x+((seed*37)%40-20)*s,top]]; let x=pts[0][0];
+  for(let i=1;i<=9;i++){ const y=top+(foot-top)*i/9; x+=(((seed*131+i*977)%100)/100-0.5)*70*s; if(i===9) x=tg.x; pts.push([x,y]); }
+  if(k<0.2) AT.flash={t0:performance.now(),a:0.35};
+  AT.trauma=Math.max(AT.trauma,0.55*a);
+  c.save(); c.globalCompositeOperation="lighter"; c.lineJoin="round"; c.lineCap="round";
+  const path=()=>{ c.beginPath(); pts.forEach((p,i)=>c[i?"lineTo":"moveTo"](p[0],p[1])); };
+  c.strokeStyle=`rgba(${col},${0.35*a})`; c.lineWidth=90*s; path(); c.stroke();
+  c.strokeStyle=`rgba(${col},${0.85*a})`; c.lineWidth=36*s; path(); c.stroke();
+  c.strokeStyle=`rgba(255,255,255,${a})`; c.lineWidth=14*s; path(); c.stroke();
+  for(let f=2;f<8;f+=2){ const p=pts[f], q=[p[0]+(((seed+f)*53)%2?1:-1)*60*s,p[1]+50*s]; c.strokeStyle=`rgba(255,255,255,${0.7*a})`; c.lineWidth=3*s; c.beginPath(); c.moveTo(p[0],p[1]); c.lineTo((p[0]+q[0])/2+12*s,(p[1]+q[1])/2); c.lineTo(q[0],q[1]); c.stroke(); }
+  const g=c.createRadialGradient(tg.x,foot,0,tg.x,foot,80*s); g.addColorStop(0,`rgba(255,255,255,${a})`); g.addColorStop(1,`rgba(${col},0)`); c.fillStyle=g; c.beginPath(); c.arc(tg.x,foot-10*s,80*s,0,7); c.fill();
+  c.restore();
+}
+/* meteors, ice falls and boulders: a huge rock or ice chunk drops from the sky with a trail and craters the ground */
+function atMegaFall(c,t,C,tg,col,s,kind,dir){
+  const foot=tg.foot||tg.y+40*s, start=0; if(t<start||t>C+520) return;
+  const ice=kind==="icefall", R=82*s;
+  if(t<C){ const k=(t-start)/C, e=Math.pow(k,1.6), x=tg.x-dir*(220*s)*(1-e), y=foot-R*0.7-(620*s)*(1-e), ang=Math.atan2(900,-dir*260);
+    const sh=c.createRadialGradient(tg.x,foot,0,tg.x,foot,R*1.6); sh.addColorStop(0,`rgba(0,0,0,${0.35*k})`); sh.addColorStop(1,"rgba(0,0,0,0)"); c.fillStyle=sh; c.beginPath(); c.ellipse(tg.x,foot,R*1.6*(0.5+k*0.5),R*0.4,0,0,7); c.fill();
+    c.save(); c.globalCompositeOperation="lighter";
+    for(let j=0;j<10;j++){ const b=j/10, tx=x-dir*b*180*s, ty=y-b*620*s; c.fillStyle=`rgba(${col},${0.5*(1-b)})`; c.beginPath(); c.arc(tx,ty,R*(1-b*0.7),0,7); c.fill(); }
+    c.restore();
+    c.save(); c.translate(x,y); c.rotate(t/140*dir);
+    c.beginPath(); for(let j=0;j<(ice?6:9);j++){ const a=j/(ice?6:9)*Math.PI*2, r=ice?(j%2?R*0.65:R*1.15):R*(0.82+((j*37)%10)/40); c[j?"lineTo":"moveTo"](Math.cos(a)*r,Math.sin(a)*r); } c.closePath();
+    const g=c.createRadialGradient(-R*0.3,-R*0.3,2,0,0,R*1.2); g.addColorStop(0,ice?"#f2fbff":"#fff2c4"); g.addColorStop(0.5,`rgb(${col})`); g.addColorStop(1,ice?"#3d6e9e":"#4a2a1e");
+    c.fillStyle=g; c.fill(); c.lineWidth=5*s; c.strokeStyle="#1a1428"; c.stroke(); c.restore(); return; }
+  const k=(t-C)/520, a=1-k;
+  if(k<0.05) { AT.flash={t0:performance.now(),a:0.5}; AT.trauma=1; if(typeof spawnPuff==="function") spawnPuff(tg.x,foot,22,-Math.PI/2,3,0.22,10*s,"rgba(235,224,200,1)",700); }
+  c.save(); c.fillStyle=`rgba(40,24,18,${0.45*a})`; c.beginPath(); c.ellipse(tg.x,foot+4*s,(90+40*k)*s,(22+8*k)*s,0,0,7); c.fill();
+  c.strokeStyle=`rgba(40,24,18,${0.6*a})`; c.lineWidth=4*s; for(let j=0;j<7;j++){ const an=j/7*Math.PI*2; c.beginPath(); c.moveTo(tg.x+Math.cos(an)*60*s,foot+Math.sin(an)*15*s); c.lineTo(tg.x+Math.cos(an)*(110+30*k)*s,foot+Math.sin(an)*(28+8*k)*s); c.stroke(); }
+  c.globalCompositeOperation="lighter"; const g=c.createRadialGradient(tg.x,foot-20*s,0,tg.x,foot-20*s,140*s); g.addColorStop(0,`rgba(255,255,255,${a*a})`); g.addColorStop(0.4,`rgba(${col},${0.7*a})`); g.addColorStop(1,`rgba(${col},0)`);
+  c.fillStyle=g; c.beginPath(); c.arc(tg.x,foot-20*s,140*s,0,7); c.fill(); c.restore();
+}
+/* pillars, fire spins, whirlpools and mists: the ground under the target glows, then a column erupts up through it */
+function atMegaRise(c,t,C,tg,col,s,kind,te){
+  const foot=tg.foot||tg.y+40*s, warn=C-300, end=C+480; if(t<warn||t>end) return;
+  c.save(); c.globalCompositeOperation="lighter";
+  if(t<C){ const k=(t-warn)/300, g=c.createRadialGradient(tg.x,foot,0,tg.x,foot,100*s); g.addColorStop(0,`rgba(${col},${0.7*k})`); g.addColorStop(1,`rgba(${col},0)`);
+    c.fillStyle=g; c.beginPath(); c.ellipse(tg.x,foot,(60+50*k)*s,(16+12*k)*s,0,0,7); c.fill();
+    c.strokeStyle=`rgba(255,255,255,${0.6*k})`; c.lineWidth=3*s; c.beginPath(); c.ellipse(tg.x,foot,(100-40*k)*s,(26-10*k)*s,0,0,7); c.stroke(); c.restore(); return; }
+  const k=(t-C)/(end-C), up=Math.min(1,k/0.12), env=Math.min(1,(1-k)/0.3), w=(64+10*Math.sin(te/40))*s*env, h=900*s*up, x=tg.x, swirl=/tornado|firespin|wave/.test(kind);
+  if(k<0.04){ AT.flash={t0:performance.now(),a:0.4}; AT.trauma=Math.max(AT.trauma,0.8); }
+  AT.trauma=Math.max(AT.trauma,0.3*env);
+  const band=(ww,fill)=>{ c.fillStyle=fill; c.beginPath(); c.moveTo(x-ww,foot); for(let y=0;y<=h;y+=24) c.lineTo(x-ww*(1+0.12*Math.sin(y/30+te/50))-(swirl?Math.sin(y/90-te/120)*20*s:0),foot-y); for(let y=h;y>=0;y-=24) c.lineTo(x+ww*(1+0.12*Math.sin(y/26-te/45))-(swirl?Math.sin(y/90-te/120)*20*s:0),foot-y); c.closePath(); c.fill(); };
+  band(w*1.8,`rgba(${col},${0.3*env})`); band(w,`rgba(${col},${0.8*env})`); band(w*0.4,`rgba(255,255,255,${0.95*env})`);
+  if(swirl){ c.strokeStyle=`rgba(255,255,255,${0.55*env})`; c.lineWidth=4*s; for(let j=0;j<8;j++){ const y=foot-((te/3+j*120)%h); c.beginPath(); c.ellipse(x,y,w*1.2,w*0.3,0,Math.PI*0.1,Math.PI*0.9); c.stroke(); } }
+  for(let j=0;j<10;j++){ const ph=((te/700+j*0.37)%1); c.fillStyle=`rgba(255,255,255,${0.8*(1-ph)*env})`; c.beginPath(); c.arc(x+((j*41)%60-30)*s*1.4,foot-ph*h*0.8,(3+(j%3))*s,0,7); c.fill(); }
+  const g=c.createRadialGradient(x,foot,0,x,foot,130*s); g.addColorStop(0,`rgba(255,255,255,${env})`); g.addColorStop(1,`rgba(${col},0)`); c.fillStyle=g; c.beginPath(); c.ellipse(x,foot,130*s,36*s,0,0,7); c.fill();
   c.restore();
 }
 /* a special fired from range: an orb gathers at the source, then a thick beam with a white core holds on the target */
@@ -362,7 +438,14 @@ function atDraw(now,dte){
   // the game's own attack effects, from the attacker's eyes, mouth or hands to the target
   [0,1].forEach(i=>{ const A=AT.side[i].anim; if(!A||te<A.t0||!placed[i]||!placed[1-i]||!ANIM[A.kind].fx) return;
     const T0=placed[1-i], tgt={...T0,x:T0.center?T0.center.x:T0.x,y:T0.center?T0.center.y:T0.y};
-    if(A.mega){ atMegaBeam(c,(te-A.t0)*A.rate,ANIM[A.kind].C,originOf(placed[i],A.src,tgt)[0],tgt,A.col,scale/2.3); return; }
+    if(/bite/.test(A.kind)&&!A.mega){ const t=(te-A.t0)*A.rate, C=ANIM[A.kind].C;
+      if(t>=C-200&&t<C){ c.save(); c.translate(tgt.x,tgt.y); atJaws(c,(t-(C-200))/200*0.159,({light:1,heavy:1.4,special:1.9}[A.tier]||1)*scale/2.3,A.col,AT.side[i].dir); c.restore(); } }
+    if(A.mega){ const t=(te-A.t0)*A.rate, C=ANIM[A.kind].C, s2=scale/2.3;
+      if(A.mega==="beam") atMegaBeam(c,t,C,originOf(placed[i],A.src,tgt)[0],tgt,A.col,s2);
+      else if(A.mega==="bolt") atMegaBolt(c,t,C,{...tgt,foot:T0.foot},A.col,s2,te);
+      else if(A.mega==="fall") atMegaFall(c,t,C,{...tgt,foot:T0.foot},A.col,s2,A.kind,AT.side[i].dir);
+      else atMegaRise(c,t,C,{...tgt,foot:T0.foot},A.col,s2,A.kind,te);
+      return; }
     try{ ANIM[A.kind].fx(c,(te-A.t0)*A.rate,{self:placed[i],target:tgt,targetLift:tgt.lift||0,col:A.col,el:A.el,name:A.name,from:originOf(placed[i],A.src,tgt),pw:A.pw,W:WW,H:HH}); }catch(err){ AT.side[i].anim=null; } });
   if(AT.spark&&placed[AT.spark.i]){ const p=placed[AT.spark.i], src=placed[1-AT.spark.i], c0=p.center||p;
     spawnSparks(c0,Math.atan2(c0.y-src.y,c0.x-src.x),AT.spark.n,AT.spark.col); AT.burst={i:AT.spark.i,t0:te,col:AT.spark.col}; AT.spark=null; }
@@ -386,8 +469,8 @@ function atDraw(now,dte){
   AT.stars=AT.stars.filter(r=>te-r.t0<150); for(const r of AT.stars){ const k=(te-r.t0)/150, R0=(46+30*k)*r.s, R1=R0*0.38;
     c.fillStyle=`rgba(255,255,255,${1-k})`; c.beginPath(); for(let n=0;n<16;n++){ const a=r.rot+n*Math.PI/8, rr=n%2?R1:R0*(0.8+0.4*((n*7)%3)/2); c[n?"lineTo":"moveTo"](r.x+Math.cos(a)*rr,r.y+Math.sin(a)*rr); } c.closePath(); c.fill();
     c.fillStyle=`rgba(${r.col},${0.9*(1-k)})`; c.beginPath(); c.arc(r.x,r.y,R1*0.9,0,7); c.fill(); }
-  AT.strikes=AT.strikes.filter(k=>te-k.t0<340); for(const k of AT.strikes){ const P=placed[k.i]; if(!P) continue;
-    atStrike(c,k,(te-k.t0)/340,P.center||P,k.big*scale/2.3); }
+  AT.strikes=AT.strikes.filter(k=>te-k.t0<k.d); for(const k of AT.strikes){ const P=placed[k.i]; if(!P) continue;
+    atStrike(c,k,(te-k.t0)/k.d,P.center||P,k.big*scale/2.3); }
   drawSparks(c,dte); drawPuffs(c);
   // damage numbers and words over the head
   AT.fx=AT.fx.filter(f=>now-f.t0<900); c.textAlign="center"; for(const f of AT.fx){ if(now<f.t0) continue; const k=(now-f.t0)/900, p=placed[f.i]; if(!p) continue;
