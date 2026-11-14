@@ -263,11 +263,11 @@ The tests are in `tools/tests` (see Where everything is). Run the regression set
 | Stilt | Pill on long legs | Long jointed legs | High Kick | 70 / 140 / 240 cm |
 | Skit | Flat body | Spider legs, no arms | Web in its element | 35 / 70 / 110 cm |
 | Booly | Floating cone | Ghost tail and a blue wisp | Phase Shift | 55 / 110 / 190 cm |
-| Plod | Rounded box on four legs | Trunk and flapping ears | Trunk Slam | see `SIZE_CM` |
-| Bipped | Upright pill | Stub arms and two legs | One-Two | see `SIZE_CM` |
-| Fizz | Potion flask | Cork and bubbles | Potion Toss | see `SIZE_CM` |
-| Teep | Teapot | Spout, lid and handle | Steam Jet | see `SIZE_CM` |
-| Lern | Paper lantern | Handle and glow | Flash | see `SIZE_CM` |
+| Plod | Rounded box on four legs | Trunk and flapping ears | Trunk Slam | 50 / 100 / 170 cm |
+| Bipped | Upright pill | Stub arms and two legs | One-Two | 60 / 120 / 190 cm |
+| Fizz | Potion flask | Cork and bubbles | Potion Toss | 45 / 90 / 150 cm |
+| Teep | Teapot | Spout, lid and handle | Steam Jet | 40 / 80 / 140 cm |
+| Lern | Paper lantern | Handle and glow | Flash | 45 / 90 / 160 cm |
 
 | Stat trained most | Mark | What it adds |
 |---|---|---|
