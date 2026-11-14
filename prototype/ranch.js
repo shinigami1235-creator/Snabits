@@ -414,7 +414,7 @@ async function pondMeditate(r){
   } finally { made.forEach(unprop); s.koiPull=0; }
 }
 /* Puzzle box in the study room: it slides the tiles on a wooden puzzle cube while the shapes it's after light up in a thought bubble.
-   A great opens it in one go with a lightbulb, confetti and a wind-up toy hopping out. A success takes two wrong tries first.
+   A great opens it in one go with a lightbulb, confetti and a wind-up toy hopping out. A success takes one wrong try first.
    A fail has the lid snap shut on its face, the box pops off, and it's left frustrated with a scribble over its head. */
 async function studyPuzzle(r){
   const s=RS, made=[], add=o=>{ made.push(prop(o)); return o; }, W=ms=>rwait(ms);
@@ -433,7 +433,7 @@ async function studyPuzzle(r){
       for(let k=0;k<3;k++){ await slide(true,true); await light(k); }
       spark(s.x,headY()-12,"bulb"); s.pose="happy"; await W(450);
     } else {
-      for(let t=0;t<2;t++){ await slide(false); await slide(false); await buzz(); }
+      for(let t=0;t<(r==="fail"?2:1);t++){ await slide(false); await slide(false); await buzz(); }   // a success gets it on the second try
       if(r==="fail"){                                                          // it leans right in, the lid snaps shut on its face
         s.pose="lean"; for(let f=0;f<8;f++){ box.lid=f/8*0.6; await W(30); }
         await W(250); box.lid=0; box.sh=2; spark(box.x,GROUND-22,"smoke",3); box.onHead=true; s.pose="hurt"; bub.a=0;
@@ -930,7 +930,7 @@ function rLoop(t){
   else { s.cam=null; const sc=el("r-scene"); if(sc) sc.style.display="none"; const ch=el("r-chibi"); if(ch) ch.style.filter=""; }
   { const go=el("r-goout"); if(go){ const on=smooth&&s.room==="barn"&&!s.busy; if(go.style.display!==(on?"block":"none")) go.style.display=on?"block":"none"; } }
   if(smooth){   // the side-scrolling ranch: the camera follows the monster, zooms in on small ones, and can be dragged to look around
-    const sp=chibiSpec(null,s), hpx=sp?sp.cm/100*RANCH_PX_M:60, wide=s.bg==='shop'||s.bg==='lab'||s.props.some(p=>p.k==='npc'), Zt=wide?1:clamp(66/hpx,1,s.bg?1.3:1.8);   /* away scenes stay wide so their props show */ s.zoom=s.zoom?s.zoom+(Zt-s.zoom)*0.05:Zt;
+    const sp=chibiSpec(null,s), hpx=sp?sp.cm/100*RANCH_PX_M:60, wide=s.bg==='shop'||s.bg==='lab'||s.props.some(p=>p.k==='npc'), Zt=wide?1:clamp(66/hpx,1,s.bg?1.1:1.8);   /* away scenes and training places stay wide so their props show */ s.zoom=s.zoom?s.zoom+(Zt-s.zoom)*0.05:Zt;
     const Z=s.zoom, vw=cv.width/Z, wx=s.x+(s.zx||0), panning=s.pan||(s.panUntil&&performance.now()<s.panUntil);
     const one=s.room||s.bg, lo=one?0:-RW, hi=Math.max(lo,(one?RW:2*RW)-vw), Lt=clamp(panning?(s.panC!=null?s.panC-vw/2:s.panL):wx-vw/2,lo,hi); s.camL=s.camL==null||s.camJump?Lt:s.camL+(Lt-s.camL)*(s.pan?1:0.08); s.camJump=false;
     s.cam={L:s.camL,Z,extra}; }
