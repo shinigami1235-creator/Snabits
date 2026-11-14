@@ -3,7 +3,7 @@ function ghostCode(s){
   const m=s.m;
   const o={v:1,n:m.name,f:m.family,hy:m.hybridOf||null,p:m.parts,e:[m.el1,m.el2,m.mono],pal:m.pal,st:m.stats,ab:m.ability,ps:m.pers,ls:m.lifespan,
     lv:s.level,tp:s.tp,sg:s.stage,mk:s.mark,m2:s.mark2,va:s.variant,we:s.wanderEl,eq:s.equip,wo:s.worn||{},he:s.held||null,u:s.uses||{},
-    h:(s.habits||[]).slice(-80).map(x=>[x.k,x.n,x.o]),gr:s.grade};
+    h:(s.habits||[]).slice(-80).map(x=>[x.k,x.n,x.o]),gr:s.grade,co:m.costume||null,ah:s.arHabit||{},ap:s.arPresets||null,ai:s.arPreset||0};   // its costume, and its arena habits and move preset
   return "SNB1:"+btoa(unescape(encodeURIComponent(JSON.stringify(o))));
 }
 function readGhost(code){
@@ -11,9 +11,9 @@ function readGhost(code){
   const o=JSON.parse(decodeURIComponent(escape(atob(t.slice(5)))));
   if(o.hy) registerHybrid(...o.hy);
   if(!FAMILY[o.f]) throw new Error("This code is from a newer version of the game.");
-  const m={name:o.n,family:o.f,hybridOf:o.hy,parts:o.p,el1:o.e[0],el2:o.e[1],mono:o.e[2],pal:o.pal,stats:o.st,ability:o.ab,pers:o.ps,lifespan:o.ls,grid:buildGrid(o.f,o.p),pool:o.eq.slice(),skills:o.eq.slice(),talent:[0,0,0,0,0,0]};
+  const m={name:o.n,family:o.f,hybridOf:o.hy,parts:o.p,el1:o.e[0],el2:o.e[1],mono:o.e[2],pal:o.pal,stats:o.st,ability:o.ab,pers:o.ps,lifespan:o.ls,grid:buildGrid(o.f,o.p),pool:o.eq.slice(),skills:o.eq.slice(),talent:[0,0,0,0,0,0],costume:o.co||null};
   const s={m,tp:o.tp,level:o.lv,stage:o.sg,mark:o.mk,mark2:o.m2,variant:o.va,wanderEl:o.we,equip:o.eq.filter(n=>SKILLS[n]),worn:o.wo,held:o.he,uses:o.u||{},
-    habits:(o.h||[]).map(([k,n,op])=>({k,n,o:op,f:0})),fightNo:0,lowLoyalty:false,grade:o.gr};
+    habits:(o.h||[]).map(([k,n,op])=>({k,n,o:op,f:0})),fightNo:0,lowLoyalty:false,grade:o.gr,arHabit:o.ah||{},arPresets:o.ap||null,arPreset:o.ai||0};
   s.grid=s.stage==="Bit"?m.grid:stageGrid(s); s.pal=variantPal(s);
   return s;
 }
