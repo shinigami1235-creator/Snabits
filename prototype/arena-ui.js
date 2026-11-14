@@ -75,7 +75,7 @@ const atRanchOf=e=>typeof RS!=="undefined"&&RS&&RS.id===e.id?RS:newRanch(e);
 function atFromScan(m){ window.PRACTICE=false; AT_PICK.me={kind:"scan",m}; if(typeof camStop==="function") try{ camStop(); }catch(e){} openArenaTest(); }
 /* a fighter from a pick: a family preset, a ranch Snabit as it is, or a monster trained up to level 30 */
 function atMake(src,R,level,grade){
-  if(typeof src==="string") src=src==="Random"?{kind:"fam",fam:Object.keys(FAM_MOVES)[Math.floor(R()*8)]}:{kind:"fam",fam:src};
+  if(typeof src==="string") src=src==="Random"?{kind:"fam",fam:Object.keys(FAM_MOVES)[Math.floor(R()*Object.keys(FAM_MOVES).length)]}:{kind:"fam",fam:src};
   if(src.kind==="ros"){ const s=PLAYER.roster[src.k]&&atRanchOf(PLAYER.roster[src.k]); if(s){ const fm=fightMon(s), f=makeFighter(fm,s.equip,s.level); f.family=s.m.family;
     f.moves=arMoves(s.m.family,s.level,(s.skillsKnown||s.equip||[]).filter(n=>SKILLS[n]),s.m.el1); f.name=typeof displayName==="function"?displayName(s):f.name; return {f,spec:chibiSpec(fm),level:s.level,grade:s.grade}; } src={kind:"fam",fam:"Chomp"}; }
   // a ranch Snabit's opponent matches its level and grade; presets and scans fight at level 30 with grade B training
@@ -562,7 +562,7 @@ function atMegaBeam(c,t,C,o,tg,col,s){
   c.restore();
   if(Math.random()<0.5&&typeof spawnSparks==="function") spawnSparks(tg,Math.atan2(dy,dx)+Math.PI,2,col);
 }
-const AT_FAMCOL={Antik:[255,224,122],Squib:[127,211,242],Moko:[255,154,214],Booly:[159,184,255],Skit:[244,239,228],Chomp:[255,214,90],Pinch:[255,138,122],Stilt:[255,179,92]};
+const AT_FAMCOL={Antik:[255,224,122],Squib:[127,211,242],Moko:[255,154,214],Booly:[159,184,255],Skit:[244,239,228],Chomp:[255,214,90],Pinch:[255,138,122],Stilt:[255,179,92],Plod:[190,196,214],Bipped:[255,170,110],Fizz:[200,140,255],Teep:[140,226,200],Lern:[255,236,150]};
 /* one side's pose and offset this frame, the way the battle's sideState works */
 function atSideState(S,te){
   const out={f:0,arc:0,lift:0,rot:0,sx:1,sy:1,pose:null,flash:0,off:[0,0],alpha:1};

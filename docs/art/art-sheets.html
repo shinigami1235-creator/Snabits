@@ -6,8 +6,8 @@ const PAL={Blaze:[[226,76,62],[150,40,40],[255,214,90]],Brawl:[[232,140,52],[128
  Venom:[[150,96,206],[72,48,110],[170,240,120]],Charm:[[244,150,190],[150,92,190],[255,240,250]],Stone:[[160,122,86],[96,72,54],[226,206,176]],
  Light:[[244,240,226],[214,180,100],[255,206,90]],Steel:[[170,178,192],[88,96,112],[120,210,240]],Shade:[[78,70,104],[38,34,56],[255,214,74]]};
 const mx=(a,b,k)=>a.map((v,i)=>Math.round(v+(b[i]-v)*k)), EL=Object.keys(PAL), pal=e=>({body:PAL[e][0],parts:PAL[e][1],accent:PAL[e][2]});
-const FAMS=['Chomp','Squib','Antik','Moko','Pinch','Stilt','Skit','Booly','Quad','Bipped','Flask','Teep','Lern'];
-const HOME={Chomp:'Brawl',Squib:'Frost',Antik:'Steel',Moko:'Charm',Pinch:'Blaze',Stilt:'Wild',Skit:'Venom',Booly:'Light',Quad:'Stone',Bipped:'Tide',Flask:'Venom',Teep:'Spark',Lern:'Blaze'};
+const FAMS=['Chomp','Squib','Antik','Moko','Pinch','Stilt','Skit','Booly','Plod','Bipped','Fizz','Teep','Lern'];
+const HOME={Chomp:'Brawl',Squib:'Frost',Antik:'Steel',Moko:'Charm',Pinch:'Blaze',Stilt:'Wild',Skit:'Venom',Booly:'Light',Plod:'Stone',Bipped:'Tide',Fizz:'Venom',Teep:'Spark',Lern:'Blaze'};
 const LOOKS={
  elements:{rows:['Squib','Pinch','Booly'],cols:EL.map(e=>({label:e,m:{stage:'Mega',el:e}}))},
  worn:{rows:FAMS,cols:[{label:'Plain',m:{}},{label:'Cap, sunglasses, boots',m:{worn:{head:'Cap',face:'Sunglasses',feet:'Boots'}}},
@@ -27,7 +27,7 @@ const LOOKS={
    {label:'Wanderer, from Tide',m:{variant:'Wanderer'},pf:p=>({...p,accent:[70,130,220],parts:mx(p.parts,[70,130,220],0.5)})},
    {label:'Feral, Mega, hurt',m:{variant:'Feral'},pose:'hurt'},{label:'Champion, back',m:{variant:'Champion',back:true}}]},
  hybrids:{rows:FAMS.slice(0,8),cols:FAMS.slice(0,8).map(b=>({label:'on '+b+' legs',legs:b,m:{}}))},
- new:{rows:['Pinch','Quad','Bipped','Flask','Teep','Lern'],cols:[{label:'Bit',m:{stage:'Bit'}},{label:'Byte',m:{stage:'Byte'}},{label:'Mega',m:{stage:'Mega'}},{label:'Mega happy',m:{stage:'Mega'},pose:'happy'},{label:'Mega walk',m:{stage:'Mega'},pose:'walk'}]}
+ new:{rows:['Pinch','Plod','Bipped','Fizz','Teep','Lern'],cols:[{label:'Bit',m:{stage:'Bit'}},{label:'Byte',m:{stage:'Byte'}},{label:'Mega',m:{stage:'Mega'}},{label:'Mega happy',m:{stage:'Mega'},pose:'happy'},{label:'Mega walk',m:{stage:'Mega'},pose:'walk'}]}
 };
 const KEY=location.hash.slice(1).replace('-dark',''), DARK=/-dark/.test(location.hash), L=LOOKS[KEY]||LOOKS.new, W=KEY==='poses'||KEY==='battle'||KEY==='bit'||KEY==='back'||KEY==='ouch'||KEY==='hybrids'||KEY==='marks'||KEY==='variants'?132:150, H=W, LX=70, TOP=34, c=document.getElementById('c'), d=2;
 c.width=(LX+L.cols.length*W)*d; c.height=(TOP+L.rows.length*H)*d; c.style.width=c.width/d+'px';

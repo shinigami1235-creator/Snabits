@@ -1,11 +1,11 @@
-/* The bestiary: every family in every element, 96 kinds. A kind counts as seen once one is scanned or fought,
+/* The bestiary: every family in every element, 13 families by 12 elements, 156 kinds. A kind counts as seen once one is scanned or fought,
    and raised once one lives on the ranch, with a star for each stage it reached there. Milestones give prizes.
    Needs monster.js, game.js and chibi.js. */
-const DEX_FAMS = ['Chomp', 'Squib', 'Antik', 'Moko', 'Pinch', 'Stilt', 'Skit', 'Booly'];
+const DEX_FAMS = ['Chomp', 'Squib', 'Antik', 'Moko', 'Pinch', 'Stilt', 'Skit', 'Booly', 'Plod', 'Bipped', 'Fizz', 'Teep', 'Lern'];
 const DEX_ELS = ['Blaze', 'Brawl', 'Spark', 'Wild', 'Frost', 'Tide', 'Venom', 'Charm', 'Stone', 'Light', 'Steel', 'Shade'];
 const DEX_STAGE = { Bit: 2, Byte: 4, Mega: 8 };
-const DEX_SEEN_PRIZE = [[10, 'bits', 500], [25, 'Element stone'], [40, 'Stat seed'], [60, 'Life seed'], [80, 'Crown'], [96, 'Life fruit']];
-const DEX_RAISE_PRIZE = [[3, 'bits', 800], [8, 'Lucky bit'], [15, 'Energy cell'], [24, 'Life fruit']];
+const DEX_SEEN_PRIZE = [[10, 'bits', 500], [30, 'Element stone'], [60, 'Stat seed'], [95, 'Life seed'], [125, 'Crown'], [156, 'Life fruit']];
+const DEX_RAISE_PRIZE = [[3, 'bits', 800], [10, 'Lucky bit'], [20, 'Energy cell'], [36, 'Life fruit']];
 function dex() { if (!PLAYER.dex) PLAYER.dex = {}; return PLAYER.dex; }
 const dexKey = m => { const f = m && FAMILY[m.family] && FAMILY[m.family].of ? FAMILY[m.family].of[0] : m && m.family; return f && DEX_FAMS.includes(f) && DEX_ELS.includes(m.el1) ? f + '|' + m.el1 : null; };
 function dexMark(m, bits) {

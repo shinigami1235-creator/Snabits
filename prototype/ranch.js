@@ -34,7 +34,7 @@ function tastePick(r,avoid){
 const taste=(k,v,s=RS)=>{ const hit=T=>T&&T.k===k&&(k==="battle"||T.v===v); return hit(s.likeT)?"like":hit(s.disT)?"dis":null; };
 function tasteFound(t,s=RS){ s.found=s.found||{}; const first=!s.found[t]; s.found[t]=true; return first; }
 const tasteName=T=>!T?"":T.k==="meal"?MEALS[T.v][0]:T.k==="drill"?DRILLS[T.v]:T.k==="battle"?"Battles":T.v;
-const EVO_TOTAL={Squib:[90,220],Stilt:[90,220],Skit:[100,240],Antik:[110,250],Chomp:[110,250],Pinch:[120,260],Moko:[130,280],Booly:[130,280]};
+const EVO_TOTAL={Squib:[90,220],Stilt:[90,220],Skit:[100,240],Antik:[110,250],Chomp:[110,250],Pinch:[120,260],Moko:[130,280],Booly:[130,280],Plod:[120,260],Bipped:[110,250],Fizz:[110,250],Teep:[120,260],Lern:[130,280]};
 const STAT_SKILLS=[[["Second Wind",30],["Endure",80],["Body Slam",150],["Regrow",240]],[["Haymaker",30],["Pump Up",80],["Crush",150],["Rampage",240]],[["Harden",30],["Shield Bash",80],["Retaliate",150],["Bulwark",240]],[["Concentrate",30],["Mind Spike",80],["Foresight",150],["Brainstorm",240]],[["Calm",30],["Still Water",80],["Spirit Ward",150],["Soul Flare",240]],[["Dart",30],["Agility",80],["Barrage",150],["Afterimage",240]]];
 const CONDITION=[[20,"It's full of energy!"],[50,"It's in good shape."],[70,"It seems a little tired."],[90,"It's really tired. It needs a rest."],[999,"It's exhausted!"]];
 const condition=()=>CONDITION.find(c=>RS.fatigue<c[0])[1];

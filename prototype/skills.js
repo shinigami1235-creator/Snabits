@@ -148,9 +148,16 @@ const SIG_SKILLS={
   "High Kick":{el:null,kind:"Strike",cost:5,power:90,acc:90},
   "Phase Shift":{el:null,kind:"Support",cost:3,afterimage:true},
   "Fly":{el:null,kind:"Strike",cost:5,power:90,acc:95,charge:true},
+  "Trunk Slam":{el:null,kind:"Strike",cost:4,power:85,acc:90},
+  "One-Two":{el:null,kind:"Strike",cost:3,power:35,hits:2,acc:95},
+  "Steam Jet":{el:null,kind:"Cast",cost:3,power:55,acc:90,status:["Blind",30]},
+  "Flash":{el:null,kind:"Cast",cost:2,power:35,acc:100,status:["Blind",50]},
 };
+/* Fizz's Potion Toss carries a status from its element, the way Skit's webs do */
+const POTION_BY_EL={Blaze:"Burn",Frost:"Freeze",Tide:"Soak",Venom:"Poison",Spark:"Shock",Wild:"Root",Stone:"Crack",Light:"Blind",Shade:"Curse",Charm:"Daze",Steel:"Crack",Brawl:"Daze",Void:"Dread"};
+SIG_SKILLS["Potion Toss"]={el:null,kind:"Cast",cost:3,power:45,acc:95,status:["Poison",40]};
 for(const [el,[n,st]] of Object.entries(WEB_BY_EL)) SIG_SKILLS[n]={el,kind:"Cast",cost:3,power:40,acc:95,lower:{spd:1},lowerChance:100,...(st?{status:[st,30]}:{})};
-const FAMILY_SIG={Pinch:"Bunker Down",Chomp:"Crunch",Squib:"Ink Jet",Antik:"Static Screen",Moko:"Glare",Stilt:"High Kick",Booly:"Phase Shift"};
+const FAMILY_SIG={Pinch:"Bunker Down",Chomp:"Crunch",Squib:"Ink Jet",Antik:"Static Screen",Moko:"Glare",Stilt:"High Kick",Booly:"Phase Shift",Plod:"Trunk Slam",Bipped:"One-Two",Fizz:"Potion Toss",Teep:"Steam Jet",Lern:"Flash"};
 function sigSkills(s){
   const out=[], fam=FAMILY[s.m.family]&&FAMILY[s.m.family].of?FAMILY[s.m.family].of[0]:s.m.family; if((s.level||1)>=5){ if(fam==="Skit") out.push(WEB_BY_EL[s.m.el1][0]); else if(FAMILY_SIG[fam]) out.push(FAMILY_SIG[fam]); }
   const w=s.worn||{}; if(w.back==="Bat wings"||w.back==="Angel wings") out.push("Fly");
@@ -248,7 +255,7 @@ const ARMLESS_NAME={"Jab":"Headbutt","Iron Palm":"Shoulder Ram","Focus Punch":"F
 function hasArms(fam,stage){
   const of=typeof FAMILY!=="undefined"&&FAMILY[fam]&&FAMILY[fam].of;
   if(of){ if(of.includes("Squib")||of[1]==="Skit") return false; fam=of[1]; }
-  if(fam==="Squib"||fam==="Skit") return false;
+  if(fam==="Squib"||fam==="Skit"||fam==="Plod"||fam==="Teep") return false;
   if(fam==="Pinch"||fam==="Bipped") return true;
   return !!stage&&stage!=="Bit";
 }

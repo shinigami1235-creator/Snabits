@@ -12,7 +12,7 @@ for(const a of FAMS) for(const b of FAMS){ if(a===b) continue; for(let k=0;k<14;
   G[a]++; G[b]++; if(ar.winner===0) W[a]++; else if(ar.winner===1) W[b]++; out.len.push(ar.t); out.n++; if(!ar.judged) out.ko++; } }
 for(const a of FAMS) out.fam[a]=Math.round(100*W[a]/G[a])+"%";
 out.len.sort((x,y)=>x-y); out.medianSec=out.len[out.len.length>>1].toFixed(1); out.koPct=Math.round(100*out.ko/out.n)+"%"; delete out.len;
-const H=[]; for(let k=0;k<300;k++){ const a=FAMS[k%8], b=FAMS[(k*5+3)%8]; const A=make(a,30), B=make(b,30), ar=new Arena(A.f,B.f,R); const mv=A.f.moves.filter(m=>m.dmg&&m.acc); for(const m of mv.slice(0,3)) H.push(ar.hitChance(ar.p[0],m)); }
+const H=[]; for(let k=0;k<300;k++){ const a=FAMS[k%FAMS.length], b=FAMS[(k*5+3)%FAMS.length]; const A=make(a,30), B=make(b,30), ar=new Arena(A.f,B.f,R); const mv=A.f.moves.filter(m=>m.dmg&&m.acc); for(const m of mv.slice(0,3)) H.push(ar.hitChance(ar.p[0],m)); }
 H.sort((x,y)=>x-y); out.hit={p10:+H[Math.floor(H.length*0.1)].toFixed(2),median:+H[H.length>>1].toFixed(2),p90:+H[Math.floor(H.length*0.9)].toFixed(2)};
 return out; }"""
 async def main():
