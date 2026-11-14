@@ -274,7 +274,7 @@ class Fight{
     if(def.ability==="Reflect"&&s.kind==="Cast"&&m<1&&total&&tgt!==i){ const back=Math.round(total*0.3); me.hp=Math.max(0,me.hp-back); this.pop(tgt,"Reflect"); this.events.push({t:"hit",who:i,dmg:back,eff:1}); }
     if(s.steal&&def.hp>0){ const g=Math.min(s.steal,def.energy); def.energy-=g; me.energy=Math.min(10,me.energy+g); this.say(`${me.name} steals ${g} energy.`); }
     if(s.selfLower) this.stageChange(me,Object.fromEntries(Object.entries(s.selfLower).map(([k,v])=>[k,-v])),false);
-    if(def.hp<=0){ this.ko(tgt,i); return; }
+    if(def.hp<=0){ this.ko(tgt,i); if(this.over||me.hp>0) return; }   // a Phoenix that rose again leaves the fight open, and the attacker may still have fainted from its own recoil
     if(me.hp<=0){ this.ko(i,tgt); return; }
     this.lastStand(tgt);
     if(s.basic&&me.ability==="Web"&&tgt!==i&&R()<0.3){ this.pop(i,"Web"); this.stageChange(def,{spd:-1},true); }
