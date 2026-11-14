@@ -16,6 +16,7 @@ function atStyle(){
 #atest .scr{position:relative;flex:1 1 auto;min-height:260px;padding-top:var(--safe-t,0px);background:#1b1630;overflow:hidden}
 #atest .scr canvas{position:absolute;left:0;right:0;top:var(--safe-t,0px);width:100%;display:block}
 #atest .scr::after{content:"";position:absolute;left:0;right:0;top:0;height:calc(var(--safe-t,0px) + 56px);background:linear-gradient(rgba(20,21,29,.7),transparent);pointer-events:none}
+#atest .ttl{position:absolute;z-index:1;left:0;right:0;top:calc(var(--safe-t,0px) + 54px);text-align:center;font-size:12px;font-weight:700;color:#fff;text-shadow:0 1px 3px #14151d;pointer-events:none}
 #atest .htop{position:absolute;z-index:1;left:50%;width:54px;margin-left:-27px;top:calc(var(--safe-t,0px) + 8px);pointer-events:none}
 #atest .clock2{font:700 22px var(--pix),system-ui;color:#ffc93c;background:rgba(20,21,29,.85);border:2px solid #ffc93c;border-radius:10px;text-align:center;padding:4px 0}
 #atest .hbot{position:absolute;left:4px;right:4px;bottom:4px;display:grid;grid-template-columns:1fr 62px 1fr;gap:4px;pointer-events:none}
@@ -37,6 +38,7 @@ function atStyle(){
 #atest .ctl3{display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:56px 64px;gap:6px;padding:8px 12px calc(env(safe-area-inset-bottom,0px) + 10px);background:#14151d}
 #atest .ctl3 .btn{font-size:20px}#atest .ctl3 .walk{font-size:26px}#atest .ctl3 svg{width:24px;height:24px}#atest .ctl3 .off{opacity:.35}#atest .ctl3 .on{border-color:#ffc93c;color:#ffc93c}
 #atest .atk{grid-column:2/4;flex-direction:column;gap:1px;background:#ffc93c;color:#14151d;border-color:#ffc93c;font-size:16px}#atest .atk small{font-size:10px;font-weight:600;opacity:.8}
+#atest .ctl3 .btn:disabled{opacity:.3}
 #atest .atk.poor{background:#3a3d52;color:#ff8a7a;border-color:#ff8a7a}#atest .atk.wait{filter:saturate(.4) brightness(.75)}
 #atest .atk.no{animation:atno .3s}@keyframes atno{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
 #atest .res{position:absolute;left:16px;right:16px;top:30%;background:#1d1f2b;border:2px solid #ffc93c;border-radius:14px;padding:16px;text-align:center}
@@ -86,11 +88,16 @@ function atMake(src,R,level,grade){
 }
 function atStop(){ if(AT){ cancelAnimationFrame(AT.raf); AT=null; } }
 function atStart(meFam,foeFam){   // picks: see atMake
-  atStop();
-  const R=Math.random, A=atMake(meFam,R), B=atMake(foeFam,R,A.level,A.grade), ar=new Arena(A.f,B.f,R,["human","smart"]); ar.live=true;   // each move pauses the fight while it plays
+  atStop(); const R=Math.random, A=atMake(meFam,R), B=atMake(foeFam,R,A.level,A.grade);
+  atBegin(A,B,{me:meFam,foe:foeFam,rand:R});
+}
+/* the fight screen for any two sides. opts: mode ("control" or "auto"), title, rand, noDraw, mus, wild, onEnd(result) for the game's own fights */
+function atBegin(A,B,opts){
+  atStop(); atStyle(); let dv=document.getElementById("atest"); if(!dv){ dv=document.createElement("div"); dv.id="atest"; document.body.appendChild(dv); } dv.style.display="flex";
+  const R=opts.rand||Math.random, meFam=opts.me, foeFam=opts.foe, auto=opts.mode==="auto", ar=new Arena(A.f,B.f,R,[auto?"smart":"human","smart"]); ar.live=true; ar.noDraw=!!opts.noDraw;   // each move pauses the fight while it plays
   const order=["Close","Near","Mid","Far","Any"];
   const moves=A.f.moves.slice().sort((a,b)=>order.indexOf(a.range)-order.indexOf(b.range)||a.cost-b.cost);
-  AT={ar,A,B,moves,auto:false,last:performance.now(),acc:0,te:0,freeze:0,trauma:0,raf:0,side:[A.spec,B.spec].map(spec=>({spec,x:null,shown:"idle",from:"idle",t0:0,dir:1})),fx:[],done:false,me:meFam,foe:foeFam};
+  AT={ar,A,B,moves,auto:false,last:performance.now(),acc:0,te:0,freeze:0,trauma:0,raf:0,side:[A.spec,B.spec].map(spec=>({spec,x:null,shown:"idle",from:"idle",t0:0,dir:1})),fx:[],done:false,me:meFam,foe:foeFam,opts};
   CB.parts=[]; CB.puffs=[];
   AT.special=[A,B].map(X=>{ const t=X.f.moves.filter(m=>m.dmg>=70).sort((a,b)=>b.dmg-a.dmg)[0]; return t?t.name:null; });
   AT.rings=[]; AT.stars=[]; AT.strikes=[];
@@ -103,7 +110,7 @@ function atStart(meFam,foeFam){   // picks: see atMake
   // ◀ ▶ walk left and right on screen. After a swap the two really trade places, and your row and numbers move to your side.
   const cells=side=>(side?AR.BANDS:AR.BANDS.slice().reverse()).map(b=>`<div class="sc${side?" foe":""}" style="--rc:${AT_RC[b]}" id="at-${side?"f":"y"}-${b}"></div>`).join("");
   d.innerHTML=`<div class="scr"><canvas id="at-cv"></canvas>
-      <div class="htop"><div class="clock2" id="at-clock">60</div></div>
+      <div class="htop"><div class="clock2" id="at-clock">60</div></div>${opts.title?`<div class="ttl">${opts.title}</div>`:""}
       <div class="hbot" id="at-hbot"><div class="side me"><div class="mv" id="at-mv0"></div><div class="strip">${cells(0)}</div><div class="fob" id="at-fb0"><i id="at-fo0"></i><span class="need" id="at-need"></span></div></div>
         <div class="mid"><div><span>Hit</span><b><i id="at-hit0"></i><em id="at-hit1"></em></b></div><div><span>Focus</span><b><i id="at-fn0"></i><em id="at-fn1"></em></b></div></div>
         <div class="side foe"><div class="mv" id="at-mv1"></div><div class="strip">${cells(1)}</div><div class="fob"><i id="at-fo1"></i></div></div></div></div>
@@ -121,6 +128,10 @@ function atStart(meFam,foeFam){   // picks: see atMake
   document.getElementById("at-atk").onclick=()=>{ const b=ar.band(), m=AT.lists[b][AT.idx[b]]; if(!m) return;
     if(!ar.start(ar.p[0],m)){ const k=document.getElementById("at-atk"); k.classList.remove("no"); void k.offsetWidth; k.classList.add("no"); } };
   atRows(); atSize();
+  // Auto plays it for you on your Snabit's habits; Skip runs it at four times the speed
+  if(auto){ AT.auto=true; const b=document.getElementById("at-auto"); b.classList.add("on"); b.disabled=true;
+    for(const id of ["at-l","at-r","at-up","at-dn","at-atk"]) document.getElementById(id).disabled=true;
+    const sk=document.getElementById("at-shove"); sk.innerHTML="Skip ▸▸"; sk.style.fontSize="14px"; sk.onclick=()=>{ AT.fast=!AT.fast; sk.classList.toggle("on",AT.fast); }; }
   AT.raf=requestAnimationFrame(atLoop);
 }
 function atSize(){ const cv=document.getElementById("at-cv"), scr=cv.parentElement, W=scr.clientWidth||390;
@@ -173,7 +184,7 @@ function atLoop(now){
   // a tap on Attack or Shove queues its start event between frames; play everything queued before moving on
   const flush=()=>{ const ev=ar.ev; ar.ev=[]; for(const e of ev) atEvent(e,now); }; flush();
   // hitstop: the fight and its animations pause for a moment when a hit lands
-  const frozen=now<AT.freeze, slow=AT.slow&&now>=AT.slow.from&&now<AT.slow.until?AT.slow.k:1, step=real*slow;
+  const frozen=now<AT.freeze, slow=AT.slow&&now>=AT.slow.from&&now<AT.slow.until?AT.slow.k:1, step=real*slow*(AT.fast?4:1);
   if(!frozen){ AT.te+=step*1000; if(!ar.turn) AT.acc+=step; }
   // a move in progress: it lands at its contact frame and the fight carries on once its animation ends
   if(ar.turn&&!AT.turn) AT.turn={t0:AT.te,C:200,D:500};   // never leave a turn hanging
@@ -572,7 +583,7 @@ function atDraw(now,dte){
   CB.te=te;   // the battle helpers (sparks, dust, bursts) run on this clock
   const WW=AT.WW||W;   // the arena is wider than the screen and the camera follows the fight
   const HH=AT.HH, FY=AT.FY;
-  if(!AT.bg){ const b=document.createElement("canvas"); b.width=WW*dpr; b.height=HH*dpr; const x=b.getContext("2d"); x.scale(dpr,dpr); atStage(x,WW,HH,FY); AT.bg=b; }
+  if(!AT.bg){ const b=document.createElement("canvas"); b.width=WW*dpr; b.height=HH*dpr; const x=b.getContext("2d"); x.scale(dpr,dpr); atStage(x,WW,HH,FY,AT.opts&&AT.opts.wild); AT.bg=b; }
   const shake=AT.trauma*AT.trauma*7; AT.trauma=Math.max(0,AT.trauma-dte/700); const cine=AT.cine&&te-AT.cine.t0<AT.cine.d?AT.cine:null, ck=cine?(te-cine.t0)/cine.d:0;
   const sx=shake?Math.sin(te/23)*shake:0, sy=shake?Math.cos(te/31)*shake*0.6:0;
   const floor=FY, scale=2.3, SEP=(58*scale-AR.BODY/AR.LEN*(WW-140))/(1-AR.BODY/AR.LEN), K=(WW-140-SEP)/AR.LEN, X=(x,right)=>70+x*K+(right?SEP:0), alpha=Math.min(1,AT.acc/AR.DT);
@@ -720,10 +731,18 @@ function atHud(){
   const nd=document.getElementById("at-need"), at=`calc(${100*Math.min(99,m.cost)/99}% - 1px)`; nd.style.left=sw?"auto":at; nd.style.right=sw?at:"auto";
   document.getElementById("at-fb0").classList.toggle("ok",ar.p[0].focus>=m.cost&&ar.inRange(m));
   document.getElementById("at-clock").textContent=Math.max(0,Math.ceil(AR.TIME-ar.t));
-  const sh=document.getElementById("at-shove"), can=arBand(g)==="Close"&&!(ar.p[0].shoveCool>0); sh.classList.toggle("off",!can);
+  const sh=document.getElementById("at-shove"), can=arBand(g)==="Close"&&!(ar.p[0].shoveCool>0); if(!(AT.opts&&AT.opts.mode==="auto")) sh.classList.toggle("off",!can);
 
 }
-function atStage(c,W,H,FY){
+function atStage(c,W,H,FY,wild){
+  if(wild){ const g=c.createLinearGradient(0,0,0,FY); g.addColorStop(0,"#7ec8f0"); g.addColorStop(1,"#cdeefa"); c.fillStyle=g; c.fillRect(0,0,W,H);
+    c.fillStyle="#fff"; for(let k=0;k<6;k++){ const x=(k*W/5.3+40)%W, y=FY-560+((k*97)%140); for(const [dx,dy,r] of [[0,0,34],[30,-12,28],[58,2,30],[28,10,26]]){ c.beginPath(); c.arc(x+dx,y+dy,r,0,7); c.fill(); } }
+    c.fillStyle="#8fcf7a"; c.beginPath(); c.moveTo(0,FY-200); for(let x=0;x<=W;x+=40) c.lineTo(x,FY-200-60*Math.sin(x/170)-30*Math.sin(x/61)); c.lineTo(W,FY-120); c.lineTo(0,FY-120); c.fill();
+    c.fillStyle="#6fb860"; c.beginPath(); c.moveTo(0,FY-150); for(let x=0;x<=W;x+=30) c.lineTo(x,FY-160-26*Math.sin(x/90+1)); c.lineTo(W,FY-110); c.lineTo(0,FY-110); c.fill();
+    for(let k=0;k<5;k++){ const x=60+k*(W-120)/4+((k*53)%40), y=FY-150; c.fillStyle="#6b4a2e"; c.fillRect(x-7,y-40,14,46); c.fillStyle=k%2?"#4e9a48":"#5fae52"; c.beginPath(); c.arc(x,y-62,40,0,7); c.arc(x-26,y-44,28,0,7); c.arc(x+26,y-44,28,0,7); c.fill(); }
+    const gr=c.createLinearGradient(0,FY-130,0,H); gr.addColorStop(0,"#9ad46e"); gr.addColorStop(1,"#6fae4c"); c.fillStyle=gr; c.fillRect(0,FY-130,W,H-FY+130);
+    for(let k=0;k<W*(H-FY+130)/600;k++){ const x=(k*7919)%W, y=FY-130+((k*104729)%(H-FY+130)); c.fillStyle=k%3?"rgba(60,110,40,.35)":"rgba(220,250,180,.4)"; c.fillRect(x,y,2,6); }
+    return; }
   const sand=FY-230, crowd=sand-12, ctop=Math.max(0,crowd-380);
   const sky=c.createLinearGradient(0,0,0,ctop+40); sky.addColorStop(0,"#140f26"); sky.addColorStop(1,"#2a1f4a"); c.fillStyle=sky; c.fillRect(0,0,W,ctop+40);
   for(let k=0;k<W;k+=W/7){ c.fillStyle="rgba(255,236,170,.9)"; c.beginPath(); c.arc(k+W/14,ctop-60,5,0,7); c.fill(); c.fillStyle="rgba(255,236,170,.08)"; c.beginPath(); c.arc(k+W/14,ctop-60,26,0,7); c.fill(); }
@@ -739,10 +758,54 @@ function atStage(c,W,H,FY){
   for(const x of [0,W-12]){ c.fillStyle="#6b5a8a"; c.fillRect(x,sand-30,12,H-sand+30); c.fillStyle="#8a78ab"; c.fillRect(x,sand-30,12,5); for(let y=sand-18;y<H;y+=14){ c.fillStyle="rgba(0,0,0,.18)"; c.fillRect(x,y,12,2);} }
 }
 function atResult(){
-  if(!AT) return; const ar=AT.ar, d=document.getElementById("atest"), w=ar.winner;
+  if(!AT) return; const ar=AT.ar, d=document.getElementById("atest"), w=ar.winner, o=AT.opts||{};
   const div=document.createElement("div"); div.className="res";
-  div.innerHTML=`<h2>${w===0?"You win":w===1?"You lose":"Draw"}</h2><div>${ar.judged?"Judges' call after 60 seconds":`Knockout at ${Math.round(ar.t)} seconds`}. You dealt ${ar.p[0].dealt} and took ${ar.p[1].dealt}.</div>
-    <div class="row"><button class="btn" id="at-again">Again</button><button class="btn" id="at-pick">Pick Snabits</button></div>`;
+  const how=ar.judged?"The judges called it after 60 seconds":`It ended in a knockout at ${Math.round(ar.t)} seconds`;
+  if(!o.onEnd){
+    div.innerHTML=`<h2>${w===0?"You win":w===1?"You lose":"Draw"}</h2><div>${how}. You dealt ${ar.p[0].dealt} and took ${ar.p[1].dealt}.</div>
+      <div class="row"><button class="btn" id="at-again">Again</button><button class="btn" id="at-pick">Pick Snabits</button></div>`;
+    d.appendChild(div);
+    document.getElementById("at-again").onclick=()=>atStart(AT.me,AT.foe); document.getElementById("at-pick").onclick=openArenaTest; return; }
+  // a fight from the game: what it learned, whether it liked fighting, then back to whatever started it
+  const s=o.s, lines=o.learn&&s?afterFight(s,ar.p[0].f,true):[];
+  const tz=s&&s.likeT&&typeof taste==="function"?taste("battle",null,s):null; let tl="";
+  if(tz){ const first=tasteFound(tz,s); s.stress=Math.max(0,s.stress+(tz==="like"?-4:6)); s.spoil+=tz==="like"?2:-1; tl=tz==="like"?(first?"It loves a good fight.":"It enjoyed that."):(first?"It hates fighting.":"It didn't enjoy that."); }
+  if(typeof musJingle==="function"&&w!==null) musJingle(w===0);
+  div.innerHTML=`<h2>${w===0?"Win":w===1?"Loss":"Draw"}</h2><div>${how}. ${displayNameOf(ar.p[0])} dealt ${ar.p[0].dealt} and took ${ar.p[1].dealt}.</div>
+    ${lines.map(t=>`<div style="margin-top:6px;color:#ffc93c">${t}</div>`).join("")}${tl?`<div style="margin-top:6px">${tl}</div>`:""}
+    <div class="row"><button class="btn" id="at-cont" style="background:#ffc93c;color:#14151d;border-color:#ffc93c">Continue</button></div>`;
   d.appendChild(div);
-  document.getElementById("at-again").onclick=()=>atStart(AT.me,AT.foe); document.getElementById("at-pick").onclick=openArenaTest;
+  document.getElementById("at-cont").onclick=()=>{ const res={winner:w,turns:Math.round(ar.t),secs:Math.round(ar.t),judged:!!ar.judged,hpLeft:ar.p[0].hp/ar.p[0].maxhp,foeHpLeft:ar.p[1].hp/ar.p[1].maxhp,learned:lines};
+    atStop(); d.style.display="none"; d.innerHTML=""; o.onEnd(res); };
 }
+const displayNameOf=p=>p.f.name||"It";
+/* the game's fights on the new arena. Takes the same options the old fight screen took and hands back the same result */
+function arenaGame({s,foe,mode="control",title="",noDraw=false,record=false,learn=false,foeHabits=null,rand=Math.random,onEnd}){
+  if(record) s.fightNo=(s.fightNo||0)+1;
+  if(foe&&foe.m&&typeof dexSee==="function") dexSee(foe.m);
+  const wild=/^Wild/.test(title), opts={s,mode,title,noDraw,learn,rand,onEnd,wild,mus:foe.boss?"boss":wild?"wild":"cup"};
+  // a ghost is a friend's Snabit: it fights with its own moves, preset and habits, the way the player's does
+  const go=()=>{ const A={f:arPlayer(s),spec:chibiSpec(fightMon(s),s),level:s.level}, B=foeHabits&&foeHabits.m?{f:arPlayer(foeHabits),spec:chibiSpec(fightMon(foeHabits),foeHabits),level:foeHabits.level}:{f:arFoe(foe),spec:chibiSpec(foe.fm),level:foe.level};
+    if(foeHabits&&typeof displayName==="function") B.f.name=displayName(foeHabits)+"'s ghost";
+    if(typeof displayName==="function") A.f.name=displayName(s);
+    atBegin(A,B,opts); };
+  if(mode==="control") atPresetCard(s,go); else go();
+}
+/* before a fight you control: switch moves on or off, in three presets. The choice is saved on the Snabit */
+function atPresetCard(s,go){
+  atStop(); atStyle(); let d=document.getElementById("atest"); if(!d){ d=document.createElement("div"); d.id="atest"; document.body.appendChild(d); } d.style.display="flex";
+  s.arPresets=s.arPresets||[[],[],[]]; s.arPreset=s.arPreset||0;
+  const all=arMoves(arFamily(s.m.family),s.level,(typeof knownSkills==="function"?knownSkills(s):[]).filter(n=>SKILLS[n]),s.m.el1);
+  const order=["Close","Near","Mid","Far","Any"]; all.sort((a,b)=>order.indexOf(a.range)-order.indexOf(b.range)||a.cost-b.cost);
+  const draw=()=>{ const off=s.arPresets[s.arPreset];
+    d.innerHTML=`<div class="pick"><h2>Moves for this fight</h2><p>Tap a move to leave it out of ▲ ▼. Each preset keeps its own choice.</p>
+      <div class="fams" style="grid-template-columns:repeat(3,1fr)">${[0,1,2].map(k=>`<button class="btn ${k===s.arPreset?"on":""}" data-p="${k}">Preset ${k+1}</button>`).join("")}</div>
+      <div style="display:flex;flex-direction:column;gap:6px">${all.map(m=>`<button class="btn" data-m="${m.name}" style="height:44px;justify-content:flex-start;gap:10px;padding:0 12px;${off.includes(m.name)?"opacity:.35":""}">
+        <span style="width:22px;height:22px;display:flex">${atIcon(m)}</span><span style="flex:1;text-align:left">${m.name}</span><small style="color:${AT_RC[m.range]}">${m.range}</small><small style="color:#ffc93c;min-width:24px;text-align:right">${m.cost}</small></button>`).join("")}</div>
+      <button class="btn go" id="at-fight">Fight</button></div>`;
+    d.querySelectorAll("[data-p]").forEach(b=>b.onclick=()=>{ s.arPreset=+b.dataset.p; draw(); });
+    d.querySelectorAll("[data-m]").forEach(b=>b.onclick=()=>{ const n=b.dataset.m, i=off.indexOf(n); if(i>=0) off.splice(i,1); else { const left=all.filter(m=>m.dmg&&!off.includes(m.name)&&m.name!==n); if(left.length) off.push(n); } draw(); });
+    document.getElementById("at-fight").onclick=()=>{ if(typeof saveGame==="function") saveGame(); go(); }; };
+  draw();
+}
+

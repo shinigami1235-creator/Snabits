@@ -138,7 +138,12 @@ function afterTurn(){
 }
 
 /* Arena fights for the ranch: tournaments, missions and practice. mode "control" gives the player the buttons, "auto" plays on the monster's habits. */
-function arenaFight({s,foe,mode="control",title="",turnLimit=15,noDraw=false,record=false,learn=false,foeHabits=null,rand=Math.random,onEnd}){
+function arenaFight(opts){
+  // the smooth art fights on the new arena; pixel mode keeps the turn battle
+  if(typeof arenaGame==="function"&&typeof CHIBI_ART!=="undefined"&&CHIBI_ART&&chibiSpec(fightMon(opts.s),opts.s)) return arenaGame(opts);
+  return arenaFightOld(opts);
+}
+function arenaFightOld({s,foe,mode="control",title="",turnLimit=15,noDraw=false,record=false,learn=false,foeHabits=null,rand=Math.random,onEnd}){
   const me=fightMon(s); if(record) s.fightNo=(s.fightNo||0)+1;
   if(foe&&foe.m&&typeof dexSee==="function") dexSee(foe.m);
   const fight=new Fight(playerFighter(s),foe.fighter||makeFighter(foe.fm,foe.skills,foe.level),rand);

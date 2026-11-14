@@ -292,6 +292,7 @@ const shown=id=>{ const e=document.getElementById(id); return !!e&&e.style.displ
 function musWant(){
   if(performance.now()<MUS.jingleT) return null;
   if(typeof CUPSHOW!=="undefined"&&CUPSHOW.on) return CUPSHOW.mus;
+  if(typeof AT!=="undefined"&&AT&&AT.opts&&AT.opts.mus&&shown("atest")) return AT.opts.mus;
   if(typeof B!=="undefined"&&B&&shown("battle")) return B.mus||"cup";
   if(typeof WILD!=="undefined"&&WILD) return "wild";
   if(shown("venue")) return "cup";

@@ -51,8 +51,9 @@ function arFromSkill(n){
 function arMoves(fam,level,known,el){
   const fm=(FAM_MOVES[fam]||[]).map(arMove).filter(m=>m.lv<=level), sh=SHARED_MOVES.map(arMove);
   if(el&&EL_PREFIX[el]&&fm[0]){ fm[0].name=`${EL_PREFIX[el]} ${fm[0].name}`; fm[0].el=el; }
-  const elm=(known||[]).map(arFromSkill).filter(m=>m&&!m.support);
-  return fm.concat(sh,elm);
+  const elm=(known||[]).map(arFromSkill).filter(m=>m&&!m.support), seen=new Set();
+  // a skill with the same name as a family move (Crunch, High Kick) shows once, as the family move
+  return fm.concat(sh,elm).filter(m=>!seen.has(m.name)&&seen.add(m.name));
 }
 
 class Arena{
@@ -78,6 +79,8 @@ class Arena{
      The computer needs a moment to react before it can act, and a Snabit can't act again until a short recovery has passed. */
   start(p,m){ if(this.turn||this.over||p.focus<m.cost||p.cool>0||p.stun>0||p.ai!=="human"&&p.think>0) return false;
     p.focus-=m.cost; this.ev.push({t:"start",i:p.i,m});
+    if(SKILLS[m.name]){ const o=this.p[1-p.i]; (p.f.used=p.f.used||{})[m.name]=(p.f.used[m.name]||0)+1; (o.f.seen=o.f.seen||{})[m.name]=1; }
+    if(p.f.habit&&p.ai==="human") p.f.habit[m.name]=(p.f.habit[m.name]||0)+1;
     if(this.live) this.turn={i:p.i,m}; else { this.resolve(p,m); this.afterTurn(p); }
     return true; }
   /* on screen: the move lands at its contact frame, then the turn ends when the animation finishes */
@@ -95,7 +98,7 @@ class Arena{
       if(p.ai==="human"){ if(p.wantDir&&!p.hold) this.walk(p,p.wantDir); } else (p.ai==="naive"?this.naive(p):this.smart(p)); }
     if(this.turn||this.over) return;
     this.t+=AR.DT;
-    if(this.t>=AR.TIME){ this.over=true; const r=this.p.map(p=>p.hp/p.maxhp); this.winner=r[0]===r[1]?null:r[0]>r[1]?0:1; this.judged=true; }
+    if(this.t>=AR.TIME){ this.over=true; const r=this.p.map(p=>p.hp/p.maxhp); this.winner=r[0]===r[1]?null:r[0]>r[1]?0:1; this.judged=true; if(this.winner===null&&this.noDraw) this.winner=this.p[0].dealt>=this.p[1].dealt?0:1; }
   }
   resolve(p,m){
     const o=this.p[1-p.i], d=this.dirTo(p), R=this.rand;
@@ -113,7 +116,7 @@ class Arena{
       if(m.el&&typeof vs==="function"){ const mm=vs(m.el,o.f.el1)*(o.f.el2?vs(m.el,o.f.el2):1); dmg*=mm; if(m.el===p.f.el1||m.el===p.f.el2) dmg*=1.2; }
       const crit=R()<m.sharp+edge(this.eff(p,"pow"),con,0.2,0,0.12); if(crit) dmg*=1.5;
       if(o.buff.brace) dmg*=0.6; if(o.buff.bunker) dmg*=0.8;
-      dmg=Math.max(1,Math.round(dmg*(0.9+R()*0.1))); o.hp=Math.max(0,o.hp-dmg); p.dealt+=dmg; this.ev.push({t:"hit",i:p.i,m,dmg,crit,h});
+      dmg=Math.max(1,Math.round(dmg*(0.9+R()*0.1))); o.hp=Math.max(0,o.hp-dmg); p.dealt+=dmg; this.ev.push({t:"hit",i:p.i,m,dmg,crit,h}); if(SKILLS[m.name]) (o.f.hitBy=o.f.hitBy||{})[m.name]=1;
       if(o.buff.riposte&&!m.cast){ const back=Math.round(dmg*1.5); p.hp=Math.max(0,p.hp-back); o.dealt+=back; }
     }
     if(m.wither){ const w=m.wither*(1+edge(this.eff(p,"mnd"),this.eff(o,"spr"),0.5,-0.3,0.5)); if(o.buff.unblink){} else if(o.buff.feedback) p.focus=Math.max(0,p.focus-w); else o.focus=Math.max(0,o.focus-w); }
@@ -136,6 +139,7 @@ class Arena{
     const atk=m.cast?this.eff(p,"mnd"):this.eff(p,"pow"); let v=m.dmg*(m.hits||1)*atk/50+m.wither*1.2+(m.hold?8:0);
     const want=AR.BANDS.indexOf(this.prefer(p)), now=AR.BANDS.indexOf(this.band());
     if(m.push>0&&want>now) v+=m.push*0.6; if(m.push<0&&want<now) v+=-m.push*0.6;
+    const hb=p.f.habit&&p.ai!=="human"?p.f.habit[m.name]||0:0; if(hb) v*=1+0.5*Math.min(1,hb/12);
     return v*m.acc/100; }
   smart(p){
     const o=this.p[1-p.i], band=this.band(), want=this.prefer(p), wi=AR.BANDS.indexOf(want), bi=AR.BANDS.indexOf(band), d=this.dirTo(p);
@@ -165,4 +169,35 @@ class Arena{
   naive(p){ const ready=p.f.moves.filter(m=>this.inRange(m)&&m.dmg&&m.cost<=p.focus).sort((a,b)=>b.dmg*(b.hits||1)-a.dmg*(a.hits||1));
     if(ready.length&&this.start(p,ready[0])) return; this.walk(p,this.dirTo(p)); }
   run(){ while(!this.over) this.step(); return this; }
+}
+
+/* ---------- the game's fights on the arena ----------
+   arFamily: the family whose moves a Snabit uses (a hybrid fights with its body's family).
+   arFighter: an arena fighter from a battle fighter: its family's moves up to its level, the shared moves and its skills,
+   mastered skills 10% stronger, and any moves the player switched off in the preset left out. */
+const arFamily=fam=>typeof FAMILY!=="undefined"&&FAMILY[fam]&&FAMILY[fam].of?FAMILY[fam].of[0]:fam;
+function arFighter(f,fam,level,known,el,o={}){
+  f.family=arFamily(fam); let mv=arMoves(f.family,level,(known||[]).filter(n=>SKILLS[n]),el);
+  if(o.uses) mv=mv.map(m=>SKILLS[m.name]&&(o.uses[m.name]||0)>=(typeof MASTERY!=="undefined"?MASTERY:20)&&m.dmg?{...m,dmg:Math.round(m.dmg*1.1),mastered:true}:m);
+  if(o.off&&o.off.length){ const keep=mv.filter(m=>!o.off.includes(m.name)); if(keep.some(m=>m.dmg)) mv=keep; }
+  f.moves=mv; if(o.habit) f.habit=o.habit; return f;
+}
+/* the player's Snabit as an arena fighter, with its fight-day shape, gear, mastery and chosen preset */
+function arPlayer(s){
+  const f=playerFighter(s), pre=s.arPresets&&s.arPresets[s.arPreset||0];
+  s.arHabit=s.arHabit||{};
+  return arFighter(f,s.m.family,s.level,typeof knownSkills==="function"?knownSkills(s):(s.skillsKnown||s.equip||[]),s.m.el1,{uses:s.uses,off:pre,habit:s.arHabit});
+}
+/* a computer Snabit: its family moves and every skill in its pool it has reached */
+function arFoe(o){
+  const f=o.fighter||makeFighter(o.fm,o.skills,o.level), m=o.m||o.fm;
+  const known=m.pool?m.pool.filter(n=>SKILLS[n]&&SKILLS[n].lv<=o.level).concat(o.skills||[]):(o.skills||[]);
+  arFighter(f,m.family,o.level,[...new Set(known)],m.el1);
+  if(o.boss){ f.maxhp=Math.round(f.maxhp*1.25); f.hp=f.maxhp; f.name=o.boss; }
+  return f;
+}
+/* a fight worked out off screen, in the shape the old simFight gave: winner, judged, how long it ran, and both sides' HP */
+function arSim(a,b,rand,noDraw){
+  const ar=new Arena(a,b,rand); ar.noDraw=!!noDraw; ar.run();
+  return {winner:ar.winner,judged:!!ar.judged,turn:Math.round(ar.t),secs:Math.round(ar.t),ar,p:ar.p.map(x=>Object.assign(x.f,{hp:x.hp,maxhp:x.maxhp}))};
 }

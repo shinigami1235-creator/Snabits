@@ -276,15 +276,15 @@ const CUPLINE = {
     if (res.winner === null) return "Time's up and the judges can't split them. It's a draw!";
     if (res.winner === 0) {
       if (res.judged) return `Time's up, and the judges give it to ${me}!`;
-      if (res.turns <= 4) return `${me} wins in just ${res.turns} turns!`;
+      if (res.secs != null ? res.secs <= 12 : res.turns <= 4) return `${me} wins in just ${res.secs != null ? res.secs + ' seconds' : res.turns + ' turns'}!`;
       if (res.hpLeft > 0.6) return `${me} wins with most of its HP left! ${foe} couldn't keep up.`;
       if (res.hpLeft < 0.2) return `${me} wins, and only just! It was down to its last bit of HP.`;
-      return `${me} wins! It took ${res.turns} turns to wear ${foe} down.`;
+      return `${me} wins! It took ${res.secs != null ? res.secs + ' seconds' : res.turns + ' turns'} to wear ${foe} down.`;
     }
     if (res.judged) return `Time's up, and the judges give it to ${foe}.`;
     if (res.foeHpLeft < 0.2) return `${foe} wins, but only just! ${me} had it down to its last bit of HP.`;
     if (res.foeHpLeft > 0.6) return `${foe} wins, and it still has most of its HP left.`;
-    return `${foe} wins after ${res.turns} turns.`;
+    return `${foe} wins after ${res.secs != null ? res.secs + ' seconds' : res.turns + ' turns'}.`;
   },
   /* Tala after a match: what it means for the cup */
   after(res, me, c, cup) {

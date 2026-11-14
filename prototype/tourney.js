@@ -98,7 +98,7 @@ function cupOpponent(c,s,R){
 function cupOdds(c,s){
   if(c.rival||c.format==="team5") return null;
   const R=rng(hashStr(s.id+"|odds|"+c.name+"|"+PLAYER.week)); let won=0, n=0;
-  for(let k=0;k<8;k++){ const o=cupOpponent(c,s,R); for(let j=0;j<3;j++){ const f=simFight(playerFighter(s),makeFighter(o.fm,o.skills,o.level),R,s,15,true); if(f.winner===0) won++; n++; } }
+  for(let k=0;k<8;k++){ const o=cupOpponent(c,s,R); for(let j=0;j<3;j++){ const f=typeof arSim==="function"?arSim(arPlayer(s),arFoe(o),R,true):simFight(playerFighter(s),makeFighter(o.fm,o.skills,o.level),R,s,15,true); if(f.winner===0) won++; n++; } }
   return won/n;
 }
 function cupAdvice(c,s){
@@ -130,7 +130,7 @@ function startCup(c){
 function fighterOf(e){ return e.me?null:e.o; }
 function simPair(a,b){ // two computer entrants
   const A=CUP.field[a].o, Bo=CUP.field[b].o;
-  const f=simFight(makeFighter(A.fm,A.skills,A.level),makeFighter(Bo.fm,Bo.skills,Bo.level),CUP.R,null,15,CUP.c.format!=="robin");
+  const f=typeof arSim==="function"?arSim(arFoe(A),arFoe(Bo),CUP.R,CUP.c.format!=="robin"):simFight(makeFighter(A.fm,A.skills,A.level),makeFighter(Bo.fm,Bo.skills,Bo.level),CUP.R,null,15,CUP.c.format!=="robin");
   return f;
 }
 function nextMatch(){

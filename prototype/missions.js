@@ -41,7 +41,7 @@ function resolveMission(s,a){
     const st={task,ok:true,text:""};
     if(task==="fight"){
       const o=gradedOpponent(grade,Math.max(1,a.level-1),R,reg.el);
-      const f=simFight(playerFighter(s),makeFighter(o.fm,o.skills,o.level),R,s); learnt.push(...afterFight(s,f.p[0],true));
+      const f=typeof arSim==="function"?arSim(arPlayer(s),arFoe(o),R):simFight(playerFighter(s),makeFighter(o.fm,o.skills,o.level),R,s); learnt.push(...afterFight(s,f.p[0],true));
       st.ok=f.winner===0; st.foe=o;
       if(st.ok){ const e=2+o.level; exp+=e; st.text=`It beat a wild ${o.m.name} and earned ${e} exp.`; if(R()<0.3){ const fd=rollFind(R,boost); if(fd.item){ finds.push(fd.item); st.text+=` The wild one dropped ${/^[AEIOU]/.test(fd.item)?"an":"a"} ${fd.item}.`; } else { bits+=fd.bits; st.text+=` The wild one dropped ${fd.bits} bits.`; } } }
       else { fat+=10; st.text=`It lost to a wild ${o.m.name} and limped on.`; }
