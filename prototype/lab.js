@@ -109,7 +109,7 @@ function fuseChild(e1,e2,cat,R){
   const pal={...m1.pal,body,parts:mix(m1.pal.parts,m2.pal.parts,1/3),accent:mix(m1.pal.accent,m2.pal.accent,1/2),dark:tone(body,-0.45),outline:(()=>{const [h,s,v]=rgbToHsv(body);return hsvToRgb([h,Math.min(1,s+0.2),Math.min(0.2,v*0.3)]);})()};
   const talent=m1.talent.map((t,i)=>Math.min(15,Math.max(0,Math.round((t+m2.talent[i])/2)+Math.floor(R()*6)-2)));
   const pr=R(), pers=pr<0.5?m1.pers:pr<0.8?m2.pers:PERSONALITY[Math.floor(R()*PERSONALITY.length)];
-  const ar=R(), ability=ar<0.5?m1.ability:ar<0.8?m2.ability:(R()<0.5?FAMILY[fam].ability:EL_ABILITY[el1][0]);
+  const ar=R(), ability=FAMILY[fam].special?FAMILY[fam].ability:ar<0.5?m1.ability:ar<0.8?m2.ability:(R()<0.5?FAMILY[fam].ability:EL_ABILITY[el1][0]);   // a special Snabit always has its own ability
   const lean=FAMILY[fam].base.slice(), mag=mono?15:10; lean[LEAN[el1][0]]+=mag; lean[LEAN[el1][1]]-=mag; if(el2){lean[LEAN[el2][0]]+=5; lean[LEAN[el2][1]]-=5;}
   const stats=lean.map((b,i)=>Math.round((b+talent[i])*(i===pers[1]?1.1:i===pers[2]?0.9:1)));
   if(cat==="Stat seed"){ const k=stats.indexOf(Math.max(...stats)); stats[k]+=20; }
