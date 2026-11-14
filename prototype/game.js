@@ -208,8 +208,19 @@ function habitPick(fight,i,s){
   for(let k=0;k<names.length;k++){ r-=w[k]; if(r<=0) return ids[names[k]]; }
   return ids[names[0]];
 }
+/* Its fight style, from the arena moves you've picked for it (what Auto copies), or the old turn battle's habits for a Snabit
+   that has only fought there. */
 function styleText(s){
-  const H=s.habits||[]; if(H.length<6) return "It hasn't fought enough tournament matches to have a style yet, so it fights on the game's own sense.";
+  const A=s.arHabit||{}, tot=Object.values(A).reduce((a,b)=>a+b,0);
+  if(tot>=12){ const top=Object.entries(A).sort((a,b)=>b[1]-a[1]), lines=[], pct=n=>Math.round(n/tot*100);
+    lines.push(`Its favourite move is ${top[0][0]}, ${pct(top[0][1])}% of the moves you've picked.`);
+    if(top[1]&&top[1][1]/tot>=0.15) lines.push(`It leans on ${top[1][0]} too.`);
+    try{ const mv=typeof arMoves==="function"?arMoves(arFamily(s.m.family),s.level,typeof knownSkills==="function"?knownSkills(s):(s.skillsKnown||[]),s.m.el1):[], rg={};
+      for(const [n,c] of top){ const m=mv.find(x=>x.name===n||x.base===n); if(m&&m.dmg&&m.range!=="Any") rg[m.range]=(rg[m.range]||0)+c; }
+      const best=Object.entries(rg).sort((a,b)=>b[1]-a[1])[0], hit=Object.values(rg).reduce((a,b)=>a+b,0);
+      if(best&&best[1]/hit>=0.5) lines.push(`It likes to fight ${{Close:"up close",Near:"at arm's length",Mid:"from mid range",Far:"from far off"}[best[0]]}.`); }catch(e){}
+    return lines.join(" "); }
+  const H=s.habits||[]; if(H.length<6) return "It hasn't fought enough matches under your control to have a style yet, so on Auto it fights on the game's own sense.";
   const top=list=>{ const c={}; list.forEach(h=>c[h.n]=(c[h.n]||0)+1); const e=Object.entries(c).sort((a,b)=>b[1]-a[1])[0]; return e?[e[0],e[1]/list.length]:null; };
   const lines=[], op=top(H.filter(h=>h.o)), low=top(H.filter(h=>h.k[0]==="L")), all=top(H);
   if(op) lines.push(`Opens with ${op[0]} ${op[1]>0.7?"almost every time":op[1]>0.45?"most of the time":"now and then"}.`);

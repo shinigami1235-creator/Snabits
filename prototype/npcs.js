@@ -481,6 +481,10 @@ async function tripHome(duskLine, homeLine, mood) {
 /* ---------- visits: Nena's shop and the lab. No week passes, and the panel carries who is talking ---------- */
 function npcBox(who, text) { const N = NPC[who]; return `<div class="tipbox npcbox full" data-who="${who}"><div class="tip-who" style="background:${N.tag}">${N.name}</div><div>${text}</div></div>`; }
 function npcPanel(html) { panel(html); document.querySelectorAll('#r-panel .npcbox').forEach(b => npcFace(b, b.dataset.who, b.textContent)); }
+/* The walk to the shop or the lab takes a second. Each panel that opens after one takes a ticket first, and a menu tap or a
+   newer panel in the meantime makes the old ticket stale, so the first panel doesn't open on top of whatever was tapped. */
+let VISIT_T = 0;
+const visitTicket = () => ++VISIT_T, visitStale = t => t !== VISIT_T;
 async function visitPlace(place) {
   const s = RS; if (!s || s.busy) return;
   if (s.visit === place || !kikoOn()) return;

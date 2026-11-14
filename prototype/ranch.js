@@ -168,7 +168,7 @@ function newRanch(entry){
   const s={id:entry.id,m,grid:m.grid,stage:"Bit",mark:-1,tp:[0,0,0,0,0,0],lastTrained:-1,used:0,level:1,exp:0,grade:"E",wins:0,losses:0,habits:[],fightNo:0,equip:m.skills.slice(),skillsKnown:m.skills.slice(),cups:[],majors:[],born:PLAYER.week,
     spoil:15,fear:15,fatigue:0,stress:0,weight:0,like,dis,known:{},mess:0,messKind:"mud",messSpots:[],
     learned:[],injured:false,hinted:false,petWeek:-1,playWeek:-1,snackWeek:-1,mealMonth:-1,strainRun:0,sick:0,    x:150,dir:1,pose:"idle",jy:0,bx:0,upside:false,hidden:false,behind:false,flash:0,shake:0,ghosts:false,trail:[],props:[],parts:[],
-    busy:false,cur:0,skip:false,noScenes:false,showNums:false,ptrX:null,ptrT:0,rub:null,bbox:null,ready:false,dead:false};
+    busy:false,cur:0,skip:false,noScenes:!!(PLAYER&&PLAYER.noScenes),showNums:!!(PLAYER&&PLAYER.showNums),ptrX:null,ptrT:0,rub:null,bbox:null,ready:false,dead:false};
   if(entry.st) Object.assign(s,JSON.parse(JSON.stringify(entry.st)));
   if(!s.likeT){ if(entry.st){ s.likeT={k:"meal",v:s.like}; s.disT={k:"meal",v:s.dis}; s.found={like:s.known[s.like]==="like",dis:s.known[s.dis]==="dis"}; }
     else { s.likeT=tastePick(r); s.disT=tastePick(r,s.likeT); s.found={}; } }
@@ -241,8 +241,10 @@ function injectRanch(){
   el("r-mus").onchange=()=>{ if(typeof musToggle==="function") musToggle(); };
   el("r-skip").onclick=()=>{RS.skip=true;};
   el("r-goout").onclick=()=>{ if(RS&&!RS.busy){ RS.cur=++RACT; RS.idling=false; leaveBarn(); } };
-  el("r-off").onchange=e=>{RS.noScenes=e.target.checked;};
-  el("r-numsbox").onchange=e=>{RS.showNums=e.target.checked;drawUI();};
+  // Skip scenes and Show hidden numbers are saved with the player, so they stay set after a reload
+  el("r-off").checked=!!(PLAYER&&PLAYER.noScenes); el("r-numsbox").checked=!!(PLAYER&&PLAYER.showNums);
+  el("r-off").onchange=e=>{RS.noScenes=PLAYER.noScenes=e.target.checked; saveGame();};
+  el("r-numsbox").onchange=e=>{RS.showNums=PLAYER.showNums=e.target.checked; saveGame(); drawUI();};
   d.querySelectorAll("#r-menu .rb").forEach(b=>b.onclick=()=>menu(b.dataset.m));
   const cv=el("r-canvas"); RS_bindPointer(cv);
 }
@@ -290,7 +292,7 @@ function rsfx(kind){ try{ if(typeof sfxBus!=="function"||typeof sTone!=="functio
     fail:()=>{ sTone(d,t,"triangle",440,330,0.25,0.07); sTone(d,t+0.22,"triangle",330,220,0.4,0.07); },
     slack:()=>{ sTone(d,t,"sine",600,200,0.35,0.07); dKick(d,t+0.3,0.3); } };
   if(S[kind]) S[kind](); }catch(e){} }
-function banner(t,col){ const b=el("r-banner"); if(t) rsfx({"Great!":"great",Success:"success",Fail:"fail","Slacked off":"slack"}[t]||"star"); b.textContent=t; b.style.color=col||"#fff"; b.classList.toggle("on",!!t); }
+function banner(t,col,quiet){ const b=el("r-banner"); if(t&&!quiet) rsfx({"Great!":"great",Success:"success",Fail:"fail","Slacked off":"slack"}[t]||"star"); b.textContent=t; b.style.color=col||"#fff"; b.classList.toggle("on",!!t); }
 function panel(html){ el("r-panel").innerHTML=html; el("ranch").classList.toggle("menu-open",!!html); if(!html&&RS&&RS.id) weekCard(); }
 /* With no menu open, the space under the stats shows what's coming up. */
 function weekCard(){
@@ -304,6 +306,7 @@ function weekCard(){
 }
 
 function menu(which){
+  if(typeof VISIT_T!=="undefined") VISIT_T++;   // a panel still waiting on a walk to the shop or lab stays shut
   if(RS) RS.inTown=false;
   if(RS&&RS.visit&&typeof leaveVisit==="function") leaveVisit();
   const s=RS; if(s.busy) return;
@@ -541,7 +544,8 @@ function rollDrill(i){
 // heavy drills: [name, main stat, minor stat, dropped stat, mess]
 const HEAVY=[["Marathon",0,5,1,"mud"],["Quarry",1,0,5,"dust"],["Fortress",2,1,3,"dust"],["Library",3,4,2,"ink"],["Shrine",4,2,0,null],["Obstacle course",5,3,4,"mud"]];
 async function runDrill(i){
-  await scene(async()=>{
+  RS.drillMus=true; RS.drillDone=false;   // the drill tune plays from the walk out to the result
+  try{ await scene(async()=>{
     RS.drillPlace=i<6?DRILL_PLACE[i]:null;
     const s=RS, res=rollDrill(i), heavy=i>=6, H=heavy?HEAVY[i-6]:null, main=heavy?H[1]:i, name=heavy?H[0]:DRILLS[i];
     s.lastTrained=main; s.weekAct=STATS[main];
@@ -566,7 +570,8 @@ async function runDrill(i){
     for(const k in gains) s.tp[k]=Math.max(0,s.tp[k]+gains[k]);
     const hurtP=s.fatigue>=90?0.3:s.fatigue>=70?0.15:0;
     const col={great:"#ffd23f",success:"#ffffff",fail:"#ff8a8a",slack:"#c9a6ff"}[res];
-    banner({great:"Great!",success:"Success",fail:"Fail",slack:"Slacked off"}[res],col);
+    s.drillDone=true; const sung=typeof musSting==="function"&&musSting(res);   // the result's sting takes over from the banner's own sound
+    banner({great:"Great!",success:"Success",fail:"Fail",slack:"Slacked off"}[res],col,sung);
     const mess=heavy?H[4]:DRILL_MESS[i];
     if(mess&&res!=="slack"){ s.mess=Math.min(100,s.mess+35); s.messKind=mess; }
     if(heavy&&H[0]==="Shrine"&&res!=="slack") s.mess=0;
@@ -575,9 +580,9 @@ async function runDrill(i){
     for(const k in gains) for(const [nm,need] of STAT_SKILLS[k]) if(s.tp[k]>=need&&!s.learned.includes(nm)){ s.learned.push(nm); fixEquip(s); banner("Learned "+nm+"!","#7dff9a"); s.pose="happy"; spark(s.x,headY()-6,"sparkle",8); drawUI(); await rwait(1300); banner(""); s.pose="idle"; }
     if(Math.random()<hurtP){ s.injured=true; s.used+=2; s.pose="hurt"; spark(s.x,headY()-4,"star",4); say("It pushed too hard and got hurt."); await rwait(1200); s.pose="tired"; }
     await praiseOrScold(res);
-    await dayFade("night",place?backHome:null);
+    await dayFade("night",()=>{ if(place) backHome(); s.drillMus=false; });   // the morning tune comes in as the next day starts
     await endWeek(1, tLine+" "+(s.injured?"It pushed too hard and got hurt. That's 2 weeks off its prime, and it needs a rest or medicine.":{great:"That was its best yet.",success:"Solid work.",fail:"It'll get it next time.",slack:"It wandered off halfway. It's getting a bit spoiled."}[res]));
-  });
+  }); } finally { if(RS){ RS.drillMus=false; RS.drillDone=false; } }
 }
 /* How you react after a drill, the Monster Rancher 2 way: praise is for a great result, scolding is for when it ignored
    the drill, and after a fail you can console it or leave it. An ordinary success gets no prompt.
