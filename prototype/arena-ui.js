@@ -762,7 +762,7 @@ function atResult(){
   const div=document.createElement("div"); div.className="res";
   const how=ar.judged?"The judges called it after 60 seconds":`It ended in a knockout at ${Math.round(ar.t)} seconds`;
   if(!o.onEnd){
-    div.innerHTML=`<h2>${w===0?"You win":w===1?"You lose":"Draw"}</h2><div>${how}. You dealt ${ar.p[0].dealt} and took ${ar.p[1].dealt}.</div>
+    div.innerHTML=`<h2>${w===0?"You win":w===1?"You lose":"Draw"}</h2><div>${how}, and you dealt ${ar.p[0].dealt} and took ${ar.p[1].dealt}.</div>
       <div class="row"><button class="btn" id="at-again">Again</button><button class="btn" id="at-pick">Pick Snabits</button></div>`;
     d.appendChild(div);
     document.getElementById("at-again").onclick=()=>atStart(AT.me,AT.foe); document.getElementById("at-pick").onclick=openArenaTest; return; }
@@ -771,7 +771,7 @@ function atResult(){
   const tz=s&&s.likeT&&typeof taste==="function"?taste("battle",null,s):null; let tl="";
   if(tz){ const first=tasteFound(tz,s); s.stress=Math.max(0,s.stress+(tz==="like"?-4:6)); s.spoil+=tz==="like"?2:-1; tl=tz==="like"?(first?"It loves a good fight.":"It enjoyed that."):(first?"It hates fighting.":"It didn't enjoy that."); }
   if(typeof musJingle==="function"&&w!==null) musJingle(w===0);
-  div.innerHTML=`<h2>${w===0?"Win":w===1?"Loss":"Draw"}</h2><div>${how}. ${displayNameOf(ar.p[0])} dealt ${ar.p[0].dealt} and took ${ar.p[1].dealt}.</div>
+  div.innerHTML=`<h2>${w===0?"Win":w===1?"Loss":"Draw"}</h2><div>${how}, and ${displayNameOf(ar.p[0])} dealt ${ar.p[0].dealt} and took ${ar.p[1].dealt}.</div>
     ${lines.map(t=>`<div style="margin-top:6px;color:#ffc93c">${t}</div>`).join("")}${tl?`<div style="margin-top:6px">${tl}</div>`:""}
     <div class="row"><button class="btn" id="at-cont" style="background:#ffc93c;color:#14151d;border-color:#ffc93c">Continue</button></div>`;
   d.appendChild(div);
