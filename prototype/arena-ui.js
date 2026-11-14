@@ -211,7 +211,8 @@ function atEvent(e,now){
     AT.turn={t0:te,C:ch+K.C/rate,D:ch+Math.min(K.D/rate,K.C/rate+700)};
     const col=m.el&&typeof ELC==="function"?hexRgb(ELC(m.el)):AT_FAMCOL[AT.ar.p[e.i].f.family]||[255,214,90];
     S.anim={kind,t0:te+ch,tier,rate,el:m.el||null,name:m.name,src:typeof sourceFor==="function"?sourceFor({name:m.name,kind:m.cast?"Cast":"Strike"},sp):"mouth",col,pw:m.dmg>=70?1.35:m.dmg>=40?1.05:0.8,contact:/^(tackle|bite|stomp|punch|claw|shadowstrike|shadowclaw|fly)$/.test(kind)};
-    if(tier==="special"&&!S.anim.contact&&!m.lower) S.anim.mega=/^(beam|bolt|spear|volley|drain|gust)$/.test(kind)?"beam":kind==="lightning"?"bolt":/^(meteor|icefall|boulder|rockpath)$/.test(kind)?"fall":kind==="pillar"&&m.el==="Frost"?"glacier":/^(tornado|firespin)$/.test(kind)?"funnel":/^(pillar|wave|mist|mistcast)$/.test(kind)?"rise":null;
+    if(tier==="special"&&!S.anim.contact&&!m.lower) S.anim.mega=/^(beam|bolt|spear|volley|drain|gust)$/.test(kind)?"beam":kind==="lightning"?"bolt":/^(meteor|icefall|boulder|rockpath)$/.test(kind)?"fall":kind==="pillar"&&m.el==="Frost"?"glacier":/^(tornado|firespin)$/.test(kind)?(m.el==="Blaze"?"inferno":"funnel"):/^(pillar|wave|mist|mistcast)$/.test(kind)?"rise":null;
+    if(S.anim.mega) AT.turn.D=Math.max(AT.turn.D,ch+(K.C+900)/rate);   // the fight waits for a special's release to finish
     if(ch){ S.charge={t0:te,d:ch,tier,col:S.anim.col,el:m.el||null,body:sp.pal&&sp.pal.body}; if(tier==="special") AT.cine={t0:te,d:ch,i:e.i,name:m.name,col:S.anim.col}; }
     try{ sfx(ch?"charge":m.cast?"charge":"whoosh"); if(typeof elSfx==="function") elSfx(m.el,"cast"); if(typeof kindSfx==="function"&&!ch) kindSfx(kind); }catch(err){}
   }
@@ -337,7 +338,33 @@ function atGlacier(c,t,C,tg,s,te){
     c.fillStyle=g; c.beginPath(); c.arc(tg.x,foot-80*s,200*s,0,7); c.fill(); }
   c.restore();
 }
-/* Maelstrom, Inferno and Null Storm: a spinning funnel, narrow at the ground and wide at the top; water gets foam and spray */
+/* Inferno: a wave of fire rolls along the ground from the attacker, swallows the target in a roaring bonfire, then burns down to smoke */
+function atInferno(c,t,C,src,tg,s,te){
+  const foot=tg.foot||tg.y+40*s, start=C-400, end=C+800; if(t<start||t>end) return;
+  // one tongue of fire: red-orange outside, a yellow tongue inside it
+  const flame=(x,y,w,h,ph)=>{ if(h<4) return; for(const [k,c0,c1] of [[1,"rgba(232,72,40,.92)","rgba(255,120,40,.85)"],[0.62,"rgba(255,214,90,.95)","rgba(255,170,50,.9)"]]){
+      const ww=w*k, hh=h*k, sw=Math.sin(te/70+ph)*ww*0.6, g=c.createLinearGradient(0,y,0,y-hh); g.addColorStop(0,c0); g.addColorStop(0.6,c1); g.addColorStop(1,"rgba(255,150,40,0)");
+      c.fillStyle=g; c.beginPath(); c.moveTo(x-ww,y); c.bezierCurveTo(x-ww*1.15,y-hh*0.5,x+sw-ww*0.35,y-hh*0.72,x+sw,y-hh); c.bezierCurveTo(x+sw+ww*0.35,y-hh*0.72,x+ww*1.15,y-hh*0.5,x+ww,y); c.closePath(); c.fill(); } };
+  const dir=tg.x>src.x?1:-1; c.save();
+  if(t<C){ const k=(t-start)/400, front=src.x+(tg.x-src.x)*Math.pow(k,1.3);
+    c.globalCompositeOperation="lighter"; const g=c.createRadialGradient(front,foot,0,front,foot,90*s); g.addColorStop(0,"rgba(255,200,90,.7)"); g.addColorStop(1,"rgba(255,120,40,0)"); c.fillStyle=g; c.beginPath(); c.ellipse(front,foot,90*s,26*s,0,0,7); c.fill();
+    c.globalCompositeOperation="source-over";
+    for(let n=0;n<26;n++){ const f=n/25, x=src.x+dir*40*s+(front-src.x-dir*40*s)*f, age=1-f, h=(70+70*Math.abs(Math.sin(n*1.7+te/90)))*s*(0.45+0.55*f)*(f>0.88?1.5:1);
+      flame(x,foot,(15+6*f)*s,h,n); }
+    c.restore(); return; }
+  const k=(t-C)/(end-C), grow=Math.min(1,k/0.1), die=k>0.6?1-(k-0.6)/0.4:1, A=grow*die;
+  if(k<0.03){ AT.flash={t0:performance.now(),a:0.4}; AT.trauma=Math.max(AT.trauma,0.85); } AT.trauma=Math.max(AT.trauma,0.28*A);
+  c.globalCompositeOperation="lighter"; const gl=c.createRadialGradient(tg.x,foot,0,tg.x,foot,200*s); gl.addColorStop(0,`rgba(255,150,60,${0.55*A})`); gl.addColorStop(1,"rgba(255,90,30,0)"); c.fillStyle=gl; c.beginPath(); c.ellipse(tg.x,foot,200*s,52*s,0,0,7); c.fill();
+  c.globalCompositeOperation="source-over";
+  const order=[...Array(24).keys()].map(n=>({n,f:(n*37%24)/23-0.5})).sort((a,b)=>Math.abs(b.f)-Math.abs(a.f));
+  for(const {n,f} of order){ const x=tg.x+f*240*s, mid=Math.max(0.12,1-Math.abs(f)*1.7), h=(70+250*mid*(0.75+0.25*Math.sin(te/60+n*2.1)))*s*A; flame(x,foot+((n*13)%9)*s,(18+18*mid)*s,h,n*1.3); }
+  for(let n=0;n<16;n++){ const ph=((te/650)+n*0.41)%1; c.fillStyle=`rgba(255,${170+n*5},80,${(1-ph)*A})`; c.fillRect(tg.x+((n*53)%220-110)*s+Math.sin(te/150+n)*10*s,foot-60*s-ph*330*s,3.5*s,3.5*s); }
+  if(k>0.5){ const sm=(k-0.5)/0.5; for(let n=0;n<7;n++){ const ph=Math.min(1,sm*1.2+n*0.05), x=tg.x+((n*41)%140-70)*s, y=foot-80*s-ph*230*s, r=(34+ph*44)*s;
+      const g=c.createRadialGradient(x,y,0,x,y,r); g.addColorStop(0,`rgba(70,60,62,${0.5*(1-ph)})`); g.addColorStop(1,"rgba(70,60,62,0)"); c.fillStyle=g; c.beginPath(); c.arc(x,y,r,0,7); c.fill(); }
+    c.fillStyle=`rgba(40,22,16,${0.45*sm*(k<0.95?1:(1-k)/0.05)})`; c.beginPath(); c.ellipse(tg.x,foot+3*s,150*s,30*s,0,0,7); c.fill(); }
+  c.restore();
+}
+/* Maelstrom and Null Storm: a spinning funnel, narrow at the ground and wide at the top; water gets foam and spray */
 function atFunnel(c,t,C,tg,col,s,el,te){
   const foot=tg.foot||tg.y+40*s, start=C-220, end=C+700; if(t<start||t>end) return;
   const up=Math.min(1,(t-start)/260), fade=t>end-200?(end-t)/200:1, H=520*s*up, water=el==="Tide", fire=el==="Blaze";
@@ -447,7 +474,7 @@ function atSideState(S,te){
   const out={f:0,arc:0,lift:0,rot:0,sx:1,sy:1,pose:null,flash:0,off:[0,0],alpha:1};
   const A=S.anim; if(A&&te<A.t0){ const ch=S.charge, k=ch?(te-ch.t0)/ch.d:1, sp=ch&&ch.tier==="special";
       out.pose=sp?(k<0.55?"determined":"cast"):"effort"; out.off[0]+=Math.sin(te/16)*(1+2.5*k); out.sy=1-0.07*k; out.sx=1+0.05*k; out.flash=k>0.82&&Math.floor(te/45)%2?3:0; }
-  else if(A){ const t=(te-A.t0)*A.rate, K=ANIM[A.kind]; if(t>K.D) S.anim=null; else Object.assign(out,K.atk(t,{foeH:60,perp:[0,-1]})); }
+  else if(A){ const t=(te-A.t0)*A.rate, K=ANIM[A.kind]; if(t>(A.mega?Math.max(K.D,K.C+950):K.D)) S.anim=null; else Object.assign(out,K.atk(t,{foeH:60,perp:[0,-1]})); }
   const O=S.foe.anim; if(O&&!S.anim){ const t=(te-O.t0)*O.rate, K=ANIM[O.kind]; if(t<=K.D&&K.def){ const d=K.def(t,{foeH:60,perp:[0,-1]}); if(d) Object.assign(out,d); } }
   if(S.pose&&te<S.pose.until&&!S.anim) out.pose=S.pose.p;
   if(S.recoil){ const k=(te-S.recoil.t0)/170; if(k>1) S.recoil=null; else out.off[0]-=S.dir*S.recoil.amt*Math.sin(k*Math.PI); }
@@ -542,6 +569,7 @@ function atDraw(now,dte){
       else if(A.mega==="bolt") atMegaBolt(c,t,C,{...tgt,foot:T0.foot},A.col,s2,te);
       else if(A.mega==="fall") atMegaFall(c,t,C,{...tgt,foot:T0.foot},A.col,s2,A.kind,AT.side[i].dir,te);
       else if(A.mega==="glacier") atGlacier(c,t,C,{...tgt,foot:T0.foot},s2,te);
+      else if(A.mega==="inferno") atInferno(c,t,C,{x:placed[i].x,foot:placed[i].foot},{...tgt,foot:T0.foot},s2,te);
       else if(A.mega==="funnel") atFunnel(c,t,C,{...tgt,foot:T0.foot},A.col,s2,A.el,te);
       else atMegaRise(c,t,C,{...tgt,foot:T0.foot},A.col,s2,A.kind,te);
       return; }
