@@ -97,7 +97,7 @@ function atStart(meFam,foeFam){   // picks: see atMake
   AT={ar,A,B,moves,sel:0,top:0,auto:false,last:performance.now(),acc:0,te:0,freeze:0,trauma:0,raf:0,side:[A.spec,B.spec].map(spec=>({spec,x:null,shown:"idle",from:"idle",t0:0,dir:1})),fx:[],done:false,me:meFam,foe:foeFam};
   CB.parts=[]; CB.puffs=[];
   AT.special=[A,B].map(X=>{ const t=X.f.moves.filter(m=>m.dmg>=70).sort((a,b)=>b.dmg-a.dmg)[0]; return t?t.name:null; });
-  AT.rings=[]; AT.stars=[];
+  AT.rings=[]; AT.stars=[]; AT.strikes=[];
   // each range has its own box; ▲ ▼ swap which of that range's moves sits in the selected box. Moves usable at any range join every box's list
   AT.lists={}; AT.idx={}; for(const b of AR.BANDS){ AT.lists[b]=moves.filter(m=>m.range===b).concat(moves.filter(m=>m.range==="Any")); AT.idx[b]=0; }
   // the opponent's strongest move at each range, so you can see where it's dangerous
@@ -210,7 +210,8 @@ function atEvent(e,now){
     const K=ANIM[kind], rate=Math.max(0.75,Math.min(1.25,K.C/Math.max(300,m.wind*900))), tier=m.dmg?atMoveTier(e.i,m):"light", ch=AT_CHARGE[tier];
     AT.turn={t0:te,C:ch+K.C/rate,D:ch+Math.min(K.D/rate,K.C/rate+700)};
     const col=m.el&&typeof ELC==="function"?hexRgb(ELC(m.el)):AT_FAMCOL[AT.ar.p[e.i].f.family]||[255,214,90];
-    S.anim={kind,t0:te+ch,tier,rate,el:m.el||null,name:m.name,src:typeof sourceFor==="function"?sourceFor({name:m.name,kind:m.cast?"Cast":"Strike"},sp):"mouth",col,pw:m.dmg>=70?1.35:m.dmg>=40?1.05:0.8,contact:/^(tackle|bite|stomp|punch|claw|shadowstrike|fly)$/.test(kind)};
+    S.anim={kind,t0:te+ch,tier,rate,el:m.el||null,name:m.name,src:typeof sourceFor==="function"?sourceFor({name:m.name,kind:m.cast?"Cast":"Strike"},sp):"mouth",col,pw:m.dmg>=70?1.35:m.dmg>=40?1.05:0.8,contact:/^(tackle|bite|stomp|punch|claw|shadowstrike|shadowclaw|fly)$/.test(kind)};
+    if(tier==="special"&&!S.anim.contact&&ANIM[kind].fx&&!m.lower) S.anim.mega=true;
     if(ch){ S.charge={t0:te,d:ch,tier,col:S.anim.col}; if(tier==="special") AT.cine={t0:te,d:ch,i:e.i,name:m.name,col:S.anim.col}; }
     try{ sfx(ch?"charge":m.cast?"charge":"whoosh"); if(typeof elSfx==="function") elSfx(m.el,"cast"); if(typeof kindSfx==="function"&&!ch) kindSfx(kind); }catch(err){}
   }
@@ -219,7 +220,8 @@ function atEvent(e,now){
     try{ sfx("whoosh"); }catch(err){} }
   if(e.t==="hit"){ const o=AT.side[1-e.i], mt=S.anim&&S.anim.tier||"light", tier=e.crit?(mt==="special"?"special":mt==="heavy"?"special":"heavy"):mt==="light"&&e.dmg>=25?"medium":mt, T=AT_TIER[tier];
     if(e.h===0||!o.react||te-o.react.t0>120){ o.react={kind:"hit",t0:te,tier}; AT.freeze=Math.max(AT.freeze,now+T.stop); AT.trauma=Math.min(1,AT.trauma+T.trauma);
-      AT.hitJuice={i:1-e.i,t0:te,tier,col:S.anim?S.anim.col:[255,236,160]}; AT.punch={t0:te,amt:T.punch,i:1-e.i};
+      AT.hitJuice={i:1-e.i,t0:te,tier,col:S.anim?S.anim.col:[255,236,160]};
+      if(S.anim) AT.strikes.push({kind:/bite/.test(S.anim.kind)?"jaws":/claw/.test(S.anim.kind)?"slash":"lines",i:1-e.i,t0:te,col:S.anim.col,big:{light:1,medium:1.15,heavy:1.4,special:1.9}[tier],dir:S.dir,ranged:!S.anim.contact}); AT.punch={t0:te,amt:T.punch,i:1-e.i};
       if(T.screen) AT.flash={t0:now+T.stop*0.4,a:T.screen};
       if(T.slow) AT.slow={from:now+T.stop,until:now+T.stop+T.slow*(AT.ar.over?2.2:1),k:AT.ar.over?0.22:0.32};
       if(tier==="heavy"||tier==="special") AT.dust={i:1-e.i,t0:te,n:tier==="special"?14:8};
@@ -231,6 +233,43 @@ function atEvent(e,now){
   if(e.t==="slam"){ S.react={kind:"hit",t0:te,tier:"heavy"}; AT.trauma=Math.min(1,AT.trauma+0.5); AT.fx.push({i:e.i,t0:now,txt:`Wall ${e.dmg}`,crit:true});
     try{ sfx("heavy"); }catch(err){} }
   if(e.t==="buff") AT.fx.push({i:e.i,t0:now,txt:m.name,buff:true});
+}
+/* hit marks drawn over the target, k runs 0 to 1 over 340 ms */
+function atStrike(c,S,k,p,s){
+  const col=S.col, a=1-Math.max(0,(k-0.45)/0.55); c.save(); c.translate(p.x,p.y); c.lineJoin="round";
+  if(S.kind==="jaws"){ const shut=Math.min(1,k/0.28), gap=(1-eo(shut))*52*s+2*s, w=78*s, n=6, bite=shut>=1?Math.min(1,(k-0.28)/0.12):0;
+    c.scale(1+0.12*bite*(1-k),1+0.12*bite*(1-k)); c.globalAlpha=a;
+    for(const sg of [-1,1]){ c.beginPath(); c.moveTo(-w,sg*(gap+30*s)); c.quadraticCurveTo(0,sg*(gap+56*s),w,sg*(gap+30*s)); c.lineTo(w,sg*gap);
+      for(let t=n;t>=0;t--){ const x=-w+2*w*t/n; c.lineTo(x,sg*gap); if(t>0) c.lineTo(x-w/n,sg*(gap-18*s)); }
+      c.closePath(); c.fillStyle="#fff"; c.fill(); c.lineWidth=4*s; c.strokeStyle="#1a1428"; c.stroke(); }
+    if(bite){ c.globalCompositeOperation="lighter"; c.fillStyle=`rgba(${col},${0.6*(1-k)})`; c.beginPath(); c.ellipse(0,0,w*1.1,24*s,0,0,7); c.fill(); } }
+  else if(S.kind==="slash"){ const grow=Math.min(1,k/0.3), L=150*s;
+    for(let n=-1;n<=1;n++){ const ox=n*26*s, x0=ox-L/2*S.dir, y0=-L/2, x1=ox+L/2*S.dir, y1=L/2, xm=x0+(x1-x0)*grow, ym=y0+(y1-y0)*grow;
+      c.globalCompositeOperation="lighter"; c.strokeStyle=`rgba(${col},${0.7*a})`; c.lineWidth=18*s; c.lineCap="round"; c.beginPath(); c.moveTo(x0,y0); c.lineTo(xm,ym); c.stroke();
+      c.globalCompositeOperation="source-over"; c.strokeStyle=`rgba(255,255,255,${a})`; c.lineWidth=6*s; c.beginPath(); c.moveTo(x0,y0); c.lineTo(xm,ym); c.stroke(); } }
+  else { const grow=eo(Math.min(1,k/0.35)), R0=26*s*(S.ranged?0.7:1), n=14;
+    for(let j=0;j<n;j++){ const ang=j/n*Math.PI*2+((j*7)%5)*0.05, lean=Math.cos(ang)*S.dir>0?1.5:0.8, r1=R0+grow*(70+((j*13)%30))*s*lean;
+      c.strokeStyle=j%2?`rgba(${col},${a})`:`rgba(255,255,255,${a})`; c.lineWidth=(j%2?5:3.5)*s; c.lineCap="round";
+      c.beginPath(); c.moveTo(Math.cos(ang)*(R0+grow*30*s),Math.sin(ang)*(R0+grow*30*s)*0.8); c.lineTo(Math.cos(ang)*r1,Math.sin(ang)*r1*0.8); c.stroke(); } }
+  c.restore();
+}
+/* a special fired from range: an orb gathers at the source, then a thick beam with a white core holds on the target */
+function atMegaBeam(c,t,C,o,tg,col,s){
+  if(!o) return; const on=C-170, off=C+430;
+  if(t<on){ const k=Math.max(0,(t-(on-300))/300); c.save(); c.globalCompositeOperation="lighter";
+    const g=c.createRadialGradient(o.x,o.y,0,o.x,o.y,40*s*k+4); g.addColorStop(0,"rgba(255,255,255,.95)"); g.addColorStop(0.4,`rgba(${col},.8)`); g.addColorStop(1,`rgba(${col},0)`);
+    c.fillStyle=g; c.beginPath(); c.arc(o.x,o.y,40*s*k+4,0,7); c.fill(); c.restore(); return; }
+  if(t>off) return;
+  const env=Math.min(1,(t-on)/80)*Math.min(1,(off-t)/160), dx=tg.x-o.x, dy=tg.y-o.y, L=Math.hypot(dx,dy)+30*s, w=38*s*env*(1+0.08*Math.sin(t/22));
+  AT.trauma=Math.max(AT.trauma,0.3*env);
+  c.save(); c.translate(o.x,o.y); c.rotate(Math.atan2(dy,dx)); c.globalCompositeOperation="lighter";
+  const band=(h,fill)=>{ c.fillStyle=fill; c.beginPath(); c.moveTo(0,-h*0.6); for(let x=0;x<=L;x+=14){ c.lineTo(x,-h+Math.sin(x/9+t/30)*h*0.08); } c.lineTo(L,h); for(let x=L;x>=0;x-=14){ c.lineTo(x,h+Math.sin(x/11-t/26)*h*0.08); } c.lineTo(0,h*0.6); c.closePath(); c.fill(); };
+  band(w*1.9,`rgba(${col},${0.28*env})`); band(w,`rgba(${col},${0.85*env})`); band(w*0.42,`rgba(255,255,255,${env})`);
+  for(let r=0;r<5;r++){ const x=((t*0.9+r*L/5)%L); c.strokeStyle=`rgba(255,255,255,${0.5*env})`; c.lineWidth=3*s; c.beginPath(); c.ellipse(x,0,6*s,w*1.25,0,0,7); c.stroke(); }
+  for(const [x,R] of [[0,w*1.25],[L-30*s,w*1.7]]){ const g=c.createRadialGradient(x,0,0,x,0,R); g.addColorStop(0,"rgba(255,255,255,1)"); g.addColorStop(0.45,`rgba(${col},.85)`); g.addColorStop(1,`rgba(${col},0)`);
+    c.fillStyle=g; c.beginPath(); c.arc(x,0,R,0,7); c.fill(); }
+  c.restore();
+  if(Math.random()<0.5&&typeof spawnSparks==="function") spawnSparks(tg,Math.atan2(dy,dx)+Math.PI,2,col);
 }
 const AT_FAMCOL={Antik:[255,224,122],Squib:[127,211,242],Moko:[255,154,214],Booly:[159,184,255],Skit:[244,239,228],Chomp:[255,214,90],Pinch:[255,138,122],Stilt:[255,179,92]};
 /* one side's pose and offset this frame, the way the battle's sideState works */
@@ -246,7 +285,7 @@ function atSideState(S,te){
   if(R){ const dur=R.kind==="hit"?(R.tier==="heavy"?560:420):380, k=(te-R.t0)/dur;
     if(k>1) S.react=null;
     else if(R.kind==="hit"){ const T=AT_TIER[R.tier], dt=te-R.t0; out.pose="hit"; out.flash=T.white?(dt<18?2:dt<T.flash?1:0):dt<T.flash?3:0;
-      out.off[0]-=S.dir*(R.tier==="heavy"?16:9)*(k<0.25?eo(k/0.25):1-eo((k-0.25)/0.75)); out.rot-=S.dir*0.12*(R.tier==="heavy"?1.6:1)*Math.sin(Math.min(1,k*1.5)*Math.PI);
+      out.off[0]-=S.dir*({light:14,medium:20,heavy:30,special:46}[R.tier]||14)*(k<0.25?eo(k/0.25):1-eo((k-0.25)/0.75)); out.rot-=S.dir*0.12*(R.tier==="heavy"?1.6:1)*Math.sin(Math.min(1,k*1.5)*Math.PI);
       const q=Math.max(0,1-dt/180), big=R.tier==="special"?1.8:R.tier==="heavy"?1.3:1; out.sx*=1+0.16*big*q; out.sy*=1-0.13*big*q; }
     else { const s2=Math.sin(k*Math.PI); out.pose="dodge"; out.off[0]-=S.dir*22*s2; out.off[1]-=12*s2; } }
   if(S.hop){ const k=(te-S.hop.t0)/(S.hop.d||380); if(k>1) S.hop=null; else { out.arc-=Math.sin(k*Math.PI)*S.hop.h; if(!out.pose) out.pose="jump"; } }
@@ -294,7 +333,8 @@ function atDraw(now,dte){
     c.strokeStyle=AT_RC[band]; c.lineWidth=3; c.setLineDash([6,5]); c.beginPath(); c.moveTo(a,y); c.lineTo(b,y); c.stroke(); c.setLineDash([]);
   }
   const placed=[null,null];
-  [0,1].forEach(i=>{ const S=AT.side[i], O=AT.side[1-i], sp=S.spec; if(!sp) return;
+  const lunging=i=>{ const A=AT.side[i].anim; return A&&A.contact&&te>=A.t0; };
+  (lunging(0)?[1,0]:[0,1]).forEach(i=>{ const S=AT.side[i], O=AT.side[1-i], sp=S.spec; if(!sp) return;
     S.dir=O.dx>S.dx?1:-1; S.foe=O;
     const h=CHIBI.height(sp.stage,sp.marks,sp.family), u=Math.min(0.5,96/(h+20))*scale;
     // walking comes from the engine, so the pose doesn't flicker between walk and idle on fast screens
@@ -303,11 +343,16 @@ function atDraw(now,dte){
     if(pose!==S.shown){ S.from=S.shown||"idle"; S.shown=pose; S.t0=te; }
     const k=(te-S.t0)/110, P=k>=0&&k<1&&CHIBI.POSES.includes(S.from)&&CHIBI.POSES.includes(pose)?CHIBI.blend(S.from,pose,k):pose;
     // a contact move reaches the opponent, but never further than a short lunge when it's out of reach
-    const reach=Math.max(-70,Math.min(70,(O.dx-S.dx)-S.dir*min58(scale)));
+    const reach=Math.max(-(SEP+40),Math.min(SEP+40,(O.dx-S.dx)-S.dir*SEP*0.42));
     const x=S.dx+reach*st.f+st.off[0], y=floor+st.arc+st.lift+st.off[1], mir=S.dir>0?-1:1;
     if(moving!==!!S.moving&&S.ko==null&&typeof spawnPuff==="function") spawnPuff(x-S.dir*10,y-2,moving?5:7,S.dir>0?Math.PI:0,1.2,0.08,5*scale,"rgba(235,228,214,1)",320);
     S.moving=moving;
     c.fillStyle="rgba(0,0,0,.2)"; c.beginPath(); c.ellipse(x,floor+2,24*scale*(st.alpha),6*scale,0,0,7); c.fill();
+    S.trail=(S.trail||[]).filter(g=>te-g.t<120);
+    if(lunging(i)&&S.lastX!=null&&Math.abs(x-S.lastX)>3) S.trail.push({x,y,P,t:te,rot:st.rot,sx:st.sx,sy:st.sy});
+    S.lastX=x;
+    for(const g of S.trail){ c.save(); c.globalAlpha=0.32*(1-(te-g.t)/120); c.filter="brightness(1.9) saturate(.5)";
+      c.translate(g.x,g.y); c.rotate(g.rot); c.scale(mir*u*g.sx,u*g.sy); c.translate(-100,-188); CHIBI.draw(c,sp,g.P,te,[0.6*S.dir*mir,0]); c.restore(); }
     c.save(); c.globalAlpha=st.alpha; if(st.flash===2) c.filter="brightness(0) invert(1)"; else if(st.flash===1) c.filter="brightness(1.5)"; else if(st.flash===3) c.filter="brightness(1.18)";
     c.translate(x,y); c.rotate(st.rot); c.scale(mir*u*st.sx,u*st.sy); c.translate(-100,-188);
     CHIBI.draw(c,{...sp,capture:(S.cap={})},P,te,[0.6*S.dir*mir,0]); c.restore();
@@ -317,6 +362,7 @@ function atDraw(now,dte){
   // the game's own attack effects, from the attacker's eyes, mouth or hands to the target
   [0,1].forEach(i=>{ const A=AT.side[i].anim; if(!A||te<A.t0||!placed[i]||!placed[1-i]||!ANIM[A.kind].fx) return;
     const T0=placed[1-i], tgt={...T0,x:T0.center?T0.center.x:T0.x,y:T0.center?T0.center.y:T0.y};
+    if(A.mega){ atMegaBeam(c,(te-A.t0)*A.rate,ANIM[A.kind].C,originOf(placed[i],A.src,tgt)[0],tgt,A.col,scale/2.3); return; }
     try{ ANIM[A.kind].fx(c,(te-A.t0)*A.rate,{self:placed[i],target:tgt,targetLift:tgt.lift||0,col:A.col,el:A.el,name:A.name,from:originOf(placed[i],A.src,tgt),pw:A.pw,W:WW,H:HH}); }catch(err){ AT.side[i].anim=null; } });
   if(AT.spark&&placed[AT.spark.i]){ const p=placed[AT.spark.i], src=placed[1-AT.spark.i], c0=p.center||p;
     spawnSparks(c0,Math.atan2(c0.y-src.y,c0.x-src.x),AT.spark.n,AT.spark.col); AT.burst={i:AT.spark.i,t0:te,col:AT.spark.col}; AT.spark=null; }
@@ -340,6 +386,8 @@ function atDraw(now,dte){
   AT.stars=AT.stars.filter(r=>te-r.t0<150); for(const r of AT.stars){ const k=(te-r.t0)/150, R0=(46+30*k)*r.s, R1=R0*0.38;
     c.fillStyle=`rgba(255,255,255,${1-k})`; c.beginPath(); for(let n=0;n<16;n++){ const a=r.rot+n*Math.PI/8, rr=n%2?R1:R0*(0.8+0.4*((n*7)%3)/2); c[n?"lineTo":"moveTo"](r.x+Math.cos(a)*rr,r.y+Math.sin(a)*rr); } c.closePath(); c.fill();
     c.fillStyle=`rgba(${r.col},${0.9*(1-k)})`; c.beginPath(); c.arc(r.x,r.y,R1*0.9,0,7); c.fill(); }
+  AT.strikes=AT.strikes.filter(k=>te-k.t0<340); for(const k of AT.strikes){ const P=placed[k.i]; if(!P) continue;
+    atStrike(c,k,(te-k.t0)/340,P.center||P,k.big*scale/2.3); }
   drawSparks(c,dte); drawPuffs(c);
   // damage numbers and words over the head
   AT.fx=AT.fx.filter(f=>now-f.t0<900); c.textAlign="center"; for(const f of AT.fx){ if(now<f.t0) continue; const k=(now-f.t0)/900, p=placed[f.i]; if(!p) continue;
