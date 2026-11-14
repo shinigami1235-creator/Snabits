@@ -1,0 +1,62 @@
+/* The ranch look: barn wood behind everything, parchment panels with brown ink, and pressable buttons with a darker
+   copy 4px under them, the same depth rule the monsters are drawn with. Fredoka's round letters match the round monsters.
+   Gold stays the one accent, kept for the main action and whatever is selected. */
+@font-face{font-family:Fredoka;src:url(fonts/fredoka-latin-500-normal.woff2) format("woff2");font-weight:500;font-display:swap}
+@font-face{font-family:Fredoka;src:url(fonts/fredoka-latin-600-normal.woff2) format("woff2");font-weight:600;font-display:swap}
+@font-face{font-family:Fredoka;src:url(fonts/fredoka-latin-700-normal.woff2) format("woff2");font-weight:700;font-display:swap}
+body.theme-wood,body.theme-wood #ranch,body.theme-wood #atest,body.theme-wood #ob{background-color:#2e2018;background-image:repeating-linear-gradient(0deg,rgba(0,0,0,.2) 0 2px,transparent 2px 64px),repeating-linear-gradient(90deg,rgba(255,240,220,.025) 0 1px,transparent 1px 9px)}
+body.theme-wood{--pix:Fredoka,system-ui,sans-serif;--wood:#2e2018;--wood2:#3b2a1f;--paper:#f3e4c4;--paper2:#e8d3a8;--brown:#5a3a22;--brown2:#8d6440;--inkb:#3a2618;--mutb:#7a6248;
+  --ink:var(--wood);--ink2:var(--wood2);--gold:#ffc93c;--gold-d:#b07c12;
+  background-color:var(--wood);background-image:repeating-linear-gradient(0deg,rgba(0,0,0,.2) 0 2px,transparent 2px 64px),repeating-linear-gradient(90deg,rgba(255,240,220,.025) 0 1px,transparent 1px 9px)}
+body.theme-wood .ic{display:block;flex:none}
+/* shared buttons */
+body.theme-wood .big{background:var(--gold);color:var(--inkb);border:2px solid var(--brown);box-shadow:0 4px 0 var(--gold-d);font-weight:700}
+body.theme-wood .btn2,body.theme-wood .small{background:var(--paper);color:var(--inkb);border:2px solid var(--brown);box-shadow:0 4px 0 var(--brown)}
+body.theme-wood .big:active,body.theme-wood .btn2:active,body.theme-wood .small:active{transform:translateY(3px);box-shadow:0 1px 0 var(--brown)}
+/* the ranch */
+body.theme-wood #r-name{color:#fff4dc;font-weight:700;text-shadow:0 2px 0 #1a110b}
+body.theme-wood #r-lv{color:#d8c3a0}
+body.theme-wood #r-coins{display:flex;align-items:center;gap:5px;background:var(--paper);color:var(--inkb);border:2px solid var(--brown);box-shadow:0 3px 0 var(--brown);border-radius:999px;padding:3px 10px 3px 4px}
+body.theme-wood #r-info,body.theme-wood #r-gear{display:flex;align-items:center;gap:5px}
+body.theme-wood #r-gear{padding:5px 7px}
+body.theme-wood #r-sub>span{background:var(--wood2);color:#e9d6b4;border:1px solid #5a3f2c}
+body.theme-wood #r-canvas{border:3px solid var(--brown);border-radius:14px;box-shadow:0 0 0 3px #1a110b}
+body.theme-wood #r-date{background:rgba(58,38,24,.7);color:#fff4dc}
+body.theme-wood #r-say,body.theme-wood .tipbox{background:var(--paper);color:var(--inkb);border:2px solid var(--brown);border-radius:14px}
+body.theme-wood #r-say .who,body.theme-wood .tip-who{border:2px solid var(--brown);border-radius:999px;color:var(--inkb);font-weight:700}
+body.theme-wood #r-stats{background:var(--paper2);color:var(--inkb);border:2px solid var(--brown);border-radius:14px}
+body.theme-wood #r-stats *{color:var(--inkb)}
+body.theme-wood #r-week>div{background:var(--wood2);border:1px solid #5a3f2c;color:#f3e4c4}
+body.theme-wood #r-week span{color:#cdb894}
+body.theme-wood #r-panel{background:var(--paper2);color:var(--inkb);border:2px solid var(--brown);border-radius:14px}
+body.theme-wood #r-menu{background:linear-gradient(#24180f,#24180f);border-top:3px solid var(--brown);gap:7px}
+body.theme-wood #r-menu .rb{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:60px;padding:6px 2px 4px;font:600 14px var(--pix);
+  background:var(--paper);color:var(--inkb);border:2px solid var(--brown);border-radius:14px;box-shadow:0 4px 0 var(--brown)}
+body.theme-wood #r-menu .rb.on{background:var(--gold);box-shadow:0 4px 0 var(--gold-d)}
+body.theme-wood #r-menu .rb:disabled{opacity:.45}
+/* the fight */
+body.theme-wood #atest{color:var(--inkb);font-family:var(--pix)}
+body.theme-wood #atest .btn{background:var(--paper);color:var(--inkb);border:2px solid var(--brown);border-radius:14px;box-shadow:0 4px 0 var(--brown)}
+body.theme-wood #atest .btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--brown)}
+body.theme-wood #atest .ctl3{background:#24180f;border-top:3px solid var(--brown)}
+body.theme-wood #atest .atk{background:var(--gold);border-color:var(--brown);box-shadow:0 4px 0 var(--gold-d);color:var(--inkb)}
+body.theme-wood #atest .ctl3 .on{background:var(--gold);color:var(--inkb);border-color:var(--brown)}
+body.theme-wood #atest .side,body.theme-wood #atest .mid{background:rgba(243,228,196,.94);border:2px solid var(--brown);color:var(--inkb)}
+body.theme-wood #atest .foe .mv{color:#b23a2a}
+body.theme-wood #atest .mid span{color:var(--mutb)}body.theme-wood #atest .mid b em{color:#b23a2a}body.theme-wood #atest .mid .ok{color:#8a5a00}
+body.theme-wood #atest .sc{background:var(--paper2);color:var(--brown2)}
+body.theme-wood #atest .sc.lit{background:var(--gold);color:var(--inkb)}body.theme-wood #atest .sc.foe.lit{background:#ff9a86}
+body.theme-wood #atest .fob{background:#d9c294}
+body.theme-wood #atest .clock2{background:var(--paper);color:var(--inkb);border:2px solid var(--brown);box-shadow:0 3px 0 var(--brown)}
+body.theme-wood #atest .res{background:var(--paper);color:var(--inkb);border:3px solid var(--brown);box-shadow:0 5px 0 var(--brown)}
+body.theme-wood #atest .res h2{color:#8a5a00}
+/* drill and choice buttons: no colour stripe down the side, the stat name carries the colour instead */
+body.theme-wood .bbtn{background:var(--paper);color:var(--inkb);border:2px solid var(--brown);border-radius:14px;box-shadow:0 4px 0 var(--brown)}
+body.theme-wood .bbtn small{color:color-mix(in srgb,var(--c) 60%,#3a2618);font-weight:600}
+body.theme-wood .bbtn:disabled{opacity:.5}
+body.theme-wood #r-panel>div[style*="flex-basis"],body.theme-wood #r-panel>p{color:var(--mutb)}
+body.theme-wood .rs>span:first-child{color:var(--mutb)}body.theme-wood .rs .bg{background:#d9c294;height:7px;border-radius:4px}
+body.theme-wood .rs i{background:#4f9be0;border-radius:4px}body.theme-wood .rs .pop{background:var(--paper)}
+body.theme-wood #r-panel .rb{background:var(--paper);color:var(--inkb);border:2px solid var(--brown);border-radius:12px;box-shadow:0 4px 0 var(--brown)}
+body.theme-wood #r-panel .rb small{color:var(--mutb)}body.theme-wood #r-panel .rb:disabled{opacity:.5}
+body.theme-wood #r-panel .rb.on{background:var(--gold);box-shadow:0 4px 0 var(--gold-d)}
