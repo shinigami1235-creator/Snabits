@@ -8,7 +8,7 @@ function entryName(e){ const st=entryState(e); return st.stage&&st.stage!=="Bit"
 
 /* ---------- Freezer ---------- */
 async function openFreezer(){
-  if(RS&&RS.id){ saveGame(); if(RS.visit!=="lab") await visitPlace("lab"); }
+  const tk=visitTicket(); if(RS&&RS.id){ saveGame(); if(RS.visit!=="lab") await visitPlace("lab"); } if(visitStale(tk)) return;
   const list=PLAYER.roster;
   npcPanel((RS?npcBox("aide",`I look after the Freezer. Snabits stored in it don't age, and it holds up to ${freezerMax()}.`):`<div style="flex-basis:100%;font-size:13px">The Freezer holds up to ${freezerMax()} Snabits, and they don't age while they're in it.</div>`)+`<div id="frz" style="flex-basis:100%;display:flex;flex-direction:column;gap:6px"></div><button class="rb" id="f-back">Back</button>`);
   const box=el("frz");
@@ -63,7 +63,7 @@ function compat(e1,e2){
   return match;
 }
 async function openLab(line){
-  if(RS&&RS.id){ saveGame(); if(RS.visit!=="lab") await visitPlace("lab"); }
+  const tk=visitTicket(); if(RS&&RS.id){ saveGame(); if(RS.visit!=="lab") await visitPlace("lab"); } if(visitStale(tk)) return;
   const R=PLAYER.roster;
   if(!LAB.a||!R.find(e=>e.id===LAB.a)) LAB.a=PLAYER.active;
   if(LAB.b&&!R.find(e=>e.id===LAB.b)) LAB.b=null;
@@ -109,7 +109,9 @@ function fuseChild(e1,e2,cat,R){
   const pal={...m1.pal,body,parts:mix(m1.pal.parts,m2.pal.parts,1/3),accent:mix(m1.pal.accent,m2.pal.accent,1/2),dark:tone(body,-0.45),outline:(()=>{const [h,s,v]=rgbToHsv(body);return hsvToRgb([h,Math.min(1,s+0.2),Math.min(0.2,v*0.3)]);})()};
   const talent=m1.talent.map((t,i)=>Math.min(15,Math.max(0,Math.round((t+m2.talent[i])/2)+Math.floor(R()*6)-2)));
   const pr=R(), pers=pr<0.5?m1.pers:pr<0.8?m2.pers:PERSONALITY[Math.floor(R()*PERSONALITY.length)];
-  const ar=R(), ability=FAMILY[fam].special?FAMILY[fam].ability:ar<0.5?m1.ability:ar<0.8?m2.ability:(R()<0.5?FAMILY[fam].ability:EL_ABILITY[el1][0]);   // a special Snabit always has its own ability
+  // a special Snabit always has its own ability, and a special family's ability stays with the special families
+  const ownOf=a=>a&&!Object.values(FAMILY).some(F=>F.special&&F.ability[0]===a[0])?a:null, ar=R();
+  const ability=FAMILY[fam].special?FAMILY[fam].ability:(ar<0.5?ownOf(m1.ability):ar<0.8?ownOf(m2.ability):null)||(R()<0.5?FAMILY[fam].ability:EL_ABILITY[el1][0]);
   const lean=FAMILY[fam].base.slice(), mag=mono?15:10; lean[LEAN[el1][0]]+=mag; lean[LEAN[el1][1]]-=mag; if(el2){lean[LEAN[el2][0]]+=5; lean[LEAN[el2][1]]-=5;}
   const stats=lean.map((b,i)=>Math.round((b+talent[i])*(i===pers[1]?1.1:i===pers[2]?0.9:1)));
   if(cat==="Stat seed"){ const k=stats.indexOf(Math.max(...stats)); stats[k]+=20; }
@@ -119,9 +121,12 @@ function fuseChild(e1,e2,cat,R){
   const known2=[...new Set((s2.skillsKnown||[]).concat(s2.learned||[]).concat(m2.pool.filter(n=>SKILLS[n].lv<=(s2.level||1))))];
   let inherit=fam===m1.family?known1.slice(0,Math.floor(known1.length*2/3)):[];
   if(!inherit.length){ for(const n of known1.concat(known2)){ const e=SKILLS[n].el||"Neutral"; if(!inherit.some(x=>(SKILLS[x].el||"Neutral")===e)) inherit.push(n); if(inherit.length>=4) break; } }
-  const pool=buildPool(el1,el2,Math.round((m1.pool.length+m2.pool.length)/2));
+  // a costume passes on now and then: 30% from the first parent, 15% from the second. With it come its two skills, the way a scan gives them
+  const cr=R(), costume=m1.costume&&cr<0.3?m1.costume:m2.costume&&cr>=0.3&&cr<0.45?m2.costume:null;
+  let pool=buildPool(el1,el2,Math.round((m1.pool.length+m2.pool.length)/2));
+  if(costume&&typeof COSTUME_SKILLS!=="undefined"){ const cs=Object.keys(COSTUME_SKILLS).filter(n=>COSTUME_SKILLS[n].costume===costume); pool=pool.filter(n=>!cs.includes(n)); pool=[pool[0],cs[0],...pool.slice(1),...cs.slice(1)].filter(Boolean); }
   const grid=buildGrid(fam,parts);
-  const m={pool,name:speciesName(fam,el1,el2),family:fam,band:m1.band,shape:m1.shape,el1,el2,mono,parts,grid,pal,stats,talent,pers,ability,hidden:false,skills:pool.slice(0,2),
+  const m={pool,name:speciesName(fam,el1,el2),family:fam,costume,special:!!FAMILY[fam].special,band:m1.band,shape:m1.shape,el1,el2,mono,parts,grid,pal,stats,talent,pers,ability,hidden:false,skills:pool.slice(0,2),
     lifespan:Math.round((2*m1.lifespan+m2.lifespan)/3)+(cat==="Life fruit"?3:0),hybridOf:hybrid?[m1.family,m2.family]:null};
   const st={tp,weight:Math.round((2*(s1.weight||0)+(s2.weight||0))/3*0.7),skillsKnown:[...new Set(pool.slice(0,2).concat(inherit))],equip:pool.slice(0,2),level:1,grade:"E",used:0};
   return {m,st,hybrid,carry:Math.round(carry*100),inherit};
@@ -138,7 +143,7 @@ async function doFuse(e1,e2,cat){
   PLAYER.roster=PLAYER.roster.filter(e=>e.id!==e1.id&&e.id!==e2.id);
   const e={id:"m"+(PLAYER.nextId++),m:child.m,st:child.st}; PLAYER.roster.push(e); PLAYER.active=e.id; RS=null; LAB={a:null,b:null,cat:null};
   saveGame();
-  panel(""); openRanch(); say(`It's a ${child.m.name}${child.hybrid?", a hybrid":""}. It keeps ${child.carry}% of its parents' training and knows ${child.st.skillsKnown.join(", ")}.`);
+  panel(""); openRanch(); say(`It's a ${child.m.name}${child.hybrid?", a hybrid":""}${child.m.costume?` in the ${child.m.costume} costume`:""}. It keeps ${child.carry}% of its parents' training and knows ${child.st.skillsKnown.join(", ")}.`);
 }
 
 /* ---------- Rebirth ---------- */
