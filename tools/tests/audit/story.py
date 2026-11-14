@@ -46,6 +46,10 @@ async def main():
             await pg.evaluate("mo=>{ PLAYER.week=48+mo*4; RS.fatigue=0; RS.stress=0; drawUI(); menu('Out'); openContests(); }", mo); await pg.wait_for_timeout(200)
             kind = await pg.evaluate("()=>contestOf(PLAYER.week).kind"); w = await pg.evaluate("()=>PLAYER.week")
             C.ok(await click(pg, '#ct-go') and await settle(pg, max_s=200, label='contest' + kind) and await pg.evaluate("w=>PLAYER.week===w+1", w), f'the {kind} contest runs and takes the week')
+        # the record page's week log: a contest week has to be readable (light text on its dark chip)
+        await pg.evaluate("()=>openInfo('record')"); await pg.wait_for_timeout(200)
+        chip = await pg.evaluate("()=>{ const e=[...document.querySelectorAll('.i-log span')].find(e=>e.textContent==='Contest'); if(!e) return null; const c=getComputedStyle(e), n=t=>t.match(/\\d+/g).slice(0,3).map(Number), lum=v=>(0.299*v[0]+0.587*v[1]+0.114*v[2]); return Math.abs(lum(n(c.color))-lum(n(c.backgroundColor))); }")
+        C.ok(chip is not None and chip > 100, f'a contest week in the log is readable (text and chip differ by {chip} in brightness)'); await pg.evaluate("()=>closeInfo()")
         for i in range(3):
             await pg.evaluate("()=>{ RS.fatigue=0; RS.stress=0; RS.injured=false; drawUI(); menu('Out'); openBoard(); }"); await pg.wait_for_timeout(200); w = await pg.evaluate("()=>PLAYER.week")
             info = await pg.evaluate("i=>{ const b=board(RS)[i]; return [b.kind,KINDS[b.kind].weeks]; }", i)
