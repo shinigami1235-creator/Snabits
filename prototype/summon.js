@@ -108,7 +108,7 @@ const SUMMON = (() => {
       // the blocks lift off and spin into a disc, then fall into the egg
       if (t >= 1250 && t < 3000) { const S = spin(t), shrink = seg(t, 2150, 2800), col = seg(t, 2800, 2980);
         const plat = seg(t, 1700, 2100) * (1 - col);
-        if (plat > 0) { c.save(); c.translate(cx, cy); c.scale(1, 0.35); c.globalAlpha = plat;
+        if (plat > 0) { c.save(); c.translate(cx, cy); c.scale(1.18, 0.35 * 1.18); c.globalAlpha = plat;
           const g = c.createRadialGradient(0, 0, 0, 0, 0, R0 * 1.25); g.addColorStop(0, rgba(lt(main, 0.6), 0.9)); g.addColorStop(0.6, rgba(main, 0.55)); g.addColorStop(1, rgba(main, 0)); c.fillStyle = g; c.beginPath(); c.arc(0, 0, R0 * 1.25, 0, 7); c.fill();
           c.strokeStyle = rgba(lt(acc, 0.4), 0.9); c.lineWidth = 3; for (const k2 of [0.55, 0.85, 1.1]) { c.beginPath(); c.arc(0, 0, R0 * k2, 0, 7); c.stroke(); }
           c.rotate(-S * 0.5); c.lineWidth = 5; for (let k2 = 0; k2 < 12; k2++) { const a = k2 * Math.PI / 6; c.beginPath(); c.moveTo(Math.cos(a) * R0 * 0.9, Math.sin(a) * R0 * 0.9); c.lineTo(Math.cos(a) * R0 * 1.05, Math.sin(a) * R0 * 1.05); c.stroke(); }
@@ -120,7 +120,7 @@ const SUMMON = (() => {
           for (const s of sparks) { const q = ((t - 2300 + s.d) * s.v) % (cy + 40); c.fillStyle = rgba(lt(acc, 0.5), 0.9); c.fillRect(cx + s.x - s.s / 2, cy - q, s.s, s.s); } }
         for (const q of blocks) { const k = io3(seg(t, 1250 + q.d, 1250 + q.d + 620));
           const a = q.a0 + (q.a1 + S - q.a0) * k, rr = (q.r0 + (q.r1 * (1 - 0.35 * shrink) - q.r0) * k) * (1 - col);
-          const sz = bs * (1 - 0.45 * k) * (1 - col * 0.8), x = cx + Math.cos(a) * rr, y = cy + Math.sin(a) * rr * (1 - 0.35 * k);
+          const sz = bs * (1 - 0.45 * k) * (1 - col * 0.8), x = cx + Math.cos(a) * rr, y = cy + Math.sin(a) * rr * (1 - 0.65 * k);
           c.fillStyle = rgba(mixc(q.c, lt(main, 0.3), shrink * 0.6)); c.fillRect(x - sz / 2, y - sz / 2, sz, sz); } }
       // the egg wobbles and cracks
       if (t >= 2820 && t < 3560) { const g = seg(t, 2820, 3000), wob = Math.sin(t / 55) * 0.16 * seg(t, 3000, 3480), rx = cw * 0.2 * back(g), ry = rx * 1.22;
