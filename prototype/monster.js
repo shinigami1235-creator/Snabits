@@ -260,7 +260,7 @@ function hatch(res,now=new Date(),ov={}){
   const stats=lean.map((b,i)=>Math.round((b+talent[i])*mult[i]));
   // ability
   let hiddenChance=(res.mono?0.12:0.03)*(bri<0.3?2:1);
-  const hidden=R()<hiddenChance;
+  const hidden=R()<hiddenChance&&!F.special;   // a special has no hidden ability to roll
   const ability=F.special?F.ability:hidden?EL_ABILITY[el1][1]:(R()<0.5?F.ability:EL_ABILITY[el1][0]);
   const costume=ov.costume||(egg&&egg.costume)||null;
   const base0=buildPool(el1,el2,res.pool), cs=costume&&typeof COSTUME_SKILLS!=="undefined"?Object.keys(COSTUME_SKILLS).filter(n=>COSTUME_SKILLS[n].costume===costume):[];

@@ -18,7 +18,7 @@ const tripRegionCount=()=>[4,7,10,12,12,12][rankIdx()];
 const wildPerWeek=()=>3+(rankIdx()>=1?1:0)+(rankIdx()>=3?1:0);
 /* new scans start with a little more in every stat as the ranch climbs, and hidden abilities come up more often */
 function scanBoost(m){ const g=rankIdx(), add=[0,2,4,6,8,10][g]; if(add) m.stats=m.stats.map(v=>v+add);
-  if(!m.hidden&&g>=2&&Math.random()<m.hiddenChance*(g>=4?1:0.5)&&typeof EL_ABILITY!=="undefined"){ m.hidden=true; m.ability=EL_ABILITY[m.el1][1]; } return m; }
+  if(!m.hidden&&!m.special&&g>=2&&Math.random()<m.hiddenChance*(g>=4?1:0.5)&&typeof EL_ABILITY!=="undefined"){ m.hidden=true; m.ability=EL_ABILITY[m.el1][1]; } return m; }   // a special Snabit keeps its own ability
 const freezerMax=()=>(PLAYER&&PLAYER.upgrades&&PLAYER.upgrades["Big Freezer"]?30:20)+(rankIdx()>=2?5:0)+(rankIdx()>=4?5:0);
 const tierOf=n=>{ const l=SKILLS[n].lv; return l<=8?1:l<=20?2:3; };
 
