@@ -15,8 +15,8 @@ function atStyle(){
 #atest .go{height:54px;width:100%;font-size:17px;background:#ffc93c;color:#14151d;border-color:#ffc93c;margin-top:6px}
 #atest .scr{position:relative;flex:1 1 auto;min-height:260px;padding-top:var(--safe-t,0px);background:#1b1630;overflow:hidden}
 #atest .scr canvas{position:absolute;left:0;right:0;top:var(--safe-t,0px);width:100%;display:block}
-#atest .scr::after{content:"";position:absolute;left:0;right:0;top:0;height:calc(var(--safe-t,0px) + 72px);background:linear-gradient(rgba(20,21,29,.9),rgba(20,21,29,.55) 70%,transparent);pointer-events:none}
-#atest .htop{position:absolute;z-index:1;left:8px;right:8px;top:calc(var(--safe-t,0px) + 8px);display:grid;grid-template-columns:1fr 50px 1fr;gap:6px;align-items:center;pointer-events:none}
+#atest .scr::after{content:"";position:absolute;left:0;right:0;top:0;height:calc(var(--safe-t,0px) + 56px);background:linear-gradient(rgba(20,21,29,.7),transparent);pointer-events:none}
+#atest .htop{position:absolute;z-index:1;left:50%;width:54px;margin-left:-27px;top:calc(var(--safe-t,0px) + 8px);pointer-events:none}
 #atest .hb .nm{font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 2px #14151d}#atest .hb.r{text-align:right}
 #atest .hpb{height:16px;border-radius:5px;background:rgba(20,21,29,.85);border:2px solid #3a3d52;margin-top:3px;position:relative;overflow:hidden}
 #atest .hpb i{position:absolute;top:0;bottom:0;left:0;background:linear-gradient(#7be3a3,#41b872)}#atest .r .hpb i{left:auto;right:0}
@@ -103,9 +103,7 @@ function atStart(meFam,foeFam){   // picks: see atMake
   // Your Snabit always stands on the left, so ◀ backs off and ▶ closes in; after a swap the arena turns round to keep it so.
   const cells=side=>(side?AR.BANDS:AR.BANDS.slice().reverse()).map(b=>`<div class="sc${side?" foe":""}" style="--rc:${AT_RC[b]}" id="at-${side?"f":"y"}-${b}"></div>`).join("");
   d.innerHTML=`<div class="scr"><canvas id="at-cv"></canvas>
-      <div class="htop"><div class="hb"><div class="nm">${A.f.name}</div><div class="hpb"><i id="at-hp0"></i><b id="at-l0"></b></div></div>
-        <div class="clock2" id="at-clock">60</div>
-        <div class="hb r"><div class="nm">${B.f.name}</div><div class="hpb"><i id="at-hp1"></i><b id="at-l1"></b></div></div></div>
+      <div class="htop"><div class="clock2" id="at-clock">60</div></div>
       <div class="hbot" id="at-hbot"><div class="side me"><div class="mv" id="at-mv0"></div><div class="strip">${cells(0)}</div><div class="fob" id="at-fb0"><i id="at-fo0"></i><span class="need" id="at-need"></span></div></div>
         <div class="mid"><div><span>Hit</span><b><i id="at-hit0"></i><em id="at-hit1"></em></b></div><div><span>Focus</span><b><i id="at-fn0"></i><em id="at-fn1"></em></b></div></div>
         <div class="side foe"><div class="mv" id="at-mv1"></div><div class="strip">${cells(1)}</div><div class="fob"><i id="at-fo1"></i></div></div></div></div>
@@ -262,6 +260,7 @@ function atDraw(now,dte){
   c.setTransform(dpr,0,0,dpr,0,0); c.clearRect(0,0,W,H);
   if(flipK){ const k=Math.max(0.04,Math.abs(Math.cos(Math.PI*flipK))); c.translate(W/2,0); c.scale(k,1); c.translate(-W/2,0); }   // the turn-around
   c.translate(sx,AT.floorS+sy); c.scale(z,z); c.translate(-AT.cam,-FY); c.drawImage(AT.bg,0,0,WW,HH);
+  const toWorld=c.getTransform().inverse();   // the drawing records its eyes, hands and head in canvas pixels; this turns them back into arena units
   // the gap between them on the floor
   { const a=Math.min(AT.side[0].dx,AT.side[1].dx), b=Math.max(AT.side[0].dx,AT.side[1].dx), y=floor+16, band=arBand(ar.gap());
     c.strokeStyle=AT_RC[band]; c.lineWidth=3; c.setLineDash([6,5]); c.beginPath(); c.moveTo(a,y); c.lineTo(b,y); c.stroke(); c.setLineDash([]);
@@ -284,7 +283,7 @@ function atDraw(now,dte){
     c.save(); c.globalAlpha=st.alpha; if(st.flash===2) c.filter="brightness(0) invert(1)"; else if(st.flash===1) c.filter="brightness(1.5)"; else if(st.flash===3) c.filter="brightness(1.18)";
     c.translate(x,y); c.rotate(st.rot); c.scale(mir*u*st.sx,u*st.sy); c.translate(-100,-188);
     CHIBI.draw(c,{...sp,capture:(S.cap={})},P,te,[0.6*S.dir*mir,0]); c.restore();
-    const cp=S.cap||{}, d=q=>q?{x:q.x/dpr,y:q.y/dpr}:null;
+    const cp=S.cap||{}, d=q=>q?toWorld.transformPoint(q):null;
     placed[i]={x,y:y-h*u*0.45,foot:y,lift:st.lift,back:false,r:CHIBI.width(sp.stage,sp.family)*u*0.55,eyes:cp.eyes&&cp.eyes.map(d),mouth:d(cp.mouth),hands:(cp.hands||[]).map(d),top:d(cp.top)||{x,y:y-50},center:d(cp.center)};
   });
   // the game's own attack effects, from the attacker's eyes, mouth or hands to the target
@@ -298,14 +297,26 @@ function atDraw(now,dte){
   // damage numbers and words over the head
   AT.fx=AT.fx.filter(f=>now-f.t0<900); c.textAlign="center"; for(const f of AT.fx){ if(now<f.t0) continue; const k=(now-f.t0)/900, p=placed[f.i]; if(!p) continue;
     c.font=`700 ${Math.round((f.crit?19:15)/z)}px system-ui`; c.globalAlpha=1-k*k; c.lineWidth=4; c.strokeStyle="#14151d"; c.fillStyle=f.buff?"#8fd3ff":f.crit?"#ffc93c":"#ffffff";
-    const y=p.top.y-14-k*26; c.strokeText(f.txt,p.x,y); c.fillText(f.txt,p.x,y); c.globalAlpha=1; }
+    const y=p.top.y-(52+k*26)/z; c.strokeText(f.txt,p.x,y); c.fillText(f.txt,p.x,y); c.globalAlpha=1; }
+  // name and HP over each head, so your eyes stay on the fight; the white part is the damage just taken, draining after a moment
+  c.setTransform(dpr,0,0,dpr,0,0);
+  if(!flipK) [0,1].forEach(i=>{ const P=placed[i], p=ar.p[i], S=AT.side[i]; if(!P) return;
+    const f=p.hp/p.maxhp; S.hpLag=S.hpLag==null?f:f>S.hpLag?f:S.hpLag+(f-S.hpLag)*(1-Math.exp(-Math.max(0,dte)/380));
+    const bw=104, bh=13, x=Math.max(6,Math.min(W-bw-6,(P.x-AT.cam)*z+sx-bw/2)), y=Math.max(52,(P.top.y-FY)*z+AT.floorS+sy-38);
+    c.fillStyle="rgba(20,21,29,.85)"; c.beginPath(); c.roundRect(x-2,y-2,bw+4,bh+4,6); c.fill();
+    c.fillStyle="#fff"; c.beginPath(); c.roundRect(x,y,bw*S.hpLag,bh,4); c.fill();
+    const g=c.createLinearGradient(0,y,0,y+bh), col=f>0.5?["#7be3a3","#41b872"]:f>0.25?["#ffd75a","#f2a92c"]:["#ff9a8a","#e2483f"]; g.addColorStop(0,col[0]); g.addColorStop(1,col[1]);
+    c.fillStyle=g; c.beginPath(); c.roundRect(x,y,Math.max(0,bw*f),bh,4); c.fill();
+    c.font="700 10px system-ui"; c.textAlign="center"; c.lineWidth=3; c.strokeStyle="#14151d"; c.fillStyle="#fff";
+    c.strokeText(`${p.hp}/${p.maxhp}`,x+bw/2,y+bh-2.5); c.fillText(`${p.hp}/${p.maxhp}`,x+bw/2,y+bh-2.5);
+    const nm=p.f.name.split(",")[0]; c.font="700 11px system-ui"; c.fillStyle=i?"#ffb4a8":"#ffe07a"; c.strokeText(nm,x+bw/2,y-6); c.fillText(nm,x+bw/2,y-6); });
 }
 
 function atHud(){
   const ar=AT.ar, g=ar.gap(), m=AT.lists[ar.band()][AT.idx[ar.band()]]||{cost:0,range:"Any"};
   const fm=AT.foeBest[ar.band()], pc=(p,mv)=>mv&&mv.acc?Math.round(100*ar.hitChance(p,mv))+"%":"-";
-  ar.p.forEach((p,i)=>{ document.getElementById("at-hp"+i).style.width=(100*p.hp/p.maxhp)+"%"; document.getElementById("at-fo"+i).style.width=(100*p.focus/99)+"%";
-    document.getElementById("at-l"+i).textContent=`${p.hp}/${p.maxhp}`; document.getElementById("at-fn"+i).textContent=Math.floor(p.focus); });
+  ar.p.forEach((p,i)=>{ document.getElementById("at-fo"+i).style.width=(100*p.focus/99)+"%";
+    document.getElementById("at-fn"+i).textContent=Math.floor(p.focus); });
   document.getElementById("at-hit0").textContent=pc(ar.p[0],m.name?m:null); document.getElementById("at-hit1").textContent=pc(ar.p[1],fm);
   document.getElementById("at-fn0").classList.toggle("ok",ar.p[0].focus>=m.cost);
   // a white line on your focus bar shows what the selected move costs, and the bar lights up once you can afford it
