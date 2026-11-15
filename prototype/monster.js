@@ -260,7 +260,7 @@ function eggOf(res){
   if(R("silver")>=50&&R("white")>=5&&R("white")<=25&&R("black")>=3&&R("black")<=18&&R("green")<3){ const w=S("white"), k=S("black"); if(w&&k&&w.cy<0.45&&k.cy>0.5) return {special:"Werewolf"}; }   // a moon above, dark slashes below
   if(R("brown")>=55&&R("white")>=8&&R("white")<=30&&R("black")<6){ const w=S("white"); if(w&&Math.abs(w.cx-0.5)<0.08&&w.cy<0.55&&eggCross(w.rows)>=3) return {special:"Minotaur"}; }   // pale horns and a pale ring, two bands down the middle of brown
   if(R("green")>=55&&R("orange")>=4&&R("orange")<=25&&R("yellow")<6&&R("red")<6){ const o=S("orange"); if(o&&o.cy<0.4&&o.spread<0.2) return {special:"Dragon"}; }   // one orange flame near the top of green
-  if(R("blue")>=50&&R("yellow")>=10&&R("yellow")<=35&&R("violet")<5&&R("red")<5&&R("white")<10){ const y=S("yellow"); if(y&&Math.max(...y.rows)>0.5&&Math.max(...y.cols)<0.45&&Math.abs(y.cx-0.5)<0.1) return {special:"Thunderbird"}; }   // a yellow bolt right across blue
+  if(R("blue")>=50&&R("yellow")>=10&&R("yellow")<=35&&R("violet")<5&&R("red")<5&&R("white")<10){ const y=S("yellow"); if(y&&Math.max(...y.rows)>0.5&&Math.max(...y.cols)<0.45&&Math.abs(y.cx-0.5)<0.1&&y.cy<0.6) return {special:"Thunderbird"}; }   // a yellow bolt right across blue
   // costumes. The second set goes first where it could be read as one of the first five: Penguin and Zebra before Panda,
   // Clownfish and Tiger before Bee, Rubber duck before Bee
   if(R("black")>=28&&R("white")>=12&&R("orange")>=2&&R("orange")<=14&&sum("black","white","orange")>=82) return {costume:"Penguin"};
