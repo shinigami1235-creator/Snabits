@@ -212,6 +212,7 @@ class Fight{
       if(R()>acc){ this.say("It misses."); this.events.push({t:"miss",who:tgt}); return; }
     }
     if(def.ability==="Illusion"&&!def.illusion&&tgt!==i&&power){ def.illusion=true; this.pop(tgt,"Illusion"); this.say(`${me.name} hits a fox-fire copy.`); this.events.push({t:"miss",who:tgt}); return; }   // Kitsune
+    if(def.ability==="Trick Leaf"&&!def.trick&&tgt!==i&&power){ def.trick=true; this.pop(tgt,"Trick Leaf"); this.say(`${me.name} hits a leaf.`); this.events.push({t:"miss",who:tgt}); return; }   // Tanuki
     if(s.kind==="Strike"&&def.ability==="Slippery"&&me.ability!=="Keen Eye"&&tgt!==i&&R()<0.1){ this.pop(tgt,"Slippery"); this.say(`${def.name} slips away.`); this.events.push({t:"miss",who:tgt}); return; }
     // element
     const el=s.basic?null:s.el;
@@ -243,6 +244,7 @@ class Fight{
       if(def.status&&def.status.name==="Soak"&&el==="Spark") d*=1.25;
       if(def.ability==="Plated"&&s.kind==="Strike") d*=0.9;
       if(def.ability==="Thick Fur"&&(el==="Blaze"||el==="Frost")) d*=0.75;   // Yeti
+      if(def.ability==="Riddle"&&s.kind==="Cast"){ d*=0.8; if(h===0) this.pop(tgt,"Riddle"); }   // Sphinx
       if(def.status&&def.status.name==="Freeze"&&me.ability==="Permafrost") d*=1.2;
       if(def.ability==="Wobble"&&!def.firstHitTaken){ d*=0.7; this.pop(tgt,"Wobble"); }
       def.firstHitTaken=true;
@@ -280,6 +282,7 @@ class Fight{
     if(s.basic&&me.ability==="Web"&&tgt!==i&&R()<0.3){ this.pop(i,"Web"); this.stageChange(def,{spd:-1},true); }
     if(s.status&&tgt!==i){ let ch=s.status[1]*this.statusOdds(me,def)*(me.ability==="Volatile"?1.3:1); if(s.status[0]==="Freeze"&&((this.field&&this.field.name==="Snow")||me.ability==="Permafrost")) ch*=2; if(R()*100<ch) this.inflict(def,s.status[0],i); }
     if(s.lower&&s.lowerChance&&tgt!==i&&R()*100<s.lowerChance) this.stageChange(def,s.lower,true);
+    if(me.ability==="Siren"&&s.kind==="Cast"&&total&&tgt!==i&&def.hp>0&&!def.status&&R()<0.2){ this.pop(i,"Siren"); this.inflict(def,"Daze",i); }   // Mermaid
     if(this.field&&this.field.name==="Static"&&R()<0.1) this.inflict(def,"Shock",i);
   }
   lastStand(i){ const f=this.p[i]; if(f.ability==="Last Stand"&&!f.lastStand&&f.hp>0&&f.hp<f.maxhp/4){ f.lastStand=true; const h=Math.round(f.maxhp*0.2); f.hp=Math.min(f.maxhp,f.hp+h); this.pop(i,"Last Stand"); this.say(`${f.name} gets a second wind.`); this.events.push({t:"heal",who:i,amt:h}); } }
@@ -298,6 +301,7 @@ class Fight{
       for(const k of ["bulwark","castWard","afterimage","statusBlock"]) if(f[k]) f[k]--;
       if(f.thawed&&!(f.status&&f.status.name==="Freeze")) f.thawedTurn=(f.thawedTurn||0)+1; if(f.thawedTurn>1){ f.thawed=false; f.thawedTurn=0; }
       if(f.taunt) f.taunt--;
+      if(f.ability==="Blessing"&&f.hp>0&&f.hp<f.maxhp){ const h=Math.max(1,Math.round(f.maxhp/50)); f.hp=Math.min(f.maxhp,f.hp+h); this.pop(i,"Blessing"); this.events.push({t:"heal",who:i,amt:h}); }   // Diwata
       if(f.ability==="Sunbather"&&this.field&&this.field.name==="Sunlit"&&f.hp<f.maxhp){ const h=Math.round(f.maxhp/16); f.hp=Math.min(f.maxhp,f.hp+h); this.pop(i,"Sunbather"); this.events.push({t:"heal",who:i,amt:h}); }
       if(f.regen){ const h=Math.round(f.maxhp*0.1); f.hp=Math.min(f.maxhp,f.hp+h); f.regen--; this.events.push({t:"heal",who:i,amt:h}); }
       if(f.status){

@@ -7,7 +7,7 @@
    seen and found stays seen and found. */
 
 // the Pattern Stone in each region, and the special Snabit its pattern belongs to
-const EX_STONE = { 'Cinder Peak': 'Phoenix', 'Static Plains': 'Eagle', 'Nightshade Marsh': 'Naga', 'Glacier Rim': 'Yeti' };
+const EX_STONE = { 'Cinder Peak': 'Phoenix', 'Static Plains': 'Eagle', 'Nightshade Marsh': 'Naga', 'Glacier Rim': 'Yeti', 'Saffron Dojo': 'Tengu', 'Tanglewood': 'Tanuki', 'Coral Shallows': 'Mermaid', 'Dream Garden': 'Diwata', 'Granite Steps': 'Sphinx' };
 // the stones only a team reaches, on the deep maps (Gid, 15 Nov 2026: stones from grade C)
 const EX_DEEP_STONE = { 'Dream Garden': 'Kitsune', 'Hollow Moor': 'Vampire', 'Tanglewood': 'Jack', 'Coral Shallows': 'Kraken', 'Granite Steps': 'Golem', 'Dawn Temple': 'Unicorn' };
 // Helena's journal, one page a region, in the order she went
@@ -215,7 +215,8 @@ async function exNode(reg, n, st, need, nm, K, used, found) {
     banner('A journal page', '#ffe9a8'); say(EX_PAGES[reg.n]); await rwait(Math.min(7000, 2000 + EX_PAGES[reg.n].length * 38)); banner(''); return; }
   if (n.k === 'stone') { const sp = EX_STONE[reg.n];
     const p = prop({ k: 'pstone', x: 150, y: GROUND, glow: true, sp }); await walkTo(122, 60, 'walk'); s.pose = 'happy';
-    if (!once) { st.got.push(n.id); const L = stoneList(); if (L && !L.includes(sp)) L.push(sp); found.push('a Pattern Stone'); spark(150, GROUND - 40, 'sparkle', 8); banner('A Pattern Stone', '#ffe9a8');
+    const L0 = stoneList(), have = L0 ? L0.includes(sp) : once;   // a save that opened this circle when it held a chest still finds the stone
+    if (!have) { if (!once) st.got.push(n.id); const L = stoneList(); if (L && !L.includes(sp)) L.push(sp); found.push('a Pattern Stone'); spark(150, GROUND - 40, 'sparkle', 8); banner('A Pattern Stone', '#ffe9a8');
       K("Look at this. Someone painted a pattern on this stone, and the Snaboscope's humming at it."); await rwait(2600); banner(''); }
     else { K('The painted stone is still here.'); await rwait(1100); }
     unprop(p); return; }

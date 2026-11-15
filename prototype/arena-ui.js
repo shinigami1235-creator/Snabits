@@ -584,7 +584,7 @@ function atMegaBeam(c,t,C,o,tg,col,s){
   c.restore();
   if(Math.random()<0.5&&typeof spawnSparks==="function") spawnSparks(tg,Math.atan2(dy,dx)+Math.PI,2,col);
 }
-const AT_FAMCOL={Antik:[255,224,122],Squib:[127,211,242],Moko:[255,154,214],Booly:[159,184,255],Skit:[244,239,228],Chomp:[255,214,90],Pinch:[255,138,122],Stilt:[255,179,92],Plod:[190,196,214],Bipped:[255,170,110],Fizz:[200,140,255],Teep:[140,226,200],Lern:[255,236,150],Eagle:[250,250,240],Vampire:[200,40,60],Phoenix:[255,150,50],Kitsune:[150,200,255],Naga:[150,220,90],Yeti:[210,236,255],Puff:[255,170,210],Flit:[200,160,255],Glop:[140,220,255],Tock:[230,230,240],Mitt:[255,150,90],Brolly:[255,226,110],Spine:[150,220,110],Burr:[210,160,110],Kraken:[120,160,255],Golem:[200,190,170],Unicorn:[255,240,190],Jack:[255,170,60]};
+const AT_FAMCOL={Antik:[255,224,122],Squib:[127,211,242],Moko:[255,154,214],Booly:[159,184,255],Skit:[244,239,228],Chomp:[255,214,90],Pinch:[255,138,122],Stilt:[255,179,92],Plod:[190,196,214],Bipped:[255,170,110],Fizz:[200,140,255],Teep:[140,226,200],Lern:[255,236,150],Eagle:[250,250,240],Vampire:[200,40,60],Phoenix:[255,150,50],Kitsune:[150,200,255],Naga:[150,220,90],Yeti:[210,236,255],Puff:[255,170,210],Flit:[200,160,255],Glop:[140,220,255],Tock:[230,230,240],Mitt:[255,150,90],Brolly:[255,226,110],Spine:[150,220,110],Burr:[210,160,110],Kraken:[120,160,255],Golem:[200,190,170],Unicorn:[255,240,190],Jack:[255,170,60],Tengu:[255,120,100],Tanuki:[210,160,110],Mermaid:[130,230,225],Diwata:[255,160,210],Sphinx:[255,220,110]};
 /* one side's pose and offset this frame, the way the battle's sideState works */
 function atSideState(S,te){
   const out={f:0,arc:0,lift:0,rot:0,sx:1,sy:1,pose:null,flash:0,off:[0,0],alpha:1};

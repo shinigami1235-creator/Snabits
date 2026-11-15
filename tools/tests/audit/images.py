@@ -68,7 +68,31 @@ def clownfish():
     im=Image.new('RGB',(W,H),ORANGE); d=ImageDraw.Draw(im)
     for f in (0.2,0.5,0.8): d.rectangle([W*(f-0.06),0,W*(f+0.06),H],fill=WHITE); d.rectangle([W*(f-0.075),0,W*(f-0.06),H],fill=BLACK); d.rectangle([W*(f+0.06),0,W*(f+0.075),H],fill=BLACK)
     return im
-EGGS={'Eagle':eagle,'Vampire':vampire,'Phoenix':phoenix,'Kitsune':kitsune,'Naga':naga,'Yeti':yeti,'Panda':panda,'Bee':bee,'Ladybug':ladybug,'Watermelon':watermelon,'Candy cane':candy,'Tiger':tiger,'Zebra':zebra,'Cow':cow,'Penguin':penguin,'Strawberry':strawberry,'Rubber duck':duck,'Clownfish':clownfish}
+# the specials of 16 Nov 2026, drawn like their Pattern Stones
+BROWN=(132,88,48); TEAL=(80,196,196)
+def tengu():
+    im=Image.new('RGB',(W,H),RED); d=ImageDraw.Draw(im); d.polygon([(W*0.1,H*0.27),(W*0.95,H*0.42),(W*0.1,H*0.57)],fill=WHITE)
+    for a in (-0.5,0,0.5): cx,cy=W*0.25,H*0.92; d.polygon([(cx,cy),(cx+math.sin(a)*W*0.14-38,cy-math.cos(a)*H*0.24),(cx+math.sin(a)*W*0.14+38,cy-math.cos(a)*H*0.24)],fill=GREEN)
+    return im
+def tanuki():
+    im=Image.new('RGB',(W,H),BROWN); d=ImageDraw.Draw(im); d.rectangle([0,H*0.4,W,H*0.62],fill=BLACK)
+    for f in (0.28,0.72): d.ellipse([W*f-38,H*0.52-38,W*f+38,H*0.52+38],fill=BROWN)
+    d.ellipse([W*0.42,H*0.05,W*0.66,H*0.27],fill=GREEN); return im
+def mermaid():
+    im=Image.new('RGB',(W,H),TEAL); d=ImageDraw.Draw(im); d.polygon([(W*0.5,H*0.42),(W*0.05,H*0.04),(W*0.5,H*0.2),(W*0.95,H*0.04)],fill=PINK)
+    for r in range(4):
+        for k in range(-3,4): x=W*(0.5+k*0.2+(r%2)*0.1); y=H*(0.55+r*0.12); d.arc([x-38,y-38,x+38,y+38],10,170,fill=(200,240,236),width=5)
+    return im
+def diwata():
+    im=Image.new('RGB',(W,H),PINK); d=ImageDraw.Draw(im)
+    for sx in (-1,1): d.ellipse([W*(0.5+sx*0.23)-62,H*0.36-100,W*(0.5+sx*0.23)+62,H*0.36+100],fill=GREEN); d.ellipse([W*(0.5+sx*0.18)-46,H*0.67-62,W*(0.5+sx*0.18)+46,H*0.67+62],fill=GREEN)
+    d.ellipse([W*0.5-34,H*0.5-34,W*0.5+34,H*0.5+34],fill=YELLOW); return im
+def sphinx():
+    im=Image.new('RGB',(W,H),(236,196,60)); d=ImageDraw.Draw(im)
+    for k in range(6):
+        y=H*(0.07+k*0.11); d.rectangle([0,y,W,y+H*0.055],fill=NAVY)
+    d.rectangle([W*0.3,H*0.3,W*0.7,H*0.68],fill=(236,196,60)); d.ellipse([W*0.5-30,H*0.8-30,W*0.5+30,H*0.8+30],fill=RED); return im
+EGGS={'Tengu':tengu,'Tanuki':tanuki,'Mermaid':mermaid,'Diwata':diwata,'Sphinx':sphinx,'Eagle':eagle,'Vampire':vampire,'Phoenix':phoenix,'Kitsune':kitsune,'Naga':naga,'Yeti':yeti,'Panda':panda,'Bee':bee,'Ladybug':ladybug,'Watermelon':watermelon,'Candy cane':candy,'Tiger':tiger,'Zebra':zebra,'Cow':cow,'Penguin':penguin,'Strawberry':strawberry,'Rubber duck':duck,'Clownfish':clownfish}
 
 def plain(seed):
     """an ordinary snapshot: a soft two-tone background with one object in it"""

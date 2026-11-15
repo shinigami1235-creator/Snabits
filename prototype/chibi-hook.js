@@ -1,7 +1,7 @@
 /* Puts the chibi drawings (chibi.js) into the ranch and battle screens while the pixel art stays the default.
    It's on by default. #art=pixel in the address, or localStorage "snabits-art" set to "pixel", brings back the pixel art.
    Only families listed in CHIBI_FAMS are drawn smooth; the rest keep their pixels. */
-const CHIBI_FAMS = ['Chomp', 'Squib', 'Antik', 'Moko', 'Pinch', 'Stilt', 'Skit', 'Booly', 'Plod', 'Bipped', 'Fizz', 'Teep', 'Lern', 'Puff', 'Flit', 'Glop', 'Tock', 'Mitt', 'Brolly', 'Spine', 'Burr', 'Eagle', 'Vampire', 'Phoenix', 'Kitsune', 'Naga', 'Yeti', 'Kraken', 'Golem', 'Unicorn', 'Jack'];
+const CHIBI_FAMS = ['Chomp', 'Squib', 'Antik', 'Moko', 'Pinch', 'Stilt', 'Skit', 'Booly', 'Plod', 'Bipped', 'Fizz', 'Teep', 'Lern', 'Puff', 'Flit', 'Glop', 'Tock', 'Mitt', 'Brolly', 'Spine', 'Burr', 'Eagle', 'Vampire', 'Phoenix', 'Kitsune', 'Naga', 'Yeti', 'Kraken', 'Golem', 'Unicorn', 'Jack', 'Tengu', 'Tanuki', 'Mermaid', 'Diwata', 'Sphinx'];
 const CHIBI_ART = !/(^#|&)art=pixel(&|$)/.test(location.hash) && (() => { try { return localStorage.getItem('snabits-art') !== 'pixel'; } catch (e) { return true; } })();
 
 /* m is a hatched monster or a fight snapshot; s is the ranch state when there is one */
@@ -21,7 +21,8 @@ const SIZE_CM = { Chomp: [50, 100, 170], Squib: [40, 85, 150], Antik: [60, 120, 
   Stilt: [70, 140, 240], Skit: [35, 70, 110], Booly: [55, 110, 190], Plod: [50, 100, 170], Bipped: [60, 120, 190], Fizz: [45, 90, 150], Teep: [40, 80, 140], Lern: [45, 90, 160],
   Eagle: [50, 105, 180], Vampire: [50, 100, 170], Phoenix: [50, 105, 185], Kitsune: [45, 95, 165], Naga: [55, 110, 200], Yeti: [65, 130, 230],
   Puff: [40, 85, 145], Flit: [35, 70, 115], Glop: [35, 70, 120], Tock: [40, 80, 140], Mitt: [45, 95, 160], Brolly: [55, 110, 185], Spine: [50, 105, 190], Burr: [40, 80, 135],
-  Kraken: [60, 125, 220], Golem: [70, 140, 250], Unicorn: [55, 110, 190], Jack: [45, 95, 165] };
+  Kraken: [60, 125, 220], Golem: [70, 140, 250], Unicorn: [55, 110, 190], Jack: [45, 95, 165],
+  Tengu: [50, 105, 185], Tanuki: [40, 85, 150], Mermaid: [50, 100, 175], Diwata: [30, 60, 110], Sphinx: [55, 115, 200] };
 function sizeK(m) {
   if (!m) return 1; if (m.sizeK) return m.sizeK;
   const t = JSON.stringify([m.pal, m.stats, m.lifespan, m.family]); let h = 2166136261;
@@ -360,6 +361,11 @@ function cry(fam, stage) {
       case 'Golem': dKick(d, t, 0.7); dKick(d, t + 0.18, 0.6); voice(t + 0.1, 'sawtooth', [[0, 90], [0.4, 70]], 0.05); break;   // stone grinding
       case 'Unicorn': voice(t, 'triangle', [[0, 900], [0.1, 1400], [0.3, 1100], [0.45, 1300]], 0.08, 18); [1568, 2093].forEach((f, i) => voice(t + 0.3 + i * 0.08, 'sine', [[0, f], [0.25, f]], 0.05)); break;   // a whinny and a sparkle
       case 'Jack': voice(t, 'square', [[0, 300], [0.1, 220]], 0.05); voice(t + 0.14, 'square', [[0, 330], [0.1, 240]], 0.05); voice(t + 0.28, 'square', [[0, 360], [0.2, 200]], 0.05); break;   // a spooky "heh heh heh"
+      case 'Tengu': voice(t, 'sawtooth', [[0, 520], [0.1, 760], [0.3, 640]], 0.05, 6); dNoise(d, t + 0.15, 0.3, 0.1, 'bandpass', 1400, 0.8); break;   // a gruff "ha" and a gust from the fan
+      case 'Tanuki': voice(t, 'triangle', [[0, 500], [0.08, 700]], 0.1); dKick(d, t + 0.14, 0.4); dKick(d, t + 0.3, 0.4); break;   // a chirp, then two pats on its belly
+      case 'Mermaid': [784, 988, 1175, 988].forEach((f, i) => voice(t + i * 0.11, 'sine', [[0, f], [0.1, f]], 0.07, 6)); dNoise(d, t + 0.4, 0.2, 0.05, 'lowpass', 900); break;   // a short song and a splash
+      case 'Diwata': [1568, 1760, 2093, 2349].forEach((f, i) => voice(t + i * 0.06, 'triangle', [[0, f], [0.18, f]], 0.05)); break;   // a twinkle
+      case 'Sphinx': voice(t, 'sawtooth', [[0, 160], [0.2, 240], [0.5, 150]], 0.06, 5); voice(t + 0.05, 'triangle', [[0, 320], [0.4, 300]], 0.04); break;   // a low purring roar
       default: voice(t, 'triangle', [[0, 800], [0.12, 1200], [0.22, 1000]], 0.13);
     } } catch (err) {}
 }

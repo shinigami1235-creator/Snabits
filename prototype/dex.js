@@ -12,6 +12,8 @@ const dexKey = m => { const f = m && FAMILY[m.family] && FAMILY[m.family].of ? F
 const DEX_SECRETS = [['Eagle', 'Hides in stars and stripes.'], ['Vampire', 'Mostly night, a little moon and a drop of red.'], ['Phoenix', 'Red at the bottom and yellow at the top, like a flame.'],
   ['Kitsune', 'A red sun on white snow.'], ['Naga', 'A green band with gold.'], ['Yeti', 'Snow and silver with a little ice blue.'],
   ['Kraken', 'Deep blue water with a violet curl.'], ['Golem', 'Grey stone with a line of moss.'], ['Unicorn', 'White with pink and lilac at the bottom.'], ['Jack', 'Orange and round, with a little black in the middle.'],
+  ['Tengu', 'Red with a pale point and a little green below.'], ['Tanuki', 'Brown with a dark band across the middle.'], ['Mermaid', 'Teal scales under a pink fin.'],
+  ['Diwata', 'Pink with green wings either side.'], ['Sphinx', 'Gold with blue stripes over the top.'],
   ['c:Panda', 'Half black, half white.'], ['c:Bee', 'Yellow and black in stripes.'], ['c:Ladybug', 'Red with black spots.'],
   ['c:Watermelon', 'Green outside, red inside, a few black seeds.'], ['c:Candy cane', 'Red and white in stripes.'],
   ['c:Tiger', 'Orange with black stripes.'], ['c:Zebra', 'Black and white in stripes.'], ['c:Cow', 'White with black patches.'], ['c:Penguin', 'Black and white with a little orange.'],
@@ -78,7 +80,9 @@ function openDex(fam) {
 
 const SECRET_PAL = { Eagle: [[46, 84, 170], [150, 40, 48], [255, 214, 90]], Vampire: [[236, 228, 240], [52, 40, 62], [200, 40, 60]], Phoenix: [[240, 96, 48], [200, 52, 40], [255, 226, 122]],
   Kitsune: [[240, 140, 62], [150, 70, 40], [214, 58, 58]], Naga: [[96, 170, 92], [54, 110, 60], [246, 206, 60]], Yeti: [[236, 240, 246], [170, 186, 204], [120, 210, 240]],
-  Kraken: [[70, 100, 190], [40, 50, 110], [160, 100, 210]], Golem: [[160, 160, 164], [96, 92, 88], [110, 170, 80]], Unicorn: [[248, 246, 250], [246, 176, 206], [200, 166, 236]], Jack: [[240, 138, 44], [150, 70, 24], [96, 150, 60]] };
+  Kraken: [[70, 100, 190], [40, 50, 110], [160, 100, 210]], Golem: [[160, 160, 164], [96, 92, 88], [110, 170, 80]], Unicorn: [[248, 246, 250], [246, 176, 206], [200, 166, 236]], Jack: [[240, 138, 44], [150, 70, 24], [96, 150, 60]],
+  Tengu: [[226, 74, 62], [244, 236, 220], [90, 170, 80]], Tanuki: [[150, 100, 56], [44, 36, 34], [96, 170, 70]], Mermaid: [[100, 214, 210], [240, 122, 176], [246, 240, 230]],
+  Diwata: [[240, 122, 180], [80, 160, 70], [246, 206, 70]], Sphinx: [[242, 206, 64], [48, 104, 210], [214, 64, 52]] };
 function dexSecretTab() { const S = (PLAYER && PLAYER.dexSecret) || {}, k = DEX_SECRETS.filter(([n]) => S[n]).length;
   return `<button class="small ${DEX_FAM === 'Secrets' ? 'on' : ''}" data-f="Secrets">Secrets<i>${k}/${DEX_SECRETS.length}</i></button>`; }
 function openSecrets(n) {

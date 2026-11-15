@@ -8,7 +8,9 @@ from playwright.async_api import async_playwright
 from common import launch, reinject, settle, Checks, HERE
 import images
 ONLY = sys.argv[1:]
+NEW16 = ['Tengu', 'Tanuki', 'Mermaid', 'Diwata', 'Sphinx']   # checked by name (specials.py Tengu ...), so the full run keeps its count of eleven
 ABILITY = {'Eagle': 'Sky High', 'Vampire': 'Bloodsuck', 'Phoenix': 'Rebirth', 'Kitsune': 'Illusion', 'Naga': 'Coil', 'Yeti': 'Thick Fur'}
+ABILITY.update({'Tengu': 'Gust', 'Tanuki': 'Trick Leaf', 'Mermaid': 'Siren', 'Diwata': 'Blessing', 'Sphinx': 'Riddle'})   # the specials of 16 Nov 2026
 
 async def click(pg, sel, wait=150):
     ok = await pg.evaluate("s=>{ const e=document.querySelector(s); if(__vis(e)){ e.click(); return true; } return false; }", sel)
@@ -71,6 +73,7 @@ async def quick_fight(pg, C, label):
 
 async def one(pg, C, kind, path, errs):
     special = kind in ABILITY; label = kind
+    if special: await pg.evaluate("k=>{ if(typeof PLAYER!=='undefined'&&PLAYER){ const L=stoneList(); if(L&&!L.includes(k)) L.push(k); } }", kind)   # its Pattern Stone found, so the scan can call it
     info = await scan(pg, path)
     if special:
         C.ok(info['family'] == kind and info['special'] and info['ability'] == ABILITY[kind], f'{label}: its picture finds the special with {ABILITY[kind]} ({info["family"]}, {info["ability"]})')
@@ -98,7 +101,7 @@ async def one(pg, C, kind, path, errs):
     C.ok(sim['old']['ended'] == sim['old']['n'] and not sim['old']['bad'], f'{label}: 40 simulated old battles all end with real numbers ({sim["old"]})')
     if special:
         C.ok(sim['arena']['abil'] > 0, f'{label}: {ABILITY[kind]} goes off in the arena ({sim["arena"]["abil"]} of 40 fights)')
-        C.ok(sim['old']['abil'] > 0 or kind == 'Yeti', f'{label}: {ABILITY[kind]} goes off in the old battle ({sim["old"]["abil"]} of 40 fights)')
+        C.ok(sim['old']['abil'] > 0 or kind in ('Yeti', 'Tengu'), f'{label}: {ABILITY[kind]} goes off in the old battle ({sim["old"]["abil"]} of 40 fights)')
     print(f'  {label}: arena {sim["arena"]}, old {sim["old"]}', flush=True)
     # evolve twice: enough training for Byte, then for Mega
     for stage in ['Byte', 'Mega']:
@@ -110,7 +113,7 @@ async def one(pg, C, kind, path, errs):
     for tab in ['status', 'skills', 'record']:
         await pg.evaluate("t=>openInfo(t)", tab); await pg.wait_for_timeout(200); bt = await pg.evaluate("()=>__badText()"); C.ok(not bt, f'{label}: info page {tab} has no broken values ({bt})'); await pg.evaluate("()=>closeInfo()")
     await pg.evaluate("()=>{ menu('Out'); openDex('Secrets'); }"); await pg.wait_for_timeout(300)
-    C.ok(await pg.evaluate("()=>document.querySelectorAll('#r-panel .dex-t').length") == 11, f'{label}: the Secrets tab draws its 11 tiles')
+    nt = await pg.evaluate("()=>[document.querySelectorAll('#r-panel .dex-t').length, DEX_SECRETS.length]"); C.ok(nt[0] == nt[1], f'{label}: the Secrets tab draws a tile for each secret ({nt})')
     bt = await pg.evaluate("()=>__audit.bad.splice(0)"); C.ok(not bt, f'{label}: no NaN or undefined on screen ({bt})')
     C.ok(not [e for e in errs], f'{label}: no console or page errors ({errs[:2]})'); errs.clear()
     await pg.evaluate("()=>{ menu(); saveGame(); openScope(); }"); await pg.wait_for_timeout(300)
@@ -119,7 +122,7 @@ async def main():
     C = Checks(); imgs = images.save_all('/tmp/snabits-audit-img')
     async with async_playwright() as p:
         b, pg, errs = await launch(p)   # the #test page: no title, and no save loaded before the first scan
-        kinds = [k for k in images.EGGS if not ONLY or k in ONLY]
+        kinds = [k for k in images.EGGS if (not ONLY and k not in NEW16) or k in ONLY]
         SAVE = '/tmp/snabits-audit-specials.json'
         if ONLY == ['--tail']:   # only the part after the eleven, from the save the last full run left
             if os.path.exists(SAVE): await pg.evaluate("t=>{ localStorage.setItem(SAVE_KEY,t); loadGame(); }", open(SAVE).read())

@@ -161,6 +161,32 @@ const SUMMON = (() => {
         under(c, x, y, h) { if (!lit) return; glow(c, x, y - h * 0.5, h * 0.9, [255, 170, 60], 0.5 * (1 - seg(tt, 900, 1600) * 0.7)); },
         over(c, x, y, h) { if (!lit) return; for (let i = 0; i < 6; i++) { const p = seg(tt, 900 + i * 60, 1700 + i * 60); if (p <= 0 || p >= 1) continue;
           c.fillStyle = `rgba(255,${180 - i * 10},70,${1 - p})`; c.beginPath(); c.arc(x + (i - 2.5) * h * 0.12 + Math.sin(p * 6 + i) * 4, y - h * (0.6 + p * 0.7), h * 0.02, 0, 7); c.fill(); } } }; },
+    Tengu(tt, H, W) { const k = out3(seg(tt, 0, 800));   // it glides down on a gust and lands on one sandal tooth
+      return { dy: -H * 0.5 * (1 - k), dx: Math.sin(tt / 180) * W * 0.04 * (1 - k), pose: tt < 800 ? 'hover' : tt < 1000 ? 'land' : 'happy',
+        over(c, x, y, h) { const a = 1 - seg(tt, 700, 1300); if (a <= 0) return; c.strokeStyle = `rgba(255,255,255,${0.7 * a})`; c.lineWidth = 2; c.lineCap = 'round';
+          for (let i = 0; i < 4; i++) { const p = ((tt / 500) + i / 4) % 1, yy = y - h * (0.2 + i * 0.2); c.beginPath(); c.moveTo(x - h * (0.7 - p * 0.3), yy); c.quadraticCurveTo(x, yy - h * 0.08, x + h * (0.4 + p * 0.3), yy); c.stroke(); }
+          for (let i = 0; i < 5; i++) { const p = seg(tt, i * 120, 1300 + i * 80); if (p <= 0 || p >= 1) continue; c.save(); c.translate(x + (i - 2) * h * 0.22 + Math.sin(p * 6 + i) * h * 0.1, y - h * (1.1 - p * 1.0)); c.rotate(p * 5 + i);
+            c.fillStyle = `rgba(56,50,64,${1 - p})`; c.beginPath(); c.ellipse(0, 0, h * 0.07, h * 0.022, 0, 0, 7); c.fill(); c.restore(); } } }; },
+    Tanuki(tt, H) { const on = tt > 650, k = on ? 1 + spring(tt - 650, 0.15) : 0;   // a leaf lands, a puff of smoke, and it's there
+      return { alpha: on ? 1 : 0, sx: k || 1, sy: on ? 2 - k : 1, pose: tt < 1050 ? 'idle' : 'happy',
+        over(c, x, y, h) { if (tt < 700) { const p = seg(tt, 0, 650); c.save(); c.translate(x + Math.sin(p * 9) * h * 0.25 * (1 - p), y - h * (1.1 - p * 1.05)); c.rotate(Math.sin(p * 9) * 0.6);
+            c.fillStyle = '#5aa63e'; c.beginPath(); c.ellipse(0, 0, h * 0.06, h * 0.12, 0, 0, 7); c.fill(); c.restore(); }
+          const p = seg(tt, 600, 1300); if (p <= 0 || p >= 1) return; for (let i = 0; i < 9; i++) { const a = i / 9 * Math.PI * 2, r = h * (0.25 + p * 0.45);
+            c.fillStyle = `rgba(236,232,224,${0.85 * (1 - p)})`; c.beginPath(); c.arc(x + Math.cos(a) * r, y - h * 0.45 + Math.sin(a) * r * 0.8, h * (0.16 - p * 0.08), 0, 7); c.fill(); } } }; },
+    Mermaid(tt, H, W) { const k = seg(tt, 0, 900), arc = Math.sin(k * Math.PI);   // it leaps out of the water in an arc and lands with a splash
+      return { dx: W * 0.35 * (1 - k), dy: tt < 900 ? -H * 0.35 * arc : 0, pose: tt < 900 ? 'jump' : tt < 1100 ? 'land' : 'happy',
+        under(c, x, y, h) { const a = 1 - seg(tt, 900, 1600); if (a <= 0) return; c.fillStyle = `rgba(80,170,210,${0.6 * a})`; c.beginPath(); c.ellipse(x, y + 2, h * 0.75, h * 0.1, 0, 0, 7); c.fill();
+          if (tt > 900) for (let i = 0; i < 10; i++) { const p = seg(tt, 900, 1500), ang = Math.PI + i / 9 * Math.PI; if (p >= 1) break;
+            c.fillStyle = `rgba(210,240,255,${1 - p})`; c.beginPath(); c.arc(x + Math.cos(ang) * h * (0.2 + p * 0.6), y + Math.sin(ang) * h * Math.sin(p * Math.PI) * 0.5, h * 0.035, 0, 7); c.fill(); } } }; },
+    Diwata(tt, H) { const k = out3(seg(tt, 300, 1100));   // petals swirl together and it fades in out of them
+      return { alpha: k, dy: -H * 0.12 * (1 - k), pose: tt < 1100 ? 'hover' : 'happy',
+        over(c, x, y, h) { const a = 1 - seg(tt, 900, 1500); if (a <= 0) return; for (let i = 0; i < 10; i++) { const ang = i / 10 * Math.PI * 2 + tt / 300, r = h * (0.9 - Math.min(1, tt / 1000) * 0.5);
+          c.save(); c.translate(x + Math.cos(ang) * r, y - h * 0.5 + Math.sin(ang) * r * 0.6); c.rotate(ang); c.fillStyle = i % 2 ? `rgba(255,170,210,${a})` : `rgba(255,236,246,${a})`;
+          c.beginPath(); c.ellipse(0, 0, h * 0.06, h * 0.03, 0, 0, 7); c.fill(); c.restore(); } } }; },
+    Sphinx(tt, H) { const k = out3(seg(tt, 100, 1000));   // it rises out of the sand
+      return { dy: H * 0.32 * (1 - k), pose: tt < 1000 ? 'idle' : tt < 1150 ? 'determined' : 'happy',
+        under(c, x, y, h) { const a = 1 - seg(tt, 1000, 1500); if (a <= 0) return; c.fillStyle = `rgba(230,196,120,${0.8 * a})`; c.beginPath(); c.ellipse(x, y + 2, h * 0.7, h * 0.1, 0, 0, 7); c.fill();
+          for (let i = 0; i < 8; i++) { const p = ((tt / 700) + i / 8) % 1; c.fillStyle = `rgba(220,184,110,${a * (1 - p)})`; c.beginPath(); c.arc(x + (i - 3.5) * h * 0.16, y - p * h * 0.4, h * 0.025, 0, 7); c.fill(); } } }; },
     pop(tt) { const k = back(seg(tt, 0, 420)); return { sx: k, sy: k, pose: 'idle' }; }
   };
 

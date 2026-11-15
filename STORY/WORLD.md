@@ -52,7 +52,7 @@ Voice samples:
 
 - Snabits hide in the colour of whatever they're in, and a Snaboscope reads that colour to find the one hiding there. The photo's colours decide its element, family and stats (`monster.js`).
 - Every Snabit gives off the same faint signal, and it comes from the Rift (`story.js`, the grade B scene).
-- **Pattern Stones.** An ancient people kept Snabits as colour patterns carved and painted on stone, so a Snabit could be carried and called back. The people are gone and the stones are scattered through the regions. Their patterns were copied into banners, lanterns and cloth by people who didn't know what they were. Each stone is abstract and nobody in the game says which real pattern it matches, so the player connects it themselves (Gid, 15 Nov 2026). A picture that looks like a stone calls its special. The ten stones, drawn by `stoneGlyph` in `scenes.js` and shown in `docs/art/pattern-stones.png`:
+- **Pattern Stones.** An ancient people kept Snabits as colour patterns carved and painted on stone, so a Snabit could be carried and called back. The people are gone and the stones are scattered through the regions. Their patterns were copied into banners, lanterns and cloth by people who didn't know what they were. Each stone is abstract and nobody in the game says which real pattern it matches, so the player connects it themselves (Gid, 15 Nov 2026). A picture that looks like a stone calls its special. The stones, drawn by `stoneGlyph` in `scenes.js` and shown in `docs/art/pattern-stones.png` and `docs/art/specials-group1.png`:
   - Phoenix (Cinder Peak): zigzag flame bands, red at the bottom up to yellow.
   - Eagle (Static Plains): a blue sky band over red and white chevrons spreading like wings.
   - Vampire (Hollow Moor, deep map): a pale crescent and a red drop on black.
@@ -63,6 +63,11 @@ Voice samples:
   - Golem (Granite Steps, deep map): a grey block with dark cracks and one line of moss.
   - Unicorn (Dawn Temple, deep map): a pale pink horn over pink, lilac and yellow bands on white.
   - Jack (Tanglewood, deep map): an orange round with a stem, two cut eyes and a cut mouth.
+  - Tengu (Saffron Dojo): a cream wedge pointing out across red, with a green fan of three blades below it.
+  - Tanuki (Tanglewood): a dark band with two brown rings across brown, and a green leaf above.
+  - Mermaid (Coral Shallows): rows of pale scales on teal under a pink fin.
+  - Diwata (Dream Garden): two pairs of green wings either side of a small yellow middle, on pink.
+  - Sphinx (Granite Steps): blue stripes in the shape of a head cloth on gold, with a red dot below.
 - **Specials need their stone (Gid's rule).** Scanning a special's pattern calls the special only after its Pattern Stone has been found on an expedition. Before that, the same scan gives a regular Snabit, and the special's Secrets hint shows ??? (`stoneOpen` in `explore.js`, the gate in `hatch`). A save that already raised a special keeps it open.
 - **Helena's lens (Proposed).** Helena fitted her Snaboscope with a lens that reads Pattern Stones. Josie gives it to the player, and it's what lets the player's scans call specials. Every special called through it pulls on the Rift, and Dr. Ines measures the signal getting stronger each time.
 
@@ -86,7 +91,7 @@ Voice samples:
    - A good trip week: Tiger (Saffron Dojo), Clownfish (Coral Shallows), Ladybug (Tanglewood).
    - The bestiary: Panda (30 kinds seen), Cow (10 kinds raised).
    - Nora's shop: Rubber duck, as a Duck pattern card for 5,000 bits.
-4. **Specials:** unlocked by finding their Pattern Stone on an expedition, deeper into the story. The ten in the game (Eagle, Vampire, Phoenix, Kitsune, Naga, Yeti, Kraken, Golem, Unicorn, Jack) and the three still planned (Garuda, Sarimanok, Bakunawa). Jack is the Jack-o'-lantern from the plan.
+4. **Specials:** unlocked by finding their Pattern Stone on an expedition, deeper into the story. The fifteen in the game (Eagle, Vampire, Phoenix, Kitsune, Naga, Yeti, Kraken, Golem, Unicorn, Jack, and from 16 Nov 2026 Tengu, Tanuki, Mermaid, Diwata, Sphinx) and the fifteen more in `docs/BATCH-PLAN.md`. Jack is the Jack-o'-lantern from the plan.
 
 ## Story spine (Proposed)
 
@@ -121,7 +126,7 @@ Deep expeditions for a team of three trained Snabits, approved by Gid from `docs
 - **Days and camps:** a deep expedition takes two weeks, split into days. Camp circles end the day, give everyone energy back and bring back anyone who's out. A wild Snabit can wander next to camp overnight.
 - **Fights:** a tag team (Gid). The leader fights first, and if it loses, the next one steps in against the same Snabit with whatever HP it has left. A Snabit that loses is out until the next camp and nothing worse (Gid). If all three are out, the team goes home with everything it found.
 - **Finds:** rarer items, bigger League bounties, the region's teacher as a guardian at the far end, and Pattern Stones.
-- **Stones:** the Kitsune, Vampire, Jack, Kraken, Golem and Unicorn stones sit behind the guardians of deep Dream Garden, Hollow Moor, Tanglewood, Coral Shallows, Granite Steps and Dawn Temple, so team expeditions have stones to find from grade C, as Gid asked. The Phoenix, Eagle, Yeti and Naga stones stay on the regular maps. Each of the three still planned goes on a deep map once it's drawn.
+- **Stones:** the Kitsune, Vampire, Jack, Kraken, Golem and Unicorn stones sit behind the guardians of deep Dream Garden, Hollow Moor, Tanglewood, Coral Shallows, Granite Steps and Dawn Temple, so team expeditions have stones to find from grade C, as Gid asked. The Phoenix, Eagle, Yeti and Naga stones stay on the regular maps. The Tengu, Tanuki, Mermaid, Diwata and Sphinx stones sit at the far end of the regular Saffron Dojo, Tanglewood, Coral Shallows, Dream Garden and Granite Steps maps (16 Nov 2026), where a big chest used to be. A save that already opened that chest still finds the stone there.
 - **The cost:** fatigue and stress on all three, so the player plans for it like a Major.
 
 ## Built on 15 Nov 2026 from Gid's MR2 and Pokemon list
