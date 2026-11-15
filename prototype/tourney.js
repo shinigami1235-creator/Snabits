@@ -18,6 +18,8 @@ function cupsOfWeek(w){
   if(mo%3===2&&wk===3){ for(const g of GRADES) add({grade:g,name:`Official ${g} Cup`,format:"robin",size:g==="B"?4:6,official:true}); return out; }   // grade-up cups: week 4 of every quarter, always round robin. The B one has 4 entrants, since the B to A step was the slowest in the game
   if(mo===3&&wk===3){ for(const g of GRADES.slice(1)) add({grade:g,name:`Summer Qualifier (${g})`,format:"elim",size:8,qualifier:true}); return out; }
   if(mo===4&&wk===3){ for(const g of GRADES.slice(1)) add({grade:g,name:`Summer Exhibition (${g})`,format:"team5",size:10,exhibition:true}); return out; }
+  // Licence Cups: in week 4 of the first two months of each season (but not Summer's), one per family the ranch can't register yet
+  if(wk===3&&mo%3!==2&&mo!==3&&mo!==4) for(const [fam,g] of Object.entries(LICENCE)) if(typeof famOpen!=="function"||!famOpen(fam)) add({grade:g,name:`${fam} Licence Cup`,format:"robin",size:4,licence:fam});
   if(wk===2&&mo%2===0) add({grade:"F",name:"Open Cup",format:"robin",size:4,open:true,prize:prize("F","Open"+mo)});
   // one regular cup a month for each grade, on a fixed week, so a cup is something to plan the month around
   const grades=wk===0?["E","B"]:wk===1?["D","A"]:wk===2?["C","S"]:[];
@@ -32,6 +34,7 @@ function cupBlock(c,s){
   if(c.legend) return s.master?null:"Needs all four Majors";
   if(c.exhibition) return s.exQual===`${yr}:${c.grade}`?null:`Needs a win in this year's Summer Qualifier (${c.grade})`;
   if(c.official||c.qualifier) return c.grade===s.grade?null:`Grade ${c.grade} only`;
+  if(c.licence) return gi>=ci?null:`Needs grade ${c.grade}`;
   if(c.open) return null;
   return ci<=gi+1?null:`Needs grade ${GRADES[ci-1]}`;
 }
@@ -95,7 +98,8 @@ function cupOpponent(c,s,R){
   const big=c.major||c.legend;
   if(big) return gradedOpponent("S",clamp(s.level+Math.floor(R()*5)-1,50,70),R,null,Math.round(c.legend?560+R()*80:480+R()*120));
   const T=cupTier(c,s), lv=clamp(s.level+Math.floor(R()*3)-1,T.lv[0],T.lv[1]);
-  return gradedOpponent(T.cg,lv,R,null,Math.round(T.earned[0]+R()*(T.earned[1]-T.earned[0])));
+  const base=c.licence?randomOpponent(R,c.licence):undefined;   // a Licence Cup's field is all that family, from ranches already licensed
+  return gradedOpponent(T.cg,lv,R,null,Math.round(T.earned[0]+R()*(T.earned[1]-T.earned[0])),base);
 }
 /* Tala's read on a cup: fights against a sample of the field it would face. match: its share of single matches won.
    cup: its chance of taking first place, worked out from those match odds and the cup's format (5 matches in a round robin of 6,
@@ -216,6 +220,7 @@ function finishCup(){
   else lines.push(`${place===1?"It won":"It finished "+["","first","second","third","fourth","fifth","sixth"][Math.min(place,6)]+" in"} the ${c.name}.`);
   if(prize){ PLAYER.bits+=prize; lines.push(`It brings home ${prize} bits.`); }
   if(place===1&&c.prize){ addItem(c.prize); lines.push(`The prize table also had ${/^[AEIOU]/.test(c.prize)?"an":"a"} ${c.prize}.`); }
+  if(place===1&&c.licence&&!famOpen(c.licence)){ openFam(c.licence); lines.push(`The Snabit League lets the ranch register ${c.licence} now, so a scan can find one.`); }
   if(place===1&&c.qualifier){ s.exQual=`${weekParts(PLAYER.week).yr}:${c.grade}`; lines.push("It's in this year's Summer Exhibition, next month."); }
   // MR2's numbers: a cup wears it out but takes a lot of stress off, most of all with a win
   const last=place===null||(c.format==="robin"&&place===c.size)||((c.format==="elim"||c.format==="bo3")&&place===5)||((c.format==="single"||c.format==="team5")&&place===2);

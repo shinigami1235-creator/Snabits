@@ -4,7 +4,7 @@ This file is the canon for the Snabits story. Every new scene, quest, item line 
 
 ## Premise
 
-Snabits are part of everyday life. People raise them, fight them in cups and keep them as pets, and a phone works as a Snaboscope to find them. Nobody knows where they come from. The League manages Snabits and the exploration teams that go looking for the answer, and it keeps the dangerous regions closed to anyone who hasn't proven their Snabit in its cups. The player is the ranch hand Tala hires, and the story follows two mothers who went into the Rift fifteen years ago and didn't come back.
+Snabits are part of everyday life. People raise them, fight them in cups and keep them as pets, and a phone works as a Snaboscope to find them. Nobody knows where they come from. The Snabit League manages Snabits and the exploration teams that go looking for the answer, and it keeps the dangerous regions closed to anyone who hasn't proven their Snabit in its cups. The player is the ranch hand Tala hires, and the story follows two mothers who went into the Rift fifteen years ago and didn't come back.
 
 ## Tone
 
@@ -20,9 +20,9 @@ Light and warm on the ranch, with real weight in the story. Kids play it, so not
 
 ## Factions
 
-- **The League (Proposed, name not picked).** Runs the cups and the grades, licenses ranches and exploration teams, and issues the permits that open regions. The grades exist because some regions are too dangerous for weak Snabits, so a cup win is how a ranch earns the right to go further. This explains why regions open by grade in the code today.
-- **The Grand Ranch.** The biggest ranch, run by Rook's father, Dario. It funds the League's expeditions, which gives Dario a seat on the board that decides permits.
-- **Tala's ranch.** Small and in debt. It used to belong to Tala's mother, Luz.
+- **The Snabit League (named by Gid, 15 Nov 2026).** Runs the cups and the grades, licenses ranches and exploration teams, and issues the permits that open regions. The grades exist because some regions are too dangerous for weak Snabits, so a cup win is how a ranch earns the right to go further. This explains why regions open by grade in the code today.
+- **The Grand Ranch.** The biggest ranch, run by Rook's father, Victor. It funds the League's expeditions, which gives Victor a seat on the board that decides permits.
+- **Tala's ranch.** Small and in debt. It used to belong to Tala's mother, Helena.
 
 ## Cast
 
@@ -35,9 +35,9 @@ Light and warm on the ranch, with real weight in the story. Kids play it, so not
 | Dr. Ines | Runs the lab: fusion, rebirth, growth reads | To understand the Rift signal | Alive | `npcs.js`, `lab.js` |
 | Benji | Dr. Ines's assistant, keeps the Freezer | | Alive | `npcs.js` |
 | Mira | Cup announcer | | Alive | `npcs.js`, `cupshow.js` |
-| Luz (Proposed) | Tala's mother, the League's lead explorer | To find where Snabits come from | Missing in the Rift for 15 years | not in code yet |
-| Amihan (Proposed) | Rook's mother, an explorer on Luz's team | | Missing in the Rift for 15 years | not in code yet |
-| Dario (Proposed) | Rook's father, runs the Grand Ranch, sits on the League board | His wife back, whatever it takes | Alive | not in code yet |
+| Helena (Proposed) | Tala's mother, the League's lead explorer | To find where Snabits come from | Missing in the Rift for 15 years | not in code yet |
+| Celia (Proposed) | Rook's mother, an explorer on Helena's team | | Missing in the Rift for 15 years | not in code yet |
+| Victor (Proposed) | Rook's father, runs the Grand Ranch, sits on the League board | His wife back, whatever it takes | Alive | not in code yet |
 | The Rift Lord | Teacher at the Rift's heart, a Moko | Unknown | | `areas.js` |
 
 Voice samples:
@@ -52,28 +52,28 @@ Voice samples:
 - Every Snabit gives off the same faint signal, and it comes from the Rift (`story.js`, the grade B scene).
 - **Pattern Stones (Proposed).** An ancient people kept Snabits as colour patterns carved and painted on stone, so a Snabit could be carried and called back. The people are gone and the stones are scattered through the regions. Their patterns were copied into flags, banners, lanterns and cloth by people who didn't know what they were. That's why a US flag pattern can call the Eagle and a Japanese flag the Kitsune.
 - **Specials need their stone (Proposed, Gid's rule).** Scanning a special's pattern calls the special only after its Pattern Stone has been found on an expedition. Before that, the same scan gives a regular Snabit.
-- **Luz's lens (Proposed).** Luz fitted her Snaboscope with a lens that reads Pattern Stones. Tala gives it to the player, and it's what lets the player's scans call specials. Every special called through it pulls on the Rift, and Dr. Ines measures the signal getting stronger each time.
+- **Helena's lens (Proposed).** Helena fitted her Snaboscope with a lens that reads Pattern Stones. Tala gives it to the player, and it's what lets the player's scans call specials. Every special called through it pulls on the Rift, and Dr. Ines measures the signal getting stronger each time.
 
-## What can be scanned (Proposed, Gid's tiers)
+## What can be scanned (Gid's tiers, decided 15 Nov 2026)
 
-1. **Basic Snabits:** scanned from the start.
-2. **Higher grade Snabits:** unlocked by a rank, a special event or a special cup the player has to win. Until then, a scan that would give one gives a basic Snabit instead. Which Snabits go in this tier is open (see Holes).
+1. **Basic Snabits:** the first eight families (Chomp, Squib, Antik, Moko, Pinch, Stilt, Skit, Booly), scanned from the start.
+2. **Licensed Snabits:** the League only lets a ranch register Plod, Bipped, Fizz, Teep and Lern once it wins that family's Licence Cup, at grades D, C, B, A and S in that order. Until then, a scan that would give one gives one of the first eight. Licence Cups run in week 4 of the first two months of each season, except Summer, and their field is all that family (`LICENCE`, `famOpen` in `game.js`, `cupsOfWeek` in `tourney.js`). A save from before keeps any of the five it had already raised.
 3. **Specials:** unlocked by finding their Pattern Stone on an expedition, deeper into the story. The six in the game (Eagle, Vampire, Phoenix, Kitsune, Naga, Yeti) and the seven planned (Garuda, Sarimanok, Kraken, Golem, Unicorn, Bakunawa, Jack-o'-lantern).
 
 ## Story spine (Proposed)
 
 Each step is caused by the one before.
 
-1. **Fifteen years ago.** Luz finds the first Pattern Stone and works out that the patterns are Snabits stored as colour. She traces where the stones point and finds they all point at the Rift. She leads a League expedition into it with Amihan, guided by Kiko. Kiko comes back alone.
-2. **After.** Luz's ranch falls into debt with no one to run it. Dario buys it, since Luz's notes say the Rift runs thinnest under that land.
-3. **Before the game.** Tala borrows 30,000 bits from the Grand Ranch to buy her mother's ranch back, since Luz's notes are hidden somewhere on it and she won't let Dario have them. Dario agrees because a loan she can't pay gets him the land and the notes later. Tala hires the player. This is where the game starts, and the loan stays as the opening.
+1. **Fifteen years ago.** Helena finds the first Pattern Stone and works out that the patterns are Snabits stored as colour. She traces where the stones point and finds they all point at the Rift. She leads a League expedition into it with Celia, guided by Kiko. Kiko comes back alone.
+2. **After.** Helena's ranch falls into debt with no one to run it. Victor buys it, since Helena's notes say the Rift runs thinnest under that land.
+3. **Before the game.** Tala borrows 30,000 bits from the Grand Ranch to buy her mother's ranch back, since Helena's notes are hidden somewhere on it and she won't let Victor have them. Victor agrees because a loan she can't pay gets him the land and the notes later. Tala hires the player. This is where the game starts, and the loan stays as the opening.
 4. **Grade E.** Cups, the loan and Rook, as the game has now.
-5. **The barn upgrade (at a quarter of the loan).** The Workshop pulls up the old barn floor and finds Luz's lens and the first page of her journal. Tala fits the lens to the player's Snaboscope. The page names a ruin in a region the ranch can reach.
+5. **The barn upgrade (at a quarter of the loan).** The Workshop pulls up the old barn floor and finds Helena's lens and the first page of her journal. Tala fits the lens to the player's Snaboscope. The page names a ruin in a region the ranch can reach.
 6. **Grade D.** The League gives the ranch its first expedition permit. The first expedition finds the ruin, a Pattern Stone and the second page. Rook is there too, sent by his father to get the stones first.
 7. **Grade C.** The pages start to disagree with what Kiko has always said about the last expedition.
-8. **Grade B.** Dr. Ines reads the stones and the lens, and finds that every special called through the lens strengthens the Rift signal. Rook tells the player his mother went in with Luz and never came back.
+8. **Grade B.** Dr. Ines reads the stones and the lens, and finds that every special called through the lens strengthens the Rift signal. Rook tells the player his mother went in with Helena and never came back.
 9. **Grade A.** The Rift permit. Kiko takes the player in and tells his side of what happened: he turned back.
-10. **Grade S and the Majors.** Dario uses his League seat to make the Legend Cup the only way into the Rift's heart, and enters Rook to win it for him.
+10. **Grade S and the Majors.** Victor uses his League seat to make the Legend Cup the only way into the Rift's heart, and enters Rook to win it for him.
 11. **The Legend Cup.** Whoever wins gets the permit. Rook has to decide whether he's winning it for his father.
 12. **After the Legend Cup.** The expedition into the Rift's heart. What's there is a hole (see Holes).
 
@@ -83,14 +83,14 @@ League expeditions, the way MR2 ran them. A permit opens a region's expedition, 
 
 ## Name sets
 
-The names lean Filipino: Tala, Kiko, Nena, Ines, Benji, Mira, Rook. New names (Luz, Amihan, Dario) follow the same set. No two cast names start with the same sound.
+Usual game names that read well anywhere, not tied to one country (Gid, 15 Nov 2026). No two cast names start with the same sound. Tala, Kiko and Nena lean Filipino and were named before this rule.
 
 ## Holes
 
-- The League's name. Two options: the Snabit League, or the Colour Bureau. (15 Nov 2026)
-- Which Snabits are higher grade, and what unlocks each one: a rank, a festival or a special cup. Today all 13 families and the costumes can be scanned from the start (`pickFamily` and `eggOf` in `monster.js`).
+- How the five costumes unlock. The idea was one per festival, but there are five costumes and four festivals, so Panda needs another way in. Today the costumes can be scanned from the start (`eggOf` in `monster.js`).
+- Whether Tala, Kiko and Nena keep their names under the name rule.
 - Who the ancient people were and why they left the stones.
-- What the Rift Lord wants, and whether it knew Luz.
-- What's at the Rift's heart, and whether Luz and Amihan are alive.
-- What Dario does if he gets into the Rift's heart.
+- What the Rift Lord wants, and whether it knew Helena.
+- What's at the Rift's heart, and whether Helena and Celia are alive.
+- What Victor does if he gets into the Rift's heart.
 - How the story ends, and whether the ending changes with how many specials the player called through the lens.

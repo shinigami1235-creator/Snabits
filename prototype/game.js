@@ -2,6 +2,15 @@
    Needs monster.js, skills.js and battle.js. */
 const SAVE_KEY="snabits.save.v1";
 const GRADES=["E","D","C","B","A","S"];
+/* The first eight families can be scanned from the start. The Snabit League only lets a ranch register the other five
+   once it wins that family's Licence Cup, one per grade from D to S (STORY/WORLD.md). Until then a scan that would have
+   made one of them makes one of the first eight. A save from before this keeps any family it already raised. */
+const LICENCE={Plod:"D",Bipped:"C",Fizz:"B",Teep:"A",Lern:"S"};
+function famOpenList(){ if(!PLAYER) return null;
+  if(!PLAYER.famOpen){ PLAYER.famOpen=[]; for(const e of PLAYER.roster||[]){ const f=e.m&&(FAMILY[e.m.family]&&FAMILY[e.m.family].of?FAMILY[e.m.family].of:[e.m.family]); for(const x of f||[]) if(LICENCE[x]&&!PLAYER.famOpen.includes(x)) PLAYER.famOpen.push(x); } }
+  return PLAYER.famOpen; }
+function famOpen(f){ if(!LICENCE[f]) return true; const L=famOpenList(); return !L||L.includes(f); }
+function openFam(f){ const L=famOpenList(); if(L&&!L.includes(f)) L.push(f); }
 const GRADE_INFO={E:{lv:[1,10],earned:[0,40],purse:200},D:{lv:[8,18],earned:[40,120],purse:500},C:{lv:[15,28],earned:[100,220],purse:1200},
   B:{lv:[25,38],earned:[200,320],purse:3000},A:{lv:[35,48],earned:[300,420],purse:5000},S:{lv:[45,60],earned:[400,520],purse:8000}};   // MR2 tops out at 5,000G, so the loan is paid over a career rather than by one cup
 const expNeed=L=>10+6*L;

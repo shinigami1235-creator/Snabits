@@ -63,7 +63,8 @@ function pickFamily(cells){
      (most of them everyday objects) take that place in the grid instead */
   const near = {top:{wide:"Teep",tall:"Lern",compact:"Fizz"},middle:{wide:"Plod",tall:"Bipped",compact:"Fizz"},bottom:{wide:"Plod",tall:"Bipped",compact:cx<0.5?"Teep":"Lern"}};
   const solid = vx+vy<0.137;   // an evenly spread colour sits near 0.148 and one spot near 0, so about 5 in 13 random photos land here
-  return {family:(solid?near:map)[band][shape], band, shape};
+  const nf=near[band][shape], open=typeof famOpen!=="function"||famOpen(nf);   // a family still waiting on its Licence Cup falls back to the first eight
+  return {family:solid&&open?nf:map[band][shape], band, shape};
 }
 
 /* Build the 20x20 label grid. Labels: 1 body, 2 parts, 3 eye white, 4 dark (mouth, brow), 5 accent tip, 6 pupil, 7 teeth. */

@@ -19,3 +19,4 @@ Every piece of story in the game, one row each, seeded from `story.js` and `onbo
 | legend | beat | story.js | Legend Cup won | Rook, Dr. Ines, Tala | ranch | Rook's family drops the loan (or gives a Life fruit), Dr. Ines explains Snabits come through the Rift, "The End" | seen.legend | story().legendWon | intro, gradeB | rival, rift, loan |
 | festivals | event | story.js `FESTIVALS` | week 2 of months 1, 5, 7, 10 | Tala | ranch | a free item, 10 stress off | | weekParts | | seasons |
 | rift-teachers | teacher | areas.js `TEACHER` | last place of each region's trip | 12 teachers and the Rift Lord | regions | better skill teaching that week | | | | regions |
+| licence-cups | cup | tourney.js `cupsOfWeek`, game.js `LICENCE` | week 4 of months 1, 2, 7, 8, 10, 11 while a family is locked | League | stadium | first place lets the ranch scan that family | PLAYER.famOpen | famOpen() | | league |
