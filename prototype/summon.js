@@ -162,6 +162,24 @@ const SUMMON = (() => {
       return { dx: -W * 0.35 * (1 - k), sy: tt > 1100 && tt < 1400 ? 1 + 0.08 * Math.sin(seg(tt, 1100, 1400) * Math.PI) : 1, pose: tt < 1100 ? 'walk' : tt < 1300 ? 'idle' : 'happy', t: tt * 0.6,
         under(c, x, y, h) { const a = 1 - seg(tt, 1200, 1800); if (a <= 0) return; const len = W * 0.35 * k + h * 0.2; c.fillStyle = `rgba(200,230,255,${0.5 * a})`; c.beginPath(); c.ellipse(x - len / 2 - h * 0.1, y + 1, len / 2, h * 0.025, 0, 0, 7); c.fill();
           for (let i = 0; i < 4; i++) if (Math.sin(tt / 120 + i * 2) > 0.5) star(c, x - h * 0.2 - i * len / 4, y - 2, h * 0.02, `rgba(255,255,255,${a})`); } }; },
+    Clank(tt, H, W) { const wound = tt < 600, step = Math.min(4, Math.floor(Math.max(0, tt - 600) / 140));   // the key winds, it rattles, then it marches in stiffly, one jerk at a time
+      return { dx: wound ? W * 0.45 : W * 0.45 * (1 - step / 4), dy: wound ? 0 : (tt - 600) % 140 < 50 && tt < 1160 ? -H * 0.012 : 0, sx: wound ? 1 + Math.sin(tt / 25) * 0.03 : 1, pose: tt < 1160 ? 'walk' : tt < 1300 ? 'idle' : 'happy', t: step * 260,
+        over(c, x, y, h) { if (!wound) return; for (let i = 0; i < 3; i++) { const p = ((tt / 200) + i / 3) % 1; c.strokeStyle = `rgba(255,255,255,${0.8 * (1 - p)})`; c.lineWidth = 2; c.beginPath(); c.arc(x + h * 0.45, y - h * 0.5, h * (0.08 + p * 0.12), -0.8, 0.8); c.stroke(); } } }; },
+    Crease(tt, H) { const k = out3(seg(tt, 0, 700)), f = back(seg(tt, 650, 1050));   // a flat sheet of paper drifts down, then folds itself up
+      return { dy: -H * 0.35 * (1 - k) + Math.sin(tt / 160) * H * 0.02 * (1 - k), sx: tt < 650 ? 1.7 : 1.7 - 0.7 * f, sy: tt < 650 ? 0.12 : 0.12 + 0.88 * f, pose: tt < 1050 ? 'hover' : tt < 1250 ? 'idle' : 'happy',
+        over(c, x, y, h) { const p = seg(tt, 650, 1050); if (p <= 0 || p >= 1) return; c.strokeStyle = `rgba(255,255,255,${1 - p})`; c.lineWidth = 2; for (let i = 0; i < 4; i++) { const a = i / 4 * Math.PI * 2 + p * 3; c.beginPath(); c.moveTo(x, y - h * 0.5); c.lineTo(x + Math.cos(a) * h * 0.6 * (1 - p), y - h * 0.5 + Math.sin(a) * h * 0.4 * (1 - p)); c.stroke(); } } }; },
+    Twiglet(tt, H) { const k = seg(tt, 0, 420), land = tt - 420;   // the pot drops with a thunk, then leaves swirl up and settle
+      return { dy: -H * 0.4 * (1 - k * k), sx: tt > 420 ? 1 + spring(land, 0.14) : 1, sy: tt > 420 ? 1 - spring(land, 0.14) : 1, pose: tt < 420 ? 'jump' : tt < 650 ? 'land' : 'happy',
+        over(c, x, y, h) { const p = seg(tt, 450, 1500); if (p <= 0 || p >= 1) return; for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2 + p * 5, r = h * (0.25 + p * 0.5); c.save(); c.translate(x + Math.cos(a) * r, y - h * 0.7 + Math.sin(a) * r * 0.4 - p * h * 0.2); c.rotate(a);
+            c.fillStyle = `rgba(${i % 2 ? '255,190,210' : '120,190,90'},${1 - p})`; c.beginPath(); c.ellipse(0, 0, h * 0.045, h * 0.022, 0, 0, 7); c.fill(); c.restore(); } } }; },
+    Swirl(tt, H, W) { const shake = tt < 700 ? Math.sin(tt / 22) * W * 0.02 * seg(tt, 0, 300) : 0;   // something shakes it hard, then a burst of snow
+      return { dx: shake, sy: tt > 700 && tt < 900 ? 1.06 : 1, pose: tt < 700 ? 'idle' : tt < 900 ? 'jump' : 'happy',
+        over(c, x, y, h) { const p = seg(tt, 650, 1700); if (p <= 0 || p >= 1) return; const r = rng(81); for (let i = 0; i < 18; i++) { const a = r() * Math.PI * 2, d = h * (0.2 + r() * 0.7) * Math.min(1, p * 2);
+            c.fillStyle = `rgba(255,255,255,${1 - p})`; c.beginPath(); c.arc(x + Math.cos(a) * d, y - h * 0.5 + Math.sin(a) * d * 0.6 + p * p * h * 0.3, 1.5 + r() * 2, 0, 7); c.fill(); } } }; },
+    Ditty(tt, H) { const beat = Math.floor(tt / 300), ph = (tt % 300) / 300;   // it bounces in time to its own tune, three beats, and notes float up
+      return { dy: beat < 3 ? -Math.sin(ph * Math.PI) * H * 0.05 : 0, sx: beat < 3 && ph < 0.12 ? 1.08 : 1, sy: beat < 3 && ph < 0.12 ? 0.92 : 1, pose: beat < 3 ? 'jump' : tt < 1100 ? 'idle' : 'happy',
+        over(c, x, y, h) { for (let i = 0; i < 5; i++) { const p = seg(tt, i * 200, 900 + i * 200); if (p <= 0 || p >= 1) continue; const nx = x + (i - 2) * h * 0.18 + Math.sin(p * 6 + i) * 6, ny = y - h * (0.9 + p * 0.6);
+            c.fillStyle = `rgba(255,${180 + i * 10},220,${1 - p})`; c.beginPath(); c.ellipse(nx, ny, 3.6, 2.6, -0.4, 0, 7); c.fill(); c.fillRect(nx + 2.4, ny - 12, 1.8, 12); } } }; },
     /* the special Snabits */
     Eagle(tt, H, W) { const k = seg(tt, 0, 700), e = out3(k), land = tt - 700, sp = spring(land, 0.2);   // it swoops down in an arc and lands with its wings out
       return { dx: W * 0.45 * (1 - e), dy: -H * 0.45 * (1 - e) + Math.sin(k * Math.PI) * H * 0.06, sx: 1 + (tt > 700 ? sp : 0), sy: 1 - (tt > 700 ? sp : 0), pose: tt < 700 ? 'jump' : tt < 860 ? 'land' : 'happy',

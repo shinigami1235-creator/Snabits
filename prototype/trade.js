@@ -62,7 +62,7 @@ function tCommit() {
   PLAYER.roster = PLAYER.roster.filter(r => r.id !== give.id);
   const e = { id: 'm' + (PLAYER.nextId++), m: get.m, st: get.st };
   if (e.m.hybridOf && typeof registerHybrid === 'function') registerHybrid(...e.m.hybridOf);
-  PLAYER.roster.push(e);
+  PLAYER.roster.push(e); PLAYER.traded = (PLAYER.traded || 0) + 1;
   if (PLAYER.active === give.id || !PLAYER.active) { PLAYER.active = e.id; RS = null; }
   if (typeof dexRaise === 'function') dexRaise(e.m, (e.st && e.st.stage) || 'Bit');
   saveGame(); const line = `${give.name} went to your friend's ranch, and ${get.name} is here now.`;

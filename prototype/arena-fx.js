@@ -578,7 +578,12 @@ const AR_KIND={Lunge:"bite","Jaw Lock":"jawlock",Gnash:"gnash",
   "Skewer Poke":"spear",Bounce:"tackle","Triple Stack":"punchflurry","Mochi Smack":"punch","Sakura Cut":"claw","Skewer Thrust":"spear",
   "Nut Bonk":"tackle","Acorn Drop":"meteor","Root Snare":"web","Leaf Storm":"volley","Branch Whip":"lash","Old Growth":"hammer",
   "Plate Bash":"tackle",Skitter:"tackle","Hundred Legs":"legflurry","Pill Roll":"boulder","Wrecking Ball":"boulder",
-  "Slime Spit":"bolt","Shell Bump":"tackle","Sticky Trail":"web","Feeler Flick":"lash","House Slam":"hammer"};
+  "Slime Spit":"bolt","Shell Bump":"tackle","Sticky Trail":"web","Feeler Flick":"lash","House Slam":"hammer",
+  "Tin Punch":"punch","Spring Hop":"tackle","Wind-Up Barrage":"punchflurry5","Rivet Shot":"volley","Rocket Fist":"punch","Steam Blast":"beam",
+  "Paper Cut":"claw","Fold Dart":"spear","Thousand Cranes":"volley","Paper Gust":"push","Wing Slice":"claw","Phoenix Fold":"sunflare",
+  "Twig Poke":"spear","Leaf Shot":"bolt","Pruning Snip":"pinch","Petal Storm":"volley","Trunk Twist":"lash","Blossom Burst":"pillar",
+  "Snow Pellet":"bolt","Frost Bump":"tackle","Shake Up":"steam","Blizzard Spin":"volley",Whiteout:"avalanche",
+  "Clasp Snap":"bite","Note Toss":"bolt","Music Box Waltz":"push",Pirouette:"kickflurry",Crescendo:"wave","Grand Finale":"sunflare"};
 
 /* ---------- the special Snabits' signature moves ---------- */
 function atBat(c,x,y,s,flap){ c.save(); c.translate(x,y); c.scale(s,s); c.fillStyle="#2a1d33"; const w=Math.sin(flap)*0.5+0.6;

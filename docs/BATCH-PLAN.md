@@ -11,7 +11,7 @@ Two chats build the next 40 families at the same time. Chat A makes the 10 commo
 
 ## How each chat works
 
-Gid, 16 Nov 2026: a Mega is a new form, never the Byte made bigger with a few effects added. Wick turns into a candelabra, Lumo into a firefly queen on a lantern, Snooze into a floating dream cloud, and Cobble into a geode with stones orbiting it.
+Gid, 16 Nov 2026: each stage is clearly different from the one before it. Bit, Byte and Mega are three different forms, and a Mega is never the Byte made bigger with a few effects added. Wick turns into a candelabra, Lumo into a firefly queen on a lantern, Snooze into a floating dream cloud, and Cobble into a geode with stones orbiting it.
 
 
 1. Draw the families in `chibi.js` in groups of 5, with Bit, Byte and Mega looking clearly different.
@@ -91,3 +91,7 @@ None of the 40 names repeats a family already in the game. Commons and uncommons
 ## Merging
 
 When both branches pass their tests, Chat A merges `batch-specials` into `batch-regular`, sorts out the conflicts in the shared lists (both chats add lines to the same tables), reruns `sim2.py` with all 71 families, then merges into main and pushes.
+
+## To fix later
+
+- Guard. Roly's ability was meant to make Guard hold 30% longer, but the fight code has no Guard timer to hook into. It's Roll Up (Close Strikes hit it 25% softer under half HP) until Guard gets one (Gid, 16 Nov 2026).

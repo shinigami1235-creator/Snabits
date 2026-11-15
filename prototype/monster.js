@@ -33,6 +33,12 @@ const FAMILY = {
   Oaklet:{body:[3,[5,7,7,6,6,6,5,4,3]], legs:"stubby", base:[60,45,58,45,52,40], ability:["Sprout","Once a fight, dropping under 30% HP heals it 20%"]},
   Roly:  {body:[6,[5,6,7,7,7,7]], legs:"stubby", base:[55,48,66,30,45,52], ability:["Roll Up","Under half HP, Close Strikes hit it 25% softer"]},
   Trundle:{body:[4,[4,5,6,6,6,6,6,7]], legs:"ghost", base:[62,40,62,50,52,30], ability:["Slow and Sure","Its hit chance can't be lowered, and Root can't land on it"]},
+  /* batch 3 uncommons: the ranch registers each one its own way, and busy, colourful photos find them */
+  Clank: {body:[4,[5,6,6,6,6,6,6,6]], legs:"twolegs", base:[55,58,58,40,45,50], ability:["Wind-Up Key","Its Speed goes up 1 step every 10 seconds"]},
+  Crease:{body:[5,[2,4,6,7,6,4,2]], legs:"ghost", base:[45,50,40,58,60,62], ability:["Paper Fold","Close Strikes hit it 15% softer"]},
+  Twiglet:{body:[6,[6,6,5,5,5,4]], legs:"stubby", base:[62,45,62,52,55,30], ability:["Deep Roots","It can't be pushed back"]},
+  Swirl: {body:[4,[3,5,6,7,7,7,6,5,4]], legs:"stubby", base:[55,40,55,62,55,45], ability:["Shaken","Its Casts have a 15% chance to Daze"]},
+  Ditty: {body:[5,[6,7,7,7,7,7,7]], legs:"stubby", base:[50,42,50,60,62,48], ability:["Lullaby","The opponent's focus fills 10% slower"]},
   Cobble:{body:[4,[3,5,6,7,7,7,7,7,6]], legs:"stubby", base:[60,56,68,30,42,34], ability:["Rock Shed","Its Constitution goes up 2 steps the first time it drops under half HP"]},
   /* special Snabits: only a colour easter egg finds them (EGGS below), they always have their own ability, and only fusion changes their element */
   Eagle:  {special:1, body:[3,[3,5,6,7,7,7,7,6,5]], legs:"twolegs", base:[50,62,45,35,55,73], ability:["Sky High","The first hit it lands in a fight is always a critical"]},
@@ -97,6 +103,9 @@ function pickFamily(cells,res){
   if(res&&res.bright<0.28) return {family:pick5(["Wick","Lumo","Snooze","Inky","Cobble"]), band, shape};
   /* a pale photo (snow, a white wall, a washed-out sky, pastels) gives the other five */
   if(res&&res.bright>0.8&&res.sat<0.2) return {family:pick5(["Nimbo","Dango","Oaklet","Roly","Trundle"]), band, shape};
+  /* a busy photo with four or more colours can find one of the batch 3 uncommons, once the ranch can register it */
+  if(res&&res.colours>=4){ const s=res.second||res.ranked&&res.ranked[1], k=Math.max(0,s?G.indexOf(s.g):0), U=["Clank","Crease","Twiglet","Swirl","Ditty","Sizzle","Aero","Nesta","Magna","Helm"], f=U[(k+["top","middle","bottom"].indexOf(band)*3+(shape==="wide"?1:0))%10];
+    if(FAMILY[f]&&(typeof famOpen!=="function"||famOpen(f))) return {family:f, band, shape}; }
   if(cells[4]/t<0.08&&vx+vy>0.125){ const rf=ringR[band][shape], ro=cx>0.5&&(typeof famOpen!=="function"||famOpen(rf)); return {family:ro?rf:ring[band][shape], band, shape}; }
   const solid = vx+vy<0.137;   // an evenly spread colour sits near 0.148 and one spot near 0, so about 5 in 13 random photos land here
   const nf=near[band][shape], open=typeof famOpen!=="function"||famOpen(nf);   // a family still waiting on its Licence Cup falls back to the first eight
