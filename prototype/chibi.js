@@ -752,6 +752,19 @@ const CHIBI = (() => {
       c.fillStyle = '#5fb04f'; c.beginPath(); c.ellipse(hx + 12, hy - 12, 7, 4, -0.5, 0, 7); c.fill(); }
     if (k === 'Candy cane') { c.fillStyle = '#2f8f4e'; for (const sd of [-1, 1]) { c.beginPath(); c.ellipse(hx + sd * 9, hy, 8, 4.5, sd * 0.4, 0, 7); c.fill(); }
       c.fillStyle = '#d6303f'; c.beginPath(); c.arc(hx, hy + 1, 4.5, 0, 7); c.fill(); }
+    // the second set of costumes (proposed 15 Nov 2026)
+    if (k === 'Tiger') for (const sd of [-1, 1]) { const ex = hx + sd * hw * 0.68, ey = hy + 4; c.fillStyle = '#e9852e'; c.beginPath(); c.arc(ex, ey, hw * 0.24, 0, 7); c.fill();
+      c.fillStyle = rgb(BLACK); c.beginPath(); c.arc(ex, ey, hw * 0.24, Math.PI * 1.1, Math.PI * 1.9); c.lineTo(ex, ey); c.fill(); c.fillStyle = '#fbe9d2'; c.beginPath(); c.arc(ex, ey + 1, hw * 0.12, 0, 7); c.fill(); }
+    if (k === 'Zebra') { c.fillStyle = rgb(BLACK); c.beginPath(); c.ellipse(hx, hy + 2, 5, 11, 0, 0, 7); c.fill(); c.fillStyle = '#f6f4ee'; for (const dy of [-6, 0, 6]) c.fillRect(hx - 5, hy + 2 + dy, 10, 2);
+      for (const sd of [-1, 1]) { c.fillStyle = '#f6f4ee'; c.beginPath(); c.ellipse(hx + sd * hw * 0.62, hy + 4, 5, 10, sd * 0.5, 0, 7); c.fill(); c.fillStyle = rgb(BLACK); c.beginPath(); c.ellipse(hx + sd * hw * 0.62, hy - 2, 3, 4, sd * 0.5, 0, 7); c.fill(); } }
+    if (k === 'Cow') for (const sd of [-1, 1]) { c.fillStyle = '#e8dcc4'; c.beginPath(); c.moveTo(hx + sd * 7, hy + 6); c.quadraticCurveTo(hx + sd * 14, hy - 6, hx + sd * 10, hy - 14); c.lineTo(hx + sd * 5, hy + 4); c.fill();
+      c.fillStyle = '#f6f4ee'; c.beginPath(); c.ellipse(hx + sd * hw * 0.78, hy + 10, 9, 5, sd * -0.4, 0, 7); c.fill(); c.fillStyle = rgb(BLACK); c.beginPath(); c.ellipse(hx + sd * hw * 0.82, hy + 10, 4, 3, sd * -0.4, 0, 7); c.fill(); }
+    if (k === 'Penguin') { c.fillStyle = rgb(BLACK); c.beginPath(); c.ellipse(hx, hy + 6, 6, 4, 0, 0, 7); c.fill(); }
+    if (k === 'Strawberry') { c.fillStyle = '#3f9a45'; for (let i = -2; i <= 2; i++) { c.save(); c.translate(hx + i * 6, hy + 6); c.rotate(i * 0.45); c.beginPath(); c.ellipse(0, -7, 4, 9, 0, 0, 7); c.fill(); c.restore(); }
+      c.strokeStyle = '#2f7a35'; c.lineWidth = 3; c.lineCap = 'round'; c.beginPath(); c.moveTo(hx, hy); c.lineTo(hx + 2, hy - 12); c.stroke(); }
+    if (k === 'Rubber duck') { const sw = Math.sin(t / 260) * 1.5; c.fillStyle = '#f5c832'; c.beginPath(); c.ellipse(hx + sw, hy, 4, 8, 0.3, 0, 7); c.fill(); c.beginPath(); c.ellipse(hx + 5 + sw, hy - 2, 3.5, 7, 0.8, 0, 7); c.fill(); }
+    if (k === 'Clownfish') { const sw = Math.sin(t / 200) * 0.15; c.save(); c.translate(hx, hy + 6); c.rotate(sw); c.fillStyle = '#f0782a'; c.beginPath(); c.moveTo(-10, 0); c.quadraticCurveTo(0, -20, 10, 0); c.closePath(); c.fill();
+      c.strokeStyle = rgb(BLACK); c.lineWidth = 2; c.stroke(); c.fillStyle = '#fff'; c.fillRect(-2, -12, 4, 12); c.restore(); }
   }
   function costumeOn(c, m, g, body, t) {
     const k = m.costume; if (!k) return; const W = g.bw, H = g.bh, L = g.left, T = g.top;
@@ -765,6 +778,22 @@ const CHIBI = (() => {
     if (k === 'Watermelon') { c.fillStyle = 'rgba(236,72,86,.9)'; c.fillRect(L - 4, T - 4, W + 8, H + 8);
       c.fillStyle = '#f3f7e6'; c.fillRect(L - 4, T + H * 0.8, W + 8, H * 0.06); c.fillStyle = '#3f8f3a'; c.fillRect(L - 4, T + H * 0.86, W + 8, H * 0.2);
       c.fillStyle = rgb(BLACK); for (const [fx, fy] of [[0.15, 0.6], [0.32, 0.72], [0.5, 0.64], [0.68, 0.72], [0.85, 0.6], [0.1, 0.32], [0.9, 0.3]]) { c.beginPath(); c.ellipse(L + W * fx, T + H * fy, 2.4, 3.6, 0.3, 0, 7); c.fill(); } }
+    if (k === 'Tiger') { c.fillStyle = 'rgba(233,133,46,.93)'; c.fillRect(L - 4, T - 4, W + 8, H + 8); c.fillStyle = '#fbe9d2'; c.beginPath(); c.ellipse(g.cx, T + H * 0.78, W * 0.26, H * 0.2, 0, 0, 7); c.fill();
+      c.fillStyle = rgb(BLACK); for (const sd of [-1, 1]) for (const f of [0.18, 0.42, 0.66]) { c.beginPath(); c.moveTo(g.cx + sd * (W / 2 + 4), T + H * f); c.quadraticCurveTo(g.cx + sd * W * 0.3, T + H * (f + 0.05), g.cx + sd * W * 0.2, T + H * (f + 0.03)); c.quadraticCurveTo(g.cx + sd * W * 0.3, T + H * (f + 0.1), g.cx + sd * (W / 2 + 4), T + H * (f + 0.08)); c.fill(); }
+      c.beginPath(); c.moveTo(g.cx - 5, T - 4); c.lineTo(g.cx, T + H * 0.12); c.lineTo(g.cx + 5, T - 4); c.fill(); }
+    if (k === 'Zebra') { c.fillStyle = 'rgba(246,244,238,.94)'; c.fillRect(L - 4, T - 4, W + 8, H + 8); c.fillStyle = rgb(BLACK);
+      for (let i = 0; i < 7; i++) { const x0 = L + W * (i + 0.5) / 7; c.beginPath(); c.moveTo(x0 - W * 0.04, T - 4); c.quadraticCurveTo(x0 + W * 0.05, T + H * 0.5, x0 - W * 0.03, T + H + 4); c.lineTo(x0 + W * 0.03, T + H + 4); c.quadraticCurveTo(x0 + W * 0.1, T + H * 0.5, x0 + W * 0.03, T - 4); c.fill(); } }
+    if (k === 'Cow') { c.fillStyle = 'rgba(246,244,238,.94)'; c.fillRect(L - 4, T - 4, W + 8, H + 8); c.fillStyle = rgb(BLACK);
+      for (const [fx, fy, rx, ry] of [[0.12, 0.25, 0.16, 0.13], [0.86, 0.62, 0.15, 0.16], [0.3, 0.9, 0.18, 0.1], [0.82, 0.12, 0.1, 0.08]]) { c.beginPath(); c.ellipse(L + W * fx, T + H * fy, W * rx, H * ry, fx, 0, 7); c.fill(); }
+      c.fillStyle = '#f2b7b7'; c.beginPath(); c.ellipse(g.cx, T + H * 0.86, W * 0.24, H * 0.12, 0, 0, 7); c.fill(); c.fillStyle = '#c47a7a'; for (const sd of [-1, 1]) { c.beginPath(); c.ellipse(g.cx + sd * W * 0.08, T + H * 0.86, 2.4, 3.2, 0, 0, 7); c.fill(); } }
+    if (k === 'Penguin') { c.fillStyle = 'rgba(38,32,40,.95)'; c.fillRect(L - 4, T - 4, W + 8, H + 8); c.fillStyle = '#f6f4ee'; c.beginPath(); c.ellipse(g.cx, T + H * 0.62, W * 0.36, H * 0.44, 0, 0, 7); c.fill();
+      c.fillStyle = '#f2a33a'; c.beginPath(); c.moveTo(g.cx - 6, T + H * 0.52); c.lineTo(g.cx + 6, T + H * 0.52); c.lineTo(g.cx, T + H * 0.6); c.closePath(); c.fill(); }
+    if (k === 'Strawberry') { c.fillStyle = 'rgba(226,52,64,.93)'; c.fillRect(L - 4, T - 4, W + 8, H + 8); c.fillStyle = '#f7d65a';
+      for (let i = 0; i < 16; i++) { const fx = ((i * 0.618) % 1) * 0.9 + 0.05, fy = (i / 16) * 0.85 + 0.1; c.beginPath(); c.ellipse(L + W * fx, T + H * fy, 1.6, 2.4, 0, 0, 7); c.fill(); } }
+    if (k === 'Rubber duck') { c.fillStyle = 'rgba(245,200,50,.95)'; c.fillRect(L - 4, T - 4, W + 8, H + 8); c.fillStyle = 'rgba(255,255,255,.35)'; c.beginPath(); c.ellipse(L + W * 0.3, T + H * 0.3, W * 0.12, H * 0.08, -0.5, 0, 7); c.fill();
+      c.fillStyle = '#f08a2a'; c.beginPath(); c.ellipse(g.cx, T + H * 0.62, W * 0.16, H * 0.07, 0, 0, 7); c.fill(); }
+    if (k === 'Clownfish') { c.fillStyle = 'rgba(240,120,42,.95)'; c.fillRect(L - 4, T - 4, W + 8, H + 8);
+      for (const f of [0.26, 0.7]) { c.fillStyle = rgb(BLACK); c.fillRect(L - 4, T + H * f - 4, W + 8, H * 0.14 + 8); c.fillStyle = '#fbfbf6'; c.fillRect(L - 4, T + H * f - 1, W + 8, H * 0.14 + 2); } }
     if (k === 'Candy cane') { c.fillStyle = 'rgba(250,248,244,.92)'; c.fillRect(L - 4, T - 4, W + 8, H + 8); c.fillStyle = '#d6303f';
       for (let i = -3; i < 6; i++) { const x0 = L + i * W * 0.24; c.beginPath(); c.moveTo(x0, T + H + 4); c.lineTo(x0 + W * 0.1, T + H + 4); c.lineTo(x0 + W * 0.1 + H * 0.9, T - 4); c.lineTo(x0 + H * 0.9, T - 4); c.closePath(); c.fill(); } }
   }
@@ -1393,7 +1422,8 @@ const CHIBI = (() => {
 
   /* the visible height of each stage in units, so screens can size it */
   const chompHeight = (stage, marks = []) => (STAGE[stage] || STAGE.Bit).bh + 18 + (marks.includes('Horned') && stage !== 'Bit' ? 28 : 0);
-  const COSTUME_PARTS = { Panda: [38, 32, 40], Bee: [38, 32, 40], Ladybug: [38, 32, 40], Watermelon: [63, 143, 58], 'Candy cane': [214, 48, 63] };
+  const COSTUME_PARTS = { Panda: [38, 32, 40], Bee: [38, 32, 40], Ladybug: [38, 32, 40], Watermelon: [63, 143, 58], 'Candy cane': [214, 48, 63],
+    Tiger: [196, 98, 30], Zebra: [38, 32, 40], Cow: [236, 230, 220], Penguin: [240, 150, 50], Strawberry: [63, 154, 69], 'Rubber duck': [240, 138, 42], Clownfish: [38, 32, 40] };
   const draw = (c, m, p, t = 0, look = [0, 0]) => {
     if (m.costume && COSTUME_PARTS[m.costume] && m.pal) m = { ...m, pal: { ...m.pal, parts: COSTUME_PARTS[m.costume] } };
     CAP = m.capture || null; if (CAP) { CAP.hands = []; CAP.eyes = null; CAP.mouth = null; }

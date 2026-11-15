@@ -1,0 +1,26 @@
+<!doctype html><html><body style="margin:0;background:#f6f3ec"><canvas id="c"></canvas>
+<script src="../../prototype/chibi.js"></script><script>
+/* Concept sheet for the second set of costumes (15 Nov 2026): each on three families, with its colour pattern and how it's unlocked */
+const CO=[
+ ['Tiger','Orange with black stripes',[[233,133,46],[30,26,34]],'A good week at Saffron Dojo on a trip',['Chomp','Plod','Bipped']],
+ ['Zebra','Black and white stripes',[[30,26,34],[245,245,245]],'Win a Speed contest',['Stilt','Booly','Moko']],
+ ['Cow','White with black patches',[[245,245,245],[30,26,34]],'Raise 10 kinds in the bestiary',['Plod','Pinch','Teep']],
+ ['Penguin','Black and white with a little orange',[[30,26,34],[245,245,245],[240,150,50]],'Win a Style contest',['Bipped','Lern','Squib']],
+ ['Strawberry','Red with yellow seeds and green on top',[[226,52,64],[247,214,90],[63,154,69]],'Be at the Blossom Festival',['Fizz','Antik','Chomp']],
+ ['Rubber duck','Yellow with a little orange',[[245,200,50],[240,138,42]],'Buy the pattern from Nora',['Squib','Teep','Skit']],
+ ['Clownfish','Orange with white bands',[[240,120,42],[251,251,246],[30,26,34]],'A good week at Coral Shallows on a trip',['Pinch','Fizz','Booly']]];
+const cv=document.getElementById('c'), x=cv.getContext('2d'), CW=190, CH=210, D=2;
+const P0={Chomp:[[232,140,52],[128,68,30],[255,236,214]],Bipped:[[70,130,220],[36,70,156],[200,240,255]],Plod:[[160,122,86],[96,72,54],[226,206,176]],Teep:[[246,206,60],[196,120,34],[255,250,225]],
+ Squib:[[120,214,224],[70,130,200],[240,252,255]],Stilt:[[150,110,200],[90,60,140],[230,210,255]],Booly:[[180,190,230],[110,120,170],[240,244,255]],Moko:[[120,190,120],[60,120,70],[220,250,220]],
+ Pinch:[[220,90,80],[140,50,50],[255,220,210]],Lern:[[240,200,120],[170,110,60],[255,244,214]],Fizz:[[110,200,180],[50,130,120],[220,255,245]],Antik:[[170,150,120],[100,86,70],[240,230,210]],Skit:[[120,120,140],[70,70,90],[220,220,240]]};
+const pal=p=>({body:p[0],parts:p[1],accent:p[2]});
+function cell(cx,cy,m,pose,t,label){ x.save(); x.translate(cx,cy); x.fillStyle='#fffdf7'; x.strokeStyle='#e4dccb'; x.lineWidth=1.5; x.beginPath(); x.roundRect(4,4,CW-8,CH-8,14); x.fill(); x.stroke();
+  x.fillStyle='#8a7d68'; x.font='600 12px system-ui'; x.textAlign='center'; x.fillText(label,CW/2,24); x.translate(CW/2-95,26); x.scale(0.95,0.95); CHIBI.draw(x,m,pose,t); x.restore(); }
+function swatch(px,py,cols){ cols.forEach((c,i)=>{ x.fillStyle=`rgb(${c})`; x.strokeStyle='#cfc4ae'; x.beginPath(); x.roundRect(px+i*26,py,22,22,5); x.fill(); x.stroke(); }); }
+function wrap(t,px,py,w){ let line='',ly=py; for(const wd of t.split(' ')){ if(x.measureText(line+wd).width>w){ x.fillText(line,px,ly); ly+=17; line=''; } line+=wd+' '; } x.fillText(line,px,ly); return ly; }
+cv.width=(250+3*CW)*D; cv.height=(40+CO.length*CH)*D; x.scale(D,D); x.fillStyle='#f6f3ec'; x.fillRect(0,0,cv.width,cv.height);
+x.fillStyle='#3b3226'; x.font='800 20px system-ui'; x.textAlign='left'; x.fillText('Seven new costumes',16,28);
+CO.forEach(([k,egg,sw,how,fams],r)=>{ const y=40+r*CH; x.textAlign='left'; x.fillStyle='#3b3226'; x.font='800 18px system-ui'; x.fillText(k,16,y+44);
+  x.fillStyle='#6b604e'; x.font='13px system-ui'; let ly=wrap(egg,16,y+68,215); swatch(16,ly+10,sw); x.fillStyle='#8a5a20'; x.font='600 13px system-ui'; wrap('Unlock: '+how,16,ly+56,215);
+  [['Bit','idle'],['Byte','idle'],['Mega','punch']].forEach(([st,pose],i)=>{ const f=fams[i]; cell(250+i*CW,y,{family:f,stage:st,el:null,marks:[],worn:{},pal:pal(P0[f]),costume:k},pose,300+i*170,f+' '+st+(pose!=='idle'?', '+pose:'')); }); });
+</script></body></html>
