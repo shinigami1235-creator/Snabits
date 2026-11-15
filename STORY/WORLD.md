@@ -53,8 +53,8 @@ Voice samples:
 - **Pattern Stones.** An ancient people kept Snabits as colour patterns carved and painted on stone, so a Snabit could be carried and called back. The people are gone and the stones are scattered through the regions. Their patterns were copied into banners, lanterns and cloth by people who didn't know what they were. Each stone is abstract and nobody in the game says which real pattern it matches, so the player connects it themselves (Gid, 15 Nov 2026). A picture that looks like a stone calls its special. The six stones, drawn by `stoneGlyph` in `scenes.js` and shown in `docs/art/pattern-stones.png`:
   - Phoenix (Cinder Peak): zigzag flame bands, red at the bottom up to yellow.
   - Eagle (Static Plains): a blue sky band over red and white chevrons spreading like wings.
-  - Vampire (Hollow Moor): a pale crescent and a red drop on black.
-  - Kitsune (Dream Garden): three red tails fanning up from one point on pale stone.
+  - Vampire (Hollow Moor, deep map): a pale crescent and a red drop on black.
+  - Kitsune (Dream Garden, deep map): three red tails fanning up from one point on pale stone.
   - Naga (Nightshade Marsh): a yellow coil on green.
   - Yeti (Glacier Rim): an ice-blue six-point star over a grey band.
 - **Specials need their stone (Gid's rule).** Scanning a special's pattern calls the special only after its Pattern Stone has been found on an expedition. Before that, the same scan gives a regular Snabit, and the special's Secrets hint shows ??? (`stoneOpen` in `explore.js`, the gate in `hatch`). A save that already raised a special keeps it open.
@@ -97,13 +97,13 @@ Each step is caused by the one before.
 
 ## Exploration mode (built 15 Nov 2026, `explore.js`)
 
-League expeditions, the way MR2 ran them. Walt hands out a permit for each open region (Out, then Expeditions, from 1 heart). An expedition takes the week, and each region can be explored once a season. The region is a map of circles in seven columns with fog over what hasn't been reached, the same map every time. Each step costs 1 energy, and the energy (10 to 19) comes from Stamina against the other stats. Columns 2 and 4 are obstacles, one stat each: Power pushes a boulder, Speed jumps a gap, Mind lights the runes on a door, Insight finds a path through bushes, Constitution pushes through thorns. The map names the stat and never the number. A fail costs 3 energy and shuts that way for the trip. Finds are chests, springs (4 energy back), wild Snabits (a League bounty for a win, 3 energy for a loss), one journal page per region and, at the far end, the Pattern Stone, a big chest or the Rift's last page. What's seen and found stays seen and found. Walt's trips stay as they are for training and skills.
+League expeditions, the way MR2 ran them. Walt hands out a permit for each open region (Out, then Expeditions, from 1 heart). An expedition takes the week, and each region can be explored once a season. The region is a map of circles in seven columns with fog over what hasn't been reached, the same map every time. Each step costs 1 energy, and the energy (10 to 19) comes from Stamina against the other stats. Columns 2 and 4 are obstacles, one stat each, and nothing names the stat since Gid wants the obstacle to show it (15 Nov 2026): a giant boulder to push (Power), a dart totem firing over pressure plates (Speed), a rune door with books left lying in front of it (Mind), a hedge with three archways where two are mirages (Insight), and a bramble wall to push through (Constitution). Walt's lines say what happened without naming a stat either. A fail costs 3 energy and shuts that way for the trip. Finds are chests, springs (4 energy back), wild Snabits (a League bounty for a win, 3 energy for a loss), one journal page per region and, at the far end, the Pattern Stone, a big chest or the Rift's last page. What's seen and found stays seen and found. Walt's trips stay as they are for training and skills.
 
 **Helena's journal,** one page per region, read in the Journal on the Expeditions screen (`EX_PAGES`): the Cinder Peak stone, the dojo banner, scans near stones, Josie's fourth birthday, the stones pointing past the map, the permit Victor signed, Walt not liking it, the lens that hums, the signal loudest at the stones, Celia's silence, Victor's letter, the notes under the barn floor, and Walt told to wait three days at the Rift's edge.
 
-## Team expeditions (Proposed, from Gid's calls on 15 Nov 2026)
+## Team expeditions (built 15 Nov 2026, `deep.js`)
 
-Deep expeditions for a team of three trained Snabits, drawn in `docs/art/team-expedition-concept.png`. Gid's calls are marked; the rest waits for his yes.
+Deep expeditions for a team of three trained Snabits, approved by Gid from `docs/art/team-expedition-concept.png`. They show up on the Expeditions screen once one opens, with nothing saying beforehand how.
 
 - **When:** from grade C (Gid). Each open region gets a deep map past its regular one, and it opens once the team has reached the far end of the regular map.
 - **The team:** three Snabits from the ranch. Each has its own energy from its own Stamina, shown on its own card over the map. The one leading makes every move and faces each obstacle. Some deep obstacles need two stats at once, and two different Snabits have to cover them.
@@ -111,7 +111,7 @@ Deep expeditions for a team of three trained Snabits, drawn in `docs/art/team-ex
 - **Days and camps:** a deep expedition takes two weeks, split into days. Camp circles end the day, give everyone energy back and bring back anyone who's out. A wild Snabit can wander next to camp overnight.
 - **Fights:** a tag team (Gid). The leader fights first, and if it loses, the next one steps in against the same Snabit with whatever HP it has left. A Snabit that loses is out until the next camp and nothing worse (Gid). If all three are out, the team goes home with everything it found.
 - **Finds:** rarer items, bigger League bounties, the region's teacher as a guardian at the far end, and Pattern Stones.
-- **Stones:** the Kitsune and Vampire stones move to the deep maps of Dream Garden and Hollow Moor, so team expeditions have stones to find from grade C, as Gid asked. The Phoenix, Eagle, Yeti and Naga stones stay on the regular maps. Each of the seven planned specials goes on a deep map once it's drawn.
+- **Stones:** the Kitsune and Vampire stones sit behind the guardians of deep Dream Garden and deep Hollow Moor, so team expeditions have stones to find from grade C, as Gid asked. The Phoenix, Eagle, Yeti and Naga stones stay on the regular maps. Each of the seven planned specials goes on a deep map once it's drawn.
 - **The cost:** fatigue and stress on all three, so the player plans for it like a Major.
 
 ## Name sets

@@ -94,7 +94,7 @@ function atStart(meFam,foeFam){   // picks: see atMake
 /* the fight screen for any two sides. opts: mode ("control" or "auto"), title, rand, noDraw, mus, wild, onEnd(result) for the game's own fights */
 function atBegin(A,B,opts){
   atStop(); atStyle(); let dv=document.getElementById("atest"); if(!dv){ dv=document.createElement("div"); dv.id="atest"; document.body.appendChild(dv); } dv.style.display="flex";
-  const R=opts.rand||Math.random, meFam=opts.me, foeFam=opts.foe, auto=opts.mode==="auto", ar=new Arena(A.f,B.f,R,[auto?"smart":"human","smart"]); ar.live=true; ar.noDraw=!!opts.noDraw;   // each move pauses the fight while it plays
+  const R=opts.rand||Math.random, meFam=opts.me, foeFam=opts.foe, auto=opts.mode==="auto", ar=new Arena(A.f,B.f,R,[auto?"smart":"human","smart"]); ar.live=true; ar.noDraw=!!opts.noDraw; if(opts.foeHp!=null) ar.p[1].hp=Math.max(1,Math.round(ar.p[1].maxhp*opts.foeHp));   // a tag team: the next Snabit steps in against what the last one left   // each move pauses the fight while it plays
   const order=["Close","Near","Mid","Far","Any"];
   const moves=A.f.moves.slice().sort((a,b)=>order.indexOf(a.range)-order.indexOf(b.range)||a.cost-b.cost);
   AT={ar,A,B,moves,auto:false,last:performance.now(),acc:0,te:0,freeze:0,trauma:0,raf:0,side:[A.spec,B.spec].map(spec=>({spec,x:null,shown:"idle",from:"idle",t0:0,dir:1})),fx:[],done:false,me:meFam,foe:foeFam,opts};
@@ -802,10 +802,10 @@ function atResult(){
 }
 const displayNameOf=p=>p.f.name||"It";
 /* the game's fights on the new arena. Takes the same options the old fight screen took and hands back the same result */
-function arenaGame({s,foe,mode="control",title="",noDraw=false,record=false,learn=false,foeHabits=null,rand=Math.random,onEnd}){
+function arenaGame({s,foe,mode="control",title="",noDraw=false,record=false,learn=false,foeHabits=null,rand=Math.random,foeHp=null,onEnd}){
   if(record) s.fightNo=(s.fightNo||0)+1;
   if(foe&&foe.m&&typeof dexSee==="function") dexSee(foe.m);
-  const wild=/^Wild/.test(title), opts={s,mode,title,noDraw,learn,rand,onEnd,wild,mus:foe.boss?"boss":wild?"wild":"cup"};
+  const wild=/^Wild/.test(title), opts={s,mode,title,noDraw,learn,rand,onEnd,wild,foeHp,mus:foe.boss?"boss":wild?"wild":"cup"};
   // a ghost is a friend's Snabit: it fights with its own moves, preset and habits, the way the player's does
   const go=()=>{ const A={f:arPlayer(s),spec:chibiSpec(fightMon(s),s),level:s.level}, B=foeHabits&&foeHabits.m?{f:arPlayer(foeHabits),spec:chibiSpec(fightMon(foeHabits),foeHabits),level:foeHabits.level}:{f:arFoe(foe),spec:chibiSpec(foe.fm),level:foe.level};
     if(foeHabits&&typeof displayName==="function") B.f.name=displayName(foeHabits)+"'s ghost";
