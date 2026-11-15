@@ -150,22 +150,85 @@ const CUPSHOW = (() => {
     if (won) confetti(c, W, H * 0.7, t, 30);
     ribbon(c, W, H * 0.2, info.title, t, 100, won ? {} : { col: '#9aa0ad', dk: '#5a6070' });
   } });
-  /* the podium: second on the left, first in the middle with the trophy, third on the right */
-  B.podium = (info, who, text, face) => ({ who, face, text, textAt: who === 'tala' ? 200 : 1600, draw(c, W, H, t) {
+  /* the podium: second on the left, first in the middle with the trophy, third on the right.
+     The winner lands, catches the trophy and hops with it held up, second claps facing it, third waves, and the crowd's cameras flash.
+     The second beat (Josie's line) starts with everyone already up, from `skip` ms in */
+  const pz = (name, o) => Object.assign(CHIBI.blend(name, name, 1), o);
+  function rays(c, x, y, t, a) {
+    c.save(); c.globalCompositeOperation = 'lighter'; c.translate(x, y); c.rotate(t / 2600);
+    for (let k = 0; k < 12; k++) { c.rotate(Math.PI / 6); const g = c.createLinearGradient(0, 0, 260, 0); g.addColorStop(0, `rgba(255,214,90,${0.34 * a})`); g.addColorStop(1, 'rgba(255,214,90,0)');
+      c.fillStyle = g; c.beginPath(); c.moveTo(0, 0); c.lineTo(260, -26); c.lineTo(260, 26); c.closePath(); c.fill(); }
+    c.restore();
+  }
+  function flashes(c, W, H, t) {   // phone cameras in the stands
+    c.save(); c.globalCompositeOperation = 'lighter';
+    for (let i = 0; i < 18; i++) { const per = 2300 + hsh(i + 40) * 1700, age = (t + hsh(i + 50) * per) % per; if (age > 170) continue;
+      const x = W * hsh(i + 60), y = H * (0.12 + hsh(i + 70) * 0.3), a = 1 - age / 170, r = 5 + 16 * a;
+      c.globalAlpha = a; c.fillStyle = '#fff'; c.beginPath(); c.arc(x, y, r * 0.4, 0, 7); c.fill();
+      c.globalAlpha = a * 0.7; c.strokeStyle = '#fff'; c.lineWidth = 2; c.beginPath(); c.moveTo(x - r, y); c.lineTo(x + r, y); c.moveTo(x, y - r); c.lineTo(x, y + r); c.stroke(); }
+    c.restore();
+  }
+  function glitter(c, x, y, w, t, n = 18) {   // gold sparks rising around the winner
+    c.save(); c.globalCompositeOperation = 'lighter';
+    for (let i = 0; i < n; i++) { const per = 1400 + hsh(i + 80) * 900, k = ((t + hsh(i + 90) * per) % per) / per, px = x + (hsh(i + 100) - 0.5) * w + Math.sin(t / 300 + i) * 6, py = y - k * 170;
+      c.globalAlpha = Math.sin(k * Math.PI); c.fillStyle = i % 3 ? '#ffd23f' : '#fff'; const s = 2 + hsh(i + 110) * 3;
+      c.beginPath(); c.moveTo(px, py - s * 2); c.lineTo(px + s * 0.6, py); c.lineTo(px, py + s * 2); c.lineTo(px - s * 0.6, py); c.closePath(); c.fill(); }
+    c.restore();
+  }
+  function ring(c, x, y, age, col = '#ffd23f') {   // the burst when the winner lands
+    if (age < 0 || age > 520) return; const k = age / 520, r = eo(k) * 70;
+    c.save(); c.globalAlpha = 1 - k; c.strokeStyle = col; c.lineWidth = 4 * (1 - k) + 1; c.beginPath(); c.ellipse(x, y, r, r * 0.3, 0, 0, 7); c.stroke();
+    for (let p = 0; p < 10; p++) { const an = p / 10 * Math.PI * 2, d = 10 + eo(k) * 56; c.fillStyle = p % 2 ? '#fff' : col; c.beginPath(); c.arc(x + Math.cos(an) * d, y - 8 + Math.sin(an) * d * 0.5 - k * 20, 3.2 * (1 - k), 0, 7); c.fill(); }
+    c.restore();
+  }
+  B.podium = (info, who, text, face, skip = 0) => ({ who, face, text, textAt: who === 'tala' ? 200 : 1600, draw(c, W, H, t0) {
+    const t = t0 + skip, land = 1300;
     stadium(c, W, H, t, { dark: 0.45, cheer: true, spots: 1, spotAt: { x: W / 2, y: H * 0.5 } });
-    const base = H * 0.66, step = [[W * 0.18, 56, '2'], [W * 0.5, 96, '1'], [W * 0.82, 30, '3']];
-    const order = [1, 0, 2];
+    flashes(c, W, H, t);
+    const base = H * 0.66, step = [[W * 0.18, 56, '2'], [W * 0.5, 96, '1'], [W * 0.82, 30, '3']], order = [1, 0, 2];
+    if (t > land) rays(c, W / 2, base - 96 - 70, t, Math.min(1, (t - land) / 500));
     step.forEach(([x, h, n], i) => { const at = 200 + order[i] * 350, k = eo((t - at) / 400), hh = h * k; if (t < at) return;
       SC.depth(c, () => { c.beginPath(); c.roundRect(x - W * 0.16, base - hh, W * 0.32, hh + 40, 4); }, n === '1' ? '#f1e6c4' : '#e2dccb', 3, 0.25);
       c.fillStyle = n === '1' ? '#d4a62a' : n === '2' ? '#9aa0ad' : '#c4834a'; c.font = `700 30px ${PIX}`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(n, x, base - hh + 26);
       const e = info.podium[+n - 1]; if (!e) return; const ek = back((t - at - 300) / 380); if (ek <= 0) return;
-      const hop = n === '1' ? Math.abs(Math.sin(t / 240)) * 10 : 0;
-      mon(c, e.spec, x, base - hh - hop, (n === '1' ? 130 : 100) * Math.min(1, ek), n === '1' ? (hop > 5 ? 'jump' : 'happy') : 'happy', t + i * 400, n === '3');
-      c.fillStyle = e.me ? '#ffc93c' : '#fff'; c.font = `700 14px ${PIX}`; c.fillText(e.name.replace(/^Rook's /, ''), x, base + 30, W * 0.29); });
-    if (t > 1300) { const k = back((t - 1300) / 400); c.save(); c.translate(W / 2, base - 96 - 200 + Math.sin(t / 500) * 4); c.scale(k, k); trophy(c, 0, 0, 34); c.restore(); }
-    fireworks(c, W, H, t, 1300, 8, 0.18); if (t > 1300) confetti(c, W, H, t - 1300, 40);
+      const top = base - hh, T = t + i * 400;
+      if (n === '1') {
+        // hops with the trophy held up, squashing on each landing and turning to face the other way every second hop
+        const per = 760, since = t - land, ph = since < 0 ? 0 : (since % per) / per, hop = since < 0 ? 0 : ph < 0.72 ? Math.sin(ph / 0.72 * Math.PI) * 30 : 0;
+        const squash = since >= 0 && ph >= 0.72 && ph < 0.86, turn = since > 0 && Math.floor(since / per / 2) % 2 === 1;
+        const pose = pz('happy', { arm: [[14, -14, 6, -34], [14, -14, 6, -34]], open: 0.95, lift: 0 });
+        if (since < 0) { const drop = eo((t - at - 300) / 380); mon(c, e.spec, x, top - (1 - drop) * 120, 130 * Math.min(1, ek), 'jump', T); }
+        else { glitter(c, x, top, 130, t); mon(c, e.spec, x, top - hop, 130, pose, T, turn, squash ? { sx: 1.1, sy: 0.88 } : hop > 4 ? { sx: 0.95, sy: 1.06 } : {}); }
+        if (since >= 0) { ring(c, x, top, since); ring(c, x, top, since % per - per * 0.72); }
+        // the trophy falls into its hands, then rides up and down with it
+        const tk = eo((t - land) / 420), ts = 40, head = 130 * 0.9 * (squash ? 0.88 : hop > 4 ? 1.06 : 1), ty = top - hop - head - ts * 0.8;
+        if (t > land) { c.save(); c.translate(x, ty - (1 - tk) * 260); c.rotate(Math.sin(t / 240) * 0.06); trophy(c, 0, 0, ts); c.restore();
+          if (since < 420) { c.save(); c.globalCompositeOperation = 'lighter'; c.globalAlpha = 1 - since / 420; c.fillStyle = '#fff6c8'; c.beginPath(); c.arc(x, ty, 30 + since / 6, 0, 7); c.fill(); c.restore(); } }
+      } else if (n === '2') {
+        // claps, facing the winner, with a little bounce on each clap
+        const clap = Math.floor(T / 170) % 2 === 0, b = clap ? 0 : 9;
+        mon(c, e.spec, x, top - b, 100 * Math.min(1, ek), pz('happy', { arm: clap ? [[12, -6, -2, -14], [12, -6, -2, -14]] : [[16, -8, 18, -18], [16, -8, 18, -18]], lift: 0, extra: null }), T, false, { look: [0.8, -0.2], ...(clap ? { sx: 1.06, sy: 0.94 } : { sx: 0.97, sy: 1.04 }) });
+        if (clap && T % 340 < 60) { c.save(); c.globalCompositeOperation = 'lighter'; c.strokeStyle = '#fff'; c.lineWidth = 2.5; for (const a of [-0.6, 0, 0.6]) { c.beginPath(); c.moveTo(x + Math.sin(a) * 30, top - 108 - Math.cos(a) * 30); c.lineTo(x + Math.sin(a) * 42, top - 108 - Math.cos(a) * 42); c.stroke(); } c.restore(); }
+      } else {
+        // waves one arm and sways, with a hop now and then
+        const wv = Math.sin(T / 140), sw = Math.sin(T / 420) * 6, per = 1300, ph = (T % per) / per, hop = ph < 0.3 ? Math.sin(ph / 0.3 * Math.PI) * 14 : 0;
+        mon(c, e.spec, x + sw, top - hop, 100 * Math.min(1, ek), pz('happy', { arm: [[16, -10, 10 + wv * 10, -30], REST_ARM], lift: 0, tilt: sw * 0.8 }), T, true, { look: [0.8, -0.2] });
+      }
+      const pulse = n === '1' && t > land ? 1 + Math.sin(t / 200) * 0.06 : 1;
+      c.save(); c.translate(x, base + 30); c.scale(pulse, pulse); c.fillStyle = e.me ? '#ffc93c' : '#fff'; c.font = `700 14px ${PIX}`; c.fillText(e.name.replace(/^Rook's /, ''), 0, 0, W * 0.29); c.restore(); });
+    // fireworks keep going in waves, and confetti and streamers keep falling
+    for (const k of [0, 1]) { const w = Math.floor((t - land) / 3400) - k; if (w >= 0) fireworks(c, W, H, t, land + w * 3400, w ? 5 : 8, 0.18); }
+    if (t > land) { confetti(c, W, H, t - land, 60); streamers(c, W, H, t - land); }
     ribbon(c, W, H * 0.1, info.cup.name, t, 1100, { size: 28 });
   } });
+  const REST_ARM = [12, 8, 16, 22];
+  function streamers(c, W, H, t) {
+    c.save(); c.lineCap = 'round';
+    for (let i = 0; i < 9; i++) { const sp = 0.07 + hsh(i + 120) * 0.05, x0 = W * hsh(i + 130), y0 = (hsh(i + 140) * H + t * sp) % (H + 120) - 120;
+      c.strokeStyle = FW[(i + 2) % FW.length]; c.lineWidth = 4; c.beginPath();
+      for (let s = 0; s <= 12; s++) { const yy = y0 + s * 7, xx = x0 + Math.sin(s * 0.7 + t / 160 + i) * 9; s ? c.lineTo(xx, yy) : c.moveTo(xx, yy); } c.stroke(); }
+    c.restore();
+  }
 
   /* a portrait tile: the Snabit's head and shoulders on a dark square, gold-edged for the player and orange for Rook */
   function tile(c, e, x, y, s, t, flip) {
@@ -435,5 +498,5 @@ function cupPodiumShow() {
   const info = { cup: showCup(c), podium: order.slice(0, 3).map(i => ({ ...showSide(i), me: !!CUP.field[i].me })) };
   const up = (CUP.lines.find(l => /moves up to grade (\w)/.test(l)) || '').match(/grade (\w)/);
   return CUPSHOW.run([{ ...B.podium(info, 'mc', L.podium(place, me.name, champ, info.cup, CUP.prize), 'happy'), mus: place === 1 ? null : 'arena', jingle: place === 1 ? true : null },
-    B.podium(info, 'tala', L.talaEnd(place, me.name, up && up[1], CUP.prize), place <= 3 ? 'happy' : 'worried')]);
+    B.podium(info, 'tala', L.talaEnd(place, me.name, up && up[1], CUP.prize), place <= 3 ? 'happy' : 'worried', 2400)]);
 }
