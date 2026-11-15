@@ -1151,13 +1151,13 @@ const CHIBI = (() => {
         c.beginPath(); c.moveTo(L, g.bot - 4); c.bezierCurveTo(L - 2, T - h * 0.12, R + 2, T - h * 0.12, R, g.bot - 4);
         for (let i = 0; i < n; i++) { const x0 = R - i * w / n, x1 = R - (i + 1) * w / n, d = 5 + ((i * 7) % 4); c.quadraticCurveTo((x0 + x1) / 2, g.bot + d, x1, g.bot - 4); } c.closePath(); },
       arms: 'stub', armW: st => by(st, 0, 7, 8), handR: st => by(st, 0, 6, 7), shoulderY: 0.62, armK: 0.7, shoulderIn: 0.02,
-      inside(c, g, x) { c.fillStyle = rgb(x.body); c.globalAlpha = 0.85; c.fillRect(g.left - 10, g.top + g.bh * 0.3, g.bw + 20, g.bh);
+      inside(c, g, x) { c.fillStyle = rgb(x.body); c.globalAlpha = 0.85; c.fillRect(g.left - 10, g.top - 10, g.bw + 20, g.bh + 20);
         c.globalAlpha = 1; c.fillStyle = rgba(dk(x.body, 0.25), 0.7); c.beginPath(); c.arc(g.cx + Math.sin(x.t / 900) * 4, g.top + g.bh * 0.66, g.bw * by(g.stage, 0.1, 0.12, 0.14), 0, 7); c.fill();
         c.fillStyle = 'rgba(255,255,255,.55)'; for (let k = 0; k < 4; k++) { const ph = (x.t / 2400 + k / 4) % 1; c.beginPath(); c.arc(g.cx + (k - 1.5) * g.bw * 0.18, g.bot - 6 - ph * g.bh * 0.6, 1.5 + k % 2, 0, 7); c.fill(); }
         if (g.stage === 'Mega') { c.fillStyle = rgb(x.acc); star(c, g.cx + Math.sin(x.t / 900) * 4, g.top + g.bh * 0.66, 0.5, rgb(lt(x.acc, 0.3))); } },
       front(c, g, x) { const ph = (x.t / 1300) % 1; c.fillStyle = rgba(lt(x.body, 0.2), 0.85 * (1 - ph)); drop(c, g.left + g.bw * 0.22, g.bot + ph * 6, 0.55); c.fill();
         if (g.stage === 'Mega') for (let k = -1; k <= 1; k++) { const yy = g.top - 10 + Math.sin(x.t / 400 + k) * 3; c.fillStyle = rgba(lt(x.body, 0.3), 0.9); c.beginPath(); c.arc(g.cx + k * 16, yy, 5 - Math.abs(k), 0, 7); c.fill(); } },
-      hl: g => [g.left + g.bw * 0.14, g.top + g.bh * 0.62, g.left + g.bw * 0.16, g.top + g.bh * 0.16, g.left + g.bw * 0.42, g.top + g.bh * 0.02],
+      hl: g => [g.left + g.bw * 0.2, g.top + g.bh * 0.52, g.left + g.bw * 0.22, g.top + g.bh * 0.3, g.left + g.bw * 0.36, g.top + g.bh * 0.22],
       head: g => [g.cx, g.top + 2, g.bw * 0.46],
       face: (c, g, x, look) => faceTwo(c, g, x, look, { ey: 0.44, ex: 0.17, my: 0.66, s: by(g.stage, 0.78, 0.88, 0.96) })
     },
@@ -1389,6 +1389,14 @@ const CHIBI = (() => {
       inside(c, g, x) { const n = by(g.stage, 5, 5, 7); c.strokeStyle = rgba(dk(x.body, 0.3), 0.55); c.lineWidth = 2.2;
         for (let k = 1; k < n; k++) { const f = k / n, px = g.left + g.bw * f; c.beginPath(); c.moveTo(g.cx + (px - g.cx) * 0.4, g.top + 4); c.quadraticCurveTo(px, g.top + g.bh / 2, g.cx + (px - g.cx) * 0.4, g.bot - 4); c.stroke(); } },
       front(c, g, x) {
+        if (g.stage !== 'Bit') for (let k = 0; k < 5; k++) { const ph = (x.t / 1500 + k / 5) % 1; c.fillStyle = `rgba(255,${150 + k * 15},60,${0.9 * (1 - ph)})`;   // embers drifting up
+          c.beginPath(); c.arc(g.cx + Math.sin(k * 2.1 + ph * 5) * g.bw * 0.35, g.top + g.bh * 0.3 - ph * 46, 1.6 + (k % 2), 0, 7); c.fill(); }
+        if (g.stage !== 'Bit') for (const sd of [-1, 1]) { const ax = g.cx + sd * (g.bw / 2 - 2), ay = g.top + g.bh * 0.62; c.fillStyle = '#7cb246';   // little leaves where the vine arms grow out
+          c.beginPath(); c.ellipse(ax + sd * 4, ay - 6, 5, 2.6, sd * -0.7, 0, 7); c.fill(); }
+        if (g.stage === 'Mega') for (let k = 0; k < 2; k++) { const a = x.t / 900 + k * Math.PI, bx = g.cx + Math.cos(a) * g.bw * 0.75, byy = g.top - 6 + Math.sin(a * 2) * 10, fl2 = Math.sin(x.t / 70 + k) * 0.5;   // two bats circling
+          c.fillStyle = '#2d2433'; c.save(); c.translate(bx, byy); c.beginPath(); c.ellipse(0, 0, 4, 3.4, 0, 0, 7); c.fill();
+          for (const sd of [-1, 1]) { c.beginPath(); c.moveTo(sd * 2, -1); c.quadraticCurveTo(sd * 8, -6 - fl2 * 6, sd * 13, -2 - fl2 * 4); c.quadraticCurveTo(sd * 9, 0, sd * 8, 3); c.quadraticCurveTo(sd * 5, 1, sd * 2, 2); c.fill(); }
+          c.fillStyle = '#ffcf5a'; c.fillRect(-2, -1.4, 1.2, 1.2); c.fillRect(0.8, -1.4, 1.2, 1.2); c.restore(); }
         if (g.stage === 'Byte') { c.strokeStyle = '#4f7a2c'; c.lineWidth = 3; c.lineCap = 'round'; c.beginPath(); c.moveTo(g.left + g.bw * 0.08, g.top + g.bh * 0.3);   // a vine curling across the top
           c.bezierCurveTo(g.left + g.bw * 0.2, g.top - 2, g.cx - 10, g.top + g.bh * 0.12, g.cx - 4, g.top + 6); c.stroke(); c.fillStyle = '#7cb246'; c.beginPath(); c.ellipse(g.left + g.bw * 0.2, g.top + g.bh * 0.12, 5, 3, -0.6, 0, 7); c.fill(); }
         if (g.stage === 'Mega') { const bob = Math.sin(x.t / 350) * 3, ly = g.top - 16 + bob, lw = g.bw * 0.36, fl = 1 + Math.sin(x.t / 70) * 0.12;   // the lid floats off and a flame burns out of the top
@@ -1404,6 +1412,8 @@ const CHIBI = (() => {
       /* the carved face: triangle eyes and a jagged grin cut out of the pumpkin, lit from inside; the shapes change with the mood */
       face(c, g, x, look) { const s = by(g.stage, 0.86, 1, 1.12), ey = g.top + g.bh * 0.4, ex = g.bw * 0.2, my = g.top + g.bh * 0.66, fl = 0.85 + Math.sin(x.t / 90) * 0.1 + Math.sin(x.t / 37) * 0.05;
         const glow = `rgba(255,${Math.round(200 * fl)},80,1)`, cut = '#3a1a0a', e = x.P.eyes, lx = look[0] * 2;
+        { const gr = c.createRadialGradient(g.cx, (ey + my) / 2, 4, g.cx, (ey + my) / 2, g.bw * 0.55); gr.addColorStop(0, `rgba(255,190,80,${0.38 * fl})`); gr.addColorStop(1, 'rgba(255,190,80,0)');   // candlelight on the skin around the cuts
+          c.save(); this.path(c, g, x); c.clip(); c.fillStyle = gr; c.fillRect(g.left, g.top, g.bw, g.bh); c.restore(); }
         const hole = fn => { c.fillStyle = cut; c.save(); c.translate(0, 1.5); fn(); c.fill(); c.restore(); c.fillStyle = glow; fn(); c.fill(); };
         for (const sd of [-1, 1]) { const cx = g.cx + sd * ex + lx;
           if (e === 'shut' || e === 'happy') hole(() => { c.beginPath(); c.moveTo(cx - 8 * s, ey + 3 * s); c.lineTo(cx, ey - 5 * s); c.lineTo(cx + 8 * s, ey + 3 * s); c.lineTo(cx, ey - 1 * s); c.closePath(); });
