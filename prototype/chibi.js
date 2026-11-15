@@ -2038,7 +2038,7 @@ const CHIBI = (() => {
     },
     /* ---- batch 4, drawn 16 Nov 2026 for Gid's look-over (not wired yet) ---- */
     /* Bloop: a jellyfish. Bit is a small frilly bell with stubby tentacles. Byte is a clear glowing bell with long wavy tentacles and frilled arms.
-       Mega is a man o' war: a tall shimmering sail on top, glowing spots, a curtain of long glowing tentacles and little fish circling it */
+       Mega is a jellyfish queen: a crown of coral set with pearls, a glowing hem and spots, a curtain of long glowing tentacles and three baby jellies drifting round it */
     Bloop: {
       dims: { Bit: [60, 40], Byte: [76, 52], Mega: [86, 58] }, float: true, glass: true, patternAfter: true, slots: { feet: false },
       bottom(st) { return st === 'Bit' ? 146 : st === 'Byte' ? 120 : 104; }, height(st) { return this.dims[st][1] + by(st, 40, 66, 96); },
@@ -2049,16 +2049,21 @@ const CHIBI = (() => {
         for (let i = 0; i < n; i++) { const tx = g.left + g.bw * (0.15 + 0.7 * i / (n - 1)), col = st === 'Mega' ? `rgba(${i % 2 ? '200,170,255' : '150,220,255'},${0.5 + 0.4 * gl})` : rgba(lt(x.body, 0.2), 0.8);
           c.strokeStyle = col; c.lineWidth = st === 'Bit' ? 4 : 2.2; c.lineCap = 'round'; c.beginPath(); c.moveTo(tx, g.bot); for (let k = 1; k <= 6; k++) c.lineTo(tx + Math.sin(x.t / 300 + i + k * 0.9) * (st === 'Bit' ? 1.5 : 4) * k / 3, g.bot + k * len / 6); c.stroke(); }
         if (st !== 'Bit') for (const sd of [-1, 1]) { c.strokeStyle = rgba(lt(x.acc, 0.3), 0.75); c.lineWidth = 6; c.beginPath(); c.moveTo(g.cx + sd * 6, g.bot); for (let k = 1; k <= 5; k++) c.lineTo(g.cx + sd * 6 + Math.sin(x.t / 350 + k + sd) * 5, g.bot + k * len * 0.12); c.stroke(); }   // frilled arms
-        if (st === 'Mega') { const sw = Math.sin(x.t / 700) * 3; const sg = c.createLinearGradient(g.cx - 30, g.top - 50, g.cx + 30, g.top); sg.addColorStop(0, 'rgba(160,140,255,.8)'); sg.addColorStop(0.5, 'rgba(120,220,255,.8)'); sg.addColorStop(1, 'rgba(255,170,230,.8)');   // the sail
-          c.fillStyle = sg; c.beginPath(); c.moveTo(g.cx - g.bw * 0.4, g.top + 8); c.quadraticCurveTo(g.cx - 20 + sw, g.top - 64, g.cx + 22 + sw, g.top - 50); c.quadraticCurveTo(g.cx + g.bw * 0.45, g.top - 20, g.cx + g.bw * 0.4, g.top + 8); c.closePath(); c.fill();
-          c.strokeStyle = 'rgba(255,255,255,.55)'; c.lineWidth = 1.2; for (let k = -2; k <= 2; k++) { c.beginPath(); c.moveTo(g.cx + k * 12, g.top + 4); c.quadraticCurveTo(g.cx + k * 8 + sw, g.top - 30, g.cx + k * 4 + 10 + sw, g.top - 46 + Math.abs(k) * 6); c.stroke(); } }
-        x.feet.push([g.cx, 182, 10]); },
+x.feet.push([g.cx, 182, 10]); },
       inside(c, g, x) { const st = g.stage, gl = 0.6 + 0.4 * Math.sin(x.t / 400);
         if (st === 'Bit') { c.fillStyle = rgba(lt(x.body, 0.3), 0.5); c.beginPath(); c.ellipse(g.cx, g.top + g.bh * 0.3, g.bw * 0.3, g.bh * 0.2, 0, 0, 7); c.fill(); return; }
         for (let k = 0; k < 4; k++) { const a = k / 4 * Math.PI * 2 + 0.78; c.fillStyle = rgba(lt(x.acc, 0.3), 0.35 + 0.35 * gl); c.beginPath(); c.ellipse(g.cx + Math.cos(a) * g.bw * 0.12, g.top + g.bh * 0.62 + Math.sin(a) * g.bh * 0.12, g.bw * 0.07, g.bw * 0.05, a, 0, 7); c.fill(); }   // the glowing rings inside
         if (st === 'Mega') for (let k = 0; k < 10; k++) { const a = k / 10 * Math.PI, px = g.cx + Math.cos(a) * g.bw * 0.4, py = g.bot - 6 - Math.sin(a) * g.bh * 0.5; c.fillStyle = `rgba(200,255,255,${0.4 + 0.5 * Math.sin(x.t / 200 + k)})`; c.beginPath(); c.arc(px, py, 2, 0, 7); c.fill(); } },
-      front(c, g, x) { if (g.stage !== 'Mega') return; for (let k = 0; k < 3; k++) { const a = x.t / 1500 + k * 2.1, px = g.cx + Math.cos(a) * g.bw * 0.9, py = g.bot + 30 + Math.sin(a) * 14, d = -Math.sin(a) > 0 ? 1 : -1;   // little fish circling
-          c.save(); c.translate(px, py); c.scale(d, 1); c.fillStyle = ['#ffb04a', '#7fd8ff', '#ff8fb0'][k]; c.beginPath(); c.ellipse(0, 0, 5, 2.8, 0, 0, 7); c.fill(); c.beginPath(); c.moveTo(-4, 0); c.lineTo(-8, -3); c.lineTo(-8, 3); c.closePath(); c.fill(); c.restore(); } },
+      front(c, g, x) { if (g.stage !== 'Mega') return; const gl = 0.6 + 0.4 * Math.sin(x.t / 400);
+        c.strokeStyle = `rgba(200,255,255,${0.4 + 0.4 * gl})`; c.lineWidth = 3; c.beginPath(); c.moveTo(g.left + 2, g.bot - 2); for (let i = 0; i <= 9; i++) c.lineTo(g.left + 2 + i * (g.bw - 4) / 9, g.bot + (i % 2 ? 4 : -1)); c.stroke();   // a glowing hem
+        const cy = g.top - 4, coral = mix(x.acc, [255, 120, 140], 0.5);   // a crown of coral branches set with pearls
+        for (const [dx, h, a] of [[-18, 14, -0.5], [-8, 20, -0.15], [4, 24, 0.1], [16, 16, 0.45]]) { c.save(); c.translate(g.cx + dx, cy + 6); c.rotate(a); c.strokeStyle = rgb(dk(coral, 0.15)); c.lineWidth = 4; c.lineCap = 'round';
+          c.beginPath(); c.moveTo(0, 0); c.lineTo(0, -h); c.moveTo(0, -h * 0.5); c.lineTo(-5, -h * 0.75); c.moveTo(0, -h * 0.6); c.lineTo(5, -h * 0.85); c.stroke(); c.restore(); }
+        for (let k = -2; k <= 2; k++) { c.fillStyle = '#f6f2ea'; c.beginPath(); c.arc(g.cx + k * 9, cy + 6 + Math.abs(k) * 1.5, 3.4, 0, 7); c.fill(); c.fillStyle = 'rgba(255,255,255,.9)'; c.beginPath(); c.arc(g.cx + k * 9 - 1, cy + 5 + Math.abs(k) * 1.5, 1.1, 0, 7); c.fill(); }
+        for (let k = 0; k < 3; k++) { const a = x.t / 1800 + k * 2.1, px = g.cx + Math.cos(a) * g.bw * 1.05, py = g.bot + 22 + Math.sin(a) * 14 + Math.sin(x.t / 300 + k) * 3, s = Math.sin(a) > 0 ? 1 : 0.8;   // three baby jellies drifting round it
+          c.fillStyle = `rgba(${['200,170,255', '150,220,255', '255,180,220'][k]},.85)`; c.beginPath(); c.moveTo(px - 8 * s, py); c.bezierCurveTo(px - 8 * s, py - 12 * s, px + 8 * s, py - 12 * s, px + 8 * s, py); c.closePath(); c.fill();
+          c.strokeStyle = c.fillStyle; c.lineWidth = 1.5; for (const d of [-4, 0, 4]) { c.beginPath(); c.moveTo(px + d * s, py); c.lineTo(px + d * s + Math.sin(x.t / 200 + d) * 2, py + 10 * s); c.stroke(); }
+          c.fillStyle = '#2a2230'; for (const d of [-2.5, 2.5]) { c.beginPath(); c.arc(px + d * s, py - 4 * s, 1, 0, 7); c.fill(); } } },
       hl: g => [g.left + g.bw * 0.16, g.top + g.bh * 0.6, g.left + g.bw * 0.2, g.top + g.bh * 0.2, g.left + g.bw * 0.4, g.top + g.bh * 0.02],
       head: g => [g.cx, g.top + 2, g.bw * 0.44],
       face: (c, g, x, look) => faceTwo(c, g, x, look, { ey: 0.42, ex: 0.16, my: 0.66, s: by(g.stage, 0.66, 0.74, 0.8) })

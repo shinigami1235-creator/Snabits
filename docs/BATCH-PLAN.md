@@ -100,5 +100,5 @@ When both branches pass their tests, Chat A merges `batch-specials` into `batch-
 
 Fifteen more families, drawn in `chibi.js` on `batch-regular` and not wired yet. Gid checks the sheets in `docs/art/batch4-1.png` to `batch4-3.png` first.
 
-- Commons: Bloop (jellyfish, glowing jellyfish, man o' war), Sox (sock, sock puppet, sock dragon), Cuppy (muffin, frosted cupcake, three-tier cake), Suds (soap bubble, soap bar, clawfoot tub), Scoop (cone, double scoop, sundae), Tome (notebook, open book, spellbook), Gumball (gumball, gumball machine, candy carousel), Pina (pineapple bud, pineapple, tiki totem).
+- Commons: Bloop (jellyfish, glowing jellyfish, jellyfish queen with a coral crown and baby jellies), Sox (sock, sock puppet, sock dragon), Cuppy (muffin, frosted cupcake, three-tier cake), Suds (soap bubble, soap bar, clawfoot tub), Scoop (cone, double scoop, sundae), Tome (notebook, open book, spellbook), Gumball (gumball, gumball machine, candy carousel), Pina (pineapple bud, pineapple, tiki totem).
 - Uncommons: Jingle (coin, piggy bank, treasure chest), Presto (top hat, hat with bunny ears, the full magic act), Vroom (dust bunny, robot vacuum, floor polisher), Shutter (film roll, instant camera, bellows camera), Yoyo (yo-yo, round the world, battle top), Lava (wax blob, lava lamp, volcano), Pogo (bouncy ball, pogo stick, jack-in-the-box).
