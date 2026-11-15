@@ -11,7 +11,7 @@ function openCupCal(sel) {
   CAL = { off: 0, sel: sel || null, adv: {}, sure: null };
   if (!el('r-cal')) { const d = document.createElement('div'); d.id = 'r-cal'; el('r-panel').after(d); const k = document.createElement('div'); k.id = 'r-calcard'; el('r-frame').appendChild(k); }
   document.body.classList.add('cal-open');
-  if (!CAL.sel) { const now = cupsOfWeek(PLAYER.week).filter(c => !cupBlock(c, s)); CAL.sel = { w: PLAYER.week, c: now[0] || cupsOfWeek(PLAYER.week)[0] || null }; }
+  if (!CAL.sel) { const now = cupsOfWeek(PLAYER.week).filter(c => !cupBlock(c, s)), mine = now.find(c => signedFor(PLAYER.week, c.name)); CAL.sel = { w: PLAYER.week, c: mine || now[0] || cupsOfWeek(PLAYER.week)[0] || null }; }
   calDraw();
 }
 function closeCupCal() { CAL = null; document.body.classList.remove('cal-open'); const a = el('r-cal'), b = el('r-calcard'); if (a) a.innerHTML = ''; if (b) b.innerHTML = ''; }
@@ -22,7 +22,7 @@ function calDraw() {
   const weeks = [0, 1, 2, 3].map(k => cupsOfWeek(start + k));
   const cells = CAL_ROWS.map(g => [0, 1, 2, 3].map(k => { const w = start + k;
     return weeks[k].map((c, i) => calRow(c) !== g ? '' : (() => { const no = cupBlock(c, s), on = CAL.sel && CAL.sel.w === w && CAL.sel.c && CAL.sel.c.name === c.name;
-      return `<button class="ct g${calRow(c)}${no ? ' no' : ''}${on ? ' on' : ''}${c.official ? ' up' : ''}" data-w="${w}" data-i="${i}">${calTile(c)}</button>`; })()).join(''); }));
+      return `<button class="ct g${calRow(c)}${no ? ' no' : ''}${on ? ' on' : ''}${c.official ? ' up' : ''}${signedFor(w, c.name) ? ' sg' : ''}" data-w="${w}" data-i="${i}">${calTile(c)}</button>`; })()).join(''); }));
   const ev = [0, 1, 2, 3].map(k => { const w = start + k, f = typeof festivalOf === 'function' && festivalOf(w), ct = typeof contestOf === 'function' && contestOf(w);
     return (f ? `<i class="ce" title="${f[0]}">★</i>` : '') + (ct ? `<i class="ce" title="${ct.name}">C</i>` : ''); });
   el('r-cal').innerHTML = `<div class="cal-card">
@@ -52,19 +52,20 @@ function calCard() {
     <div class="cc-name">${c.name.replace(/ \([A-SF]\)$/, '')}</div>
     <div class="cc-row">${calRow(c) === 'F' ? 'Any grade' : `Grade ${calRow(c)}`} · ${fmt} · ${n} entries${c.official && c.grade === s.grade && s.grade !== 'S' ? ' · grade-up cup' : ''}</div>
     <div class="cc-row">Prize <b>${cupPurse(c).toLocaleString()} bits${c.prize ? ` and ${/^[AEIOU]/.test(c.prize) ? 'an' : 'a'} ${c.prize}` : ''}</b>${fee ? ` · Entry <b>${fee} bits</b>` : ''}</div>
-    ${why ? `<div class="cc-no">${why}</div>` : ''}`;
+    ${why ? `<div class="cc-no">${why}</div>` : signedFor(sel.w, c.name) ? '<div class="cc-row"><b>Signed up</b></div>' : ''}`;
   // Josie's read on this week's cups, worked out once per cup since it runs a few dozen fights off screen
   const tala = el('cal-tala'), key = sel.w + '|' + c.name;
   let adv = null; if (k === 0 && !why && typeof cupAdvice === 'function') adv = CAL.adv[key] !== undefined ? CAL.adv[key] : (CAL.adv[key] = cupAdvice(c, s));
   const low = fee && PLAYER.bits < fee;
   tala.innerHTML = low ? `<b>Josie</b>The ${c.name.replace(/ \([A-SF]\)$/, '')} costs ${fee} bits to enter, and we have ${PLAYER.bits}.` : adv ? `<b>Josie</b>${adv.t}` : '';
   const sure = !(adv && adv.weak) || CAL.sure === key;
-  go.textContent = k === 0 ? `${sure ? 'Enter' : 'Enter anyway'}${fee ? ` · ${fee} bits` : ''}` : k < 0 ? 'Done' : `In ${k} week${k > 1 ? 's' : ''}`;
-  go.disabled = k !== 0 || !!why || low;
+  go.textContent = k === 0 ? `${sure ? 'Enter' : 'Enter anyway'}${fee ? ` · ${fee} bits` : ''}` : k < 0 ? 'Done' : signedFor(sel.w, c.name) ? 'Cancel sign-up' : 'Sign up';
+  go.disabled = k < 0 || !!why || (k === 0 && low);
 }
 /* Enter takes the Snabit to the stadium for the cup. When Josie thinks the field is too strong, the first tap asks again */
 function calEnter() {
-  const sel = CAL && CAL.sel; if (!sel || !sel.c || sel.w !== PLAYER.week) return;
+  const sel = CAL && CAL.sel; if (!sel || !sel.c || sel.w < PLAYER.week) return;
+  if (sel.w > PLAYER.week) { toggleSignup(sel.w, sel.c.name); calDraw(); return; }   // a cup weeks away: sign up for it, or cancel
   const key = sel.w + '|' + sel.c.name, adv = CAL.adv[key];
   if (adv && adv.weak && CAL.sure !== key) { CAL.sure = key; el('cal-go').textContent = `Yes, enter${cupFee(sel.c) ? ` · ${cupFee(sel.c)} bits` : ''}`; return; }
   const c = sel.c; closeCupCal(); CUP = null;

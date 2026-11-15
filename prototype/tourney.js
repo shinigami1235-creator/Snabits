@@ -72,6 +72,22 @@ function fightDayLine(s,ahead){
   const mine=list.find(c=>!c.open&&!c.small&&c.grade===s.grade); if(mine) return `The ${mine.name.replace(/ \([A-S]\)$/,"")} is ${when}.`;
   return "";
 }
+/* Sign-ups (Gid, 15 Nov 2026): a cup or contest weeks away can be signed up for from the calendar or the contests screen,
+   and Josie brings it up the week before so there's time to rest. She also brings up a grade-up cup or a Major when the
+   Snabit looks ready for it, signed up or not. */
+function signups(){ if(!PLAYER) return []; PLAYER.signups=(PLAYER.signups||[]).filter(x=>x.w>=PLAYER.week); return PLAYER.signups; }
+const signedFor=(w,name)=>signups().some(x=>x.w===w&&x.name===name);
+function toggleSignup(w,name){ const L=signups(), i=L.findIndex(x=>x.w===w&&x.name===name); if(i>=0) L.splice(i,1); else L.push({w,name}); if(typeof saveGame==="function") saveGame(); return i<0; }
+function aheadLines(s){
+  const nm=displayName(s), cn=n=>n.replace(/ \([A-SF]\)$/,""), rest=/Top|Good/.test(fightCond(s).name)?"":` ${nm} could do with a rest this week.`, out=[];
+  for(const x of signups().filter(x=>x.w===PLAYER.week)) out.push(`The ${cn(x.name)} is this week, and we're signed up for it.`);
+  const w1=PLAYER.week+1, mine=signups().filter(x=>x.w===w1);
+  if(mine.length) out.push(`The ${cn(mine[0].name)} is next week, and we're signed up for it.${rest}`);
+  else { const big=cupsOfWeek(w1).filter(c=>!cupBlock(c,s)).find(c=>(c.official&&c.grade===s.grade&&s.grade!=="S")||c.major||c.legend);
+    const x=big&&cupChances(big,s); if(x&&x.cup>=0.25) out.push(`The ${cn(big.name)} is next week, and I think ${nm}'s ready for it.${rest}`); }
+  if(!out.length&&weekParts(w1).wk===2&&typeof story==="function"&&story().seen.gradeD) out.push("Rook is at the stadium next week for a rival match.");
+  return out.join(" ");
+}
 function nextCupText(){
   const w=PLAYER.week; for(let k=1;k<16;k++){ const x=w+k, {mo,wk}=weekParts(x); if(wk===3&&mo%3===2) return `The next official cup is in ${k} week${k>1?"s":""}.`; }
   return "";

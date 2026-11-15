@@ -964,7 +964,7 @@ async function endWeek(weeks,line){
   clampAll();   // the festival, a visitor, the plants and worn things move stress after the clamp at the top
   notes.push(condition());
   if(s.stress>50) notes.push("It seems tense lately, maybe give it a rest.");
-  { const nx=fightDayLine(s,1); if(nx) notes.push(nx+(fightCond(s).name==="Top shape"?"":" A rest this week would have it fresh for it.")); }   // Josie looks ahead to next week's special fight
+  { const nx=aheadLines(s); if(nx) notes.push(nx); }   // Josie brings up what we signed up for, and a big cup it looks ready for
   if(s.petWeek!==PLAYER.week-1&&s.playWeek!==PLAYER.week-1) s.neglect=(s.neglect||0)+1;
   if(s.variant==="Scruffy"){ s.cleanRun=(s.petWeek===PLAYER.week-1||s.playWeek===PLAYER.week-1)?(s.cleanRun||0)+1:0; if(s.cleanRun>=4){ s.variant=null; notes.push("It's groomed itself back to looking smart."); } }
   if(s.stage!=="Mega"){

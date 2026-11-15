@@ -97,6 +97,8 @@ body.cal-open #r-cal{display:flex;flex-direction:column;gap:10px;flex:1 1 auto;m
 .cal-grid .ct{width:34px;height:26px;border:2px solid var(--brown);border-radius:6px;font:700 15px Fredoka,system-ui,sans-serif;color:#1a1300;box-shadow:0 3px 0 var(--brown);padding:0}
 .cal-grid .ct.no{opacity:.45}
 .cal-grid .ct.up{border-color:#b07c12}
+.cal-grid .ct.sg{position:relative}
+.cal-grid .ct.sg::after{content:'';position:absolute;top:-4px;right:-4px;width:9px;height:9px;border-radius:50%;background:#e9852e;border:2px solid var(--brown)}   /* signed up */
 .cal-grid .ct.on{outline:3px solid var(--gold);outline-offset:2px;transform:translateY(-2px)}
 .cal-grid .ce{font:700 13px Fredoka,system-ui,sans-serif;font-style:normal;color:var(--brown)}
 .cal-acts{display:grid;grid-template-columns:1fr 2fr;gap:10px}
