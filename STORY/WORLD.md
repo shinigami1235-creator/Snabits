@@ -101,6 +101,19 @@ League expeditions, the way MR2 ran them. Walt hands out a permit for each open 
 
 **Helena's journal,** one page per region, read in the Journal on the Expeditions screen (`EX_PAGES`): the Cinder Peak stone, the dojo banner, scans near stones, Josie's fourth birthday, the stones pointing past the map, the permit Victor signed, Walt not liking it, the lens that hums, the signal loudest at the stones, Celia's silence, Victor's letter, the notes under the barn floor, and Walt told to wait three days at the Rift's edge.
 
+## Team expeditions (Proposed, from Gid's calls on 15 Nov 2026)
+
+Deep expeditions for a team of three trained Snabits, drawn in `docs/art/team-expedition-concept.png`. Gid's calls are marked; the rest waits for his yes.
+
+- **When:** from grade C (Gid). Each open region gets a deep map past its regular one, and it opens once the team has reached the far end of the regular map.
+- **The team:** three Snabits from the ranch. Each has its own energy from its own Stamina, shown on its own card over the map. The one leading makes every move and faces each obstacle. Some deep obstacles need two stats at once, and two different Snabits have to cover them.
+- **Switching:** a different Snabit can take the lead at any time for 1 of its energy (Gid).
+- **Days and camps:** a deep expedition takes two weeks, split into days. Camp circles end the day, give everyone energy back and bring back anyone who's out. A wild Snabit can wander next to camp overnight.
+- **Fights:** a tag team (Gid). The leader fights first, and if it loses, the next one steps in against the same Snabit with whatever HP it has left. A Snabit that loses is out until the next camp and nothing worse (Gid). If all three are out, the team goes home with everything it found.
+- **Finds:** rarer items, bigger League bounties, the region's teacher as a guardian at the far end, and Pattern Stones.
+- **Stones:** the Kitsune and Vampire stones move to the deep maps of Dream Garden and Hollow Moor, so the first stones turn up at grade C as Gid asked. The Phoenix, Eagle, Yeti and Naga stones stay on the regular maps. Each of the seven planned specials goes on a deep map once it's drawn.
+- **The cost:** fatigue and stress on all three, so the player plans for it like a Major.
+
 ## Name sets
 
 Usual game names that read well anywhere, not tied to one country (Gid, 15 Nov 2026). No two cast names start with the same sound. Josie, Walt and Nora were Tala, Kiko and Nena until Gid asked for this rule (15 Nov 2026).

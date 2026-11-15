@@ -759,7 +759,7 @@ function awayProps(c, p, t, front) {
       c.fillStyle = '#ffd23f'; c.beginPath(); c.roundRect(x - 3.5, y - 3.5, 7, 7, 2); c.fill(); c.fillStyle = '#ffffff'; c.beginPath(); c.arc(x - 1.2, y - 1.2, 1, 0, 7); c.fill(); } return;
     case 'foe': if (!front) return; { const sp = p.fm && typeof chibiSpec === 'function' ? chibiSpec(p.fm) : null; if (!sp) return;
       const ppu = sp.cm / 100 * RANCH_PX_M / CHIBI.height(sp.stage, [], sp.family); c.save(); c.globalAlpha = p.fade == null ? 1 : p.fade;
-      c.translate(x, GROUND + (p.jy || 0)); c.scale(-ppu, ppu); c.translate(-100, -188); CHIBI.draw(c, sp, p.pose || 'idle', t); c.restore(); } return;
+      c.translate(x, GROUND + (p.jy || 0)); c.scale(p.right ? ppu : -ppu, ppu); c.translate(-100, -188); CHIBI.draw(c, sp, p.pose || 'idle', t); c.restore(); } return;   // right: a teammate walking the same way
   }
 }
 

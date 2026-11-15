@@ -96,12 +96,14 @@ function exDraw(cv, M, st, at, energy, emax, blocked, title) {
   for (let i = 0; i < 7; i++) { const sx = R() * W, sy = R() * H, sr = 20 + R() * 40, g = x.createRadialGradient(sx, sy, 1, sx, sy, sr); g.addColorStop(0, 'rgba(196,165,110,.16)'); g.addColorStop(1, 'rgba(196,165,110,0)'); x.fillStyle = g; x.fillRect(sx - sr, sy - sr, sr * 2, sr * 2); }
   x.strokeStyle = 'rgba(122,90,55,.55)'; x.lineWidth = 1.5; x.beginPath(); x.roundRect(5, 5, W - 10, H - 10, 7); x.stroke(); x.lineWidth = 0.7; x.beginPath(); x.roundRect(8.5, 8.5, W - 17, H - 17, 5); x.stroke();
   // energy: a pill with depth
+  if (energy != null) {   // a team shows each Snabit's energy on its own card instead
   x.fillStyle = ink; x.font = '700 12px Fredoka, system-ui'; x.fillText('Energy', 16, 27);
   const bx = 64, bw = W - 146; SC.depth(x, () => { x.beginPath(); x.roundRect(bx, 17, bw, 12, 6); }, '#d9c8a0', 2, 0.25);
   if (energy > 0) SC.depth(x, () => { x.beginPath(); x.roundRect(bx, 17, Math.max(12, bw * energy / emax), 12, 6); }, energy > 3 ? '#6fae4f' : '#d8823a', 0, 0);
   x.fillStyle = 'rgba(255,255,255,.35)'; x.fillRect(bx + 5, 19, Math.max(0, bw * Math.max(0, energy) / emax - 10), 2);
   x.fillStyle = ink; x.fillText(`${Math.max(0, energy)} of ${emax}`, W - 74, 27);
-  const P = n => [26 + n.c * (W - 52) / 6, 72 + n.r * 62], near = M.near(at), vis = k => st.seen.includes(k) || near.includes(k) || k === at;
+  }
+  const top = energy != null ? 72 : 52, P = n => [26 + n.c * (W - 52) / 6, top + n.r * 62], near = M.near(at), vis = k => st.seen.includes(k) || near.includes(k) || k === at;
   x.lineCap = 'round';
   for (const [a, b] of M.E) { const A = P(M.N[a]), B = P(M.N[b]), lit = vis(a) && vis(b);
     if (lit) { x.strokeStyle = '#9c7b52'; x.lineWidth = 5; x.setLineDash([]); x.beginPath(); x.moveTo(...A); x.lineTo(...B); x.stroke(); x.strokeStyle = '#d9c39a'; x.lineWidth = 2; x.setLineDash([3, 5]); x.beginPath(); x.moveTo(...A); x.lineTo(...B); x.stroke(); }
@@ -120,7 +122,7 @@ function exDraw(cv, M, st, at, energy, emax, blocked, title) {
   x.fillStyle = 'rgba(40,25,10,.25)'; x.beginPath(); x.ellipse(tx, ty + 13, 6, 2, 0, 0, 7); x.fill();
   SC.depth(x, () => { x.beginPath(); x.moveTo(tx, py + 15); x.bezierCurveTo(tx - 11, py + 2, tx - 9, py - 11, tx, py - 11); x.bezierCurveTo(tx + 9, py - 11, tx + 11, py + 2, tx, py + 15); }, '#e9852e', 1.5, 0.3);
   x.fillStyle = '#fff6dc'; x.beginPath(); x.arc(tx, py - 2, 3.6, 0, 7); x.fill();
-  if (title) { x.fillStyle = ink; x.font = '700 10px Fredoka, system-ui'; x.textAlign = 'right'; x.fillText(title, W - 16, H - 14); x.textAlign = 'left'; }
+  if (title) { x.fillStyle = ink; x.font = '700 10px Fredoka, system-ui'; x.textAlign = 'right'; x.fillText(title, W - 16, energy != null ? H - 14 : 24); x.textAlign = 'left'; }
   return P;
 }
 /* the map icons reuse the scene props from explore-art.js, scaled down onto the circle */
