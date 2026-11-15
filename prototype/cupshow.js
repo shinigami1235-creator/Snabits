@@ -189,7 +189,7 @@ const CUPSHOW = (() => {
     F.forEach((e, i) => { const y = top + i * rh, k = eo((t - 120 * i) / 300); c.save(); c.globalAlpha = k; c.translate(-(1 - k) * 30, 0);
       numBlock(c, i + 1, 12, y + (rh - nb) / 2, nb); tile(c, e, 12 + nb + 4, y + 2, rh - 4, t + i * 300, false);
       c.font = `700 ${Math.min(16, rh * 0.36)}px ${PIX}`; c.fillStyle = e.me ? '#ffc93c' : e.rook ? '#ffb04a' : '#fff'; c.textAlign = 'left'; c.textBaseline = 'middle';
-      c.fillText(e.name.replace(/^Rook's /, ''), 12 + nb + rh + 6, y + rh / 2, gx - (12 + nb + rh + 10)); c.restore(); });
+      c.fillText(e.name.replace(/^Rook's /, '').split(',')[0], 12 + nb + rh + 6, y + rh / 2, gx - (12 + nb + rh + 10)); c.restore(); });
     c.fillStyle = 'rgba(10,10,24,.55)'; c.fillRect(gx, top, cs * n, rh * n);
     c.strokeStyle = '#f4f0e6'; c.lineWidth = 2; c.strokeRect(gx, top, cs * n, rh * n);
     for (let k = 1; k < n; k++) { c.beginPath(); c.moveTo(gx + k * cs, top); c.lineTo(gx + k * cs, top + rh * n); c.moveTo(gx, top + k * rh); c.lineTo(gx + cs * n, top + k * rh); c.stroke(); }
@@ -215,7 +215,7 @@ const CUPSHOW = (() => {
       c.strokeStyle = 'rgba(255,255,255,.14)'; c.lineWidth = 10; for (let k = -4; k < 8; k++) { c.beginPath(); c.moveTo(x + k * 26, cy + ch); c.lineTo(x + k * 26 + ch * 0.7, cy); c.stroke(); }
       mon(c, e.spec, x + cw / 2, cy + ch * 0.9, ch * 0.62, t > 500 && t < 1300 && !flip ? 'determined' : 'idle', t + (flip ? 500 : 0), flip); c.restore();
       c.fillStyle = 'rgba(14,15,26,.92)'; c.beginPath(); c.roundRect(x - 2, cy + ch + 6, cw + 4, 30, 6); c.fill(); c.strokeStyle = e.me ? '#ffc93c' : e.rook ? '#ffb04a' : '#8a8fa8'; c.lineWidth = 2; c.stroke();
-      c.fillStyle = '#fff'; c.font = `700 17px ${PIX}`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(e.name.replace(/^Rook's /, ''), x + cw / 2, cy + ch + 21, cw - 8);
+      c.fillStyle = '#fff'; c.font = `700 17px ${PIX}`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(e.name.replace(/^Rook's /, '').split(',')[0], x + cw / 2, cy + ch + 21, cw - 8);
       c.fillStyle = '#c9cde0'; c.font = `500 13px ${PIX}`; c.fillText(e.line, x + cw / 2, cy + ch + 50, cw); c.restore(); };
     card(info.me, W * 0.06, false, info.me.cols || ['#4a7cc8', '#1c3264']); card(info.foe, W * 0.54, true, info.foe.cols || ['#d2505e', '#5c1a26']);
     if (t > 450) { const k = t < 650 ? 1.8 - 0.8 * eo((t - 450) / 200) : 1; c.save(); c.translate(W / 2, cy + ch * 0.5); c.scale(k, k); c.font = `700 40px ${PIX}`; c.textAlign = 'center'; c.textBaseline = 'middle';
@@ -256,7 +256,7 @@ const CUPSHOW = (() => {
       numBlock(c, r + 1, 12, y + (ph - 26) / 2, 26);
       SC.depth(c, () => { c.beginPath(); c.roundRect(42, y, pw - 30, ph, 7); }, e.me ? '#ffe8a8' : e.rook ? '#ffd2a0' : '#e9dcbc', 2, 0.25);
       tile(c, e, 46, y + 3, ph - 6, t + r * 300, false);
-      c.fillStyle = '#3a2618'; c.font = `700 ${Math.min(17, ph * 0.38)}px ${PIX}`; c.textAlign = 'left'; c.textBaseline = 'middle'; c.fillText(e.name.replace(/^Rook's /, ''), 46 + ph, y + ph * 0.38, pw - ph - 40);
+      c.fillStyle = '#3a2618'; c.font = `700 ${Math.min(17, ph * 0.38)}px ${PIX}`; c.textAlign = 'left'; c.textBaseline = 'middle'; c.fillText(e.name.replace(/^Rook's /, '').split(',')[0], 46 + ph, y + ph * 0.38, pw - ph - 40);
       c.fillStyle = '#7a6248'; c.font = `500 ${Math.min(13, ph * 0.28)}px ${PIX}`; c.fillText(e.me ? "Tala's ranch" : e.rook ? 'Rook' : e.breeder || '', 46 + ph, y + ph * 0.72, pw - ph - 40);
       c.restore(); });
   } });
