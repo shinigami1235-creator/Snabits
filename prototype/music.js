@@ -145,7 +145,7 @@ const TRACKS={
   /* a short tune for the drill itself: it counts in with a snare roll, loops its 8 bars while the drill plays, and a sting
      for the result (musSting) cuts it off. D major at 140, brighter and quicker than anything on the ranch */
   drill:{name:"Drill Time",bpm:140,lead:"sqep",lv:0.17,comp:"skank",bassK:"slap",startAt:7*16+12,xfade:0.6,
-    dr:{k:"x...x...x...x...",s:"....c.......c..x",h:"x.x.x.x.x.x.x.xo"},
+    dr:{k:"x...x...x...x...",s:"....x.......x...",h:"....x.......x.o."},   // a soft snare on the backbeat and few hats, since the clap and steady hats read as snapping
     bs:"R.R.O.R.R.R.5.O.",cp:"..C...C...C...C.",form:["A","A"],
     sec:{A:{ch:["D","G","Bm","A","D","G","Em|A","D"],mel:[
       "A4 - D5 - F#5 - A5 - - - F#5 - D5 - A4 -",
@@ -279,7 +279,7 @@ function musStep(tr,t,sp,hot){
   else{const sn=D.dr.s[s];if(sn==="x")dSnare(dst,t,.42);else if(sn==="c")dClap(dst,t,.5);else if(sn==="r")dRim(dst,t,.22);}
   if(D.dr.t){const tm=D.dr.t[s];if(tm==="t")dTom(dst,t,.5,105);else if(tm==="T")dTom(dst,t,.42,160);}   // toms for the arena drums
   const h=hot?"x":D.dr.h[s];
-  if(h==="x")dNoise(dst,t,.035,s%4===2?.13:.08,"highpass",8000);else if(h==="o")dNoise(dst,t,.2,.1,"highpass",7000);else if(h==="s")dNoise(dst,t,.03,s%2?.05:.08,"bandpass",6500,1.5);
+  if(h==="x")dNoise(dst,t,.035,s%4===2?.06:.035,"highpass",8000);else if(h==="o")dNoise(dst,t,.2,.05,"highpass",7000);   // hats sit low in the mixelse if(h==="s")dNoise(dst,t,.03,s%2?.05:.08,"bandpass",6500,1.5);
   if(b===0&&s===0&&!D.calm)dNoise(dst,t,1.3,.13,"highpass",4200);
   const bp=D.bs[s],root=ch.r+Math.ceil((33-ch.r)/12)*12;
   if(bp!=="."&&bp!=="-"){const m=bp==="O"?root+12:bp==="5"?root+7:root;iBass(dst,t,m,sp*holdLen(D.bs,s)*.8,D.bassK==="saw"?.17:.25,D.bassK);}
