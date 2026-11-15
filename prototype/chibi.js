@@ -2036,6 +2036,431 @@ const CHIBI = (() => {
       head: g => [g.cx, g.top + 2, g.bw * 0.46],
       face: (c, g, x, look) => g.stage === 'Mega' ? faceTwo(c, { ...g, cx: g.cx + g.bw * 0.12 }, x, look, { ey: 0.44, ex: 0.07, my: 0.62, s: 0.6 }) : faceTwo(c, g, x, look, { ey: 0.42, ex: 0.12, my: 0.6, s: by(g.stage, 0.58, 0.6, 0.6) })
     },
+    /* ---- batch 4, drawn 16 Nov 2026 for Gid's look-over (not wired yet) ---- */
+    /* Bloop: a jellyfish. Bit is a small frilly bell with stubby tentacles. Byte is a clear glowing bell with long wavy tentacles and frilled arms.
+       Mega is a man o' war: a tall shimmering sail on top, glowing spots, a curtain of long glowing tentacles and little fish circling it */
+    Bloop: {
+      dims: { Bit: [60, 40], Byte: [76, 52], Mega: [86, 58] }, float: true, glass: true, patternAfter: true, slots: { feet: false },
+      bottom(st) { return st === 'Bit' ? 146 : st === 'Byte' ? 120 : 104; }, height(st) { return this.dims[st][1] + by(st, 40, 66, 96); },
+      path(c, g, x) { const t = x ? x.t : 0, n = by(g.stage, 5, 7, 9), br = Math.sin(t / 500) * 0.04, w = g.bw * (1 + br), L = g.cx - w / 2;
+        c.beginPath(); c.moveTo(L, g.bot); c.bezierCurveTo(L, g.top - g.bh * 0.3, L + w, g.top - g.bh * 0.3, L + w, g.bot);
+        for (let i = 0; i < n; i++) c.quadraticCurveTo(L + w - (i + 0.5) * w / n, g.bot + 7, L + w - (i + 1) * w / n, g.bot); c.closePath(); },
+      behind(c, g, x) { const st = g.stage, n = by(st, 3, 5, 9), len = by(st, 16, 48, 78), gl = 0.6 + 0.4 * Math.sin(x.t / 400);
+        for (let i = 0; i < n; i++) { const tx = g.left + g.bw * (0.15 + 0.7 * i / (n - 1)), col = st === 'Mega' ? `rgba(${i % 2 ? '200,170,255' : '150,220,255'},${0.5 + 0.4 * gl})` : rgba(lt(x.body, 0.2), 0.8);
+          c.strokeStyle = col; c.lineWidth = st === 'Bit' ? 4 : 2.2; c.lineCap = 'round'; c.beginPath(); c.moveTo(tx, g.bot); for (let k = 1; k <= 6; k++) c.lineTo(tx + Math.sin(x.t / 300 + i + k * 0.9) * (st === 'Bit' ? 1.5 : 4) * k / 3, g.bot + k * len / 6); c.stroke(); }
+        if (st !== 'Bit') for (const sd of [-1, 1]) { c.strokeStyle = rgba(lt(x.acc, 0.3), 0.75); c.lineWidth = 6; c.beginPath(); c.moveTo(g.cx + sd * 6, g.bot); for (let k = 1; k <= 5; k++) c.lineTo(g.cx + sd * 6 + Math.sin(x.t / 350 + k + sd) * 5, g.bot + k * len * 0.12); c.stroke(); }   // frilled arms
+        if (st === 'Mega') { const sw = Math.sin(x.t / 700) * 3; const sg = c.createLinearGradient(g.cx - 30, g.top - 50, g.cx + 30, g.top); sg.addColorStop(0, 'rgba(160,140,255,.8)'); sg.addColorStop(0.5, 'rgba(120,220,255,.8)'); sg.addColorStop(1, 'rgba(255,170,230,.8)');   // the sail
+          c.fillStyle = sg; c.beginPath(); c.moveTo(g.cx - g.bw * 0.4, g.top + 8); c.quadraticCurveTo(g.cx - 20 + sw, g.top - 64, g.cx + 22 + sw, g.top - 50); c.quadraticCurveTo(g.cx + g.bw * 0.45, g.top - 20, g.cx + g.bw * 0.4, g.top + 8); c.closePath(); c.fill();
+          c.strokeStyle = 'rgba(255,255,255,.55)'; c.lineWidth = 1.2; for (let k = -2; k <= 2; k++) { c.beginPath(); c.moveTo(g.cx + k * 12, g.top + 4); c.quadraticCurveTo(g.cx + k * 8 + sw, g.top - 30, g.cx + k * 4 + 10 + sw, g.top - 46 + Math.abs(k) * 6); c.stroke(); } }
+        x.feet.push([g.cx, 182, 10]); },
+      inside(c, g, x) { const st = g.stage, gl = 0.6 + 0.4 * Math.sin(x.t / 400);
+        if (st === 'Bit') { c.fillStyle = rgba(lt(x.body, 0.3), 0.5); c.beginPath(); c.ellipse(g.cx, g.top + g.bh * 0.3, g.bw * 0.3, g.bh * 0.2, 0, 0, 7); c.fill(); return; }
+        for (let k = 0; k < 4; k++) { const a = k / 4 * Math.PI * 2 + 0.78; c.fillStyle = rgba(lt(x.acc, 0.3), 0.35 + 0.35 * gl); c.beginPath(); c.ellipse(g.cx + Math.cos(a) * g.bw * 0.12, g.top + g.bh * 0.62 + Math.sin(a) * g.bh * 0.12, g.bw * 0.07, g.bw * 0.05, a, 0, 7); c.fill(); }   // the glowing rings inside
+        if (st === 'Mega') for (let k = 0; k < 10; k++) { const a = k / 10 * Math.PI, px = g.cx + Math.cos(a) * g.bw * 0.4, py = g.bot - 6 - Math.sin(a) * g.bh * 0.5; c.fillStyle = `rgba(200,255,255,${0.4 + 0.5 * Math.sin(x.t / 200 + k)})`; c.beginPath(); c.arc(px, py, 2, 0, 7); c.fill(); } },
+      front(c, g, x) { if (g.stage !== 'Mega') return; for (let k = 0; k < 3; k++) { const a = x.t / 1500 + k * 2.1, px = g.cx + Math.cos(a) * g.bw * 0.9, py = g.bot + 30 + Math.sin(a) * 14, d = -Math.sin(a) > 0 ? 1 : -1;   // little fish circling
+          c.save(); c.translate(px, py); c.scale(d, 1); c.fillStyle = ['#ffb04a', '#7fd8ff', '#ff8fb0'][k]; c.beginPath(); c.ellipse(0, 0, 5, 2.8, 0, 0, 7); c.fill(); c.beginPath(); c.moveTo(-4, 0); c.lineTo(-8, -3); c.lineTo(-8, 3); c.closePath(); c.fill(); c.restore(); } },
+      hl: g => [g.left + g.bw * 0.16, g.top + g.bh * 0.6, g.left + g.bw * 0.2, g.top + g.bh * 0.2, g.left + g.bw * 0.4, g.top + g.bh * 0.02],
+      head: g => [g.cx, g.top + 2, g.bw * 0.44],
+      face: (c, g, x, look) => faceTwo(c, g, x, look, { ey: 0.42, ex: 0.16, my: 0.66, s: by(g.stage, 0.66, 0.74, 0.8) })
+    },
+    /* Sox: a sock. Bit is a striped sock standing on its toe end with a heel bump. Byte is a sock puppet: yarn hair, a stitched mouth line and a ribbed cuff.
+       Mega is a sock dragon: felt spikes down its back, wings made of odd socks, a long striped sock tail, and a darning needle for a horn */
+    Sox: {
+      dims: { Bit: [44, 68], Byte: [56, 82], Mega: [64, 90] }, ll: st => by(st, 4, 4, 4), slots: { feet: false },
+      bottom(st) { return 182 - this.ll(st); }, height(st) { return this.dims[st][1] + this.ll(st) + by(st, 6, 18, 30); },
+      path(c, g) { const r = g.bw / 2; c.beginPath(); c.moveTo(g.left, g.bot); c.lineTo(g.left, g.top + r); c.arc(g.cx, g.top + r, r, Math.PI, 0); c.lineTo(g.left + g.bw, g.bot - 10);
+        c.quadraticCurveTo(g.left + g.bw + (g.stage === 'Bit' ? 12 : 4), g.bot - 4, g.left + g.bw - 4, g.bot); c.closePath(); },
+      arms: 'stub', armW: st => by(st, 0, 5, 6), handR: st => by(st, 0, 4.5, 5), shoulderY: 0.56, armK: 0.75,
+      behind(c, g, x) { const st = g.stage;
+        for (const sd of [-1, 1]) { const fx = g.cx + sd * g.bw * 0.24, lift = Math.max(0, sd * x.walk) * 4; blob(c, fx, 182 - lift, 7, 4, dk(x.body, 0.2), sd < 0 ? x.L.legL : x.L.legR, x.t, 'foot'); x.feet.push([fx, 182 - lift, 6]); }
+        if (st === 'Mega') { const sw = Math.sin(x.t / 400);   // odd-sock wings, a striped tail and felt spikes
+          for (const sd of [-1, 1]) { c.save(); c.translate(g.cx + sd * g.bw * 0.4, g.top + g.bh * 0.32); c.rotate(sd * (-0.5 + sw * 0.15)); const wc = sd < 0 ? x.acc : x.parts;
+            c.fillStyle = rgb(dk(wc, 0.2)); roundBox(c, sd < 0 ? -50 : 0, -12, 50, 24, 12); c.fill(); c.fillStyle = rgb(wc); roundBox(c, sd < 0 ? -48 : 2, -12, 46, 20, 10); c.fill();
+            c.fillStyle = rgb(lt(wc, 0.4)); for (let k = 0; k < 3; k++) c.fillRect(sd < 0 ? -42 + k * 14 : 8 + k * 14, -12, 6, 20); c.restore(); }
+          c.strokeStyle = rgb(x.body); c.lineWidth = 12; c.lineCap = 'round'; c.beginPath(); c.moveTo(g.left + 6, g.bot - 6); c.bezierCurveTo(g.left - 30, g.bot, g.left - 40, g.bot - 30, g.left - 26 + sw * 4, g.bot - 46); c.stroke();
+          c.strokeStyle = rgb(lt(x.acc, 0.3)); c.lineWidth = 12; c.setLineDash([5, 7]); c.stroke(); c.setLineDash([]);
+          c.fillStyle = rgb(x.acc); for (let k = 0; k < 4; k++) { const a = Math.PI * (1.15 + k * 0.22), px = g.cx + Math.cos(a) * g.bw * 0.52, py = g.top + g.bw / 2 + Math.sin(a) * g.bw * 0.52; c.beginPath(); c.moveTo(px - 5, py + 3); c.lineTo(px + Math.cos(a) * 12, py + Math.sin(a) * 12); c.lineTo(px + 5, py + 3); c.closePath(); c.fill(); } } },
+      inside(c, g, x) { const st = g.stage; c.fillStyle = rgba(lt(x.acc, 0.35), 0.75); for (let k = 0; k < by(st, 3, 2, 2); k++) c.fillRect(g.left - 4, g.top + g.bh * (0.36 + k * 0.18), g.bw + 16, g.bh * 0.07);   // stripes
+        c.fillStyle = rgba(dk(x.body, 0.15), 0.8); c.beginPath(); c.ellipse(g.cx, g.top + g.bw * 0.25, g.bw * 0.3, g.bw * 0.2, 0, Math.PI, 0); c.fill();   // the darker toe
+        if (st !== 'Bit') { c.fillStyle = rgb(dk(x.body, 0.25)); c.fillRect(g.left - 2, g.bot - 12, g.bw + 6, 12); c.strokeStyle = rgba(lt(x.body, 0.2), 0.7); c.lineWidth = 1.5; for (let k = 0; k < 8; k++) { c.beginPath(); c.moveTo(g.left + 2 + k * g.bw / 7, g.bot - 12); c.lineTo(g.left + 2 + k * g.bw / 7, g.bot); c.stroke(); } } },
+      front(c, g, x) { const st = g.stage; if (st === 'Bit') return;
+        c.strokeStyle = rgb(lt(x.parts, 0.2)); c.lineWidth = 3; c.lineCap = 'round'; for (let k = -2; k <= 2; k++) { c.beginPath(); c.moveTo(g.cx + k * 4, g.top + 2); c.quadraticCurveTo(g.cx + k * 8, g.top - 12, g.cx + k * 10 + Math.sin(x.t / 300 + k) * 2, g.top - 8); c.stroke(); }   // yarn hair
+        if (st === 'Mega') { c.save(); c.translate(g.cx + 6, g.top + 2); c.rotate(0.3); c.fillStyle = '#c9ced8'; c.beginPath(); c.moveTo(-2, 0); c.lineTo(0, -26); c.lineTo(2, 0); c.closePath(); c.fill(); c.strokeStyle = '#8a8f99'; c.lineWidth = 1; c.beginPath(); c.ellipse(0, -20, 1, 3, 0, 0, 7); c.stroke(); c.restore(); } },
+      hl: g => [g.left + g.bw * 0.14, g.top + g.bh * 0.5, g.left + g.bw * 0.16, g.top + g.bh * 0.2, g.left + g.bw * 0.36, g.top + g.bh * 0.04],
+      head: g => [g.cx, g.top + 2, g.bw * 0.5],
+      face: (c, g, x, look) => faceTwo(c, g, x, look, { ey: 0.24, ex: 0.18, my: 0.36, s: by(g.stage, 0.6, 0.7, 0.76) })
+    },
+    /* Cuppy: a cupcake. Bit is a plain muffin in a pleated paper cup. Byte is a cupcake with a tall swirl of frosting, sprinkles and a cherry.
+       Mega is a three-tier cake: frosting dripping off each tier, strawberries round the middle, and candles burning on top */
+    Cuppy: {
+      dims: { Bit: [58, 56], Byte: [64, 62], Mega: [92, 96] }, ll: st => by(st, 4, 4, 6),
+      bottom(st) { return 182 - this.ll(st); }, height(st) { return this.dims[st][1] + this.ll(st) + by(st, 10, 44, 34); },
+      path(c, g) { if (g.stage === 'Mega') { const W = [0.6, 0.8, 1].map(w => g.bw * w / 2), Y = [g.top, g.top + g.bh * 0.3, g.top + g.bh * 0.62, g.bot], P = [];   // three tiers as one stepped outline
+          P.push([g.cx - W[2], Y[3]], [g.cx - W[2], Y[2]], [g.cx - W[1], Y[2]], [g.cx - W[1], Y[1]], [g.cx - W[0], Y[1]], [g.cx - W[0], Y[0]], [g.cx + W[0], Y[0]], [g.cx + W[0], Y[1]], [g.cx + W[1], Y[1]], [g.cx + W[1], Y[2]], [g.cx + W[2], Y[2]], [g.cx + W[2], Y[3]]);
+          c.beginPath(); c.moveTo((P[0][0] + P[11][0]) / 2, Y[3]); for (let i = 0; i < P.length; i++) c.arcTo(P[i][0], P[i][1], P[(i + 1) % P.length][0], P[(i + 1) % P.length][1], 5); c.closePath(); return; }
+        const cup = g.top + g.bh * 0.42; c.beginPath(); c.moveTo(g.left + 6, g.bot); c.lineTo(g.left - 2, cup); c.bezierCurveTo(g.left - 6, g.top, g.left + g.bw + 6, g.top, g.left + g.bw + 2, cup); c.lineTo(g.left + g.bw - 6, g.bot); c.closePath(); },
+      arms: 'stub', armW: st => by(st, 0, 5, 6), handR: st => by(st, 0, 4.5, 5), shoulderY: 0.62, armK: 0.75,
+      behind(c, g, x) { const st = g.stage; for (const sd of [-1, 1]) { const fx = g.cx + sd * g.bw * 0.24, lift = Math.max(0, sd * x.walk) * 4; blob(c, fx, 182 - lift, 7, 4, dk(x.parts, 0.15), sd < 0 ? x.L.legL : x.L.legR, x.t, 'foot'); x.feet.push([fx, 182 - lift, 6]); }
+        if (st === 'Byte') { const fr = lt(x.acc, 0.45), cy = g.top + g.bh * 0.3; for (const [w, dy] of [[1.12, 0], [0.86, -14], [0.6, -26], [0.32, -36]]) { c.fillStyle = rgb(dk(fr, 0.12)); c.beginPath(); c.ellipse(g.cx, cy + dy + 3, g.bw * w / 2, 9, 0, 0, 7); c.fill(); c.fillStyle = rgb(fr); c.beginPath(); c.ellipse(g.cx, cy + dy, g.bw * w / 2, 9, 0, 0, 7); c.fill(); }   // the frosting swirl and its cherry
+          c.fillStyle = '#d8333f'; c.beginPath(); c.arc(g.cx + 2, cy - 46, 7, 0, 7); c.fill(); c.strokeStyle = '#5a7a3a'; c.lineWidth = 1.6; c.beginPath(); c.moveTo(g.cx + 3, cy - 52); c.quadraticCurveTo(g.cx + 8, cy - 60, g.cx + 12, cy - 60); c.stroke();
+          const cols = ['#ff6b8a', '#6bc6ff', '#ffe066', '#8ae06b', '#c08bff']; for (let k = 0; k < 14; k++) { c.fillStyle = cols[k % 5]; c.save(); c.translate(g.cx + ((k * 37) % 50 - 25) * g.bw / 64, cy - 30 + ((k * 23) % 36)); c.rotate(k); c.fillRect(-3, -1, 6, 2); c.restore(); } }
+        if (st === 'Mega') for (let k = -2; k <= 2; k++) { const cx0 = g.cx + k * 10, top = g.top - 18 - (k === 0 ? 4 : 0);   // candles
+          c.fillStyle = ['#ff8fb0', '#8fd0ff', '#fff2a0'][(k + 3) % 3]; c.fillRect(cx0 - 2.5, top, 5, 20); const f = 1 + Math.sin(x.t / 90 + k) * 0.12; c.fillStyle = '#ff9a3c'; c.beginPath(); c.moveTo(cx0, top - 10 * f); c.quadraticCurveTo(cx0 + 4, top - 3, cx0, top); c.quadraticCurveTo(cx0 - 4, top - 3, cx0, top - 10 * f); c.fill(); c.fillStyle = '#fff4c2'; c.beginPath(); c.arc(cx0, top - 3, 1.6, 0, 7); c.fill(); } },
+      inside(c, g, x) { const st = g.stage, liner = mix(x.parts, [240, 200, 160], 0.4);
+        if (st === 'Mega') { const T = [[0.6, 0, 0.3], [0.8, 0.3, 0.32], [1, 0.62, 0.38]], fr = lt(x.acc, 0.5); T.forEach(([w, y0, h], i) => { const L = g.cx - g.bw * w / 2, y = g.top + g.bh * y0;   // frosting dripping off each tier
+            c.fillStyle = rgb(fr); c.beginPath(); c.moveTo(L - 2, y); c.lineTo(L + g.bw * w + 2, y); c.lineTo(L + g.bw * w + 2, y + 6); for (let k = 7; k >= 0; k--) { const px = L + g.bw * w * k / 7; c.quadraticCurveTo(px + g.bw * w / 14, y + 6 + (k % 2 ? 10 : 4), px, y + 6); } c.closePath(); c.fill();
+            if (i === 2) for (let k = 0; k < 5; k++) { const px = L + g.bw * w * (0.1 + k * 0.2), py = y + 16; c.fillStyle = '#e8394a'; c.beginPath(); c.moveTo(px - 5, py - 4); c.quadraticCurveTo(px, py - 8, px + 5, py - 4); c.quadraticCurveTo(px + 3, py + 5, px, py + 6); c.quadraticCurveTo(px - 3, py + 5, px - 5, py - 4); c.fill(); } }); return; }
+        const cup = g.top + g.bh * 0.42; c.fillStyle = rgba(liner, 0.95); c.beginPath(); c.moveTo(g.left + 6, g.bot + 2); c.lineTo(g.left - 3, cup); c.lineTo(g.left + g.bw + 3, cup); c.lineTo(g.left + g.bw - 6, g.bot + 2); c.closePath(); c.fill();   // the pleated paper cup
+        c.strokeStyle = rgba(dk(liner, 0.25), 0.7); c.lineWidth = 1.5; for (let k = 1; k < 8; k++) { const fx = k / 8; c.beginPath(); c.moveTo(g.left - 3 + (g.bw + 6) * fx, cup); c.lineTo(g.left + 6 + (g.bw - 12) * fx, g.bot); c.stroke(); }
+        if (st === 'Bit') { c.fillStyle = rgba(dk(x.body, 0.3), 0.5); for (let k = 0; k < 5; k++) { c.beginPath(); c.arc(g.left + g.bw * (0.2 + k * 0.15), g.top + g.bh * (0.18 + (k % 2) * 0.1), 2, 0, 7); c.fill(); } } },
+      hl: g => [g.left + g.bw * 0.14, g.top + g.bh * 0.4, g.left + g.bw * 0.16, g.top + g.bh * 0.16, g.left + g.bw * 0.36, g.top + g.bh * 0.04],
+      head: g => [g.cx, g.top + 2, g.bw * 0.46],
+      face: (c, g, x, look) => faceTwo(c, g, x, look, g.stage === 'Mega' ? { ey: 0.42, ex: 0.14, my: 0.55, s: 0.74 } : { ey: 0.6, ex: 0.16, my: 0.78, s: by(g.stage, 0.6, 0.66, 0.7) })
+    },
+    /* Suds: soap. Bit is a soap bubble with a rainbow sheen. Byte is a bar of soap with foam piled on top and bubbles drifting off.
+       Mega is a clawfoot bathtub: a mountain of foam on top, gold claw feet, and bubbles of every size floating up */
+    Suds: {
+      dims: { Bit: [54, 54], Byte: [76, 52], Mega: [104, 62] }, ll: st => by(st, 0, 4, 12),
+      bottom(st) { return st === 'Bit' ? 150 : 182 - this.ll(st); }, height(st) { return this.dims[st][1] + this.ll(st) + by(st, 34, 26, 50); },
+      path(c, g) { if (g.stage === 'Bit') { c.beginPath(); c.arc(g.cx, g.top + g.bh / 2, g.bw / 2, 0, 7); return; } if (g.stage === 'Byte') { roundBox(c, g.left, g.top, g.bw, g.bh, 18); return; }
+        c.beginPath(); c.moveTo(g.left - 6, g.top); c.lineTo(g.left + g.bw + 6, g.top); c.lineTo(g.left + g.bw + 2, g.top + 8); c.bezierCurveTo(g.left + g.bw, g.bot + 4, g.left, g.bot + 4, g.left - 2, g.top + 8); c.closePath(); },
+      arms: 'stub', armW: st => by(st, 0, 5, 6), handR: st => by(st, 0, 4.5, 5), shoulderY: 0.56, armK: 0.75,
+      bub(c, px, py, r, a) { c.fillStyle = `rgba(220,240,255,${0.25 * a})`; c.beginPath(); c.arc(px, py, r, 0, 7); c.fill(); c.strokeStyle = `rgba(255,255,255,${0.85 * a})`; c.lineWidth = 1.2; c.stroke();
+        c.strokeStyle = `rgba(255,170,230,${0.6 * a})`; c.beginPath(); c.arc(px, py, r - 1.5, 0.3, 1.4); c.stroke(); c.fillStyle = `rgba(255,255,255,${0.9 * a})`; c.beginPath(); c.arc(px - r * 0.35, py - r * 0.35, r * 0.18, 0, 7); c.fill(); },
+      foam(c, cx0, y0, w, n, t) { for (let k = 0; k < n; k++) { const px = cx0 - w / 2 + (k + 0.5) * w / n, r = 7 + ((k * 7) % 5) + Math.sin(t / 600 + k) * 0.8; c.fillStyle = 'rgba(205,220,235,.95)'; c.beginPath(); c.arc(px, y0 - r * 0.4 + 2, r, 0, 7); c.fill(); c.fillStyle = '#ffffff'; c.beginPath(); c.arc(px, y0 - r * 0.4, r, 0, 7); c.fill(); } },
+      behind(c, g, x) { const st = g.stage;
+        if (st === 'Bit') { x.feet.push([g.cx, 182, 8]); return; }
+        if (st === 'Byte') { for (const sd of [-1, 1]) { const fx = g.cx + sd * g.bw * 0.26, lift = Math.max(0, sd * x.walk) * 4; blob(c, fx, 182 - lift, 7, 4, dk(x.body, 0.2), sd < 0 ? x.L.legL : x.L.legR, x.t, 'foot'); x.feet.push([fx, 182 - lift, 6]); } return; }
+        for (const sd of [-1, 1]) for (const k of [0.16, 0.84]) { if ((k < 0.5) !== (sd < 0)) continue; const fx = g.left + g.bw * k, lift = Math.max(0, sd * x.walk) * 3;   // gold claw feet
+          c.fillStyle = '#b8902e'; c.beginPath(); c.moveTo(fx - 5, g.bot - 6); c.lineTo(fx + 5, g.bot - 6); c.lineTo(fx + 7, 180 - lift); c.lineTo(fx - 7, 180 - lift); c.closePath(); c.fill(); c.fillStyle = '#e9c45a'; for (const d of [-5, 0, 5]) { c.beginPath(); c.arc(fx + d, 181 - lift, 2.6, 0, 7); c.fill(); } x.feet.push([fx, 182 - lift, 7]); }
+        this.foam(c, g.cx, g.top + 2, g.bw * 1.05, 7, x.t); this.foam(c, g.cx - 4, g.top - 12, g.bw * 0.7, 5, x.t + 300); this.foam(c, g.cx + 2, g.top - 24, g.bw * 0.36, 3, x.t + 600); },
+      inside(c, g, x) { const st = g.stage;
+        if (st === 'Bit') { const sh = c.createLinearGradient(g.left, g.top, g.left + g.bw, g.bot); sh.addColorStop(0, 'rgba(255,170,230,.35)'); sh.addColorStop(0.5, 'rgba(170,230,255,.2)'); sh.addColorStop(1, 'rgba(200,255,190,.35)'); c.fillStyle = sh; c.fillRect(g.left - 4, g.top - 4, g.bw + 8, g.bh + 8); return; }
+        if (st === 'Byte') { c.strokeStyle = rgba(dk(x.body, 0.25), 0.6); c.lineWidth = 2; c.beginPath(); c.ellipse(g.cx, g.top + g.bh * 0.55, g.bw * 0.38, g.bh * 0.32, 0, 0, 7); c.stroke(); return; }   // an engraved oval
+        c.fillStyle = 'rgba(255,255,255,.3)'; c.fillRect(g.left + 8, g.top + 10, 5, g.bh - 24); c.strokeStyle = rgba(dk(x.body, 0.3), 0.5); c.lineWidth = 2; c.beginPath(); c.moveTo(g.left, g.top + 9); c.lineTo(g.left + g.bw, g.top + 9); c.stroke(); },
+      front(c, g, x) { const st = g.stage; if (st === 'Byte') this.foam(c, g.cx, g.top + 3, g.bw * 0.9, 5, x.t);
+        const n = by(st, 2, 4, 8); for (let k = 0; k < n; k++) { const ph = (x.t / (st === 'Mega' ? 2200 : 1800) + k / n) % 1, r = by(st, 4, 5, 4) + (k % 3) * 3; this.bub(c, g.cx + Math.sin(ph * 5 + k * 2) * g.bw * 0.5 + (k - n / 2) * 4, g.top - 10 - ph * 70, r, 1 - ph); } },
+      hl: g => [g.left + g.bw * 0.14, g.top + g.bh * 0.6, g.left + g.bw * 0.16, g.top + g.bh * 0.24, g.left + g.bw * 0.36, g.top + g.bh * 0.08],
+      head: g => [g.cx, g.top + 2, g.bw * 0.46],
+      face: (c, g, x, look) => faceTwo(c, g, x, look, { ey: by(g.stage, 0.44, 0.48, 0.42), ex: 0.16, my: by(g.stage, 0.66, 0.7, 0.62), s: by(g.stage, 0.7, 0.74, 0.82) })
+    },
+    /* Scoop: ice cream. Bit is one scoop melting on a waffle cone it hops on. Byte is a double scoop in two flavours with sprinkles and a wafer stick.
+       Mega is a sundae: a tall glass with three scoops on top, whipped cream, a cherry, wafer fans like wings, and chocolate running down the glass */
+    Scoop: {
+      dims: { Bit: [58, 50], Byte: [62, 88], Mega: [80, 70] }, cl: st => by(st, 28, 30, 0), slots: { feet: false },
+      bottom(st) { return st === 'Mega' ? 168 : 184 - this.cl(st); }, height(st) { return this.dims[st][1] + this.cl(st) + by(st, 6, 14, 76); },
+      circ(g) { if (g.stage === 'Bit') return [[g.top + g.bh / 2, g.bw / 2]]; const r1 = g.bw * 0.42, r2 = g.bw / 2; return [[g.top + r1, r1], [g.bot - r2, r2]]; },
+      path(c, g) { if (g.stage === 'Mega') { c.beginPath(); c.moveTo(g.left - 4, g.top); c.lineTo(g.left + g.bw + 4, g.top); c.bezierCurveTo(g.left + g.bw, g.top + g.bh * 0.7, g.cx + 10, g.bot - 6, g.cx + 6, g.bot); c.lineTo(g.cx - 6, g.bot); c.bezierCurveTo(g.cx - 10, g.bot - 6, g.left, g.top + g.bh * 0.7, g.left - 4, g.top); c.closePath(); return; }
+        const C = this.circ(g); c.beginPath(); if (C.length === 1) { const [cy, r] = C[0]; c.arc(g.cx, cy, r, Math.PI * 0.95, Math.PI * 2.05); for (let k = 0; k <= 6; k++) { const px = g.cx + r - k * 2 * r / 6; c.quadraticCurveTo(px + r / 6, cy + r * (k % 2 ? 0.9 : 0.5), px, cy + r * 0.45); } c.closePath(); return; }
+        const [A, B] = C, d = B[0] - A[0], h = (d * d + A[1] * A[1] - B[1] * B[1]) / (2 * d), w = Math.sqrt(Math.max(1, A[1] * A[1] - h * h)), ja = Math.atan2(h, w), jb = Math.atan2(h - d, w);
+        c.arc(g.cx, A[0], A[1], Math.PI - ja, Math.PI * 2 + ja); c.arc(g.cx, B[0], B[1], jb, Math.PI - jb); c.closePath(); },
+      behind(c, g, x) { const st = g.stage, waf = [214, 160, 96];
+        if (st !== 'Mega') { const hop = x.walk ? Math.max(0, Math.sin(x.t / 200)) * 4 : 0, ct = g.bot - 6, cw = g.bw * 0.4, tip = 183 - hop;   // the waffle cone
+          c.fillStyle = rgb(dk(waf, 0.25)); c.beginPath(); c.moveTo(g.cx - cw, ct); c.lineTo(g.cx + cw, ct); c.lineTo(g.cx, tip); c.closePath(); c.fill(); c.fillStyle = rgb(waf); c.beginPath(); c.moveTo(g.cx - cw + 2, ct); c.lineTo(g.cx + cw - 2, ct); c.lineTo(g.cx, tip - 3); c.closePath(); c.fill();
+          c.save(); c.clip(); c.strokeStyle = rgba(dk(waf, 0.3), 0.7); c.lineWidth = 1.4; for (let k = -4; k <= 4; k++) { c.beginPath(); c.moveTo(g.cx + k * 7, ct); c.lineTo(g.cx + k * 7 + 30, tip); c.moveTo(g.cx + k * 7, ct); c.lineTo(g.cx + k * 7 - 30, tip); c.stroke(); } c.restore(); x.feet.push([g.cx, tip, 4]);
+          if (st === 'Byte') { c.fillStyle = rgb(lt(waf, 0.15)); c.save(); c.translate(g.cx + g.bw * 0.3, g.top + 8); c.rotate(0.4); roundBox(c, -4, -20, 8, 26, 2); c.fill(); c.restore(); } return; }
+        const sc = [x.body, mix(x.acc, [255, 190, 210], 0.4), [120, 80, 55]], sx = [g.cx - 20, g.cx + 20, g.cx];   // three scoops, wafer fans, whipped cream and a cherry
+        for (const sd of [-1, 1]) { c.save(); c.translate(g.cx + sd * 26, g.top - 26); c.rotate(sd * 0.7); c.fillStyle = rgb(waf); c.beginPath(); c.moveTo(0, 8); for (let k = 0; k <= 4; k++) { const a = -Math.PI / 2 + (k - 2) * 0.32; c.lineTo(Math.cos(a) * 30, Math.sin(a) * 30 + 8); } c.closePath(); c.fill();
+          c.strokeStyle = rgba(dk(waf, 0.3), 0.7); c.lineWidth = 1.2; for (let k = 0; k <= 4; k++) { const a = -Math.PI / 2 + (k - 2) * 0.32; c.beginPath(); c.moveTo(0, 8); c.lineTo(Math.cos(a) * 30, Math.sin(a) * 30 + 8); c.stroke(); } c.restore(); }
+        [0, 1, 2].forEach(i => { const py = g.top - (i === 2 ? 26 : 8); c.fillStyle = rgb(dk(sc[i], 0.15)); c.beginPath(); c.arc(sx[i], py + 2, 17, 0, 7); c.fill(); c.fillStyle = rgb(sc[i]); c.beginPath(); c.arc(sx[i], py, 17, 0, 7); c.fill(); c.fillStyle = 'rgba(255,255,255,.35)'; c.beginPath(); c.arc(sx[i] - 6, py - 6, 4, 0, 7); c.fill(); });
+        c.fillStyle = '#ffffff'; for (const [ox, oy, r] of [[-8, -44, 9], [8, -44, 9], [0, -52, 9], [0, -60, 6]]) { c.beginPath(); c.arc(g.cx + ox, g.top + oy, r, 0, 7); c.fill(); }
+        c.fillStyle = '#d8333f'; c.beginPath(); c.arc(g.cx + 2, g.top - 68, 6, 0, 7); c.fill(); c.strokeStyle = '#5a7a3a'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(g.cx + 3, g.top - 73); c.quadraticCurveTo(g.cx + 8, g.top - 80, g.cx + 12, g.top - 79); c.stroke();
+        c.fillStyle = '#bfe3f0'; c.fillRect(g.cx - 4, g.bot - 2, 8, 182 - g.bot - 4); c.beginPath(); c.ellipse(g.cx, 180, 20, 4, 0, 0, 7); c.fill(); x.feet.push([g.cx, 182, 14]); },
+      inside(c, g, x) { const st = g.stage;
+        if (st === 'Byte') { const [A] = this.circ(g); c.fillStyle = rgba(mix(x.acc, [255, 190, 210], 0.4), 0.85); c.beginPath(); c.arc(g.cx, A[0], A[1] + 2, 0, 7); c.fill(); }   // the second flavour on top
+        if (st !== 'Mega') { const cols = ['#ff6b8a', '#6bc6ff', '#ffe066', '#8ae06b', '#c08bff']; for (let k = 0; k < by(st, 6, 14, 0); k++) { c.fillStyle = cols[k % 5]; c.save(); c.translate(g.left + ((k * 37) % 100) / 100 * g.bw, g.top + ((k * 23) % 40) / 100 * g.bh); c.rotate(k); c.fillRect(-3, -1, 6, 2); c.restore(); } return; }
+        c.fillStyle = 'rgba(255,255,255,.35)'; c.fillRect(g.left + 10, g.top + 6, 5, g.bh * 0.6); c.fillStyle = rgba([120, 80, 55], 0.95); c.beginPath(); c.moveTo(g.left - 4, g.top); c.lineTo(g.left + g.bw + 4, g.top);   // chocolate running down the glass
+        for (let k = 8; k >= 0; k--) { const px = g.left - 4 + (g.bw + 8) * k / 8; c.quadraticCurveTo(px + (g.bw + 8) / 16, g.top + (k % 3 ? 10 : 22), px, g.top + 4); } c.closePath(); c.fill(); },
+      hl: g => [g.left + g.bw * 0.16, g.top + g.bh * 0.5, g.left + g.bw * 0.18, g.top + g.bh * 0.24, g.left + g.bw * 0.36, g.top + g.bh * 0.08],
+      head: g => [g.cx, g.top + 2, g.bw * 0.46],
+      face: (c, g, x, look) => faceTwo(c, g, x, look, g.stage === 'Mega' ? { ey: 0.44, ex: 0.15, my: 0.66, s: 0.76 } : g.stage === 'Byte' ? { ey: 0.68, ex: 0.16, my: 0.82, s: 0.7 } : { ey: 0.46, ex: 0.17, my: 0.66, s: 0.66 })
+    },
+    /* Tome: a book. Bit is a closed notebook with a spine stripe and an elastic band. Byte is a book standing open, pages fluttering and a ribbon bookmark hanging.
+       Mega is a spellbook: it floats open over a magic circle, gold corners on its cover, runes circling it and loose pages drifting round */
+    Tome: {
+      dims: { Bit: [50, 62], Byte: [88, 58], Mega: [100, 66] }, ll: st => by(st, 5, 5, 0),
+      bottom(st) { return st === 'Mega' ? 150 : 182 - this.ll(st); }, height(st) { return this.dims[st][1] + this.ll(st) + by(st, 6, 20, 48); },
+      path(c, g) { if (g.stage === 'Bit') { roundBox(c, g.left, g.top, g.bw, g.bh, 6); return; }
+        const dip = g.stage === 'Mega' ? 8 : 6; c.beginPath(); c.moveTo(g.cx, g.top + dip); c.quadraticCurveTo(g.left + g.bw * 0.3, g.top - 4, g.left, g.top + 4); c.lineTo(g.left, g.bot); c.quadraticCurveTo(g.left + g.bw * 0.3, g.bot - 8, g.cx, g.bot + 2);
+        c.quadraticCurveTo(g.left + g.bw * 0.7, g.bot - 8, g.left + g.bw, g.bot); c.lineTo(g.left + g.bw, g.top + 4); c.quadraticCurveTo(g.left + g.bw * 0.7, g.top - 4, g.cx, g.top + dip); c.closePath(); },
+      arms: 'stub', armW: st => by(st, 0, 5, 0), handR: st => by(st, 0, 4.5, 0), shoulderY: 0.6, armK: 0.75,
+      behind(c, g, x) { const st = g.stage, cover = dk(x.body, 0.35);
+        if (st === 'Mega') { const gl = 0.6 + 0.4 * Math.sin(x.t / 400);   // the magic circle, the cover behind the pages, runes circling
+          c.strokeStyle = rgba(lt(x.acc, 0.3), 0.5 + 0.3 * gl); c.lineWidth = 2; c.beginPath(); c.ellipse(g.cx, 178, g.bw * 0.6, 7, 0, 0, 7); c.stroke(); c.beginPath(); c.ellipse(g.cx, 178, g.bw * 0.45, 5, 0, 0, 7); c.stroke();
+          for (let k = 0; k < 6; k++) { const a = k / 6 * Math.PI * 2 + x.t / 2000; c.beginPath(); c.moveTo(g.cx + Math.cos(a) * g.bw * 0.45, 178 + Math.sin(a) * 5); c.lineTo(g.cx + Math.cos(a + 2.1) * g.bw * 0.45, 178 + Math.sin(a + 2.1) * 5); c.stroke(); }
+          c.fillStyle = rgb(cover); c.beginPath(); c.moveTo(g.cx, g.top + 2); c.lineTo(g.left - 8, g.top - 2); c.lineTo(g.left - 8, g.bot + 6); c.lineTo(g.cx, g.bot + 8); c.lineTo(g.left + g.bw + 8, g.bot + 6); c.lineTo(g.left + g.bw + 8, g.top - 2); c.closePath(); c.fill();
+          c.fillStyle = '#e9b23a'; for (const [px, py] of [[g.left - 8, g.top - 2], [g.left - 8, g.bot + 6], [g.left + g.bw + 8, g.top - 2], [g.left + g.bw + 8, g.bot + 6]]) { c.beginPath(); c.moveTo(px, py); c.lineTo(px + (px < g.cx ? 10 : -10), py); c.lineTo(px, py + (py < g.cx ? 10 : -10)); c.closePath(); c.fill(); }
+          x.feet.push([g.cx, 182, g.bw * 0.4]); return; }
+        if (st === 'Byte') { c.fillStyle = rgb(cover); c.beginPath(); c.moveTo(g.cx, g.top + 4); c.lineTo(g.left - 5, g.top); c.lineTo(g.left - 5, g.bot + 4); c.lineTo(g.cx, g.bot + 6); c.lineTo(g.left + g.bw + 5, g.bot + 4); c.lineTo(g.left + g.bw + 5, g.top); c.closePath(); c.fill();
+          c.fillStyle = rgb(x.acc); c.fillRect(g.cx - 2, g.bot, 4, 18 + Math.sin(x.t / 400) * 2); c.beginPath(); c.moveTo(g.cx - 2, g.bot + 18); c.lineTo(g.cx + 2, g.bot + 18); c.lineTo(g.cx, g.bot + 14); c.fill(); }   // the ribbon bookmark
+        for (const sd of [-1, 1]) { const fx = g.cx + sd * g.bw * (st === 'Bit' ? 0.24 : 0.3), lift = Math.max(0, sd * x.walk) * 4; blob(c, fx, 182 - lift, 7, 4, dk(cover, 0.1), sd < 0 ? x.L.legL : x.L.legR, x.t, 'foot'); x.feet.push([fx, 182 - lift, 6]); } },
+      inside(c, g, x) { const st = g.stage, cover = dk(x.body, 0.35);
+        if (st === 'Bit') { c.fillStyle = rgb(cover); c.fillRect(g.left - 2, g.top - 2, 10, g.bh + 4); c.fillStyle = rgb(x.acc); c.fillRect(g.left + g.bw - 12, g.top - 2, 5, g.bh + 4); return; }   // spine stripe and elastic band
+        c.fillStyle = rgba(mix(x.body, [250, 244, 228], 0.7), 0.9); c.fillRect(g.left - 2, g.top - 4, g.bw + 4, g.bh + 12);   // paper
+        c.strokeStyle = rgba(dk(x.body, 0.35), 0.35); c.lineWidth = 1.2; for (let k = 0; k < 6; k++) for (const sd of [-1, 1]) { const y0 = g.top + g.bh * (0.2 + k * 0.12); if (y0 > g.top + g.bh * 0.3 && y0 < g.top + g.bh * 0.82 && false) continue; c.beginPath(); c.moveTo(g.cx + sd * 8, y0); c.lineTo(g.cx + sd * g.bw * 0.42, y0); c.stroke(); }
+        c.strokeStyle = rgba(dk(x.body, 0.3), 0.5); c.beginPath(); c.moveTo(g.cx, g.top + 6); c.lineTo(g.cx, g.bot); c.stroke();
+        if (st === 'Byte') { const fl = Math.sin(x.t / 300); c.fillStyle = 'rgba(255,252,240,.95)'; c.beginPath(); c.moveTo(g.cx, g.top + 4); c.quadraticCurveTo(g.cx + 10, g.top - 12 - fl * 6, g.cx + g.bw * 0.3, g.top - 6 - fl * 8); c.lineTo(g.cx + g.bw * 0.3, g.top + 14); c.quadraticCurveTo(g.cx + 10, g.top + 6, g.cx, g.top + 20); c.closePath(); c.fill(); } },
+      front(c, g, x) { if (g.stage !== 'Mega') return; const gl = 0.6 + 0.4 * Math.sin(x.t / 400);
+        c.font = '700 13px serif'; c.textAlign = 'center'; const R = ['ᚠ', 'ᚢ', 'ᚦ', 'ᚨ', 'ᚱ', 'ᚲ']; for (let k = 0; k < 6; k++) { const a = x.t / 1600 + k / 6 * Math.PI * 2, s = Math.sin(a); c.fillStyle = rgba(lt(x.acc, 0.4), (0.4 + 0.5 * gl) * (s > 0 ? 1 : 0.5)); c.fillText(R[k], g.cx + Math.cos(a) * g.bw * 0.75, g.top + g.bh * 0.4 + s * 16); }
+        for (let k = 0; k < 3; k++) { const ph = (x.t / 2600 + k / 3) % 1, px = g.cx + Math.sin(ph * 6 + k * 2) * g.bw * 0.7, py = g.bot + 10 - ph * 110; c.save(); c.translate(px, py); c.rotate(Math.sin(ph * 8 + k) * 0.6); c.fillStyle = `rgba(255,250,235,${Math.sin(ph * Math.PI)})`; c.fillRect(-7, -9, 14, 18); c.strokeStyle = `rgba(150,140,120,${0.6 * Math.sin(ph * Math.PI)})`; c.lineWidth = 1; for (let q = 0; q < 3; q++) { c.beginPath(); c.moveTo(-5, -5 + q * 5); c.lineTo(5, -5 + q * 5); c.stroke(); } c.restore(); } },
+      hl: g => [g.left + g.bw * 0.1, g.top + g.bh * 0.6, g.left + g.bw * 0.12, g.top + g.bh * 0.24, g.left + g.bw * 0.3, g.top + g.bh * 0.08],
+      head: g => [g.cx, g.top + 2, g.bw * 0.46],
+      face: (c, g, x, look) => faceTwo(c, g, x, look, g.stage === 'Bit' ? { ey: 0.42, ex: 0.16, my: 0.62, s: 0.62 } : { ey: 0.46, ex: by(g.stage, 0.16, 0.2, 0.2), my: 0.68, s: by(g.stage, 0.62, 0.72, 0.8) })
+    },
+    /* Gumball: candy. Bit is one shiny gumball on little feet. Byte is a gumball machine: a glass globe full of gumballs on a red base with a coin slot and a chute.
+       Mega is a candy carousel: a striped canopy over the globe, gold poles, and lollipop horses riding round its base */
+    Gumball: {
+      dims: { Bit: [50, 50], Byte: [70, 66], Mega: [80, 76] }, bs: st => by(st, 0, 30, 34), ll: st => by(st, 4, 4, 4),
+      bottom(st) { return 182 - this.ll(st) - this.bs(st); }, height(st) { return this.dims[st][1] + this.bs(st) + this.ll(st) + by(st, 6, 12, 50); },
+      glass: true, patternAfter: true,
+      path(c, g) { c.beginPath(); c.arc(g.cx, g.top + g.bh / 2, g.bw / 2, 0, 7); },
+      arms: 'stub', armW: st => 0, handR: st => 0, shoulderY: 0.6, armK: 0.7,
+      cols: ['#ff5a6a', '#ffd84a', '#5ac6ff', '#7be07b', '#c08bff', '#ff9f4a'],
+      behind(c, g, x) { const st = g.stage;
+        if (st === 'Bit') { for (const sd of [-1, 1]) { const fx = g.cx + sd * g.bw * 0.2, lift = Math.max(0, sd * x.walk) * 4; blob(c, fx, 182 - lift, 7, 4, dk(x.body, 0.25), sd < 0 ? x.L.legL : x.L.legR, x.t, 'foot'); x.feet.push([fx, 182 - lift, 6]); } return; }
+        x.feet.push([g.cx, 182, g.bw * 0.4]);
+        if (st === 'Mega') { const ch = g.top - 34, rw = g.bw * 0.9;   // poles, canopy, and horses behind
+          c.fillStyle = '#e9b23a'; for (const sd of [-1, 1]) c.fillRect(g.cx + sd * rw * 0.82 - 2, ch + 10, 4, 182 - ch - 14);
+          for (let k = 0; k < 8; k++) { c.fillStyle = k % 2 ? '#ffffff' : rgb(x.acc); c.beginPath(); c.moveTo(g.cx, ch - 18); c.lineTo(g.cx - rw + k * rw / 4, ch + 12); c.lineTo(g.cx - rw + (k + 1) * rw / 4, ch + 12); c.closePath(); c.fill(); }
+          for (let k = 0; k <= 8; k++) { c.fillStyle = k % 2 ? '#ffffff' : rgb(x.acc); c.beginPath(); c.arc(g.cx - rw + k * rw / 4, ch + 12, rw / 8, 0, Math.PI); c.fill(); }
+          c.fillStyle = '#e9b23a'; c.beginPath(); c.arc(g.cx, ch - 20, 4, 0, 7); c.fill(); this.horses(c, g, x, true); } },
+      horses(c, g, x, back) { for (let k = 0; k < 4; k++) { const a = x.t / 1400 + k * Math.PI / 2, s = Math.sin(a); if ((s < 0) !== back) continue; const px = g.cx + Math.cos(a) * g.bw * 0.82, py = 168 + s * 6 - Math.max(0, Math.sin(x.t / 300 + k)) * 6, sc = back ? 0.8 : 1;   // lollipop horses on poles
+          c.fillStyle = '#d9d0c0'; c.fillRect(px - 1, py - 24, 2, 26); c.fillStyle = this.cols[k]; c.beginPath(); c.arc(px, py - 26, 8 * sc, 0, 7); c.fill(); c.strokeStyle = '#ffffff'; c.lineWidth = 2 * sc; c.beginPath(); c.arc(px, py - 26, 4.5 * sc, 0, Math.PI * 1.5); c.stroke(); } },
+      inside(c, g, x) { const st = g.stage; if (st === 'Bit') { c.fillStyle = 'rgba(255,255,255,.3)'; c.beginPath(); c.arc(g.cx + g.bw * 0.15, g.top + g.bh * 0.7, g.bw * 0.08, 0, 7); c.fill(); return; }
+        const r = st === 'Mega' ? 6.5 : 6; for (let k = 0; k < 26; k++) { const px = g.left + 6 + ((k * 37) % 100) / 100 * (g.bw - 12), py = g.top + g.bh * 0.66 + ((k * 61) % 100) / 100 * g.bh * 0.32; if (Math.hypot(px - g.cx, py - g.top - g.bh / 2) > g.bw / 2 - r) continue;   // gumballs filling the globe
+          c.fillStyle = this.cols[k % 6]; c.beginPath(); c.arc(px, py, r, 0, 7); c.fill(); c.fillStyle = 'rgba(255,255,255,.45)'; c.beginPath(); c.arc(px - 2, py - 2, 1.6, 0, 7); c.fill(); } },
+      front(c, g, x) { const st = g.stage; if (st === 'Bit') return; const bs = this.bs(st), bw = g.bw * (st === 'Mega' ? 0.9 : 0.8), by0 = g.bot - 4, base = mix(x.acc, [220, 60, 60], 0.5);   // the base with its coin slot and chute
+        c.fillStyle = rgb(dk(base, 0.3)); c.beginPath(); c.moveTo(g.cx - bw * 0.38, by0); c.lineTo(g.cx + bw * 0.38, by0); c.lineTo(g.cx + bw / 2, by0 + bs + 4); c.lineTo(g.cx - bw / 2, by0 + bs + 4); c.closePath(); c.fill();
+        c.fillStyle = rgb(base); c.beginPath(); c.moveTo(g.cx - bw * 0.38, by0); c.lineTo(g.cx + bw * 0.38, by0); c.lineTo(g.cx + bw / 2, by0 + bs); c.lineTo(g.cx - bw / 2, by0 + bs); c.closePath(); c.fill();
+        c.fillStyle = '#c9ced8'; c.beginPath(); c.arc(g.cx, by0 + bs * 0.35, 6, 0, 7); c.fill(); c.fillStyle = '#3a3a44'; c.fillRect(g.cx - 3, by0 + bs * 0.35 - 1, 6, 2); c.fillStyle = '#3a3a44'; roundBox(c, g.cx - 6, by0 + bs * 0.62, 12, 8, 3); c.fill();
+        if (st === 'Mega') this.horses(c, g, x, false); },
+      hl: g => [g.left + g.bw * 0.14, g.top + g.bh * 0.6, g.left + g.bw * 0.16, g.top + g.bh * 0.24, g.left + g.bw * 0.36, g.top + g.bh * 0.08],
+      head: g => [g.cx, g.top + 2, g.bw * 0.46],
+      face: (c, g, x, look) => faceTwo(c, g, x, look, { ey: by(g.stage, 0.44, 0.34, 0.34), ex: 0.16, my: by(g.stage, 0.66, 0.5, 0.5), s: by(g.stage, 0.66, 0.72, 0.76) })
+    },
+    /* Pina: a pineapple. Bit is a little round bud with a short leafy crown. Byte is a full pineapple with its crosshatched skin and a tall crown.
+       Mega is a tiki totem: a carved wooden pole with the pineapple crown on top, a flower lei round its middle, and a torch burning on each side */
+    Pina: {
+      dims: { Bit: [50, 46], Byte: [62, 74], Mega: [64, 104] }, ll: st => by(st, 4, 5, 4),
+      bottom(st) { return 182 - this.ll(st); }, height(st) { return this.dims[st][1] + this.ll(st) + by(st, 24, 40, 40); },
+      path(c, g) { if (g.stage === 'Mega') { roundBox(c, g.left, g.top, g.bw, g.bh, 12); return; } c.beginPath(); c.ellipse(g.cx, g.top + g.bh / 2, g.bw / 2, g.bh / 2, 0, 0, 7); },
+      arms: 'stub', armW: st => by(st, 0, 5, 7), handR: st => by(st, 0, 4.5, 6), shoulderY: 0.62, armK: 0.75,
+      crown(c, cx0, y0, h, n, t) { for (let k = 0; k < n; k++) { const a = (k / (n - 1) - 0.5) * 1.6, sw = Math.sin(t / 700 + k) * 0.05, len = h * (1 - Math.abs(a) * 0.35); c.save(); c.translate(cx0, y0); c.rotate(a + sw);
+          c.fillStyle = k % 2 ? 'rgb(70,140,70)' : 'rgb(95,170,85)'; c.beginPath(); c.moveTo(-5, 0); c.quadraticCurveTo(-3, -len * 0.6, 0, -len); c.quadraticCurveTo(3, -len * 0.6, 5, 0); c.closePath(); c.fill(); c.restore(); } },
+      behind(c, g, x) { const st = g.stage;
+        for (const sd of [-1, 1]) { const fx = g.cx + sd * g.bw * 0.22, lift = Math.max(0, sd * x.walk) * 4; blob(c, fx, 182 - lift, 7, 4, dk(x.body, 0.3), sd < 0 ? x.L.legL : x.L.legR, x.t, 'foot'); x.feet.push([fx, 182 - lift, 6]); }
+        this.crown(c, g.cx, g.top + 6, by(st, 22, 40, 40), by(st, 5, 7, 9), x.t);
+        if (st === 'Mega') for (const sd of [-1, 1]) { const tx = g.cx + sd * (g.bw * 0.5 + 22), ty = g.top + 10;   // a torch each side
+          c.fillStyle = 'rgb(130,90,55)'; c.fillRect(tx - 3, ty, 6, 182 - ty); c.fillStyle = 'rgb(160,115,70)'; c.beginPath(); c.moveTo(tx - 8, ty); c.lineTo(tx + 8, ty); c.lineTo(tx + 5, ty + 12); c.lineTo(tx - 5, ty + 12); c.closePath(); c.fill();
+          const f = 1 + Math.sin(x.t / 80 + sd) * 0.12; c.fillStyle = '#ff8a2e'; c.beginPath(); c.moveTo(tx, ty - 22 * f); c.quadraticCurveTo(tx + 10, ty - 6, tx, ty + 2); c.quadraticCurveTo(tx - 10, ty - 6, tx, ty - 22 * f); c.fill(); c.fillStyle = '#ffd35a'; c.beginPath(); c.moveTo(tx, ty - 12 * f); c.quadraticCurveTo(tx + 5, ty - 3, tx, ty + 1); c.quadraticCurveTo(tx - 5, ty - 3, tx, ty - 12 * f); c.fill(); } },
+      inside(c, g, x) { const st = g.stage;
+        if (st === 'Mega') { c.fillStyle = rgba(mix(x.body, [150, 105, 65], 0.65), 0.9); c.fillRect(g.left - 4, g.top - 4, g.bw + 8, g.bh + 8);   // carved wood, bands and a lei
+          c.fillStyle = rgba([100, 65, 40], 0.6); for (const fy of [0.08, 0.86]) c.fillRect(g.left - 4, g.top + g.bh * fy, g.bw + 8, 6);
+          c.strokeStyle = rgba([100, 65, 40], 0.5); c.lineWidth = 2; for (let k = 0; k < 6; k++) { c.beginPath(); c.moveTo(g.left + 4 + k * (g.bw - 8) / 5, g.top + g.bh * 0.72); c.lineTo(g.left + 4 + k * (g.bw - 8) / 5 + 5, g.top + g.bh * 0.8); c.stroke(); }
+          const cols = ['#ff6b8a', '#ffd84a', '#ffffff', '#ff9f4a']; for (let k = 0; k < 9; k++) { const px = g.left + 2 + k * (g.bw - 4) / 8, py = g.top + g.bh * 0.62 + Math.sin(k / 8 * Math.PI) * 8; c.fillStyle = cols[k % 4]; for (let p = 0; p < 5; p++) { const a = p / 5 * Math.PI * 2; c.beginPath(); c.arc(px + Math.cos(a) * 2.6, py + Math.sin(a) * 2.6, 2.2, 0, 7); c.fill(); } } return; }
+        c.save(); c.strokeStyle = rgba(dk(x.body, 0.3), 0.55); c.lineWidth = 1.5; for (let k = -6; k <= 6; k++) { c.beginPath(); c.moveTo(g.cx + k * 9 - 30, g.top); c.lineTo(g.cx + k * 9 + 30, g.bot); c.moveTo(g.cx + k * 9 + 30, g.top); c.lineTo(g.cx + k * 9 - 30, g.bot); c.stroke(); }   // the crosshatched skin
+        c.fillStyle = rgba(lt(x.acc, 0.3), 0.6); for (let k = 0; k < 12; k++) { c.beginPath(); c.arc(g.left + 6 + (k * 37 % 100) / 100 * (g.bw - 12), g.top + 6 + (k * 53 % 100) / 100 * (g.bh - 12), 1.4, 0, 7); c.fill(); } c.restore(); },
+      hl: g => [g.left + g.bw * 0.14, g.top + g.bh * 0.6, g.left + g.bw * 0.16, g.top + g.bh * 0.26, g.left + g.bw * 0.36, g.top + g.bh * 0.1],
+      head: g => [g.cx, g.top + 2, g.bw * 0.46],
+      face: (c, g, x, look) => faceTwo(c, g, x, look, g.stage === 'Mega' ? { ey: 0.28, ex: 0.18, my: 0.46, s: 0.78 } : { ey: 0.46, ex: 0.17, my: 0.68, s: by(g.stage, 0.64, 0.72, 0.8) })
+    },
+    /* Jingle: money. Bit is a gold coin with a star stamped on it. Byte is a piggy bank with a coin slot on its back, a snout, ears and a curly tail.
+       Mega is a treasure chest: its lid thrown open, gold coins and gems spilling over, and a glow pouring out */
+    Jingle: {
+      dims: { Bit: [52, 52], Byte: [80, 60], Mega: [92, 60] }, ll: st => by(st, 4, 10, 6),
+      bottom(st) { return 182 - this.ll(st); }, height(st) { return this.dims[st][1] + this.ll(st) + by(st, 6, 16, 50); },
+      path(c, g) { if (g.stage === 'Bit') { c.beginPath(); c.arc(g.cx, g.top + g.bh / 2, g.bw / 2, 0, 7); return; } if (g.stage === 'Byte') { c.beginPath(); c.ellipse(g.cx, g.top + g.bh / 2, g.bw / 2, g.bh / 2, 0, 0, 7); return; } roundBox(c, g.left, g.top, g.bw, g.bh, 8); },
+      arms: 'stub', armW: st => by(st, 0, 0, 6), handR: st => by(st, 0, 0, 5), shoulderY: 0.6, armK: 0.75,
+      coin(c, px, py, r, t, k) { const w = Math.abs(Math.cos(t / 400 + k)); c.fillStyle = '#b8902e'; c.beginPath(); c.ellipse(px, py + 1, r * (0.3 + 0.7 * w), r, 0, 0, 7); c.fill(); c.fillStyle = '#f2cc4a'; c.beginPath(); c.ellipse(px, py, r * (0.3 + 0.7 * w), r, 0, 0, 7); c.fill(); },
+      behind(c, g, x) { const st = g.stage, gold = [233, 190, 70];
+        if (st === 'Bit') { for (const sd of [-1, 1]) { const fx = g.cx + sd * g.bw * 0.2, lift = Math.max(0, sd * x.walk) * 4; blob(c, fx, 182 - lift, 7, 4, dk(gold, 0.3), sd < 0 ? x.L.legL : x.L.legR, x.t, 'foot'); x.feet.push([fx, 182 - lift, 6]); } return; }
+        if (st === 'Byte') { for (const k of [-0.32, -0.12, 0.12, 0.32]) { const fx = g.cx + k * g.bw, lift = (k > 0 ? 1 : -1) * x.walk > 0 ? 3 : 0; roundBox(c, fx - 6, g.bot - 6, 12, 182 - g.bot + 6 - lift, 4); c.fillStyle = rgb(dk(x.body, 0.15)); c.fill(); x.feet.push([fx, 182 - lift, 5]); }   // trotters, ears, a curly tail
+          for (const sd of [-1, 1]) { c.fillStyle = rgb(dk(x.body, 0.1)); c.beginPath(); c.moveTo(g.cx + sd * g.bw * 0.16, g.top + 4); c.lineTo(g.cx + sd * g.bw * 0.34, g.top - 12); c.lineTo(g.cx + sd * g.bw * 0.36, g.top + 8); c.closePath(); c.fill(); }
+          c.strokeStyle = rgb(dk(x.body, 0.1)); c.lineWidth = 3; c.beginPath(); for (let a = 0; a < 9; a += 0.3) c.lineTo(g.left + g.bw + 4 + Math.cos(a) * (1 + a * 0.6), g.top + g.bh * 0.4 + Math.sin(a) * (1 + a * 0.6)); c.stroke(); return; }
+        const lid = g.top + 2, gl = 0.6 + 0.4 * Math.sin(x.t / 400), wood = mix(x.body, [140, 90, 55], 0.6);   // the open lid, the glow and the treasure heap
+        const h0 = c.createRadialGradient(g.cx, lid - 10, 2, g.cx, lid - 10, 70); h0.addColorStop(0, `rgba(255,230,140,${0.6 * gl})`); h0.addColorStop(1, 'rgba(255,230,140,0)'); c.fillStyle = h0; c.fillRect(g.cx - 70, lid - 80, 140, 110);
+        c.fillStyle = rgb(dk(wood, 0.3)); c.beginPath(); c.moveTo(g.left - 2, lid); c.lineTo(g.left + g.bw + 2, lid); c.lineTo(g.left + g.bw - 6, lid - 44); c.quadraticCurveTo(g.cx, lid - 56, g.left + 6, lid - 44); c.closePath(); c.fill();
+        c.fillStyle = 'rgba(80,50,30,.9)'; c.beginPath(); c.moveTo(g.left + 6, lid - 4); c.lineTo(g.left + g.bw - 6, lid - 4); c.lineTo(g.left + g.bw - 12, lid - 38); c.quadraticCurveTo(g.cx, lid - 48, g.left + 12, lid - 38); c.closePath(); c.fill();
+        c.fillStyle = '#e9b23a'; c.fillRect(g.left + 4, lid - 6, g.bw - 8, 4);
+        for (let k = 0; k < 14; k++) this.coin(c, g.left + 10 + (k * 37 % 100) / 100 * (g.bw - 20), lid - 4 - ((k * 23) % 14), 6, x.t, k);
+        for (const [fx, col] of [[0.3, '#e05a6a'], [0.62, '#5ab0e0'], [0.48, '#6ad08a']]) { const px = g.left + g.bw * fx, py = lid - 12; c.fillStyle = col; c.beginPath(); c.moveTo(px, py - 6); c.lineTo(px + 5, py); c.lineTo(px, py + 6); c.lineTo(px - 5, py); c.closePath(); c.fill(); }
+        for (const sd of [-1, 1]) { const fx = g.cx + sd * g.bw * 0.34; c.fillStyle = '#b8902e'; c.fillRect(fx - 5, g.bot - 2, 10, 182 - g.bot + 2); x.feet.push([fx, 182, 6]); } },
+      inside(c, g, x) { const st = g.stage;
+        if (st === 'Bit') { c.fillStyle = 'rgba(242,204,74,.85)'; c.beginPath(); c.arc(g.cx, g.top + g.bh / 2, g.bw / 2, 0, 7); c.fill(); c.strokeStyle = '#b8902e'; c.lineWidth = 3; c.beginPath(); c.arc(g.cx, g.top + g.bh / 2, g.bw / 2 - 4, 0, 7); c.stroke();
+          star(c, g.cx, g.top + g.bh * 0.82, 0.35, '#fff3b0'); return; }
+        if (st === 'Byte') { c.fillStyle = rgb(dk(x.body, 0.35)); roundBox(c, g.cx - 12, g.top + 3, 24, 5, 2); c.fill(); return; }   // the coin slot
+        c.fillStyle = rgba(mix(x.body, [140, 90, 55], 0.6), 0.85); c.fillRect(g.left - 4, g.top - 4, g.bw + 8, g.bh + 8); c.fillStyle = '#d9a440'; for (const fx of [0.12, 0.88]) c.fillRect(g.left + g.bw * fx - 4, g.top - 2, 8, g.bh + 4);   // wood with gold bands
+        c.fillStyle = '#e9c45a'; roundBox(c, g.cx - 8, g.top + g.bh * 0.78 - 8, 16, 14, 3); c.fill(); c.fillStyle = '#5a4020'; c.beginPath(); c.arc(g.cx, g.top + g.bh * 0.78 - 2, 2.4, 0, 7); c.fill(); },
+      front(c, g, x) { if (g.stage !== 'Byte') return; c.fillStyle = rgb(dk(x.body, 0.12)); c.beginPath(); c.ellipse(g.cx, g.top + g.bh * 0.66, 10, 7, 0, 0, 7); c.fill(); c.fillStyle = rgb(dk(x.body, 0.4)); for (const sd of [-1, 1]) { c.beginPath(); c.ellipse(g.cx + sd * 3.5, g.top + g.bh * 0.66, 1.8, 2.6, 0, 0, 7); c.fill(); } },   // the snout
+      hl: g => [g.left + g.bw * 0.14, g.top + g.bh * 0.6, g.left + g.bw * 0.16, g.top + g.bh * 0.24, g.left + g.bw * 0.36, g.top + g.bh * 0.08],
+      head: g => [g.cx, g.top + 2, g.bw * 0.46],
+      face: (c, g, x, look) => faceTwo(c, g, x, look, g.stage === 'Bit' ? { ey: 0.42, ex: 0.16, my: 0.62, s: 0.64 } : g.stage === 'Byte' ? { ey: 0.4, ex: 0.18, my: 0.84, s: 0.72 } : { ey: 0.4, ex: 0.16, my: 0.62, s: 0.78 })
+    },
+    /* Presto: a magician's hat. Bit is a plain top hat with a band. Byte has bunny ears poking out of the top and a wand tucked in the band.
+       Mega is the full act: a starry hat, a red-lined cape, doves flying out of the top, a fan of cards and a wand throwing sparkles */
+    Presto: {
+      dims: { Bit: [50, 56], Byte: [58, 64], Mega: [66, 74] }, ll: st => by(st, 5, 6, 8),
+      bottom(st) { return 182 - this.ll(st); }, height(st) { return this.dims[st][1] + this.ll(st) + by(st, 8, 30, 50); },
+      path(c, g) { const bh = 9, bw = g.bw * 0.66; c.beginPath(); c.moveTo(g.left - 8, g.bot); c.quadraticCurveTo(g.left - 10, g.bot - bh, g.left - 2, g.bot - bh); c.lineTo(g.cx - bw / 2 - 2, g.bot - bh); c.lineTo(g.cx - bw / 2, g.top + 4);
+        c.quadraticCurveTo(g.cx - bw / 2, g.top, g.cx - bw / 2 + 4, g.top); c.lineTo(g.cx + bw / 2 - 4, g.top); c.quadraticCurveTo(g.cx + bw / 2, g.top, g.cx + bw / 2, g.top + 4); c.lineTo(g.cx + bw / 2 + 2, g.bot - bh); c.lineTo(g.left + g.bw + 2, g.bot - bh); c.quadraticCurveTo(g.left + g.bw + 10, g.bot - bh, g.left + g.bw + 8, g.bot); c.closePath(); },
+      arms: 'stub', armW: st => by(st, 0, 5, 6), handR: st => by(st, 0, 4.5, 5), shoulderY: 0.6, armK: 0.75,
+      behind(c, g, x) { const st = g.stage;
+        if (st === 'Mega') { const sw = Math.sin(x.t / 500) * 4; c.fillStyle = '#7a1f2e'; c.beginPath(); c.moveTo(g.cx - g.bw * 0.4, g.top + g.bh * 0.5); c.quadraticCurveTo(g.left - 30 + sw, g.bot, g.left - 24 + sw, 182); c.lineTo(g.left + g.bw + 24 - sw, 182); c.quadraticCurveTo(g.left + g.bw + 30 - sw, g.bot, g.cx + g.bw * 0.4, g.top + g.bh * 0.5); c.closePath(); c.fill();   // the cape
+          c.fillStyle = '#1e1a28'; c.beginPath(); c.moveTo(g.cx - g.bw * 0.4, g.top + g.bh * 0.5); c.quadraticCurveTo(g.left - 34 + sw, g.bot, g.left - 30 + sw, 180); c.lineTo(g.left - 18 + sw, 180); c.quadraticCurveTo(g.left - 16, g.bot, g.cx - g.bw * 0.3, g.top + g.bh * 0.5); c.closePath(); c.fill();
+          for (let k = 0; k < 2; k++) { const ph = (x.t / 1600 + k / 2) % 1, px = g.cx + (k ? 1 : -1) * ph * 40, py = g.top - 10 - ph * 50, fl = Math.sin(x.t / 60 + k) * 4;   // doves flying out
+            c.fillStyle = `rgba(255,255,255,${1 - ph * 0.8})`; c.beginPath(); c.ellipse(px, py, 7, 4, 0, 0, 7); c.fill(); c.beginPath(); c.moveTo(px - 2, py); c.lineTo(px - 8, py - 6 - fl); c.lineTo(px + 2, py - 1); c.lineTo(px + 8, py - 6 - fl); c.closePath(); c.fill(); } }
+        for (const sd of [-1, 1]) { const fx = g.cx + sd * g.bw * 0.2, lift = Math.max(0, sd * x.walk) * 4; blob(c, fx, 182 - lift, 7, 4, [42, 38, 50], sd < 0 ? x.L.legL : x.L.legR, x.t, 'foot'); x.feet.push([fx, 182 - lift, 6]); }
+        if (st !== 'Bit') for (const sd of [-1, 1]) { const ex = g.cx + sd * 7, tw = Math.sin(x.t / 400 + sd) * 0.15; c.save(); c.translate(ex, g.top + 2); c.rotate(sd * 0.2 + tw);   // bunny ears
+          c.fillStyle = '#f4f0ea'; c.beginPath(); c.ellipse(0, -14, 5, 15, 0, 0, 7); c.fill(); c.fillStyle = '#ffb3c6'; c.beginPath(); c.ellipse(0, -14, 2.4, 10, 0, 0, 7); c.fill(); c.restore(); } },
+      inside(c, g, x) { const st = g.stage; c.fillStyle = rgba([40, 36, 50], 0.55); c.fillRect(g.left - 12, g.top - 4, g.bw + 24, g.bh + 8);
+        const bw = g.bw * 0.66; c.fillStyle = rgb(x.acc); c.fillRect(g.cx - bw / 2 - 2, g.bot - 22, bw + 4, 9);   // the band
+        if (st === 'Mega') for (let k = 0; k < 7; k++) star(c, g.cx - bw / 2 + 4 + ((k * 37) % 100) / 100 * (bw - 8), g.top + 6 + ((k * 53) % 100) / 100 * (g.bh * 0.55), 0.22, '#ffe27a'); },
+      front(c, g, x) { const st = g.stage; if (st === 'Bit') return; const A = x.P.arm || [[12, 8, 16, 22], [12, 8, 16, 22]], r = Math.max(0, (A[1][2] - 16) / 30);   // the wand
+        const wx = g.left + g.bw + (st === 'Mega' ? 4 : -2), wy = g.bot - (st === 'Mega' ? 30 : 20); c.save(); c.translate(wx, wy); c.rotate(-0.8 + r * 0.9); c.fillStyle = '#1e1a28'; c.fillRect(-2, -26, 4, 26); c.fillStyle = '#ffffff'; c.fillRect(-2, -26, 4, 6); if (CAP) (CAP.hands = CAP.hands || []).push(capPt(c, 0, -26)); c.restore();
+        if (st === 'Mega') { for (let k = 0; k < 4; k++) { const ph = (x.t / 900 + k / 4) % 1; star(c, wx + 14 + ph * 20, wy - 26 - ph * 16 + Math.sin(ph * 8) * 4, 0.25 * (1 - ph), '#fff3b0'); }
+          for (let k = 0; k < 4; k++) { c.save(); c.translate(g.left - 14, g.bot - 26); c.rotate(-0.6 + k * 0.25); c.fillStyle = '#ffffff'; roundBox(c, -6, -20, 12, 18, 2); c.fill(); c.fillStyle = k % 2 ? '#d8333f' : '#2a2632'; c.beginPath(); c.arc(0, -11, 2.5, 0, 7); c.fill(); c.restore(); } } },   // a fan of cards
+      hl: g => [g.left + g.bw * 0.24, g.top + g.bh * 0.6, g.left + g.bw * 0.26, g.top + g.bh * 0.24, g.left + g.bw * 0.4, g.top + g.bh * 0.08],
+      head: g => [g.cx, g.top + 2, g.bw * 0.4],
+      face: (c, g, x, look) => faceTwo(c, g, x, look, { ey: 0.36, ex: 0.12, my: 0.54, s: by(g.stage, 0.56, 0.62, 0.68) })
+    },
+    /* Vroom: cleaning. Bit is a dust bunny, a fluffy grey puff. Byte is a robot vacuum: a flat disc with a bumper ring, spinning side brushes and a blinking light.
+       Mega is a ride-on floor polisher: a cab with a flashing beacon, big round brushes spinning in front, wheels, and a gleaming trail behind it */
+    Vroom: {
+      dims: { Bit: [56, 48], Byte: [90, 40], Mega: [86, 74] }, ll: st => by(st, 4, 4, 12),
+      bottom(st) { return 182 - this.ll(st); }, height(st) { return this.dims[st][1] + this.ll(st) + by(st, 6, 14, 26); },
+      path(c, g, x) { const st = g.stage; if (st === 'Bit') { const t = x ? x.t : 0, n = 16; c.beginPath(); for (let i = 0; i <= n; i++) { const a = i / n * Math.PI * 2, r = (i % 2 ? 0.88 : 1.04) + 0.03 * Math.sin(t / 200 + i); i ? c.lineTo(g.cx + Math.cos(a) * g.bw / 2 * r, g.top + g.bh / 2 + Math.sin(a) * g.bh / 2 * r) : c.moveTo(g.cx + Math.cos(a) * g.bw / 2 * r, g.top + g.bh / 2 + Math.sin(a) * g.bh / 2 * r); } c.closePath(); return; }
+        if (st === 'Byte') { c.beginPath(); c.ellipse(g.cx, g.top + g.bh / 2, g.bw / 2, g.bh / 2, 0, 0, 7); return; } roundBox(c, g.left, g.top, g.bw, g.bh, 12); },
+      arms: 'stub', armW: st => by(st, 0, 0, 6), handR: st => by(st, 0, 0, 5), shoulderY: 0.6, armK: 0.75,
+      behind(c, g, x) { const st = g.stage, sp = x.t / (x.walk ? 60 : 160);
+        if (st === 'Bit') { for (const sd of [-1, 1]) { const fx = g.cx + sd * g.bw * 0.2, lift = Math.max(0, sd * x.walk) * 4; blob(c, fx, 182 - lift, 6, 4, dk(x.body, 0.2), sd < 0 ? x.L.legL : x.L.legR, x.t, 'foot'); x.feet.push([fx, 182 - lift, 6]); } return; }
+        if (st === 'Byte') { for (const sd of [-1, 1]) { const bx = g.cx + sd * g.bw * 0.4, by0 = g.bot - 2; c.strokeStyle = 'rgba(80,80,90,.8)'; c.lineWidth = 1.5; for (let k = 0; k < 3; k++) { const a = sp * sd + k * 2.09; c.beginPath(); c.moveTo(bx, by0); c.lineTo(bx + Math.cos(a) * 12, by0 + Math.sin(a) * 4); c.stroke(); } }   // side brushes
+          c.fillStyle = '#3a3a44'; c.fillRect(g.cx - g.bw * 0.3, g.bot - 4, g.bw * 0.6, 182 - g.bot + 2); x.feet.push([g.cx, 182, g.bw * 0.35]); return; }
+        const cl = mix(x.parts, [250, 240, 200], 0.5); c.fillStyle = 'rgba(200,235,255,.4)'; c.fillRect(g.left - 70, 179, 70, 3); for (let k = 0; k < 3; k++) if (Math.sin(x.t / 150 + k * 2) > 0.5) star(c, g.left - 20 - k * 20, 176, 0.25, '#ffffff');   // the gleaming trail
+        for (const sd of [-1, 1]) { const wx = g.cx + sd * g.bw * 0.34; c.fillStyle = '#2a2a33'; c.beginPath(); c.arc(wx, 174, 9, 0, 7); c.fill(); c.fillStyle = '#9aa0ab'; c.beginPath(); c.arc(wx, 174, 4, 0, 7); c.fill(); x.feet.push([wx, 182, 8]); }
+        const on = Math.floor(x.t / 300) % 2; c.fillStyle = '#5a5a62'; c.fillRect(g.cx - 4, g.top - 10, 8, 10); c.fillStyle = on ? 'rgba(255,170,40,.95)' : 'rgba(200,120,30,.8)'; c.beginPath(); c.arc(g.cx, g.top - 14, 7, Math.PI, 0); c.fill();   // the beacon
+        if (on) { const h0 = c.createRadialGradient(g.cx, g.top - 14, 1, g.cx, g.top - 14, 26); h0.addColorStop(0, 'rgba(255,190,60,.5)'); h0.addColorStop(1, 'rgba(255,190,60,0)'); c.fillStyle = h0; c.fillRect(g.cx - 26, g.top - 40, 52, 52); } },
+      inside(c, g, x) { const st = g.stage;
+        if (st === 'Bit') { c.fillStyle = 'rgba(255,255,255,.25)'; for (let k = 0; k < 8; k++) { const a = k / 8 * Math.PI * 2; c.beginPath(); c.arc(g.cx + Math.cos(a) * g.bw * 0.3, g.top + g.bh / 2 + Math.sin(a) * g.bh * 0.3, 4, 0, 7); c.fill(); } return; }
+        if (st === 'Byte') { c.strokeStyle = rgba(dk(x.body, 0.35), 0.8); c.lineWidth = 4; c.beginPath(); c.ellipse(g.cx, g.top + g.bh / 2, g.bw / 2 - 3, g.bh / 2 - 3, 0, 0, Math.PI); c.stroke();   // the bumper and a blinking light
+          c.fillStyle = Math.floor(x.t / 500) % 2 ? '#6ad08a' : '#2f6a40'; c.beginPath(); c.arc(g.cx + g.bw * 0.3, g.top + g.bh * 0.3, 3, 0, 7); c.fill(); return; }
+        c.fillStyle = rgba(dk(x.body, 0.25), 0.6); c.fillRect(g.left - 4, g.bot - g.bh * 0.24, g.bw + 8, g.bh * 0.3); c.fillStyle = '#e9b23a'; for (let k = 0; k < 6; k++) { c.beginPath(); c.moveTo(g.left + k * g.bw / 6, g.bot - 4); c.lineTo(g.left + k * g.bw / 6 + 7, g.bot - 4); c.lineTo(g.left + k * g.bw / 6 + 14, g.bot - g.bh * 0.2); c.lineTo(g.left + k * g.bw / 6 + 7, g.bot - g.bh * 0.2); c.closePath(); c.fill(); } },   // hazard stripes
+      front(c, g, x) { if (g.stage !== 'Mega') return; const sp = x.t / (x.walk ? 50 : 140); for (const sd of [-1, 1]) { const bx = g.cx + sd * g.bw * 0.2, by0 = 178;   // round brushes spinning in front
+          c.fillStyle = 'rgba(60,140,220,.85)'; c.beginPath(); c.ellipse(bx, by0, 16, 5, 0, 0, 7); c.fill(); c.strokeStyle = 'rgba(255,255,255,.7)'; c.lineWidth = 1.5; for (let k = 0; k < 4; k++) { const a = sp * sd + k * Math.PI / 2; c.beginPath(); c.moveTo(bx, by0); c.lineTo(bx + Math.cos(a) * 15, by0 + Math.sin(a) * 4.5); c.stroke(); } } },
+      hl: g => [g.left + g.bw * 0.14, g.top + g.bh * 0.6, g.left + g.bw * 0.16, g.top + g.bh * 0.24, g.left + g.bw * 0.36, g.top + g.bh * 0.08],
+      head: g => [g.cx, g.top + 2, g.bw * 0.46],
+      face: (c, g, x, look) => faceTwo(c, g, x, look, g.stage === 'Byte' ? { ey: 0.4, ex: 0.12, my: 0.66, s: 0.6 } : { ey: by(g.stage, 0.44, 0.4, 0.34), ex: 0.16, my: by(g.stage, 0.66, 0.66, 0.54), s: by(g.stage, 0.62, 0.6, 0.76) })
+    },
+    /* Shutter: a camera. Bit is a roll of film in its canister with the strip sticking out. Byte is an instant camera with a lens, a flash on top and a photo sliding out.
+       Mega is an old bellows camera on a tripod: a wooden box, a brass lens on an accordion, and a flash bar it fires off in a burst of light */
+    Shutter: {
+      dims: { Bit: [44, 58], Byte: [80, 60], Mega: [76, 62] }, ll: st => by(st, 4, 6, 36),
+      bottom(st) { return 182 - this.ll(st); }, height(st) { return this.dims[st][1] + this.ll(st) + by(st, 10, 16, 40); },
+      path(c, g) { if (g.stage === 'Bit') { roundBox(c, g.left, g.top, g.bw, g.bh, 10); return; } roundBox(c, g.left, g.top, g.bw, g.bh, g.stage === 'Byte' ? 14 : 6); },
+      arms: 'stub', armW: st => by(st, 0, 5, 0), handR: st => by(st, 0, 4.5, 0), shoulderY: 0.6, armK: 0.75,
+      behind(c, g, x) { const st = g.stage;
+        if (st === 'Mega') { const wood = [130, 88, 55], fl = (x.t % 2400) < 160;   // the tripod, the flash bar and its burst
+          c.strokeStyle = rgb(dk(wood, 0.2)); c.lineWidth = 5; c.lineCap = 'round'; for (const [ax, bx] of [[-6, -34], [0, 0], [6, 34]]) { c.beginPath(); c.moveTo(g.cx + ax, g.bot); c.lineTo(g.cx + bx, 182); c.stroke(); } x.feet.push([g.cx, 182, 30]);
+          const fx = g.left + g.bw * 0.2, fy = g.top - 22; c.strokeStyle = '#5a5a62'; c.lineWidth = 3; c.beginPath(); c.moveTo(fx, g.top); c.lineTo(fx - 6, fy); c.stroke(); c.fillStyle = '#c9ced8'; c.beginPath(); c.moveTo(fx - 24, fy - 4); c.lineTo(fx + 12, fy - 4); c.lineTo(fx + 6, fy + 4); c.lineTo(fx - 18, fy + 4); c.closePath(); c.fill();
+          if (fl) { const h0 = c.createRadialGradient(fx - 6, fy - 4, 2, fx - 6, fy - 4, 60); h0.addColorStop(0, 'rgba(255,255,240,.95)'); h0.addColorStop(1, 'rgba(255,255,240,0)'); c.fillStyle = h0; c.fillRect(fx - 66, fy - 64, 120, 120); } else { c.fillStyle = 'rgba(200,200,200,.5)'; for (let k = 0; k < 2; k++) { const ph = ((x.t % 2400) / 2400 + k * 0.2) % 1; c.beginPath(); c.arc(fx - 6 + ph * 10, fy - 10 - ph * 30, 3 + ph * 6, 0, 7); c.fill(); } }
+          return; }
+        for (const sd of [-1, 1]) { const fx = g.cx + sd * g.bw * 0.24, lift = Math.max(0, sd * x.walk) * 4; blob(c, fx, 182 - lift, 7, 4, dk(x.body, 0.3), sd < 0 ? x.L.legL : x.L.legR, x.t, 'foot'); x.feet.push([fx, 182 - lift, 6]); }
+        if (st === 'Bit') { const sx = g.left + g.bw - 2; c.fillStyle = '#2a2630'; c.fillRect(sx, g.top + g.bh * 0.3, 22 + Math.sin(x.t / 600) * 2, g.bh * 0.4); c.fillStyle = '#e8d8b0'; for (let k = 0; k < 4; k++) { c.fillRect(sx + 3 + k * 5, g.top + g.bh * 0.3 + 2, 3, 3); c.fillRect(sx + 3 + k * 5, g.top + g.bh * 0.7 - 5, 3, 3); } return; }   // the film strip
+        c.fillStyle = '#e9e5dc'; c.fillRect(g.left + g.bw - 26, g.top - 8, 20, 9); c.fillStyle = 'rgba(255,255,255,.9)'; c.fillRect(g.left + g.bw - 24, g.top - 7, 16, 6);   // the flash on top
+        const pp = (x.t / 2000) % 1; c.fillStyle = '#ffffff'; c.fillRect(g.cx - 14, g.bot - 4, 28, 6 + pp * 18); c.fillStyle = rgba(lt(x.acc, 0.2), 0.8); c.fillRect(g.cx - 11, g.bot + 1, 22, Math.max(0, pp * 18 - 4)); },   // a photo sliding out
+      inside(c, g, x) { const st = g.stage;
+        if (st === 'Bit') { c.fillStyle = rgb(dk(x.body, 0.35)); c.fillRect(g.left - 2, g.top - 2, g.bw + 4, 8); c.fillRect(g.left - 2, g.bot - 6, g.bw + 4, 8); c.fillStyle = rgba(lt(x.acc, 0.3), 0.8); c.fillRect(g.left - 2, g.top + g.bh * 0.62, g.bw + 4, g.bh * 0.16); return; }
+        if (st === 'Mega') { c.fillStyle = rgba(mix(x.body, [130, 88, 55], 0.7), 0.9); c.fillRect(g.left - 4, g.top - 4, g.bw + 8, g.bh + 8); c.strokeStyle = 'rgba(80,50,30,.5)'; c.lineWidth = 1.5; for (let k = 1; k < 4; k++) { c.beginPath(); c.moveTo(g.left, g.top + k * g.bh / 4); c.lineTo(g.left + g.bw, g.top + k * g.bh / 4); c.stroke(); } c.fillStyle = '#d9a440'; for (const [fx, fy] of [[0.06, 0.08], [0.94, 0.08], [0.06, 0.92], [0.94, 0.92]]) { c.beginPath(); c.arc(g.left + g.bw * fx, g.top + g.bh * fy, 2.4, 0, 7); c.fill(); } return; }
+        c.fillStyle = rgb(x.acc); for (const fx of [0.3, 0.4, 0.5]) c.fillRect(g.left + g.bw * fx, g.top - 2, g.bw * 0.08, g.bh + 4); },   // a rainbow stripe
+      front(c, g, x) { const st = g.stage; if (st === 'Bit') return;
+        if (st === 'Byte') { const lx = g.left + g.bw * 0.82, ly = g.top + g.bh * 0.62, r = g.bh * 0.22; c.fillStyle = '#2a2630'; c.beginPath(); c.arc(lx, ly, r + 3, 0, 7); c.fill(); c.fillStyle = '#4a5a7a'; c.beginPath(); c.arc(lx, ly, r, 0, 7); c.fill(); c.fillStyle = 'rgba(255,255,255,.6)'; c.beginPath(); c.arc(lx - r * 0.35, ly - r * 0.35, r * 0.25, 0, 7); c.fill(); return; }   // the lens
+        const bx = g.left + g.bw, by0 = g.top + g.bh * 0.5, n = 4; for (let k = 0; k < n; k++) { const w = 26 - k * 3; c.fillStyle = k % 2 ? '#2a2630' : '#3a3540'; c.fillRect(bx + k * 6, by0 - w / 2, 7, w); }   // the bellows and the brass lens
+        const lx = bx + n * 6 + 6; c.fillStyle = '#b8902e'; c.beginPath(); c.arc(lx, by0, 11, 0, 7); c.fill(); c.fillStyle = '#4a5a7a'; c.beginPath(); c.arc(lx, by0, 7, 0, 7); c.fill(); c.fillStyle = 'rgba(255,255,255,.6)'; c.beginPath(); c.arc(lx - 2.5, by0 - 2.5, 2, 0, 7); c.fill(); if (CAP) (CAP.hands = CAP.hands || []).push(capPt(c, lx, by0)); },
+      hl: g => [g.left + g.bw * 0.12, g.top + g.bh * 0.6, g.left + g.bw * 0.14, g.top + g.bh * 0.24, g.left + g.bw * 0.34, g.top + g.bh * 0.08],
+      head: g => [g.cx, g.top + 2, g.bw * 0.46],
+      face: (c, g, x, look) => g.stage === 'Byte' ? faceTwo(c, { ...g, cx: g.cx - g.bw * 0.14 }, x, look, { ey: 0.44, ex: 0.12, my: 0.66, s: 0.62 }) : faceTwo(c, g, x, look, { ey: by(g.stage, 0.34, 0.4, 0.42), ex: 0.15, my: by(g.stage, 0.52, 0.66, 0.64), s: by(g.stage, 0.58, 0.64, 0.74) })
+    },
+    /* Yoyo: a toy that spins. Bit is a yo-yo hanging on its string from a finger loop. Byte swings round the world: its string loops out in a circle and its rim glows with speed.
+       Mega is a battle top: a cone spinning on its tip with a metal ring, sparks flying off where it grinds the floor and speed lines whipping round it */
+    Yoyo: {
+      dims: { Bit: [52, 52], Byte: [58, 58], Mega: [84, 70] }, ll: st => by(st, 0, 0, 14), float: true, slots: { feet: false },
+      bottom(st) { return st === 'Mega' ? 168 : st === 'Bit' ? 150 : 140; }, height(st) { return this.dims[st][1] + by(st, 40, 52, 22); },
+      path(c, g) { if (g.stage === 'Mega') { c.beginPath(); c.moveTo(g.left, g.top + g.bh * 0.3); c.quadraticCurveTo(g.left, g.top, g.cx, g.top); c.quadraticCurveTo(g.left + g.bw, g.top, g.left + g.bw, g.top + g.bh * 0.3); c.lineTo(g.cx + 6, g.bot); c.lineTo(g.cx - 6, g.bot); c.closePath(); return; }
+        c.beginPath(); c.arc(g.cx, g.top + g.bh / 2, g.bw / 2, 0, 7); },
+      behind(c, g, x) { const st = g.stage;
+        if (st === 'Bit') { const bob = Math.sin(x.t / 400) * 3; c.strokeStyle = 'rgba(255,255,255,.9)'; c.lineWidth = 1.4; c.beginPath(); c.moveTo(g.cx, g.top + g.bh / 2); c.lineTo(g.cx, g.top - 30 + bob); c.stroke(); c.strokeStyle = rgb(x.acc); c.lineWidth = 3; c.beginPath(); c.arc(g.cx, g.top - 34 + bob, 4, 0, 7); c.stroke(); x.feet.push([g.cx, 182, 8]); return; }
+        if (st === 'Byte') { const a = x.t / 300, R = 44, hx = g.cx - Math.cos(a) * R * 0.2, hy = g.top - 34; c.strokeStyle = 'rgba(255,255,255,.85)'; c.lineWidth = 1.4; c.beginPath(); c.moveTo(g.cx, g.top + g.bh / 2); c.lineTo(hx, hy); c.stroke();   // round the world
+          c.strokeStyle = 'rgba(255,255,255,.35)'; c.lineWidth = 2; c.beginPath(); c.arc(hx, hy + R * 0.7, R * 0.9, a, a + 2.2); c.stroke(); c.strokeStyle = rgb(x.acc); c.lineWidth = 3; c.beginPath(); c.arc(hx, hy - 4, 4, 0, 7); c.stroke(); x.feet.push([g.cx, 182, 8]); return; }
+        const sp = x.t / 60; c.strokeStyle = 'rgba(255,255,255,.5)'; c.lineWidth = 2; for (let k = 0; k < 3; k++) { c.beginPath(); c.ellipse(g.cx, g.top + g.bh * 0.3, g.bw * (0.62 + k * 0.1), 10 + k * 3, 0, sp + k * 2, sp + k * 2 + 2.2); c.stroke(); }   // speed lines
+        c.strokeStyle = '#c9ced8'; c.lineWidth = 3; c.beginPath(); c.moveTo(g.cx, g.bot); c.lineTo(g.cx, 182); c.stroke(); x.feet.push([g.cx, 182, 6]); },
+      inside(c, g, x) { const st = g.stage, sp = x.t / (st === 'Mega' ? 40 : st === 'Byte' ? 90 : 400);
+        if (st === 'Mega') { c.fillStyle = 'rgba(205,210,220,.9)'; c.fillRect(g.left - 4, g.top + g.bh * 0.24, g.bw + 8, g.bh * 0.14); c.fillStyle = 'rgba(255,255,255,.6)'; for (let k = 0; k < 6; k++) { const px = g.left + ((k / 6 + sp / 6) % 1) * g.bw; c.fillRect(px, g.top + g.bh * 0.24, 4, g.bh * 0.14); }   // the metal ring and spinning stripes
+          c.strokeStyle = rgba(dk(x.body, 0.3), 0.5); c.lineWidth = 3; for (let k = 0; k < 4; k++) { const fx = ((k / 4 + sp / 4) % 1); c.beginPath(); c.moveTo(g.left + g.bw * fx, g.top + g.bh * 0.4); c.lineTo(g.cx + (fx - 0.5) * 10, g.bot); c.stroke(); } return; }
+        c.strokeStyle = rgba(dk(x.body, 0.35), 0.7); c.lineWidth = 3; c.beginPath(); c.arc(g.cx, g.top + g.bh / 2, g.bw / 2 - 3, 0, 7); c.stroke();
+        if (st === 'Byte') { c.strokeStyle = rgba(lt(x.acc, 0.4), 0.8); c.lineWidth = 2.5; c.beginPath(); c.arc(g.cx, g.top + g.bh / 2, g.bw / 2 - 1, sp, sp + 4); c.stroke(); } },
+      front(c, g, x) { if (g.stage !== 'Mega') return; for (let k = 0; k < 5; k++) { const ph = (x.t / 400 + k / 5) % 1, a = Math.PI + (k % 2 ? 0.3 : -0.3) + (k - 2) * 0.4; c.fillStyle = `rgba(255,${200 + k * 10},90,${1 - ph})`; c.beginPath(); c.arc(g.cx + Math.cos(a) * ph * 30 * (k % 2 ? 1 : -1), 180 - Math.abs(Math.sin(a)) * ph * 16, 1.8, 0, 7); c.fill(); } },   // sparks
+      hl: g => [g.left + g.bw * 0.16, g.top + g.bh * 0.6, g.left + g.bw * 0.18, g.top + g.bh * 0.24, g.left + g.bw * 0.38, g.top + g.bh * 0.08],
+      head: g => [g.cx, g.top + 2, g.bw * 0.44],
+      face: (c, g, x, look) => faceTwo(c, g, x, look, g.stage === 'Mega' ? { ey: 0.16, ex: 0.16, my: 0.24, s: 0.62 } : { ey: 0.44, ex: 0.16, my: 0.66, s: by(g.stage, 0.62, 0.68, 0.7) })
+    },
+    /* Lava: molten wax. Bit is a wobbling blob of warm wax. Byte is a lava lamp: a tapered glass with a metal cap and base and blobs drifting up and down inside.
+       Mega is a volcano: a cone of rock with the face on it, lava pouring from the crater and running down its sides, and embers shooting up */
+    Lava: {
+      dims: { Bit: [58, 46], Byte: [52, 84], Mega: [108, 80] }, ll: st => by(st, 4, 14, 2),
+      bottom(st) { return 182 - this.ll(st); }, height(st) { return this.dims[st][1] + this.ll(st) + by(st, 6, 16, 40); },
+      glass: true, patternAfter: true,
+      path(c, g, x) { const st = g.stage, t = x ? x.t : 0;
+        if (st === 'Bit') { const b = Math.sin(t / 300) * 0.06; c.beginPath(); c.ellipse(g.cx, g.top + g.bh * 0.55, g.bw / 2 * (1 + b), g.bh / 2 * (1 - b), 0, 0, 7); return; }
+        if (st === 'Byte') { c.beginPath(); c.moveTo(g.cx - g.bw * 0.22, g.top); c.lineTo(g.cx + g.bw * 0.22, g.top); c.quadraticCurveTo(g.left + g.bw + 4, g.top + g.bh * 0.6, g.cx + g.bw * 0.36, g.bot); c.lineTo(g.cx - g.bw * 0.36, g.bot); c.quadraticCurveTo(g.left - 4, g.top + g.bh * 0.6, g.cx - g.bw * 0.22, g.top); c.closePath(); return; }
+        c.beginPath(); c.moveTo(g.left - 4, g.bot); c.quadraticCurveTo(g.left + g.bw * 0.2, g.top + g.bh * 0.4, g.cx - g.bw * 0.2, g.top + 4); c.lineTo(g.cx - g.bw * 0.12, g.top + 10); c.lineTo(g.cx + g.bw * 0.12, g.top + 10); c.lineTo(g.cx + g.bw * 0.2, g.top + 4);
+        c.quadraticCurveTo(g.left + g.bw * 0.8, g.top + g.bh * 0.4, g.left + g.bw + 4, g.bot); c.closePath(); },
+      arms: 'stub', armW: st => by(st, 0, 0, 7), handR: st => by(st, 0, 0, 6), shoulderY: 0.66, armK: 0.7,
+      behind(c, g, x) { const st = g.stage, metal = [190, 196, 206];
+        if (st === 'Byte') { roundBox(c, g.cx - g.bw * 0.2, g.top - 12, g.bw * 0.4, 14, 4); c.fillStyle = rgb(dk(metal, 0.1)); c.fill(); c.fillStyle = rgb(dk(metal, 0.25)); c.beginPath(); c.moveTo(g.cx - g.bw * 0.36, g.bot - 2); c.lineTo(g.cx + g.bw * 0.36, g.bot - 2); c.lineTo(g.cx + g.bw * 0.5, 182); c.lineTo(g.cx - g.bw * 0.5, 182); c.closePath(); c.fill(); x.feet.push([g.cx, 182, g.bw * 0.4]); return; }
+        if (st === 'Bit') { for (const sd of [-1, 1]) { const fx = g.cx + sd * g.bw * 0.22, lift = Math.max(0, sd * x.walk) * 4; blob(c, fx, 182 - lift, 7, 4, dk(x.body, 0.2), sd < 0 ? x.L.legL : x.L.legR, x.t, 'foot'); x.feet.push([fx, 182 - lift, 6]); } return; }
+        const gl = 0.6 + 0.4 * Math.sin(x.t / 300), h0 = c.createRadialGradient(g.cx, g.top, 2, g.cx, g.top, 60); h0.addColorStop(0, `rgba(255,140,50,${0.55 * gl})`); h0.addColorStop(1, 'rgba(255,140,50,0)'); c.fillStyle = h0; c.fillRect(g.cx - 60, g.top - 60, 120, 100);   // the crater's glow and embers
+        for (let k = 0; k < 8; k++) { const ph = (x.t / 900 + k / 8) % 1, px = g.cx + Math.sin(k * 2.3) * 18 * ph, py = g.top + 4 - ph * 60 + ph * ph * 30; c.fillStyle = `rgba(255,${150 + k * 10},60,${1 - ph})`; c.beginPath(); c.arc(px, py, 2.4, 0, 7); c.fill(); }
+        x.feet.push([g.cx, 182, g.bw * 0.45]); },
+      inside(c, g, x) { const st = g.stage, lv = mix(x.acc, [255, 110, 50], 0.6);
+        if (st === 'Bit') { c.fillStyle = rgba(lt(x.body, 0.3), 0.5); for (let k = 0; k < 3; k++) { const ph = (x.t / 1800 + k / 3) % 1; c.beginPath(); c.arc(g.cx + (k - 1) * 12, g.bot - 4 - ph * g.bh * 0.7, 3 + k, 0, 7); c.fill(); } return; }
+        if (st === 'Byte') { for (let k = 0; k < 4; k++) { const ph = (x.t / 3000 + k / 4) % 1, yy = g.bot - 8 - Math.abs(Math.sin(ph * Math.PI)) * (g.bh - 18), r = 6 + (k % 2) * 4, w = Math.sin(x.t / 300 + k) * 0.15; c.fillStyle = rgb(lv); c.beginPath(); c.ellipse(g.cx + (k - 1.5) * 6, yy, r * (1 + w), r * (1 - w), 0, 0, 7); c.fill(); } return; }   // blobs drifting in the lamp
+        c.fillStyle = rgba(mix(x.body, [110, 90, 80], 0.6), 0.85); c.fillRect(g.left - 6, g.top - 4, g.bw + 12, g.bh + 8);   // rock, and lava running down from the crater
+        c.fillStyle = rgb(lv); c.beginPath(); c.moveTo(g.cx - g.bw * 0.12, g.top + 8); c.lineTo(g.cx + g.bw * 0.12, g.top + 8);
+        for (const [fx, len] of [[0.06, 0.55], [-0.08, 0.38], [0.14, 0.3]]) { } c.lineTo(g.cx + g.bw * 0.16, g.top + 18); c.quadraticCurveTo(g.cx + g.bw * 0.3, g.top + g.bh * 0.5, g.cx + g.bw * 0.34, g.top + g.bh * 0.62 + Math.sin(x.t / 500) * 2); c.quadraticCurveTo(g.cx + g.bw * 0.26, g.top + g.bh * 0.6, g.cx + g.bw * 0.2, g.top + 26);
+        c.lineTo(g.cx - g.bw * 0.16, g.top + 22); c.quadraticCurveTo(g.cx - g.bw * 0.3, g.top + g.bh * 0.4, g.cx - g.bw * 0.36, g.top + g.bh * 0.5 + Math.sin(x.t / 600) * 2); c.quadraticCurveTo(g.cx - g.bw * 0.28, g.top + g.bh * 0.36, g.cx - g.bw * 0.12, g.top + 14); c.closePath(); c.fill();
+        c.fillStyle = 'rgba(255,230,140,.7)'; c.beginPath(); c.ellipse(g.cx, g.top + 11, g.bw * 0.1, 2.5, 0, 0, 7); c.fill(); },
+      hl: g => [g.left + g.bw * 0.16, g.top + g.bh * 0.6, g.left + g.bw * 0.18, g.top + g.bh * 0.3, g.left + g.bw * 0.34, g.top + g.bh * 0.14],
+      head: g => [g.cx, g.top + 2, g.bw * 0.44],
+      face: (c, g, x, look) => faceTwo(c, g, x, look, g.stage === 'Mega' ? { ey: 0.58, ex: 0.13, my: 0.78, s: 0.76 } : g.stage === 'Byte' ? { ey: 0.56, ex: 0.16, my: 0.74, s: 0.6 } : { ey: 0.46, ex: 0.16, my: 0.68, s: 0.64 })
+    },
+    /* Pogo: bouncing. Bit is a striped rubber ball that never stops bouncing. Byte is a pogo stick: handlebars on its sides and a spring under it that it hops on.
+       Mega is a jack-in-the-box: a painted box with a crank turning, its lid flung open and a jester's hat bobbing up out of it on a spring */
+    Pogo: {
+      dims: { Bit: [46, 46], Byte: [52, 60], Mega: [76, 70] }, ll: st => by(st, 0, 26, 6), slots: { feet: false },
+      bottom(st) { return 182 - this.ll(st); }, height(st) { return this.dims[st][1] + this.ll(st) + by(st, 30, 14, 64); },
+      bounce(st, t) { return st === 'Mega' ? 0 : Math.abs(Math.sin(t / (st === 'Bit' ? 260 : 300))) * (st === 'Bit' ? 26 : 16); },
+      path(c, g, x) { const st = g.stage, b = x ? this.bounce(st, x.t) : 0; if (st === 'Mega') { roundBox(c, g.left, g.top, g.bw, g.bh, 6); return; }
+        const sq = b < 3 ? 0.08 : 0; if (st === 'Bit') { c.beginPath(); c.ellipse(g.cx, g.top + g.bh / 2 - b, g.bw / 2 * (1 + sq), g.bh / 2 * (1 - sq), 0, 0, 7); return; } roundBox(c, g.left, g.top - b, g.bw, g.bh, 16); },
+      arms: 'stub', armW: st => 0, handR: st => 0, shoulderY: 0.6, armK: 0.7,
+      behind(c, g, x) { const st = g.stage, b = this.bounce(st, x.t);
+        if (st === 'Bit') { c.fillStyle = 'rgba(0,0,0,.12)'; c.beginPath(); c.ellipse(g.cx, 182, g.bw * 0.4 * (1 - b / 60), 3, 0, 0, 7); c.fill(); x.feet.push([g.cx, 182, 6]); return; }
+        if (st === 'Byte') { const sy = g.bot - b, coils = 6, sl = 182 - sy; c.strokeStyle = '#9aa0ab'; c.lineWidth = 3; c.beginPath(); c.moveTo(g.cx, sy); for (let k = 0; k <= coils * 2; k++) c.lineTo(g.cx + (k % 2 ? 9 : -9), sy + sl * k / (coils * 2)); c.stroke();   // the spring, the foot pegs and the handlebars
+          c.fillStyle = '#3a3a44'; c.fillRect(g.cx - 3, 176, 6, 6); c.fillStyle = '#c9ced8'; c.fillRect(g.cx - 16, sy - 2, 32, 5); x.feet.push([g.cx, 182, 6]);
+          for (const sd of [-1, 1]) { c.strokeStyle = '#5a5a62'; c.lineWidth = 3; c.beginPath(); c.moveTo(g.cx + sd * g.bw * 0.4, g.top + 10 - b); c.lineTo(g.cx + sd * (g.bw * 0.5 + 12), g.top + 2 - b); c.stroke(); c.fillStyle = rgb(x.acc); roundBox(c, g.cx + sd * (g.bw * 0.5 + 12) - 5, g.top - 4 - b, 10, 10, 3); c.fill(); } return; }
+        const spr = 22 + Math.abs(Math.sin(x.t / 260)) * 18, hx = g.cx + Math.sin(x.t / 400) * 6, hy = g.top - spr;   // the open lid, the spring and the jester hat
+        c.save(); c.translate(g.left, g.top); c.rotate(-1.75); c.fillStyle = rgb(dk(x.acc, 0.25)); c.fillRect(0, -2, g.bw * 0.9, 16); c.fillStyle = rgb(x.acc); c.fillRect(0, 0, g.bw * 0.9, 12); c.fillStyle = '#e9b23a'; c.fillRect(0, 0, g.bw * 0.9, 2); c.restore();
+        c.strokeStyle = '#c9ced8'; c.lineWidth = 3; c.beginPath(); c.moveTo(g.cx, g.top + 2); for (let k = 0; k <= 8; k++) c.lineTo(g.cx + (k % 2 ? 8 : -8) + (hx - g.cx) * k / 8, g.top + 2 - spr * k / 8); c.stroke();
+        for (const [sd, col] of [[-1, x.acc], [0, x.parts], [1, x.acc]]) { c.fillStyle = rgb(col); c.beginPath(); c.moveTo(hx - 14, hy); c.lineTo(hx + 14, hy); c.quadraticCurveTo(hx + sd * 18, hy - 16, hx + sd * 22, hy - 22 + Math.abs(sd) * 6); c.closePath(); c.fill(); c.fillStyle = '#ffe27a'; c.beginPath(); c.arc(hx + sd * 22, hy - 22 + Math.abs(sd) * 6, 3.5, 0, 7); c.fill(); }
+        roundBox(c, hx - 15, hy - 3, 30, 7, 3); c.fillStyle = '#ffffff'; c.fill(); for (const sd of [-1, 1]) { const fx = g.cx + sd * g.bw * 0.34; c.fillStyle = '#b8902e'; c.beginPath(); c.arc(fx, 179, 4, 0, 7); c.fill(); x.feet.push([fx, 182, 5]); } },
+      inside(c, g, x) { const st = g.stage, b = this.bounce(st, x.t);
+        if (st === 'Bit') { c.fillStyle = rgba(lt(x.acc, 0.3), 0.85); c.fillRect(g.left - 4, g.top + g.bh * 0.4 - b, g.bw + 8, g.bh * 0.2); c.fillStyle = 'rgba(255,255,255,.4)'; c.beginPath(); c.arc(g.cx - g.bw * 0.2, g.top + g.bh * 0.25 - b, 4, 0, 7); c.fill(); return; }
+        if (st === 'Byte') { c.fillStyle = rgba(lt(x.acc, 0.3), 0.7); for (let k = 0; k < 3; k++) c.fillRect(g.left - 4, g.top + g.bh * (0.15 + k * 0.32) - b, g.bw + 8, 4); return; }
+        const cols = [x.acc, lt(x.body, 0.35)]; for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) { c.fillStyle = rgba(cols[(i + j) % 2], 0.55); c.fillRect(g.left + i * g.bw / 4, g.top + j * g.bh / 4, g.bw / 4, g.bh / 4); }   // a painted checkerboard
+        c.strokeStyle = '#e9b23a'; c.lineWidth = 3; c.strokeRect(g.left + 2, g.top + 2, g.bw - 4, g.bh - 4); },
+      front(c, g, x) { if (g.stage !== 'Mega') return; const a = x.t / 300, kx = g.left + g.bw + 6, ky = g.top + g.bh * 0.5; c.strokeStyle = '#9aa0ab'; c.lineWidth = 3; c.beginPath(); c.moveTo(g.left + g.bw, ky); c.lineTo(kx, ky); c.lineTo(kx + Math.cos(a) * 10, ky + Math.sin(a) * 10); c.stroke(); c.fillStyle = '#d8333f'; c.beginPath(); c.arc(kx + Math.cos(a) * 10, ky + Math.sin(a) * 10, 3.5, 0, 7); c.fill(); },   // the crank
+      hl: g => [g.left + g.bw * 0.14, g.top + g.bh * 0.6, g.left + g.bw * 0.16, g.top + g.bh * 0.24, g.left + g.bw * 0.36, g.top + g.bh * 0.08],
+      head: g => [g.cx, g.top + 2, g.bw * 0.46],
+      face(c, g, x, look) { const b = this.bounce(g.stage, x.t); return faceTwo(c, { ...g, top: g.top - b }, x, look, { ey: by(g.stage, 0.42, 0.44, 0.42), ex: 0.16, my: by(g.stage, 0.64, 0.66, 0.66), s: by(g.stage, 0.6, 0.64, 0.76) }); }
+    },
     /* ---- the four specials ---- */
     /* Kraken: a tall pointed mantle with fins, two long arms curling up behind it, a skirt of short tentacles with suckers, and a fin crest at Mega */
     Kraken: {
