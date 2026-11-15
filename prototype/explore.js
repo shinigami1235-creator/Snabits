@@ -7,9 +7,9 @@
    seen and found stays seen and found. */
 
 // the Pattern Stone in each region, and the special Snabit its pattern belongs to
-const EX_STONE = { 'Cinder Peak': 'Phoenix', 'Static Plains': 'Eagle', 'Nightshade Marsh': 'Naga', 'Glacier Rim': 'Yeti', 'Saffron Dojo': 'Tengu', 'Tanglewood': 'Tanuki', 'Coral Shallows': 'Mermaid', 'Dream Garden': 'Diwata', 'Granite Steps': 'Sphinx' };
+const EX_STONE = { 'Cinder Peak': 'Phoenix', 'Static Plains': 'Eagle', 'Nightshade Marsh': 'Naga', 'Glacier Rim': 'Yeti', 'Saffron Dojo': 'Tengu', 'Tanglewood': 'Tanuki', 'Coral Shallows': 'Mermaid', 'Dream Garden': 'Diwata', 'Granite Steps': 'Sphinx', 'Dawn Temple': 'Garuda', 'Hollow Moor': 'Werewolf', 'Iron Foundry': 'Minotaur' };
 // the stones only a team reaches, on the deep maps (Gid, 15 Nov 2026: stones from grade C)
-const EX_DEEP_STONE = { 'Dream Garden': 'Kitsune', 'Hollow Moor': 'Vampire', 'Tanglewood': 'Jack', 'Coral Shallows': 'Kraken', 'Granite Steps': 'Golem', 'Dawn Temple': 'Unicorn' };
+const EX_DEEP_STONE = { 'Dream Garden': 'Kitsune', 'Hollow Moor': 'Vampire', 'Tanglewood': 'Jack', 'Coral Shallows': 'Kraken', 'Granite Steps': 'Golem', 'Dawn Temple': 'Unicorn', 'Cinder Peak': 'Dragon', 'Static Plains': 'Thunderbird' };
 // Helena's journal, one page a region, in the order she went
 const EX_PAGES = {
   'Cinder Peak': "Found a carved stone under the ash on the north slope, painted in bands of red and orange that are still bright under the soot. Victor wants it for the Grand Ranch hall. I left it where it stood.",

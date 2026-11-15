@@ -47,6 +47,11 @@ function atSfx(kind,el){
     else if(kind==="ab:Siren") [988,1319,1175].forEach((f,k)=>sTone(d,t+k*0.12,"sine",f,f,0.3,0.05));   // three notes of a song
     else if(kind==="ab:Blessing") [1568,2093].forEach((f,k)=>sTone(d,t+k*0.06,"triangle",f,f,0.2,0.03));
     else if(kind==="ab:Riddle"){ sTone(d,t,"triangle",440,660,0.2,0.06); sTone(d,t+0.15,"triangle",660,440,0.25,0.05); }
+    else if(kind==="ab:Sky King"){ sTone(d,t,"sawtooth",1600,2400,0.25,0.035); }
+    else if(kind==="ab:Full Moon"){ sTone(d,t,"sawtooth",300,600,0.5,0.05); sTone(d,t+0.1,"triangle",600,900,0.6,0.05); }   // a howl
+    else if(kind==="ab:Headlong"){ dKick(d,t,0.5); dNoise(d,t,0.15,0.2,"lowpass",700); }
+    else if(kind==="ab:Dragon Scale"){ sTone(d,t,"triangle",500,300,0.15,0.06); dNoise(d,t,0.1,0.1,"highpass",3000); }
+    else if(kind==="ab:Stormborn"){ dNoise(d,t,0.2,0.2,"highpass",2000,1); sTone(d,t,"square",1800,600,0.15,0.04); }
     else if(kind==="ab:Slippery"){ sTone(d,t,"sine",500,1400,0.22,0.07); }   // a slide whistle
     else if(kind==="ab:Shell"||kind==="ab:Unbreakable"||kind==="ab:Bedrock"||kind==="ab:Plated"||kind==="ab:Steady"){ dKick(d,t,0.4); [523,1250,2100].forEach(f=>sTone(d,t,"square",f,f*0.98,0.18,0.025)); }   // a hard clank
     else if(kind==="ab:Hothead"||kind==="ab:Wildfire"){ for(let k=0;k<4;k++) dNoise(d,t+k*0.03,0.05,0.18,"bandpass",1800+k*500,2); dNoise(d,t,0.35,0.12,"lowpass",700); }   // a flare of fire
@@ -578,7 +583,12 @@ const AR_KIND={Lunge:"bite","Jaw Lock":"jawlock",Gnash:"gnash",
   "Belly Bump":"tackle","Leaf Toss":"volley","Belly Drum":"hammer","Straw Hat Toss":"bolt","Big Belly Slam":"avalanche",
   "Tail Flick":"lash","Pearl Shot":"bolt","Siren Song":"push","Rip Current":"wave","Fin Slap":"lash","Tidal Aria":"wave",
   "Petal Pat":"punch","Pollen Puff":"bolt","Petal Storm":"volley","Thorn Whip":"lash","Fairy Lights":"volley","Grove Bloom":"pillar",
-  "Paw Swipe":"claw","Lion Leap":"tackle","Puzzle Gaze":"beam","Desert Roar":"push","Sun Disc":"bolt","Great Pounce":"talondive"};
+  "Paw Swipe":"claw","Lion Leap":"tackle","Puzzle Gaze":"beam","Desert Roar":"push","Sun Disc":"bolt","Great Pounce":"talondive",
+  "Crown Peck":"punch","Wing Rush":"tackle","Garuda Dive":"talondive","Feather Storm":"volley","Serpent Snatch":"vicegrip","Heaven Dive":"talondive",
+  "Wolf Claw":"claw","Moon Howl":"push","Feral Slash":"shadowclaw","Lunar Leap":"tackle","Fang Frenzy":"gnash","Midnight Maul":"shadowclaw",
+  "Horn Butt":"tackle","Hoof Stamp":"stomp","Bull Rush":"tackle","Axe Swing":"hammer","Labyrinth Charge":"tackle","Great Axe":"hammer",
+  "Claw Rake":"claw","Ember Breath":"bolt","Wyrm Breath":"firespin","Tail Smash":"lash","Wing Buffet":"gust","Dragon Fury":"meteor",
+  "Storm Peck":"punch","Static Feather":"bolt","Thunder Wing":"lightning","Wing Clap":"push","Chain Bolt":"volley","Storm Bringer":"lightning"};
 
 /* ---------- the special Snabits' signature moves ---------- */
 function atBat(c,x,y,s,flap){ c.save(); c.translate(x,y); c.scale(s,s); c.fillStyle="#2a1d33"; const w=Math.sin(flap)*0.5+0.6;
@@ -649,7 +659,8 @@ if(typeof MOVE_KIND!=="undefined") Object.assign(MOVE_KIND,{"Talon Dive":"fly","
   "Bamboo Smack":"stomp","Roly-Poly":"heal",Stinger:"punch",Swarm:"volley","Shell Bash":"tackle","Lucky Spots":"buff","Seed Spit":"volley","Melon Smash":"stomp","Cane Hook":"claw","Sugar Rush":"buff",
   "Tiger Swipe":"claw",Pounce:"tackle","Stripe Dash":"tackle","Dazzle Stripes":"glare","Moo Rush":"tackle","Milk Break":"heal","Belly Slide":"tackle","Flipper Slap":"claw",
   "Berry Toss":"volley","Sweet Scent":"heal",Squeak:"glare","Bubble Bath":"heal","Anemone Sting":"punch","Reef Dart":"tackle",
-  "Gale Fan":"gust","Belly Drum":"stomp","Siren Song":"glare","Petal Storm":"volley","Puzzle Gaze":"glare"});
+  "Gale Fan":"gust","Belly Drum":"stomp","Siren Song":"glare","Petal Storm":"volley","Puzzle Gaze":"glare",
+  "Garuda Dive":"fly","Feral Slash":"claw","Bull Rush":"tackle","Wyrm Breath":"bolt","Thunder Wing":"bolt"});
 
 /* ---------- abilities: when one works, its name shows over the Snabit with its own colour, particles and sound ---------- */
 const AT_ABIL={ "Sky High":{c:[255,236,170],k:"feather"}, Bloodsuck:{c:[230,50,70],k:"suck"}, Rebirth:{c:[255,170,60],k:"flame"}, Illusion:{c:[160,200,255],k:"wisp"},
@@ -660,7 +671,8 @@ const AT_ABIL={ "Sky High":{c:[255,236,170],k:"feather"}, Bloodsuck:{c:[230,50,7
   "Toxic Touch":{c:[164,92,232],k:"ring"}, Beguile:{c:[255,132,192],k:"ring"}, "Mirror Mind":{c:[255,132,192],k:"shine"}, Bedrock:{c:[170,118,66],k:"ring"}, Unbreakable:{c:[170,118,66],k:"ring"},
   Halo:{c:[255,246,190],k:"shine"}, Sanctuary:{c:[255,246,190],k:"shine"}, Reflect:{c:[200,210,225],k:"shine"}, Haunt:{c:[140,86,190],k:"ring"}, "Life seed":{c:[120,210,110],k:"ring"},
   Wildfire:{c:[255,112,40],k:"flame"}, Volatile:{c:[164,92,232],k:"ring"}, Permafrost:{c:[150,222,255],k:"snow"}, Corrosion:{c:[164,92,232],k:"ring"}, Plated:{c:[200,210,225],k:"ring"}, Undertow:{c:[74,146,240],k:"ring"},
-  Gust:{c:[170,230,160],k:"feather"}, "Trick Leaf":{c:[110,190,80],k:"ring"}, Siren:{c:[240,140,190],k:"shine"}, Blessing:{c:[255,190,220],k:"shine"}, Riddle:{c:[240,200,80],k:"ring"} };
+  Gust:{c:[170,230,160],k:"feather"}, "Trick Leaf":{c:[110,190,80],k:"ring"}, Siren:{c:[240,140,190],k:"shine"}, Blessing:{c:[255,190,220],k:"shine"}, Riddle:{c:[240,200,80],k:"ring"},
+  "Sky King":{c:[255,214,90],k:"feather"}, "Full Moon":{c:[250,246,220],k:"shine"}, Headlong:{c:[200,150,100],k:"ring"}, "Dragon Scale":{c:[110,190,90],k:"ring"}, Stormborn:{c:[255,224,60],k:"ring"} };
 function atAbility(e,now){ const A=AT_ABIL[e.name]||{c:[255,214,90],k:"ring"}, P=atP(e.i);
   AT.fx.push({i:e.i,t0:now,txt:e.name,col:atRgba(A.c,1),size:15,lift:44});
   if(P){ atPart({k:"ring",x:P.cx,y:P.foot,life:520,s:P.r*2.4,c:A.c}); atPart({k:"ring",x:P.cx,y:P.foot,life:700,s:P.r*3.2,c:A.c,t0:AT.te+90});

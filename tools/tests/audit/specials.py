@@ -8,9 +8,9 @@ from playwright.async_api import async_playwright
 from common import launch, reinject, settle, Checks, HERE
 import images
 ONLY = sys.argv[1:]
-NEW16 = ['Tengu', 'Tanuki', 'Mermaid', 'Diwata', 'Sphinx']   # checked by name (specials.py Tengu ...), so the full run keeps its count of eleven
+NEW16 = ['Tengu', 'Tanuki', 'Mermaid', 'Diwata', 'Sphinx', 'Garuda', 'Werewolf', 'Minotaur', 'Dragon', 'Thunderbird']   # checked by name (specials.py Tengu ...), so the full run keeps its count of eleven
 ABILITY = {'Eagle': 'Sky High', 'Vampire': 'Bloodsuck', 'Phoenix': 'Rebirth', 'Kitsune': 'Illusion', 'Naga': 'Coil', 'Yeti': 'Thick Fur'}
-ABILITY.update({'Tengu': 'Gust', 'Tanuki': 'Trick Leaf', 'Mermaid': 'Siren', 'Diwata': 'Blessing', 'Sphinx': 'Riddle'})   # the specials of 16 Nov 2026
+ABILITY.update({'Tengu': 'Gust', 'Tanuki': 'Trick Leaf', 'Mermaid': 'Siren', 'Diwata': 'Blessing', 'Sphinx': 'Riddle', 'Garuda': 'Sky King', 'Werewolf': 'Full Moon', 'Minotaur': 'Headlong', 'Dragon': 'Dragon Scale', 'Thunderbird': 'Stormborn'})   # the specials of 16 Nov 2026
 
 async def click(pg, sel, wait=150):
     ok = await pg.evaluate("s=>{ const e=document.querySelector(s); if(__vis(e)){ e.click(); return true; } return false; }", sel)
@@ -101,7 +101,7 @@ async def one(pg, C, kind, path, errs):
     C.ok(sim['old']['ended'] == sim['old']['n'] and not sim['old']['bad'], f'{label}: 40 simulated old battles all end with real numbers ({sim["old"]})')
     if special:
         C.ok(sim['arena']['abil'] > 0, f'{label}: {ABILITY[kind]} goes off in the arena ({sim["arena"]["abil"]} of 40 fights)')
-        C.ok(sim['old']['abil'] > 0 or kind in ('Yeti', 'Tengu'), f'{label}: {ABILITY[kind]} goes off in the old battle ({sim["old"]["abil"]} of 40 fights)')
+        C.ok(sim['old']['abil'] > 0 or kind in ('Yeti', 'Tengu', 'Minotaur', 'Garuda'), f'{label}: {ABILITY[kind]} goes off in the old battle ({sim["old"]["abil"]} of 40 fights)')
     print(f'  {label}: arena {sim["arena"]}, old {sim["old"]}', flush=True)
     # evolve twice: enough training for Byte, then for Mega
     for stage in ['Byte', 'Mega']:

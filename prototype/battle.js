@@ -65,6 +65,7 @@ class Fight{
     if(f.statusBlock){ this.say(`${f.name} stays calm and shrugs it off.`); return false; }
     if(f.ability==="Sanctuary"&&f.hp===f.maxhp){ this.pop(i,"Sanctuary"); return false; }
     if(f.ability==="Bright"&&name==="Blind"){ this.pop(i,"Bright"); return false; }
+    if(f.ability==="Sky King"&&name==="Root"){ this.pop(i,"Sky King"); return false; }   // Garuda
     if(name==="Crack"&&f.ability==="Unbreakable"){ this.pop(i,"Unbreakable"); return false; }
     if(name==="Freeze"&&(f.thawed||f.ability==="Thick Fur")) return false;
     if(name==="Poison"&&(f.el1==="Steel"||f.el2==="Steel")&&!(fromIdx!=null&&this.p[fromIdx].ability==="Corrosion")){ this.say(`${f.name} is made of metal and can't be poisoned.`); return false; }
@@ -244,6 +245,7 @@ class Fight{
       if(def.status&&def.status.name==="Soak"&&el==="Spark") d*=1.25;
       if(def.ability==="Plated"&&s.kind==="Strike") d*=0.9;
       if(def.ability==="Thick Fur"&&(el==="Blaze"||el==="Frost")) d*=0.75;   // Yeti
+      if(def.ability==="Dragon Scale"&&(el==="Blaze"||el==="Frost")){ d*=0.8; if(h===0) this.pop(tgt,"Dragon Scale"); }   // Dragon
       if(def.ability==="Riddle"&&s.kind==="Cast"){ d*=0.8; if(h===0) this.pop(tgt,"Riddle"); }   // Sphinx
       if(def.status&&def.status.name==="Freeze"&&me.ability==="Permafrost") d*=1.2;
       if(def.ability==="Wobble"&&!def.firstHitTaken){ d*=0.7; this.pop(tgt,"Wobble"); }
@@ -282,10 +284,12 @@ class Fight{
     if(s.basic&&me.ability==="Web"&&tgt!==i&&R()<0.3){ this.pop(i,"Web"); this.stageChange(def,{spd:-1},true); }
     if(s.status&&tgt!==i){ let ch=s.status[1]*this.statusOdds(me,def)*(me.ability==="Volatile"?1.3:1); if(s.status[0]==="Freeze"&&((this.field&&this.field.name==="Snow")||me.ability==="Permafrost")) ch*=2; if(R()*100<ch) this.inflict(def,s.status[0],i); }
     if(s.lower&&s.lowerChance&&tgt!==i&&R()*100<s.lowerChance) this.stageChange(def,s.lower,true);
+    if(me.ability==="Stormborn"&&total&&tgt!==i&&def.hp>0&&!def.status&&R()<0.15){ this.pop(i,"Stormborn"); this.inflict(def,"Shock",i); }   // Thunderbird
     if(me.ability==="Siren"&&s.kind==="Cast"&&total&&tgt!==i&&def.hp>0&&!def.status&&R()<0.2){ this.pop(i,"Siren"); this.inflict(def,"Daze",i); }   // Mermaid
     if(this.field&&this.field.name==="Static"&&R()<0.1) this.inflict(def,"Shock",i);
   }
-  lastStand(i){ const f=this.p[i]; if(f.ability==="Last Stand"&&!f.lastStand&&f.hp>0&&f.hp<f.maxhp/4){ f.lastStand=true; const h=Math.round(f.maxhp*0.2); f.hp=Math.min(f.maxhp,f.hp+h); this.pop(i,"Last Stand"); this.say(`${f.name} gets a second wind.`); this.events.push({t:"heal",who:i,amt:h}); } }
+  lastStand(i){ const f=this.p[i]; if(f.ability==="Full Moon"&&!f.moon&&f.hp>0&&f.hp<f.maxhp*0.4){ f.moon=true; this.pop(i,"Full Moon"); this.stageChange(f,{pow:2},false); }   // Werewolf
+    if(f.ability==="Last Stand"&&!f.lastStand&&f.hp>0&&f.hp<f.maxhp/4){ f.lastStand=true; const h=Math.round(f.maxhp*0.2); f.hp=Math.min(f.maxhp,f.hp+h); this.pop(i,"Last Stand"); this.say(`${f.name} gets a second wind.`); this.events.push({t:"heal",who:i,amt:h}); } }
   ko(i,by){
     const f=this.p[i];
     if(f.ability==="Rebirth"&&!f.reborn){ f.reborn=true; f.hp=Math.round(f.maxhp/4); f.status=null; this.pop(i,"Rebirth"); this.say(`${f.name} rises from the flames.`); this.events.push({t:"heal",who:i,amt:f.hp}); return; }   // Phoenix

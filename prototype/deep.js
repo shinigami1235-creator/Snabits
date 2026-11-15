@@ -180,10 +180,10 @@ async function deepNode(reg, n, st, g, need, T, leadOf, setLead, K, used, found,
     const won = await deepFight(T, leadOf(), foe, tName, K);
     if (!won) { K(`${tName} beat all three of you. We're going home.`); await rwait(1600); return 'end'; }
     const alive = T.findIndex(m => !m.out); if (alive >= 0 && T[leadOf()].out) setLead(alive);
-    const sp = EX_DEEP_STONE[reg.n], have = once;
-    if (sp && !have) { const p = prop({ k: 'pstone', x: 170, y: GROUND, glow: true, sp }); await walkTo(140, 60, 'walk'); RS.pose = 'happy'; st.got.push(n.id); const L = stoneList(); if (L && !L.includes(sp)) L.push(sp);
+    const sp = EX_DEEP_STONE[reg.n], L0 = sp && stoneList(), have = L0 ? L0.includes(sp) : once;   // a save that beat this guardian when it guarded two items still finds the stone
+    if (sp && !have) { const p = prop({ k: 'pstone', x: 170, y: GROUND, glow: true, sp }); await walkTo(140, 60, 'walk'); RS.pose = 'happy'; if (!once) st.got.push(n.id); const L = stoneList(); if (L && !L.includes(sp)) L.push(sp);
       found.push('a Pattern Stone'); spark(170, GROUND - 40, 'sparkle', 8); banner('A Pattern Stone', '#ffe9a8'); K("Look behind it. Someone painted a pattern on that stone, and the Snaboscope's humming at it."); await rwait(2800); banner(''); unprop(p); return 'end'; }
-    if (!have) { st.got.push(n.id); const R2 = rng(hashStr('guardchest' + reg.n)), items = [EX_RARE[Math.floor(R2() * 3)], EX_RARE[Math.floor(R2() * 3)]]; items.forEach(addItem); found.push(...items.map(i => `${/^[AEIOU]/.test(i) ? 'an' : 'a'} ${i}`)); }
+    if (!once) { st.got.push(n.id); const R2 = rng(hashStr('guardchest' + reg.n)), items = [EX_RARE[Math.floor(R2() * 3)], EX_RARE[Math.floor(R2() * 3)]]; items.forEach(addItem); found.push(...items.map(i => `${/^[AEIOU]/.test(i) ? 'an' : 'a'} ${i}`)); }
     const bounty = Math.round(G.purse * 1.5); PLAYER.bits += bounty; drawUI(); found.push(`${bounty.toLocaleString()} bits`);
     RS.pose = 'happy'; K(`You beat ${tName}! The League pays ${bounty.toLocaleString()} bits for that.`); await rwait(1800); return 'end'; }
   // an obstacle, maybe one that needs two Snabits

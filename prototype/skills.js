@@ -177,13 +177,18 @@ const SIG_SKILLS={
   "Siren Song":{el:null,kind:"Cast",cost:3,power:30,acc:95,status:["Daze",40]},
   "Petal Storm":{el:null,kind:"Cast",cost:3,power:24,hits:3,acc:95},
   "Puzzle Gaze":{el:null,kind:"Cast",cost:3,power:35,acc:100,status:["Daze",35]},
+  "Garuda Dive":{el:null,kind:"Strike",cost:4,power:80,acc:95,crit:0.1},
+  "Feral Slash":{el:null,kind:"Strike",cost:4,power:85,acc:90,crit:0.1},
+  "Bull Rush":{el:null,kind:"Strike",cost:5,power:90,acc:85},
+  "Wyrm Breath":{el:null,kind:"Cast",cost:4,power:70,acc:95,status:["Burn",25]},
+  "Thunder Wing":{el:null,kind:"Cast",cost:4,power:70,acc:95,status:["Shock",25]},
   "Avalanche":{el:null,kind:"Strike",cost:5,power:90,acc:85,lower:{spd:1},lowerChance:40},
 };
 /* Fizz's Potion Toss carries a status from its element, the way Skit's webs do */
 const POTION_BY_EL={Blaze:"Burn",Frost:"Freeze",Tide:"Soak",Venom:"Poison",Spark:"Shock",Wild:"Root",Stone:"Crack",Light:"Blind",Shade:"Curse",Charm:"Daze",Steel:"Crack",Brawl:"Daze",Void:"Dread"};
 SIG_SKILLS["Potion Toss"]={el:null,kind:"Cast",cost:3,power:45,acc:95,status:["Poison",40]};
 for(const [el,[n,st]] of Object.entries(WEB_BY_EL)) SIG_SKILLS[n]={el,kind:"Cast",cost:3,power:40,acc:95,lower:{spd:1},lowerChance:100,...(st?{status:[st,30]}:{})};
-const FAMILY_SIG={Pinch:"Bunker Down",Chomp:"Crunch",Squib:"Ink Jet",Antik:"Static Screen",Moko:"Glare",Stilt:"High Kick",Booly:"Phase Shift",Plod:"Trunk Slam",Bipped:"One-Two",Fizz:"Potion Toss",Teep:"Steam Jet",Lern:"Flash",Eagle:"Talon Dive",Vampire:"Night Bite",Phoenix:"Sun Flare",Kitsune:"Foxfire",Naga:"Venom Coil",Yeti:"Avalanche",Puff:"Drowsy Spores",Flit:"Sonar",Glop:"Engulf",Tock:"Second Hand",Mitt:"Big Swing",Brolly:"Rain Shot",Spine:"Cactus Punch",Burr:"Claw Swipe",Kraken:"Crushing Grip",Golem:"Boulder Smash",Unicorn:"Prism Beam",Jack:"Spooky Grin",Tengu:"Gale Fan",Tanuki:"Belly Drum",Mermaid:"Siren Song",Diwata:"Petal Storm",Sphinx:"Puzzle Gaze"};
+const FAMILY_SIG={Pinch:"Bunker Down",Chomp:"Crunch",Squib:"Ink Jet",Antik:"Static Screen",Moko:"Glare",Stilt:"High Kick",Booly:"Phase Shift",Plod:"Trunk Slam",Bipped:"One-Two",Fizz:"Potion Toss",Teep:"Steam Jet",Lern:"Flash",Eagle:"Talon Dive",Vampire:"Night Bite",Phoenix:"Sun Flare",Kitsune:"Foxfire",Naga:"Venom Coil",Yeti:"Avalanche",Puff:"Drowsy Spores",Flit:"Sonar",Glop:"Engulf",Tock:"Second Hand",Mitt:"Big Swing",Brolly:"Rain Shot",Spine:"Cactus Punch",Burr:"Claw Swipe",Kraken:"Crushing Grip",Golem:"Boulder Smash",Unicorn:"Prism Beam",Jack:"Spooky Grin",Tengu:"Gale Fan",Tanuki:"Belly Drum",Mermaid:"Siren Song",Diwata:"Petal Storm",Sphinx:"Puzzle Gaze",Garuda:"Garuda Dive",Werewolf:"Feral Slash",Minotaur:"Bull Rush",Dragon:"Wyrm Breath",Thunderbird:"Thunder Wing"};
 function sigSkills(s){
   const out=[], fam=FAMILY[s.m.family]&&FAMILY[s.m.family].of?FAMILY[s.m.family].of[0]:s.m.family; if((s.level||1)>=5){ if(fam==="Skit") out.push(WEB_BY_EL[s.m.el1][0]); else if(FAMILY_SIG[fam]) out.push(FAMILY_SIG[fam]); }
   const w=s.worn||{}; if(w.back==="Bat wings"||w.back==="Angel wings") out.push("Fly");

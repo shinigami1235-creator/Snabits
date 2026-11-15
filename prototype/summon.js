@@ -187,6 +187,25 @@ const SUMMON = (() => {
       return { dy: H * 0.32 * (1 - k), pose: tt < 1000 ? 'idle' : tt < 1150 ? 'determined' : 'happy',
         under(c, x, y, h) { const a = 1 - seg(tt, 1000, 1500); if (a <= 0) return; c.fillStyle = `rgba(230,196,120,${0.8 * a})`; c.beginPath(); c.ellipse(x, y + 2, h * 0.7, h * 0.1, 0, 0, 7); c.fill();
           for (let i = 0; i < 8; i++) { const p = ((tt / 700) + i / 8) % 1; c.fillStyle = `rgba(220,184,110,${a * (1 - p)})`; c.beginPath(); c.arc(x + (i - 3.5) * h * 0.16, y - p * h * 0.4, h * 0.025, 0, 7); c.fill(); } } }; },
+    Garuda(tt, H) { const k = out3(seg(tt, 0, 850));   // it drops out of the sky with its wings wide and lands in a burst of gold light
+      return { dy: -H * 0.55 * (1 - k), pose: tt < 850 ? 'hover' : tt < 1050 ? 'land' : 'happy',
+        under(c, x, y, h) { if (tt < 850) return; glow(c, x, y - h * 0.5, h * 0.9, [255, 210, 90], 0.55 * (1 - seg(tt, 850, 1600))); } }; },
+    Werewolf(tt, H) { const dark = tt < 700;   // a moon rises behind a dark shape, then it howls
+      return { filter: dark ? 'brightness(0.25)' : null, pose: tt < 900 ? 'idle' : tt < 1400 ? poseWith('happy', { eyes: 'shut' }) : 'happy', sx: dark ? 1 : 1 + spring(tt - 700, 0.08), sy: dark ? 1 : 1 - spring(tt - 700, 0.08),
+        under(c, x, y, h) { const a = Math.min(1, tt / 600) * (1 - seg(tt, 1300, 1800)); if (a <= 0) return; c.save(); c.shadowColor = 'rgba(255,248,210,.9)'; c.shadowBlur = 20; c.fillStyle = `rgba(251,246,224,${a})`;
+          c.beginPath(); c.arc(x + h * 0.25, y - h * (0.6 + Math.min(1, tt / 700) * 0.4), h * 0.28, 0, 7); c.fill(); c.restore(); } }; },
+    Minotaur(tt, H, W) { const k = out3(seg(tt, 0, 600)), skid = tt > 600 && tt < 900;   // it charges in and skids to a stop in a cloud of dust
+      return { dx: -W * 0.7 * (1 - k), pose: tt < 600 ? 'run' : skid ? 'crouch' : 'happy', t: tt * 2,
+        under(c, x, y, h) { const p = seg(tt, 450, 1300); if (p <= 0 || p >= 1) return; for (let i = 0; i < 7; i++) { c.fillStyle = `rgba(190,160,120,${0.7 * (1 - p)})`; c.beginPath(); c.arc(x - h * (0.3 + i * 0.12) - p * h * 0.3, y - h * 0.05 - Math.sin(i + p * 3) * h * 0.06, h * (0.06 + p * 0.06), 0, 7); c.fill(); } } }; },
+    Dragon(tt, H) { const hatch = tt > 600, k = hatch ? 1 + spring(tt - 600, 0.18) : 1, sh = !hatch ? Math.sin(tt / 30) * Math.min(1, tt / 600) * 3 : 0;   // an egg shakes and cracks, and it bursts out with a puff of flame
+      return { alpha: hatch ? 1 : 0, dx: sh, sx: k, sy: 2 - k, pose: tt < 1000 ? 'jump' : 'happy',
+        over(c, x, y, h) { if (tt < 650) { c.fillStyle = '#f6f0e2'; c.beginPath(); c.ellipse(x + sh, y - h * 0.35, h * 0.28, h * 0.36, 0, 0, 7); c.fill(); c.strokeStyle = '#8a8070'; c.lineWidth = 2; if (tt > 300) { c.beginPath(); c.moveTo(x - h * 0.2 + sh, y - h * 0.4); c.lineTo(x - h * 0.05 + sh, y - h * 0.32); c.lineTo(x + h * 0.08 + sh, y - h * 0.45); c.lineTo(x + h * 0.2 + sh, y - h * 0.36); c.stroke(); } }
+          const p = seg(tt, 600, 1300); if (p <= 0 || p >= 1) return; for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2; c.fillStyle = i % 2 ? `rgba(246,240,226,${1 - p})` : `rgba(255,150,50,${0.8 * (1 - p)})`; c.beginPath(); c.arc(x + Math.cos(a) * h * (0.2 + p * 0.5), y - h * 0.4 + Math.sin(a) * h * (0.2 + p * 0.4), h * 0.05, 0, 7); c.fill(); } } }; },
+    Thunderbird(tt, H) { const strike = tt > 500 && tt < 640;   // a bolt of lightning hits the ground and it's standing there
+      return { alpha: tt > 560 ? 1 : 0, pose: tt < 1000 ? 'land' : 'happy', sx: tt > 560 ? 1 + spring(tt - 560, 0.12) : 1, sy: tt > 560 ? 1 - spring(tt - 560, 0.12) : 1,
+        over(c, x, y, h) { if (strike) { c.save(); c.shadowColor = '#fff6a0'; c.shadowBlur = 20; c.strokeStyle = '#fff8c0'; c.lineWidth = h * 0.05; c.lineJoin = 'miter'; c.beginPath(); c.moveTo(x + h * 0.1, y - h * 2.2);
+            for (let i = 1; i <= 6; i++) c.lineTo(x + (i % 2 ? -1 : 1) * h * 0.12, y - h * 2.2 + i * h * 0.36); c.stroke(); c.restore(); }
+          if (tt > 480 && tt < 720) { c.fillStyle = `rgba(255,255,230,${0.6 * (1 - seg(tt, 480, 720))})`; c.fillRect(x - h * 2, y - h * 2.4, h * 4, h * 2.6); } } }; },
     pop(tt) { const k = back(seg(tt, 0, 420)); return { sx: k, sy: k, pose: 'idle' }; }
   };
 

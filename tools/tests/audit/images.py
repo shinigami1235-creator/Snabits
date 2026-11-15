@@ -92,7 +92,27 @@ def sphinx():
     for k in range(6):
         y=H*(0.07+k*0.11); d.rectangle([0,y,W,y+H*0.055],fill=NAVY)
     d.rectangle([W*0.3,H*0.3,W*0.7,H*0.68],fill=(236,196,60)); d.ellipse([W*0.5-30,H*0.8-30,W*0.5+30,H*0.8+30],fill=RED); return im
-EGGS={'Tengu':tengu,'Tanuki':tanuki,'Mermaid':mermaid,'Diwata':diwata,'Sphinx':sphinx,'Eagle':eagle,'Vampire':vampire,'Phoenix':phoenix,'Kitsune':kitsune,'Naga':naga,'Yeti':yeti,'Panda':panda,'Bee':bee,'Ladybug':ladybug,'Watermelon':watermelon,'Candy cane':candy,'Tiger':tiger,'Zebra':zebra,'Cow':cow,'Penguin':penguin,'Strawberry':strawberry,'Rubber duck':duck,'Clownfish':clownfish}
+def garuda():
+    im=Image.new('RGB',(W,H),YELLOW); d=ImageDraw.Draw(im)
+    for sx in (-1,1): d.polygon([(W*0.5,H*0.58),(W*(0.5+sx*0.5),0),(W*(0.5+sx*0.5),H*0.24),(W*(0.5+sx*0.1),H*0.72)],fill=RED)
+    d.polygon([(W*0.5,H*0.58),(W*0.6,H*0.68),(W*0.5,H*0.8),(W*0.4,H*0.68)],fill=NAVY); return im
+def werewolf():
+    im=Image.new('RGB',(W,H),(150,154,160)); d=ImageDraw.Draw(im); d.ellipse([W*0.45,H*0.1,W*0.9,H*0.1+W*0.45],fill=WHITE)
+    for k in (-1,0,1): d.line([(W*(0.2+k*0.17),H*0.55),(W*(0.45+k*0.17),H*0.9)],fill=BLACK,width=26)
+    return im
+def minotaur():
+    im=Image.new('RGB',(W,H),BROWN); d=ImageDraw.Draw(im)
+    for sx in (-1,1): d.polygon([(W*(0.5+sx*0.1),H*0.27),(W*(0.5+sx*0.42),H*0.24),(W*(0.5+sx*0.38),H*0.05),(W*(0.5+sx*0.28),H*0.2),(W*(0.5+sx*0.1),H*0.2)],fill=WHITE)
+    d.ellipse([W*0.28,H*0.48,W*0.72,H*0.48+W*0.44],outline=(186,190,196),width=34); return im
+def dragon():
+    im=Image.new('RGB',(W,H),GREEN); d=ImageDraw.Draw(im); d.polygon([(W*0.5,H*0.03),(W*0.72,H*0.24),(W*0.64,H*0.38),(W*0.36,H*0.38),(W*0.28,H*0.24)],fill=ORANGE)
+    for r in range(4):
+        for k in range(-3,4): x=W*(0.5+k*0.2+(r%2)*0.1); y=H*(0.55+r*0.12); d.arc([x-38,y-38,x+38,y+38],10,170,fill=(36,100,40),width=5)
+    return im
+def thunderbird():
+    im=Image.new('RGB',(W,H),(44,98,200)); d=ImageDraw.Draw(im); pts=[(W*k/10,H*(0.36 if k%2 else 0.44)) for k in range(11)]
+    d.line(pts,fill=YELLOW,width=34); d.polygon([(W*0.44,H*0.52),(W*0.56,H*0.52),(W*0.5,H*0.8)],fill=YELLOW); return im
+EGGS={'Garuda':garuda,'Werewolf':werewolf,'Minotaur':minotaur,'Dragon':dragon,'Thunderbird':thunderbird,'Tengu':tengu,'Tanuki':tanuki,'Mermaid':mermaid,'Diwata':diwata,'Sphinx':sphinx,'Eagle':eagle,'Vampire':vampire,'Phoenix':phoenix,'Kitsune':kitsune,'Naga':naga,'Yeti':yeti,'Panda':panda,'Bee':bee,'Ladybug':ladybug,'Watermelon':watermelon,'Candy cane':candy,'Tiger':tiger,'Zebra':zebra,'Cow':cow,'Penguin':penguin,'Strawberry':strawberry,'Rubber duck':duck,'Clownfish':clownfish}
 
 def plain(seed):
     """an ordinary snapshot: a soft two-tone background with one object in it"""
