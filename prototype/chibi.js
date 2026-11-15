@@ -2040,6 +2040,7 @@ const CHIBI = (() => {
     /* Bloop: a jellyfish. Bit is a small frilly bell with stubby tentacles. Byte is a clear glowing bell with long wavy tentacles and frilled arms.
        Mega is a jellyfish queen: a crown of coral set with pearls, a glowing hem and spots, a curtain of long glowing tentacles and three baby jellies drifting round it */
     Bloop: {
+      topUp: { Mega: 34 },
       dims: { Bit: [60, 40], Byte: [76, 52], Mega: [86, 58] }, float: true, glass: true, patternAfter: true, slots: { feet: false },
       bottom(st) { return st === 'Bit' ? 146 : st === 'Byte' ? 120 : 104; }, height(st) { return this.dims[st][1] + by(st, 40, 66, 96); },
       path(c, g, x) { const t = x ? x.t : 0, n = by(g.stage, 5, 7, 9), br = Math.sin(t / 500) * 0.04, w = g.bw * (1 + br), L = g.cx - w / 2;
@@ -2098,6 +2099,7 @@ x.feet.push([g.cx, 182, 10]); },
     /* Cuppy: a cupcake. Bit is a plain muffin in a pleated paper cup. Byte is a cupcake with a tall swirl of frosting, sprinkles and a cherry.
        Mega is a three-tier cake: frosting dripping off each tier, strawberries round the middle, and candles burning on top */
     Cuppy: {
+      topUp: { Mega: 24 },
       dims: { Bit: [58, 56], Byte: [64, 62], Mega: [92, 96] }, ll: st => by(st, 4, 4, 6),
       bottom(st) { return 182 - this.ll(st); }, height(st) { return this.dims[st][1] + this.ll(st) + by(st, 10, 44, 34); },
       path(c, g) { if (g.stage === 'Mega') { const W = [0.6, 0.8, 1].map(w => g.bw * w / 2), Y = [g.top, g.top + g.bh * 0.3, g.top + g.bh * 0.62, g.bot], P = [];   // three tiers as one stepped outline
@@ -2215,6 +2217,7 @@ x.feet.push([g.cx, 182, 10]); },
     /* Gumball: candy. Bit is one shiny gumball on little feet. Byte is a gumball machine: a glass globe full of gumballs on a red base with a coin slot and a chute.
        Mega is a candy carousel: a striped canopy over the globe, gold poles, and lollipop horses riding round its base */
     Gumball: {
+      topUp: { Mega: 12 },
       dims: { Bit: [50, 50], Byte: [70, 66], Mega: [80, 76] }, bs: st => by(st, 0, 30, 34), ll: st => by(st, 4, 4, 4),
       bottom(st) { return 182 - this.ll(st) - this.bs(st); }, height(st) { return this.dims[st][1] + this.bs(st) + this.ll(st) + by(st, 6, 12, 50); },
       glass: true, patternAfter: true,
@@ -2246,6 +2249,7 @@ x.feet.push([g.cx, 182, 10]); },
     /* Pina: a pineapple. Bit is a little round bud with a short leafy crown. Byte is a full pineapple with its crosshatched skin and a tall crown.
        Mega is a tiki totem: a carved wooden pole with the pineapple crown on top, a flower lei round its middle, and a torch burning on each side */
     Pina: {
+      topUp: { Mega: 20 },
       dims: { Bit: [50, 46], Byte: [62, 74], Mega: [64, 104] }, ll: st => by(st, 4, 5, 4),
       bottom(st) { return 182 - this.ll(st); }, height(st) { return this.dims[st][1] + this.ll(st) + by(st, 24, 40, 40); },
       path(c, g) { if (g.stage === 'Mega') { roundBox(c, g.left, g.top, g.bw, g.bh, 12); return; } c.beginPath(); c.ellipse(g.cx, g.top + g.bh / 2, g.bw / 2, g.bh / 2, 0, 0, 7); },
@@ -2304,6 +2308,7 @@ x.feet.push([g.cx, 182, 10]); },
     /* Presto: a magician's hat. Bit is a plain top hat with a band. Byte has bunny ears poking out of the top and a wand tucked in the band.
        Mega is the full act: a starry hat, a red-lined cape, doves flying out of the top, a fan of cards and a wand throwing sparkles */
     Presto: {
+      topUp: { Byte: 12, Mega: 16 },
       dims: { Bit: [50, 56], Byte: [58, 64], Mega: [66, 74] }, ll: st => by(st, 5, 6, 8),
       bottom(st) { return 182 - this.ll(st); }, height(st) { return this.dims[st][1] + this.ll(st) + by(st, 8, 30, 50); },
       path(c, g) { const bh = 9, bw = g.bw * 0.66; c.beginPath(); c.moveTo(g.left - 8, g.bot); c.quadraticCurveTo(g.left - 10, g.bot - bh, g.left - 2, g.bot - bh); c.lineTo(g.cx - bw / 2 - 2, g.bot - bh); c.lineTo(g.cx - bw / 2, g.top + 4);
@@ -2862,7 +2867,7 @@ x.feet.push([g.cx, 182, 10]); },
     if (m.fx) fxOnBody(c, m.fx, () => F.path.call(F, c, g, x), g, body, t);
     c.restore();
     variantOutline(c, pathF);
-    capBody(c, g);
+    capBody(c, g); if (CAP && F.topUp && F.topUp[stage]) CAP.top = capPt(c, g.cx, g.top + g.bh * 0.18 - F.topUp[stage]);   // headgear the bar above it has to clear
     const h = F.hl ? F.hl(g) : [g.left + g.bw * 0.13, g.top + g.bh * 0.42, g.left + g.bw * 0.12, g.top + g.bh * 0.12, g.left + g.bw * 0.4, g.top + g.bh * 0.08];
     c.strokeStyle = 'rgba(255,255,255,.55)'; c.lineWidth = stage === 'Bit' ? 4.5 : 5.5; c.lineCap = 'round';
     c.beginPath(); c.moveTo(h[0], h[1]); c.quadraticCurveTo(h[2], h[3], h[4], h[5]); c.stroke();

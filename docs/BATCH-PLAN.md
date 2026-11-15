@@ -118,7 +118,7 @@ Fifteen more families, drawn in `chibi.js` on `batch-regular`. Gid passed the sh
 | Lava | Molten: a Close Strike that hits it has a 20% chance to Burn the attacker | Eruption | heatwave week at C, licence C |
 | Pogo | Spring Step: bounces back out of reach after a Close Strike hits it | Pogo Stomp | 5 hearts, licence A |
 
-Every one wins 43 to 53% in sim2 against the whole field.
+Every one wins 44 to 52% in sim2 against the whole field.
 
 - Commons: Bloop (jellyfish, glowing jellyfish, jellyfish queen with a coral crown and baby jellies), Sox (sock, sock puppet, sock dragon), Cuppy (muffin, frosted cupcake, three-tier cake), Suds (soap bubble, soap bar, clawfoot tub), Scoop (cone, double scoop, sundae), Tome (notebook, open book, spellbook), Gumball (gumball, gumball machine, candy carousel), Pina (pineapple bud, pineapple, tiki totem).
 - Uncommons: Jingle (coin, piggy bank, treasure chest), Presto (top hat, hat with bunny ears, the full magic act), Vroom (dust bunny, robot vacuum, floor polisher), Shutter (film roll, instant camera, bellows camera), Yoyo (yo-yo, round the world, battle top), Lava (wax blob, lava lamp, volcano), Pogo (bouncy ball, pogo stick, jack-in-the-box).
