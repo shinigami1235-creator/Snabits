@@ -54,6 +54,7 @@ const CHIBI = (() => {
     // battle
     guard:  { arm: [[8, 4, -16, -2], [8, 4, -16, 4]], feet: [-4, 0, 4, 0], eyes: 'fierce', open: 0, sy: 0.95, front: 1 },
     crouch: { arm: [[10, 10, 14, 16], [10, 10, 14, 16]], feet: [-5, 0, 5, 0], eyes: 'fierce', open: 0.2, sx: 1.1, sy: 0.84, lean: -5, tilt: -4 },
+    duck:   { arm: [[10, 12, 16, 18], [10, 12, 16, 18]], feet: [-7, 0, 7, 0], eyes: 'shut', open: 0, sx: 1.24, sy: 0.6, tilt: -2 },   // Dodgeball: squashed flat under a high ball
     tackle: { arm: [[6, 4, -2, 14], [6, 4, -4, 10]], feet: [-6, -4, 6, -6], eyes: 'fierce', open: 0.3, sx: 1.08, sy: 0.9, tilt: 18, lean: 8 },
     bitewide: { arm: [[14, 2, 22, 6], [14, 2, 22, 6]], feet: [-4, -3, 4, -5], eyes: 'fierce', open: 1, tilt: 10, lean: 8 },
     chomp:  { arm: [[12, 6, 18, 12], [12, 6, 18, 12]], feet: [-4, 0, 4, 0], eyes: 'fierce', open: 0, sx: 1.06, sy: 0.95, tilt: 6, lean: 6 },

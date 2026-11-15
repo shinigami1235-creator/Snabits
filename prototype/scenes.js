@@ -326,7 +326,7 @@ function ranchProps(c, s, t, front) {
       c.fillStyle = 'rgba(0,0,0,.14)'; c.fillRect(x - 1, y - 12, 2, 12);
       if (p.open) { SC.depth(c, () => { c.beginPath(); c.roundRect(x - 11, y - 22, 4, 10, 1.5); }, '#d9995a', 1, 0.25); }
       else SC.depth(c, () => { c.beginPath(); c.roundRect(x - 9.5, y - 16, 19, 4, 1.5); }, '#d9995a', 1, 0.25); }
-    if (front && (p.k === 'ball' || p.k === 'snack')) { const r = p.k === 'ball' ? 3.6 : 2.6;
+    if (front && (p.k === 'ball' || p.k === 'snack')) { const r = p.k === 'ball' ? (p.r ? p.r * 1.8 : 3.6) : 2.6;
       SC.depth(c, () => { c.beginPath(); c.arc(x, y, r, 0, 7); }, p.c, 0.8, 0.3);
       c.fillStyle = 'rgba(255,255,255,.55)'; c.beginPath(); c.arc(x - r * 0.35, y - r * 0.35, r * 0.32, 0, 7); c.fill(); }
     if (front && p.k === 'ring') { c.strokeStyle = `rgba(255,240,160,${Math.max(0, 1 - p.r / 28)})`; c.lineWidth = 1.6; c.beginPath(); c.ellipse(x, y, p.r * 1.3, p.r * 0.55, 0, 0, 7); c.stroke(); }
@@ -695,7 +695,7 @@ function awayProps(c, p, t, front) {
       c.strokeStyle = '#e2483f'; c.lineWidth = 2; c.beginPath(); if (!p.broken) { c.moveTo(x, y - 21); c.quadraticCurveTo(x + 13, y - 18, x + 27, y - 21); } else { c.moveTo(x, y - 21); c.quadraticCurveTo(x + 4, y - 14, x + 2, y - 8); c.moveTo(x + 27, y - 21); c.quadraticCurveTo(x + 23, y - 14, x + 25, y - 8); } c.stroke(); return;
     case 'rock': if (front) return; { const r = p.r; c.save(); c.translate(x, y - r); c.scale(p.half ? 0.55 : 1, 1); SC.depth(c, () => { c.beginPath(); c.arc(0, 0, r, 0, 7); }, '#8f8a83', 1.5, 0.3);
       c.fillStyle = 'rgba(255,255,255,.25)'; c.beginPath(); c.arc(-r * 0.35, -r * 0.4, r * 0.3, 0, 7); c.fill(); c.restore(); } return;
-    case 'log': if (!front) return; { const a = Math.sin(p.t || 0) * 0.9, ax = 150 + Math.sin(a) * 60, ay = GROUND - 128 + Math.cos(a) * 60;
+    case 'log': if (!front) return; { const L = p.L || 60, a = Math.sin(p.t || 0) * 0.9, ax = 150 + Math.sin(a) * L, ay = GROUND - 128 + Math.cos(a) * L;   // L: rope length, so the bottom of the swing is at the monster's chest
       c.strokeStyle = '#555'; c.lineWidth = 1.2; c.beginPath(); c.moveTo(150, GROUND - 128); c.lineTo(ax, ay); c.stroke();
       c.save(); c.translate(ax, ay); c.rotate(a); SC.depth(c, () => { c.beginPath(); c.roundRect(-14, -5, 28, 10, 5); }, p.broken ? '#b07a45' : '#8a5532', 1.2, 0.3);
       c.fillStyle = '#c9a66b'; c.beginPath(); c.ellipse(14, 0, 2.5, 4.5, 0, 0, 7); c.fill(); c.restore(); } return;

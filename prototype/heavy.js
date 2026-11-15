@@ -69,16 +69,21 @@ const HEAVY_FN=[
     s.pose="tired"; await rwait(800);
   },
   async r=>{ // Fortress
-    const s=RS; s.bg="gate"; s.x=150; s.pose="guard"; const log=placed("log",{k:"log",x:0,y:0,t:-1.2});
-    for(let k=0;k<3;k++){ for(let j=0;j<24;j++){ log.t+=0.1; await rwait(25);} s.flash=4; s.shake=6; spark(s.x-16,headY()+8,"dust",4);
-      if(r==="fail"&&k===1){ s.upside=true; s.pose="walk"; await rwait(1200); s.upside=false; s.pose="dizzy"; await rwait(500); return; }
+    const s=RS, home=fortX(); s.bg="gate"; s.x=home; s.pose="guard"; const log=placed("log",fortLog());
+    s.dir=-1;   // the log swings in from the left and lands at the bottom of its swing
+    for(let k=0;k<3;k++){ for(let j=0;j<12;j++){ log.t+=0.1; if(j===7) s.pose="crouch"; await rwait(32);} log.t=0; s.flash=4; s.shake=6; spark(s.x-fortTall()*0.4,GROUND-fortTall()*0.5,"dust",4);   // it gets low just before the log lands
+      if(r==="fail"&&k===1){ s.pose="hit"; for(let f=0;f<8;f++){ s.x+=2; if(f%2===0) spark(s.x+6,GROUND-1,"dust"); await rwait(28);} s.upside=true; s.pose="walk"; await rwait(1200); s.upside=false; s.pose="dizzy"; await rwait(500); return; }
       if(r==="great"&&k===2){ log.broken=true; spark(s.x-20,headY()+8,"sparkle",8); s.pose="happy"; await rwait(900); return; }
-      for(let j=0;j<24;j++){ log.t-=0.1; await rwait(25);} }
-    s.pose="idle"; await rwait(500);
+      // the log shoves it back along the ground, and it pushes its way back to the gate as the log swings away
+      s.pose="hit"; const push=r==="great"?3:6; for(let f=0;f<6;f++){ s.x+=push/6*2; if(f%2===0) spark(s.x+6,GROUND-1,"dust"); await rwait(28);}
+      if(r!=="great"){ s.pose="hurt"; spark(s.x,headY(),"sweat"); await rwait(250); }
+      s.pose="effort"; for(let j=0;j<12;j++){ log.t-=0.1; if(s.x>home) s.x=Math.max(home,s.x-0.8); await rwait(40);} log.t=-1.2; s.x=home; s.pose="guard"; }
+    s.pose="determined"; await rwait(700);
   },
   async r=>{ // Library
     const s=RS; s.bg="library"; s.x=110; s.pose="sit"; const bk=placed("books",{k:"books",x:150,y:GROUND,n:1});
-    for(let k=0;k<(r==="great"?8:5);k++){ spark(s.x+rnd(-6,6),headY()-4,k%3?"sparkle":"q"); bk.n++; await rwait(320); }
+    // a book at a time: it leans in to read, a spark or a question goes up, and the book goes on the read pile
+    for(let k=0;k<(r==="great"?8:5);k++){ s.pose="lean"; await rwait(200); spark(s.x+rnd(-6,6),headY()-4,k%3?"sparkle":"q"); await rwait(160); s.pose="sit"; bk.n++; spark(bk.x,GROUND-6-bk.n*2,"dust"); await rwait(180); }
     if(r==="fail"){ bk.fall=true; bk.x=s.x+4; s.pose="hurt"; await rwait(900); s.pose="dizzy"; await rwait(700); return; }
     if(r==="great") spark(s.x,headY()-10,"bulb");
     s.pose="happy"; await rwait(900);

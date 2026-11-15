@@ -509,10 +509,12 @@ const DRILL_PROPS={
   trail:s=>[{k:"boulder",x:80+16+s.P.scale*4,y:GROUND,r:11,rot:0}],
   study:s=>[{k:"pbox",x:124+(s.stage==="Bit"?0:14)+(s.stage==="Mega"?12:0),y:GROUND,tiles:[0,1,2,3,0,1,2,3,0],lid:0,gr:0,sh:0}],
   quarry:()=>[{k:"rock",x:150,y:GROUND,r:16}],
-  gate:()=>[{k:"log",x:0,y:0,t:-1.2}],
+  gate:()=>[fortLog()],
   library:()=>[{k:"books",x:150,y:GROUND,n:1}],
   course:()=>[{k:"rope"},...[70,120,210].map(x=>({k:"hurdle",x,y:GROUND}))],
 };
+/* Fortress: the log hangs so the bottom of its swing is at the monster's chest, and the monster stands just right of it */
+const fortTall=()=>GROUND-headY(), fortLog=()=>({k:"log",x:0,y:0,t:-1.2,L:128-fortTall()*0.5}), fortX=()=>150+14+fortTall()*0.42;
 const placed=(k,o)=>RS.props.find(p=>p.k===k&&!p.taken&&(p.taken=true))||prop(o);
 async function goPlace(place,pre,x0){ const s=RS; await sceneFade(true); s.propsHome=s.props; s.props=pre||[]; s.bg=place; s.training=true; s.x=x0||PLACE_START[place]||110; s.jy=0; s.pose="idle"; s.camJump=true; await rwait(300); await sceneFade(false); }
 function backHome(){ const s=RS; s.bg=null; s.training=false; s.waterY=null; s.lotus=false; s.koiPull=0; s.jy=0; s.x=150; s.upside=false; s.parted=false; s.props=s.propsHome||s.props.filter(p=>p.k==="bowl"); s.propsHome=null; s.camJump=true; }
@@ -563,7 +565,7 @@ async function runDrill(i){
     s.lastTrained=main; s.weekAct=STATS[main];
     const place=heavy?HEAVY_PLACE[i-6]:smoothRanch()?DRILL_PLACE[i]:null;
     say(place?`${name} at ${PLACE_NAME[place]}. Let's see how it does.`:`${name}. Let's see how it does.`);
-    if(place) await goPlace(place,DRILL_PROPS[place]?DRILL_PROPS[place](s):[],place==="study"?96:0);   // the puzzle box scene sits it at 96
+    if(place) await goPlace(place,DRILL_PROPS[place]?DRILL_PROPS[place](s):[],place==="study"?96:place==="gate"?fortX():0);   // the puzzle box scene sits it at 96, the Fortress next to the log
     if(res==="slack") await SLACK(i); else await (heavy?HEAVY_FN[i-6]:SCENE_FN[i])(res);
     if(place){ s.props=[]; s.upside=false; s.parted=false; if(s.waterY==null) s.jy=0; } else { s.bg=null; s.x=150; s.props=s.props.filter(p=>p.k==="bowl"); s.upside=false; s.parted=false; s.jy=0; }
     const age=ageMult(s), vet=age<0.5, base=FAMILY[s.m.family].base;
@@ -661,17 +663,31 @@ const SCENE_FN=[
     else { s.pose="tired"; spark(s.x,headY(),"sweat",2); await rwait(800); unprop(b); }
   },
   async r=>{ // Brace
-    const s=RS; await walkTo(140,50); s.pose="guard"; await rwait(400);
+    const s=RS, home=140; await walkTo(home,50); s.dir=-1;
+    // it plants its feet: down into a crouch, a stamp of dust each side, then up into its guard
+    s.pose="crouch"; spark(s.x-8,GROUND-1,"dust",2); spark(s.x+8,GROUND-1,"dust",2); await rwait(350); s.pose="guard"; await rwait(250);
+    const back=async(dx,n)=>{ for(let f=0;f<n;f++){ s.x+=dx/n; if(f%2===0) spark(s.x+6,GROUND-1,"dust"); await rwait(28); } };
     for(let k=0;k<4;k++){
-      // aim each throw at its chest, whatever its size: the arc lands where the body is, not at a fixed height
-      const top=headY(), tall=GROUND-top, tx=s.x-tall*0.32, ty=top+tall*0.42, x0=HELPX+6, y0=GROUND-26, vx=3.4, g=0.08, T=Math.max(8,(tx-x0)/vx);
-      const ball=prop({k:"ball",x:x0,y:y0,vx,vy:(ty-y0-g*T*(T-1)/2)/T,g,c:"#e8453c"});
+      const heavy=k===2, top=headY(), tall=GROUND-top, tx=s.x-tall*0.32, ty=top+tall*0.42, x0=HELPX+6, y0=GROUND-26, vx=heavy?2.8:3.4, g=0.08, T=Math.max(8,(tx-x0)/vx);
+      // aim each throw at its chest, whatever its size: the arc lands where the body is, not at a fixed height. The third one is a heavy ball.
+      const ball=prop({k:"ball",x:x0,y:y0,vx,vy:(ty-y0-g*T*(T-1)/2)/T,g,c:heavy?"#8a3a2a":"#e8453c",r:heavy?3:2});
+      await until(()=>ball.x>=tx-30); if(heavy) s.pose="crouch";   // it sees the big one coming and gets low
       await until(()=>ball.x>=tx);
-      if(r==="fail"&&k===2){ unprop(ball); s.upside=true; s.pose="walk"; spark(s.x,GROUND-3,"dust",5); await rwait(1300); s.upside=false; s.pose="dizzy"; await rwait(600); return; }
-      ball.vx=-2.2; ball.vy=-2; s.flash=4; if(r==="success") s.x+=3;
-      await rwait(380); unprop(ball);
+      if(r==="fail"&&k===2){ ball.vx=-1.4; ball.vy=-1.5; s.pose="hit"; s.flash=4; s.shake=10; spark(tx,ty,"star",4); await back(16,8); unprop(ball);
+        s.upside=true; s.pose="walk"; spark(s.x,GROUND-3,"dust",5); await rwait(1300); s.upside=false; s.pose="dizzy"; spark(s.x,headY()-4,"star",3); await rwait(600); return; }
+      if(r==="great"&&k===3){   // the last ball it punches straight back over the assistant's head
+        s.pose="punch"; ball.vx=-4.6; ball.vy=-3.4; ball.g=0.1; s.flash=3; s.shake=6; spark(tx,ty,"star",4); await rwait(260); s.pose="happy"; await rwait(500); unprop(ball);
+        spark(s.x,headY()-4,"heart",2); await hop(14,380); await rwait(500); return; }
+      // the hit: it takes the ball on its guard and slides back a step, harder for the heavy one and less the better its week
+      ball.vx=-2.2; ball.vy=-2; s.flash=4; s.pose="hit"; s.shake=heavy?8:3; spark(tx,ty,"star",heavy?3:1);
+      await back((heavy?12:6)*(r==="great"?0.4:r==="success"?1:1.4),6);
+      if(heavy&&r!=="great"){ s.pose="hurt"; spark(s.x,headY(),"sweat",2); await rwait(380); }
+      else if(r==="great"){ s.pose="determined"; await rwait(220); }
+      s.pose="guard"; await rwait(120);
+      while(s.x>home+0.5){ s.x-=1.2; await rwait(22); } s.x=home;   // steps back onto its mark
+      unprop(ball); await rwait(150);
     }
-    if(r==="great"){ s.pose="happy"; spark(s.x,headY()-4,"heart",2); await rwait(900);} else { s.pose="idle"; await rwait(500); }
+    s.pose="determined"; spark(s.x,headY(),"sweat",2); await rwait(900);
   },
   async r=>{ // Puzzle box
     if(RS.bg==="study"){ await studyPuzzle(r); return; }
@@ -692,14 +708,18 @@ const SCENE_FN=[
     else { s.pose="idle"; await rwait(400); }
   },
   async r=>{ // Dodgeball
-    const s=RS; await walkTo(100,50); s.pose="idle"; if(r==="great") s.ghosts=true;
+    const s=RS; await walkTo(100,50); s.dir=1; s.pose="idle"; if(r==="great") s.ghosts=true;
+    // low balls along the floor get jumped, high ones at head height get ducked under
     for(let k=0;k<4;k++){
-      const ball=prop({k:"ball",x:RW+6,y:GROUND-7,vx:-4.2,vy:0,g:0,c:"#3c8ce8"});
-      await until(()=>ball.x<s.x+RS.P.scale*7);
+      const high=k%2===1, top=headY(), tall=GROUND-top, y=high?GROUND-tall*0.6-Math.max(7,tall*0.14):GROUND-7;   // a high ball passes just over it squashed flat
+      const ball=prop({k:"ball",x:RW+6,y,vx:-4.2,vy:0,g:0,c:"#3c8ce8"});
+      await until(()=>ball.x<s.x+RS.P.scale*7+(high?14:0));
       if(r==="fail"&&k===2){ ball.vx=2; ball.vy=-2.6; ball.g=0.15; s.pose="dizzy"; s.flash=4; spark(s.x,headY()-4,"star",5); await rwait(1400); unprop(ball); return; }
-      s.pose="walk"; await hop(26,420); s.pose="idle"; await until(()=>ball.x<-10,1500); unprop(ball);
+      if(high){ s.pose="duck"; await until(()=>ball.x<s.x-tall*0.6,1500); s.pose="idle"; if(r!=="great") spark(s.x,headY(),"sweat"); }
+      else { s.pose="walk"; await hop(26,420); s.pose="idle"; }
+      await until(()=>ball.x<-10,1500); unprop(ball);
     }
-    s.ghosts=false; s.pose=r==="great"?"happy":"idle"; await rwait(700);
+    s.ghosts=false; s.pose=r==="great"?"happy":"idle"; if(r==="great") await hop(12,340); await rwait(700);
   },
 ];
 
@@ -1063,7 +1083,7 @@ function drawProps(c,t,front){
     if(p.k==="boulder"&&!front){ const r=p.r; for(let j=-r;j<=r;j++){ const w=Math.round(Math.sqrt(r*r-j*j)); for(let i=-w;i<=w;i++){ const sh=((i*Math.cos(p.rot)-j*Math.sin(p.rot))>3)?"#6f6a64":(j<-4?"#b8b2aa":"#958f88"); c.fillStyle=sh; c.fillRect(Math.round(p.x)+i,Math.round(p.y)-r+j,1,1);} } }
     if(p.k==="box"&&!front){ c.fillStyle="#b07a45"; c.fillRect(Math.round(p.x)-6,Math.round(p.y)-10,12,10); c.fillStyle="#7a5230"; c.fillRect(Math.round(p.x)-6,Math.round(p.y)-10,12,1); c.fillRect(Math.round(p.x)-1,Math.round(p.y)-9,2,9);
       if(p.open){ c.fillStyle="#b07a45"; c.fillRect(Math.round(p.x)-7,Math.round(p.y)-16,3,7); } else { c.fillStyle="#d79a5a"; c.fillRect(Math.round(p.x)-7,Math.round(p.y)-12,14,2);} }
-    if(front&&(p.k==="ball"||p.k==="snack")){ c.fillStyle=p.c; c.fillRect(Math.round(p.x)-2,Math.round(p.y)-2,4,4); c.fillStyle="rgba(255,255,255,.6)"; c.fillRect(Math.round(p.x)-1,Math.round(p.y)-2,1,1); }
+    if(front&&(p.k==="ball"||p.k==="snack")){ const r=p.r||2; c.fillStyle=p.c; c.fillRect(Math.round(p.x)-r,Math.round(p.y)-r,r*2,r*2); c.fillStyle="rgba(255,255,255,.6)"; c.fillRect(Math.round(p.x)-r+1,Math.round(p.y)-r,1,1); }
     if(front&&p.k==="ring"){ c.strokeStyle="rgba(255,240,160,"+(1-p.r/28)+")"; c.lineWidth=1; for(let a=0;a<64;a++){ const x=Math.round(p.x+Math.cos(a/64*6.283)*p.r), y=Math.round(p.y+Math.sin(a/64*6.283)*p.r*0.5); c.fillStyle=c.strokeStyle; c.fillRect(x,y,1,1);} }
     if(front&&p.k==="bug"){ c.fillStyle="#2a2a2a"; c.fillRect(Math.round(p.x),Math.round(p.y),2,1); c.fillStyle=(Math.floor(t/80)%2)?"#ffffff":"#cfe8ff"; c.fillRect(Math.round(p.x)-1,Math.round(p.y)-1,1,1); c.fillRect(Math.round(p.x)+2,Math.round(p.y)-1,1,1); }
   }
