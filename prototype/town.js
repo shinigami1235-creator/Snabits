@@ -36,7 +36,7 @@ function weekStock(){
   const held=hd[Math.floor(R()*hd.length)], held2=GRADES.indexOf(bestGrade())>=2?hd.filter(k=>k!==held)[Math.floor(R()*(hd.length-1))]:null;
   return {worn,held,held2,chips:ch};
 }
-/* Nena's shop: the Market, the week's things to wear and hold, skill chips and selling, all from her counter.
+/* Nora's shop: the Market, the week's things to wear and hold, skill chips and selling, all from her counter.
    With the smooth art it's a place you walk into; she talks in the box at the top of the panel. */
 let SHOP_SAY=null;
 function buy(k,price,then){
@@ -47,8 +47,8 @@ function buy(k,price,then){
 function openTown(){
   if(RS) RS.inTown=true;
   if(RS&&RS.visit==="shop"){ leaveVisit().then(openTown); return; }
-  panel(`<div class="full lab-head"><b>Town</b><button class="small" id="tw-back">Back</button></div><div class="full lab-info">Nena's things to wear and her skill chips change every week.</div>
-    <button class="rb" id="tw-shop">Nena's shop<small>Snacks, medicine, things to wear, skill chips</small></button><button class="rb" id="tw-w">Workshop<small>Ranch upgrades</small></button><button class="rb" id="tw-hall">Town Hall<small>${loanLeft()?`Pay the loan, ${loanLeft().toLocaleString()} bits left`:"The loan is paid"}</small></button>`);
+  panel(`<div class="full lab-head"><b>Town</b><button class="small" id="tw-back">Back</button></div><div class="full lab-info">Nora's things to wear and her skill chips change every week.</div>
+    <button class="rb" id="tw-shop">Nora's shop<small>Snacks, medicine, things to wear, skill chips</small></button><button class="rb" id="tw-w">Workshop<small>Ranch upgrades</small></button><button class="rb" id="tw-hall">Town Hall<small>${loanLeft()?`Pay the loan, ${loanLeft().toLocaleString()} bits left`:"The loan is paid"}</small></button>`);
   el("tw-shop").onclick=()=>openShop(); el("tw-w").onclick=openWorkshop; el("tw-hall").onclick=()=>openHall(); el("tw-back").onclick=()=>menu("Out");
 }
 async function openShop(line){

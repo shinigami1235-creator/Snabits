@@ -1,9 +1,9 @@
-/* The people besides Tala: Kiko the trip guide, Nena at the shop, and Dr. Ines and Benji at the lab.
-   Drawn the way Tala is: a big head about 70 units across centred on (0,0), a darker copy a little lower for depth,
+/* The people besides Josie: Walt the trip guide, Nora at the shop, and Dr. Ines and Benji at the lab.
+   Drawn the way Josie is: a big head about 70 units across centred on (0,0), a darker copy a little lower for depth,
    big dark eyes with two sparkles, pink blush. Faces: happy, talk, worried, surprised. Needs scenes.js (SC). */
 const NPC = {
-  guide: { name: 'Kiko', cm: 165, tag: '#9ccf6a' },
-  shop: { name: 'Nena', cm: 150, tag: '#ff9fb8' },
+  guide: { name: 'Walt', cm: 165, tag: '#9ccf6a' },
+  shop: { name: 'Nora', cm: 150, tag: '#ff9fb8' },
   doc: { name: 'Dr. Ines', cm: 168, tag: '#c9b3ff' },
   aide: { name: 'Benji', cm: 172, tag: '#7fe0d0' },
   rival: { name: 'Rook', cm: 170, tag: '#ffb04a' },
@@ -33,7 +33,7 @@ function npcMouth(x, face, col = '#8a3a3a', y = 22) {
 }
 const npcBlush = (x, y = 18, dx = 20, a = 0.42) => { x.fillStyle = `rgba(255,120,140,${a})`; x.beginPath(); x.ellipse(-dx, y, 5, 3, 0, 0, 7); x.ellipse(dx, y, 5, 3, 0, 0, 7); x.fill(); };
 
-/* ---------- Kiko, the trip guide: an old ranger with a wide hat and a white mustache ---------- */
+/* ---------- Walt, the trip guide: an old ranger with a wide hat and a white mustache ---------- */
 function kikoHead(x, face = 'talk') {
   const skin = '#d9a066', hat = '#7d8a4e', grey = '#e4e0d6';
   SC.depth(x, () => { x.beginPath(); x.ellipse(-28, 9, 6, 8, 0, 0, 7); x.ellipse(28, 9, 6, 8, 0, 0, 7); }, skin, 2, 0.28);
@@ -57,7 +57,7 @@ function kikoHead(x, face = 'talk') {
   x.fillStyle = 'rgba(255,255,255,.2)'; x.beginPath(); x.ellipse(-12, -33, 7, 3, -0.4, 0, 7); x.fill();
 }
 
-/* ---------- Nena, the shopkeeper: round glasses, a bun with a pencil through it, a striped apron ---------- */
+/* ---------- Nora, the shopkeeper: round glasses, a bun with a pencil through it, a striped apron ---------- */
 function nenaHead(x, face = 'talk') {
   const skin = '#ecbd8c', hair = '#2c2229';
   SC.depth(x, () => { x.beginPath(); x.arc(0, -36, 14, 0, 7); }, hair, 2.5, 0.3);
@@ -217,7 +217,7 @@ function npcFull(c, who, X, Y, h, face = 'happy', pose = 'stand', t = 0, flip = 
     mc: { leg: '#22222c', shoe: '#f4f6f8', top: '#6b3fa0', skin: '#c98d5e', arm: '#6b3fa0' },
   }[who];
   if (sit) c.translate(0, 18);
-  // backpack behind Kiko
+  // backpack behind Walt
   if (who === 'guide') {
     SC.depth(c, () => { c.beginPath(); c.roundRect(-20, -60, 26, 34, 7); }, '#c0793f', 2, 0.3);
     SC.depth(c, () => { c.beginPath(); c.roundRect(-22, -68, 30, 10, 5); }, '#4a7ab8', 1.5, 0.3);
@@ -290,7 +290,7 @@ function npcFull(c, who, X, Y, h, face = 'happy', pose = 'stand', t = 0, flip = 
   c.restore();
 }
 /* a person standing in the scenes, at real height: 48 px to a metre */
-/* their portrait in the speech box, the way talaFace puts Tala's there */
+/* their portrait in the speech box, the way talaFace puts Josie's there */
 function npcFace(box, who, text) {
   if (!box || typeof CHIBI_ART === 'undefined' || !CHIBI_ART) return;
   let cv = box.querySelector('canvas.tala-pic');
@@ -299,7 +299,7 @@ function npcFace(box, who, text) {
 }
 const npcPx = who => NPC[who].cm / 100 * (typeof RANCH_PX_M !== 'undefined' ? RANCH_PX_M : 48);
 
-/* ---------- places: Nena's shop and the lab, one screen each in the same yard coordinates as the trip regions ---------- */
+/* ---------- places: Nora's shop and the lab, one screen each in the same yard coordinates as the trip regions ---------- */
 const PLACE_SKY = { shop: ['#f3e2c4', '#f3e2c4', '#f3e2c4'], lab: ['#dde7ee', '#dde7ee', '#dde7ee'] };
 function npcPlaceArt(c, s, bg, t) {
   if (bg === 'shop') { shopArt(c, t); return true; }
@@ -346,7 +346,7 @@ function shopArt(c, t) {
   SC.depth(c, () => { c.beginPath(); c.roundRect(168, GROUND - 152, 56, 18, 4); }, '#2f7a5a', 1.5, 0.3);
   c.fillStyle = '#fff4d6'; c.font = '800 10px system-ui'; c.textAlign = 'center'; c.fillText("NENA'S", 196, GROUND - 139.5);
 }
-/* the counter goes in front of Nena, as a prop after her */
+/* the counter goes in front of Nora, as a prop after her */
 function shopCounter(c) {
   const T = GROUND - 36;
   SC.depth(c, () => { c.beginPath(); c.roundRect(146, T + 4, 92, GROUND - T - 4, [3, 3, 0, 0]); }, '#b0703f', 2, 0.25);
@@ -431,12 +431,12 @@ function npcNightPass(c, s, t, W, H, world) {
   if (fire) { world(); awayProps(c, fire, t, false); }
 }
 
-/* ---------- errantry with Kiko: he picks the Snabit up at the road, stands by while it works, camps with it
+/* ---------- errantry with Walt: he picks the Snabit up at the road, stands by while it works, camps with it
    between weeks and walks it home. Smooth art only; the pixel ranch keeps the old walk off and walk back. ---------- */
 const kikoOn = () => typeof smoothRanch === 'function' && smoothRanch();
 const asName = t => t.replace(/^It /, RS.m.name + ' ').replace(/^Its /, RS.m.name + "'s ");
 function guideAt(x, o = {}) { return prop({ k: 'npc', who: 'guide', x, y: GROUND, face: 'happy', pose: 'stand', flip: false, ...o }); }
-/* Kiko waits at the road to town, the monster walks over, and the yard fades out */
+/* Walt waits at the road to town, the monster walks over, and the yard fades out */
 async function tripLeave(line) {
   const s = RS; say(line);
   if (!kikoOn()) { s.pose = 'happy'; await hop(12, 380); await walkTo(RW + 30, 60, 'walk'); return; }
@@ -445,13 +445,13 @@ async function tripLeave(line) {
   s.pose = 'happy'; await hop(10, 360); await walkTo(2 * RW - 62, 70, 'walk'); g.pose = 'stand'; s.pose = 'idle'; await rwait(900);
   s.trip = true; await sceneFade(true, 800); unprop(g);
 }
-/* the region opens with Kiko standing at the left, watching */
+/* the region opens with Walt standing at the left, watching */
 async function tripArrive(el) {
   const s = RS; s.bg = 'reg:' + el; s.trip = true; s.night = 0; s.dusk = 0;
   if (!kikoOn()) { s.x = -30; return; }
   s.props = []; s.x = 60; s.pose = 'idle'; s.camJump = true; s.guide = guideAt(18, { face: 'talk' }); await rwait(250); await sceneFade(false, 800);
 }
-/* tasks clear the props; Kiko stays */
+/* tasks clear the props; Walt stays */
 function keepGuide() { const s = RS; if (s.guide && !s.props.includes(s.guide)) s.props.unshift(s.guide); }
 /* a short night at camp between weeks, then morning in the same place */
 async function campNight(label, line, atDawn) {
@@ -478,7 +478,7 @@ async function tripHome(duskLine, homeLine, mood) {
   unprop(g); await toBed(mood);
 }
 
-/* ---------- visits: Nena's shop and the lab. No week passes, and the panel carries who is talking ---------- */
+/* ---------- visits: Nora's shop and the lab. No week passes, and the panel carries who is talking ---------- */
 function npcBox(who, text) { const N = NPC[who]; return `<div class="tipbox npcbox full" data-who="${who}"><div class="tip-who" style="background:${N.tag}">${N.name}</div><div>${text}</div></div>`; }
 function npcPanel(html) { panel(html); document.querySelectorAll('#r-panel .npcbox').forEach(b => npcFace(b, b.dataset.who, b.textContent)); }
 /* The walk to the shop or the lab takes a second. Each panel that opens after one takes a ticket first, and a menu tap or a

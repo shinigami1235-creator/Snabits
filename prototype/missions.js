@@ -20,7 +20,7 @@ function board(s){
 }
 function openBoard(){
   const s=RS;
-  panel(`<div class="full lab-head"><b>Missions</b><button class="small" id="r-bback">Back</button></div><div class="full lab-info">Kiko takes it out, and you watch each stop. The weeks pass once it's home.</div>`+
+  panel(`<div class="full lab-head"><b>Missions</b><button class="small" id="r-bback">Back</button></div><div class="full lab-info">Walt takes it out, and you watch each stop. The weeks pass once it's home.</div>`+
     board(s).map((b,i)=>{ const K=KINDS[b.kind], reg=REGIONS.find(x=>x.n===b.reg);
       return `<button class="rb mis" data-b="${i}"><span class="mis-t">${b.kind}<span class="elc" style="${chipStyle(ELC(reg.el))}">${reg.el}</span></span><span class="mis-r">${b.reg}</span><small>${K.stops} stops · ${K.weeks} wk · Lv ${b.level}</small></button>`; }).join(""));
   const bs=board(s);
@@ -93,7 +93,7 @@ async function runMission(b){
   let lv=[];
   const nm=s.m.name, per=Math.ceil(res.stops.length/K.weeks), kindW={Scout:"a scouting",Gather:"a gathering",Hunt:"a hunting"}[b.kind];
   await scene(async()=>{
-    await tripLeave(`Kiko is here to take ${nm} on ${kindW} mission in ${b.reg}. They'll be gone ${K.weeks} week${K.weeks>1?"s":""}.`);
+    await tripLeave(`Walt is here to take ${nm} on ${kindW} mission in ${b.reg}. They'll be gone ${K.weeks} week${K.weeks>1?"s":""}.`);
     await tripArrive(reg.el);
     s.tripLabel=`${b.reg} · Stop 1 of ${res.stops.length}`; drawUI();
     await stageCard(b.reg,`We'll make ${res.stops.length} stops here, then head home.`,"guide");

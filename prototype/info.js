@@ -71,7 +71,7 @@ function infoStatus(s) {
       <span class="k">Condition</span><span>${cond}</span>
       ${looks.length ? `<span class="k">Look</span><span>${looks.join(', ')}</span>` : ''}
     </div>
-    <div class="i-talk"><span class="who">Tala</span>${condition()}${s.stress > 45 ? ' It seems tense, so a rest would help.' : ''}</div>`;
+    <div class="i-talk"><span class="who">Josie</span>${condition()}${s.stress > 45 ? ' It seems tense, so a rest would help.' : ''}</div>`;
 }
 function infoPortrait(s) {
   const cv = el('i-port'); if (!cv) return;
@@ -137,7 +137,7 @@ function infoSkills(s) {
     return `<button class="i-sk ${on ? 'eq' : ''}" data-k="${n}"><span class="dot" style="background:${bg}"></span><span><b>${skillLabelOf(s, n)}${(uses[n] || 0) >= MASTERY ? ' ★' : ''}</b>${on ? `<em>slot ${eq.indexOf(n) + 1}</em>` : ''}<small>${skillTag(n, sk)[0]} · ${[skillNote(sk), skillWhere(s, n)].filter(Boolean).join(' · ')}</small></span>
       <span class="pw">${sk.power ? (sk.hits ? sk.power + '×' + sk.hits : sk.power) : '–'}<small>${sk.cost} en</small></span></button>`; }).join('');
   return `<div class="i-slots">${slots}</div>
-    <div class="i-talk"><span class="who">Tala</span>${eq[INFO.slot] ? `Slot ${INFO.slot + 1} is picked. Tap a skill below to put it there.` : `Slot ${INFO.slot + 1} is empty. Tap a skill below to fill it.`}</div>
+    <div class="i-talk"><span class="who">Josie</span>${eq[INFO.slot] ? `Slot ${INFO.slot + 1} is picked. Tap a skill below to put it there.` : `Slot ${INFO.slot + 1} is empty. Tap a skill below to fill it.`}</div>
     <div class="i-sec">Learned · ${known.length}</div>
     <div class="i-filters">${kinds.map(k => `<button class="${INFO.filter === k ? 'on' : ''}" data-f="${k}">${k}</button>`).join('')}</div>
     <div class="i-list">${rows || '<div class="i-q">Nothing of that kind yet.</div>'}</div>

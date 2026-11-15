@@ -34,7 +34,7 @@ def summary(rows, label):
     cups = {}
     for r in rows:
         for k, v in r['cups'].items(): c = cups.setdefault(k, [0, 0, 0]); c[0] += v['n']; c[1] += v['won']; c[2] += v['odds']
-    print('  cups entered -> won (Tala\'s odds at entry):', {k: f"{v[1]}/{v[0]} ({round(100 * v[2] / max(1, v[0]))}%)" for k, v in sorted(cups.items(), key=lambda x: 'EDCBAS'.index(x[0][-1]))})
+    print('  cups entered -> won (Josie\'s odds at entry):', {k: f"{v[1]}/{v[0]} ({round(100 * v[2] / max(1, v[0]))}%)" for k, v in sorted(cups.items(), key=lambda x: 'EDCBAS'.index(x[0][-1]))})
 async def main():
     mode = sys.argv[1] if len(sys.argv) > 1 else 'quick'
     async with async_playwright() as p:

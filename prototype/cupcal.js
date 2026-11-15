@@ -53,16 +53,16 @@ function calCard() {
     <div class="cc-row">${calRow(c) === 'F' ? 'Any grade' : `Grade ${calRow(c)}`} · ${fmt} · ${n} entries${c.official && c.grade === s.grade && s.grade !== 'S' ? ' · grade-up cup' : ''}</div>
     <div class="cc-row">Prize <b>${cupPurse(c).toLocaleString()} bits${c.prize ? ` and ${/^[AEIOU]/.test(c.prize) ? 'an' : 'a'} ${c.prize}` : ''}</b>${fee ? ` · Entry <b>${fee} bits</b>` : ''}</div>
     ${why ? `<div class="cc-no">${why}</div>` : ''}`;
-  // Tala's read on this week's cups, worked out once per cup since it runs a few dozen fights off screen
+  // Josie's read on this week's cups, worked out once per cup since it runs a few dozen fights off screen
   const tala = el('cal-tala'), key = sel.w + '|' + c.name;
   let adv = null; if (k === 0 && !why && typeof cupAdvice === 'function') adv = CAL.adv[key] !== undefined ? CAL.adv[key] : (CAL.adv[key] = cupAdvice(c, s));
   const low = fee && PLAYER.bits < fee;
-  tala.innerHTML = low ? `<b>Tala</b>The ${c.name.replace(/ \([A-SF]\)$/, '')} costs ${fee} bits to enter, and we have ${PLAYER.bits}.` : adv ? `<b>Tala</b>${adv.t}` : '';
+  tala.innerHTML = low ? `<b>Josie</b>The ${c.name.replace(/ \([A-SF]\)$/, '')} costs ${fee} bits to enter, and we have ${PLAYER.bits}.` : adv ? `<b>Josie</b>${adv.t}` : '';
   const sure = !(adv && adv.weak) || CAL.sure === key;
   go.textContent = k === 0 ? `${sure ? 'Enter' : 'Enter anyway'}${fee ? ` · ${fee} bits` : ''}` : k < 0 ? 'Done' : `In ${k} week${k > 1 ? 's' : ''}`;
   go.disabled = k !== 0 || !!why || low;
 }
-/* Enter takes the Snabit to the stadium for the cup. When Tala thinks the field is too strong, the first tap asks again */
+/* Enter takes the Snabit to the stadium for the cup. When Josie thinks the field is too strong, the first tap asks again */
 function calEnter() {
   const sel = CAL && CAL.sel; if (!sel || !sel.c || sel.w !== PLAYER.week) return;
   const key = sel.w + '|' + sel.c.name, adv = CAL.adv[key];

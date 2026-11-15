@@ -188,7 +188,7 @@ const lifeWeeks=()=>RS.m.lifespan*4;
 const AGE_PHASES=[[0.2,0.8,"Young"],[0.7,1.2,"Prime"],[1,0.8,"Elder"],[Infinity,0.25,"Veteran"]];
 function agePhase(s=RS){ const f=s.used/(s.m.lifespan*4); return AGE_PHASES.find(p=>f<p[0]); }
 function ageMult(s=RS){ return agePhase(s)[1]; }
-/* how old it is. Its lifespan and life stage stay hidden: the player finds out from Tala and from how training takes */
+/* how old it is. Its lifespan and life stage stay hidden: the player finds out from Josie and from how training takes */
 function ageText(s){ const mo=Math.floor((s.used||0)/4); return mo<1?"Under a month old":`${mo} month${mo>1?"s":""} old`; }
 const AGE_NOTE={Prime:"It's in its prime now, so training sticks better than it did.",Elder:"It's getting on in years, and training doesn't take as well as it used to."};
 function dateShort(){const w=PLAYER.week, y=Math.floor(w/48)+1, mo=Math.floor(w/4)%12;return `${SEASON[Math.floor(mo/3)]} · Month ${mo%3+1} · Week ${w%4+1}${y>1?` · Year ${y}`:""}`;}
@@ -271,9 +271,9 @@ function drawUI(){
 }
 function shownStat(i){ const s=RS; let v=s.m.stats[i]+s.tp[i]; if(s.stage!=="Bit"&&s.mark===i) v=Math.round(v*1.05); return v; }
 function popStat(i,txt,neg){ const r=el("rs"+i); if(!r) return; const p=document.createElement("span"); p.className="pop"+(neg?" neg":""); p.textContent=txt; r.appendChild(p); setTimeout(()=>p.remove(),1500); }
-/* the speech box: Tala by default, or one of the other people (npcs.js) when who is given */
+/* the speech box: Josie by default, or one of the other people (npcs.js) when who is given */
 function sayBox(t,who){ const b=el("r-say"), N=who&&typeof NPC!=="undefined"&&NPC[who];
-  b.innerHTML=`<span class="who"${N?` style="background:${N.tag}"`:""}>${N?N.name:"Tala"}</span>${t||""}`;
+  b.innerHTML=`<span class="who"${N?` style="background:${N.tag}"`:""}>${N?N.name:"Josie"}</span>${t||""}`;
   if(N){ if(typeof npcFace==="function") npcFace(b,who,t); } else if(typeof talaFace==="function") talaFace(b,t); }
 function say(t,who){ RS.say=t; RS.sayWho=who||null; sayBox(t,who); }
 /* small ranch sounds for the drills, trips and care: a pop for hearts, a twinkle for sparkles, a thud for dust, a ding for a bright idea,
@@ -950,11 +950,12 @@ async function endWeek(weeks,line){
   if(Math.random()<0.05){ const v=randomOpponent(Math.random); s.visitor={m:v,x:RW+20,until:performance.now()+9000}; s.stress-=10; notes.push(`A wild ${v.name} wandered in, and they played until sundown.`); }
   if(PLAYER.week>s.born&&(PLAYER.week-s.born)%52===0){ const g=COMMON_FINDS[Math.floor(Math.random()*COMMON_FINDS.length)]; addItem(g); s.spoil+=5; notes.push(`It's its birthday! There was cake, and a ${g} as a present.`); }
   { const mo=Math.floor(PLAYER.week/4)%12, wk=PLAYER.week%4; if(mo%3===2&&wk===2&&typeof rookMon==="function"&&story().seen.intro){ const r=rookMon(s.grade); notes.push(`Rook dropped by with ${r.m.name} to show off before the official cup. It's a ${r.m.el1} ${r.m.family}, so plan for that.`); } }
-  { const fest=typeof festivalOf==="function"&&festivalOf(PLAYER.week); if(fest){ addItem(fest[1]); s.stress-=10; notes.push(`The ${fest[0]} is on in town this week. Nena gave every ranch ${/^[AEIOU]/.test(fest[1])?"an":"a"} ${fest[1]}, and the music took 10 stress off.`); } }
+  { const fest=typeof festivalOf==="function"&&festivalOf(PLAYER.week); if(fest&&fest[0]==="Lantern Festival"&&!famOpen("Lern")&&GRADES.indexOf(bestGrade())>=2){ openFam("Lern"); notes.push("Lern came out of the lanterns at the festival, and the League stand registered the ranch for them. A scan can find one now."); }   // Lern opens at the Lantern Festival from grade C
+    if(fest){ addItem(fest[1]); s.stress-=10; notes.push(`The ${fest[0]} is on in town this week. Nora gave every ranch ${/^[AEIOU]/.test(fest[1])?"an":"a"} ${fest[1]}, and the music took 10 stress off.`); } }
   clampAll();   // the festival, a visitor, the plants and worn things move stress after the clamp at the top
   notes.push(condition());
   if(s.stress>50) notes.push("It seems tense lately, maybe give it a rest.");
-  { const nx=fightDayLine(s,1); if(nx) notes.push(nx+(fightCond(s).name==="Top shape"?"":" A rest this week would have it fresh for it.")); }   // Tala looks ahead to next week's special fight
+  { const nx=fightDayLine(s,1); if(nx) notes.push(nx+(fightCond(s).name==="Top shape"?"":" A rest this week would have it fresh for it.")); }   // Josie looks ahead to next week's special fight
   if(s.petWeek!==PLAYER.week-1&&s.playWeek!==PLAYER.week-1) s.neglect=(s.neglect||0)+1;
   if(s.variant==="Scruffy"){ s.cleanRun=(s.petWeek===PLAYER.week-1||s.playWeek===PLAYER.week-1)?(s.cleanRun||0)+1:0; if(s.cleanRun>=4){ s.variant=null; notes.push("It's groomed itself back to looking smart."); } }
   if(s.stage!=="Mega"){

@@ -8,7 +8,7 @@ The full design lives in the [Snabits design doc](https://claude.ai/artifact/PMV
 
 Live: https://shinigami1235-creator.github.io/Snabits/prototype/
 
-It opens on a title screen. A new player sees a short intro, meets Tala in town, gets the Snaboscope (the phone's camera), scans 3 things, keeps 1 and walks it to the ranch. A returning player taps Continue and goes straight back to the ranch, since the save lives in the browser's local storage.
+It opens on a title screen. A new player sees a short intro, meets Josie in town, gets the Snaboscope (the phone's camera), scans 3 things, keeps 1 and walks it to the ranch. A returning player taps Continue and goes straight back to the ranch, since the save lives in the browser's local storage.
 
 From there it plays like Monster Rancher 2: weekly drills and rests, feeding and care, praise and scolding, evolution from Bit to Byte to Mega, missions and skill trips played out on screen, MR2-style cups in a stadium, wild battles, the fusion lab, the town shops, friend battles in live rooms or by ghost code, and Team battle, a 6 on 6 mode for fully trained monsters.
 
@@ -28,7 +28,7 @@ The camera needs a phone browser with camera permission. "From gallery" loads a 
 | `prototype/team.js` | Team battle: 6 on 6 with switching, team picker and the computer's teams |
 | `prototype/game.js` | The save, roster and Freezer, levels, grades, opponents, items and fight habits |
 | `prototype/ranch.js` | The ranch: weeks, drills, care, feeding, reactions, aging, evolution looks and the ranch scene |
-| `prototype/tala.js` | Tala's tips at the ranch |
+| `prototype/tala.js` | Josie's tips at the ranch |
 | `prototype/errantry.js` | Region art and the on-screen tasks for missions and trips |
 | `prototype/missions.js` | Missions: planning the stops, playing them out and the report |
 | `prototype/trips.js` | Skill trips: 4 weeks in a region |

@@ -4,19 +4,22 @@ Every piece of story in the game, one row each, seeded from `story.js` and `onbo
 
 | id | type | file | trigger | who | where | changes | sets | reads | calls back to | arc |
 |---|---|---|---|---|---|---|---|---|---|---|
-| onboard | intro | onboard.js `OB_INTRO` | new game | Tala | town board, first Snaboscope trip | first Snabit, unlimited scans on the first trip | | | | main |
-| intro | beat | story.js | end of the first week | Tala, Rook | ranch | the loan and Rook's deal: win the Legend Cup first and his father drops the rest | seen.intro | | onboard | loan, rival |
-| loan25 | beat | story.js | a quarter of 30,000 paid at the Town Hall | Tala | ranch | Workshop builds barn upgrades | seen.loan25 | story().paid | intro | loan |
-| loan50 | beat | story.js | half paid | Tala | ranch | first level of each training place | seen.loan50 | story().paid | loan25 | loan |
-| loan75 | beat | story.js | three quarters paid | Tala | ranch | second level of each training place | seen.loan75 | story().paid | loan50 | loan |
+| onboard | intro | onboard.js `OB_INTRO` | new game | Josie | town board, first Snaboscope trip | first Snabit, unlimited scans on the first trip | | | | main |
+| intro | beat | story.js | end of the first week | Josie, Rook | ranch | the loan and Rook's deal: win the Legend Cup first and his father drops the rest | seen.intro | | onboard | loan, rival |
+| loan25 | beat | story.js | a quarter of 30,000 paid at the Town Hall | Josie | ranch | Workshop builds barn upgrades | seen.loan25 | story().paid | intro | loan |
+| loan50 | beat | story.js | half paid | Josie | ranch | first level of each training place | seen.loan50 | story().paid | loan25 | loan |
+| loan75 | beat | story.js | three quarters paid | Josie | ranch | second level of each training place | seen.loan75 | story().paid | loan50 | loan |
 | loan100 | beat | story.js | all paid | Rook | ranch | the deed, and Rook's line that the cups go on | seen.loan100 | story().paid | intro | loan, rival |
 | gradeD | beat | story.js | best grade reaches D | Rook | ranch | rival matches in week 3 of every month | seen.gradeD | bestGrade() | intro | rival |
-| gradeC | beat | story.js | best grade reaches C | Nena | ranch | a second held item in the shop each week | seen.gradeC | bestGrade() | | shop |
-| gradeB | beat | story.js | best grade reaches B | Dr. Ines, Tala | ranch | the Rift signal: every scanned Snabit gives off the same faint signal | seen.gradeB | bestGrade() | | rift |
-| gradeA | beat | story.js | best grade reaches A | Kiko | ranch | The Rift opens as a skill trip | seen.gradeA | bestGrade() | gradeB | rift |
+| gradeC | beat | story.js | best grade reaches C | Nora | ranch | a second held item in the shop each week | seen.gradeC | bestGrade() | | shop |
+| gradeB | beat | story.js | best grade reaches B | Dr. Ines, Josie | ranch | the Rift signal: every scanned Snabit gives off the same faint signal | seen.gradeB | bestGrade() | | rift |
+| gradeA | beat | story.js | best grade reaches A | Walt | ranch | The Rift opens as a skill trip | seen.gradeA | bestGrade() | gradeB | rift |
 | gradeS | beat | story.js | best grade reaches S | Rook | ranch | the Majors open | seen.gradeS | bestGrade() | gradeD | rival |
 | master | beat | story.js | all four Majors won | Rook | ranch | the Legend Cup opens | seen.master | anyMaster | gradeS | rival |
-| legend | beat | story.js | Legend Cup won | Rook, Dr. Ines, Tala | ranch | Rook's family drops the loan (or gives a Life fruit), Dr. Ines explains Snabits come through the Rift, "The End" | seen.legend | story().legendWon | intro, gradeB | rival, rift, loan |
-| festivals | event | story.js `FESTIVALS` | week 2 of months 1, 5, 7, 10 | Tala | ranch | a free item, 10 stress off | | weekParts | | seasons |
+| legend | beat | story.js | Legend Cup won | Rook, Dr. Ines, Josie | ranch | Rook's family drops the loan (or gives a Life fruit), Dr. Ines explains Snabits come through the Rift, "The End" | seen.legend | story().legendWon | intro, gradeB | rival, rift, loan |
+| festivals | event | story.js `FESTIVALS` | week 2 of months 1, 5, 7, 10 | Josie | ranch | a free item, 10 stress off | | weekParts | | seasons |
 | rift-teachers | teacher | areas.js `TEACHER` | last place of each region's trip | 12 teachers and the Rift Lord | regions | better skill teaching that week | | | | regions |
-| licence-cups | cup | tourney.js `cupsOfWeek`, game.js `LICENCE` | week 4 of months 1, 2, 7, 8, 10, 11 while a family is locked | League | stadium | first place lets the ranch scan that family | PLAYER.famOpen | famOpen() | | league |
+| licence-cups | cup | tourney.js `cupsOfWeek`, game.js `LICENCE_CUP` | week 4 of months 1, 2, 7, 8, 10, 11 while Plod or Teep is locked | League | stadium | first place lets the ranch scan that family | PLAYER.famOpen | famOpen() | | league |
+| bipped-form | contest result | contests.js | first Strength contest win | judges | town | Bipped can be scanned | PLAYER.famOpen | famOpen() | | league |
+| fizz-form | beat line | story.js gradeB | the grade B scene | Dr. Ines | ranch | Fizz can be scanned | PLAYER.famOpen | famOpen() | gradeB | league |
+| lern-lanterns | week note | ranch.js | the Lantern Festival at grade C or higher | League stand | town | Lern can be scanned | PLAYER.famOpen | famOpen(), bestGrade() | festivals | league |

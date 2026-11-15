@@ -1,6 +1,6 @@
-/* Onboarding: Tala, the ranch assistant, teaches a few buttons at a time and opens the rest as the player goes. Needs ranch.js and game.js. */
+/* Onboarding: Josie, the ranch assistant, teaches a few buttons at a time and opens the rest as the player goes. Needs ranch.js and game.js. */
 const TIPS=[
-  ["welcome",()=>true,s=>`${PLAYER.onboarded?`Welcome home, ${s.m.name}.`:`I'm Tala, and I help run the ranch. This is ${s.m.name}.`} Train builds its stats, Rest clears tiredness, Feed gives it its meal for the day, and Care is for petting, cleaning and its things. Each drill or rest takes one week.`],
+  ["welcome",()=>true,s=>`${PLAYER.onboarded?`Welcome home, ${s.m.name}.`:`I'm Josie, and I help run the ranch. This is ${s.m.name}.`} Train builds its stats, Rest clears tiredness, Feed gives it its meal for the day, and Care is for petting, cleaning and its things. Each drill or rest takes one week.`],
   ["drill",s=>s.tp.some(v=>v>0),()=>"After each drill you can praise or scold it. Praise good work and scold slacking, and it learns what you expect."],
   ["tired",s=>s.fatigue>=50,()=>"It's getting tired. A rest week clears it, and pushing on risks an injury."],
   ["month",()=>PLAYER.week>=4,()=>"The first month's done, so Out is open. Tournaments are how it climbs from grade E, and missions bring back bits and items."],
@@ -23,7 +23,7 @@ function checkTips(){
     el("r-say").after(box); }
   if(!t){ box.style.display="none"; el("r-say").style.display=""; return; }
   box.style.display="block"; el("r-say").style.display="none";
-  box.innerHTML=`<div class="tip-who">Tala</div><div>${t[2](s)}</div><div class="tip-acts"><button class="big" id="tip-ok">Got it</button>${t[0]==="welcome"?`<button class="btn2" id="tip-skip">I know how to play</button>`:""}</div>`;
+  box.innerHTML=`<div class="tip-who">Josie</div><div>${t[2](s)}</div><div class="tip-acts"><button class="big" id="tip-ok">Got it</button>${t[0]==="welcome"?`<button class="btn2" id="tip-skip">I know how to play</button>`:""}</div>`;
   if(typeof talaFace==="function") talaFace(box,t[2](s));
   el("tip-ok").onclick=()=>{ PLAYER.tips[t[0]]=true; saveGame(); checkTips(); drawUI(); };
   if(el("tip-skip")) el("tip-skip").onclick=()=>{ PLAYER.tutorialDone=true; saveGame(); box.style.display="none"; el("r-say").style.display=""; drawUI(); };

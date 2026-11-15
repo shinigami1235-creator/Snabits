@@ -63,8 +63,8 @@ function openDex(fam) {
   dexBackfill(); if (fam) DEX_FAM = fam; const D = dex(), n = dexCount();
   if (DEX_FAM === 'Secrets') return openSecrets(n);
   panel(`<div class="full lab-head"><b>Bestiary</b><button class="small" id="dx-back">Back</button></div>
-    <div class="full lab-info">${n.seen} of ${n.total} seen and ${n.raised} raised. ${n.next || "It's complete."}</div>
-    <div class="full dex-tabs">${DEX_FAMS.map(f => { const k = DEX_ELS.filter(e => D[f + '|' + e]).length; return `<button class="small ${f === DEX_FAM ? 'on' : ''}" data-f="${f}">${f}<i>${k}/12</i></button>`; }).join('')}${dexSecretTab()}</div>
+    <div class="full lab-info">${n.seen} of ${n.total} seen and ${n.raised} raised. ${n.next || "It's complete."}${typeof famOpen === 'function' && !famOpen(DEX_FAM) ? ` The Snaboscope can't find ${DEX_FAM} yet. ${UNLOCK_HOW[DEX_FAM]}` : ''}</div>
+    <div class="full dex-tabs">${DEX_FAMS.map(f => { const k = DEX_ELS.filter(e => D[f + '|' + e]).length; return `<button class="small ${f === DEX_FAM ? 'on' : ''}" data-f="${f}">${f}<i>${typeof famOpen === 'function' && !famOpen(f) && !k ? 'Locked' : k + '/12'}</i></button>`; }).join('')}${dexSecretTab()}</div>
     <div class="full dex-grid">${DEX_ELS.map(e => { const b = D[DEX_FAM + '|' + e] || 0;
       return `<div class="dex-t ${b ? '' : 'unk'}"><canvas data-e="${e}"></canvas><b>${b ? speciesName(DEX_FAM, e) : '???'}</b><small>${b ? (b & 14 ? ['Bit', 'Byte', 'Mega'].filter(st => b & DEX_STAGE[st]).map(() => '★').join('') : 'Seen') : e}</small></div>`; }).join('')}</div>`);
   el('dx-back').onclick = () => menu('Out');

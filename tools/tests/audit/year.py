@@ -78,7 +78,7 @@ async def week_action(pg, st, k, C, did):
     if out_open and st['cupNow'] and st['fat'] <= 60:
         await click(pg, '#r-menu [data-m="Out"]'); await click(pg, '#r-cup', 900)
         nm = st['cupNow'][0]
-        # Cups opens the calendar on the ranch: pick this week's tile, then Enter (twice when Tala asks again)
+        # Cups opens the calendar on the ranch: pick this week's tile, then Enter (twice when Josie asks again)
         ok = await pg.evaluate("n=>{ const w=PLAYER.week, i=cupsOfWeek(w).findIndex(c=>c.name===n), b=document.querySelector(`#r-cal .ct[data-w='${w}'][data-i='${i}']`); if(b){ b.click(); return true; } closeCupCal(); return false; }", nm)
         if ok:
             await pg.wait_for_timeout(300); await click(pg, '#cal-go', 300); await click(pg, '#cal-go', 300)

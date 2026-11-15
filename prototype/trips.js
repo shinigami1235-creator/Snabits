@@ -4,7 +4,7 @@ const TRIP_STATS={"Cinder Peak":[1,0],"Saffron Dojo":[0,1],"Static Plains":[5,3]
   "Nightshade Marsh":[3,5],"Dream Garden":[3,4],"Granite Steps":[2,0],"Dawn Temple":[4,3],"Iron Foundry":[1,2],"Hollow Moor":[5,1],"The Rift":[3,1]};
 const TRIP_REGIONS=()=>REGIONS.concat([{n:"The Rift",el:"Void",boss:"Rift Lord"}]);
 const NEED=[0,20,80,140];
-/* Kiko's fee, the way MR2's errantries cost 2,000G: about four E cup purses, and The Rift costs more */
+/* Walt's fee, the way MR2's errantries cost 2,000G: about four E cup purses, and The Rift costs more */
 const tripCost=reg=>reg.n==="The Rift"?3000:800;
 const atkStatOf=n=>{ const k=SKILLS[n].kind; return k==="Strike"?1:k==="Cast"?3:4; };
 function chainBefore(n){ // the skill before this one in its element's chain
@@ -28,15 +28,15 @@ function tripOptions(s,reg){
 }
 function tutorLine(s,reg){
   const o=tripOptions(s,reg);
-  if(o.some(x=>x.chainOk&&x.score>=x.need)) return "Kiko: \"It's ready to learn a skill here.\"";
-  if(o.some(x=>!x.chainOk&&x.score>=x.need)) return "Kiko: \"There's a skill here it can't reach until it masters an easier one.\"";
-  if(o.some(x=>x.chainOk&&x.score>=x.need-20)) return "Kiko: \"It could learn something here if it trains hard.\"";
-  return "Kiko: \"It isn't ready to learn anything new here.\"";
+  if(o.some(x=>x.chainOk&&x.score>=x.need)) return "Walt: \"It's ready to learn a skill here.\"";
+  if(o.some(x=>!x.chainOk&&x.score>=x.need)) return "Walt: \"There's a skill here it can't reach until it masters an easier one.\"";
+  if(o.some(x=>x.chainOk&&x.score>=x.need-20)) return "Walt: \"It could learn something here if it trains hard.\"";
+  return "Walt: \"It isn't ready to learn anything new here.\"";
 }
 function openTrips(){
   const s=RS;
   const regs=TRIP_REGIONS().filter((r,i)=>r.n==="The Rift"?(s.grade==="A"||s.grade==="S"):i<tripRegionCount());   // more regions open as the ranch climbs the grades
-  panel(`<div style="flex-basis:100%;font-size:13px">Kiko takes it to one region for 4 weeks and trains two stats each week, for ${tripCost({}).toLocaleString()} bits a trip. Under each region he says whether it can learn a skill there.</div>`+
+  panel(`<div style="flex-basis:100%;font-size:13px">Walt takes it to one region for 4 weeks and trains two stats each week, for ${tripCost({}).toLocaleString()} bits a trip. Under each region he says whether it can learn a skill there.</div>`+
     regs.map((r,i)=>{ const [a,b]=TRIP_STATS[r.n]; return `<button class="rb" data-t="${i}">${r.n} · ${tripCost(r).toLocaleString()} bits<small>${r.el}, ${STATS[a]} and ${STATS[b]}. ${tutorLine(s,r)}</small></button>`; }).join("")+
     `<button class="rb" id="tr-back">Back</button>`);
   el("r-panel").querySelectorAll("[data-t]").forEach(b=>b.onclick=()=>{ const r=regs[+b.dataset.t], cost=tripCost(r);
@@ -50,7 +50,7 @@ async function runTrip(reg){
   const max=hearts()>=4?2:1, base=FAMILY[s.m.family].base, rp=k=>RANK_PTS[rankOf(base[k])], gain=[0,0];
   await scene(async()=>{
     const nm=s.m.name, K=n=>say(n,"guide");
-    await tripLeave(`Kiko is here to take ${nm} to ${reg.n}. They'll train there for four weeks.`);
+    await tripLeave(`Walt is here to take ${nm} to ${reg.n}. They'll train there for four weeks.`);
     await tripArrive(reg.el);
     s.tripLabel=`${reg.n} · Week 1 of 4`; drawUI();
     await stageCard(reg.n,`We'll train ${STATS[main]} the most here, and ${STATS[second]} a little too.`,"guide");

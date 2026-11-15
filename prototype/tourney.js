@@ -10,6 +10,8 @@ let CUP=null;
    the Summer qualifier and the Summer exhibition, the Legend Cup, an open cup each month and regular prize cups. */
 const PRIZE_POOL={E:["Berry","Candy","Cool leaf"],D:["Honey cake","Energy nut","Medicine"],C:["Ball","Slim tea","Medicine"],B:["Lucky bit","Element stone","Stat seed"],A:["Stat seed","Life seed","Element stone"],S:["Energy cell","Life seed","Life fruit"],F:["Berry","Candy","Energy nut"]};
 const weekParts=w=>({mo:Math.floor(w/4)%12,wk:w%4,yr:Math.floor(w/48)});
+/* Licence Cups grow with the grade: 4 entrants at E and D, 6 at C and B, 8 at A and S (a knockout, since a round robin of 8 runs 7 matches) */
+const licenceSize=g=>({E:4,D:4,C:6,B:6,A:8,S:8})[g]||4;
 function cupsOfWeek(w){
   const {mo,wk}=weekParts(w), out=[], season=SEASON[Math.floor(mo/3)], add=c=>out.push(c);
   const prize=(g,name)=>{ const P=PRIZE_POOL[g]; return P[hashStr(name)%P.length]; };
@@ -19,7 +21,7 @@ function cupsOfWeek(w){
   if(mo===3&&wk===3){ for(const g of GRADES.slice(1)) add({grade:g,name:`Summer Qualifier (${g})`,format:"elim",size:8,qualifier:true}); return out; }
   if(mo===4&&wk===3){ for(const g of GRADES.slice(1)) add({grade:g,name:`Summer Exhibition (${g})`,format:"team5",size:10,exhibition:true}); return out; }
   // Licence Cups: in week 4 of the first two months of each season (but not Summer's), one per family the ranch can't register yet
-  if(wk===3&&mo%3!==2&&mo!==3&&mo!==4) for(const [fam,g] of Object.entries(LICENCE)) if(typeof famOpen!=="function"||!famOpen(fam)) add({grade:g,name:`${fam} Licence Cup`,format:"robin",size:4,licence:fam});
+  if(wk===3&&mo%3!==2&&mo!==3&&mo!==4) for(const fam in LICENCE_CUP) if(typeof famOpen!=="function"||!famOpen(fam)){ const g=LICENCE[fam], n=licenceSize(g); add({grade:g,name:`${fam} Licence Cup`,format:n>6?"elim":"robin",size:n,licence:fam}); }
   if(wk===2&&mo%2===0) add({grade:"F",name:"Open Cup",format:"robin",size:4,open:true,prize:prize("F","Open"+mo)});
   // one regular cup a month for each grade, on a fixed week, so a cup is something to plan the month around
   const grades=wk===0?["E","B"]:wk===1?["D","A"]:wk===2?["C","S"]:[];
@@ -60,7 +62,7 @@ function nextCupFor(s){
   for(let k=0;k<20;k++){ const x=PLAYER.week+k; const c=cupsOfWeek(x).find(c=>!cupBlock(c,s)&&!c.open&&(c.official||c.grade===s.grade||c.major||c.legend)); if(c) return {c,k}; }
   return null;
 }
-/* Tala's word about what's special this week or next */
+/* Josie's word about what's special this week or next */
 function fightDayLine(s,ahead){
   const w=PLAYER.week+(ahead||0), {mo,wk}=weekParts(w), list=cupsOfWeek(w).filter(c=>!cupBlock(c,s)), nm=displayName(s), when=ahead?"next week":"this week";
   const off=list.find(c=>c.official&&c.grade===s.grade&&s.grade!=="S");
@@ -101,7 +103,7 @@ function cupOpponent(c,s,R){
   const base=c.licence?randomOpponent(R,c.licence):undefined;   // a Licence Cup's field is all that family, from ranches already licensed
   return gradedOpponent(T.cg,lv,R,null,Math.round(T.earned[0]+R()*(T.earned[1]-T.earned[0])),base);
 }
-/* Tala's read on a cup: fights against a sample of the field it would face. match: its share of single matches won.
+/* Josie's read on a cup: fights against a sample of the field it would face. match: its share of single matches won.
    cup: its chance of taking first place, worked out from those match odds and the cup's format (5 matches in a round robin of 6,
    3 knockout rounds, 3 best-of-3 rounds, or a single match) */
 function cupChances(c,s){
@@ -201,7 +203,7 @@ function afterMatch(opp,res){
   }
   clampAll(); drawUI(); showThen(opp,res,nextMatch);
 }
-/* Mira sums up the match and Tala reacts before the cup moves on */
+/* Mira sums up the match and Josie reacts before the cup moves on */
 function showThen(opp,res,then){ if(res.forfeit||typeof cupAfterShow!=="function") return then(); cupAfterShow(opp,res).then(then,then); }
 function finishCup(){
   const s=RS, c=CUP.c; let place;

@@ -1,6 +1,6 @@
 /* The cup show: the build-up and wrap-up around cup fights, the way a broadcast would do it.
-   The lights go down and the cup's name comes up with fireworks, Mira the announcer opens it, Tala has a word at the gate,
-   the draw is shown, then each match gets a VS card. After a match Rico sums it up and Tala reacts, and at the end
+   The lights go down and the cup's name comes up with fireworks, Mira the announcer opens it, Josie has a word at the gate,
+   the draw is shown, then each match gets a VS card. After a match Rico sums it up and Josie reacts, and at the end
    the top three stand on the podium. Mira is the announcer. Each beat is a picture drawn from its own clock plus an optional line in a speech box.
    Tap to finish a line or move on, and Skip ends the whole show. Needs scenes.js, npcs.js, chibi.js and summon.js. */
 const CUPSHOW = (() => {
@@ -80,7 +80,7 @@ const CUPSHOW = (() => {
     const bh = 150, x = 12, y = H - bh - 18, w = W - 24, ps = 88;
     c.save(); c.fillStyle = 'rgba(18,19,30,.94)'; c.strokeStyle = '#3a3f58'; c.lineWidth = 2; c.beginPath(); c.roundRect(x, y, w, bh, 12); c.fill(); c.stroke();
     c.drawImage(pic(who, face), x + 12, y + 18, ps, ps); c.strokeStyle = '#11131c'; c.lineWidth = 3; c.beginPath(); c.roundRect(x + 12, y + 18, ps, ps, 10); c.stroke();
-    const name = who === 'tala' ? 'Tala' : NPC[who].name; c.font = `700 16px ${PIX}`; const nw = c.measureText(name).width + 18;
+    const name = who === 'tala' ? 'Josie' : NPC[who].name; c.font = `700 16px ${PIX}`; const nw = c.measureText(name).width + 18;
     c.fillStyle = TAGS[who] || NPC[who].tag; c.beginPath(); c.roundRect(x + ps + 26, y - 12, nw, 24, 5); c.fill(); c.fillStyle = '#16121e'; c.textBaseline = 'middle'; c.textAlign = 'left'; c.fillText(name, x + ps + 35, y + 1);
     c.font = `500 17px ${BODY}`; c.fillStyle = '#eef0f6'; c.textBaseline = 'top';
     let left = shown; wrap(c, text, w - ps - 44).slice(0, 5).forEach((ln, i) => { if (left <= 0) return; c.fillText(ln.slice(0, left), x + ps + 28, y + 22 + i * 24); left -= ln.length + 1; });
@@ -112,7 +112,7 @@ const CUPSHOW = (() => {
     npcFull(c, 'mc', fx, fy, 210, Math.floor(t / 260) % 2 ? 'talk' : 'happy', o.pose || (t % 2400 < 1200 ? 'wave' : 'point'), t);
     if (o.fw) fireworks(c, W, H, t, 0, 6, 0.2);
   } });
-  /* Tala and the Snabit at the players' gate, the bright ring beyond */
+  /* Josie and the Snabit at the players' gate, the bright ring beyond */
   B.gate = (info, text, face = 'talk') => ({ who: 'tala', face, text, textAt: 500, draw(c, W, H, t) {
     c.fillStyle = '#2a2140'; c.fillRect(0, 0, W, H);
     const ox = W * 0.18, ow = W * 0.64, oy = H * 0.12, oh = H * 0.5;
@@ -138,7 +138,7 @@ const CUPSHOW = (() => {
     c.fillStyle = 'rgba(255,255,255,.5)'; c.beginPath(); c.ellipse(-s * 0.22, -s * 0.3, s * 0.08, s * 0.2, 0.2, 0, 7); c.fill();
     c.restore();
   }
-  /* after the match: the winner celebrates in the ring and Mira or Tala says how it went */
+  /* after the match: the winner celebrates in the ring and Mira or Josie says how it went */
   B.result = (info, who, text, face) => ({ who, face, text, textAt: who === 'tala' ? 200 : 1200, draw(c, W, H, t) {
     const won = info.won;
     stadium(c, W, H, t, { cheer: true, spots: 0.6, spotAt: { x: W * (won ? 0.3 : 0.7), y: H * 0.6 } });
@@ -257,7 +257,7 @@ const CUPSHOW = (() => {
       SC.depth(c, () => { c.beginPath(); c.roundRect(42, y, pw - 30, ph, 7); }, e.me ? '#ffe8a8' : e.rook ? '#ffd2a0' : '#e9dcbc', 2, 0.25);
       tile(c, e, 46, y + 3, ph - 6, t + r * 300, false);
       c.fillStyle = '#3a2618'; c.font = `700 ${Math.min(17, ph * 0.38)}px ${PIX}`; c.textAlign = 'left'; c.textBaseline = 'middle'; c.fillText(e.name.replace(/^Rook's /, '').split(',')[0], 46 + ph, y + ph * 0.38, pw - ph - 40);
-      c.fillStyle = '#7a6248'; c.font = `500 ${Math.min(13, ph * 0.28)}px ${PIX}`; c.fillText(e.me ? "Tala's ranch" : e.rook ? 'Rook' : e.breeder || '', 46 + ph, y + ph * 0.72, pw - ph - 40);
+      c.fillStyle = '#7a6248'; c.font = `500 ${Math.min(13, ph * 0.28)}px ${PIX}`; c.fillText(e.me ? "Josie's ranch" : e.rook ? 'Rook' : e.breeder || '', 46 + ph, y + ph * 0.72, pw - ph - 40);
       c.restore(); });
   } });
   /* ---------- running a show ---------- */
@@ -298,13 +298,13 @@ const CUPSHOW = (() => {
   return API;
 })();
 
-/* ---------- the lines. Rico calls the cup, Tala talks to the player ---------- */
+/* ---------- the lines. Rico calls the cup, Josie talks to the player ---------- */
 const CUPLINE = {
   open: c => `Welcome to the ${c.name}! ${c.size} Snabits signed up this week, and the winner takes home ${c.purse.toLocaleString()} bits${c.prize ? ` and ${/^[AEIOU]/.test(c.prize) ? 'an' : 'a'} ${c.prize}` : ''}.`,
   rules: c => c.format === 'robin' ? 'Everyone fights everyone once. A win is worth 3 points and a draw is worth 1.' : c.format === 'single' ? "It's one match, and the winner takes the purse." : c.format === 'bo3' ? "It's a knockout, and every match is the best of three." : "It's a knockout, so one loss and you're out.",
   draw: (me, foe) => `Here's the draw. ${me} meets ${foe} in the first round.`,
-  vs: (round, me, foe) => `${round}! On the left, ${me.name} from Tala's ranch. On the right, ${foe.rook ? `${foe.name.replace(/^Rook's /, '')} with Rook from the Grand Ranch` : `${foe.name}, raised by ${foe.breeder}`}!`,
-  /* Tala's word at the gate: the one thing about this opponent worth knowing */
+  vs: (round, me, foe) => `${round}! On the left, ${me.name} from Josie's ranch. On the right, ${foe.rook ? `${foe.name.replace(/^Rook's /, '')} with Rook from the Grand Ranch` : `${foe.name}, raised by ${foe.breeder}`}!`,
+  /* Josie's word at the gate: the one thing about this opponent worth knowing */
   advice(meF, foeF, meName, foeName) {
     const hurt = Math.max(...[foeF.el1, foeF.el2].filter(Boolean).map(e => effect(e, meF))), hit = Math.max(...[meF.el1, meF.el2].filter(Boolean).map(e => effect(e, foeF)));
     if (hit > 1) return `${meName}'s ${meF.el1} skills are strong against ${foeName}. Use them early and keep up the pressure.`;
@@ -330,7 +330,7 @@ const CUPLINE = {
     if (res.foeHpLeft > 0.6) return `${foe} wins, and it still has most of its HP left.`;
     return `${foe} wins after ${res.secs != null ? res.secs + ' seconds' : res.turns + ' turns'}.`;
   },
-  /* Tala after a match: what it means for the cup */
+  /* Josie after a match: what it means for the cup */
   after(res, me, c, cup) {
     const won = res.winner === 0;
     if (c.format === 'robin') { const left = cup.rounds.length - cup.round; return won ? `Good job, ${me}! That's ${cup.pts[0]} points${left ? ` with ${left} round${left > 1 ? 's' : ''} to go` : ''}.` : res.winner === null ? `A draw still gets us a point.${left ? ` There ${left > 1 ? 'are' : 'is'} ${left} round${left > 1 ? 's' : ''} left.` : ''}` : left ? `We lost that one, but there ${left > 1 ? 'are' : 'is'} still ${left} round${left > 1 ? 's' : ''} to go.` : `We lost that one, ${me}. Let's see where we finish.`; }
@@ -340,9 +340,9 @@ const CUPLINE = {
     return nx ? `Nice work, ${me}! Next up is ${nx}.` : `Nice work, ${me}!`;
   },
   podium(place, me, champ, c, prize) {
-    if (place === 1) return `In first place, and taking home ${prize.toLocaleString()} bits, ${me} from Tala's ranch!`;
-    if (place === 2) return `${champ} wins the ${c.name}! ${me} from Tala's ranch takes second place and ${prize.toLocaleString()} bits.`;
-    if (place === 3) return `${champ} wins the ${c.name}! ${me} from Tala's ranch finishes third and takes home ${prize.toLocaleString()} bits.`;
+    if (place === 1) return `In first place, and taking home ${prize.toLocaleString()} bits, ${me} from Josie's ranch!`;
+    if (place === 2) return `${champ} wins the ${c.name}! ${me} from Josie's ranch takes second place and ${prize.toLocaleString()} bits.`;
+    if (place === 3) return `${champ} wins the ${c.name}! ${me} from Josie's ranch finishes third and takes home ${prize.toLocaleString()} bits.`;
     return `${champ} wins the ${c.name}! Thanks for coming, everyone.`;
   },
   talaEnd(place, me, up, prize) {
@@ -398,7 +398,7 @@ function cupBeforeShow(opp) {
   beats.push({ ...B.faceoff(info, L.vs(roundName(), me, { ...e, name: e.name })), jingle: 'vs', mus: 'cup' });
   return CUPSHOW.run(beats);
 }
-/* after a match: Mira's recap, then Tala if the cup goes on */
+/* after a match: Mira's recap, then Josie if the cup goes on */
 function cupAfterShow(opp, res) {
   if (!showOk()) return Promise.resolve();
   const c = CUP.c, me = showSide(0), foe = showSide(opp), won = res.winner === 0, draw = res.winner === null, B = CUPSHOW.B, L = CUPLINE;

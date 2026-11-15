@@ -231,7 +231,7 @@ function ranchYard(c, t, season, s) {
   const bowl = s.props.find(p => p.k === 'bowl');
   if (bowl && bowl.food) { c.fillStyle = bowl.food; c.beginPath(); c.ellipse(BOWLX + 6.5, GROUND - 5.3, 5.8, 1.9, 0, 0, 7); c.fill(); }
   c.fillStyle = 'rgba(255,255,255,.35)'; c.beginPath(); c.ellipse(BOWLX + 3.5, GROUND - 3, 1.6, 0.7, 0, 0, 7); c.fill();
-  // toy box where Tala used to stand
+  // toy box where Josie used to stand
   const bx = HELPX - 4;
   SC.depth(c, () => { c.beginPath(); c.roundRect(bx - 12, GROUND - 18, 24, 18, 3); }, '#d39a5a', 1.5, 0.28);
   c.fillStyle = 'rgba(0,0,0,.1)'; c.fillRect(bx - 12, GROUND - 12, 24, 1.2);
@@ -256,7 +256,7 @@ function ranchTraining(c, X, season) {
   c.fillStyle = '#4a3220'; c.font = '700 8px system-ui'; c.textAlign = 'center'; c.fillText('Town', sx - 2, GROUND - 35);
 }
 
-/* ---------- Tala ---------- */
+/* ---------- Josie ---------- */
 /* her head, about 70 units across, centred on (0,0); faces: happy, talk, worried, surprised */
 function talaHead(x, face = 'talk') {
   const hair = '#5a3420', hairD = '#3e2214';
@@ -749,7 +749,7 @@ function awayProps(c, p, t, front) {
   }
 }
 
-/* ---------- Tala, full body: a big head on a small body, feet at (x,y), h px tall; phone in her raised hand if asked ---------- */
+/* ---------- Josie, full body: a big head on a small body, feet at (x,y), h px tall; phone in her raised hand if asked ---------- */
 function talaFull(c, x, y, h, face = 'happy', phone = false, t = 0) {
   const u = h / 100; c.save(); c.translate(x, y); c.scale(u, u);
   c.fillStyle = 'rgba(0,0,0,.18)'; c.beginPath(); c.ellipse(0, 0, 18, 4, 0, 0, 7); c.fill();
@@ -819,7 +819,7 @@ const OB_SMOOTH = {
   town(c, t) { obSkyS(c, ['#f2a65a', '#f8d29a', '#fbe6c2'], 44); obSunS(c, 14, 14, '#ffd27a'); SC.cloud(c, 66, 9, 3, 0.9);
     obGroundS(c, 44, '#c39a68'); c.fillStyle = '#a8814f'; c.fillRect(0, 54, 96, 3);
     obHouseS(c, 2, 44, '#e8d5a8', '#5a6fb5', true); obHouseS(c, 28, 44, '#f4ead2', '#c0392b', true); obHouseS(c, 72, 44, '#d8e4c8', '#3f7f3b', true);
-    // the town board where Tala is pinning up her job request
+    // the town board where Josie is pinning up her job request
     c.fillStyle = '#6b4428'; c.fillRect(48.6, 40, 0.9, 15); c.fillRect(55.5, 40, 0.9, 15);
     SC.depth(c, () => { c.beginPath(); c.roundRect(47.5, 34, 10, 8, 0.8); }, '#a8743f', 0.5, 0.3);
     c.fillStyle = '#fbf3df'; c.fillRect(48.6, 35, 3.6, 4.6); c.fillStyle = '#e8eef8'; c.fillRect(53, 35.6, 3.4, 3.2);

@@ -1,4 +1,4 @@
-/* Title screen, intro and the first Snaboscope trip: Tala, who needs help on her ranch, offers the player the job in
+/* Title screen, intro and the first Snaboscope trip: Josie, who needs help on her ranch, offers the player the job in
    town, the player scans as many things as they like, keeps 1 and walks it to the ranch. A returning player taps Continue and lands back at the ranch.
    Needs monster.js, battle.js, game.js and ranch.js, plus the scan code in index.html. */
 let ONB=null;
@@ -25,7 +25,7 @@ function obHouse(c,x,g,wall,roof){ obR(c,x,g-14,18,14,wall); obR(c,x-2,g-17,22,3
 function obBarn(c,x,g){ obR(c,x,g-16,22,16,"#c0392b"); obR(c,x-2,g-19,26,3,"#7a2418"); obR(c,x+2,g-22,18,3,"#7a2418"); obR(c,x+6,g-25,10,3,"#7a2418");
   obR(c,x+7,g-11,8,11,"#f4ead2"); obR(c,x+8,g-10,6,10,"#8a3324"); obR(c,x+8,g-10,6,1,"#f4ead2"); obR(c,x+9,g-21,4,3,"#f4ead2"); }
 function obFence(c,x0,x1,g){ for(let x=x0;x<x1;x+=5) obR(c,x,g-6,2,6,"#e8d5a8"); obR(c,x0,g-5,x1-x0,1,"#e8d5a8"); obR(c,x0,g-3,x1-x0,1,"#e8d5a8"); }
-/* Tala, the ranch assistant. y is her feet. */
+/* Josie, the ranch assistant. y is her feet. */
 function obTala(c,x,y,s,t,phone){
   const P=(dx,dy,w,h,col)=>obR(c,x+dx*s,y-20*s+dy*s,w*s,h*s,col), bob=Math.floor(t/500)%2;
   P(2,18,3,2,"#6b4226"); P(7,18,3,2,"#6b4226"); P(3,16,2,2,"#3b6fb5"); P(7,16,2,2,"#3b6fb5");
@@ -122,9 +122,9 @@ function obConfirmNew(){
 const OB_INTRO=[
   ["hidden",null,"Snabits live everywhere, camouflaged in the colour of whatever they hide in, like a red mailbox, a green leaf or the blue sky."],
   ["scope",null,"Only a Snaboscope can uncover them. It reads the colours of whatever it's pointed at and shows the Snabit hiding there."],
-  ["town","Tala","Hi, I'm Tala. I run a ranch up the hill, and I was just putting up this job request for someone to help me with it."],
-  ["town","Tala","You look like you'd be a good fit. The job is raising Snabits, training them and taking them to cups. The ranch is empty right now, so we'd start by finding your first one."],
-  ["handover","Tala","Your phone can work as a Snaboscope. Scan as many things as you like, see what comes out of each, and bring your favourite home."],
+  ["town","Josie","Hi, I'm Josie. I run a ranch up the hill, and I was just putting up this job request for someone to help me with it."],
+  ["town","Josie","You look like you'd be a good fit. The job is raising Snabits, training them and taking them to cups. The ranch is empty right now, so we'd start by finding your first one."],
+  ["handover","Josie","Your phone can work as a Snaboscope. Scan as many things as you like, see what comes out of each, and bring your favourite home."],
 ];
 function obIntro(){
   if(!PLAYER) PLAYER=newPlayer();
@@ -167,7 +167,7 @@ function obCoach(){
   if(!d){ d=document.createElement("div"); d.id="ob-coach"; d.className="tipbox"; document.body.appendChild(d); }
   const on=!!(ONB&&ONB.tut);
   d.style.display=on?"block":"none";
-  if(on) d.innerHTML=`<div class="tip-who">Tala</div><div>${obCoachText()}</div>`;
+  if(on) d.innerHTML=`<div class="tip-who">Josie</div><div>${obCoachText()}</div>`;
   const mt=document.getElementById("msgtext"); if(mt&&on) mt.textContent=obCoachText();
 }
 /* Called by render() in index.html once the result sheet is drawn. Returns true when it took over the buttons. */
@@ -186,7 +186,7 @@ function obSheet(m){
 }
 function obChoose(){
   ONB.tut=false; obCoach(); ONB.sel=0;
-  obRoot().innerHTML=`<div class="ob-story"><div class="ob-text"><div class="tip-who">Tala</div><p>Which one comes home? The others go back into hiding.</p></div>
+  obRoot().innerHTML=`<div class="ob-story"><div class="ob-text"><div class="tip-who">Josie</div><p>Which one comes home? The others go back into hiding.</p></div>
     <div class="ob-picks">${ONB.picks.map((m,i)=>`<button class="ob-pick" data-i="${i}"><canvas class="mon-tile sm" id="ob-p${i}"></canvas>
       <b>${m.name}</b><span class="sheet-kind"><span class="elc" style="${chipStyle(ELC(m.el1))}">${m.el1}</span>${m.el2?`<span class="elc" style="${chipStyle(ELC(m.el2))}">${m.el2}</span>`:""}<span class="fam">${m.family}</span></span>
       <small>${obBest(m)}</small></button>`).join("")}</div>
@@ -202,7 +202,7 @@ function obMark(){ obRoot().querySelectorAll(".ob-pick").forEach(b=>b.classList.
 function obHome(m){
   ONB.tut=false; ONB.mons=[m]; obCoach(); document.body.classList.remove("ob-tut");
   obRoot().innerHTML=`<div class="ob-story"><div class="ob-frame"><canvas id="ob-cv"></canvas></div>
-    <div class="ob-text"><div class="tip-who">Tala</div><p>Good pick. ${m.name} is ${/^[AEIOU]/.test(m.el1)?"an":"a"} ${m.el1} ${m.family}. Let's walk it up to the ranch.</p></div>
+    <div class="ob-text"><div class="tip-who">Josie</div><p>Good pick. ${m.name} is ${/^[AEIOU]/.test(m.el1)?"an":"a"} ${m.el1} ${m.family}. Let's walk it up to the ranch.</p></div>
     <button class="big" id="ob-go">Go to the ranch</button></div>`;
   obShow(true); obScene("home");
   document.getElementById("ob-go").onclick=()=>{ PLAYER.onboarded=true; ONB=null; obShow(false); openRanch(m); saveGame(); };

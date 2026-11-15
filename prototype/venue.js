@@ -41,7 +41,7 @@ function venueLobby(){
     <div class="v-row"><button class="btn2" id="v-cal">Calendar</button><button class="btn2" id="v-home">Back to the ranch</button></div>`);
   venueSay(`These are the cups ${displayName(s)} can enter this week. ${next}`);
   const up=list.concat(cupsOfWeek(PLAYER.week+1)).find(c=>c.official&&c.grade===s.grade), adv=up&&typeof cupAdvice==="function"?cupAdvice(up,s):null;
-  const tl=[fightDayLine(s)||fightDayLine(s,1),adv?adv.t:null,fightCondLine(s)].filter(Boolean).join(" "); if(tl) el("v-ann").insertAdjacentHTML("afterend",`<div class="v-card v-ann"><span class="who" style="background:var(--sky)">Tala</span>${tl}</div>`);
+  const tl=[fightDayLine(s)||fightDayLine(s,1),adv?adv.t:null,fightCondLine(s)].filter(Boolean).join(" "); if(tl) el("v-ann").insertAdjacentHTML("afterend",`<div class="v-card v-ann"><span class="who" style="background:var(--sky)">Josie</span>${tl}</div>`);
   el("v-cal").onclick=()=>venueCalendar(0);
   el("v-body").querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>venueEntry(list[+b.dataset.c]));
   el("v-home").onclick=closeVenue;
@@ -65,7 +65,7 @@ function venueEntry(c){
     </div></div>
     <div class="v-row"><button class="btn2" id="v-back">Back</button><button class="big" id="v-enter">Enter${fee?` · ${fee} bits`:""}</button></div>`);
   venueSay(`${c.official?"An official cup. ":""}${c.official&&c.grade===s.grade&&s.grade!=="S"?`Win it and ${displayName(s)} moves up to grade ${GRADES[GRADES.indexOf(s.grade)+1]}. `:""}The cup takes the week.${fee&&PLAYER.bits<fee?` We have ${PLAYER.bits} bits, short of the ${fee} entry.`:""}`);
-  if(adv) el("v-ann").insertAdjacentHTML("afterend",`<div class="v-card v-ann"><span class="who" style="background:var(--sky)">Tala</span>${adv.t}</div>`);
+  if(adv) el("v-ann").insertAdjacentHTML("afterend",`<div class="v-card v-ann"><span class="who" style="background:var(--sky)">Josie</span>${adv.t}</div>`);
   let sure=!(adv&&adv.weak);
   if(!sure) el("v-enter").textContent=`Enter anyway${fee?` · ${fee} bits`:""}`;
   el("v-enter").onclick=()=>{ if(!sure){ sure=true; el("v-enter").textContent=`Yes, enter${fee?` · ${fee} bits`:""}`; return; } startCup(c); };

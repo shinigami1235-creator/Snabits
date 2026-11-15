@@ -16,7 +16,7 @@ const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..')
 /* lines allowed to break a rule, each with its reason */
 const ALLOW = [
   // [file, start of the sentence, reason]
-  ['tala.js', 'This is X.', 'Tala introducing the monster by name, which is how a person says it'],
+  ['tala.js', 'This is X.', 'Josie introducing the monster by name, which is how a person says it'],
 ];
 const SKIP = ['peer.js'];   // the PeerJS library, not the game's own text
 
@@ -138,10 +138,10 @@ function lintFile(f) {
 
 /* ---------- self-test: the rules must still catch what Gid rejected and pass what he approved ---------- */
 function selfTest() {
-  const bad = ["Kiko's here to take it to Glacier Rim. Four weeks, and it comes back in a month.", 'Set to Lower face. That is the treated area.', 'Wrinkles compared. Displacement was not.',
+  const bad = ["Walt's here to take it to Glacier Rim. Four weeks, and it comes back in a month.", 'Set to Lower face. That is the treated area.', 'Wrinkles compared. Displacement was not.',
     'It is not a song, it is a statement.', 'Tall post 3:4, nothing cut', 'People still come this far out sometimes. Not often.', 'The photo is loaded and nothing is marked.',
     'The shadow is the lamp, not the treatment.', 'It came off clean and sharp — that was Ice Shard.', 'This boasts a vibrant shop.', 'Out like a light. Mostly.'];
-  const good = ['Kiko is here to take Toxichomp to Glacier Rim. They\'ll train there for four weeks.', 'Well done! Toxichomp has learned Ice Shard.', 'Wrinkles were compared while displacement was not.',
+  const good = ['Walt is here to take Toxichomp to Glacier Rim. They\'ll train there for four weeks.', 'Well done! Toxichomp has learned Ice Shard.', 'Wrinkles were compared while displacement was not.',
     'Welcome! Feel free to look around. The skill chips are in the glass case.', 'Hit the post again and put your weight behind it.', 'It isn\'t well enough to travel. Rest it or give it medicine first.'];
   let fail = 0;
   const caught = t => lint([{ text: t, line: 0 }], 'test.js').some(h => h.err);

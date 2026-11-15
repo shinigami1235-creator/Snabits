@@ -64,10 +64,12 @@ async function runContest(K) {
     if (place === 1) { s.pose = 'happy'; spark(s.x, headY() - 6, 'sparkle', 12); await hop(16, 420); } else s.pose = place <= 3 ? 'happy' : 'sad';
     await rwait(1500); banner('');
     PLAYER.bits += purse; if (place === 1) { addItem(T[3]); story().contests++; }
+    const bipNow = place === 1 && K.kind === 'Strength' && typeof famOpen === 'function' && !famOpen('Bipped'); if (bipNow) openFam('Bipped');   // a Strength win lets the ranch register Bipped
     s.stress -= 15; s.fatigue += 8; s.spoil += place === 1 ? 2 : 0; clampAll(); drawUI();
     const lines = [`${nm} finished ${['first', 'second', 'third', 'fourth', 'fifth'][place - 1]} in the ${T[0]} ${K.name} with ${me.sum.toFixed(1)} points. ${order[0].me ? `Second was ${order[1].name} with ${order[1].sum.toFixed(1)}.` : `${order[0].name} won with ${order[0].sum.toFixed(1)}.`}`];
     if (purse) lines.push(`It brings home ${purse.toLocaleString()} bits${place === 1 ? ` and ${/^[AEIOU]/.test(T[3]) ? 'an' : 'a'} ${T[3]}` : ''}.`);
     const wonNow = place === 1 && CONTEST_WINS[story().contests]; if (wonNow) { addItem(wonNow); lines.push(`That's ${story().contests} contest win${story().contests > 1 ? 's' : ''}, and the judges sent ${/^[AEIOU]/.test(wonNow) ? 'an' : 'a'} ${wonNow} to wear.`); }
+    if (bipNow) lines.push('The judges were Bipped breeders, and they signed the League form so the ranch can register Bipped. A scan can find one now.');
     lines.push('It lost 15 stress and gained 8 fatigue.');
     if (smoothRanch()) { await sceneFade(true, 800); backHome(); s.dayHour = 21; s.x = 2 * RW - 14; s.camJump = true; await sceneFade(false, 700);   // home at night, then off to bed
       await walkTo(300, 60, 'walk'); await toBed(place === 1 ? 'happy' : 'idle'); }

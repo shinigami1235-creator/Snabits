@@ -39,7 +39,7 @@ window.SIM = (() => {
   async function act(kind, fn) { const b0 = PLAYER.bits; await fn(); await idle(); money[kind] = (money[kind] || 0) + PLAYER.bits - b0; }
   /* one life from hatch to the end of its lifespan, on a plain sensible plan:
      the week's wild fights while it's fresh enough (none on a cup week), the cup of its grade each month and the official cup when
-     Tala gives it a fair chance, a rest when it's tired or tense, the week before the official cup kept free of cups and wild fights
+     Josie gives it a fair chance, a rest when it's tired or tense, the week before the official cup kept free of cups and wild fights
      (a rest if it isn't in top shape), and otherwise a drill in one of its family's better stats. */
   async function life(fam, seed, P = {}) {
     const p = { restAt: 50, stressAt: 35, wildMax: 3, wildFat: 40, heavy: true, cupOdds: 0.4, mealEvery: 8, maxWeeks: 260, afterS: 0, ...P };
