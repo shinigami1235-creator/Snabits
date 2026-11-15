@@ -500,6 +500,8 @@ function spark(x,y,kind,n=1){ rsfx(kind); for(let i=0;i<n;i++){ const p={x,y,kin
   if(kind==="star"){p.vx=rnd(-1,1);p.vy=-rnd(.6,1.4);p.g=0.04;p.max=50;}
   if(kind==="crumb"){p.vx=rnd(-.6,.6);p.vy=-rnd(.2,.8);p.g=.08;p.max=30;}
   if(kind==="sweat"){p.vx=rnd(-.8,.8);p.vy=-rnd(.5,1);p.g=.06;p.max=30;}
+  if(kind==="wave"){p.vx=0;p.vy=0;p.max=34;}
+  if(kind==="streak"){p.vy=0;p.max=18;}
   if(kind==="ember"){p.vx=rnd(-2.2,2.2);p.vy=-rnd(1,2.6);p.g=0.12;p.max=34;}
   if(kind==="puff"){p.vx=rnd(-.25,.25);p.vy=-rnd(.25,.45);p.max=110;}
   if(kind==="splinter"||kind==="chip"){p.vx=rnd(-1.8,1.8);p.vy=-rnd(1,2.4);p.g=0.13;p.max=40;}
@@ -645,9 +647,17 @@ async function SLACK(i){ const s=RS; s.pose="idle"; await rwait(700); spark(s.x,
 const SCENE_FN=[
   async r=>{ // Laps
     const s=RS, laps=r==="great"?3:2;
-    if(s.bg==="pool"){ const tall=GROUND-headY(), sink=tall*0.5-24, surf=GROUND-24;   // half the body under the water
+    if(s.bg==="pool"){ const tall=GROUND-headY(), surf=GROUND-18, sink=tall*0.5-18, bw=tall*0.42;   // the water comes up to the middle of its body, just in front of the lane rope
       let v=2;
-      const swim=async tx=>{ const d=Math.sign(tx-s.x); s.dir=d; s.pose="walk"; while(Math.abs(tx-s.x)>v){ s.x+=d*v; if(Math.random()<0.12+v*0.05) spark(s.x-d*10,surf-1,"drip"); await rwait(20); } s.x=tx; spark(s.x+d*8,surf-2,"drip",v>4?5:2); };
+      /* a length of the pool: rings spread behind it as it swims, and the faster it goes the more it throws up
+         at the front, with speed lines streaming off behind and a bigger splash when it turns at the wall */
+      const swim=async tx=>{ const d=Math.sign(tx-s.x); s.dir=d; s.pose="walk"; let f=0;
+        while(Math.abs(tx-s.x)>v){ s.x+=d*v; f++; s.jy=-sink+Math.sin(f/(v>3?2:4))*(v>3?1.2:0.8);
+          if(f%Math.max(2,Math.round(8/v))===0) spark(s.x-d*bw*0.7,surf,"wave");
+          if(v>3){ spark(s.x+d*bw*0.5,surf-1,"drip"); if(f%2===0){ const q={x:s.x-d*(bw+rnd(0,10)),y:surf+rnd(-2,3),kind:"streak",life:0,max:16,vx:-d*v*0.6,vy:0,g:0}; RS.parts.push(q); } }
+          else if(Math.random()<0.15) spark(s.x-d*10,surf-1,"drip");
+          await rwait(20); }
+        s.x=tx; s.jy=-sink; spark(s.x+d*bw*0.6,surf-2,"drip",v>4?10:3); spark(s.x+d*bw*0.6,surf,"wave"); if(v>4) s.shake=2; };
       if(r==="great"){ s.x=226; s.jy=30; s.pose="crouch"; await rwait(450); s.pose="jump";
         for(let f=0;f<=36;f++){ const k=f/36; s.x-=1.2; s.jy=30+Math.sin(k*Math.PI)*24-k*(30+sink); await rwait(18); }
         s.waterY=surf; spark(s.x,surf-2,"drip",14); s.shake=6; await rwait(300); }

@@ -355,6 +355,8 @@ function ranchParticles(c, s) {
       case 'sparkle': { const r = 2.4; c.fillStyle = '#ffffff'; c.beginPath(); c.moveTo(x, y - r); c.quadraticCurveTo(x, y, x + r, y); c.quadraticCurveTo(x, y, x, y + r); c.quadraticCurveTo(x, y, x - r, y); c.quadraticCurveTo(x, y, x, y - r); c.fill(); break; }
       case 'sweat': case 'drip': c.fillStyle = p.kind === 'sweat' ? '#9fd8ff' : '#4aa3ff'; c.beginPath(); c.moveTo(x, y - 2.2); c.quadraticCurveTo(x + 1.6, y, x, y + 1.3); c.quadraticCurveTo(x - 1.6, y, x, y - 2.2); c.fill(); break;
       case 'zap': c.strokeStyle = '#ffe14d'; c.lineWidth = 1.1; c.beginPath(); c.moveTo(x - 1.5, y - 2.5); c.lineTo(x + 0.5, y - 0.3); c.lineTo(x - 0.5, y + 0.3); c.lineTo(x + 1.5, y + 2.5); c.stroke(); break;
+      case 'wave': { const w = 4 + p.life * 0.45; c.strokeStyle = 'rgba(255,255,255,.85)'; c.lineWidth = 1; c.beginPath(); c.ellipse(x, y, w, w * 0.2, 0, 0, 7); c.stroke(); break; }   // a ring spreading on the water
+      case 'streak': c.strokeStyle = 'rgba(255,255,255,.9)'; c.lineWidth = 1; c.beginPath(); c.moveTo(x, y); c.lineTo(x + (p.vx > 0 ? -1 : 1) * 7, y); c.stroke(); break;   // a speed line on the water
       case 'leaf': c.fillStyle = '#5fc46a'; c.beginPath(); c.ellipse(x, y, 1.8, 0.9, p.life / 6, 0, 7); c.fill(); break;
       default: { const col = { dust: 'rgba(217,200,168,.9)', crumb: '#e8c070', smoke: 'rgba(122,122,128,.7)', flake: '#ffffff', ember: '#ffb43a', puff: 'rgba(110,110,116,.55)', splinter: '#a0703f', chip: '#8f8a83' }[p.kind] || '#ffffff', r = { dust: 1.6, crumb: 0.9, smoke: 2.4 + p.life / 20, flake: 1.1, ember: 0.9, puff: 3 + p.life / 14, splinter: 1.3, chip: 1.4 }[p.kind] || 1;
         c.fillStyle = col; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill(); }
