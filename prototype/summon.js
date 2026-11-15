@@ -85,6 +85,37 @@ const SUMMON = (() => {
       return { dy: -H * 0.35 * (1 - k) - Math.sin(tt / 400) * H * 0.01, pose: tt < 800 ? 'hover' : tt < 1100 ? 'idle' : 'happy', filter: lit ? null : 'brightness(0.45)',
         under(c, x, y, h) { if (!lit) return; const a = 1 - seg(tt, 850, 1500) * 0.6, g = c.createRadialGradient(x, y - h * 0.5, 2, x, y - h * 0.5, h * 0.9);
           g.addColorStop(0, `rgba(255,230,160,${0.55 * a})`); g.addColorStop(1, 'rgba(255,230,160,0)'); c.fillStyle = g; c.fillRect(x - h, y - h * 1.4, h * 2, h * 1.8); } }; },
+    /* the twelve families added 15 Nov 2026 */
+    Puff(tt, H) { const k = back(seg(tt, 0, 600));   // it sprouts out of the ground like a mushroom, then puffs out spores
+      return { sy: Math.max(0.08, k), sx: 0.7 + 0.3 * Math.min(1, k), pose: tt < 650 ? 'crouch' : tt < 950 ? 'idle' : 'happy',
+        over(c, x, y, h) { const r = rng(21); for (let i = 0; i < 12; i++) { const p = seg(tt, 600 + i * 30, 1500 + i * 30); if (p <= 0 || p >= 1) continue; const ang = -Math.PI * (0.1 + r() * 0.8);
+          c.fillStyle = `rgba(255,236,170,${0.85 * (1 - p)})`; c.beginPath(); c.arc(x + Math.cos(ang) * h * 0.7 * p, y - h * 0.7 + Math.sin(ang) * h * 0.5 * p + p * p * h * 0.3, h * 0.025, 0, 7); c.fill(); } } }; },
+    Flit(tt, H, W) { const k = out3(seg(tt, 0, 950));   // it flutters in on a zigzag and hangs in the air
+      return { dx: -W * 0.5 * (1 - k), dy: -H * 0.25 * (1 - k) + Math.sin(tt / 70) * H * 0.02 * (1 - k) - Math.sin(tt / 300) * H * 0.012, pose: tt < 950 ? 'hover' : tt < 1200 ? 'idle' : 'happy', t: tt * 2 }; },
+    Glop(tt, H) { const k = seg(tt, 0, 520), land = tt - 520, sp = spring(land, 0.45, 180, 60);   // a drip that falls and splats into shape
+      return { dy: -H * 0.5 * (1 - k * k), sx: tt < 520 ? 0.75 : 1 + sp, sy: tt < 520 ? 1.3 : 1 - sp, pose: tt < 800 ? 'idle' : 'happy',
+        under(c, x, y, h) { const p = seg(tt, 520, 1100); if (p <= 0 || p >= 1) return; for (let i = 0; i < 8; i++) { const ang = Math.PI + (i + 0.5) / 8 * Math.PI, r = h * (0.3 + p * 0.6);
+          c.fillStyle = `rgba(150,220,255,${0.8 * (1 - p)})`; c.beginPath(); c.arc(x + Math.cos(ang) * r, y + Math.sin(ang) * r * 0.5 + p * p * h * 0.3, h * 0.04, 0, 7); c.fill(); } } }; },
+    Tock(tt, H, W) { const step = Math.min(5, Math.floor(tt / 160)), done = tt > 900;   // it ticks in one step at a time, then rings
+      return { dx: W * 0.5 * (1 - step / 5), dy: tt < 800 && tt % 160 < 60 ? -H * 0.015 : 0, pose: !done ? 'walk' : tt < 1300 ? 'idle' : 'happy', t: step * 220,
+        over(c, x, y, h) { if (!done || tt > 1500) return; const a = 1 - seg(tt, 900, 1500), w = Math.sin(tt / 30) * h * 0.02; c.strokeStyle = `rgba(255,236,150,${a})`; c.lineWidth = 2;
+          for (const sd of [-1, 1]) for (let i = 1; i <= 2; i++) { c.beginPath(); c.arc(x + w, y - h * 0.62, h * (0.32 + i * 0.1), sd > 0 ? -0.9 : Math.PI + 0.3, sd > 0 ? -0.3 : Math.PI + 0.9); c.stroke(); } } }; },
+    Mitt(tt, H) { const k = seg(tt, 0, 480), land = tt - 480, sp = spring(land, 0.25);   // it drops in and throws one big punch at the air
+      return { dy: -H * 0.4 * (1 - k * k), sx: 1 + (tt > 480 ? sp : 0), sy: 1 - (tt > 480 ? sp : 0), pose: tt < 480 ? 'jump' : tt < 650 ? 'land' : tt < 850 ? 'punchwind' : tt < 1150 ? 'punch' : 'happy',
+        over(c, x, y, h) { const p = seg(tt, 850, 1150); if (p > 0 && p < 1) star(c, x + h * 0.7, y - h * 0.5, h * 0.14 * Math.sin(p * Math.PI), '#ffe08a'); } }; },
+    Brolly(tt, H, W) { const k = seg(tt, 0, 1100);   // it floats down like an open umbrella, rocking side to side
+      return { dy: -H * 0.5 * (1 - k), dx: Math.sin(tt / 220) * W * 0.05 * (1 - k), pose: tt < 1100 ? 'hover' : tt < 1250 ? 'land' : 'happy',
+        over(c, x, y, h) { const a = 1 - seg(tt, 900, 1300); if (a <= 0) return; c.strokeStyle = `rgba(170,210,255,${0.7 * a})`; c.lineWidth = 1.5; const r = rng(31);
+          for (let i = 0; i < 14; i++) { const px = x + (r() - 0.5) * h * 1.6, py = ((tt / 2 + r() * 400) % (h * 1.3)) + y - h * 1.4; c.beginPath(); c.moveTo(px, py); c.lineTo(px - 2, py + 7); c.stroke(); } } }; },
+    Spine(tt, H) { const k = out3(seg(tt, 0, 800));   // it pushes up out of the sand, then its needles glint
+      return { dy: H * 0.25 * (1 - k), dx: tt < 800 ? Math.sin(tt / 35) * 2 : 0, pose: tt < 800 ? 'idle' : 'happy',
+        under(c, x, y, h) { const a = 1 - seg(tt, 700, 1100); if (a <= 0) return; c.fillStyle = `rgba(220,190,130,${0.7 * a})`; c.beginPath(); c.ellipse(x, y + 2, h * 0.55, h * 0.09, 0, 0, 7); c.fill(); },
+        over(c, x, y, h) { for (let i = 0; i < 3; i++) { const p = seg(tt, 850 + i * 120, 1150 + i * 120); if (p > 0 && p < 1) star(c, x + (i - 1) * h * 0.3, y - h * (0.55 + (i % 2) * 0.2), h * 0.07 * Math.sin(p * Math.PI), '#fff'); } } }; },
+    Burr(tt, H) { const k = out3(seg(tt, 250, 900));   // dirt flies out of a hole, then it pops its head up
+      return { dy: H * 0.32 * (1 - k), pose: tt < 900 ? 'idle' : tt < 1150 ? 'swipeup' : 'happy',
+        under(c, x, y, h) { if (tt > 1200) return; c.fillStyle = 'rgba(110,80,50,.7)'; c.beginPath(); c.ellipse(x, y + 2, h * 0.5, h * 0.08, 0, 0, 7); c.fill(); },
+        over(c, x, y, h) { const r = rng(41); for (let i = 0; i < 10; i++) { const p = seg(tt, i * 50, 600 + i * 50); if (p <= 0 || p >= 1) continue; const sd = r() > 0.5 ? 1 : -1, vx = sd * h * (0.3 + r() * 0.4);
+          c.fillStyle = `rgba(140,100,60,${1 - p})`; c.beginPath(); c.arc(x + vx * p, y - h * 0.8 * Math.sin(p * Math.PI) * (0.6 + r() * 0.4), h * 0.035, 0, 7); c.fill(); } } }; },
     /* the special Snabits */
     Eagle(tt, H, W) { const k = seg(tt, 0, 700), e = out3(k), land = tt - 700, sp = spring(land, 0.2);   // it swoops down in an arc and lands with its wings out
       return { dx: W * 0.45 * (1 - e), dy: -H * 0.45 * (1 - e) + Math.sin(k * Math.PI) * H * 0.06, sx: 1 + (tt > 700 ? sp : 0), sy: 1 - (tt > 700 ? sp : 0), pose: tt < 700 ? 'jump' : tt < 860 ? 'land' : 'happy',
@@ -113,6 +144,23 @@ const SUMMON = (() => {
       return { dy: -H * 0.45 * (1 - k * k), sx: 1 + (tt > 520 ? sp : 0), sy: 1 - (tt > 520 ? sp : 0), pose: tt < 520 ? 'jump' : tt < 700 ? 'land' : 'happy',
         under(c, x, y, h) { const p = seg(tt, 520, 1300); if (p <= 0 || p >= 1) return; for (let i = 0; i < 10; i++) { const ang = Math.PI + i / 9 * Math.PI, r = h * (0.2 + p * 0.8);
           c.fillStyle = `rgba(245,250,255,${1 - p})`; c.beginPath(); c.arc(x + Math.cos(ang) * r, y + Math.sin(ang) * r * 0.4 + p * p * h * 0.2, h * (0.06 - p * 0.03), 0, 7); c.fill(); } } }; },
+    Kraken(tt, H) { const k = out3(seg(tt, 150, 1000));   // a pool opens and it rises out of the water
+      return { dy: H * 0.35 * (1 - k), pose: tt < 1000 ? 'idle' : 'happy',
+        under(c, x, y, h) { const a = 1 - seg(tt, 1000, 1500); if (a <= 0) return; c.fillStyle = `rgba(40,80,160,${0.75 * a})`; c.beginPath(); c.ellipse(x, y + 2, h * 0.7 * Math.min(1, tt / 300), h * 0.1, 0, 0, 7); c.fill();
+          c.strokeStyle = `rgba(200,230,255,${0.6 * a})`; c.lineWidth = 1.2; for (let i = 0; i < 2; i++) { const p = ((tt / 600) + i / 2) % 1; c.beginPath(); c.ellipse(x, y + 2, h * (0.3 + p * 0.5), h * (0.04 + p * 0.06), 0, 0, 7); c.stroke(); } } }; },
+    Golem(tt, H, W) { const k = seg(tt, 0, 560), land = tt - 560, shake = tt > 560 && tt < 900 ? Math.sin(tt / 25) * W * 0.012 * (1 - seg(tt, 560, 900)) : 0;   // it drops like a boulder and the ground shakes
+      return { dy: -H * 0.45 * (1 - k * k), dx: shake, sx: 1 + (tt > 560 ? spring(land, 0.12) : 0), sy: 1 - (tt > 560 ? spring(land, 0.12) : 0), pose: tt < 560 ? 'jump' : tt < 900 ? 'land' : 'happy',
+        under(c, x, y, h) { const p = seg(tt, 560, 1300); if (p <= 0 || p >= 1) return; for (let i = 0; i < 8; i++) { const sd = i % 2 ? 1 : -1, d = h * (0.3 + (i >> 1) * 0.15 + p * 0.4);
+          c.fillStyle = `rgba(150,140,128,${1 - p})`; c.beginPath(); c.roundRect(x + sd * d - 3, y - Math.sin(p * Math.PI) * h * 0.25 * (1 + (i >> 1) * 0.3) - 3, 6, 5, 1.5); c.fill(); } } }; },
+    Unicorn(tt, H, W) { const k = out3(seg(tt, 0, 750));   // it gallops in on a rainbow trail and rears up
+      return { dx: W * 0.6 * (1 - k), dy: tt < 750 ? -Math.abs(Math.sin(tt / 90)) * H * 0.02 : 0, pose: tt < 750 ? 'walk' : tt < 1050 ? 'jump' : 'happy', t: tt * 2.4,
+        under(c, x, y, h) { const a = 1 - seg(tt, 750, 1400); if (a <= 0) return; const cols = ['255,140,160', '255,210,120', '150,220,170', '150,190,255', '200,160,240'], len = W * 0.6 * (1 - k) + h * 0.3;
+          cols.forEach((col, i) => { c.fillStyle = `rgba(${col},${0.55 * a})`; c.fillRect(x + h * 0.15, y - h * (0.18 + i * 0.05), len, h * 0.05); }); } }; },
+    Jack(tt, H) { const lit = tt > 900, fl = !lit && Math.floor(tt / 90) % 3 === 0;   // it sits dark with a candle flickering, then lights up all at once
+      return { pose: tt < 1100 ? 'idle' : 'happy', filter: lit ? null : fl ? 'brightness(0.75)' : 'brightness(0.35)', sx: lit ? 1 + spring(tt - 900, 0.1) : 1, sy: lit ? 1 - spring(tt - 900, 0.1) : 1,
+        under(c, x, y, h) { if (!lit) return; glow(c, x, y - h * 0.5, h * 0.9, [255, 170, 60], 0.5 * (1 - seg(tt, 900, 1600) * 0.7)); },
+        over(c, x, y, h) { if (!lit) return; for (let i = 0; i < 6; i++) { const p = seg(tt, 900 + i * 60, 1700 + i * 60); if (p <= 0 || p >= 1) continue;
+          c.fillStyle = `rgba(255,${180 - i * 10},70,${1 - p})`; c.beginPath(); c.arc(x + (i - 2.5) * h * 0.12 + Math.sin(p * 6 + i) * 4, y - h * (0.6 + p * 0.7), h * 0.02, 0, 7); c.fill(); } } }; },
     pop(tt) { const k = back(seg(tt, 0, 420)); return { sx: k, sy: k, pose: 'idle' }; }
   };
 

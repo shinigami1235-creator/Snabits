@@ -652,6 +652,18 @@ function stoneGlyph(c, sp) {
     c.fillStyle = a(236, 230, 214); for (const d of [-1, 0, 1]) { c.beginPath(); c.arc(d * 3.5, -5.5, 1, 0, 7); c.fill(); } }
   else if (sp === 'Naga') { c.fillStyle = a(70, 140, 70, 0.95); c.fillRect(-10, -13, 20, 26); c.strokeStyle = a(236, 200, 70, 0.95); c.lineWidth = 3; c.beginPath(); c.moveTo(-8, -10); c.bezierCurveTo(10, -8, -10, 2, 6, 4); c.quadraticCurveTo(10, 8, 2, 11); c.stroke(); }   // a coil on green
   else if (sp === 'Yeti') { c.fillStyle = a(176, 184, 196); c.fillRect(-10, 4, 20, 9); c.strokeStyle = a(110, 200, 220, 0.95); c.lineWidth = 1.4; for (let i = 0; i < 3; i++) { const t = i * Math.PI / 3; c.beginPath(); c.moveTo(Math.cos(t) * -6, -4 + Math.sin(t) * -6); c.lineTo(Math.cos(t) * 6, -4 + Math.sin(t) * 6); c.stroke(); } }
+  else if (sp === 'Kraken') { c.fillStyle = a(40, 70, 150, 0.97); c.fillRect(-10, -13, 20, 26); c.fillStyle = a(24, 30, 70, 0.97); c.fillRect(-10, 6, 20, 7);   // deep water, and a violet curl rising from the dark
+    c.strokeStyle = a(150, 90, 200, 0.95); c.lineWidth = 2.4; c.lineCap = 'round'; c.beginPath(); for (let k = 0; k < 40; k++) { const q = k / 39, r = 1 + q * 7; c.lineTo(Math.cos(q * 9) * r, -2 + Math.sin(q * 9) * r * 0.9); } c.stroke(); }
+  else if (sp === 'Golem') { c.fillStyle = a(150, 152, 156, 0.97); c.fillRect(-10, -13, 20, 26); c.strokeStyle = a(34, 32, 30, 0.97); c.lineWidth = 1.6;   // a grey block with cracks and one line of moss
+    c.beginPath(); c.moveTo(-10, -2); c.lineTo(10, -2); c.moveTo(0, -13); c.lineTo(0, -2); c.moveTo(-5, -2); c.lineTo(-5, 13); c.moveTo(5, -2); c.lineTo(5, 13); c.stroke();
+    c.fillStyle = a(92, 150, 70, 0.95); c.fillRect(-10, 8, 20, 2.4); }
+  else if (sp === 'Unicorn') { c.fillStyle = a(248, 246, 250, 0.97); c.fillRect(-10, -13, 20, 26);   // a pale horn over soft bands
+    for (const [y, col] of [[5, a(246, 170, 200, 0.95)], [8, a(196, 160, 230, 0.95)], [11, a(250, 226, 130, 0.95)]]) { c.fillStyle = col; c.fillRect(-10, y - 1.5, 20, 3); }
+    c.fillStyle = a(250, 214, 226, 0.95); c.beginPath(); c.moveTo(0, -12); c.lineTo(3, 2); c.lineTo(-3, 2); c.closePath(); c.fill(); c.strokeStyle = a(210, 150, 190, 0.9); c.lineWidth = 0.8;
+    for (let k = 0; k < 4; k++) { c.beginPath(); c.moveTo(-2.6 + k * 0.6, 0 - k * 3.4); c.lineTo(2.6 - k * 0.6, -1.6 - k * 3.4); c.stroke(); } }
+  else if (sp === 'Jack') { c.fillStyle = a(238, 130, 40, 0.97); c.fillRect(-10, -13, 20, 26); c.fillStyle = a(80, 140, 60, 0.95); c.fillRect(-1.2, -13, 2.4, 3.5);   // an orange round with three cuts and a stem
+    c.fillStyle = a(16, 12, 10, 0.98); for (const d of [-1, 1]) { c.beginPath(); c.moveTo(d * 5, -6); c.lineTo(d * 2, -1); c.lineTo(d * 8, -1); c.closePath(); c.fill(); }
+    c.beginPath(); c.moveTo(-6, 4); c.lineTo(6, 4); c.lineTo(0, 9); c.closePath(); c.fill(); }
 }
 function awayProps(c, p, t, front) {
   const x = p.x, y = p.y;

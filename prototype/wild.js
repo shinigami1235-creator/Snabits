@@ -7,7 +7,9 @@ const WILD_PER_WEEK=3;
 const FAM_COUSINS={Squib:["Booly","Moko","Skit"],Booly:["Squib","Moko","Stilt"],Moko:["Squib","Booly","Antik"],
   Skit:["Stilt","Antik","Pinch"],Stilt:["Skit","Antik","Booly"],Antik:["Skit","Stilt","Chomp"],
   Pinch:["Chomp","Skit","Squib"],Chomp:["Pinch","Antik","Moko"],
-  Plod:["Chomp","Pinch","Teep"],Bipped:["Antik","Stilt","Chomp"],Fizz:["Squib","Moko","Lern"],Teep:["Antik","Fizz","Plod"],Lern:["Booly","Fizz","Moko"]};
+  Plod:["Chomp","Pinch","Teep"],Bipped:["Antik","Stilt","Chomp"],Fizz:["Squib","Moko","Lern"],Teep:["Antik","Fizz","Plod"],Lern:["Booly","Fizz","Moko"],
+  Puff:["Moko","Booly","Spine"],Flit:["Skit","Booly","Stilt"],Glop:["Squib","Moko","Fizz"],Tock:["Antik","Teep","Lern"],
+  Mitt:["Bipped","Chomp","Pinch"],Brolly:["Stilt","Lern","Flit"],Spine:["Puff","Pinch","Plod"],Burr:["Chomp","Plod","Skit"]};
 
 function wildLeft(s){ const n=typeof wildPerWeek==="function"?wildPerWeek():WILD_PER_WEEK; return s.wildWeek===PLAYER.week?n-(s.wildCount||0):n; }
 function wildBlock(s){

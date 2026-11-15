@@ -554,7 +554,20 @@ const AR_KIND={Lunge:"bite","Jaw Lock":"jawlock",Gnash:"gnash",
   Jab:"punch","Dash Punch":"punch","One-Two":"onetwo",Uppercut:"punch",Haymaker:"punch","Flurry Punch":"punchflurry5",
   Bubble:"bolt","Cork Pop":"push","Potion Toss":"potion","Beaker Splash":"volley","Boil Over":"pillar","Explosive Brew":"meteor",
   Splash:"bolt","Lid Bonk":"tackle","Steam Jet":"steam",Scald:"bolt",Whistle:"push","Boiling Point":"pillar",
-  Ember:"bolt",Flash:"flash","Spark Shower":"volley",Beacon:"beam","Sky Lantern":"meteor"};
+  Ember:"bolt",Flash:"flash","Spark Shower":"volley",Beacon:"beam","Sky Lantern":"meteor",
+  // the twelve families of 15 Nov 2026
+  "Spore Puff":"bolt","Cap Bonk":"tackle","Drowsy Spores":"steam","Toxic Cloud":"steam","Fairy Ring":"volley","Bloom Burst":"pillar",
+  "Wing Clip":"claw","Dive Bite":"talondive",Sonar:"push","Fang Flurry":"gnash","Leech Bite":"nightbite",Screech:"push",
+  Glob:"bolt","Slime Slap":"lash",Engulf:"jawlock","Sticky Trap":"web","Body Splash":"tackle","Acid Flood":"wave",
+  Tick:"punch","Alarm Ring":"push","Second Hand":"punchflurry",Pendulum:"hammer","Time Stop":"flash",Midnight:"pillar",
+  "Mitt Jab":"punch","Step In":"punch","Big Swing":"punch","Body Blow":"punch",Knockout:"hammer","Combo Rush":"punchflurry5",
+  Poke:"spear","Spin Open":"push","Rain Shot":"volley","Hook Pull":"lash","Thunder Clap":"lightning",Downpour:"volley",
+  Prick:"claw","Needle Shot":"spear","Cactus Punch":"punch","Needle Spray":"volley","Saguaro Slam":"hammer",
+  Scratch:"claw","Dig Under":"tackle","Claw Swipe":"claw","Mud Fling":"bolt","Drill Claw":"claw","Cave In":"boulder",
+  "Tentacle Slap":"lash","Ink Cloud":"steam","Crushing Grip":"vicegrip",Reach:"lash",Whirlpool:"wave","Eight Arms":"legflurry","Deep Vortex":"wave",
+  "Rock Fist":"punch","Pebble Toss":"bolt","Boulder Smash":"hammer",Tremor:"rockpath","Rune Pulse":"beam","Mountain Fall":"avalanche",
+  "Horn Jab":"spear",Gallop:"tackle","Prism Beam":"beam",Starlight:"volley","Rainbow Charge":"tackle",Wish:"meteor",
+  "Vine Slap":"lash","Candle Flick":"bolt","Spooky Grin":"push","Pip Spit":"volley","Hollow Howl":"push","Pumpkin Bomb":"meteor"};
 
 /* ---------- the special Snabits' signature moves ---------- */
 function atBat(c,x,y,s,flap){ c.save(); c.translate(x,y); c.scale(s,s); c.fillStyle="#2a1d33"; const w=Math.sin(flap)*0.5+0.6;

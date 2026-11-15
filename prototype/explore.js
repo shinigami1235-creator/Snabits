@@ -9,7 +9,7 @@
 // the Pattern Stone in each region, and the special Snabit its pattern belongs to
 const EX_STONE = { 'Cinder Peak': 'Phoenix', 'Static Plains': 'Eagle', 'Nightshade Marsh': 'Naga', 'Glacier Rim': 'Yeti' };
 // the stones only a team reaches, on the deep maps (Gid, 15 Nov 2026: stones from grade C)
-const EX_DEEP_STONE = { 'Dream Garden': 'Kitsune', 'Hollow Moor': 'Vampire' };
+const EX_DEEP_STONE = { 'Dream Garden': 'Kitsune', 'Hollow Moor': 'Vampire', 'Tanglewood': 'Jack', 'Coral Shallows': 'Kraken', 'Granite Steps': 'Golem', 'Dawn Temple': 'Unicorn' };
 // Helena's journal, one page a region, in the order she went
 const EX_PAGES = {
   'Cinder Peak': "Found a carved stone under the ash on the north slope, painted in bands of red and orange that are still bright under the soot. Victor wants it for the Grand Ranch hall. I left it where it stood.",

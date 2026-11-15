@@ -158,13 +158,26 @@ const SIG_SKILLS={
   "Sun Flare":{el:null,kind:"Cast",cost:5,power:75,acc:95,status:["Burn",35]},
   "Foxfire":{el:null,kind:"Cast",cost:3,power:24,hits:3,acc:95,status:["Daze",20]},
   "Venom Coil":{el:null,kind:"Strike",cost:4,power:50,acc:95,status:["Poison",50]},
+  // the twelve families of 15 Nov 2026
+  "Drowsy Spores":{el:null,kind:"Cast",cost:3,power:35,acc:95,status:["Daze",45]},
+  "Sonar":{el:null,kind:"Cast",cost:3,power:45,acc:100,status:["Daze",30]},
+  "Engulf":{el:null,kind:"Strike",cost:4,power:60,acc:95,lower:{spd:1},lowerChance:40},
+  "Second Hand":{el:null,kind:"Strike",cost:3,power:20,hits:4,acc:95},
+  "Big Swing":{el:null,kind:"Strike",cost:5,power:95,acc:80},
+  "Rain Shot":{el:null,kind:"Cast",cost:3,power:30,hits:2,acc:95},
+  "Cactus Punch":{el:null,kind:"Strike",cost:4,power:80,acc:90},
+  "Claw Swipe":{el:null,kind:"Strike",cost:4,power:75,acc:95,crit:0.1},
+  "Crushing Grip":{el:null,kind:"Strike",cost:4,power:60,acc:95,lower:{spd:1},lowerChance:50},
+  "Boulder Smash":{el:null,kind:"Strike",cost:5,power:95,acc:85},
+  "Prism Beam":{el:null,kind:"Cast",cost:4,power:70,acc:95},
+  "Spooky Grin":{el:null,kind:"Cast",cost:3,power:25,acc:95,status:["Dread",35]},
   "Avalanche":{el:null,kind:"Strike",cost:5,power:90,acc:85,lower:{spd:1},lowerChance:40},
 };
 /* Fizz's Potion Toss carries a status from its element, the way Skit's webs do */
 const POTION_BY_EL={Blaze:"Burn",Frost:"Freeze",Tide:"Soak",Venom:"Poison",Spark:"Shock",Wild:"Root",Stone:"Crack",Light:"Blind",Shade:"Curse",Charm:"Daze",Steel:"Crack",Brawl:"Daze",Void:"Dread"};
 SIG_SKILLS["Potion Toss"]={el:null,kind:"Cast",cost:3,power:45,acc:95,status:["Poison",40]};
 for(const [el,[n,st]] of Object.entries(WEB_BY_EL)) SIG_SKILLS[n]={el,kind:"Cast",cost:3,power:40,acc:95,lower:{spd:1},lowerChance:100,...(st?{status:[st,30]}:{})};
-const FAMILY_SIG={Pinch:"Bunker Down",Chomp:"Crunch",Squib:"Ink Jet",Antik:"Static Screen",Moko:"Glare",Stilt:"High Kick",Booly:"Phase Shift",Plod:"Trunk Slam",Bipped:"One-Two",Fizz:"Potion Toss",Teep:"Steam Jet",Lern:"Flash",Eagle:"Talon Dive",Vampire:"Night Bite",Phoenix:"Sun Flare",Kitsune:"Foxfire",Naga:"Venom Coil",Yeti:"Avalanche"};
+const FAMILY_SIG={Pinch:"Bunker Down",Chomp:"Crunch",Squib:"Ink Jet",Antik:"Static Screen",Moko:"Glare",Stilt:"High Kick",Booly:"Phase Shift",Plod:"Trunk Slam",Bipped:"One-Two",Fizz:"Potion Toss",Teep:"Steam Jet",Lern:"Flash",Eagle:"Talon Dive",Vampire:"Night Bite",Phoenix:"Sun Flare",Kitsune:"Foxfire",Naga:"Venom Coil",Yeti:"Avalanche",Puff:"Drowsy Spores",Flit:"Sonar",Glop:"Engulf",Tock:"Second Hand",Mitt:"Big Swing",Brolly:"Rain Shot",Spine:"Cactus Punch",Burr:"Claw Swipe",Kraken:"Crushing Grip",Golem:"Boulder Smash",Unicorn:"Prism Beam",Jack:"Spooky Grin"};
 function sigSkills(s){
   const out=[], fam=FAMILY[s.m.family]&&FAMILY[s.m.family].of?FAMILY[s.m.family].of[0]:s.m.family; if((s.level||1)>=5){ if(fam==="Skit") out.push(WEB_BY_EL[s.m.el1][0]); else if(FAMILY_SIG[fam]) out.push(FAMILY_SIG[fam]); }
   const w=s.worn||{}; if(w.back==="Bat wings"||w.back==="Angel wings") out.push("Fly");

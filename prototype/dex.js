@@ -1,16 +1,17 @@
-/* The bestiary: every family in every element, 13 families by 12 elements, 156 kinds. A kind counts as seen once one is scanned or fought,
+/* The bestiary: every family in every element, 21 families by 12 elements, 252 kinds. A kind counts as seen once one is scanned or fought,
    and raised once one lives on the ranch, with a star for each stage it reached there. Milestones give prizes.
    Needs monster.js, game.js and chibi.js. */
-const DEX_FAMS = ['Chomp', 'Squib', 'Antik', 'Moko', 'Pinch', 'Stilt', 'Skit', 'Booly', 'Plod', 'Bipped', 'Fizz', 'Teep', 'Lern'];
+const DEX_FAMS = ['Chomp', 'Squib', 'Antik', 'Moko', 'Pinch', 'Stilt', 'Skit', 'Booly', 'Plod', 'Bipped', 'Fizz', 'Teep', 'Lern', 'Puff', 'Flit', 'Glop', 'Tock', 'Mitt', 'Brolly', 'Spine', 'Burr'];
 const DEX_ELS = ['Blaze', 'Brawl', 'Spark', 'Wild', 'Frost', 'Tide', 'Venom', 'Charm', 'Stone', 'Light', 'Steel', 'Shade'];
 const DEX_STAGE = { Bit: 2, Byte: 4, Mega: 8 };
-const DEX_SEEN_PRIZE = [[10, 'bits', 500], [30, 'Element stone'], [60, 'Stat seed'], [95, 'Life seed'], [125, 'Crown'], [156, 'Life fruit']];
-const DEX_RAISE_PRIZE = [[3, 'bits', 800], [10, 'Lucky bit'], [20, 'Energy cell'], [36, 'Life fruit']];
+const DEX_SEEN_PRIZE = [[10, 'bits', 500], [30, 'Element stone'], [60, 'Stat seed'], [95, 'Life seed'], [125, 'Crown'], [156, 'Life fruit'], [200, 'bits', 3000], [252, 'Life fruit']];
+const DEX_RAISE_PRIZE = [[3, 'bits', 800], [10, 'Lucky bit'], [20, 'Energy cell'], [36, 'Life fruit'], [60, 'Crown']];
 function dex() { if (!PLAYER.dex) PLAYER.dex = {}; return PLAYER.dex; }
 const dexKey = m => { const f = m && FAMILY[m.family] && FAMILY[m.family].of ? FAMILY[m.family].of[0] : m && m.family; return f && DEX_FAMS.includes(f) && DEX_ELS.includes(m.el1) ? f + '|' + m.el1 : null; };
 /* the secrets: special Snabits and costumes, one tile each, found only through colour easter eggs. Unfound ones show a hint. */
 const DEX_SECRETS = [['Eagle', 'Hides in stars and stripes.'], ['Vampire', 'Mostly night, a little moon and a drop of red.'], ['Phoenix', 'Red at the bottom and yellow at the top, like a flame.'],
   ['Kitsune', 'A red sun on white snow.'], ['Naga', 'A green band with gold.'], ['Yeti', 'Snow and silver with a little ice blue.'],
+  ['Kraken', 'Deep blue water with a violet curl.'], ['Golem', 'Grey stone with a line of moss.'], ['Unicorn', 'White with pink and lilac at the bottom.'], ['Jack', 'Orange and round, with a little black in the middle.'],
   ['c:Panda', 'Half black, half white.'], ['c:Bee', 'Yellow and black in stripes.'], ['c:Ladybug', 'Red with black spots.'],
   ['c:Watermelon', 'Green outside, red inside, a few black seeds.'], ['c:Candy cane', 'Red and white in stripes.'],
   ['c:Tiger', 'Orange with black stripes.'], ['c:Zebra', 'Black and white in stripes.'], ['c:Cow', 'White with black patches.'], ['c:Penguin', 'Black and white with a little orange.'],
@@ -76,7 +77,8 @@ function openDex(fam) {
 }
 
 const SECRET_PAL = { Eagle: [[46, 84, 170], [150, 40, 48], [255, 214, 90]], Vampire: [[236, 228, 240], [52, 40, 62], [200, 40, 60]], Phoenix: [[240, 96, 48], [200, 52, 40], [255, 226, 122]],
-  Kitsune: [[240, 140, 62], [150, 70, 40], [214, 58, 58]], Naga: [[96, 170, 92], [54, 110, 60], [246, 206, 60]], Yeti: [[236, 240, 246], [170, 186, 204], [120, 210, 240]] };
+  Kitsune: [[240, 140, 62], [150, 70, 40], [214, 58, 58]], Naga: [[96, 170, 92], [54, 110, 60], [246, 206, 60]], Yeti: [[236, 240, 246], [170, 186, 204], [120, 210, 240]],
+  Kraken: [[70, 100, 190], [40, 50, 110], [160, 100, 210]], Golem: [[160, 160, 164], [96, 92, 88], [110, 170, 80]], Unicorn: [[248, 246, 250], [246, 176, 206], [200, 166, 236]], Jack: [[240, 138, 44], [150, 70, 24], [96, 150, 60]] };
 function dexSecretTab() { const S = (PLAYER && PLAYER.dexSecret) || {}, k = DEX_SECRETS.filter(([n]) => S[n]).length;
   return `<button class="small ${DEX_FAM === 'Secrets' ? 'on' : ''}" data-f="Secrets">Secrets<i>${k}/${DEX_SECRETS.length}</i></button>`; }
 function openSecrets(n) {

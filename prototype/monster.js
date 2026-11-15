@@ -14,6 +14,15 @@ const FAMILY = {
   Fizz:  {body:[3,[2,2,2,4,6,7,7,7,6,4]], legs:"twolegs", base:[45,30,45,75,55,50], ability:["Volatile","Statuses it lands last 30% longer"]},
   Teep:  {body:[5,[4,6,7,7,7,7,6,5]], legs:"stubby", base:[55,35,60,65,50,35], ability:["Steeping","Focus fills 10% faster while it stands still"]},
   Lern:  {body:[3,[2,4,5,6,6,6,6,6,5,4,2]], legs:"twolegs", base:[45,35,40,65,65,50], ability:["Bright","Blind can't land on it, and its hit chance can't be lowered"]},
+  /* the twelve families added 15 Nov 2026: four common, four registered, and four specials below */
+  Puff:  {body:[3,[3,5,6,7,7,7,4,4,4,4]], legs:"stubby", base:[50,30,45,65,65,45], ability:["Spores","A Close Strike that hits it has a 20% chance to Daze the attacker"]},
+  Flit:  {body:[4,[3,5,6,6,6,6,5,3]], legs:"ghost", base:[45,55,35,40,55,70], ability:["Hit and Run","After it lands a Close hit, it hops back out of reach"]},
+  Glop:  {body:[7,[3,5,6,7,7,7,7,7]], legs:"ghost", base:[62,35,58,45,50,40], ability:["Regrow","Heals 2% of its HP every 3 seconds"]},
+  Tock:  {body:[3,[3,5,6,6,6,6,6,5,3]], legs:"twolegs", base:[52,48,48,52,55,60], ability:["Wind Up","Focus fills 15% faster"]},
+  Mitt:  {body:[3,[4,6,7,7,7,7,6,5,5]], legs:"stubby", base:[55,75,50,25,40,55], ability:["Heavy Hands","Its Strikes push 50% harder"]},
+  Brolly:{body:[3,[2,4,6,7,7,1,1,1,1]], legs:"longlegs", base:[50,40,60,45,55,50], ability:["Parasol","Cast moves hit it 20% softer"]},
+  Spine: {body:[2,[2,3,3,4,4,4,4,4,4,5,5]], legs:"stubby", base:[55,55,63,30,45,35], ability:["Prickly","A Close Strike that hits it costs the attacker 1/16 of its HP"]},
+  Burr:  {body:[5,[3,5,6,7,7,7,6,4]], legs:"stubby", base:[55,60,55,35,45,50], ability:["Dirt Kick","Its Close Strikes have a 15% chance to Blind"]},
   /* special Snabits: only a colour easter egg finds them (EGGS below), they always have their own ability, and only fusion changes their element */
   Eagle:  {special:1, body:[3,[3,5,6,7,7,7,7,6,5]], legs:"twolegs", base:[50,62,45,35,55,73], ability:["Sky High","The first hit it lands in a fight is always a critical"]},
   Vampire:{special:1, body:[3,[3,5,6,6,6,6,6,6,6,5]], legs:"stubby", base:[55,55,50,60,55,45], ability:["Bloodsuck","Its Strikes heal it for 15% of the damage they deal"]},
@@ -21,6 +30,10 @@ const FAMILY = {
   Kitsune:{special:1, body:[3,[3,5,6,6,6,6,6,6,5]], legs:"stubby", base:[45,40,45,70,65,55], ability:["Illusion","The first attack aimed at it in a fight hits a fox-fire copy and misses"]},
   Naga:   {special:1, body:[3,[3,5,6,6,6,6,5,4]], legs:"tentacles", base:[55,60,55,50,50,50], ability:["Coil","A Close Strike that hits it has a 25% chance to Root the attacker"]},
   Yeti:   {special:1, body:[4,[4,6,7,7,7,7,7,7,6]], legs:"stubby", base:[70,65,75,30,45,35], ability:["Thick Fur","Blaze and Frost hit it 25% softer, and it can't be Frozen"]},
+  Kraken: {special:1, body:[2,[1,2,3,4,5,5,6,6,6]], legs:"tentacles", base:[60,60,55,55,45,45], ability:["Grapple","Its Close Strikes have a 25% chance to Root the target"]},
+  Golem:  {special:1, body:[3,[5,6,7,7,7,7,7,7,6]], legs:"stubby", base:[64,62,70,25,40,25], ability:["Stone Skin","Every hit on it deals 10% less, and crits can't land on it"]},
+  Unicorn:{special:1, body:[4,[4,6,7,7,7,7,6]], legs:"stubby", base:[55,40,50,70,60,55], ability:["Healing Horn","Once a fight, dropping under 40% HP heals it 30%"]},
+  Jack:   {special:1, body:[5,[4,6,7,7,7,7,7,6,4]], legs:"stubby", base:[50,45,45,70,55,50], ability:["Fright","Drops the opponent's Speed 1 step when a fight starts"]},
 };
 /* Stamina: energy each turn and less fatigue. Power: Strike damage and crits. Constitution: HP and cutting all damage.
    Mind: Cast damage and landing statuses. Insight: hit rate and shrugging off statuses. Speed: going first, dodging and follow-up attacks. */
@@ -62,6 +75,11 @@ function pickFamily(cells){
   /* when the main colour gathers in one spot, like a single object in the middle of the shot, the five newer families
      (most of them everyday objects) take that place in the grid instead */
   const near = {top:{wide:"Teep",tall:"Lern",compact:"Fizz"},middle:{wide:"Plod",tall:"Bipped",compact:"Fizz"},bottom:{wide:"Plod",tall:"Bipped",compact:cx<0.5?"Teep":"Lern"}};
+  /* when the main colour hugs the edges of the shot and leaves the middle to something else, the twelve families of 15 Nov 2026 take
+     the place (under 8% of it in the middle ninth of the shot): the four common ones always, and the four registered ones on the right half once the ranch can register them */
+  const ring = {top:{wide:"Flit",tall:"Puff",compact:"Flit"},middle:{wide:"Glop",tall:"Tock",compact:"Tock"},bottom:{wide:"Glop",tall:"Puff",compact:"Puff"}};
+  const ringR = {top:{wide:"Brolly",tall:"Brolly",compact:"Mitt"},middle:{wide:"Burr",tall:"Spine",compact:"Mitt"},bottom:{wide:"Burr",tall:"Spine",compact:"Burr"}};
+  if(cells[4]/t<0.08&&vx+vy>0.125){ const rf=ringR[band][shape], ro=cx>0.5&&(typeof famOpen!=="function"||famOpen(rf)); return {family:ro?rf:ring[band][shape], band, shape}; }
   const solid = vx+vy<0.137;   // an evenly spread colour sits near 0.148 and one spot near 0, so about 5 in 13 random photos land here
   const nf=near[band][shape], open=typeof famOpen!=="function"||famOpen(nf);   // a family still waiting on its Licence Cup falls back to the first eight
   return {family:solid&&open?nf:map[band][shape], band, shape};
@@ -194,7 +212,7 @@ function speciesName(family,el1,el2){
    A photo with the right mix of colours, in the right places, finds a special Snabit or puts a costume on the one it makes.
    res.raw gives each colour's share of the picture in percent, and res.g12 gives where each colour sits on a 12 by 12 grid
    (the share of each cell that colour fills). Specials are checked first since their mixes are the stricter ones. */
-const EGG_SPECIAL=["Eagle","Vampire","Phoenix","Kitsune","Naga","Yeti"];
+const EGG_SPECIAL=["Eagle","Vampire","Phoenix","Kitsune","Naga","Yeti","Kraken","Golem","Unicorn","Jack"];
 const COSTUMES=["Panda","Bee","Ladybug","Watermelon","Candy cane","Tiger","Zebra","Cow","Penguin","Strawberry","Rubber duck","Clownfish"];
 function eggStats(res,g){ const G=res.g12&&res.g12[g]; if(!G) return null; let t=0,cx=0,cy=0;
   for(let i=0;i<144;i++){ const v=G[i]; t+=v; cx+=v*((i%12)+0.5)/12; cy+=v*(Math.floor(i/12)+0.5)/12; }
@@ -215,6 +233,11 @@ function eggOf(res){
   if(R("white")>=55&&R("red")>=6&&R("red")<=35&&sum("white","red")>=85){ const r=S("red"); if(r&&Math.abs(r.cx-0.5)<0.12&&Math.abs(r.cy-0.5)<0.12&&r.spread<0.2) return {special:"Kitsune"}; }
   if(R("green")>=40&&R("yellow")>=8&&sum("green","yellow")>=65){ const g=S("green"); if(g&&(Math.max(...g.rows)>0.55||Math.max(...g.cols)>0.55)) return {special:"Naga"}; }
   if(sum("white","silver")>=72&&sum("cyan","blue")>=3&&sum("cyan","blue")<=22){ const w=S("white"); if(w&&w.spread>0.2) return {special:"Yeti"}; }
+  // the four of 15 Nov 2026: a deep-sea spiral, a grey block with a moss line, a pale horn over pastel bands, and three cuts in an orange round
+  if(R("blue")>=35&&R("violet")>=6&&sum("blue","violet","black")>=72){ const b=S("blue"); if(b&&b.spread>0.18) return {special:"Kraken"}; }
+  if(R("silver")>=35&&R("green")>=3&&R("green")<=20&&sum("silver","brown","green","black")>=75&&R("brown")+R("black")>=4) return {special:"Golem"};
+  if(R("white")>=35&&R("pink")>=6&&sum("violet","cyan","yellow")>=4&&sum("white","pink","violet","cyan","yellow")>=78) return {special:"Unicorn"};
+  if(R("orange")>=40&&R("black")>=4&&R("black")<14&&R("green")>=1){ const o=S("orange"), k=S("black"); if(o&&k&&Math.abs(o.cx-0.5)<0.15&&Math.abs(o.cy-0.5)<0.15&&Math.abs(k.cx-0.5)<0.12) return {special:"Jack"}; }   // under the Tiger's 15% black, so the two never overlap
   // costumes. The second set goes first where it could be read as one of the first five: Penguin and Zebra before Panda,
   // Clownfish and Tiger before Bee, Rubber duck before Bee
   if(R("black")>=28&&R("white")>=12&&R("orange")>=2&&R("orange")<=14&&sum("black","white","orange")>=82) return {costume:"Penguin"};

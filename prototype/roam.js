@@ -5,7 +5,7 @@
 function roamState() {
   if (!PLAYER || rankIdx() < 1) return null;
   if (!PLAYER.roam) {
-    const R = rng(hashStr('drifter|' + (PLAYER.nextId || 1) + '|' + PLAYER.week)), shut = ['Plod', 'Bipped', 'Fizz', 'Teep', 'Lern'].filter(f => typeof famOpen === 'function' && !famOpen(f));
+    const R = rng(hashStr('drifter|' + (PLAYER.nextId || 1) + '|' + PLAYER.week)), shut = Object.keys(LICENCE).filter(f => typeof famOpen === 'function' && !famOpen(f));
     const fam = shut.length ? shut[Math.floor(R() * shut.length)] : ['Chomp', 'Skit', 'Booly', 'Stilt'][Math.floor(R() * 4)];
     const m = randomOpponent(R, fam), sh = c => { const [h, sa, v] = rgbToHsv(c); return hsvToRgb([(h + 200) % 360, Math.min(1, sa * 1.1), Math.min(1, v * 1.05)]); };
     m.pal = { ...m.pal, body: sh(m.pal.body), parts: sh(m.pal.parts), accent: [255, 214, 90] };

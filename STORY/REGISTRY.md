@@ -23,6 +23,11 @@ Every piece of story in the game, one row each, seeded from `story.js` and `onbo
 | bipped-form | contest result | contests.js | first Strength contest win | judges | town | Bipped can be scanned | PLAYER.famOpen | famOpen() | | league |
 | fizz-form | beat line | story.js gradeB | the grade B scene | Dr. Ines | ranch | Fizz can be scanned | PLAYER.famOpen | famOpen() | gradeB | league |
 | lern-lanterns | week note | ranch.js | the Lantern Festival at grade C or higher | League stand | town | Lern can be scanned | PLAYER.famOpen | famOpen(), bestGrade() | festivals | league |
+| mitt-form | week note | ranch.js `endWeek` | 3 wins against Rook | Rook | ranch | Mitt can be scanned | PLAYER.famOpen | story().rookW | rook-cups | league |
+| brolly-form | week note | ranch.js `endWeek` | a Rain week at grade D or higher | Walt, a wild Brolly | ranch | Brolly can be scanned | PLAYER.famOpen | s.weather, bestGrade() | | league |
+| spine-form | week note | ranch.js `endWeek` | the Snabit is Mega at the end of a week | Dr. Ines | ranch | Spine can be scanned | PLAYER.famOpen | s.stage | | league |
+| burr-form | week note | ranch.js `endWeek` | 5 journal pages found | Walt, a wild Burr | ranch | Burr can be scanned | PLAYER.famOpen | PLAYER.journal | helena-pages | league |
+| stones-15nov | Pattern Stones | scenes.js `stoneGlyph`, explore.js `EX_DEEP_STONE` | deep map guardians at Tanglewood, Coral Shallows, Granite Steps, Dawn Temple | Walt | deep maps | Jack, Kraken, Golem, Unicorn can be called | PLAYER.stones | stoneOpen() | pattern-stones | specials |
 | costume-cards | unlock lines | contests.js, ranch.js, trips.js, dex.js, town.js | contest wins, festivals, good trip weeks, bestiary counts, the Duck pattern | judges, League stand, Walt, Dr. Ines, Nora | various | a costume can be scanned | PLAYER.cosOpen | cosOpen() | festivals | league |
 | expeditions | exploration | explore.js `runExpedition`, `exMap` | Out, Expeditions, from 1 heart; each region once a season | Walt | each open region | a week, +12 fatigue, +4 stress; items, bits from wild bounties | PLAYER.explore, PLAYER.stones, PLAYER.journal | tripRegionCount(), rankIdx() | | exploration |
 | rift-edge | exploration | explore.js `exRegions` | best grade C | Walt | the Rift's edge | the last journal page at the far end | PLAYER.journal | rankIdx() | gradeB | rift |
