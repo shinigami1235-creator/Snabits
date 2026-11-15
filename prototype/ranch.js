@@ -265,7 +265,7 @@ function drawUI(){
   const n=el("r-nums"); n.style.display=s.showNums?"block":"none";
   n.textContent=`Fatigue ${s.fatigue}, stress ${s.stress}, Strain ${s.fatigue+2*s.stress}. Spoil ${s.spoil}, Fear ${s.fear}, loyalty ${loyalty()}. Weight ${s.weight}. Weeks lived ${s.used}. Earned points ${tpTotal()}${s.stage==="Bit"?` of ${evoTotal()} for Byte`:""}.`;
   el("r-learned").textContent=s.learned.length?"Stat skills: "+s.learned.join(", "):"";
-  el("r-menu").querySelectorAll(".rb").forEach(b=>{ b.disabled=s.busy||s.dead||(!!s.away&&b.dataset.m!=="Out")||(b.dataset.m==="Out"&&!s.away&&typeof outLocked==="function"&&outLocked()); b.title=b.disabled&&b.dataset.m==="Out"?"Opens after the first month":""; });
+  el("r-menu").querySelectorAll(".rb").forEach(b=>{ b.disabled=s.busy||s.dead||(!!s.away&&b.dataset.m!=="Out")||(b.dataset.m==="Out"&&!s.away&&typeof outLocked==="function"&&outLocked()); b.title=b.disabled&&b.dataset.m==="Out"?"Opens after the first month":""; b.classList.toggle("sg",b.dataset.m==="Out"&&typeof signups==="function"&&signups().some(x=>x.w===PLAYER.week)); });
   if(!el("r-panel").innerHTML) weekCard();
   if(typeof checkTips==="function") checkTips();
 }
@@ -367,11 +367,12 @@ function menu(which){
   }
   if(which==="Out"){
     if(s.away){ missionStatus(); return; }
-    panel(`<button class="rb full feat" id="r-wild">Wild battle<small>${typeof wildLeft==="function"?wildLeft(s):3} left this week</small></button><button class="rb" id="r-mis">Missions<small>1 to 3 weeks away</small></button><button class="rb" id="r-cup">Tournaments<small>Grade ${s.grade}</small></button><button class="rb" id="r-exp">Expeditions<small>League permits from Walt</small></button><button class="rb" id="r-lab">Fusion lab<small>Fusion and rebirth</small></button><button class="rb" id="r-town">Town<small>Shops, Town Hall and upgrades</small></button><button class="rb" id="r-ct">Contests<small>${typeof contestOf==="function"&&contestOf(PLAYER.week)?"One is on this week":"First week of each month"}</small></button><button class="rb" id="r-goals">Goals<small>The loan, grades and what's next</small></button><button class="rb" id="r-dex">Bestiary<small>Every Snabit kind you've seen</small></button><button class="rb" id="r-frz">Freezer<small>${PLAYER.roster.length-1} frozen</small></button><button class="rb" id="r-ghost">Friend battle<small>Room or ghost code</small></button><button class="rb" id="r-prac">Practice fight<small>Won't shape its habits</small></button><button class="rb" id="r-trip">Skill trip<small>4 weeks in a region</small></button><button class="rb full" id="r-team">Team battle<small>6 on 6 · ${typeof teamReady==="function"?Math.min(6,teamReady().length):0} of 6 ready</small></button>`);
+    panel(`<button class="rb full feat" id="r-wild">Wild battle<small>${typeof wildLeft==="function"?wildLeft(s):3} left this week</small></button><button class="rb" id="r-mis">Missions<small>1 to 3 weeks away</small></button><button class="rb" id="r-cup">Tournaments<small>${typeof signedCupNow==="function"&&signedCupNow()?`Signed up for the ${signedCupNow().name.replace(/ \([A-SF]\)$/,"")}`:`Grade ${s.grade}`}</small></button><button class="rb" id="r-exp">Expeditions<small>League permits from Walt</small></button><button class="rb" id="r-lab">Fusion lab<small>Fusion and rebirth</small></button><button class="rb" id="r-town">Town<small>Shops, Town Hall and upgrades</small></button><button class="rb" id="r-ct">Contests<small>${typeof contestOf==="function"&&contestOf(PLAYER.week)?(typeof signups==="function"&&signups().some(x=>x.w===PLAYER.week&&!(typeof signedCupNow==="function"&&signedCupNow()===x))?"Signed up for this week's":"One is on this week"):"First week of each month"}</small></button><button class="rb" id="r-goals">Goals<small>The loan, grades and what's next</small></button><button class="rb" id="r-dex">Bestiary<small>Every Snabit kind you've seen</small></button><button class="rb" id="r-frz">Freezer<small>${PLAYER.roster.length-1} frozen</small></button><button class="rb" id="r-ghost">Friend battle<small>Room or ghost code</small></button><button class="rb" id="r-prac">Practice fight<small>Won't shape its habits</small></button><button class="rb" id="r-trip">Skill trip<small>4 weeks in a region</small></button><button class="rb full" id="r-team">Team battle<small>6 on 6 · ${typeof teamReady==="function"?Math.min(6,teamReady().length):0} of 6 ready</small></button>`);
     { const P=el("r-panel"); ["r-wild","r-mis","r-trip","r-exp","r-cup","r-ct","r-town","r-lab","r-frz","r-goals","r-dex","r-ghost","r-prac","r-team"].forEach(id=>{ const b=el(id); if(b) P.appendChild(b); }); }   // going out, then town, then records, then friends
     // anything that can't go ahead says why on the button itself, since the speech box is hidden behind this panel on a phone
     const ill=null;   // a cold or a hurt never locks anything, it only weakens drills and fights
     const block=(id,why)=>{ const bt=el(id); if(!why||!bt) return; bt.disabled=true; bt.classList.add("blocked"); const sm=bt.querySelector("small"); if(sm) sm.textContent=why; };
+    if(typeof signups==="function"){ const now=signups().filter(x=>x.w===PLAYER.week), cup=signedCupNow(); if(cup) el("r-cup").classList.add("sgnow"); if(now.some(x=>x!==cup)) el("r-ct").classList.add("sgnow"); }
     block("r-wild",typeof wildBlock==="function"?wildBlock(s):null); block("r-mis",ill); block("r-cup",ill); block("r-ct",ill); block("r-trip",ill||(tripsLocked()?"Opens at 1 heart.":null)); block("r-exp",tripsLocked()?"Opens at 1 heart.":null);
     el("r-wild").onclick=startWild; el("r-exp").onclick=()=>{ if(tripsLocked()){ say("Expeditions open at 1 heart."); return; } openExpeditions(); }; el("r-mis").onclick=openBoard; el("r-cup").onclick=openCups; el("r-lab").onclick=()=>openLab(); el("r-frz").onclick=openFreezer; el("r-trip").onclick=()=>{ if(tripsLocked()){ say("Skill trips open at 1 heart."); return; } openTrips(); }; el("r-town").onclick=openTown; el("r-goals").onclick=openGoals; el("r-ct").onclick=openContests; el("r-dex").onclick=()=>openDex(); el("r-ghost").onclick=()=>openRooms(); el("r-team").onclick=openTeam;
     el("r-prac").onclick=()=>{ const o=gradedOpponent(s.grade,Math.max(1,s.level+Math.floor(rnd(-1,2))),Math.random); arenaFight({s,foe:o,mode:"control",title:"Practice",learn:true,onEnd:r=>{ if(r.learned.length) say(r.learned.join(" ")); saveGame(); }}); };
@@ -937,9 +938,11 @@ const topMark=()=>{const s=RS, top=s.tp.indexOf(Math.max(...s.tp)); return s.tp.
 
 /* ---------- the end of a week ---------- */
 async function endWeek(weeks,line){
-  const s=RS; PLAYER.week+=Math.max(1,weeks); s.used+=weeks; clampAll();
+  const s=RS, missed=(PLAYER.signups||[]).filter(x=>x.w>=PLAYER.week&&x.w<PLAYER.week+Math.max(1,weeks)); PLAYER.week+=Math.max(1,weeks); s.used+=weeks; clampAll();
   s.log=(s.log||[]).concat(Array(Math.max(1,weeks)).fill(s.weekAct||"Rest")).slice(-8); s.weekAct=null;
   let notes=[line];
+  { const now=typeof signedNowLine==="function"&&signedNowLine(); if(now) notes.push(now); }   // the sign-up goes near the top so it isn't lost under the week's news
+  if(missed.length) notes.push(`We missed the ${missed[0].name.replace(/ \([A-SF]\)$/,"")}${weeks>1?" while we were away":""}.`);
   const strain=s.fatigue+2*s.stress;
   if(strain>=140){ s.used+=2; notes.push("It's under a lot of strain. That cost it 2 weeks of its prime."); }
   else if(strain>=110){ s.used+=1; notes.push("The strain cost it a week of its prime."); }
@@ -976,6 +979,7 @@ async function endWeek(weeks,line){
   if(past>=0&&past<weeks) notes.push("It's reached the end of its lifespan. It's a veteran now. It still fights as hard as ever, but training barely changes it.");
   say(notes.filter(Boolean).join(" ")); drawUI(); saveGame();
   if(typeof storyAfterWeek==="function") await storyAfterWeek();
+  { const now=typeof signedNowLine==="function"&&signedNowLine(); if(now&&RS===s&&!(RS.say||"").includes(now)) say(now,"guide"); }   // a story scene can take the speech box, so say it again after
 }
 /* ---------- ordinary life: what it does on its own ---------- */
 /* how it feels shows on its face and stance: worn out, droopy, normal, fresh, or fired up on some weeks in top shape */

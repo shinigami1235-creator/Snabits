@@ -64,6 +64,7 @@ async function runContest(K) {
   const s = RS, T = CONTEST_TIER(s.grade), R = rng(hashStr(s.id + '|contest|' + PLAYER.week)), nm = s.m.name;
   const rivals = [0, 1, 2, 3].map(() => { const G = GRADE_INFO[T[1]], o = gradedOpponent(T[1], Math.round(G.lv[0] + R() * (G.lv[1] - G.lv[0])), R); return { o, name: o.m.name, f: makeFighter(o.fm, o.skills, o.level), sum: 0 }; });
   const me = { name: nm, f: playerFighter(s), sum: 0, me: true }, all = [me].concat(rivals);
+  if (typeof dropSignup === 'function') dropSignup(PLAYER.week);
   await scene(async () => {
     s.weekAct = 'Contest';
     await goPlace(K.place); say(contestOpen(K, T[0]), 'mc'); await rwait(2400);

@@ -77,10 +77,14 @@ function fightDayLine(s,ahead){
    Snabit looks ready for it, signed up or not. */
 function signups(){ if(!PLAYER) return []; PLAYER.signups=(PLAYER.signups||[]).filter(x=>x.w>=PLAYER.week); return PLAYER.signups; }
 const signedFor=(w,name)=>signups().some(x=>x.w===w&&x.name===name);
+function dropSignup(w){ if(PLAYER&&PLAYER.signups) PLAYER.signups=PLAYER.signups.filter(x=>x.w!==w); }   // entered, so nothing left to remind about
+const signedCupNow=()=>signups().find(x=>x.w===PLAYER.week&&cupsOfWeek(PLAYER.week).some(c=>c.name===x.name));
 function toggleSignup(w,name){ const L=signups(), i=L.findIndex(x=>x.w===w&&x.name===name); if(i>=0) L.splice(i,1); else L.push({w,name}); if(typeof saveGame==="function") saveGame(); return i<0; }
+/* what we signed up for this week, as Josie says it */
+function signedNowLine(){ const cn=n=>n.replace(/ \([A-SF]\)$/,""), L=signups().filter(x=>x.w===PLAYER.week);
+  return L.length?`The ${cn(L[0].name)} is this week, and we're signed up for it.`:""; }
 function aheadLines(s){
-  const nm=displayName(s), cn=n=>n.replace(/ \([A-SF]\)$/,""), rest=/Top|Good/.test(fightCond(s).name)?"":` ${nm} could do with a rest this week.`, out=[];
-  for(const x of signups().filter(x=>x.w===PLAYER.week)) out.push(`The ${cn(x.name)} is this week, and we're signed up for it.`);
+  const nm=displayName(s), cn=n=>n.replace(/ \([A-SF]\)$/,""), rest=/Top|Good/.test(fightCond(s).name)?"":` A rest this week would have ${nm} fresh for it.`, out=[];
   const w1=PLAYER.week+1, mine=signups().filter(x=>x.w===w1);
   if(mine.length) out.push(`The ${cn(mine[0].name)} is next week, and we're signed up for it.${rest}`);
   else { const big=cupsOfWeek(w1).filter(c=>!cupBlock(c,s)).find(c=>(c.official&&c.grade===s.grade&&s.grade!=="S")||c.major||c.legend);
@@ -147,7 +151,7 @@ function cupAdvice(c,s){
 }
 function startCup(c){
   const fee=cupFee(c);
-  if(fee&&PLAYER.bits<fee){ venueSay(`The ${c.name} costs ${fee} bits to enter, and we have ${PLAYER.bits}.`); return; } PLAYER.bits-=fee; drawUI();
+  if(fee&&PLAYER.bits<fee){ venueSay(`The ${c.name} costs ${fee} bits to enter, and we have ${PLAYER.bits}.`); return; } PLAYER.bits-=fee; dropSignup(PLAYER.week); drawUI();
   const s=RS, R=rng(hashStr(s.id+"|cup|"+PLAYER.week+"|"+c.name)), cg=c.grade==="F"?s.grade:c.grade;
   const field=[{me:true,name:displayName(s)}];
   const big=c.major||c.legend;

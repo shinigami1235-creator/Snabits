@@ -24,11 +24,15 @@ async def main():
             await tapthrough(pg)
             if not await pg.evaluate("()=>!!document.getElementById('t-auto')"): break
             if rnd==0:
-                await pg.click('#t-fight'); await pg.wait_for_timeout(500)
+                await pg.screenshot(path='arena/gf_card.png')
+                await pg.click('#t-moves'); await pg.wait_for_timeout(500)
                 await pg.screenshot(path='arena/gf_preset.png')
                 await pg.click('#atest [data-m] >> nth=1'); await pg.wait_for_timeout(200)
                 print('preset after one tap', await pg.evaluate("()=>JSON.stringify(RS.arPresets)"))
-                await pg.click('#at-fight'); await pg.wait_for_timeout(1500)
+                await pg.click('#at-fight'); await pg.wait_for_timeout(400)
+                print('back on the card', await pg.evaluate("()=>[getComputedStyle(document.getElementById('atest')).display, !!document.getElementById('t-fight')]"))
+                await pg.click('#t-fight'); await pg.wait_for_timeout(1500)
+                print('fight started without the picker', await pg.evaluate("()=>[!!AT&&!!AT.ar, !document.querySelector('#atest .pick')]"))
                 await pg.screenshot(path='arena/gf_cupfight.png')
                 print('music', await pg.evaluate("()=>[musWant(), AT.opts.mus, AT.ar.p[0].f.moves.length]"))
                 await pg.click('#at-auto')

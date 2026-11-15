@@ -311,7 +311,7 @@ table.rr td.pt{color:var(--gold);font-weight:700}
 .v-vs canvas{width:96px;height:96px;image-rendering:pixelated;margin:0 auto;display:block}
 .v-vs .vs{font:700 26px var(--pix);color:var(--gold);text-shadow:0 3px 0 #6b4a00}
 .v-vs b{font:700 15px var(--pix);display:block}.v-vs small{color:var(--mute);font-size:12px;display:block}
-.v-acts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.v-acts{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 .v-acts .big{grid-column:1/-1}
 .v-podium{display:flex;flex-direction:column;gap:6px}
 .v-podium div{display:grid;grid-template-columns:34px 1fr auto;gap:8px;align-items:center;background:var(--ink2);border-radius:6px;padding:7px 10px;font:500 14px var(--pix)}

@@ -63,13 +63,14 @@ function wildCard(res,card){
   card.innerHTML=`<div class="sheet-head"><canvas id="wild-spr" class="mon-tile"></canvas>
       <div class="sheet-id"><div class="sheet-meta" style="margin:0 0 2px;color:var(--gold)">Wild · ${wildLeft(s)} fight${wildLeft(s)===1?"":"s"} left this week</div><h2>${o.fm.name}</h2>
         <div class="sheet-kind">${chip(o.m.el1)}${o.m.el2?chip(o.m.el2):""}<span class="fam">${o.m.family} · Lv ${o.level}${o.stage!=="Bit"?" "+o.stage:""}</span></div></div></div>
-    <div class="sheet-actions"><button class="big" id="wild-go">Fight</button><button class="btn2" id="wild-run">Run</button></div>
+    <div class="sheet-actions"><button class="big" id="wild-go">Fight</button><button class="btn2" id="wild-moves">Moves</button><button class="btn2" id="wild-run">Run</button></div>
     <div class="sheet-body">
       ${o.shiny?`<p class="abil"><b class="hid">Rare colours.</b> It pays double.</p>`:""}
       <p class="abil"><b>${o.m.ability[0]}</b> ${o.m.ability[1]}.</p>
       <p>Skills: ${o.skills.join(", ")}.</p></div>`;
   paintMon(document.getElementById("wild-spr"),o.fm,{grid:o.fm.grid,stage:o.fm.stage||(o.fm.grid.length>20?"Byte":"Bit")});
   document.getElementById("wild-go").onclick=()=>wildFight();
+  { const mv=document.getElementById("wild-moves"); if(typeof atPresetCard==="function"&&typeof CHIBI_ART!=="undefined"&&CHIBI_ART) { mv.onclick=()=>atPresetCard(s); mv.parentNode.style.gridTemplateColumns="1.4fr 1fr 1fr"; } else mv.remove(); }
   document.getElementById("wild-run").onclick=()=>{ WILD.foe=null; if(typeof wildRescan==="function") wildRescan(); };
   if(typeof musWant==="function") musWant();
 }

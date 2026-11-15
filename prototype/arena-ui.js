@@ -837,23 +837,23 @@ function arenaGame({s,foe,mode="control",title="",noDraw=false,record=false,lear
     if(foeHabits&&typeof displayName==="function") B.f.name=displayName(foeHabits)+"'s ghost";
     if(typeof displayName==="function") A.f.name=displayName(s);
     atBegin(A,B,opts); };
-  if(mode==="control") atPresetCard(s,go); else go();
+  go();
 }
-/* before a fight you control: switch moves on or off, in three presets. The choice is saved on the Snabit */
-function atPresetCard(s,go){
+/* from a match card: switch moves on or off, in three presets. The choice is saved on the Snabit and used in every fight */
+function atPresetCard(s,done){
   atStop(); atStyle(); let d=document.getElementById("atest"); if(!d){ d=document.createElement("div"); d.id="atest"; document.body.appendChild(d); } d.style.display="flex";
   s.arPresets=s.arPresets||[[],[],[]]; s.arPreset=s.arPreset||0;
   const all=arMoves(arFamily(s.m.family),s.level,(typeof knownSkills==="function"?knownSkills(s):[]).filter(n=>SKILLS[n]),s.m.el1);
   const order=["Close","Near","Mid","Far","Any"]; all.sort((a,b)=>order.indexOf(a.range)-order.indexOf(b.range)||a.cost-b.cost);
   const draw=()=>{ const off=s.arPresets[s.arPreset];
-    d.innerHTML=`<div class="pick"><h2>Moves for this fight</h2><p>Tap a move to leave it out of ▲ ▼. Each preset keeps its own choice.</p>
+    d.innerHTML=`<div class="pick"><h2>Moves</h2><p>Tap a move to keep it out of fights. Each preset keeps its own choice.</p>
       <div class="fams" style="grid-template-columns:repeat(3,1fr)">${[0,1,2].map(k=>`<button class="btn ${k===s.arPreset?"on":""}" data-p="${k}">Preset ${k+1}</button>`).join("")}</div>
       <div style="display:flex;flex-direction:column;gap:6px">${all.map(m=>`<button class="btn" data-m="${m.name}" style="height:44px;justify-content:flex-start;gap:10px;padding:0 12px;${off.includes(m.name)?"opacity:.35":""}">
         <span style="width:22px;height:22px;display:flex">${atIcon(m)}</span><span style="flex:1;text-align:left">${m.name}</span><small style="color:${AT_RC[m.range]}">${m.range}</small><small style="color:#ffc93c;min-width:24px;text-align:right">${m.cost}</small></button>`).join("")}</div>
-      <button class="btn go" id="at-fight">Fight</button></div>`;
+      <button class="btn go" id="at-fight">Done</button></div>`;
     d.querySelectorAll("[data-p]").forEach(b=>b.onclick=()=>{ s.arPreset=+b.dataset.p; draw(); });
     d.querySelectorAll("[data-m]").forEach(b=>b.onclick=()=>{ const n=b.dataset.m, i=off.indexOf(n); if(i>=0) off.splice(i,1); else { const left=all.filter(m=>m.dmg&&!off.includes(m.name)&&m.name!==n); if(left.length) off.push(n); } draw(); });
-    document.getElementById("at-fight").onclick=()=>{ if(typeof saveGame==="function") saveGame(); go(); }; };
+    document.getElementById("at-fight").onclick=()=>{ if(typeof saveGame==="function") saveGame(); d.style.display="none"; d.innerHTML=""; if(done) done(); }; };
   draw();
 }
 

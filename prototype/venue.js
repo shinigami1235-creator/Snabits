@@ -122,7 +122,7 @@ function venueMatch(){
       <div class="vs">VS</div>
       <div><b>${e.name}</b><small>Lv ${o.level} · ${e.breeder}</small><div class="sheet-kind" style="justify-content:center">${els(o.m)}</div></div>
     </div></div>
-    <div class="v-acts"><button class="big" id="t-fight">Fight</button><button class="btn2" id="t-auto">Auto</button><button class="btn2" id="t-info">Info</button></div>
+    <div class="v-acts"><button class="big" id="t-fight">Fight</button><button class="btn2" id="t-auto">Auto</button><button class="btn2" id="t-moves">Moves</button><button class="btn2" id="t-info">Info</button></div>
     <div class="v-card" id="v-info" style="display:none"><h3>${e.name}</h3><div class="statgrid">${STATS.map((n,i)=>`<div class="sg"><span>${n}</span><b>${st[i]}</b><i><u style="width:${Math.min(100,st[i]/2)}%;background:${ELC(o.m.el1)}"></u></i><em></em></div>`).join("")}</div>
       <p style="margin-top:8px;font-size:13px;color:var(--mute)">${o.m.ability[0]}: ${o.m.ability[1]}. Skills: ${o.skills.join(", ")}.</p></div>
     ${c.format==="single"?"":`<div class="v-card"><h3>${c.format==="robin"?"Standings":c.format==="team5"?"Bouts":"Bracket"}</h3>${boardHtml()}</div>`}
@@ -130,6 +130,7 @@ function venueMatch(){
   venueSay(CUP.ann||`${roundName()}: ${displayName(s)} against ${e.name}, raised by ${e.breeder}.`); CUP.ann=null;
   const go=mode=>arenaFight({s,foe:o,mode,title:c.name,noDraw:c.format!=="robin",record:mode==="control",learn:true,rand:CUP.R,onEnd:res=>afterMatch(opp,res)});
   el("t-fight").onclick=()=>go("control"); el("t-auto").onclick=()=>go("auto");
+  if(typeof atPresetCard==="function"&&typeof CHIBI_ART!=="undefined"&&CHIBI_ART) el("t-moves").onclick=()=>atPresetCard(s); else el("t-moves").remove();
   el("t-info").onclick=()=>{ const i=el("v-info"); i.style.display=i.style.display==="none"?"block":"none"; if(i.style.display==="block") i.scrollIntoView({behavior:"smooth",block:"nearest"}); };
   el("t-forfeit").onclick=()=>afterMatch(opp,{winner:1,forfeit:true,hpLeft:0,foeHpLeft:1});
   el("t-drop").onclick=()=>{ CUP.dropped=true; finishCup(); };
