@@ -35,10 +35,10 @@ These come from scans from the start. They need a new scan layer, so the share o
 | Inky | an ink blot with a pen nib | dark | Smudge: its Casts have a 15% chance to Blind |
 | Cobble | a little pile of pebbles | dark | Rock Shed: Constitution up 2 steps the first time it drops under half HP |
 | Nimbo | a small rain cloud | pale | Drizzle: its Casts have a 15% chance to Soak |
-| Dango | three dumplings on a stick | pale | Stack: takes one less damage per hit for each hit it took this fight, up to 3 |
+| Dango | three dumplings on a stick | pale | Stack: each hit it takes makes the next ones 3% softer, up to 9% |
 | Oaklet | an acorn with a leaf cap | pale | Sprout: once a fight, under 30% HP, heals 20% |
-| Roly | a pill bug that rolls into a ball | pale | Roll Up: Guard holds 30% longer |
-| Trundle | a snail with a spiral shell | pale | Slow and Sure: its hit chance can't be lowered |
+| Roly | a pill bug that rolls into a ball | pale | Roll Up: under half HP, Close Strikes hit it 25% softer |
+| Trundle | a snail with a spiral shell | pale | Slow and Sure: its hit chance can't be lowered, and Root can't land on it |
 
 ## Chat A: 10 uncommons
 

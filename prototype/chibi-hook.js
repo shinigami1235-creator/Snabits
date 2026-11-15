@@ -1,7 +1,7 @@
 /* Puts the chibi drawings (chibi.js) into the ranch and battle screens while the pixel art stays the default.
    It's on by default. #art=pixel in the address, or localStorage "snabits-art" set to "pixel", brings back the pixel art.
    Only families listed in CHIBI_FAMS are drawn smooth; the rest keep their pixels. */
-const CHIBI_FAMS = ['Chomp', 'Squib', 'Antik', 'Moko', 'Pinch', 'Stilt', 'Skit', 'Booly', 'Plod', 'Bipped', 'Fizz', 'Teep', 'Lern', 'Puff', 'Flit', 'Glop', 'Tock', 'Mitt', 'Brolly', 'Spine', 'Burr', 'Wick', 'Lumo', 'Snooze', 'Inky', 'Cobble', 'Eagle', 'Vampire', 'Phoenix', 'Kitsune', 'Naga', 'Yeti', 'Kraken', 'Golem', 'Unicorn', 'Jack'];
+const CHIBI_FAMS = ['Chomp', 'Squib', 'Antik', 'Moko', 'Pinch', 'Stilt', 'Skit', 'Booly', 'Plod', 'Bipped', 'Fizz', 'Teep', 'Lern', 'Puff', 'Flit', 'Glop', 'Tock', 'Mitt', 'Brolly', 'Spine', 'Burr', 'Wick', 'Lumo', 'Snooze', 'Inky', 'Cobble', 'Nimbo', 'Dango', 'Oaklet', 'Roly', 'Trundle', 'Eagle', 'Vampire', 'Phoenix', 'Kitsune', 'Naga', 'Yeti', 'Kraken', 'Golem', 'Unicorn', 'Jack'];
 const CHIBI_ART = !/(^#|&)art=pixel(&|$)/.test(location.hash) && (() => { try { return localStorage.getItem('snabits-art') !== 'pixel'; } catch (e) { return true; } })();
 
 /* m is a hatched monster or a fight snapshot; s is the ranch state when there is one */
@@ -22,7 +22,8 @@ const SIZE_CM = { Chomp: [50, 100, 170], Squib: [40, 85, 150], Antik: [60, 120, 
   Eagle: [50, 105, 180], Vampire: [50, 100, 170], Phoenix: [50, 105, 185], Kitsune: [45, 95, 165], Naga: [55, 110, 200], Yeti: [65, 130, 230],
   Puff: [40, 85, 145], Flit: [35, 70, 115], Glop: [35, 70, 120], Tock: [40, 80, 140], Mitt: [45, 95, 160], Brolly: [55, 110, 185], Spine: [50, 105, 190], Burr: [40, 80, 135],
   Kraken: [60, 125, 220], Golem: [70, 140, 250], Unicorn: [55, 110, 190], Jack: [45, 95, 165],
-  Wick: [30, 60, 110], Lumo: [25, 50, 95], Snooze: [45, 90, 150], Inky: [30, 65, 115], Cobble: [40, 85, 150] };
+  Wick: [30, 60, 110], Lumo: [25, 50, 95], Snooze: [45, 90, 150], Inky: [30, 65, 115], Cobble: [40, 85, 150],
+  Nimbo: [40, 80, 160], Dango: [25, 45, 90], Oaklet: [30, 70, 180], Roly: [20, 40, 80], Trundle: [25, 50, 110] };
 function sizeK(m) {
   if (!m) return 1; if (m.sizeK) return m.sizeK;
   const t = JSON.stringify([m.pal, m.stats, m.lifespan, m.family]); let h = 2166136261;
@@ -366,6 +367,11 @@ function cry(fam, stage) {
       case 'Snooze': voice(t, 'sine', [[0, 700], [0.35, 300]], 0.12); dNoise(d, t + 0.45, 0.35, 0.08, 'lowpass', 400); break;   // a yawn, then a snore
       case 'Inky': voice(t, 'sine', [[0, 300], [0.06, 800], [0.12, 250]], 0.13); dNoise(d, t + 0.1, 0.08, 0.12, 'lowpass', 1200); break;   // a blub and a splat
       case 'Cobble': [0, 0.09, 0.2].forEach((dt, i) => { dNoise(d, t + dt, 0.04, 0.2, 'bandpass', 2600 - i * 500); voice(t + dt, 'square', [[0, 1400 - i * 200], [0.02, 900]], 0.04); }); break;   // stones clacking together
+      case 'Nimbo': for (let i = 0; i < 6; i++) dNoise(d, t + i * 0.05, 0.03, 0.06, 'highpass', 4000); voice(t + 0.2, 'sine', [[0, 600], [0.2, 900]], 0.1); dNoise(d, t + 0.45, 0.3, 0.1, 'lowpass', 300); break;   // pattering rain, a "hoo", a far rumble
+      case 'Dango': [0, 0.11, 0.22].forEach((dt, i) => voice(t + dt, 'sine', [[0, 500 + i * 150], [0.05, 700 + i * 150], [0.09, 600 + i * 150]], 0.11)); break;   // three bouncy boops
+      case 'Oaklet': dNoise(d, t, 0.25, 0.1, 'bandpass', 3000); voice(t + 0.15, 'triangle', [[0, 700], [0.08, 950], [0.2, 850]], 0.1); break;   // rustling leaves and a little chirp
+      case 'Roly': for (let i = 0; i < 5; i++) dNoise(d, t + i * 0.035, 0.02, 0.12, 'bandpass', 3500); voice(t + 0.22, 'square', [[0, 900], [0.06, 1100]], 0.04); break;   // a clicky skitter
+      case 'Trundle': voice(t, 'sine', [[0, 300], [0.5, 380]], 0.1, 6); dNoise(d, t + 0.1, 0.4, 0.05, 'lowpass', 900); break;   // a slow, sleepy "hmmm" and a squelch
       default: voice(t, 'triangle', [[0, 800], [0.12, 1200], [0.22, 1000]], 0.13);
     } } catch (err) {}
 }

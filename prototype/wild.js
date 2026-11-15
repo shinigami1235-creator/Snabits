@@ -10,7 +10,8 @@ const FAM_COUSINS={Squib:["Booly","Moko","Skit"],Booly:["Squib","Moko","Stilt"],
   Plod:["Chomp","Pinch","Teep"],Bipped:["Antik","Stilt","Chomp"],Fizz:["Squib","Moko","Lern"],Teep:["Antik","Fizz","Plod"],Lern:["Booly","Fizz","Moko"],
   Puff:["Moko","Booly","Spine"],Flit:["Skit","Booly","Stilt"],Glop:["Squib","Moko","Fizz"],Tock:["Antik","Teep","Lern"],
   Mitt:["Bipped","Chomp","Pinch"],Brolly:["Stilt","Lern","Flit"],Spine:["Puff","Pinch","Plod"],Burr:["Chomp","Plod","Skit"],
-  Wick:["Lumo","Teep","Antik"],Lumo:["Wick","Flit","Lern"],Snooze:["Moko","Puff","Booly"],Inky:["Squib","Glop","Booly"],Cobble:["Pinch","Plod","Burr"]};
+  Wick:["Lumo","Teep","Antik"],Lumo:["Wick","Flit","Lern"],Snooze:["Moko","Puff","Booly"],Inky:["Squib","Glop","Booly"],Cobble:["Pinch","Plod","Burr"],
+  Nimbo:["Squib","Booly","Flit"],Dango:["Moko","Fizz","Puff"],Oaklet:["Puff","Spine","Chomp"],Roly:["Pinch","Burr","Skit"],Trundle:["Squib","Glop","Plod"]};
 
 function wildLeft(s){ const n=typeof wildPerWeek==="function"?wildPerWeek():WILD_PER_WEEK; return s.wildWeek===PLAYER.week?n-(s.wildCount||0):n; }
 function wildBlock(s){

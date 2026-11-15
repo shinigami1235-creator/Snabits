@@ -28,6 +28,11 @@ const FAMILY = {
   Lumo:  {body:[4,[3,5,6,6,6,6,5,3]], legs:"ghost", base:[45,35,40,62,65,58], ability:["Flicker","1 hit in 10 on it misses"]},
   Snooze:{body:[5,[7,7,7,7,7,7,7,7]], legs:"stubby", base:[66,35,60,50,50,39], ability:["Nap","Heals 3% for every 2 seconds it stays put"]},
   Inky:  {body:[4,[4,6,7,7,7,7,6,5]], legs:"stubby", base:[52,42,48,68,58,48], ability:["Smudge","Its Casts have a 15% chance to Blind"]},
+  Nimbo: {body:[5,[5,7,7,7,7,7,6]], legs:"ghost", base:[50,35,45,62,58,55], ability:["Drizzle","Its Casts have a 15% chance to Soak"]},
+  Dango: {body:[3,[4,5,5,4,5,5,4,5,5,4]], legs:"stubby", base:[60,48,52,45,45,48], ability:["Stack","Each hit it takes makes the next ones 3% softer, up to 9%"]},
+  Oaklet:{body:[3,[5,7,7,6,6,6,5,4,3]], legs:"stubby", base:[60,45,58,45,52,40], ability:["Sprout","Once a fight, dropping under 30% HP heals it 20%"]},
+  Roly:  {body:[6,[5,6,7,7,7,7]], legs:"stubby", base:[55,48,66,30,45,52], ability:["Roll Up","Under half HP, Close Strikes hit it 25% softer"]},
+  Trundle:{body:[4,[4,5,6,6,6,6,6,7]], legs:"ghost", base:[62,40,62,50,52,30], ability:["Slow and Sure","Its hit chance can't be lowered, and Root can't land on it"]},
   Cobble:{body:[4,[3,5,6,7,7,7,7,7,6]], legs:"stubby", base:[60,56,68,30,42,34], ability:["Rock Shed","Its Constitution goes up 2 steps the first time it drops under half HP"]},
   /* special Snabits: only a colour easter egg finds them (EGGS below), they always have their own ability, and only fusion changes their element */
   Eagle:  {special:1, body:[3,[3,5,6,7,7,7,7,6,5]], legs:"twolegs", base:[50,62,45,35,55,73], ability:["Sky High","The first hit it lands in a fight is always a critical"]},
@@ -86,8 +91,12 @@ function pickFamily(cells,res){
   const ring = {top:{wide:"Flit",tall:"Puff",compact:"Flit"},middle:{wide:"Glop",tall:"Tock",compact:"Tock"},bottom:{wide:"Glop",tall:"Puff",compact:"Puff"}};
   const ringR = {top:{wide:"Brolly",tall:"Brolly",compact:"Mitt"},middle:{wide:"Burr",tall:"Spine",compact:"Mitt"},bottom:{wide:"Burr",tall:"Spine",compact:"Burr"}};
   /* a dark photo (a night shot, a dim room) gives the five commons of batch 3 that live in the dark */
-  const dark = {top:{wide:"Lumo",tall:"Wick",compact:"Lumo"},middle:{wide:"Snooze",tall:"Wick",compact:"Inky"},bottom:{wide:"Snooze",tall:"Cobble",compact:"Cobble"}};
-  if(res&&res.bright<0.28) return {family:dark[band][shape], band, shape};
+  /* a dark or pale photo is mostly one flat colour, so the family comes from its second colour and where the main one sits */
+  const G=["red","orange","yellow","green","cyan","blue","violet","pink","brown","white","silver","black"], pick5=L=>{ const s=res.second||res.ranked&&res.ranked[1], k=s?G.indexOf(s.g):Math.floor(rgbToHsv(res.main.rgb)[0]/72);   // with no second colour, the faint tint of the main one
+    return L[(Math.max(0,k)+["top","middle","bottom"].indexOf(band)*2+(shape==="wide"?1:0))%5]; };
+  if(res&&res.bright<0.28) return {family:pick5(["Wick","Lumo","Snooze","Inky","Cobble"]), band, shape};
+  /* a pale photo (snow, a white wall, a washed-out sky, pastels) gives the other five */
+  if(res&&res.bright>0.8&&res.sat<0.2) return {family:pick5(["Nimbo","Dango","Oaklet","Roly","Trundle"]), band, shape};
   if(cells[4]/t<0.08&&vx+vy>0.125){ const rf=ringR[band][shape], ro=cx>0.5&&(typeof famOpen!=="function"||famOpen(rf)); return {family:ro?rf:ring[band][shape], band, shape}; }
   const solid = vx+vy<0.137;   // an evenly spread colour sits near 0.148 and one spot near 0, so about 5 in 13 random photos land here
   const nf=near[band][shape], open=typeof famOpen!=="function"||famOpen(nf);   // a family still waiting on its Licence Cup falls back to the first eight
