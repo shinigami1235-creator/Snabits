@@ -213,6 +213,7 @@ function ranchBarn(c, cx, season, night, s) {
 /* the yard: fence, tree, food bowl and the toy box (balls and snacks come from here) */
 function ranchYard(c, t, season, s) {
   const wood = '#c08f5c';
+  if (typeof hallStatues === 'function') hallStatues(c, t);   // retired Snabits, behind the fence
   for (const yy of [GROUND - 42, GROUND - 24]) SC.depth(c, () => { c.beginPath(); c.roundRect(84, yy, RW - 30, 3.4, 1.7); }, wood, 1.2, 0.3);
   for (let x = 88; x < RW + 60; x += 22) SC.depth(c, () => { c.beginPath(); c.roundRect(x, GROUND - 48, 4.5, 46, [2.2, 2.2, 0.6, 0.6]); }, wood, 1.2, 0.3);
   if (season === 3) { c.fillStyle = '#ffffff'; for (let x = 88; x < RW + 60; x += 22) { c.beginPath(); c.ellipse(x + 2.2, GROUND - 48, 3.2, 1.6, 0, 0, 7); c.fill(); } c.fillRect(84, GROUND - 42.8, RW - 30, 1.2); }

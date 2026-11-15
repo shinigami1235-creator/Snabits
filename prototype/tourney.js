@@ -4,6 +4,9 @@
 const CUP_NAMES={E:["Sprout Cup","Pebble Cup","Puddle Cup"],D:["Ember Cup","Breeze Cup","Clover Cup"],C:["Thunder Cup","Coral Cup","Granite Cup"],
   B:["Iron Cup","Moonlit Cup","Glacier Cup"],A:["Queen's Cup","King's Cup","Sun Cup"],S:["Masters Cup","Monsters Cup","Star Cup"]};
 let CUP=null;
+const VISIT_FAMS=["Plod","Bipped","Fizz","Teep","Lern"], VISIT_BREEDERS=["Astrid Hale","Gunnar","Erling","Freya and Tove","Captain Ulla"];
+/* a cup's house rule, applied to both fighters: at the Northreach Invitational nobody guards */
+function arRule(f){ const r=CUP&&CUP.c&&CUP.c.rule; if(r==="noguard"&&f&&f.moves) f.moves=f.moves.filter(m=>!m.buff&&!m.protect); return f; }
 
 /* The year's calendar, the same every year the way MR2's is: 48 weeks, a few cups most weeks.
    Official cups for every grade in the last week of each season, the Major 4 in each season's middle month,
@@ -23,6 +26,7 @@ function cupsOfWeek(w){
   // Licence Cups: in week 4 of the first two months of each season (but not Summer's), one per family the ranch can't register yet
   if(wk===3&&mo%3!==2&&mo!==3&&mo!==4) for(const fam in LICENCE_CUP) if(typeof famOpen!=="function"||!famOpen(fam)){ const g=LICENCE[fam], n=licenceSize(g); add({grade:g,name:`${fam} Licence Cup`,format:n>6?"elim":"robin",size:n,licence:fam}); }
   if(wk===2&&mo%2===0) add({grade:"F",name:"Open Cup",format:"robin",size:4,open:true,prize:prize("F","Open"+mo)});
+  if(mo===7&&wk===0) add({grade:"F",name:"Northreach Invitational",format:"robin",size:6,visit:true,rule:"noguard",prize:"Life fruit"});   // once a year the Northreach League sails in, with its own families and no guarding
   // one regular cup a month for each grade, on a fixed week, so a cup is something to plan the month around
   const grades=wk===0?["E","B"]:wk===1?["D","A"]:wk===2?["C","S"]:[];
   for(const g of grades){ const name=CUP_NAMES[g][(mo+wk)%3]+` (${g})`, elim=(mo+wk)%4===0; add({grade:g,name,format:elim?"elim":"robin",size:elim?8:4,official:false,prize:prize(g,name+mo)}); }
@@ -37,7 +41,7 @@ function cupBlock(c,s){
   if(c.exhibition) return s.exQual===`${yr}:${c.grade}`?null:`Needs a win in this year's Summer Qualifier (${c.grade})`;
   if(c.official||c.qualifier) return c.grade===s.grade?null:`Grade ${c.grade} only`;
   if(c.licence) return gi>=ci?null:`Needs grade ${c.grade}`;
-  if(c.open) return null;
+  if(c.open||c.visit) return null;
   return ci<=gi+1?null:`Needs grade ${GRADES[ci-1]}`;
 }
 function cupsThisWeek(s){
@@ -96,7 +100,7 @@ function nextCupText(){
   const w=PLAYER.week; for(let k=1;k<16;k++){ const x=w+k, {mo,wk}=weekParts(x); if(wk===3&&mo%3===2) return `The next official cup is in ${k} week${k>1?"s":""}.`; }
   return "";
 }
-function cupPurse(c){ if(c.rival) return Math.round(GRADE_INFO[c.grade].purse/4); return c.legend?30000:c.major?15000:c.open?150:c.official?Math.round(GRADE_INFO[c.grade].purse*1.5):c.small?Math.round(GRADE_INFO[c.grade].purse/10):c.exhibition?Math.round(GRADE_INFO[c.grade].purse*1.5):GRADE_INFO[c.grade].purse; }
+function cupPurse(c){ if(c.visit) return Math.round(GRADE_INFO[(RS&&RS.grade)||"E"].purse*2); if(c.rival) return Math.round(GRADE_INFO[c.grade].purse/4); return c.legend?30000:c.major?15000:c.open?150:c.official?Math.round(GRADE_INFO[c.grade].purse*1.5):c.small?Math.round(GRADE_INFO[c.grade].purse/10):c.exhibition?Math.round(GRADE_INFO[c.grade].purse*1.5):GRADE_INFO[c.grade].purse; }
 function cupFee(c){ return c.exhibition?2000:c.grade!=="E"&&!c.small&&!c.open?Math.round(cupPurse(c)/10):0; }
 function cupFormat(c){ return c.format==="team5"?"Team exhibition, 5 bouts":c.format==="robin"?`Round robin, ${c.size} monsters`:c.format==="elim"?"Knockout, 8 monsters":c.format==="bo3"?"Knockout of 8, best of 3":"One match"; }
 /* Cups opens the calendar on the ranch. The stadium lobby (venueLobby) stays for the test drivers */
@@ -120,7 +124,7 @@ function cupOpponent(c,s,R){
   const big=c.major||c.legend;
   if(big) return gradedOpponent("S",clamp(s.level+Math.floor(R()*5)-1,50,70),R,null,Math.round(c.legend?560+R()*80:480+R()*120));
   const T=cupTier(c,s), lv=clamp(s.level+Math.floor(R()*3)-1,T.lv[0],T.lv[1]);
-  const base=c.licence?randomOpponent(R,c.licence):undefined;   // a Licence Cup's field is all that family, from ranches already licensed
+  const base=c.licence?randomOpponent(R,c.licence):c.visit?randomOpponent(R,VISIT_FAMS[Math.floor(R()*VISIT_FAMS.length)]):undefined;   // Northreach breeds the families the League here keeps on licence   // a Licence Cup's field is all that family, from ranches already licensed
   return gradedOpponent(T.cg,lv,R,null,Math.round(T.earned[0]+R()*(T.earned[1]-T.earned[0])),base);
 }
 /* Josie's read on a cup: fights against a sample of the field it would face. match: its share of single matches won.
@@ -155,7 +159,7 @@ function startCup(c){
   const s=RS, R=rng(hashStr(s.id+"|cup|"+PLAYER.week+"|"+c.name)), cg=c.grade==="F"?s.grade:c.grade;
   const field=[{me:true,name:displayName(s)}];
   const big=c.major||c.legend;
-  while(field.length<c.size){ const o=cupOpponent(c,s,R); field.push({o,name:o.stage==="Bit"?o.m.name:`${o.m.name}, ${MARK[o.mark][0]} Byte`,breeder:BREEDERS[Math.floor(R()*BREEDERS.length)]}); }
+  while(field.length<c.size){ const o=cupOpponent(c,s,R), B=c.visit?VISIT_BREEDERS:BREEDERS; field.push({o,name:o.stage==="Bit"?o.m.name:`${o.m.name}, ${MARK[o.mark][0]} Byte`,breeder:B[Math.floor(R()*B.length)]}); }
   if(typeof rookEntrant==="function"&&story().seen.intro&&(c.official||c.major||c.legend||c.rival)) field[c.format==="single"?1:field.length-1]=rookEntrant(big?"S":cg,c.official&&cg==="B"?0.45:undefined);   // in a knockout he waits in the other half, for the final
   CUP={c,field,R,pts:field.map(()=>0),hp:field.map(()=>0),res:field.map(()=>field.map(()=>null)),log:[],round:0,alive:field.map((_,i)=>i),done:false,myWins:0,fights:0,out:false};
   CUP.hist=[CUP.alive.slice()];
@@ -171,7 +175,7 @@ function startCup(c){
 function fighterOf(e){ return e.me?null:e.o; }
 function simPair(a,b){ // two computer entrants
   const A=CUP.field[a].o, Bo=CUP.field[b].o;
-  const f=typeof arSim==="function"?arSim(arFoe(A),arFoe(Bo),CUP.R,CUP.c.format!=="robin"):simFight(makeFighter(A.fm,A.skills,A.level),makeFighter(Bo.fm,Bo.skills,Bo.level),CUP.R,null,15,CUP.c.format!=="robin");
+  const f=typeof arSim==="function"?arSim(arRule(arFoe(A)),arRule(arFoe(Bo)),CUP.R,CUP.c.format!=="robin"):simFight(makeFighter(A.fm,A.skills,A.level),makeFighter(Bo.fm,Bo.skills,Bo.level),CUP.R,null,15,CUP.c.format!=="robin");
   return f;
 }
 function nextMatch(){
@@ -243,6 +247,7 @@ function finishCup(){
   if(prize){ PLAYER.bits+=prize; lines.push(`It brings home ${prize} bits.`); }
   if(place===1&&c.prize){ addItem(c.prize); lines.push(`The prize table also had ${/^[AEIOU]/.test(c.prize)?"an":"a"} ${c.prize}.`); }
   if(place===1&&c.licence&&!famOpen(c.licence)){ openFam(c.licence); lines.push(`The Snabit League lets the ranch register ${c.licence} now, so a scan can find one.`); }
+  if(place===1&&c.visit){ const shut=VISIT_FAMS.filter(f=>!famOpen(f)); if(shut.length){ const f=shut[Math.floor(CUP.R()*shut.length)]; openFam(f); lines.push(`The Northreach breeders signed a League form for the ranch, so it can register ${f} now and a scan can find one.`); } }
   if(place===1&&c.qualifier){ s.exQual=`${weekParts(PLAYER.week).yr}:${c.grade}`; lines.push("It's in this year's Summer Exhibition, next month."); }
   // MR2's numbers: a cup wears it out but takes a lot of stress off, most of all with a win
   const last=place===null||(c.format==="robin"&&place===c.size)||((c.format==="elim"||c.format==="bo3")&&place===5)||((c.format==="single"||c.format==="team5")&&place===2);

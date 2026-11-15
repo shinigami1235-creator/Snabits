@@ -37,11 +37,11 @@ function openRooms(msg){
     <button class="rb" id="nr-host">Host a room</button>
     <div style="flex-basis:100%;display:flex;gap:8px;align-items:center"><input id="nr-code" maxlength="5" placeholder="K7QPX" style="width:120px;font-size:20px;font-weight:800;letter-spacing:3px;text-transform:uppercase;padding:6px 10px;border-radius:10px;border:0"><button class="rb" id="nr-join" style="flex:0 0 auto">Join</button></div>
     <div id="nr-msg" style="flex-basis:100%;font-size:13px;color:#ffd23f"></div>
-    <button class="rb" id="nr-ghost">Ghost codes<small>Fight without being online together</small></button><button class="rb" id="nr-back">Back</button>
+    <button class="rb" id="nr-ghost">Ghost codes<small>Fight without being online together</small></button><button class="rb" id="nr-trade">Trade<small>Swap a Snabit with a friend</small></button><button class="rb" id="nr-back">Back</button>
     <div style="flex-basis:100%;font-size:11px;opacity:.6">Game version ${NET_VER}${LN.log.length?` <button class="small" id="nr-log">Copy online log</button>`:""}</div>`);
   nStatus(msg);
   el("nr-host").onclick=netHost; el("nr-join").onclick=()=>netJoin(el("nr-code").value);
-  el("nr-ghost").onclick=openGhost; el("nr-back").onclick=()=>menu("Out");
+  el("nr-ghost").onclick=openGhost; el("nr-trade").onclick=()=>openTrade(); el("nr-back").onclick=()=>menu("Out");
   if(el("nr-log")) el("nr-log").onclick=()=>{ const t=["Snabits online log","Version "+NET_VER,"Role "+(LN.host?"host":"guest")+", room "+(LN.code||"none"),navigator.userAgent,"",...LN.log].join("\n"); navigator.clipboard&&navigator.clipboard.writeText(t); say("Online log copied."); };
 }
 function netClose(){ nWakeLock(false); LN.reconn=null; try{ LN.conn&&LN.conn.close(); }catch(e){} try{ LN.peer&&LN.peer.destroy(); }catch(e){}

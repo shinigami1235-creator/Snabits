@@ -135,6 +135,8 @@ function atFx(e,now){
   if(e.t==="taunt") say(e.i,"Taunted",{col:"#ff8a7a",size:15,lift:16});
   if(e.t==="erase"){ say(e.i,"Buffs gone",{col:"#c7a6ff",size:14,lift:16}); if(P) for(let k=0;k<10;k++) atPart({k:"smoke",x:P.cx+(atH(k)-0.5)*P.r*2,y:P.cy+(atH(k+2)-0.5)*P.H*0.5,vy:-0.03,life:700,s:10,c:[150,110,210]}); }
   if(e.t==="daze") say(e.i,"Dazed",{col:"#ff9ccc",size:15,lift:30});
+  if(e.t==="sulk") say(e.i,"Not listening",{col:"#ffb86b",size:15,lift:30});
+  if(e.t==="wilful") say(e.i,"Has its own idea",{col:"#ffb86b",size:15,lift:30});
   if(e.t==="buff"&&(e.m.protect||e.m.buff==="bubble"||e.m.buff==="bunker")) atSfx("shield");
 }
 /* a move that will miss: the target starts getting out of the way just before it arrives. How depends on what's coming:

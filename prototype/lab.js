@@ -22,7 +22,9 @@ async function openFreezer(){
     const b=document.createElement("button"); b.className="small";
     b.textContent=PLAYER.active===e.id?"At the ranch":"Bring out"; b.disabled=PLAYER.active===e.id;
     b.onclick=()=>{ saveGame(); PLAYER.active=e.id; RS=null; openRanch(); };
-    row.appendChild(b); box.appendChild(row); });
+    row.appendChild(b);
+    if(typeof canRetire==="function"&&canRetire(e)){ const rb=document.createElement("button"); rb.className="small"; rb.textContent="Retire"; rb.onclick=()=>retirePick(e); row.appendChild(rb); }
+    box.appendChild(row); });
   el("f-back").onclick=()=>{ if(RS) openLab(); else openScope(); };
 }
 

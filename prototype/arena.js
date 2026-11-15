@@ -155,6 +155,11 @@ class Arena{
      The computer needs a moment to react before it can act, and a Snabit can't act again until a short recovery has passed.
      Whether it lands is rolled here, so the screen knows at the start whether the target will get out of the way. */
   start(p,m){ if(this.turn||this.over||p.cool>0||!this.canAct(p)||p.ai!=="human"&&p.think>0||!this.allowed(p,m)||p.focus<this.cost(p,m)) return false;
+    // a Snabit that doesn't trust you yet sometimes sulks and ignores the call, or does something else
+    if(p.ai==="human"&&p.f.wilful&&!m.shove&&this.rand()<p.f.wilful){
+      const alt=p.f.moves.filter(x=>x!==m&&x.dmg&&this.cost(p,x)<=p.focus&&this.allowed(p,x));
+      if(alt.length&&this.rand()<0.5){ const to=alt[Math.floor(this.rand()*alt.length)]; this.ev.push({t:"wilful",i:p.i,from:m.name,to:to.name}); m=to; }
+      else { p.cool=Math.max(p.cool,0.9); this.ev.push({t:"sulk",i:p.i}); return true; } }
     // dazed: half the time it does something else, and the daze wears off once it has
     if(this.has(p,"Daze")&&!m.shove&&this.rand()<0.5){ const alt=p.f.moves.filter(x=>x!==m&&!x.step&&this.cost(p,x)<=p.focus&&this.allowed(p,x));
       if(alt.length){ const to=alt[Math.floor(this.rand()*alt.length)]; this.ev.push({t:"daze",i:p.i,from:m.name,to:to.name}); m=to; }

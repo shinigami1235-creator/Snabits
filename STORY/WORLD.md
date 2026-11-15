@@ -23,6 +23,8 @@ Light and warm on the ranch, with real weight in the story. Kids play it, so not
 - **The Snabit League (named by Gid, 15 Nov 2026).** Runs the cups and the grades, licenses ranches and exploration teams, and issues the permits that open regions. The grades exist because some regions are too dangerous for weak Snabits, so a cup win is how a ranch earns the right to go further. This explains why regions open by grade in the code today.
 - **The Grand Ranch.** The biggest ranch, run by Rook's father, Victor. It funds the League's expeditions, which gives Victor a seat on the board that decides permits.
 - **Josie's ranch.** Small and in debt. It used to belong to Josie's mother, Helena.
+- **The Northreach League (Proposed, 15 Nov 2026).** A league from across the sea that sails in once a year for the Northreach Invitational (Autumn, month 8, week 1). Its breeders raise the five families the Snabit League keeps on licence, and they never guard, so nobody guards in their cup. Winning it gets the ranch a signed League form for one family it can't register yet (`VISIT_FAMS`, `arRule` in `tourney.js`). Its breeders: Astrid Hale, Gunnar, Erling, Freya and Tove, Captain Ulla, picked so no first sound clashes with the cast or the cup breeders.
+- **The League's meadow (Proposed).** Where retired Snabits spend their days. A ranch keeps a statue of each one behind its fence (`hall.js`).
 
 ## Cast
 
@@ -114,6 +116,15 @@ Deep expeditions for a team of three trained Snabits, approved by Gid from `docs
 - **Stones:** the Kitsune and Vampire stones sit behind the guardians of deep Dream Garden and deep Hollow Moor, so team expeditions have stones to find from grade C, as Gid asked. The Phoenix, Eagle, Yeti and Naga stones stay on the regular maps. Each of the seven planned specials goes on a deep map once it's drawn.
 - **The cost:** fatigue and stress on all three, so the player plans for it like a Major.
 
+## Built on 15 Nov 2026 from Gid's MR2 and Pokemon list
+
+- **It doesn't always listen.** Below 2 hearts, a tapped move is sometimes ignored or swapped for another, up to about 1 in 3 at no hearts (`wilfulness` in `game.js`, the `sulk` and `wilful` events in `arena.js`).
+- **Hall of Fame.** A Snabit past Bit, or past its lifespan, can retire from the Freezer. It turns to stone on a plinth at dusk, its statue stands behind the yard fence (newest three), and the next fresh Snabit raised starts with one of its moves and a tenth of its training (`hall.js`).
+- **Letters and visitors.** About one week in four after the first month: a gift basket, a kid who wants to play, a friendly match, a stray, a paid day hauling logs, the town paper, Nora's cart, fan mail and a storm. The people are the breeders the cups already name (`events.js`).
+- **The Tower (Proposed name).** In town from grade A. One fight per floor against a slightly stronger Snabit, back to full between floors, a keeper every fifth floor (Keepers Quill, Zeno, Ivo and Yuki, in turn), items at set floors, and the best streak kept (`tower.js`).
+- **The Drifter (Proposed).** One Snabit in colours no scan gives, of a family the ranch can't register yet. From grade D it turns up in about 1 in 8 wild scans (once a week at most), and half the time in an expedition's wild circle when it's near that region. Every sixth week someone in town has seen it near a region. Beat it and it follows you home (`roam.js`).
+- **Trading** over a 5-letter code on the friend-room link (`trade.js`), and **mystery codes** in Settings that work once per save, stored as hashes (`codes.js`).
+
 ## Name sets
 
 Usual game names that read well anywhere, not tied to one country (Gid, 15 Nov 2026). No two cast names start with the same sound. Josie, Walt and Nora were Tala, Kiko and Nena until Gid asked for this rule (15 Nov 2026).
@@ -123,6 +134,8 @@ Usual game names that read well anywhere, not tied to one country (Gid, 15 Nov 2
 - More families are planned to fill more roles (Gid, 15 Nov 2026).
 - Who the ancient people were and why they left the stones.
 - What the Rift Lord wants, and whether it knew Helena.
+- Where Northreach is, and why its league doesn't keep the five families on licence.
+- Where the Drifter's colours come from.
 - What's at the Rift's heart, and whether Helena and Celia are alive.
 - What Victor does if he gets into the Rift's heart.
 - How the story ends, and whether the ending changes with how many specials the player called through the lens.

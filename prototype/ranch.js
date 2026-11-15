@@ -202,7 +202,8 @@ function openRanch(m){
   injectRanch();
   if(m){ if(RS&&RS.id) saveGame(); const e=addToRoster(m); if(!e){ alert("The Freezer is full."); return; } PLAYER.active=e.id; }
   const e=activeEntry(); if(!e){ el("ranch").style.display="flex"; RS=null; panel(""); openFreezer(); return; }
-  if(!RS||RS.id!==e.id){ RS=newRanch(e); RS.say=e.st?"Welcome back.":"This is the ranch. Train it, feed it, and watch how it takes it."; }
+  if(!RS||RS.id!==e.id){ RS=newRanch(e); RS.say=e.st?"Welcome back.":"This is the ranch. Train it, feed it, and watch how it takes it.";
+    if(!e.st&&typeof applyLegacy==="function"){ const lg=applyLegacy(RS); if(lg) RS.say=lg; } }
   if(typeof dexRaise==="function"){ dexBackfill(); dexRaise(RS.m,RS.stage); }
   el("ranch").style.display="flex"; RS.open=true;
   checkReturn(); { const hungry=hungerCheck(); if(hungry&&!RS.busy) say(hungry); } drawUI(); menu(RS.away?"Out":undefined); saveGame();
@@ -223,10 +224,12 @@ function injectRanch(){
 <label class="set-row">Music<input type="checkbox" class="sw" id="r-mus" ${typeof MUS==="undefined"||MUS.on?"checked":""}></label>
 <label class="set-row">Skip scenes<input type="checkbox" class="sw" id="r-off"></label>
 <label class="set-row">Show hidden numbers<input type="checkbox" class="sw" id="r-numsbox"></label>
+<div class="set-row">Mystery code<span style="display:flex;gap:6px"><input id="r-code" maxlength="24" autocomplete="off" autocapitalize="characters" spellcheck="false" style="width:120px;font:700 14px var(--pix);padding:4px 8px;border-radius:8px;border:2px solid var(--line);text-transform:uppercase"><button class="small" id="r-codego">Use</button></span></div><div id="r-codemsg" style="font-size:13px;min-height:0"></div>
 <div class="set-file"><span id="r-filewhen"></span><div class="brow"><button class="small" id="r-export">Save to a file</button><label class="small" for="r-import">Load a save file</label><button class="small install-btn" hidden onclick="installApp()">Install Snabits</button><input type="file" id="r-import" accept=".json,application/json" hidden></div><div id="r-fileask"></div></div>
 <button class="btn2" id="r-back">Open the Snaboscope</button><span class="ver">Version ${typeof APP_VER!=="undefined"&&APP_VER!=="__VER__"?APP_VER:"dev"}</span></div></div>`;
   document.body.appendChild(d);
   el("r-back").onclick=()=>{ el("r-foot").classList.remove("open"); openScope(); };
+  el("r-codego").onclick=async()=>{ const m=typeof redeemCode==="function"?await redeemCode(el("r-code").value):""; el("r-codemsg").textContent=m; if(/^That code gave/.test(m)) el("r-code").value=""; };
   const fileWhen=()=>{ el("r-filewhen").textContent=PLAYER.lastExport?`Last saved to a file on ${new Date(PLAYER.lastExport).toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"})}.`:"Clearing this site's data in the browser deletes the game, so keep a save file."; };
   el("r-gear").onclick=()=>{ installShow(); fileWhen(); el("r-fileask").innerHTML=""; el("r-foot").classList.toggle("open"); };
   el("r-export").onclick=async()=>{ await exportSave(); fileWhen(); };
@@ -367,14 +370,14 @@ function menu(which){
   }
   if(which==="Out"){
     if(s.away){ missionStatus(); return; }
-    panel(`<button class="rb full feat" id="r-wild">Wild battle<small>${typeof wildLeft==="function"?wildLeft(s):3} left this week</small></button><button class="rb" id="r-mis">Missions<small>1 to 3 weeks away</small></button><button class="rb" id="r-cup">Tournaments<small>${typeof signedCupNow==="function"&&signedCupNow()?`Signed up for the ${signedCupNow().name.replace(/ \([A-SF]\)$/,"")}`:`Grade ${s.grade}`}</small></button><button class="rb" id="r-exp">Expeditions<small>League permits from Walt</small></button><button class="rb" id="r-lab">Fusion lab<small>Fusion and rebirth</small></button><button class="rb" id="r-town">Town<small>Shops, Town Hall and upgrades</small></button><button class="rb" id="r-ct">Contests<small>${typeof contestOf==="function"&&contestOf(PLAYER.week)?(typeof signups==="function"&&signups().some(x=>x.w===PLAYER.week&&!(typeof signedCupNow==="function"&&signedCupNow()===x))?"Signed up for this week's":"One is on this week"):"First week of each month"}</small></button><button class="rb" id="r-goals">Goals<small>The loan, grades and what's next</small></button><button class="rb" id="r-dex">Bestiary<small>Every Snabit kind you've seen</small></button><button class="rb" id="r-frz">Freezer<small>${PLAYER.roster.length-1} frozen</small></button><button class="rb" id="r-ghost">Friend battle<small>Room or ghost code</small></button><button class="rb" id="r-prac">Practice fight<small>Won't shape its habits</small></button><button class="rb" id="r-trip">Skill trip<small>4 weeks in a region</small></button><button class="rb full" id="r-team">Team battle<small>6 on 6 · ${typeof teamReady==="function"?Math.min(6,teamReady().length):0} of 6 ready</small></button>`);
-    { const P=el("r-panel"); ["r-wild","r-mis","r-trip","r-exp","r-cup","r-ct","r-town","r-lab","r-frz","r-goals","r-dex","r-ghost","r-prac","r-team"].forEach(id=>{ const b=el(id); if(b) P.appendChild(b); }); }   // going out, then town, then records, then friends
+    panel(`<button class="rb full feat" id="r-wild">Wild battle<small>${typeof wildLeft==="function"?wildLeft(s):3} left this week</small></button><button class="rb" id="r-mis">Missions<small>1 to 3 weeks away</small></button><button class="rb" id="r-cup">Tournaments<small>${typeof signedCupNow==="function"&&signedCupNow()?`Signed up for the ${signedCupNow().name.replace(/ \([A-SF]\)$/,"")}`:`Grade ${s.grade}`}</small></button><button class="rb" id="r-exp">Expeditions<small>League permits from Walt</small></button><button class="rb" id="r-lab">Fusion lab<small>Fusion and rebirth</small></button><button class="rb" id="r-town">Town<small>Shops, Town Hall and upgrades</small></button><button class="rb" id="r-ct">Contests<small>${typeof contestOf==="function"&&contestOf(PLAYER.week)?(typeof signups==="function"&&signups().some(x=>x.w===PLAYER.week&&!(typeof signedCupNow==="function"&&signedCupNow()===x))?"Signed up for this week's":"One is on this week"):"First week of each month"}</small></button><button class="rb" id="r-goals">Goals<small>The loan, grades and what's next</small></button>${(PLAYER.hall||[]).length?`<button class="rb" id="r-hall">Hall of Fame<small>${PLAYER.hall.length} retired</small></button>`:""}<button class="rb" id="r-dex">Bestiary<small>Every Snabit kind you've seen</small></button><button class="rb" id="r-frz">Freezer<small>${PLAYER.roster.length-1} frozen</small></button><button class="rb" id="r-ghost">Friends<small>Battles, ghost codes and trades</small></button><button class="rb" id="r-prac">Practice fight<small>Won't shape its habits</small></button><button class="rb" id="r-trip">Skill trip<small>4 weeks in a region</small></button><button class="rb full" id="r-team">Team battle<small>6 on 6 · ${typeof teamReady==="function"?Math.min(6,teamReady().length):0} of 6 ready</small></button>`);
+    { const P=el("r-panel"); ["r-wild","r-mis","r-trip","r-exp","r-cup","r-ct","r-town","r-lab","r-frz","r-goals","r-hall","r-dex","r-ghost","r-prac","r-team"].forEach(id=>{ const b=el(id); if(b) P.appendChild(b); }); }   // going out, then town, then records, then friends
     // anything that can't go ahead says why on the button itself, since the speech box is hidden behind this panel on a phone
     const ill=null;   // a cold or a hurt never locks anything, it only weakens drills and fights
     const block=(id,why)=>{ const bt=el(id); if(!why||!bt) return; bt.disabled=true; bt.classList.add("blocked"); const sm=bt.querySelector("small"); if(sm) sm.textContent=why; };
     if(typeof signups==="function"){ const now=signups().filter(x=>x.w===PLAYER.week), cup=signedCupNow(); if(cup) el("r-cup").classList.add("sgnow"); if(now.some(x=>x!==cup)) el("r-ct").classList.add("sgnow"); }
     block("r-wild",typeof wildBlock==="function"?wildBlock(s):null); block("r-mis",ill); block("r-cup",ill); block("r-ct",ill); block("r-trip",ill||(tripsLocked()?"Opens at 1 heart.":null)); block("r-exp",tripsLocked()?"Opens at 1 heart.":null);
-    el("r-wild").onclick=startWild; el("r-exp").onclick=()=>{ if(tripsLocked()){ say("Expeditions open at 1 heart."); return; } openExpeditions(); }; el("r-mis").onclick=openBoard; el("r-cup").onclick=openCups; el("r-lab").onclick=()=>openLab(); el("r-frz").onclick=openFreezer; el("r-trip").onclick=()=>{ if(tripsLocked()){ say("Skill trips open at 1 heart."); return; } openTrips(); }; el("r-town").onclick=openTown; el("r-goals").onclick=openGoals; el("r-ct").onclick=openContests; el("r-dex").onclick=()=>openDex(); el("r-ghost").onclick=()=>openRooms(); el("r-team").onclick=openTeam;
+    el("r-wild").onclick=startWild; el("r-exp").onclick=()=>{ if(tripsLocked()){ say("Expeditions open at 1 heart."); return; } openExpeditions(); }; el("r-mis").onclick=openBoard; el("r-cup").onclick=openCups; el("r-lab").onclick=()=>openLab(); el("r-frz").onclick=openFreezer; el("r-trip").onclick=()=>{ if(tripsLocked()){ say("Skill trips open at 1 heart."); return; } openTrips(); }; el("r-town").onclick=openTown; el("r-goals").onclick=openGoals; el("r-ct").onclick=openContests; if(el("r-hall")) el("r-hall").onclick=openHall_; el("r-dex").onclick=()=>openDex(); el("r-ghost").onclick=()=>openRooms(); el("r-team").onclick=openTeam;
     el("r-prac").onclick=()=>{ const o=gradedOpponent(s.grade,Math.max(1,s.level+Math.floor(rnd(-1,2))),Math.random); arenaFight({s,foe:o,mode:"control",title:"Practice",learn:true,onEnd:r=>{ if(r.learned.length) say(r.learned.join(" ")); saveGame(); }}); };
   }
 }
@@ -391,6 +394,7 @@ async function scene(fn,keepRoom){
   if(s.visit){ s.props=s.propsHome||s.props; s.propsHome=null; s.visit=null; } s.trip=false; s.night=0; s.dusk=0; s.guide=null;
   s.busy=false; s.skip=false; s.bg=null; s.tripLabel=null; s.props=s.props.filter(p=>p.k==="bowl"); el("r-skip").style.display="none"; s.pose=moodPose(); s.jy=0; s.bx=0; s.upside=false; s.ghosts=false;
   drawUI(); if(s.lastMenu&&!s.dead) menu(s.lastMenu); saveGame();
+  if(s.pendingEv&&RS===s&&typeof showWeekEvent==="function"){ const ev=s.pendingEv; s.pendingEv=null; setTimeout(()=>{ if(RS===s&&!s.busy) showWeekEvent(ev); },1600); }   // a visitor or a letter, once the week's news has been read
 }
 function walkTo(x,speed=45,pose="walk",id=RS.cur){
   return new Promise((res,rej)=>{ const s=RS; s.pose=pose; s.dir=x<s.x?-1:1;
@@ -967,7 +971,8 @@ async function endWeek(weeks,line){
   clampAll();   // the festival, a visitor, the plants and worn things move stress after the clamp at the top
   notes.push(condition());
   if(s.stress>50) notes.push("It seems tense lately, maybe give it a rest.");
-  { const nx=aheadLines(s); if(nx) notes.push(nx); }   // Josie brings up what we signed up for, and a big cup it looks ready for
+  { const nx=aheadLines(s); if(nx) notes.push(nx); }
+  if(typeof roamState==="function"&&PLAYER.week%6===0&&roamState()) notes.push(`Somebody in town saw a Snabit in strange colours near ${roamAt()} this week.`);   // the Drifter   // Josie brings up what we signed up for, and a big cup it looks ready for
   if(s.petWeek!==PLAYER.week-1&&s.playWeek!==PLAYER.week-1) s.neglect=(s.neglect||0)+1;
   if(s.variant==="Scruffy"){ s.cleanRun=(s.petWeek===PLAYER.week-1||s.playWeek===PLAYER.week-1)?(s.cleanRun||0)+1:0; if(s.cleanRun>=4){ s.variant=null; notes.push("It's groomed itself back to looking smart."); } }
   if(s.stage!=="Mega"){
@@ -976,10 +981,11 @@ async function endWeek(weeks,line){
   }
   { const ph=agePhase(s)[2]; if(s.phaseSeen&&s.phaseSeen!==ph&&AGE_NOTE[ph]) notes.push(AGE_NOTE[ph]); s.phaseSeen=ph; }
   const past=s.used-lifeWeeks();
-  if(past>=0&&past<weeks) notes.push("It's reached the end of its lifespan. It's a veteran now. It still fights as hard as ever, but training barely changes it.");
+  if(past>=0&&past<weeks) notes.push("It's reached the end of its lifespan. It's a veteran now. It still fights as hard as ever, but training barely changes it. Whenever you're ready, it's earned its place in the Hall of Fame.");
+  if(weeks===1&&typeof weekEvent==="function"){ const ev=weekEvent(s); if(ev&&!ev.choices) notes.push(ev.text); else if(ev) s.pendingEv=ev; }   // a letter or a visitor
   say(notes.filter(Boolean).join(" ")); drawUI(); saveGame();
   if(typeof storyAfterWeek==="function") await storyAfterWeek();
-  { const now=typeof signedNowLine==="function"&&signedNowLine(); if(now&&RS===s&&!(RS.say||"").includes(now)) say(now,"guide"); }   // a story scene can take the speech box, so say it again after
+  { const now=typeof signedNowLine==="function"&&signedNowLine(); if(now&&RS===s&&!(RS.say||"").includes(now)) say(now); }   // a story scene can take the speech box, so say it again after
 }
 /* ---------- ordinary life: what it does on its own ---------- */
 /* how it feels shows on its face and stance: worn out, droopy, normal, fresh, or fired up on some weeks in top shape */

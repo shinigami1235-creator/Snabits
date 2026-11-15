@@ -55,9 +55,9 @@ function wildFrom(res,s,R){
 /* Called by the scan screen when a photo is taken in wild mode. */
 function wildCard(res,card){
   const s=WILD.s, R=rng(hashStr(res.photoKey+"|"+Date.now()+"|"+(WILD.seen++)));
-  const o=wildFrom(res,s,R); WILD.foe=o;
+  const o=(typeof roamInScan==="function"&&roamInScan(s,R))||wildFrom(res,s,R); WILD.foe=o;
   const el=o.m.el2?`${o.m.el1} / ${o.m.el2}`:o.m.el1;
-  const notes=[o.shiny?"<b style=\"color:#ffd23f\">Rare colours!</b> It pays double.":"",
+  const notes=[o.drifter?"<b style=\"color:#ffd23f\">Strange colours.</b> No scan gives colours like these.":o.shiny?"<b style=\"color:#ffd23f\">Rare colours!</b> It pays double.":"",
     o.famShift?"Same colours, but a different family showed up this time.":"", o.elShift?"Its second element shifted with the light.":""].filter(Boolean).join(" ");
   const chip=e=>`<span class="elc" style="${chipStyle(ELC(e))}">${e}</span>`;
   card.innerHTML=`<div class="sheet-head"><canvas id="wild-spr" class="mon-tile"></canvas>
@@ -65,7 +65,7 @@ function wildCard(res,card){
         <div class="sheet-kind">${chip(o.m.el1)}${o.m.el2?chip(o.m.el2):""}<span class="fam">${o.m.family} · Lv ${o.level}${o.stage!=="Bit"?" "+o.stage:""}</span></div></div></div>
     <div class="sheet-actions"><button class="big" id="wild-go">Fight</button><button class="btn2" id="wild-moves">Moves</button><button class="btn2" id="wild-run">Run</button></div>
     <div class="sheet-body">
-      ${o.shiny?`<p class="abil"><b class="hid">Rare colours.</b> It pays double.</p>`:""}
+      ${o.drifter?`<p class="abil"><b class="hid">Strange colours.</b> No scan gives colours like these.</p>`:o.shiny?`<p class="abil"><b class="hid">Rare colours.</b> It pays double.</p>`:""}
       <p class="abil"><b>${o.m.ability[0]}</b> ${o.m.ability[1]}.</p>
       <p>Skills: ${o.skills.join(", ")}.</p></div>`;
   paintMon(document.getElementById("wild-spr"),o.fm,{grid:o.fm.grid,stage:o.fm.stage||(o.fm.grid.length>20?"Byte":"Bit")});
@@ -92,6 +92,7 @@ function wildFight(){
       if(Math.random()<0.4){ const fd=rollFind(Math.random,o.shiny?2:1); if(fd.item){ addItem(fd.item); lines.push(`It dropped ${/^[AEIOU]/.test(fd.item)?"an":"a"} ${fd.item}.`); } else if(fd.bits){ PLAYER.bits+=fd.bits; lines.push(`It dropped ${fd.bits} more bits.`); } }
     } else lines.push(r.winner===null?"It was a draw, and the wild one wandered off.":"The wild one won and ran off. Your Snabit is tired but not hurt.");
     if(r.learned.length) lines.push(...r.learned);
+    if(o.drifter&&typeof roamResult==="function") lines.push(roamResult(won));
     WILD.foe=null; endWild(); openRanch(); say(lines.join(" ")); saveGame();
   }});
 }

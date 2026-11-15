@@ -371,7 +371,8 @@ const CUPLINE = {
     return vary([`Welcome, everyone, to the ${c.name}! We've got ${c.size} Snabits here today, all after ${bits} bits${prize}!`,
       `It's a packed house for the ${c.name}! ${c.size} Snabits came to fight, and only one of them goes home with ${bits} bits${prize}.`,
       `Hello and welcome to the ${c.name}! Grab your seats, folks, because ${c.size} Snabits are about to fight for ${bits} bits${prize}!`], 'open' + c.name); },
-  rules: c => vary(c.format === 'robin' ? ["Every Snabit here fights every other one today, so there's nowhere to hide!", "It's a round robin, folks, and everybody gets a shot at everybody!"]
+  rules: c => c.visit ? vary(["The Northreach League sailed all the way here for this one, and they don't guard up north, so nobody guards today!",
+      "Northreach is in town, folks! Their house rule is no guarding, so every Snabit here has to take its hits!"], 'rules' + c.name) : vary(c.format === 'robin' ? ["Every Snabit here fights every other one today, so there's nowhere to hide!", "It's a round robin, folks, and everybody gets a shot at everybody!"]
     : c.format === 'single' ? ['It all comes down to one match, and the winner takes everything!', 'It all comes down to one match today!']
     : c.format === 'bo3' ? ["Every match is best of three today, so nobody goes out on one bad round!", "Best of three all the way, folks. Let's see who's got staying power!"]
     : ["It's a knockout today, so one loss and you're going home!", "Win and you're through, lose and your day's over. Let's get started!"], 'rules' + c.name),
@@ -433,7 +434,7 @@ const CUPLINE = {
 /* ---------- the shows the cups play ---------- */
 const showSpec = fm => SUMMON.specFor(fm);
 const showCup = c => { const fm = c.format, n = CUP.field.length;
-  return { name: c.name.replace(/ \([A-S]\)$/, ''), grade: c.major || c.legend ? 'S' : c.small ? 'F' : c.grade, format: fm, size: n, purse: cupPurse(c), prize: c.prize,
+  return { visit: !!c.visit, name: c.name.replace(/ \([A-S]\)$/, ''), grade: c.major || c.legend ? 'S' : c.small ? 'F' : c.grade, format: fm, size: n, purse: cupPurse(c), prize: c.prize,
     sub: fm === 'single' ? 'One match' : `${fm === 'robin' ? 'Round robin' : fm === 'bo3' ? 'Knockout, best of 3' : 'Knockout'} · ${n} Snabits` }; };
 /* the six stats as the fight uses them, for the face-off */
 const showStats = e => { try { const b = (e.me ? playerFighter(RS) : makeFighter(e.o.fm, e.o.skills, e.o.level)).base; return ['sta', 'pow', 'grd', 'mnd', 'spr', 'spd'].map(k => Math.round(b[k] || 0)); } catch (err) { return [0, 0, 0, 0, 0, 0]; } };

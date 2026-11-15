@@ -138,7 +138,7 @@ const saveSummary=(p,saved)=>`${p.roster.length} Snabit${p.roster.length===1?"":
 const KEEP=["worn","held","weather","weatherBonus","majorInvite","master","stage","mark","mark2","variant","wanderEl","stageRegions","stageCups","neglect","cleanRun","uses","book","grid","tp","lastTrained","used","spoil","fear","fatigue","stress","weight","like","dis","known","mess","messKind","messSpots",
   "learned","injured","sick","strainRun","petWeek","playWeek","snackWeek","mealMonth","mealDay","hungerDay","hinted","toldEvo","slackBonus","dead","level","exp","grade",
   "wins","losses","habits","fightNo","equip","skillsKnown","away","fruitUsed","cups","majors","born","likeT","disT","found","log",
-  "arPresets","arPreset","arHabit","read","exQual","wildWeek","wildCount","phaseSeen"];   // arena presets and habits, the paid growth reading, the Summer Exhibition place, this week's wild fights, the last age note
+  "arPresets","arPreset","arHabit","towerBest","read","exQual","wildWeek","wildCount","phaseSeen"];   // arena presets and habits, the paid growth reading, the Summer Exhibition place, this week's wild fights, the last age note
 function packRanch(s){ const o={}; for(const k of KEEP) if(s[k]!==undefined) o[k]=s[k]; return o; }
 
 function addToRoster(m){
@@ -213,6 +213,8 @@ function recordHabit(s,fight,id){
   s.habits=s.habits||[]; s.habits.push({k:sitKey(me,foe),n,o:fight.turn===0?1:0,f:s.fightNo||0});
   const cut=(s.fightNo||0)-50; s.habits=s.habits.filter(h=>h.f>cut);
 }
+/* how often a Snabit ignores what you tap in a fight: none from 2 hearts up, rising to about 1 in 3 at no hearts */
+function wilfulness(s){ if(RS===s&&typeof loyalty==="function"){ const L=loyalty(); return L>=40?0:0.06+0.28*(40-L)/40; } return s&&s.lowLoyalty?0.18:0; }
 function habitPick(fight,i,s){
   const me=fight.p[i], foe=fight.p[1-i], R=fight.rand;
   if(me.charging) return RELEASE;
