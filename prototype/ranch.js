@@ -558,7 +558,9 @@ const DRILL_PROPS={
 /* Fortress: the log hangs so the bottom of its swing is at the monster's chest, and the monster stands just right of it */
 const fortTall=()=>GROUND-headY(), fortLog=()=>({k:"log",x:0,y:0,t:-1.2,L:128-fortTall()*0.5}), fortX=()=>150+14+fortTall()*0.42;
 const placed=(k,o)=>RS.props.find(p=>p.k===k&&!p.taken&&(p.taken=true))||prop(o);
-async function goPlace(place,pre,x0){ const s=RS; await sceneFade(true); s.propsHome=s.props; s.props=pre||[]; s.bg=place; s.training=true; s.x=x0||PLACE_START[place]||110; s.jy=0; s.pose="idle"; s.camJump=true; await rwait(300); await sceneFade(false); }
+async function goPlace(place,pre,x0){ const s=RS; await sceneFade(true); s.propsHome=s.props; s.props=pre||[]; s.bg=place; s.training=true; s.x=x0||PLACE_START[place]||110; s.jy=0; s.pose="idle"; s.camJump=true;
+  if(place==="pool"&&smoothRanch()){ s.x=226; s.jy=30; s.dir=-1; }   // the swim starts standing on the diving board
+  await rwait(300); await sceneFade(false); }
 function backHome(){ const s=RS; s.mShake=0; s.mBroke=false; s.bg=null; s.training=false; s.waterY=null; s.lotus=false; s.koiPull=0; s.jy=0; s.x=150; s.upside=false; s.parted=false; s.props=s.propsHome||s.props.filter(p=>p.k==="bowl"); s.propsHome=null; s.camJump=true; }
 /* Meals follow the phone's calendar: one a day, and every day it goes without one makes it hungrier. */
 const dayKey=(d=new Date())=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
@@ -675,7 +677,7 @@ async function SLACK(i){ const s=RS; s.pose="idle"; await rwait(700); spark(s.x,
 const SCENE_FN=[
   async r=>{ // Laps
     const s=RS, laps=r==="great"?3:2;
-    if(s.bg==="pool"){ const tall=GROUND-headY(), surf=GROUND-18, sink=tall*0.5-18, bw=tall*0.42;   // the water comes up to the middle of its body, just in front of the lane rope
+    if(s.bg==="pool"){ const tall=GROUND-headY()-(s.jy||0), surf=GROUND-18, sink=tall*0.5-18, bw=tall*0.42;   // the water comes up to the middle of its body, just in front of the lane rope
       let v=2;
       /* a length of the pool: rings spread behind it as it swims, and the faster it goes the more it throws up
          at the front, with speed lines streaming off behind and a bigger splash when it turns at the wall */
@@ -688,16 +690,22 @@ const SCENE_FN=[
           else if(Math.random()<0.15) spark(s.x-d*10,surf-1,"drip");
           await rwait(20); }
         s.x=tx; s.jy=-sink; spark(s.x+d*bw*0.6,surf-2,"drip",v>4?10:3,true); spark(s.x+d*bw*0.6,surf,"wave"); rsfx(v>3?"splash":"stroke"); if(v>4) s.shake=2; };
-      if(r==="great"){ s.x=226; s.jy=30; s.pose="crouch"; await rwait(450); s.pose="jump";
-        for(let f=0;f<=36;f++){ const k=f/36; s.x-=1.2; s.jy=30+Math.sin(k*Math.PI)*24-k*(30+sink); await rwait(18); }
-        s.waterY=surf; spark(s.x,surf-2,"drip",14,true); rsfx("splash"); s.shake=6; await rwait(300); }
-      else { s.waterY=surf; s.jy=-sink; spark(s.x,surf-2,"drip",6,true); rsfx("splash"); await rwait(400); }
-      if(r==="great"){ s.ghosts=true; for(let k=0;k<5;k++){ v=2.4+k*1.3; await swim(205); await swim(45); } s.ghosts=false; v=2; }   // five lengths, each faster than the last
+      /* every swim starts on the diving board (Gid, 15 Nov 2026): a great is a big springy dive, a success a clean one,
+         and a fail hesitates at the edge and belly-flops */
+      s.x=226; s.jy=30; s.dir=-1;
+      if(r==="fail"){ s.pose="idle"; spark(s.x,headY(),"sweat",2); await rwait(700); }
+      s.pose="crouch"; await rwait(r==="great"?450:350); s.pose="jump"; rsfx("leap");
+      { const H=r==="great"?24:r==="fail"?9:16, N=r==="great"?36:30;
+        for(let f=0;f<=N;f++){ const k=f/N; s.x-=1.2; s.jy=30+Math.sin(k*Math.PI)*H-k*(30+sink); await rwait(18); } }
+      s.waterY=surf;
+      if(r==="fail"){ s.pose="hurt"; spark(s.x,surf-2,"drip",16,true); spark(s.x-12,surf,"wave"); spark(s.x+12,surf,"wave"); rsfx("splash"); s.shake=4; await rwait(700); }
+      else { spark(s.x,surf-2,"drip",r==="great"?14:8,true); rsfx("splash"); if(r==="great") s.shake=6; await rwait(300); }
+      if(r==="great"){ s.ghosts=true; for(let k=0;k<5;k++){ v=2.4+k*1.3; await swim(45); await swim(205); } s.ghosts=false; v=2; }   // five lengths, each faster than the last
       else for(let k=0;k<laps;k++){
-        await swim(205);
-        if(r==="fail"&&k===1){ await swim(140); s.pose="tired"; spark(s.x,headY(),"sweat",3); const fl=prop({k:"floatie",x:s.x,y:surf,w:tall*0.55});
-          for(let j=0;j<20;j++){ s.jy=-sink+Math.sin(j/2)*1.5; await rwait(90);} s.pose="sad"; await rwait(700); return; }
         await swim(45);
+        if(r==="fail"&&k===1){ await swim(110); s.pose="tired"; spark(s.x,headY(),"sweat",3); const fl=prop({k:"floatie",x:s.x,y:surf,w:tall*0.55});
+          for(let j=0;j<20;j++){ s.jy=-sink+Math.sin(j/2)*1.5; await rwait(90);} s.pose="sad"; await rwait(700); return; }
+        await swim(205);
       }
       if(r==="great"){ spark(s.x,surf-3,"drip",16); await greatBurst(false); await rwait(300); return; }   // a great swim ends in a splash and the burst
       s.pose="happy"; spark(s.x,surf-3,"drip",8); await rwait(900); return; }

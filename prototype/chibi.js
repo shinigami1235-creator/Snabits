@@ -535,7 +535,9 @@ const CHIBI = (() => {
   /* Shelled: a spiked shell on the back; from the front only its rim and spikes show round the body */
   function shell(c, g, parts, over) {
     const cx = g.cx, rx = g.bw * (over ? 0.46 : 0.57), ry = Math.min(g.bh * (over ? 0.44 : 0.56), rx * (over ? 0.85 : 0.82)), cy = g.top + Math.max(g.bh * (over ? 0.48 : 0.42), ry * 0.85);
-    const sc = mix(dk(parts, 0.1), [120, 96, 70], 0.25), bone = mix([240, 228, 204], parts, 0.15);
+    // a tortoise-brown shell tinted by the parts colour, kept light enough that a near-black Snabit's shell doesn't read as a black blob behind it
+    let sc = mix(dk(parts, 0.1), [138, 108, 78], 0.55); const lum = q => 0.3 * q[0] + 0.59 * q[1] + 0.11 * q[2]; if (lum(sc) < 90) sc = lt(sc, (90 - lum(sc)) / 160);
+    const bone = mix([240, 228, 204], parts, 0.15);
     for (const a of [-2.55, -2.05, -1.57, -1.09, -0.59, -3.05, -0.09]) {
       const ex = cx + Math.cos(a) * rx * 0.94, ey = cy + Math.sin(a) * ry * 0.94, l = over ? 11 : 13, nx = Math.cos(a), ny = Math.sin(a);
       c.fillStyle = rgb(dk(bone, 0.3)); c.beginPath(); c.moveTo(ex - ny * 6, ey + nx * 6 + 2); c.lineTo(ex + nx * l, ey + ny * l + 2); c.lineTo(ex + ny * 6, ey - nx * 6 + 2); c.closePath(); c.fill();
@@ -543,6 +545,7 @@ const CHIBI = (() => {
     }
     c.fillStyle = rgb(dk(sc, 0.35)); c.beginPath(); c.ellipse(cx, cy + 4, rx, ry, 0, 0, 7); c.fill();
     c.fillStyle = rgb(sc); c.beginPath(); c.ellipse(cx, cy, rx, ry, 0, 0, 7); c.fill();
+    if (!over) { c.strokeStyle = rgb(lt(sc, 0.3)); c.lineWidth = 3; c.lineCap = 'round'; c.beginPath(); c.ellipse(cx, cy, rx - 2, ry - 2, 0, Math.PI * 1.1, Math.PI * 1.9); c.stroke(); }   // the shell's lit rim over the top
     if (over) {                    // seen from behind: plates on the shell
       c.strokeStyle = rgb(dk(sc, 0.3)); c.lineWidth = 2.5;
       c.beginPath(); c.ellipse(cx, cy, rx * 0.45, ry * 0.45, 0, 0, 7); c.stroke();
