@@ -223,7 +223,7 @@ async function exNode(reg, n, st, need, nm, K, used, found) {
     const g = exGrade(reg), G = GRADE_INFO[g], foe = gradedOpponent(g, Math.round(G.lv[0] + (G.lv[1] - G.lv[0]) * 0.5), Math.random, reg.el === 'Void' ? null : reg.el), prize = Math.round(G.purse * 0.4);
     const fp = prop({ k: 'foe', x: 170, y: GROUND, grid: foe.fm.grid, pal: foe.fm.pal, fm: foe.fm }); banner('A wild Snabit', '#ffd23f'); K(`A wild ${foe.m.name} is in the way.`); await rwait(1300); banner('');
     await sceneFade(true, 400); let won = false;
-    await new Promise(done => arenaFight({ s: fightSnapshot(s), foe, mode: 'auto', title: 'Wild', noDraw: true, onEnd: r => { won = !!(r && r.winner === 0); done(); } }));
+    await new Promise(done => arenaFight({ s, foe, mode: 'control', title: 'Wild', noDraw: true, onEnd: r => { won = !!(r && r.winner === 0); done(); } }));
     unprop(fp); s.trip = true; s.camJump = true; s.pose = won ? 'happy' : 'tired'; await sceneFade(false, 400);
     if (won) { PLAYER.bits += prize; drawUI(); found.push(`${prize.toLocaleString()} bits`); K(`You did it! The League pays ${prize.toLocaleString()} bits for that one.`); await rwait(1400); return; }
     K(`That ${foe.m.name} was too strong. Let's get out of here.`); await rwait(1400); return 'lost'; }

@@ -89,7 +89,7 @@ async function deepFight(T, leadI, foe, title, K) {
     const m = T[order[j]];
     if (j) { K(`${displayName(m.s)}, you're up!`); await rwait(1100); }
     await sceneFade(true, 400); let res = null;
-    await new Promise(done => arenaFight({ s: fightSnapshot(m.s), foe, mode: 'auto', title, noDraw: true, foeHp, onEnd: r => { res = r; done(); } }));
+    await new Promise(done => arenaFight({ s: m.s, foe, mode: 'control', title, noDraw: true, foeHp, onEnd: r => { res = r; done(); } }));
     RS.trip = true; RS.camJump = true; await sceneFade(false, 400);
     if (res && res.winner === 0) return true;
     m.out = true; foeHp = res ? Math.max(0.05, res.foeHpLeft) : foeHp;
