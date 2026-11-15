@@ -69,7 +69,7 @@ Voice samples:
 ## What can be scanned (Gid's tiers, decided 15 Nov 2026)
 
 1. **Basic Snabits:** the first eight families (Chomp, Squib, Antik, Moko, Pinch, Stilt, Skit, Booly), scanned from the start, plus four commons added 15 Nov 2026 (Puff, Flit, Glop, Tock) that come from a scan whose main colour surrounds the middle of the shot (`ring` in `pickFamily`), and ten added 16 Nov 2026: Wick, Lumo, Snooze, Inky and Cobble from dark photos, and Nimbo, Dango, Oaklet, Roly and Trundle from pale ones (`pick5` in `pickFamily`, by the photo's second colour or the tint of its main one).
-2. **Registered Snabits:** the League only lets a ranch register fourteen families so far once it has proven itself, and each opens a different way, since Gid wants locked Snabits but not one route for all of them (`LICENCE`, `UNLOCK_HOW`, `famOpen` in `game.js`). Until then a scan that would give one gives one of the first eight. Nothing in the game says how any of them opens, since Gid wants it found by playing (15 Nov 2026). A save from before keeps any of the five it had already raised.
+2. **Registered Snabits:** the League only lets a ranch register nineteen families so far once it has proven itself, and each opens a different way, since Gid wants locked Snabits but not one route for all of them (`LICENCE`, `UNLOCK_HOW`, `famOpen` in `game.js`). Until then a scan that would give one gives one of the first eight. Nothing in the game says how any of them opens, since Gid wants it found by playing (15 Nov 2026). A save from before keeps any of the five it had already raised.
    - Plod: win the Plod Licence Cup, grade D.
    - Bipped: win a Strength contest. The judges are Bipped breeders and sign the League form.
    - Fizz: Dr. Ines signs the form when the ranch reaches grade B.
@@ -84,6 +84,11 @@ Voice samples:
    - Twiglet: the Snabit's second year on the ranch. Nora sends a potted tree with the form in it.
    - Swirl: a Snow week at grade C or higher. A Swirl rolls down the hill to the barn door.
    - Ditty: the first trade with a friend. The friend sends a music box with the form under the dancer.
+   - Sizzle: the ranch buys the Kitchen upgrade. The first breakfast burns and a Sizzle hops out of the toaster.
+   - Aero: floor 10 of the Tower. A kite caught up there comes down at the ranch with the form tied to its tail.
+   - Nesta: the first fusion in Dr. Ines's lab. She sends a nesting doll with the form inside the smallest one.
+   - Magna: the ranch beats the Drifter. It drags home a horseshoe magnet with the form stuck to it.
+   - Helm: 100 kinds seen in the bestiary. Dr. Ines sends a brass diving helmet with the form in it.
    - Batch 3's registered families come from busy photos with four or more colours, once registered (`pickFamily`).
    - Licence Cups run in week 4 of the first two months of each season except Summer, with a field of that family only. They grow with the grade (Gid, 15 Nov 2026): 4 entrants at E and D, 6 at C and B, 8 at A and S, where 8 is a knockout.
 3. **Costumes:** twelve, each opened its own way and never explained in the game (`cosOpen`, `openCos` in `game.js`). A costume's pattern scanned before then makes a plain Snabit, and its Secrets hint shows ??? until it opens. Each brings a skill and teaches a second at level 6 (`COSTUME_SKILLS` in `skills.js`).

@@ -180,6 +180,23 @@ const SUMMON = (() => {
       return { dy: beat < 3 ? -Math.sin(ph * Math.PI) * H * 0.05 : 0, sx: beat < 3 && ph < 0.12 ? 1.08 : 1, sy: beat < 3 && ph < 0.12 ? 0.92 : 1, pose: beat < 3 ? 'jump' : tt < 1100 ? 'idle' : 'happy',
         over(c, x, y, h) { for (let i = 0; i < 5; i++) { const p = seg(tt, i * 200, 900 + i * 200); if (p <= 0 || p >= 1) continue; const nx = x + (i - 2) * h * 0.18 + Math.sin(p * 6 + i) * 6, ny = y - h * (0.9 + p * 0.6);
             c.fillStyle = `rgba(255,${180 + i * 10},220,${1 - p})`; c.beginPath(); c.ellipse(nx, ny, 3.6, 2.6, -0.4, 0, 7); c.fill(); c.fillRect(nx + 2.4, ny - 12, 1.8, 12); } } }; },
+    Sizzle(tt, H) { const k = seg(tt, 0, 380), land = tt - 380, pop = tt > 380 && tt < 700;   // it pops up out of nowhere like toast, lands, and steam puffs off it
+      return { dy: tt < 380 ? -H * 0.45 * Math.sin(k * Math.PI * 0.5 + Math.PI * 0.5) : 0, sx: tt > 380 ? 1 + spring(land, 0.18) : 1, sy: tt > 380 ? 1 - spring(land, 0.18) : 1, pose: tt < 380 ? 'jump' : tt < 600 ? 'land' : 'happy',
+        over(c, x, y, h) { const p = seg(tt, 400, 1500); if (p <= 0 || p >= 1) return; for (let i = 0; i < 4; i++) { const q = (p + i / 4) % 1; c.fillStyle = `rgba(255,255,255,${0.6 * (1 - q) * (1 - p)})`; c.beginPath(); c.arc(x + (i - 1.5) * h * 0.15 + Math.sin(q * 6) * 4, y - h * (0.9 + q * 0.5), h * (0.05 + q * 0.06), 0, 7); c.fill(); } } }; },
+    Aero(tt, H, W) { const k = out3(seg(tt, 0, 1000));   // a gust carries it in on a long curve, with wind streaks behind it
+      return { dx: -W * 0.55 * (1 - k), dy: -H * 0.3 * Math.sin((1 - k) * Math.PI), pose: tt < 1000 ? 'hover' : tt < 1200 ? 'idle' : 'happy',
+        under(c, x, y, h) { const a = 1 - seg(tt, 900, 1400); if (a <= 0) return; c.strokeStyle = `rgba(255,255,255,${0.6 * a})`; c.lineWidth = 2; c.lineCap = 'round'; for (let i = 0; i < 4; i++) { const yy = y - h * (0.3 + i * 0.15), len = h * (0.5 + (i % 2) * 0.3); c.beginPath(); c.moveTo(x - h * 0.4, yy); c.lineTo(x - h * 0.4 - len, yy + Math.sin(tt / 100 + i) * 3); c.stroke(); } } }; },
+    Nesta(tt, H) { const k = back(seg(tt, 0, 450));   // a small doll appears, a bigger one closes over it, then a bigger one again
+      const step = tt < 450 ? 0 : tt < 750 ? 1 : 2, s = [0.4, 0.7, 1][step] * (tt < 450 ? k : 1);
+      return { sx: s * (tt > 450 && (tt % 300) < 60 && tt < 800 ? 1.08 : 1), sy: s * (tt > 450 && (tt % 300) < 60 && tt < 800 ? 0.92 : 1), pose: tt < 900 ? 'idle' : 'happy',
+        over(c, x, y, h) { const p = seg(tt, 750, 1300); if (p <= 0 || p >= 1) return; for (let i = 0; i < 6; i++) { const a = -Math.PI * (0.15 + i * 0.14); c.fillStyle = `rgba(255,220,120,${1 - p})`; c.beginPath(); c.arc(x + Math.cos(a) * h * 0.6 * p, y - h * 0.5 + Math.sin(a) * h * 0.5 * p, 2.5, 0, 7); c.fill(); } } }; },
+    Magna(tt, H, W) { const k = seg(tt, 0, 700), snap = tt > 700;   // something pulls it in fast, it snaps into place, and bits of metal fly in after it
+      return { dx: snap ? 0 : W * 0.6 * (1 - k * k * k), sx: snap ? 1 + spring(tt - 700, 0.12) : 1.15, sy: snap ? 1 - spring(tt - 700, 0.12) : 0.88, pose: tt < 700 ? 'idle' : tt < 900 ? 'land' : 'happy',
+        over(c, x, y, h) { for (let i = 0; i < 6; i++) { const p = seg(tt, 600 + i * 50, 1000 + i * 50); if (p <= 0 || p >= 1) continue; const sx = x + W * 0.5 * (1 - p) * (i % 2 ? 1 : 0.7), sy = y - h * (0.2 + (i % 3) * 0.25);
+            c.save(); c.translate(sx, sy); c.rotate(p * 8 + i); c.fillStyle = '#9aa0ab'; c.fillRect(-1.5, -6, 3, 11); c.fillStyle = '#c8cdd6'; c.fillRect(-4, -8, 8, 3); c.restore(); } } }; },
+    Helm(tt, H) { const k = out3(seg(tt, 100, 1000));   // it rises up through a column of bubbles
+      return { dy: H * 0.3 * (1 - k), pose: tt < 1000 ? 'idle' : 'happy',
+        under(c, x, y, h) { const a = 1 - seg(tt, 1000, 1500); if (a <= 0) return; for (let i = 0; i < 14; i++) { const ph = ((tt / 700) + i / 14) % 1; c.strokeStyle = `rgba(200,235,255,${0.8 * (1 - ph) * a})`; c.lineWidth = 1.5; c.beginPath(); c.arc(x + Math.sin(i * 2.3 + ph * 4) * h * 0.35, y - ph * h * 1.3, 2 + (i % 4), 0, 7); c.stroke(); } } }; },
     /* the special Snabits */
     Eagle(tt, H, W) { const k = seg(tt, 0, 700), e = out3(k), land = tt - 700, sp = spring(land, 0.2);   // it swoops down in an arc and lands with its wings out
       return { dx: W * 0.45 * (1 - e), dy: -H * 0.45 * (1 - e) + Math.sin(k * Math.PI) * H * 0.06, sx: 1 + (tt > 700 ? sp : 0), sy: 1 - (tt > 700 ? sp : 0), pose: tt < 700 ? 'jump' : tt < 860 ? 'land' : 'happy',

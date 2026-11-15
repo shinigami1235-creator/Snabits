@@ -39,6 +39,11 @@ const FAMILY = {
   Twiglet:{body:[6,[6,6,5,5,5,4]], legs:"stubby", base:[62,45,62,52,55,30], ability:["Deep Roots","It can't be pushed back"]},
   Swirl: {body:[4,[3,5,6,7,7,7,6,5,4]], legs:"stubby", base:[55,40,55,62,55,45], ability:["Shaken","Its Casts have a 15% chance to Daze"]},
   Ditty: {body:[5,[6,7,7,7,7,7,7]], legs:"stubby", base:[50,42,50,60,62,48], ability:["Lullaby","The opponent's focus fills 10% slower"]},
+  Sizzle:{body:[4,[6,7,7,7,7,7,7,7]], legs:"stubby", base:[52,62,48,40,45,58], ability:["Pop Up","Its first hit each fight can't miss"]},
+  Aero:  {body:[3,[2,4,6,7,6,4,2]], legs:"ghost", base:[50,48,46,60,58,70], ability:["Tailwind","It moves 20% faster"]},
+  Nesta: {body:[3,[4,5,5,4,6,7,7,7,6]], legs:"stubby", base:[62,42,58,52,58,40], ability:["Inner Doll","Once a fight, a hit that would knock it out leaves it at 1 HP"]},
+  Magna: {body:[4,[7,7,7,3,3,3,3,3]], legs:"stubby", base:[55,55,60,55,45,40], ability:["Pull","Its Strikes pull the target closer"]},
+  Helm:  {body:[3,[4,6,7,7,7,7,7,7,6]], legs:"twolegs", base:[62,52,65,40,48,36], ability:["Pressure","Tide moves hit it 25% softer"]},
   Cobble:{body:[4,[3,5,6,7,7,7,7,7,6]], legs:"stubby", base:[60,56,68,30,42,34], ability:["Rock Shed","Its Constitution goes up 2 steps the first time it drops under half HP"]},
   /* special Snabits: only a colour easter egg finds them (EGGS below), they always have their own ability, and only fusion changes their element */
   Eagle:  {special:1, body:[3,[3,5,6,7,7,7,7,6,5]], legs:"twolegs", base:[50,62,45,35,55,73], ability:["Sky High","The first hit it lands in a fight is always a critical"]},

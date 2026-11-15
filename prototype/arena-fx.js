@@ -583,7 +583,12 @@ const AR_KIND={Lunge:"bite","Jaw Lock":"jawlock",Gnash:"gnash",
   "Paper Cut":"claw","Fold Dart":"spear","Thousand Cranes":"volley","Paper Gust":"push","Wing Slice":"claw","Phoenix Fold":"sunflare",
   "Twig Poke":"spear","Leaf Shot":"bolt","Pruning Snip":"pinch","Petal Storm":"volley","Trunk Twist":"lash","Blossom Burst":"pillar",
   "Snow Pellet":"bolt","Frost Bump":"tackle","Shake Up":"steam","Blizzard Spin":"volley",Whiteout:"avalanche",
-  "Clasp Snap":"bite","Note Toss":"bolt","Music Box Waltz":"push",Pirouette:"kickflurry",Crescendo:"wave","Grand Finale":"sunflare"};
+  "Clasp Snap":"bite","Note Toss":"bolt","Music Box Waltz":"push",Pirouette:"kickflurry",Crescendo:"wave","Grand Finale":"sunflare",
+  "Crumb Toss":"volley","Toast Slap":"tackle","Toast Pop":"tackle","Hot Coals":"foxfire","Kettle Steam":"steam","Full Breakfast":"meteor",
+  "Wind Nudge":"push","Pinwheel Spin":"kickflurry",Updraft:"wave","Tail Lash":"lash","Dive Bomb":"talondive","Jet Stream":"beam",
+  "Doll Bonk":"tackle","Little Sister":"bolt","Nesting Stack":"punchflurry","Lid Clap":"hammer","Sister Parade":"volley","Russian Roll":"boulder",
+  Clink:"punch","Bolt Toss":"spear",Attract:"lash",Repel:"push","Scrap Storm":"volley",Overcharge:"lightning","Field Crush":"pillar",
+  "Brass Bonk":"tackle","Bubble Shot":"bolt","Air Hose":"wave","Lead Boots":"stomp","Sonar Ping":"push","Depth Charge":"meteor"};
 
 /* ---------- the special Snabits' signature moves ---------- */
 function atBat(c,x,y,s,flap){ c.save(); c.translate(x,y); c.scale(s,s); c.fillStyle="#2a1d33"; const w=Math.sin(flap)*0.5+0.6;

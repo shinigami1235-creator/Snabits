@@ -143,7 +143,7 @@ async function doFuse(e1,e2,cat){
   if(typeof SUMMON!=="undefined") await SUMMON.run(cv=>SUMMON.fusion(cv,{a:SUMMON.specFor(e1.m,entryState(e1)),b:SUMMON.specFor(e2.m,entryState(e2)),child:SUMMON.specFor(child.m,child.st,"Bit"),name:child.m.name,family:child.m.family}));
   // the parents are used up and the child takes the ranch
   PLAYER.roster=PLAYER.roster.filter(e=>e.id!==e1.id&&e.id!==e2.id);
-  const e={id:"m"+(PLAYER.nextId++),m:child.m,st:child.st}; PLAYER.roster.push(e); PLAYER.active=e.id; RS=null; LAB={a:null,b:null,cat:null};
+  const e={id:"m"+(PLAYER.nextId++),m:child.m,st:child.st}; PLAYER.roster.push(e); PLAYER.fused=(PLAYER.fused||0)+1; PLAYER.active=e.id; RS=null; LAB={a:null,b:null,cat:null};
   saveGame();
   panel(""); openRanch(); say(`It's a ${child.m.name}${child.hybrid?", a hybrid":""}${child.m.costume?` in the ${child.m.costume} costume`:""}. It keeps ${child.carry}% of its parents' training and knows ${child.st.skillsKnown.join(", ")}.`);
 }

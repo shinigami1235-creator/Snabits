@@ -1,7 +1,7 @@
 /* Puts the chibi drawings (chibi.js) into the ranch and battle screens while the pixel art stays the default.
    It's on by default. #art=pixel in the address, or localStorage "snabits-art" set to "pixel", brings back the pixel art.
    Only families listed in CHIBI_FAMS are drawn smooth; the rest keep their pixels. */
-const CHIBI_FAMS = ['Chomp', 'Squib', 'Antik', 'Moko', 'Pinch', 'Stilt', 'Skit', 'Booly', 'Plod', 'Bipped', 'Fizz', 'Teep', 'Lern', 'Puff', 'Flit', 'Glop', 'Tock', 'Mitt', 'Brolly', 'Spine', 'Burr', 'Wick', 'Lumo', 'Snooze', 'Inky', 'Cobble', 'Nimbo', 'Dango', 'Oaklet', 'Roly', 'Trundle', 'Clank', 'Crease', 'Twiglet', 'Swirl', 'Ditty', 'Eagle', 'Vampire', 'Phoenix', 'Kitsune', 'Naga', 'Yeti', 'Kraken', 'Golem', 'Unicorn', 'Jack'];
+const CHIBI_FAMS = ['Chomp', 'Squib', 'Antik', 'Moko', 'Pinch', 'Stilt', 'Skit', 'Booly', 'Plod', 'Bipped', 'Fizz', 'Teep', 'Lern', 'Puff', 'Flit', 'Glop', 'Tock', 'Mitt', 'Brolly', 'Spine', 'Burr', 'Wick', 'Lumo', 'Snooze', 'Inky', 'Cobble', 'Nimbo', 'Dango', 'Oaklet', 'Roly', 'Trundle', 'Clank', 'Crease', 'Twiglet', 'Swirl', 'Ditty', 'Sizzle', 'Aero', 'Nesta', 'Magna', 'Helm', 'Eagle', 'Vampire', 'Phoenix', 'Kitsune', 'Naga', 'Yeti', 'Kraken', 'Golem', 'Unicorn', 'Jack'];
 const CHIBI_ART = !/(^#|&)art=pixel(&|$)/.test(location.hash) && (() => { try { return localStorage.getItem('snabits-art') !== 'pixel'; } catch (e) { return true; } })();
 
 /* m is a hatched monster or a fight snapshot; s is the ranch state when there is one */
@@ -24,7 +24,8 @@ const SIZE_CM = { Chomp: [50, 100, 170], Squib: [40, 85, 150], Antik: [60, 120, 
   Kraken: [60, 125, 220], Golem: [70, 140, 250], Unicorn: [55, 110, 190], Jack: [45, 95, 165],
   Wick: [30, 60, 110], Lumo: [25, 50, 95], Snooze: [45, 90, 150], Inky: [30, 65, 115], Cobble: [40, 85, 150],
   Nimbo: [40, 80, 160], Dango: [25, 45, 90], Oaklet: [30, 70, 180], Roly: [20, 40, 80], Trundle: [25, 50, 110],
-  Clank: [35, 70, 180], Crease: [20, 45, 110], Twiglet: [25, 55, 120], Swirl: [30, 60, 120], Ditty: [25, 50, 130] };
+  Clank: [35, 70, 180], Crease: [20, 45, 110], Twiglet: [25, 55, 120], Swirl: [30, 60, 120], Ditty: [25, 50, 130],
+  Sizzle: [20, 40, 120], Aero: [40, 90, 320], Nesta: [15, 35, 90], Magna: [20, 45, 160], Helm: [35, 70, 300] };
 function sizeK(m) {
   if (!m) return 1; if (m.sizeK) return m.sizeK;
   const t = JSON.stringify([m.pal, m.stats, m.lifespan, m.family]); let h = 2166136261;
@@ -378,6 +379,11 @@ function cry(fam, stage) {
       case 'Twiglet': dKick(d, t, 0.3); voice(t + 0.05, 'triangle', [[0, 520], [0.06, 520]], 0.07); [1318, 1760].forEach((f, i) => voice(t + 0.2 + i * 0.1, 'sine', [[0, f], [0.3, f]], 0.05)); break;   // a knock on the pot and a little chime
       case 'Swirl': for (let i = 0; i < 4; i++) dNoise(d, t + i * 0.06, 0.05, 0.08, 'highpass', 5000); [2093, 2637, 3136].forEach((f, i) => voice(t + 0.25 + i * 0.06, 'sine', [[0, f], [0.35, f]], 0.04)); break;   // a shake, then glassy tinkles
       case 'Ditty': [1568, 1760, 2093, 1760, 2349].forEach((f, i) => voice(t + i * 0.13, 'sine', [[0, f], [0.25, f]], 0.06)); break;   // five notes off a music box comb
+      case 'Sizzle': dNoise(d, t, 0.35, 0.1, 'highpass', 4500); voice(t + 0.3, 'square', [[0, 1200], [0.04, 1600]], 0.05); dKick(d, t + 0.3, 0.3); break;   // a sizzle, then a toaster pop
+      case 'Aero': dNoise(d, t, 0.4, 0.08, 'bandpass', 900, 3); voice(t + 0.1, 'sine', [[0, 700], [0.3, 1400]], 0.08); break;   // a gust of wind and a rising "wheee"
+      case 'Nesta': [0, 0.1].forEach((dt, i) => { dKick(d, t + dt, 0.2); voice(t + dt, 'triangle', [[0, 1100 + i * 300], [0.05, 1100 + i * 300]], 0.06); }); voice(t + 0.25, 'triangle', [[0, 1500], [0.12, 1900]], 0.07); break;   // wooden knock-knock and a giggle
+      case 'Magna': voice(t, 'sawtooth', [[0, 120], [0.4, 125]], 0.05, 4); voice(t + 0.05, 'sine', [[0, 600], [0.3, 1200]], 0.06); dNoise(d, t + 0.35, 0.04, 0.15, 'bandpass', 3000); break;   // a magnetic hum, a rising pull and a clink
+      case 'Helm': for (let i = 0; i < 4; i++) voice(t + i * 0.08, 'sine', [[0, 400 + i * 90], [0.06, 600 + i * 90]], 0.06); voice(t + 0.35, 'sine', [[0, 1400], [0.5, 1400]], 0.04, 4); break;   // bubbles and a sonar ping
       default: voice(t, 'triangle', [[0, 800], [0.12, 1200], [0.22, 1000]], 0.13);
     } } catch (err) {}
 }
