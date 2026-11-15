@@ -65,7 +65,7 @@ function chibiRanch(s, t) {
     if (s.waterY != null && cam) {           // swimming: crisp above the waterline, faint and blue-tinted below it
       const wy = k * (cam.Z * s.waterY + GROUND + cam.extra - GROUND * cam.Z);
       c.save(); c.beginPath(); c.rect(0, 0, W, wy); c.clip(); c.setTransform(u * kx, 0, 0, u, x - 100 * u * kx, y - 188 * u); CHIBI.draw(c, spec, pose, t); c.restore();
-      c.save(); c.beginPath(); c.rect(0, wy, W, H); c.clip(); c.globalAlpha = 0.38; c.setTransform(u * kx, 0, 0, u, x - 100 * u * kx, y - 188 * u); CHIBI.draw(c, spec, pose, t); c.restore();
+      c.save(); c.beginPath(); c.rect(0, wy, W, H); c.clip(); c.globalAlpha = 0.1; c.setTransform(u * kx, 0, 0, u, x - 100 * u * kx, y - 188 * u); CHIBI.draw(c, spec, pose, t); c.restore();
       const bw = CHIBI.width(spec.stage, spec.family) * u * 0.62; c.setTransform(1, 0, 0, 1, 0, 0);
       c.strokeStyle = 'rgba(255,255,255,.85)'; c.lineWidth = 1.6 * k; c.beginPath(); c.ellipse(x, wy, bw, bw * 0.16, 0, 0, Math.PI * 2); c.stroke();
     } else {
