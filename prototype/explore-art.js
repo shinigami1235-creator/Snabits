@@ -90,6 +90,54 @@ const XA = {
     c.fillStyle = '#b8324a'; for (const [bx, by] of [[-8, -18], [9, -20], [-2, -9]]) { c.beginPath(); c.arc(x + bx * s, y + by * s, 1.8 * s, 0, 7); c.fill(); c.fillStyle = 'rgba(255,255,255,.6)'; c.beginPath(); c.arc(x + bx * s - 0.6 * s, y + by * s - 0.6 * s, 0.6 * s, 0, 7); c.fill(); c.fillStyle = '#b8324a'; }
   },
 
+  // books lying open and stacked on the ground, so a door in front of them reads as a thinking problem
+  litter(c, x, y, s = 1) {
+    const B = [[-16, 0, '#b8463b', -0.15], [-4, 0, '#3b6fb8', 0.1], [9, 0, '#3f8f4a', -0.05], [-10, -4, '#c9a33b', 0.2]];
+    for (const [bx, by, col, r] of B) { c.save(); c.translate(x + bx * s, y + by * s); c.rotate(r); SC.depth(c, () => { c.beginPath(); c.roundRect(-6 * s, -3.5 * s, 12 * s, 3.5 * s, 1); }, col, 1, 0.3); c.fillStyle = 'rgba(255,250,235,.85)'; c.fillRect(-5 * s, -2.6 * s, 10 * s, 1.1 * s); c.restore(); }
+    c.save(); c.translate(x + 20 * s, y - 1); c.rotate(0.08);                              // one lying open
+    c.fillStyle = '#7a3b2e'; c.beginPath(); c.moveTo(-9 * s, 0); c.lineTo(0, -1.5 * s); c.lineTo(9 * s, 0); c.lineTo(9 * s, 1.2 * s); c.lineTo(-9 * s, 1.2 * s); c.fill();
+    c.fillStyle = '#f6efdc'; c.beginPath(); c.moveTo(-8 * s, -0.4 * s); c.quadraticCurveTo(-4 * s, -3.6 * s, 0, -1.6 * s); c.quadraticCurveTo(4 * s, -3.6 * s, 8 * s, -0.4 * s); c.lineTo(0, 0); c.fill();
+    c.strokeStyle = 'rgba(90,65,40,.5)'; c.lineWidth = 0.6 * s; for (const k of [-5, -2.5, 2.5, 5]) { c.beginPath(); c.moveTo(k * s, -1.4 * s - Math.abs(k) * 0.12 * s); c.lineTo(k * s + (k < 0 ? 1.5 : -1.5) * s, -1.2 * s); c.stroke(); }
+    c.restore();
+    c.fillStyle = '#f2e6c8'; c.save(); c.translate(x - 24 * s, y - 1); c.rotate(-0.4); c.fillRect(-3 * s, -2 * s, 6 * s, 4 * s); c.restore();   // a loose page
+  },
+
+  // a dart totem: a carved stone post whose mouths fire darts across the path at two heights
+  darts(c, x, y, t, s = 1, live = true) {
+    const H = 46 * s, W = 16 * s;
+    XA.shadow(c, x, y + 1, 12 * s);
+    SC.depth(c, () => { c.beginPath(); c.roundRect(x - W / 2, y - H, W, H, [5 * s, 5 * s, 1, 1]); }, '#8a7f70', 2 * s, 0.32);
+    c.fillStyle = '#a0968a'; c.beginPath(); c.roundRect(x - W / 2 + 2 * s, y - H + 2 * s, W - 4 * s, 6 * s, 3 * s); c.fill();
+    c.fillStyle = '#5b5248'; c.beginPath(); c.arc(x - 3 * s, y - H + 12 * s, 1.6 * s, 0, 7); c.arc(x + 3 * s, y - H + 12 * s, 1.6 * s, 0, 7); c.fill();   // a carved face
+    for (const hy of [0.42, 0.78]) { c.fillStyle = '#2c2622'; c.beginPath(); c.ellipse(x - W / 2 + 1, y - H * (1 - hy), 2.6 * s, 2 * s, 0, 0, 7); c.fill(); }
+    c.fillStyle = '#6f9a4a'; SC.blob(c, x + 4 * s, y - H, [[0, 0, 3 * s], [-4 * s, 0.5 * s, 2.4 * s]]); c.fill();
+    for (let i = 0; i < 4; i++) { const px = x - 28 * s - i * 10 * s; c.fillStyle = 'rgba(60,50,40,.28)'; c.fillRect(px - 4 * s, y - 1, 8 * s, 2); }   // pressure plates on the path
+    if (!live || t == null) return;
+    for (const [hy, ph] of [[0.42, 0], [0.78, 0.5]]) { const q = ((t / 700) + ph) % 1, dx = x - W / 2 - q * 90 * s, dy = y - H * (1 - hy);
+      if (q > 0.85) continue; c.globalAlpha = 1 - q * 0.6;
+      c.strokeStyle = 'rgba(255,255,255,.5)'; c.lineWidth = 1 * s; c.beginPath(); c.moveTo(dx + 4 * s, dy); c.lineTo(dx + 14 * s, dy); c.stroke();
+      c.strokeStyle = '#5a4128'; c.lineWidth = 1.3 * s; c.beginPath(); c.moveTo(dx - 5 * s, dy); c.lineTo(dx + 3 * s, dy); c.stroke();
+      c.fillStyle = '#c9c2b6'; c.beginPath(); c.moveTo(dx - 7 * s, dy); c.lineTo(dx - 4 * s, dy - 1.4 * s); c.lineTo(dx - 4 * s, dy + 1.4 * s); c.fill();
+      c.fillStyle = '#d24f43'; c.beginPath(); c.moveTo(dx + 3 * s, dy); c.lineTo(dx + 6 * s, dy - 2 * s); c.lineTo(dx + 5 * s, dy); c.lineTo(dx + 6 * s, dy + 2 * s); c.fill(); c.globalAlpha = 1; }
+  },
+  dart(c, x, y, s = 1) { c.strokeStyle = '#5a4128'; c.lineWidth = 1.3 * s; c.beginPath(); c.moveTo(x - 5 * s, y); c.lineTo(x + 3 * s, y); c.stroke(); c.fillStyle = '#c9c2b6'; c.beginPath(); c.moveTo(x - 7 * s, y); c.lineTo(x - 4 * s, y - 1.4 * s); c.lineTo(x - 4 * s, y + 1.4 * s); c.fill(); c.fillStyle = '#d24f43'; c.beginPath(); c.moveTo(x + 3 * s, y); c.lineTo(x + 6 * s, y - 2 * s); c.lineTo(x + 5 * s, y); c.lineTo(x + 6 * s, y + 2 * s); c.fill(); },
+
+  // a hedge wall with three archways that look the same; two of them shimmer because they aren't really there
+  mirage(c, x, y, real, reveal, t, s = 1) {
+    const W = 92 * s, H = 40 * s, L = x - W / 2;
+    SC.depth(c, () => { c.beginPath(); c.roundRect(L, y - H, W, H, [12 * s, 12 * s, 2, 2]); }, '#3f7046', 2 * s, 0.3);
+    c.fillStyle = '#4f8656'; SC.blob(c, x, y - H + 2 * s, [[-34 * s, 0, 8 * s], [-16 * s, -2 * s, 9 * s], [2 * s, 0, 8 * s], [20 * s, -2 * s, 9 * s], [36 * s, 0, 7 * s]]); c.fill();
+    for (let i = 0; i < 3; i++) { const ax = L + W * (0.2 + i * 0.3), fake = i !== real, ph = (t || 0) / 260 + i, wob = fake ? Math.sin(ph) * 0.8 * s : 0;
+      const hole = () => { c.beginPath(); c.moveTo(ax - 8 * s, y); c.lineTo(ax - 8 * s + wob, y - 16 * s); c.arc(ax + wob, y - 16 * s, 8 * s, Math.PI, 0); c.lineTo(ax + 8 * s, y); c.closePath(); };
+      if (fake && reveal) { c.globalAlpha = 1 - reveal; }
+      hole(); c.fillStyle = fake ? '#2f4a36' : '#1d2a20'; c.fill();
+      if (fake) { c.strokeStyle = `rgba(190,230,255,${0.35 + 0.25 * Math.sin(ph * 1.7)})`; c.lineWidth = 1 * s; hole(); c.stroke();
+        c.fillStyle = 'rgba(220,240,255,.7)'; for (let k = 0; k < 2; k++) { const q = ((t || 0) / 900 + k * 0.5 + i * 0.3) % 1; c.beginPath(); c.arc(ax + Math.sin(q * 6 + i) * 5 * s, y - q * 20 * s, 0.8 * s, 0, 7); c.fill(); } }
+      c.globalAlpha = 1;
+      if (fake && reveal) { c.globalAlpha = reveal; hole(); c.fillStyle = '#4a7d51'; c.fill(); c.globalAlpha = 1; } }
+    c.fillStyle = SC.light('#3f7046', 0.25); for (const [lx, ly] of [[-40, -30], [-12, -34], [16, -30], [40, -24]]) { c.beginPath(); c.ellipse(x + lx * s, y + ly * s, 2.6 * s, 1.2 * s, -0.5, 0, 7); c.fill(); }
+  },
+
   // a wooden chest with gold bands; open tips the lid back and lets light out
   chest(c, x, y, open, t, s = 1) {
     const W = 30 * s, H = 17 * s, L = x - W / 2, top = y - H;
@@ -160,8 +208,12 @@ function exProp(c, p, t, front) {
     case 'sealdoor': if (!front) XA.door(c, x, y, p.lit, p.drop, t); return true;
     case 'xbush': if (!front) XA.thicket(c, x, y, p.col, p.shake, t); return true;
     case 'glowpath': if (!front) XA.prints(c, x, y, p.n, t); return true;
-    case 'thorns': if (!front) XA.bramble(c, x, y); return true;
+    case 'thorns': if (!front) XA.bramble(c, x, y, p.s || 1); return true;
     case 'chest': if (!front) XA.chest(c, x, y, p.open, t); return true;
+    case 'litter': if (front) XA.litter(c, x, y, p.s || 1); return true;
+    case 'darttrap': if (!front) XA.darts(c, x, y, t, p.s || 1, p.live !== false); return true;
+    case 'dart': if (front) XA.dart(c, x, y, p.s || 1); return true;
+    case 'mirage': if (!front) XA.mirage(c, x, y, p.real, p.reveal || 0, t, p.s || 1); return true;
     case 'spring': if (!front) XA.spring(c, x, y, t); return true;
     case 'page': if (front) XA.page(c, x, y, t); return true;
     case 'pstone': if (!front) XA.stone(c, x, y, p.sp, p.glow, t); return true;

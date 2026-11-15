@@ -7,7 +7,9 @@
    seen and found stays seen and found. */
 
 // the Pattern Stone in each region, and the special Snabit its pattern belongs to
-const EX_STONE = { 'Cinder Peak': 'Phoenix', 'Static Plains': 'Eagle', 'Hollow Moor': 'Vampire', 'Dream Garden': 'Kitsune', 'Nightshade Marsh': 'Naga', 'Glacier Rim': 'Yeti' };
+const EX_STONE = { 'Cinder Peak': 'Phoenix', 'Static Plains': 'Eagle', 'Nightshade Marsh': 'Naga', 'Glacier Rim': 'Yeti' };
+// the stones only a team reaches, on the deep maps (Gid, 15 Nov 2026: stones from grade C)
+const EX_DEEP_STONE = { 'Dream Garden': 'Kitsune', 'Hollow Moor': 'Vampire' };
 // Helena's journal, one page a region, in the order she went
 const EX_PAGES = {
   'Cinder Peak': "Found a carved stone under the ash on the north slope, painted in bands of red and orange that are still bright under the soot. Victor wants it for the Grand Ranch hall. I left it where it stood.",
@@ -113,9 +115,7 @@ function exDraw(cv, M, st, at, energy, emax, blocked, title) {
     SC.depth(x, () => { x.beginPath(); x.arc(cx, cy, 16, 0, 7); }, can ? '#fff6dc' : seen ? '#f3e6c6' : '#ebdcba', 2.5, 0.3);
     x.strokeStyle = can ? '#d39a2c' : '#b59a6c'; x.lineWidth = can ? 2.6 : 1.4; x.beginPath(); x.arc(cx, cy, can ? 16 : 15, 0, 7); x.stroke();
     if (v) exIcon(x, n, cx, cy, st.got.includes(k), blocked.includes(k));
-    if (v && n.k === 'block') { const lab = EX_STAT[n.stat]; x.font = '700 9px Fredoka, system-ui'; const tw = x.measureText(lab).width + 10;
-      SC.depth(x, () => { x.beginPath(); x.roundRect(cx - tw / 2, cy + 19, tw, 13, 6); }, blocked.includes(k) ? '#c86a55' : '#8a6a3c', 1.5, 0.3);
-      x.fillStyle = '#fff6dc'; x.textAlign = 'center'; x.fillText(lab, cx, cy + 29); x.textAlign = 'left'; }
+    // obstacles carry no stat name: the picture on the circle says what it needs (Gid, 15 Nov 2026)
     if (!v) { const fog = () => SC.blob(x, cx, cy + 2, [[0, -4, 13], [-12, 3, 10], [12, 3, 10], [-5, 6, 9], [6, 7, 9]]); x.globalAlpha = 0.96; SC.depth(x, fog, '#e3d4b2', 2, 0.12); x.fillStyle = 'rgba(255,255,255,.25)'; x.beginPath(); x.arc(cx - 4, cy - 6, 6, 3.4, 4.9); x.fill(); x.globalAlpha = 1; } }
   // the Snabit's pin over where it stands
   const [tx, ty] = P(M.N[at]), py = ty - 22;
@@ -135,14 +135,16 @@ function exIcon(x, n, cx, cy, got, shut) {
   else if (k === 'stone') XA.stone(x, cx, cy + 8, null, false, 0, 0.3);
   else if (k === 'wild') { x.fillStyle = '#5a4128'; x.beginPath(); x.ellipse(cx, cy + 3, 5, 4, 0, 0, 7); x.fill(); for (const [a, b] of [[-6, -2], [-2.4, -6.5], [2.4, -6.5], [6, -2]]) { x.beginPath(); x.ellipse(cx + a, cy + b, 2, 2.5, a * 0.08, 0, 7); x.fill(); } }
   else if (k === 'path') { x.fillStyle = 'rgba(110,80,50,.5)'; for (const [a, b] of [[-5, 4], [0, -1], [5, 4]]) { x.beginPath(); x.ellipse(cx + a, cy + b, 1.8, 2.6, 0, 0, 7); x.fill(); } }
-  else if (k === 'block') { const s = n.stat;
-    if (s === 1) XA.rock(x, cx, cy + 9, 0.6);
-    else if (s === 5) { x.fillStyle = '#9c8a6a'; x.fillRect(cx - 12, cy - 1, 8, 9); x.fillRect(cx + 4, cy - 1, 8, 9); XA.chasm(x, cx - 4, cy, 8, null, 0.2); }
-    else if (s === 3) XA.door(x, cx, cy + 10, 0, 0, 0, 0.32);
-    else if (s === 4) XA.thicket(x, cx, cy + 8, '#3f7a44', false, 0, 0.55);
-    else XA.bramble(x, cx, cy + 8, 0.48);
+  else if (k === 'block') { for (const [st, dx] of (n.stat2 ? [[n.stat, -5], [n.stat2, 6]] : [[n.stat, 0]])) exBlockIcon(x, st, cx + dx, cy, n.stat2 ? 0.75 : 1);
     if (shut) { x.globalAlpha = 1; x.strokeStyle = '#b8402e'; x.lineWidth = 3; x.beginPath(); x.moveTo(cx - 7, cy - 7); x.lineTo(cx + 7, cy + 7); x.moveTo(cx + 7, cy - 7); x.lineTo(cx - 7, cy + 7); x.stroke(); } }
   x.restore();
+}
+function exBlockIcon(x, st, cx, cy, k) {
+  if (st === 1) XA.rock(x, cx, cy + 10 * k, 0.72 * k);
+  else if (st === 5) { XA.darts(x, cx + 6 * k, cy + 10 * k, 0, 0.4 * k, false); XA.dart(x, cx - 5 * k, cy - 3 * k, 0.8 * k); }
+  else if (st === 3) { XA.door(x, cx + 2 * k, cy + 9 * k, 0, 0, 0, 0.28 * k); XA.litter(x, cx - 2 * k, cy + 10 * k, 0.35 * k); }
+  else if (st === 4) XA.mirage(x, cx, cy + 8 * k, 1, 0, 0, 0.3 * k);
+  else XA.bramble(x, cx, cy + 8 * k, 0.48 * k);
 }
 /* waits for a tap on a circle next to the Snabit, or the Head home button */
 function exPick(cv, M, P, at, blocked) {
@@ -219,35 +221,48 @@ async function exNode(reg, n, st, need, nm, K, used, found) {
     unprop(fp); s.trip = true; s.camJump = true; s.pose = won ? 'happy' : 'tired'; await sceneFade(false, 400);
     if (won) { PLAYER.bits += prize; drawUI(); found.push(`${prize.toLocaleString()} bits`); K(`${nm} beat it, and a League bounty pays ${prize.toLocaleString()} bits.`); await rwait(1400); return; }
     K(`The ${foe.m.name} was too strong, and ${nm} lost 3 energy getting away.`); await rwait(1400); return 'lost'; }
-  // an obstacle: the stat against what the region asks for
-  const f = playerFighter(s), v = f.base[EX_KEY[n.stat]], ok = v >= need * n.mul, stat = EX_STAT[n.stat];
-  await exObstacle(n.stat, ok);
-  K(ok ? `${nm} got through.` : `${nm} couldn't get through, so it goes back and loses 3 energy. It needs more ${stat}.`); await rwait(1500);
+  // an obstacle: the stat against what the region asks for. Nothing names the stat, since the obstacle shows it
+  const f = playerFighter(s), v = f.base[EX_KEY[n.stat]], ok = v >= need * n.mul;
+  await exObstacle(n.stat, ok, hashStr(reg.n + n.id));
+  K((ok ? EX_WIN : EX_LOSE)[n.stat](nm)); await rwait(1500);
   return ok ? null : 'fail';
 }
+const EX_WIN = { 1: nm => `${nm} pushed the boulder out of the way.`, 5: nm => `${nm} ran past the darts without a scratch.`, 3: nm => `${nm} worked out the door.`, 4: nm => `${nm} found the real way through.`, 2: nm => `${nm} pushed through the thorns.` };
+const EX_LOSE = { 1: nm => `The boulder didn't move, so ${nm} backs off and loses 3 energy.`, 5: nm => `A dart caught ${nm}, so it backs off and loses 3 energy.`, 3: nm => `${nm} couldn't work out the door, so it backs off and loses 3 energy.`,
+  4: nm => `${nm} walked into an archway that wasn't there, so it backs off and loses 3 energy.`, 2: nm => `The thorns were too much for ${nm}, so it backs off and loses 3 energy.` };
+const exBack = async x => { RS.dir = -1; await walkTo(x, 60, 'walk'); RS.dir = 1; };
 /* what each obstacle looks like, getting through or not */
-async function exObstacle(stat, ok) {
+async function exObstacle(stat, ok, seed = 0) {
   const s = RS;
-  if (stat === 1) { const b = prop({ k: 'xrock', x: 152, y: GROUND, rot: 0 }); await walkTo(152 - 20 - RS.P.scale * 4, 50, 'walk'); s.pose = 'effort'; await rwait(700);
-    if (ok) { for (let i = 0; i < 20; i++) { b.x += 1.2; s.x += 1.2; b.rot += 0.1; if (i % 5 === 0) spark(s.x - 8, GROUND - 1, 'dust'); await rwait(30); } b.vx = 2.5; rsfx('rumble'); s.pose = 'happy'; await rwait(700); }
-    else { for (let i = 0; i < 3; i++) { s.bx = 1; await rwait(160); s.bx = 0; await rwait(160); } spark(s.x, headY(), 'sweat', 3); s.pose = 'tired'; await rwait(700); s.dir = -1; await walkTo(70, 60, 'walk'); }
+  if (stat === 1) {   // Power: a giant boulder across the path
+    const b = prop({ k: 'xrock', x: 172, y: GROUND, s: 1.7, rot: 0 }); await walkTo(172 - 44 - RS.P.scale * 4, 50, 'walk'); s.pose = 'effort'; await rwait(700);
+    if (ok) { for (let i = 0; i < 26; i++) { b.x += 1.2; s.x += 1.2; b.rot += 0.05; if (i % 5 === 0) spark(s.x - 8, GROUND - 1, 'dust'); if (i % 8 === 0) rsfx('rumble'); await rwait(34); }
+      for (let i = 0; i < 24; i++) { b.x += 3; b.rot += 0.12; await rwait(20); } spark(b.x - 20, GROUND - 2, 'dust', 6); s.pose = 'happy'; await rwait(500); }
+    else { for (let i = 0; i < 3; i++) { s.bx = 1; await rwait(160); s.bx = 0; await rwait(160); } spark(s.x, headY(), 'sweat', 3); s.pose = 'tired'; await rwait(700); await exBack(70); }
     unprop(b); return; }
-  if (stat === 5) { prop({ k: 'chasm', x: 126, y: GROUND, w: 54 }); await walkTo(118, 60, 'walk'); s.pose = 'crouch'; await rwait(300); s.pose = 'jump'; rsfx('leap');
-    const x0 = s.x, x1 = ok ? 186 : 140; for (let f = 0; f <= 28; f++) { const q = f / 28; s.x = x0 + (x1 - x0) * q; s.jy = Math.sin(q * Math.PI) * (ok ? 30 : 14); await rwait(20); }
-    s.jy = 0; if (ok) { s.pose = 'land'; spark(s.x, GROUND - 1, 'dust', 5); rsfx('thud'); await rwait(500); }
-    else { s.pose = 'hurt'; for (let f = 0; f < 14; f++) { s.x -= 2; s.jy = Math.sin(f / 14 * Math.PI) * 10; await rwait(20); } s.jy = 0; spark(s.x, headY(), 'sweat', 2); await rwait(600); }
-    return; }
-  if (stat === 3) { const d = prop({ k: 'sealdoor', x: 168, y: GROUND, lit: 0, drop: 0 }); await walkTo(132, 60, 'walk'); s.pose = 'idle'; spark(s.x, headY() - 6, 'q');
-    for (let i = 1; i <= 3; i++) { await rwait(420); if (!ok && i === 3) { d.lit = 0; s.flash = 2; spark(165, GROUND - 40, 'zap', 3); break; } d.lit = i; rsfx('chip'); }
-    if (ok) { spark(s.x, headY() - 10, 'bulb'); await rwait(400); for (let f = 0; f < 16; f++) { d.drop += 4; await rwait(20); } spark(165, GROUND - 4, 'dust', 6); rsfx('rumble'); await walkTo(190, 60, 'walk'); }
-    else { s.pose = 'sad'; await rwait(800); }
-    unprop(d); return; }
-  if (stat === 4) { const b1 = prop({ k: 'xbush', x: 150, y: GROUND }), b2 = prop({ k: 'xbush', x: 178, y: GROUND }); s.pose = 'idle'; spark(s.x, headY() - 6, 'q'); await rwait(700);
-    if (ok) { spark(s.x, headY() - 10, 'bulb'); const gp = prop({ k: 'glowpath', x: 128, y: GROUND - 4, n: 5 }); await rwait(500); b1.shake = b2.shake = 1; await walkTo(196, 50, 'walk'); unprop(gp); }
-    else { spark(s.x, headY() - 6, 'q'); await rwait(700); s.pose = 'sad'; await rwait(700); }
-    unprop(b1); unprop(b2); return; }
-  // Constitution: thorns
-  const th = prop({ k: 'thorns', x: 150, y: GROUND }); await walkTo(130, 50, 'walk'); s.pose = 'effort';
-  if (ok) { for (let i = 0; i < 24; i++) { s.x += 1.5; if (i % 6 === 0) spark(s.x + 6, headY(), 'sweat'); await rwait(40); } unprop(th); spark(s.x, GROUND - 2, 'dust', 4); s.pose = 'happy'; await rwait(400); }
-  else { await rwait(500); s.pose = 'hurt'; s.flash = 2; spark(s.x, headY() - 4, 'star', 2); await rwait(600); s.dir = -1; await walkTo(80, 60, 'walk'); unprop(th); }
+  if (stat === 5) {   // Speed: a dart totem firing across pressure plates
+    const tr = prop({ k: 'darttrap', x: 206, y: GROUND, live: true, s: 1.5 }); await walkTo(112, 60, 'walk'); s.pose = 'idle'; await rwait(900); tr.live = false;
+    const H = 69, fire = hy => { const d = prop({ k: 'dart', x: 194, y: GROUND - H * (1 - hy), s: 1.4 }); (async () => { for (let f = 0; f < 30; f++) { d.x -= 5; await rwait(16); } unprop(d); })(); rsfx('whiz'); return d; };
+    s.pose = 'run'; rsfx('leap');
+    if (ok) { const plan = [[134, 0.78, 'jump'], [160, 0.42, 'duck'], [186, 0.78, 'jump']];
+      for (const [px, hy, move] of plan) { fire(hy); await walkTo(px, 160, 'run'); if (move === 'jump') { s.pose = 'jump'; for (let f = 0; f <= 12; f++) { s.jy = Math.sin(f / 12 * Math.PI) * 18; s.x += 1.2; await rwait(18); } s.jy = 0; } else { s.pose = 'duck'; await rwait(240); } }
+      await walkTo(226, 160, 'run'); s.pose = 'happy'; spark(s.x, GROUND - 1, 'dust', 4); await rwait(500); }
+    else { fire(0.42); await walkTo(150, 140, 'run'); s.pose = 'hurt'; s.flash = 2; spark(s.x, headY() - 4, 'star', 3); rsfx('hit'); await rwait(400); for (let f = 0; f < 14; f++) { s.x -= 3; s.jy = Math.sin(f / 14 * Math.PI) * 8; await rwait(18); } s.jy = 0; s.pose = 'tired'; await rwait(500); await exBack(84); }
+    unprop(tr); return; }
+  if (stat === 3) {   // Mind: a rune door with books left lying in front of it
+    const d = prop({ k: 'sealdoor', x: 184, y: GROUND, lit: 0, drop: 0 }), lt = prop({ k: 'litter', x: 154, y: GROUND, s: 1.3 }); await walkTo(126, 60, 'walk'); s.pose = 'idle'; spark(s.x, headY() - 6, 'q');
+    for (let i = 1; i <= 3; i++) { await rwait(480); if (!ok && i === 3) { d.lit = 0; s.flash = 2; spark(184, GROUND - 40, 'zap', 3); rsfx('zap'); break; } d.lit = i; rsfx('chip'); }
+    if (ok) { spark(s.x, headY() - 10, 'bulb'); await rwait(400); for (let f = 0; f < 18; f++) { d.drop += 3.4; await rwait(20); } spark(184, GROUND - 4, 'dust', 6); rsfx('rumble'); await walkTo(212, 60, 'walk'); }
+    else { s.pose = 'sad'; await rwait(800); await exBack(96); }
+    unprop(d); unprop(lt); return; }
+  if (stat === 4) {   // Insight: three archways in a hedge, and two of them aren't there
+    const real = seed % 3, m = prop({ k: 'mirage', x: 170, y: GROUND, real, reveal: 0, s: 1.2 }), ax = i => 170 - 55 + 110 * (0.2 + i * 0.3);
+    await walkTo(98, 60, 'walk'); s.pose = 'idle'; spark(s.x, headY() - 6, 'q'); await rwait(900);
+    if (ok) { spark(s.x, headY() - 10, 'bulb'); rsfx('chip'); for (let f = 0; f <= 20; f++) { m.reveal = f / 20; await rwait(30); } await walkTo(ax(real), 60, 'walk'); await walkTo(224, 60, 'walk'); s.pose = 'happy'; await rwait(400); }
+    else { const wrong = (real + 1) % 3; await walkTo(ax(wrong), 70, 'walk'); s.pose = 'hurt'; s.flash = 2; spark(s.x, headY() - 4, 'star', 2); rsfx('thud'); await rwait(500); s.pose = 'sad'; await rwait(400); await exBack(90); }
+    unprop(m); return; }
+  // Constitution: a bramble wall
+  const th = prop({ k: 'thorns', x: 168, y: GROUND, s: 1.35 }); await walkTo(140, 50, 'walk'); s.pose = 'effort';
+  if (ok) { for (let i = 0; i < 30; i++) { s.x += 1.6; if (i % 6 === 0) { spark(s.x + 6, headY(), 'sweat'); rsfx('snap'); } await rwait(40); } unprop(th); spark(s.x, GROUND - 2, 'dust', 4); s.pose = 'happy'; await rwait(400); }
+  else { await rwait(500); s.pose = 'hurt'; s.flash = 2; spark(s.x, headY() - 4, 'star', 2); await rwait(600); await exBack(84); unprop(th); }
 }
