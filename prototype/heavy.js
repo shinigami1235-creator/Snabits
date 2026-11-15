@@ -62,14 +62,14 @@ const HEAVY_FN=[
     s.pose="tired"; spark(s.x,headY(),"sweat",4); await rwait(900);
   },
   async r=>{ // Quarry
-    const s=RS; s.bg="quarry"; s.x=90; const rock=prop({k:"rock",x:150,y:GROUND,r:16});
+    const s=RS; s.bg="quarry"; s.x=90; const rock=placed("rock",{k:"rock",x:150,y:GROUND,r:16});
     for(let k=0;k<3;k++){ await walkTo(118-RS.P.scale*3,90,"run"); s.flash=4; s.shake=6; spark(150-14,GROUND-14,"dust",4); s.x-=8; await rwait(260);
       if(r==="fail"&&k===2){ s.pose="dizzy"; spark(s.x,headY()-4,"star",5); await rwait(1400); return; } await walkTo(90,60,"walk"); }
     if(r==="great"){ rock.half=true; const h2=prop({k:"rock",x:150,y:GROUND,r:16,half:true}); rock.vx=-1.2; h2.vx=1.4; s.shake=12; spark(150,GROUND-16,"dust",12); s.pose="happy"; await hop(16,420); await rwait(600); return; }
     s.pose="tired"; await rwait(800);
   },
   async r=>{ // Fortress
-    const s=RS; s.bg="gate"; s.x=150; s.pose="guard"; const log=prop({k:"log",x:0,y:0,t:-1.2});
+    const s=RS; s.bg="gate"; s.x=150; s.pose="guard"; const log=placed("log",{k:"log",x:0,y:0,t:-1.2});
     for(let k=0;k<3;k++){ for(let j=0;j<24;j++){ log.t+=0.1; await rwait(25);} s.flash=4; s.shake=6; spark(s.x-16,headY()+8,"dust",4);
       if(r==="fail"&&k===1){ s.upside=true; s.pose="walk"; await rwait(1200); s.upside=false; s.pose="dizzy"; await rwait(500); return; }
       if(r==="great"&&k===2){ log.broken=true; spark(s.x-20,headY()+8,"sparkle",8); s.pose="happy"; await rwait(900); return; }
@@ -77,7 +77,7 @@ const HEAVY_FN=[
     s.pose="idle"; await rwait(500);
   },
   async r=>{ // Library
-    const s=RS; s.bg="library"; s.x=110; s.pose="sit"; const bk=prop({k:"books",x:150,y:GROUND,n:1});
+    const s=RS; s.bg="library"; s.x=110; s.pose="sit"; const bk=placed("books",{k:"books",x:150,y:GROUND,n:1});
     for(let k=0;k<(r==="great"?8:5);k++){ spark(s.x+rnd(-6,6),headY()-4,k%3?"sparkle":"q"); bk.n++; await rwait(320); }
     if(r==="fail"){ bk.fall=true; bk.x=s.x+4; s.pose="hurt"; await rwait(900); s.pose="dizzy"; await rwait(700); return; }
     if(r==="great") spark(s.x,headY()-10,"bulb");
@@ -91,7 +91,7 @@ const HEAVY_FN=[
     s.pose="idle"; await rwait(500);
   },
   async r=>{ // Obstacle course
-    const s=RS; s.bg="course"; s.x=20; prop({k:"rope"}); const hs=[70,120,210].map(x=>prop({k:"hurdle",x,y:GROUND}));
+    const s=RS; s.bg="course"; s.x=20; placed("rope",{k:"rope"}); const hs=[70,120,210].map(x=>placed("hurdle",{k:"hurdle",x,y:GROUND}));
     for(let k=0;k<hs.length;k++){ await walkTo(hs[k].x-RS.P.scale*7,90,"run");
       if(r==="fail"&&k===1){ s.x=hs[k].x; s.jy=10; s.pose="hurt"; await rwait(1300); s.jy=0; s.pose="dizzy"; await rwait(500); return; }
       s.pose="walk"; await hop(24,380); s.x=hs[k].x+RS.P.scale*4; }

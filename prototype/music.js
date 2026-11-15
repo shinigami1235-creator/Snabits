@@ -156,6 +156,18 @@ const TRACKS={
       "G5 - B5 - D6 - - - B5 - G5 - D5 - B4 -",
       "E5 - G5 - B5 - - - A5 - - - C#6 - E6 -",
       "D6 - - - - - - - . . F#5 - E5 - C#5 -"]}}},
+  lull:{name:"Hay Bed",bpm:80,lead:"box",lv:0.12,comp:"pad",bassK:"pick",calm:true,xfade:1.2,
+    dr:{k:"................",s:"................",h:"................"},
+    bs:"R...............",cp:"L---------------",ar:"0...2...1...2...",form:["A"],
+    sec:{A:{ch:["F","C","Dm","Bb","F","Gm7|C","F","F"],mel:[
+      "A5 - - - C6 - - - A5 - - - F5 - - -",
+      "G5 - - - - - - - E5 - - - C5 - - -",
+      "D5 - - - F5 - - - A5 - - - G5 - F5 -",
+      "D5 - - - - - - - . . . . . . . .",
+      "C5 - - - F5 - - - A5 - - - C6 - - -",
+      "Bb5 - - - A5 - - - G5 - - - E5 - - -",
+      "F5 - - - - - - - . . . . . . . .",
+      ". . . . . . . . . . . . . . . ."]}}},
   cup:{name:"Ring of Eight",bpm:136,lead:"crystal",lv:0.18,comp:"pad",bassK:"pick",
     dr:{k:"x...x...x...x...",s:"....x.......x...",h:"x.o.x.o.x.o.x.o."},
     bs:"R.R.O.R.R.R.O.5.",cp:"L---------------",ar:"0123212301232123",form:["A","B","A","B"],
@@ -281,6 +293,7 @@ function musStep(tr,t,sp,hot){
   const ev=S.ev[b][s];
   if(ev){const dur=sp*ev.l*.92,v=D.lv;
     if(D.lead==="sqep"){iLead(dst,t,ev.m,dur,v*.75,"square",3000,[0]);iEP(dst,t,ev.m,dur,v*.6);}
+    else if(D.lead==="box"){iBell(dst,t,ev.m,dur,v);iEP(dst,t,ev.m-12,dur,v*.3);}   // music box: a bell with a soft piano an octave under
     else if(D.lead==="bell"){iEP(dst,t,ev.m,dur,v);iBell(dst,t,ev.m+12,dur,v*.25);}
     else if(D.lead==="whistle"){iWhistle(dst,t,ev.m,dur,v);iBell(dst,t,ev.m-12,Math.min(dur,sp*2),v*.3);}
     else if(D.lead==="crystal"){iLead(dst,t,ev.m,dur,v*.8,"triangle",5000,[0]);iBell(dst,t,ev.m,dur,v*.45);}
@@ -312,6 +325,7 @@ function musWant(){
   if(shown("venue")) return "cup";
   if(shown("ob")) return "town";
   if(typeof RS!=="undefined"&&RS&&shown("ranch")){
+    if(RS.lull) return "lull";   // asleep: the lullaby, until the morning fade
     if(RS.drillMus) return RS.drillDone?null:"drill";   // a drill: its own short tune, then quiet after the result's sting until the next morning
     if(RS.trip) return RS.night?"night":"travel";
     if(RS.inTown||RS.visit) return "town";

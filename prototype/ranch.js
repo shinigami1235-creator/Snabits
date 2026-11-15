@@ -443,7 +443,7 @@ async function studyPuzzle(r){
   const s=RS, made=[], add=o=>{ made.push(prop(o)); return o; }, W=ms=>rwait(ms);
   try{
     s.x=96; s.dir=1; s.jy=0; s.pose="sit";
-    const box=add({k:"pbox",x:s.x+28+(s.stage==="Bit"?0:14)+(s.stage==="Mega"?12:0),y:GROUND,tiles:[0,1,2,3,0,1,2,3,0],lid:0,gr:0,sh:0});
+    const box=placed("pbox",{k:"pbox",x:s.x+28+(s.stage==="Bit"?0:14)+(s.stage==="Mega"?12:0),y:GROUND,tiles:[0,1,2,3,0,1,2,3,0],lid:0,gr:0,sh:0}); made.push(box);
     const bub=add({k:"bubble",x:s.x-16,y:headY()-14,lit:[0,0,0],a:0});
     for(let f=0;f<=10;f++){ bub.a=f/10; await W(30); }
     const slide=async(good,fast)=>{ s.pose="lean"; const i=Math.floor(Math.random()*9);
@@ -503,7 +503,18 @@ const PLACE_NAME={pool:"the pool",trail:"the rocky trail",cage:"the batting cage
   road:"the long road",quarry:"the quarry",gate:"the old fortress",library:"the library",shrine:"the waterfall shrine",course:"the obstacle course"};
 const PLACE_START={pool:60,trail:60,cage:140,study:110,pond:196,court:100,road:110,quarry:90,gate:150,library:110,shrine:130,course:20};
 async function sceneFade(dark,ms=700){ const d=el("r-dusk"); if(!d) return; d.style.transition=`background-color ${Math.round(ms/rk())}ms ease`; d.style.backgroundColor=dark?"rgba(3,4,9,1)":"rgba(3,4,9,0)"; await rwait(ms); }
-async function goPlace(place){ const s=RS; await sceneFade(true); s.propsHome=s.props; s.props=[]; s.bg=place; s.training=true; s.x=PLACE_START[place]||110; s.jy=0; s.pose="idle"; s.camJump=true; await rwait(300); await sceneFade(false); }
+/* what a drill's place already has set out when the scene fades in, so the boulder, rock, books or hurdles are waiting there
+   and never pop in after the fade. The scene picks them up with placed(). */
+const DRILL_PROPS={
+  trail:s=>[{k:"boulder",x:80+16+s.P.scale*4,y:GROUND,r:11,rot:0}],
+  study:s=>[{k:"pbox",x:124+(s.stage==="Bit"?0:14)+(s.stage==="Mega"?12:0),y:GROUND,tiles:[0,1,2,3,0,1,2,3,0],lid:0,gr:0,sh:0}],
+  quarry:()=>[{k:"rock",x:150,y:GROUND,r:16}],
+  gate:()=>[{k:"log",x:0,y:0,t:-1.2}],
+  library:()=>[{k:"books",x:150,y:GROUND,n:1}],
+  course:()=>[{k:"rope"},...[70,120,210].map(x=>({k:"hurdle",x,y:GROUND}))],
+};
+const placed=(k,o)=>RS.props.find(p=>p.k===k&&!p.taken&&(p.taken=true))||prop(o);
+async function goPlace(place,pre,x0){ const s=RS; await sceneFade(true); s.propsHome=s.props; s.props=pre||[]; s.bg=place; s.training=true; s.x=x0||PLACE_START[place]||110; s.jy=0; s.pose="idle"; s.camJump=true; await rwait(300); await sceneFade(false); }
 function backHome(){ const s=RS; s.bg=null; s.training=false; s.waterY=null; s.lotus=false; s.koiPull=0; s.jy=0; s.x=150; s.upside=false; s.parted=false; s.props=s.propsHome||s.props.filter(p=>p.k==="bowl"); s.propsHome=null; s.camJump=true; }
 /* Meals follow the phone's calendar: one a day, and every day it goes without one makes it hungrier. */
 const dayKey=(d=new Date())=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
@@ -520,13 +531,14 @@ async function dayFade(kind,atBlack){
   // one fade to black, then the next morning comes up in one go (Gid: after training it's a fade to black, then the next day)
   await to("rgba(3,4,9,1)",kind==="sleep"?2200:1100,600);
   if(atBlack) await atBlack();
+  s.lull=false;   // the lullaby fades out as the morning comes up
   s.dayHour=6; await to("rgba(3,4,9,0)",1400); s.dayHour=null;
 }
 /* the end of a long day away (a mission, a cup, a trip, a contest): it walks into the barn, curls up in bed, and the next day starts */
 async function toBed(mood){
   const s=RS; if(!smoothRanch()){ await dayFade("sleep"); s.pose=mood||"happy"; return; }
   if(!s.room){ await walkTo(HUTX(),110); s.room="barn"; s.x=24; s.camJump=true; }
-  await walkTo(202,60); s.pose="sleep"; for(let k=0;k<3;k++){ spark(s.x+8,headY(),"z"); await rwait(500); }
+  await walkTo(202,60); s.pose="sleep"; s.lull=true; for(let k=0;k<4;k++){ spark(s.x+8,headY(),"z"); await rwait(550); }
   await dayFade("sleep",()=>{ s.room=null; s.x=150; s.camJump=true; s.pose=mood||"happy"; });   // it wakes up in the yard
 }
 const headY=()=>{ const h=RS.cam&&typeof chibiHeadY==="function"?chibiHeadY(RS):null; return h!=null?h:GROUND-(RS.P.base-RS.P.topY+1)*RS.P.scale-RS.jy; };
@@ -551,7 +563,7 @@ async function runDrill(i){
     s.lastTrained=main; s.weekAct=STATS[main];
     const place=heavy?HEAVY_PLACE[i-6]:smoothRanch()?DRILL_PLACE[i]:null;
     say(place?`${name} at ${PLACE_NAME[place]}. Let's see how it does.`:`${name}. Let's see how it does.`);
-    if(place) await goPlace(place);
+    if(place) await goPlace(place,DRILL_PROPS[place]?DRILL_PROPS[place](s):[],place==="study"?96:0);   // the puzzle box scene sits it at 96
     if(res==="slack") await SLACK(i); else await (heavy?HEAVY_FN[i-6]:SCENE_FN[i])(res);
     if(place){ s.props=[]; s.upside=false; s.parted=false; if(s.waterY==null) s.jy=0; } else { s.bg=null; s.x=150; s.props=s.props.filter(p=>p.k==="bowl"); s.upside=false; s.parted=false; s.jy=0; }
     const age=ageMult(s), vet=age<0.5, base=FAMILY[s.m.family].base;
@@ -641,8 +653,8 @@ const SCENE_FN=[
     else { s.pose="tired"; spark(s.x,headY(),"sweat",3); await rwait(900); }
   },
   async r=>{ // Boulder push
-    const s=RS; await walkTo(80,50);
-    const b=prop({k:"boulder",x:80+16+RS.P.scale*4,y:GROUND,r:11,rot:0}); s.pose="effort"; await rwait(700);
+    const s=RS, b=placed("boulder",{k:"boulder",x:80+16+RS.P.scale*4,y:GROUND,r:11,rot:0});
+    await walkTo(80,50); s.pose="effort"; await rwait(700);
     if(r==="fail"){ for(let k=0;k<25;k++){ s.x-=0.5; if(k%5===0) spark(s.x,GROUND-1,"dust"); await rwait(40);} s.pose="tired"; spark(s.x,headY(),"sweat",3); await rwait(1000); unprop(b); return; }
     while(b.x<185){ b.x+=1; s.x+=1; b.rot+=0.09; if(b.x%6===0) spark(s.x-8,GROUND-1,"dust"); await rwait(r==="great"?22:40); }
     if(r==="great"){ b.vx=3.2; s.pose="happy"; await until(()=>b.x>RW+20); unprop(b); s.shake=14; spark(RW-6,GROUND-6,"dust",10); await hop(14,420); await rwait(600); }
@@ -694,8 +706,8 @@ const SCENE_FN=[
 /* ---------- other week actions ---------- */
 async function runRest(){
   await scene(async()=>{ const s=RS; say(smoothRanch()?"A quiet week in the barn.":"A quiet week in the hut.");
-    if(smoothRanch()){ if(!s.room){ await walkTo(HUTX(),110); s.room="barn"; s.x=24; s.camJump=true; } await walkTo(202,60); s.pose="sleep"; for(let k=0;k<3;k++){ spark(s.x+8,headY(),"z"); await rwait(500);} await dayFade("sleep"); s.pose="happy"; await rwait(500); }
-    else { await walkTo(HUTX(),40); s.hidden=true; for(let k=0;k<3;k++){ spark(HUTX()+4,GROUND-34,"z"); await rwait(450);} await dayFade("sleep"); s.hidden=false; s.pose="happy"; await rwait(500); }
+    if(smoothRanch()){ if(!s.room){ await walkTo(HUTX(),110); s.room="barn"; s.x=24; s.camJump=true; } await walkTo(202,60); s.pose="sleep"; s.lull=true; for(let k=0;k<4;k++){ spark(s.x+8,headY(),"z"); await rwait(550);} await dayFade("sleep"); s.lull=false; s.pose="happy"; await rwait(500); }
+    else { await walkTo(HUTX(),40); s.hidden=true; s.lull=true; for(let k=0;k<4;k++){ spark(HUTX()+4,GROUND-34,"z"); await rwait(550);} await dayFade("sleep"); s.lull=false; s.hidden=false; s.pose="happy"; await rwait(500); }
     // a full week of rest clears a normal month of training, or a whole skill trip, and cures a cold or a hurt
     s.fatigue-=has("Better hut")?65:55; s.stress-=25; s.weight+=1; const wasHurt=s.injured||s.sick; s.injured=false; s.sick=0; await endWeek(1,wasHurt?"The rest made it well again.":"It looks rested.");
   },true);

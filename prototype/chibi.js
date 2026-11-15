@@ -951,10 +951,18 @@ const CHIBI = (() => {
           c.fillStyle = rgb(x.body); c.beginPath(); c.ellipse(sd * er * 0.5, 0, er * 0.68, er, 0, 0, 7); c.fill();
           c.fillStyle = rgb(lt(x.acc, 0.2)); c.beginPath(); c.ellipse(sd * er * 0.5, 2, er * 0.42, er * 0.68, 0, 0, 7); c.fill(); c.restore(); }
         PLODLEG(c, g, x, g.cx - g.bw * 0.3, x.L.legL, 1, true); PLODLEG(c, g, x, g.cx + g.bw * 0.3, x.L.legR, 3, true); },
-      front(c, g, x) { PLODLEG(c, g, x, g.cx - g.bw * 0.16, x.L.legL, 0, false); PLODLEG(c, g, x, g.cx + g.bw * 0.16, x.L.legR, 2, false);
+      front(c, g, x) { PLODLEG(c, g, x, g.cx - g.bw * 0.25, x.L.legL, 0, false); PLODLEG(c, g, x, g.cx + g.bw * 0.25, x.L.legR, 2, false);   // front legs set out wide, under the shoulders
         const sw = Math.sin(x.t / 420) * 6, tw = by(g.stage, 9, 11, 13), y0 = g.top + g.bh * 0.5, y1 = g.bot + by(g.stage, 2, 6, 8);
         if (g.stage === 'Mega') for (const sd of [-1, 1]) { c.strokeStyle = '#f6efe0'; c.lineWidth = 5; c.lineCap = 'round'; c.beginPath(); c.moveTo(g.cx + sd * 12, y0 + 18); c.quadraticCurveTo(g.cx + sd * 22, y0 + 34, g.cx + sd * 14, y0 + 40); c.stroke(); }
-        limb(c, [g.cx, y0, g.cx + sw * 0.4, (y0 + y1) / 2, g.cx + sw, y1], tw, x.body, x.L.tail, x.t);
+        // the trunk: a dark edge and a shade darker than the body so it reads against the face, a lighter ridge down the front and three wrinkles
+        const tq = [g.cx, y0, g.cx + sw * 0.4, (y0 + y1) / 2, g.cx + sw, y1], plain = !x.L.tail || x.L.tail === 'flesh';
+        if (plain) { c.lineCap = 'round'; c.strokeStyle = rgb(dk(x.body, 0.5)); c.lineWidth = tw + 3.5; c.beginPath(); c.moveTo(tq[0], tq[1]); c.quadraticCurveTo(tq[2], tq[3], tq[4], tq[5]); c.stroke(); }
+        limb(c, tq, tw, plain ? dk(x.body, 0.14) : x.body, x.L.tail, x.t);
+        if (plain) { const gr = c.createLinearGradient(0, y0 - tw, 0, y0 + tw * 1.4); gr.addColorStop(0, rgba(x.body, 1)); gr.addColorStop(0.55, rgba(x.body, 1)); gr.addColorStop(1, rgba(x.body, 0));   // the root of the trunk grows out of the face
+          c.fillStyle = gr; c.beginPath(); c.ellipse(g.cx + sw * 0.05, y0 + tw * 0.2, tw * 0.95, tw * 1.25, 0, 0, 7); c.fill(); }
+        if (plain) { c.strokeStyle = rgba(lt(x.body, 0.35), 0.55); c.lineWidth = tw * 0.22; c.beginPath(); c.moveTo(tq[0] - tw * 0.15, tq[1] + 4); c.quadraticCurveTo(tq[2] - tw * 0.15, tq[3], tq[4] - tw * 0.15, tq[5] - 4); c.stroke();
+          c.strokeStyle = rgb(dk(x.body, 0.45)); c.lineWidth = 1.4; for (const k of [0.45, 0.62, 0.78]) { const mt = 1 - k, px = mt * mt * tq[0] + 2 * mt * k * tq[2] + k * k * tq[4], py = mt * mt * tq[1] + 2 * mt * k * tq[3] + k * k * tq[5];
+            c.beginPath(); c.moveTo(px - tw * 0.38, py - 1); c.quadraticCurveTo(px, py + 1.6, px + tw * 0.38, py - 1); c.stroke(); } }
         c.fillStyle = rgb(dk(x.body, 0.4)); for (const sd of [-1, 1]) { c.beginPath(); c.arc(g.cx + sw + sd * tw * 0.2, y1 + 1, 1.6, 0, 7); c.fill(); } },
       hl: g => [g.left + g.bw * 0.16, g.top + g.bh * 0.5, g.left + g.bw * 0.16, g.top + g.bh * 0.12, g.left + g.bw * 0.42, g.top + g.bh * 0.04],
       face: (c, g, x, look) => faceTwo(c, g, x, look, { ey: 0.38, ex: 0.2, my: 0.62, s: by(g.stage, 0.8, 0.9, 0.98) })
