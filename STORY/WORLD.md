@@ -111,7 +111,7 @@ Deep expeditions for a team of three trained Snabits, drawn in `docs/art/team-ex
 - **Days and camps:** a deep expedition takes two weeks, split into days. Camp circles end the day, give everyone energy back and bring back anyone who's out. A wild Snabit can wander next to camp overnight.
 - **Fights:** a tag team (Gid). The leader fights first, and if it loses, the next one steps in against the same Snabit with whatever HP it has left. A Snabit that loses is out until the next camp and nothing worse (Gid). If all three are out, the team goes home with everything it found.
 - **Finds:** rarer items, bigger League bounties, the region's teacher as a guardian at the far end, and Pattern Stones.
-- **Stones:** the Kitsune and Vampire stones move to the deep maps of Dream Garden and Hollow Moor, so the first stones turn up at grade C as Gid asked. The Phoenix, Eagle, Yeti and Naga stones stay on the regular maps. Each of the seven planned specials goes on a deep map once it's drawn.
+- **Stones:** the Kitsune and Vampire stones move to the deep maps of Dream Garden and Hollow Moor, so team expeditions have stones to find from grade C, as Gid asked. The Phoenix, Eagle, Yeti and Naga stones stay on the regular maps. Each of the seven planned specials goes on a deep map once it's drawn.
 - **The cost:** fatigue and stress on all three, so the player plans for it like a Major.
 
 ## Name sets
