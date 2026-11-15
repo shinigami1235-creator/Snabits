@@ -664,6 +664,21 @@ function stoneGlyph(c, sp) {
   else if (sp === 'Jack') { c.fillStyle = a(238, 130, 40, 0.97); c.fillRect(-10, -13, 20, 26); c.fillStyle = a(80, 140, 60, 0.95); c.fillRect(-1.2, -13, 2.4, 3.5);   // an orange round with three cuts and a stem
     c.fillStyle = a(16, 12, 10, 0.98); for (const d of [-1, 1]) { c.beginPath(); c.moveTo(d * 5, -6); c.lineTo(d * 2, -1); c.lineTo(d * 8, -1); c.closePath(); c.fill(); }
     c.beginPath(); c.moveTo(-6, 4); c.lineTo(6, 4); c.lineTo(0, 9); c.closePath(); c.fill(); }
+  else if (sp === 'Tengu') { c.fillStyle = a(200, 56, 48, 0.97); c.fillRect(-10, -13, 20, 26);   // a cream wedge pointing out across red, and a green fan of three blades below
+    c.fillStyle = a(240, 232, 214, 0.97); c.beginPath(); c.moveTo(-8, -6); c.lineTo(9, -2); c.lineTo(-8, 2); c.closePath(); c.fill();
+    c.fillStyle = a(70, 150, 70, 0.97); for (const r of [-0.5, 0, 0.5]) { c.save(); c.translate(-5, 11); c.rotate(r); c.beginPath(); c.ellipse(0, -4.5, 1.8, 4.5, 0, 0, 7); c.fill(); c.restore(); } }
+  else if (sp === 'Tanuki') { c.fillStyle = a(132, 88, 48, 0.97); c.fillRect(-10, -13, 20, 26); c.fillStyle = a(30, 24, 22, 0.97); c.fillRect(-10, -3, 20, 7);   // a dark band with two brown rings across brown, and a green leaf above
+    c.fillStyle = a(132, 88, 48, 0.97); for (const d of [-1, 1]) { c.beginPath(); c.arc(d * 4.5, 0.5, 2, 0, 7); c.fill(); }
+    c.fillStyle = a(70, 150, 70, 0.97); c.beginPath(); c.ellipse(1, -8.5, 2.2, 3.6, 0.5, 0, 7); c.fill(); }
+  else if (sp === 'Mermaid') { c.fillStyle = a(80, 196, 196, 0.97); c.fillRect(-10, -13, 20, 26); c.save(); c.beginPath(); c.rect(-10, -13, 20, 26); c.clip(); c.strokeStyle = a(200, 240, 236, 0.9); c.lineWidth = 1;   // rows of pale scales on teal under a pink fan
+    for (let r = 0; r < 4; r++) for (let k = -2; k <= 2; k++) { c.beginPath(); c.arc(k * 4 + (r % 2) * 2, 0 + r * 3.4, 2, 0.1, Math.PI - 0.1); c.stroke(); } c.restore();
+    c.fillStyle = a(236, 120, 170, 0.97); c.beginPath(); c.moveTo(0, -3); c.quadraticCurveTo(-3, -8, -8, -11); c.quadraticCurveTo(-2, -10, 0, -7); c.quadraticCurveTo(2, -10, 8, -11); c.quadraticCurveTo(3, -8, 0, -3); c.fill(); }
+  else if (sp === 'Diwata') { c.fillStyle = a(236, 120, 176, 0.97); c.fillRect(-10, -13, 20, 26);   // two pairs of green wings either side of a yellow centre, on pink
+    c.fillStyle = a(70, 150, 70, 0.97); for (const d of [-1, 1]) { c.beginPath(); c.ellipse(d * 5, -4, 4, 6, d * 0.6, 0, 7); c.fill(); c.beginPath(); c.ellipse(d * 4, 5, 3, 4, -d * 0.5, 0, 7); c.fill(); }
+    c.fillStyle = a(240, 206, 60, 0.97); c.beginPath(); c.arc(0, 0, 1.8, 0, 7); c.fill(); }
+  else if (sp === 'Sphinx') { c.fillStyle = a(236, 196, 60, 0.97); c.fillRect(-10, -13, 20, 26); c.save(); c.beginPath(); c.moveTo(-10, 4); c.lineTo(-8, -11); c.lineTo(8, -11); c.lineTo(10, 4); c.lineTo(5, 4); c.lineTo(4, -5); c.lineTo(-4, -5); c.lineTo(-5, 4); c.closePath(); c.clip();   // blue stripes in the shape of a head cloth on gold, with a red dot under it
+    c.fillStyle = a(44, 98, 200, 0.97); for (let y = -11; y < 4; y += 3) c.fillRect(-10, y, 20, 1.5); c.restore();
+    c.fillStyle = a(200, 56, 48, 0.97); c.beginPath(); c.arc(0, 8, 1.8, 0, 7); c.fill(); }
 }
 function awayProps(c, p, t, front) {
   const x = p.x, y = p.y;
