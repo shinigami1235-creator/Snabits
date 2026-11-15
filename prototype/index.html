@@ -17,13 +17,9 @@
 <div id="bars"></div>
 <div id="card"></div>
 <div id="bottom">
-  <button class="small" id="flip" aria-label="Switch camera">Flip</button>
-  <button id="shutter" aria-label="Scan"></button>
-  <button class="big" id="scanbtn" style="display:none">Scan</button>
-  <label class="small" id="newbtn" for="take" style="display:none">New photo</label>
-  <label class="small" for="pick">Gallery</label>
-  <button class="small musbtn" onclick="musToggle()">♪ On</button>
-  <button class="small" id="ranchbtn" style="display:none" onclick="if(typeof WILD!=='undefined'&&WILD)endWild();openRanch()">Ranch</button>
+  <div class="cam-l"><button class="small" id="flip" aria-label="Switch camera">Flip</button><label class="small" for="pick">Gallery</label></div>
+  <div class="cam-c"><button id="shutter" aria-label="Scan"></button><button class="big" id="scanbtn" style="display:none">Scan</button><label class="small" id="newbtn" for="take" style="display:none">New photo</label></div>
+  <div class="cam-r"><button class="small" id="ranchbtn" style="display:none" onclick="if(typeof WILD!=='undefined'&&WILD)endWild();openRanch()">Ranch</button><button class="small musbtn" onclick="musToggle()">♪ On</button></div>
   <input type="file" id="pick" accept="image/*">
   <input type="file" id="take" accept="image/*" capture="environment" style="display:none">
 </div>

@@ -546,3 +546,10 @@ html:not(.dbg) #bottom label[for=pick]{display:none}
 #ranch.exploring #r-week,#ranch.exploring #r-stats,#ranch.exploring #r-nums,#ranch.exploring #r-learned{display:none}   /* the expedition map takes the stats' place under the speech box */
 #ranch.exploring>#r-panel{flex:0 0 auto;overflow:visible}
 #ex-map{border-radius:10px;touch-action:manipulation}
+
+/* the shutter sits in the middle of the bar, the way phone camera apps have it (Gid, 15 Nov 2026) */
+#bottom{display:grid;grid-template-columns:1fr auto 1fr;gap:12px}
+#bottom .cam-l,#bottom .cam-r,#bottom .cam-c{display:flex;align-items:center;gap:8px;min-width:0}
+#bottom .cam-r{justify-content:flex-end}
+#bottom .cam-c{justify-content:center}
+#bottom .cam-l .small{flex:0 1 auto;min-width:84px}
