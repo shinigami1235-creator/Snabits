@@ -41,7 +41,7 @@ function openDeepPick(reg) {
   DP.reg = reg; DP.pick = DP.pick.filter(id => rosterStates().some(s => s.id === id)).slice(0, 3);
   const all = rosterStates();
   panel(`<div class="full lab-head"><b>${reg.n}, deep</b><button class="small" id="dp-back">Back</button></div>
-    <div class="full lab-info">${all.length < 3 ? `A deep expedition needs three Snabits. You have ${all.length}.` : 'Pick three. The first one you pick leads. It takes two weeks.'}</div>` +
+    <div class="full lab-info">${all.length < 3 ? `A deep expedition needs three Snabits. You have ${all.length}.` : 'Pick three. The first one you pick leads.'}</div>` +
     all.map(s => { const k = DP.pick.indexOf(s.id); return `<button class="rb tm-pick ${k >= 0 ? 'on' : ''}" data-id="${s.id}"><span class="tm-n">${k >= 0 ? k + 1 : ''}</span><b>${displayName(s)}</b><small>Lv ${s.level} · ${s.stage} · ${s.m.el1}</small></button>`; }).join('') +
     `<button class="big full" id="dp-go" ${DP.pick.length === 3 ? '' : 'disabled'}>Set off</button>`);
   el('dp-back').onclick = openExpeditions;
@@ -87,7 +87,7 @@ async function deepFight(T, leadI, foe, title, K) {
   let foeHp = null;
   for (let j = 0; j < order.length; j++) {
     const m = T[order[j]];
-    if (j) { K(`${displayName(m.s)} steps in.`); await rwait(1100); }
+    if (j) { K(`${displayName(m.s)}, you're up!`); await rwait(1100); }
     await sceneFade(true, 400); let res = null;
     await new Promise(done => arenaFight({ s: fightSnapshot(m.s), foe, mode: 'auto', title, noDraw: true, foeHp, onEnd: r => { res = r; done(); } }));
     RS.trip = true; RS.camJump = true; await sceneFade(false, 400);
@@ -108,7 +108,7 @@ async function runDeep(reg, team) {
     await tripLeave(`Walt has a League permit for deep ${reg.n}. ${T.map(m => displayName(m.s)).join(', ')} go with him for two weeks.`);
     const s0 = RS; s0.bg = `area:${reg.el}:${areas[2].key}`; s0.trip = true; s0.night = 0; s0.dusk = 0; s0.props = []; s0.x = 90; s0.pose = 'idle'; s0.camJump = true; s0.tripLabel = `${reg.n}, deep`; drawUI();
     stop = deepFollow(T, () => T[lead]);
-    await sceneFade(false, 700); banner(`${reg.n}, deep`, '#fff'); K('Past here the League only sends teams. The leader goes first, and the others follow it.'); await rwait(1400); banner('');
+    await sceneFade(false, 700); banner(`${reg.n}, deep`, '#fff'); K('Only League teams come out this far. Stay close, you three.'); await rwait(1400); banner('');
     el('r-panel').innerHTML = `<canvas id="dp-team" class="full" style="width:100%;display:block"></canvas><canvas id="ex-map" class="full" style="width:100%;display:block"></canvas><button class="rb full" id="ex-home">Head home<small>Keeps everything found so far</small></button>`;
     el('ranch').classList.add('exploring');
     try {
@@ -116,11 +116,11 @@ async function runDeep(reg, team) {
         for (const k of M.near(at)) if (!st.seen.includes(k)) st.seen.push(k);
         const col = M.N[at].c; M.off = clamp(col - 3, 0, 4);
         const boxes = deepTeamDraw(el('dp-team'), T, lead), P = exDraw(el('ex-map'), M, st, at, null, 1, blocked, `${reg.n}, deep · Day ${day}`);
-        if (!T.some(m => !m.out && m.e > 0)) { K(T.every(m => m.out) ? 'All three are out, so the team heads home with what it found.' : "The team's worn out, so that's it for this expedition."); await rwait(1800); break; }
-        if (T[lead].out || T[lead].e <= 0) { const nx = T.findIndex(m => !m.out && m.e > 0); lead = nx; deepLead(T[lead].s); K(`${displayName(T[lead].s)} takes the lead.`); await rwait(900); continue; }
+        if (!T.some(m => !m.out && m.e > 0)) { K(T.every(m => m.out) ? "That's all three of you down. We're going home." : "You're all worn out. We're going home."); await rwait(1800); break; }
+        if (T[lead].out || T[lead].e <= 0) { const nx = T.findIndex(m => !m.out && m.e > 0); lead = nx; deepLead(T[lead].s); K(`${displayName(T[lead].s)}, you go in front.`); await rwait(900); continue; }
         const pick = await deepPick(el('dp-team'), boxes, el('ex-map'), M, P, at, blocked);
         if (!pick) break;
-        if (pick.sw != null) { const m = T[pick.sw]; if (pick.sw === lead || m.out || m.e < 1) continue; m.e -= 1; lead = pick.sw; deepLead(m.s); K(`${displayName(m.s)} takes the lead.`); await rwait(700); continue; }
+        if (pick.sw != null) { const m = T[pick.sw]; if (pick.sw === lead || m.out || m.e < 1) continue; m.e -= 1; lead = pick.sw; deepLead(m.s); K(`${displayName(m.s)}, you go in front.`); await rwait(700); continue; }
         const to = pick.to, n = M.N[to], back = at, L = T[lead]; L.e -= 1; at = to;
         exDraw(el('ex-map'), M, st, at, null, 1, blocked, `${reg.n}, deep · Day ${day}`); deepTeamDraw(el('dp-team'), T, lead);
         await sceneFade(true, 250); RS.props = []; RS.parts = []; RS.bg = `area:${reg.el}:${areas[Math.min(3, 1 + Math.floor(n.c / 4))].key}`; RS.x = 70; RS.camJump = true; RS.jy = 0; await sceneFade(false, 250);
@@ -160,10 +160,10 @@ async function deepNode(reg, n, st, g, need, T, leadOf, setLead, K, used, found,
     for (const m of T) { m.out = false; m.e = Math.min(m.max, Math.max(0, m.e) + 8); }
     await campNight(`${reg.n}, deep · night ${dayOf()}`, 'We camp here tonight. Everyone gets their energy back, and anyone who was out is back on their feet.');
     // overnight a wild Snabit can wander onto a path next to camp
-    if (Math.random() < 0.5) { const k = M.near(n.id).find(k => M.N[k].c > n.c && M.N[k].k === 'path'); if (k) { M.N[k].k = 'wild'; K('Something moved onto the path ahead in the night.'); await rwait(1200); } }
+    if (Math.random() < 0.5) { const k = M.near(n.id).find(k => M.N[k].c > n.c && M.N[k].k === 'path'); if (k) { M.N[k].k = 'wild'; K('Something was moving around out there last night. Keep your eyes open.'); await rwait(1200); } }
     return 'camp'; }
   if (n.k === 'spring') { if (used.includes(n.id)) { await rwait(200); return; } used.push(n.id); const sp = prop({ k: 'spring', x: 150, y: GROUND }); await walkTo(124, 60, 'walk'); s.pose = 'happy'; spark(150, GROUND - 10, 'drip', 8); rsfx('splash');
-    for (const m of T) if (!m.out) m.e = Math.min(m.max, m.e + 3); K('The team drinks from a spring, and each gets 3 energy back.'); await rwait(1300); unprop(sp); return; }
+    for (const m of T) if (!m.out) m.e = Math.min(m.max, m.e + 3); K("There's fresh water here. Drink up, all of you."); await rwait(1300); unprop(sp); return; }
   if (n.k === 'chest') { if (once) { K('The chest here is empty now.'); await rwait(900); return; }
     const c = prop({ k: 'chest', x: 150, y: GROUND }); await walkTo(126, 60, 'walk'); await rwait(300); c.open = true; rsfx('creak'); s.pose = 'happy'; spark(150, GROUND - 22, 'sparkle', 6);
     const R = rng(hashStr('deep' + reg.n + n.id)), item = R() < 0.5 ? EX_RARE[Math.floor(R() * EX_RARE.length)] : EX_FINDS[Math.floor(R() * EX_FINDS.length)], a = /^[AEIOU]/.test(item) ? 'an' : 'a';
@@ -172,20 +172,20 @@ async function deepNode(reg, n, st, g, need, T, leadOf, setLead, K, used, found,
     const G = GRADE_INFO[g], foe = gradedOpponent(g, Math.round(G.lv[0] + (G.lv[1] - G.lv[0]) * 0.5), Math.random, reg.el), prize = Math.round(G.purse * 0.5);
     const fp = prop({ k: 'foe', x: 186, y: GROUND, fm: foe.fm }); banner('A wild Snabit', '#ffd23f'); K(`A wild ${foe.m.name} is in the way.`); await rwait(1300); banner(''); unprop(fp);
     const won = await deepFight(T, leadOf(), foe, 'Wild', K); if (T[leadOf()].out && T.some(m => !m.out)) setLead(T.findIndex(m => !m.out));
-    if (won) { PLAYER.bits += prize; drawUI(); found.push(`${prize.toLocaleString()} bits`); RS.pose = 'happy'; K(`The team beat it, and a League bounty pays ${prize.toLocaleString()} bits.`); await rwait(1400); return; }
-    K(`The ${foe.m.name} beat all three.`); await rwait(1400); return 'end'; }
+    if (won) { PLAYER.bits += prize; drawUI(); found.push(`${prize.toLocaleString()} bits`); RS.pose = 'happy'; K(`You did it! The League pays ${prize.toLocaleString()} bits for that one.`); await rwait(1400); return; }
+    K(`That ${foe.m.name} beat all three of you. We're going home.`); await rwait(1400); return 'end'; }
   if (n.k === 'guard') {
     const [tName, fam] = TEACHER[reg.el], G = GRADE_INFO[g], R = rng(hashStr('guard' + reg.n)), foe = gradedOpponent(g, G.lv[1], R, null, null, randomOpponent(R, fam)); foe.boss = tName;
-    const fp = prop({ k: 'foe', x: 186, y: GROUND, fm: foe.fm }); banner(tName, '#ffd23f'); K(`${tName} guards the way on. The team has to get past it.`); await rwait(1800); banner(''); unprop(fp);
+    const fp = prop({ k: 'foe', x: 186, y: GROUND, fm: foe.fm }); banner(tName, '#ffd23f'); K(`That's ${tName}. Nobody gets past without a fight.`); await rwait(1800); banner(''); unprop(fp);
     const won = await deepFight(T, leadOf(), foe, tName, K);
-    if (!won) { K(`${tName} beat all three, so the team turns back.`); await rwait(1600); return 'end'; }
+    if (!won) { K(`${tName} beat all three of you. We're going home.`); await rwait(1600); return 'end'; }
     const alive = T.findIndex(m => !m.out); if (alive >= 0 && T[leadOf()].out) setLead(alive);
     const sp = EX_DEEP_STONE[reg.n], have = once;
     if (sp && !have) { const p = prop({ k: 'pstone', x: 170, y: GROUND, glow: true, sp }); await walkTo(140, 60, 'walk'); RS.pose = 'happy'; st.got.push(n.id); const L = stoneList(); if (L && !L.includes(sp)) L.push(sp);
-      found.push('a Pattern Stone'); spark(170, GROUND - 40, 'sparkle', 8); banner('A Pattern Stone', '#ffe9a8'); K(`Behind ${tName} stands a carved stone with a pattern painted on it. The Snaboscope hums when it's pointed at it.`); await rwait(2800); banner(''); unprop(p); return 'end'; }
+      found.push('a Pattern Stone'); spark(170, GROUND - 40, 'sparkle', 8); banner('A Pattern Stone', '#ffe9a8'); K("Look behind it. Someone painted a pattern on that stone, and the Snaboscope's humming at it."); await rwait(2800); banner(''); unprop(p); return 'end'; }
     if (!have) { st.got.push(n.id); const R2 = rng(hashStr('guardchest' + reg.n)), items = [EX_RARE[Math.floor(R2() * 3)], EX_RARE[Math.floor(R2() * 3)]]; items.forEach(addItem); found.push(...items.map(i => `${/^[AEIOU]/.test(i) ? 'an' : 'a'} ${i}`)); }
     const bounty = Math.round(G.purse * 1.5); PLAYER.bits += bounty; drawUI(); found.push(`${bounty.toLocaleString()} bits`);
-    RS.pose = 'happy'; K(`The team beat ${tName}, and the League pays ${bounty.toLocaleString()} bits for it.`); await rwait(1800); return 'end'; }
+    RS.pose = 'happy'; K(`You beat ${tName}! The League pays ${bounty.toLocaleString()} bits for that.`); await rwait(1800); return 'end'; }
   // an obstacle, maybe one that needs two Snabits
   const leadI = leadOf(), L = T[leadI], v1 = playerFighter(L.s).base[EX_KEY[n.stat]];
   await exObstacle(n.stat, v1 >= need * n.mul, hashStr(reg.n + n.id));
@@ -193,9 +193,9 @@ async function deepNode(reg, n, st, g, need, T, leadOf, setLead, K, used, found,
   K(EX_WIN[n.stat](displayName(L.s))); await rwait(1100);
   if (!n.stat2) return;
   const helpers = T.map((m, i) => ({ m, i })).filter(({ m, i }) => i !== leadI && !m.out && m.e > 0).sort((a, b) => playerFighter(b.m.s).base[EX_KEY[n.stat2]] - playerFighter(a.m.s).base[EX_KEY[n.stat2]]);
-  if (!helpers.length) { K("There's a second obstacle past it, and nobody else on the team has the energy for it."); await rwait(1500); return 'fail'; }
+  if (!helpers.length) { K("There's more past it, and nobody's got the energy left."); await rwait(1500); return 'fail'; }
   const H = helpers[0], v2 = playerFighter(H.m.s).base[EX_KEY[n.stat2]], ok2 = v2 >= need * n.mul; H.m.e -= 1;
-  K(`There's another one past it. ${displayName(H.m.s)} takes this one.`); await rwait(1100);
+  K(`There's more past it. ${displayName(H.m.s)}, your turn.`); await rwait(1100);
   await sceneFade(true, 250); setLead(H.i); RS.props = []; RS.x = 70; RS.camJump = true; await sceneFade(false, 250); await walkTo(100, 70, 'walk');
   await exObstacle(n.stat2, ok2, hashStr(reg.n + n.id + '2'));
   if (!ok2) H.m.e -= 3;

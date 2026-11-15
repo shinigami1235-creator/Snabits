@@ -172,14 +172,14 @@ async function runExpedition(reg) {
   await scene(async () => {
     await tripLeave(`Walt has a League permit for ${reg.n}. ${nm} goes with him for the week.`);
     s.bg = `area:${reg.el}:${areas[0].key}`; s.trip = true; s.night = 0; s.dusk = 0; s.props = []; s.x = 60; s.pose = 'idle'; s.camJump = true; s.tripLabel = `${reg.n} expedition`; drawUI();
-    await sceneFade(false, 700); banner(reg.n, '#fff'); K(reg.rift ? `This is the edge of the Rift. The League's teams have mapped this far, and nobody goes further in. Pick a way and ${nm} will try it.` : `This is as far as the trail goes. Pick a way and ${nm} will try it.`); await rwait(1200); banner('');
+    await sceneFade(false, 700); banner(reg.n, '#fff'); K(reg.rift ? "This is the edge of the Rift. The League's mapped this far and no further." : 'The trail ends here. Where to?'); await rwait(1200); banner('');
     el('r-panel').innerHTML = `<canvas id="ex-map" class="full" style="width:100%;display:block"></canvas><button class="rb full" id="ex-home">Head home<small>Keeps everything found so far</small></button>`;
     el('ranch').classList.add('exploring');
     try {
       for (;;) {
         for (const k of M.near(at)) if (!st.seen.includes(k)) st.seen.push(k);
         const cv = el('ex-map'), P = exDraw(cv, M, st, at, energy, emax, blocked, reg.n);
-        if (energy <= 0) { K(`${nm} is worn out, so that's it for this expedition.`); await rwait(1600); break; }
+        if (energy <= 0) { K(`${nm}'s worn out. We're going home.`); await rwait(1600); break; }
         const to = await exPick(cv, M, P, at, blocked); if (!to) break;
         const n = M.N[to], back = at; energy -= 1; at = to;
         const ai = n.c <= 1 ? 0 : n.c <= 3 ? 1 : 2, key = (reg.rift && n.c === 6 ? areas[2] : areas[Math.min(ai, areas.length - 2)]).key;
@@ -204,7 +204,7 @@ async function exNode(reg, n, st, need, nm, K, used, found) {
   const s = RS, once = st.got.includes(n.id);
   await walkTo(100, 70, 'walk'); s.pose = 'idle';
   if (n.k === 'camp' || n.k === 'path') { await rwait(250); return; }
-  if (n.k === 'spring') { if (used.includes(n.id)) { await rwait(200); return; } used.push(n.id); const sp = prop({ k: 'spring', x: 150, y: GROUND }); await walkTo(124, 60, 'walk'); s.pose = 'happy'; spark(150, GROUND - 10, 'drip', 8); rsfx('splash'); spark(s.x, headY() - 6, 'sparkle', 3); K(`There's a spring here. ${nm} drinks from it and gets 4 energy back.`); await rwait(1300); unprop(sp); return 'spring'; }
+  if (n.k === 'spring') { if (used.includes(n.id)) { await rwait(200); return; } used.push(n.id); const sp = prop({ k: 'spring', x: 150, y: GROUND }); await walkTo(124, 60, 'walk'); s.pose = 'happy'; spark(150, GROUND - 10, 'drip', 8); rsfx('splash'); spark(s.x, headY() - 6, 'sparkle', 3); K(`There's fresh water here. Drink up, ${nm}.`); await rwait(1300); unprop(sp); return 'spring'; }
   if (n.k === 'chest') { if (once) { K('The chest here is empty now.'); await rwait(900); return; }
     const c = prop({ k: 'chest', x: 144, y: GROUND }); await walkTo(120, 60, 'walk'); s.pose = 'idle'; await rwait(300); c.open = true; rsfx('creak'); s.pose = 'happy'; spark(144, GROUND - 22, 'sparkle', 6);
     const R = rng(hashStr(reg.n + n.id)), item = n.big ? EX_RARE[Math.floor(R() * EX_RARE.length)] : EX_FINDS[Math.floor(R() * EX_FINDS.length)];
@@ -216,8 +216,8 @@ async function exNode(reg, n, st, need, nm, K, used, found) {
   if (n.k === 'stone') { const sp = EX_STONE[reg.n];
     const p = prop({ k: 'pstone', x: 150, y: GROUND, glow: true, sp }); await walkTo(122, 60, 'walk'); s.pose = 'happy';
     if (!once) { st.got.push(n.id); const L = stoneList(); if (L && !L.includes(sp)) L.push(sp); found.push('a Pattern Stone'); spark(150, GROUND - 40, 'sparkle', 8); banner('A Pattern Stone', '#ffe9a8');
-      K(`${nm} found a carved stone with a pattern painted on it. The Snaboscope hums when it's pointed at it.`); await rwait(2600); banner(''); }
-    else { K('The Pattern Stone is still here.'); await rwait(1100); }
+      K("Look at this. Someone painted a pattern on this stone, and the Snaboscope's humming at it."); await rwait(2600); banner(''); }
+    else { K('The painted stone is still here.'); await rwait(1100); }
     unprop(p); return; }
   if (n.k === 'wild') { if (used.includes(n.id)) { await rwait(200); return; } used.push(n.id);
     const g = exGrade(reg), G = GRADE_INFO[g], foe = gradedOpponent(g, Math.round(G.lv[0] + (G.lv[1] - G.lv[0]) * 0.5), Math.random, reg.el === 'Void' ? null : reg.el), prize = Math.round(G.purse * 0.4);
@@ -225,17 +225,16 @@ async function exNode(reg, n, st, need, nm, K, used, found) {
     await sceneFade(true, 400); let won = false;
     await new Promise(done => arenaFight({ s: fightSnapshot(s), foe, mode: 'auto', title: 'Wild', noDraw: true, onEnd: r => { won = !!(r && r.winner === 0); done(); } }));
     unprop(fp); s.trip = true; s.camJump = true; s.pose = won ? 'happy' : 'tired'; await sceneFade(false, 400);
-    if (won) { PLAYER.bits += prize; drawUI(); found.push(`${prize.toLocaleString()} bits`); K(`${nm} beat it, and a League bounty pays ${prize.toLocaleString()} bits.`); await rwait(1400); return; }
-    K(`The ${foe.m.name} was too strong, and ${nm} lost 3 energy getting away.`); await rwait(1400); return 'lost'; }
+    if (won) { PLAYER.bits += prize; drawUI(); found.push(`${prize.toLocaleString()} bits`); K(`You did it! The League pays ${prize.toLocaleString()} bits for that one.`); await rwait(1400); return; }
+    K(`That ${foe.m.name} was too strong. Let's get out of here.`); await rwait(1400); return 'lost'; }
   // an obstacle: the stat against what the region asks for. Nothing names the stat, since the obstacle shows it
   const f = playerFighter(s), v = f.base[EX_KEY[n.stat]], ok = v >= need * n.mul;
   await exObstacle(n.stat, ok, hashStr(reg.n + n.id));
   K((ok ? EX_WIN : EX_LOSE)[n.stat](nm)); await rwait(1500);
   return ok ? null : 'fail';
 }
-const EX_WIN = { 1: nm => `${nm} pushed the boulder out of the way.`, 5: nm => `${nm} ran past the darts without a scratch.`, 3: nm => `${nm} worked out the door.`, 4: nm => `${nm} found the real way through.`, 2: nm => `${nm} pushed through the thorns.` };
-const EX_LOSE = { 1: nm => `The boulder didn't move, so ${nm} backs off and loses 3 energy.`, 5: nm => `A dart caught ${nm}, so it backs off and loses 3 energy.`, 3: nm => `${nm} couldn't work out the door, so it backs off and loses 3 energy.`,
-  4: nm => `${nm} walked into an archway that wasn't there, so it backs off and loses 3 energy.`, 2: nm => `The thorns were too much for ${nm}, so it backs off and loses 3 energy.` };
+const EX_WIN = { 1: nm => `${nm} shoved the boulder aside!`, 5: nm => `${nm} made it past the darts!`, 3: nm => `${nm} worked out the door!`, 4: nm => `${nm} found the real way through!`, 2: nm => `${nm} pushed through the thorns!` };
+const EX_LOSE = { 1: () => "It won't budge.", 5: nm => `Ow, a dart got ${nm}.`, 3: nm => `${nm} can't work out the door.`, 4: () => "That archway wasn't really there.", 2: nm => `The thorns are too much for ${nm}.` };
 const exBack = async x => { RS.dir = -1; await walkTo(x, 60, 'walk'); RS.dir = 1; };
 /* what each obstacle looks like, getting through or not */
 async function exObstacle(stat, ok, seed = 0) {
