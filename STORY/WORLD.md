@@ -35,9 +35,9 @@ Light and warm on the ranch, with real weight in the story. Kids play it, so not
 | Dr. Ines | Runs the lab: fusion, rebirth, growth reads | To understand the Rift signal | Alive | `npcs.js`, `lab.js` |
 | Benji | Dr. Ines's assistant, keeps the Freezer | | Alive | `npcs.js` |
 | Mira | Cup announcer | | Alive | `npcs.js`, `cupshow.js` |
-| Helena (Proposed) | Josie's mother, the League's lead explorer | To find where Snabits come from | Missing in the Rift for 15 years | not in code yet |
-| Celia (Proposed) | Rook's mother, an explorer on Helena's team | | Missing in the Rift for 15 years | not in code yet |
-| Victor (Proposed) | Rook's father, runs the Grand Ranch, sits on the League board | His wife back, whatever it takes | Alive | not in code yet |
+| Helena (Proposed) | Josie's mother, the League's lead explorer | To find where Snabits come from | Missing in the Rift for 15 years | her journal, `EX_PAGES` in `explore.js` |
+| Celia (Proposed) | Rook's mother, an explorer on Helena's team | | Missing in the Rift for 15 years | named in Helena's journal |
+| Victor (Proposed) | Rook's father, runs the Grand Ranch, sits on the League board | His wife back, whatever it takes | Alive | named in Helena's journal |
 | The Rift Lord | Teacher at the Rift's heart, a Moko | Unknown | | `areas.js` |
 
 Voice samples:
@@ -87,7 +87,7 @@ Each step is caused by the one before.
 3. **Before the game.** Josie borrows 30,000 bits from the Grand Ranch to buy her mother's ranch back, since Helena's notes are hidden somewhere on it and she won't let Victor have them. Victor agrees because a loan she can't pay gets him the land and the notes later. Josie hires the player. This is where the game starts, and the loan stays as the opening.
 4. **Grade E.** Cups, the loan and Rook, as the game has now.
 5. **The barn upgrade (at a quarter of the loan).** The Workshop pulls up the old barn floor and finds Helena's lens and the first page of her journal. Josie fits the lens to the player's Snaboscope. The page names a ruin in a region the ranch can reach.
-6. **Grade E (built at 1 heart).** The League gives the ranch its first expedition permits through Walt. The first expedition finds the ruin, a Pattern Stone and the second page. Rook is there too, sent by his father to get the stones first.
+6. **Grade E (built at 1 heart).** The League gives the ranch its first expedition permits through Walt, and expeditions find Pattern Stones and Helena's pages. Still to build: the ruin the first page names, and Rook turning up, sent by his father to get the stones first.
 7. **Grade C.** The Rift's edge opens as an expedition, since the League's teams have mapped it for years (built). The pages start to disagree with what Walt has always said about the last expedition.
 8. **Grade B.** Dr. Ines reads the stones and the lens, and finds that every special called through the lens strengthens the Rift signal. Rook tells the player his mother went in with Helena and never came back.
 9. **Grade A.** The Rift permit. Walt takes the player in and tells his side of what happened: he turned back.
