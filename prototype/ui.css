@@ -542,3 +542,7 @@ html:not(.dbg):not(.rd) .i-stat{grid-template-columns:104px 0 1fr 36px}
 .v-cal .wk h4 small{color:var(--mute);font-weight:500;margin-left:4px}
 /* the Gallery button is for testing only; it shows with #debug at the end of the address */
 html:not(.dbg) #bottom label[for=pick]{display:none}
+
+#ranch.exploring #r-week,#ranch.exploring #r-stats,#ranch.exploring #r-nums,#ranch.exploring #r-learned{display:none}   /* the expedition map takes the stats' place under the speech box */
+#ranch.exploring>#r-panel{flex:0 0 auto;overflow:visible}
+#ex-map{border-radius:10px;touch-action:manipulation}

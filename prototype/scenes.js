@@ -637,6 +637,21 @@ function drillArt(c, s, bg, t, off) {
     c.fillStyle = '#6b4428'; c.beginPath(); c.roundRect(149, GROUND - 130, 4, 60, 1.5); c.fill(); c.beginPath(); c.roundRect(149, GROUND - 130, 42, 4, 1.5); c.fill(); }
 }
 /* props from trips and heavy drills */
+/* the faded pattern on a Pattern Stone, centred on (0,0) in a 20 by 26 face. Each one hints at its special Snabit through
+   colour and a simple shape, without copying any real flag (Gid, 15 Nov 2026) */
+function stoneGlyph(c, sp) {
+  const a = (r, g, b, o = 0.8) => `rgba(${r},${g},${b},${o})`, wave = (y, h, col) => { c.fillStyle = col; c.beginPath(); c.moveTo(-10, y); for (let i = 0; i <= 10; i++) c.lineTo(-10 + i * 2, y + Math.sin(i * 1.3) * 1.4); c.lineTo(10, y + h); c.lineTo(-10, y + h); c.closePath(); c.fill(); };
+  c.fillStyle = a(236, 230, 214); c.fillRect(-10, -13, 20, 26);
+  if (sp === 'Eagle') { c.fillStyle = a(70, 96, 160); c.fillRect(-10, -13, 20, 7);   // sky, then wings spreading down in red and white chevrons
+    for (let i = 0; i < 4; i++) { c.fillStyle = i % 2 ? a(236, 230, 214) : a(196, 52, 52); c.beginPath(); c.moveTo(-10, -6 + i * 5); c.lineTo(0, -1 + i * 5); c.lineTo(10, -6 + i * 5); c.lineTo(10, -2 + i * 5); c.lineTo(0, 3 + i * 5); c.lineTo(-10, -2 + i * 5); c.fill(); } }
+  else if (sp === 'Vampire') { c.fillStyle = a(22, 20, 26, 0.95); c.fillRect(-10, -13, 20, 26); c.fillStyle = a(236, 232, 222, 0.95); c.beginPath(); c.arc(-1.5, -4, 7, 0, 7); c.fill(); c.fillStyle = a(22, 20, 26, 0.98); c.beginPath(); c.arc(2, -6, 6.5, 0, 7); c.fill();   // a crescent and a drop on black
+    c.fillStyle = a(190, 30, 40, 0.95); c.beginPath(); c.moveTo(3, 2); c.quadraticCurveTo(8, 9, 3, 11); c.quadraticCurveTo(-2, 9, 3, 2); c.fill(); }
+  else if (sp === 'Phoenix') { for (const [y, col] of [[2, a(200, 60, 40)], [-5, a(232, 128, 44)], [-12, a(240, 200, 70)]]) { c.fillStyle = col; c.beginPath(); c.moveTo(-10, y + 12); for (let i = 0; i <= 5; i++) { c.lineTo(-10 + i * 4, y + (i % 2 ? 0 : 4)); } c.lineTo(10, y + 12); c.fill(); } }
+  else if (sp === 'Kitsune') { for (const d of [-1, 0, 1]) { c.fillStyle = d ? a(214, 70, 50) : a(196, 44, 44); c.beginPath(); c.moveTo(0, 5); c.quadraticCurveTo(d ? d * 6 : -2, 1, d * 3.5, -6); c.quadraticCurveTo(d ? d * 1 : 2, 0, 0, 5); c.fill(); }   // three tails fanning up from one point
+    c.fillStyle = a(236, 230, 214); for (const d of [-1, 0, 1]) { c.beginPath(); c.arc(d * 3.5, -5.5, 1, 0, 7); c.fill(); } }
+  else if (sp === 'Naga') { c.fillStyle = a(70, 140, 70, 0.95); c.fillRect(-10, -13, 20, 26); c.strokeStyle = a(236, 200, 70, 0.95); c.lineWidth = 3; c.beginPath(); c.moveTo(-8, -10); c.bezierCurveTo(10, -8, -10, 2, 6, 4); c.quadraticCurveTo(10, 8, 2, 11); c.stroke(); }   // a coil on green
+  else if (sp === 'Yeti') { c.fillStyle = a(176, 184, 196); c.fillRect(-10, 4, 20, 9); c.strokeStyle = a(110, 200, 220, 0.95); c.lineWidth = 1.4; for (let i = 0; i < 3; i++) { const t = i * Math.PI / 3; c.beginPath(); c.moveTo(Math.cos(t) * -6, -4 + Math.sin(t) * -6); c.lineTo(Math.cos(t) * 6, -4 + Math.sin(t) * 6); c.stroke(); } }
+}
 function awayProps(c, p, t, front) {
   const x = p.x, y = p.y;
   switch (p.k) {
@@ -645,8 +660,7 @@ function awayProps(c, p, t, front) {
     // exploration finds and obstacles (concept 15 Nov 2026): a Pattern Stone, a sealed rune door, a chasm, a thorn wall, a journal page
     case 'pstone': if (front) return; { const gl = 0.5 + 0.5 * Math.sin(t / 400); if (p.glow) { const g = c.createRadialGradient(x, y - 26, 4, x, y - 26, 40); g.addColorStop(0, `rgba(255,236,150,${0.35 * gl})`); g.addColorStop(1, 'rgba(255,236,150,0)'); c.fillStyle = g; c.fillRect(x - 40, y - 66, 80, 80); }
       SC.depth(c, () => { c.beginPath(); c.moveTo(x - 15, y); c.lineTo(x - 15, y - 38); c.quadraticCurveTo(x, y - 52, x + 15, y - 38); c.lineTo(x + 15, y); c.closePath(); }, '#8f8a83', 1.5, 0.3);
-      c.save(); c.beginPath(); c.rect(x - 10, y - 38, 20, 26); c.clip(); const P = p.pat || [[214, 40, 52], [245, 245, 245]];   // the pattern painted on it, faded
-      for (let i = 0; i < 7; i++) { c.fillStyle = `rgba(${P[i % 2]},.75)`; c.fillRect(x - 10, y - 38 + i * 26 / 7, 20, 26 / 7 + 0.5); } if (P[2]) { c.fillStyle = `rgba(${P[2]},.85)`; c.fillRect(x - 10, y - 38, 9, 11); } c.restore();
+      c.save(); c.beginPath(); c.rect(x - 10, y - 38, 20, 26); c.clip(); c.translate(x, y - 25); stoneGlyph(c, p.sp); c.restore();   // the pattern painted on it, faded
       c.strokeStyle = 'rgba(60,55,50,.55)'; c.lineWidth = 1.2; c.strokeRect(x - 10, y - 38, 20, 26); } return;
     case 'sealdoor': if (front) return; SC.depth(c, () => { c.beginPath(); c.roundRect(x - 22, y - 60, 44, 60, 3); }, '#7d776f', 1.5, 0.3);
       c.strokeStyle = 'rgba(50,45,40,.5)'; c.lineWidth = 1; c.beginPath(); c.moveTo(x, y - 58); c.lineTo(x, y); c.stroke();

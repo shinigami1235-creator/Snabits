@@ -235,7 +235,8 @@ function eggOf(res){
 
 function hatch(res,now=new Date(),ov={}){
   const el1=EL[res.main.g], el2=res.second?EL[res.second.g]:null;
-  let egg0=ov.family?null:eggOf(res); if(egg0&&egg0.costume&&!ov.costume&&typeof cosOpen==="function"&&!cosOpen(egg0.costume)) egg0=null;   // a costume still waiting to be opened makes a plain Snabit
+  let egg0=ov.family?null:eggOf(res); if(egg0&&egg0.costume&&!ov.costume&&typeof cosOpen==="function"&&!cosOpen(egg0.costume)) egg0=null;
+  if(egg0&&egg0.special&&typeof stoneOpen==="function"&&!stoneOpen(egg0.special)) egg0=null;   // a special needs its Pattern Stone found on an expedition first   // a costume still waiting to be opened makes a plain Snabit
   const pf=pickFamily(res.cells), egg=egg0, family=ov.family||(egg&&egg.special)||pf.family, band=pf.band, shape=pf.shape;
   const F=FAMILY[family];
   const sat=res.sat, con=res.contrast, bri=res.bright;

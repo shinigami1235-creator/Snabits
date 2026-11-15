@@ -85,7 +85,7 @@ function openSecrets(n) {
     <div class="full lab-info">Secrets turn up when a photo has just the right colours. Each hint says what to look for.</div>
     <div class="full dex-tabs">${DEX_FAMS.map(f => { const k = DEX_ELS.filter(e => D[f + '|' + e]).length; return `<button class="small" data-f="${f}">${f}<i>${k}/12</i></button>`; }).join('')}${dexSecretTab()}</div>
     <div class="full dex-grid">${DEX_SECRETS.map(([k, hint]) => { const b = S[k] || 0, nm = k.startsWith('c:') ? k.slice(2) + ' costume' : k;
-      const shut = k.startsWith('c:') && typeof cosOpen === 'function' && !cosOpen(k.slice(2));   // a costume not opened yet keeps its hint hidden too
+      const shut = k.startsWith('c:') ? typeof cosOpen === 'function' && !cosOpen(k.slice(2)) : typeof stoneOpen === 'function' && !stoneOpen(k);   // a costume not opened yet keeps its hint hidden too
       return `<div class="dex-t ${b ? '' : 'unk'}"><canvas data-k="${k}"></canvas><b>${b ? nm : '???'}</b><small>${b ? (b & 14 ? 'Raised' : 'Seen') : shut ? '???' : hint}</small></div>`; }).join('')}</div>`);
   el('dx-back').onclick = () => menu('Out');
   el('r-panel').querySelectorAll('[data-f]').forEach(b => b.onclick = () => openDex(b.dataset.f));

@@ -72,7 +72,7 @@ const BEATS = {
   async gradeB() {
     const w = await walkIn('doc');
     await talk('doc', "Every Snabit you've scanned with the Snaboscope gives off the same faint signal.");
-    w.p.face = 'worried'; await talk('doc', 'It comes from the Rift, past the edge of the map. Only a grade A monster is strong enough to go there.');
+    w.p.face = 'worried'; await talk('doc', "It comes from the Rift, past the edge of the map. The League's teams have been going to the edge for years, and nobody knows what's further in.");
     w.p.face = 'happy'; if (typeof famOpen === 'function' && !famOpen('Fizz')) { openFam('Fizz'); await talk('doc', "I've signed the League form for Fizz, so you can register one. The Snaboscope can find them now."); }
     await walkOut(w); await talk('tala', 'Get a Snabit to grade A, and Walt can take it to the Rift on a skill trip.');
   },

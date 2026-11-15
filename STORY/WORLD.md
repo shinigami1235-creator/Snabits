@@ -16,7 +16,7 @@ Light and warm on the ranch, with real weight in the story. Kids play it, so not
 - **Town:** Nora's shop, the Workshop, the Town Hall and Dr. Ines's lab (`town.js`, `npcs.js`, `lab.js`).
 - **The stadium:** where the League runs its cups (`tourney.js`, `cupshow.js`).
 - **The 12 regions,** one per element, each with four places and a teacher (`REGIONS` in `missions.js`, `TRIP_AREAS` in `areas.js`). They open by the ranch's best grade: 4 at E, 7 at D, 10 at C, all 12 at B (`tripRegionCount` in `game.js`).
-- **The Rift,** past the edge of the map, open at grade A, with the Rift Lord at its heart (`TRIP_REGIONS` in `trips.js`).
+- **The Rift,** past the edge of the map. The League has known about it for years and its teams map the edge, so the Rift's edge opens as an expedition at grade C (`exRegions` in `explore.js`). The skill trip to the Rift Lord at its heart opens at grade A (`TRIP_REGIONS` in `trips.js`).
 
 ## Factions
 
@@ -50,8 +50,14 @@ Voice samples:
 
 - Snabits hide in the colour of whatever they're in, and a Snaboscope reads that colour to find the one hiding there. The photo's colours decide its element, family and stats (`monster.js`).
 - Every Snabit gives off the same faint signal, and it comes from the Rift (`story.js`, the grade B scene).
-- **Pattern Stones (Proposed).** An ancient people kept Snabits as colour patterns carved and painted on stone, so a Snabit could be carried and called back. The people are gone and the stones are scattered through the regions. Their patterns were copied into flags, banners, lanterns and cloth by people who didn't know what they were. That's why a US flag pattern can call the Eagle and a Japanese flag the Kitsune.
-- **Specials need their stone (Proposed, Gid's rule).** Scanning a special's pattern calls the special only after its Pattern Stone has been found on an expedition. Before that, the same scan gives a regular Snabit.
+- **Pattern Stones.** An ancient people kept Snabits as colour patterns carved and painted on stone, so a Snabit could be carried and called back. The people are gone and the stones are scattered through the regions. Their patterns were copied into banners, lanterns and cloth by people who didn't know what they were. Each stone is abstract and nobody in the game says which real pattern it matches, so the player connects it themselves (Gid, 15 Nov 2026). A picture that looks like a stone calls its special. The six stones, drawn by `stoneGlyph` in `scenes.js` and shown in `docs/art/pattern-stones.png`:
+  - Phoenix (Cinder Peak): zigzag flame bands, red at the bottom up to yellow.
+  - Eagle (Static Plains): a blue sky band over red and white chevrons spreading like wings.
+  - Vampire (Hollow Moor): a pale crescent and a red drop on black.
+  - Kitsune (Dream Garden): three red tails fanning up from one point on pale stone.
+  - Naga (Nightshade Marsh): a yellow coil on green.
+  - Yeti (Glacier Rim): an ice-blue six-point star over a grey band.
+- **Specials need their stone (Gid's rule).** Scanning a special's pattern calls the special only after its Pattern Stone has been found on an expedition. Before that, the same scan gives a regular Snabit, and the special's Secrets hint shows ??? (`stoneOpen` in `explore.js`, the gate in `hatch`). A save that already raised a special keeps it open.
 - **Helena's lens (Proposed).** Helena fitted her Snaboscope with a lens that reads Pattern Stones. Josie gives it to the player, and it's what lets the player's scans call specials. Every special called through it pulls on the Rift, and Dr. Ines measures the signal getting stronger each time.
 
 ## What can be scanned (Gid's tiers, decided 15 Nov 2026)
@@ -81,17 +87,19 @@ Each step is caused by the one before.
 3. **Before the game.** Josie borrows 30,000 bits from the Grand Ranch to buy her mother's ranch back, since Helena's notes are hidden somewhere on it and she won't let Victor have them. Victor agrees because a loan she can't pay gets him the land and the notes later. Josie hires the player. This is where the game starts, and the loan stays as the opening.
 4. **Grade E.** Cups, the loan and Rook, as the game has now.
 5. **The barn upgrade (at a quarter of the loan).** The Workshop pulls up the old barn floor and finds Helena's lens and the first page of her journal. Josie fits the lens to the player's Snaboscope. The page names a ruin in a region the ranch can reach.
-6. **Grade D.** The League gives the ranch its first expedition permit. The first expedition finds the ruin, a Pattern Stone and the second page. Rook is there too, sent by his father to get the stones first.
-7. **Grade C.** The pages start to disagree with what Walt has always said about the last expedition.
+6. **Grade E (built at 1 heart).** The League gives the ranch its first expedition permits through Walt. The first expedition finds the ruin, a Pattern Stone and the second page. Rook is there too, sent by his father to get the stones first.
+7. **Grade C.** The Rift's edge opens as an expedition, since the League's teams have mapped it for years (built). The pages start to disagree with what Walt has always said about the last expedition.
 8. **Grade B.** Dr. Ines reads the stones and the lens, and finds that every special called through the lens strengthens the Rift signal. Rook tells the player his mother went in with Helena and never came back.
 9. **Grade A.** The Rift permit. Walt takes the player in and tells his side of what happened: he turned back.
 10. **Grade S and the Majors.** Victor uses his League seat to make the Legend Cup the only way into the Rift's heart, and enters Rook to win it for him.
 11. **The Legend Cup.** Whoever wins gets the permit. Rook has to decide whether he's winning it for his father.
 12. **After the Legend Cup.** The expedition into the Rift's heart. What's there is a hole (see Holes).
 
-## Exploration mode (Proposed)
+## Exploration mode (built 15 Nov 2026, `explore.js`)
 
-League expeditions, the way MR2 ran them. A permit opens a region's expedition, the player picks a Snabit and leads it across the region's map, and its stats decide where it can go. Power moves boulders, Speed clears gaps, Mind opens puzzle doors, Insight spots hidden paths, Constitution gets through hazards, and Stamina sets how far it can go on one trip. Finds are journal pages, Pattern Stones, items and rare Snabits to fight. Walt's trips stay as they are for training and skills.
+League expeditions, the way MR2 ran them. Walt hands out a permit for each open region (Out, then Expeditions, from 1 heart). An expedition takes the week, and each region can be explored once a season. The region is a map of circles in seven columns with fog over what hasn't been reached, the same map every time. Each step costs 1 energy, and the energy (10 to 19) comes from Stamina against the other stats. Columns 2 and 4 are obstacles, one stat each: Power pushes a boulder, Speed jumps a gap, Mind lights the runes on a door, Insight finds a path through bushes, Constitution pushes through thorns. The map names the stat and never the number. A fail costs 3 energy and shuts that way for the trip. Finds are chests, springs (4 energy back), wild Snabits (a League bounty for a win, 3 energy for a loss), one journal page per region and, at the far end, the Pattern Stone, a big chest or the Rift's last page. What's seen and found stays seen and found. Walt's trips stay as they are for training and skills.
+
+**Helena's journal,** one page per region, read in the Journal on the Expeditions screen (`EX_PAGES`): the Cinder Peak stone, the dojo banner, scans near stones, Josie's fourth birthday, the stones pointing past the map, the permit Victor signed, Walt not liking it, the lens that hums, the signal loudest at the stones, Celia's silence, Victor's letter, the notes under the barn floor, and Walt told to wait three days at the Rift's edge.
 
 ## Name sets
 
