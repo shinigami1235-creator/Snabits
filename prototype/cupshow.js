@@ -129,33 +129,6 @@ const CUPSHOW = (() => {
     const gy = H * 0.7; shadow(c, W * 0.6, gy, 46); mon(c, info.me.spec, W * 0.6, gy, 120, Math.floor(t / 900) % 3 === 2 ? 'determined' : 'idle', t, false, { look: [0.3, -0.6] });
     talaFull(c, W * 0.28, gy + 6, 210, 'talk', false, t);
   } });
-  /* the draw: eight tiles light up one by one and the lines join them to the trophy */
-  B.bracket = (info, text) => ({ who: 'mc', face: 'talk', text, textAt: 1500, draw(c, W, H, t) {
-    const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#2a1d4a'); g.addColorStop(1, '#14102a'); c.fillStyle = g; c.fillRect(0, 0, W, H);
-    spots(c, W, H, t, 0.5);
-    c.font = `700 26px ${PIX}`; c.fillStyle = '#ffc93c'; c.textAlign = 'center'; c.fillText('The draw', W / 2, 52);
-    const F = info.field, n = F.length, rows = n / 2, top = 86, avail = H - top - 200, th = Math.min(66, avail / rows - 10), tw = W * 0.34;
-    const tiles = F.map((e, i) => { const side = i < rows ? 0 : 1, r = i % rows; return { e, x: side ? W - 14 - tw : 14, y: top + r * (avail / rows) + 4, side }; });
-    // lines: pairs, then pairs of pairs, then the middle
-    c.lineWidth = 3; c.lineCap = 'round';
-    const lineIn = cl((t - 300 - n * 140) / 500);
-    for (let s = 0; s < 2; s++) for (let p = 0; p < rows / 2; p++) { const a = tiles[s * rows + p * 2], b = tiles[s * rows + p * 2 + 1], ex = s ? a.x - 18 : a.x + tw + 18;
-      const mine = a.e.me || b.e.me; c.strokeStyle = mine ? '#ffc93c' : 'rgba(255,255,255,.35)'; c.globalAlpha = lineIn;
-      const ay = a.y + th / 2, by = b.y + th / 2, ax = s ? a.x : a.x + tw; c.beginPath(); c.moveTo(ax, ay); c.lineTo(ex, ay); c.lineTo(ex, by); c.lineTo(ax, by); c.moveTo(ex, (ay + by) / 2); c.lineTo(W / 2 + (s ? 22 : -22), (ay + by) / 2); c.stroke(); }
-    c.globalAlpha = 1;
-    // the trophy in the middle
-    const tk = back((t - 300 - n * 140 - 300) / 450); if (tk > 0) { c.save(); c.translate(W / 2, top + avail / 2); c.scale(tk, tk); trophy(c, 0, 0, 34); c.restore(); }
-    tiles.forEach((T, i) => { const at = 300 + i * 140, k = back((t - at) / 360); if (t < at) return;
-      c.save(); c.translate(T.x + tw / 2, T.y + th / 2); c.scale(k, k); c.translate(-tw / 2, -th / 2);
-      const col = T.e.me ? '#ffc93c' : T.e.rook ? '#ffb04a' : '#3a3f58';
-      c.fillStyle = 'rgba(14,15,26,.92)'; c.strokeStyle = col; c.lineWidth = T.e.me || T.e.rook ? 3 : 2; c.beginPath(); c.roundRect(0, 0, tw, th, 8); c.fill(); c.stroke();
-      c.save(); c.beginPath(); c.roundRect(2, 2, th - 4, th - 4, 6); c.clip(); c.fillStyle = T.e.me ? '#4a3a10' : '#262a3e'; c.fillRect(0, 0, th, th);
-      mon(c, T.e.spec, th / 2, th * 1.02, th * 0.95, 'idle', t + i * 300, !!T.side); c.restore();
-      c.fillStyle = '#eef0f6'; c.font = `700 ${Math.min(15, th * 0.24)}px ${PIX}`; c.textAlign = 'left'; c.textBaseline = 'middle';
-      const nm = T.e.name.replace(/^Rook's /, ''); c.fillText(nm, th + 4, th * 0.36, tw - th - 8);
-      c.fillStyle = T.e.me ? '#ffc93c' : T.e.rook ? '#ffb04a' : '#9aa0b8'; c.font = `500 ${Math.min(12, th * 0.2)}px ${PIX}`; c.fillText(T.e.me ? "Tala's ranch" : T.e.breeder, th + 4, th * 0.68, tw - th - 8);
-      c.restore(); });
-  } });
   function trophy(c, x, y, s) {
     c.save(); c.translate(x, y); const gold = '#ffc93c';
     SC.depth(c, () => { c.beginPath(); c.roundRect(-s * 0.5, s * 0.55, s, s * 0.28, 4); }, '#8a5a2a', 2, 0.3);
@@ -165,28 +138,6 @@ const CUPSHOW = (() => {
     c.fillStyle = 'rgba(255,255,255,.5)'; c.beginPath(); c.ellipse(-s * 0.22, -s * 0.3, s * 0.08, s * 0.2, 0.2, 0, 7); c.fill();
     c.restore();
   }
-  /* the match card: the two Snabits slide in from each side and VS slams down between them */
-  B.vs = (info, text) => ({ who: 'mc', face: 'happy', text, textAt: 900, draw(c, W, H, t) {
-    const sl = eo(t / 500), cut = H * 0.08;
-    c.fillStyle = '#121022'; c.fillRect(0, 0, W, H);
-    const half = (side, cols) => { c.save(); c.beginPath(); if (!side) { c.moveTo(0, 0); c.lineTo(W / 2 + cut, 0); c.lineTo(W / 2 - cut, H); c.lineTo(0, H); } else { c.moveTo(W / 2 + cut + 6, 0); c.lineTo(W, 0); c.lineTo(W, H); c.lineTo(W / 2 - cut + 6, H); }
-      c.closePath(); c.clip(); const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, cols[0]); g.addColorStop(1, cols[1]); c.fillStyle = g; c.fillRect(0, 0, W, H);
-      c.strokeStyle = 'rgba(255,255,255,.08)'; c.lineWidth = 3; for (let k = 0; k < 14; k++) { const y = (hsh(k + side * 20) * H + t * (0.3 + hsh(k) * 0.4) * (side ? 1 : -1)) % H; c.beginPath(); c.moveTo(0, y < 0 ? y + H : y); c.lineTo(W, (y < 0 ? y + H : y) - 30); c.stroke(); }
-      c.restore(); };
-    c.save(); c.translate(-W * (1 - sl), 0); half(0, ['#2c5aa8', '#16264e']); c.restore();
-    c.save(); c.translate(W * (1 - sl), 0); half(1, ['#b8364a', '#4e1622']); c.restore();
-    const gy = H * 0.5, px = Math.min(150, W * 0.38);
-    shadow(c, W * 0.27 - W * (1 - sl), gy, 40); shadow(c, W * 0.73 + W * (1 - sl), gy, 40);
-    mon(c, info.me.spec, W * 0.27 - W * (1 - sl), gy, px * (info.me.k || 1), t > 600 && t < 1400 ? 'determined' : 'idle', t, false);
-    mon(c, info.foe.spec, W * 0.73 + W * (1 - sl), gy, px * (info.foe.k || 1), 'idle', t + 500, true);
-    const plate = (x, e, al, col) => { c.save(); c.globalAlpha = cl((t - 500) / 300); c.textAlign = al; c.fillStyle = '#fff'; c.font = `700 22px ${PIX}`; c.fillText(e.name, x, gy + 40, W * 0.44);
-      c.font = `500 15px ${PIX}`; c.fillStyle = col; c.fillText(e.line, x, gy + 62, W * 0.44); c.restore(); };
-    plate(16, info.me, 'left', '#a9d4ff'); plate(W - 16, info.foe, 'right', '#ffb3be');
-    if (t > 500) { const k = t < 700 ? 1.8 - 0.8 * eo((t - 500) / 200) : 1, sh = t < 760 ? (hsh(Math.floor(t / 30)) - 0.5) * 8 : 0;
-      c.save(); c.translate(W / 2 + sh, H * 0.24); c.scale(k, k); c.font = `700 64px ${PIX}`; c.textAlign = 'center'; c.textBaseline = 'middle';
-      c.lineWidth = 8; c.strokeStyle = '#1b1530'; c.strokeText('VS', 0, 0); c.fillStyle = '#ffc93c'; c.fillText('VS', 0, 0); c.restore(); }
-    c.font = `700 18px ${PIX}`; c.fillStyle = '#fff6d8'; c.textAlign = 'center'; c.globalAlpha = cl((t - 300) / 300); c.fillText(info.round, W / 2, 34); c.globalAlpha = 1;
-  } });
   /* after the match: the winner celebrates in the ring and Mira or Tala says how it went */
   B.result = (info, who, text, face) => ({ who, face, text, textAt: who === 'tala' ? 200 : 1200, draw(c, W, H, t) {
     const won = info.won;
@@ -216,6 +167,99 @@ const CUPSHOW = (() => {
     ribbon(c, W, H * 0.1, info.cup.name, t, 1100, { size: 28 });
   } });
 
+  /* a portrait tile: the Snabit's head and shoulders on a dark square, gold-edged for the player and orange for Rook */
+  function tile(c, e, x, y, s, t, flip) {
+    c.save(); c.beginPath(); c.roundRect(x, y, s, s, 6); c.fillStyle = e.me ? '#4a3a10' : e.rook ? '#4a2a10' : '#262a3e'; c.fill(); c.clip();
+    mon(c, e.spec, x + s / 2, y + s * 1.18, s * 1.25, 'idle', t, flip); c.restore();
+    c.strokeStyle = e.me ? '#ffc93c' : e.rook ? '#ffb04a' : 'rgba(255,255,255,.35)'; c.lineWidth = e.me || e.rook ? 2.5 : 1.5; c.beginPath(); c.roundRect(x, y, s, s, 6); c.stroke();
+  }
+  /* a green number block, the way MR2 numbers its entrants */
+  function numBlock(c, n, x, y, s) {
+    SC.depth(c, () => { c.beginPath(); c.roundRect(x, y, s, s, 4); }, '#3f9a4e', 2, 0.25);
+    c.fillStyle = '#fff'; c.font = `700 ${s * 0.72}px ${PIX}`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(n, x + s / 2, y + s / 2 + 1);
+  }
+  /* the round robin table: entrants down the side, a grid with a red circle for each win and a blue cross for each loss,
+     read along the row. Results already played are there from the start, and the newest pair (info.last) pops in */
+  B.table = (info, text) => ({ who: 'mc', face: 'talk', text, textAt: 700, draw(c, W, H, t) {
+    stadium(c, W, H, t, { dark: 0.62 });
+    c.font = `700 24px ${PIX}`; c.fillStyle = '#ffc93c'; c.textAlign = 'center'; c.textBaseline = 'alphabetic'; c.fillText(info.cup.name, W / 2, 48);
+    c.font = `500 16px ${PIX}`; c.fillStyle = '#fff6d8'; c.fillText(info.round, W / 2, 72);
+    const F = info.field, n = F.length, cs = Math.min(44, (W - 24 - 128) / n), gx = W - 12 - cs * n, rh = cs, nb = Math.min(26, rh - 8), top = Math.max(110, (H - 190 - rh * n) / 2 + 30);   // centred in the space above the speech box
+    for (let j = 0; j < n; j++) numBlock(c, j + 1, gx + j * cs + (cs - nb) / 2, top - nb - 6, nb);
+    F.forEach((e, i) => { const y = top + i * rh, k = eo((t - 120 * i) / 300); c.save(); c.globalAlpha = k; c.translate(-(1 - k) * 30, 0);
+      numBlock(c, i + 1, 12, y + (rh - nb) / 2, nb); tile(c, e, 12 + nb + 4, y + 2, rh - 4, t + i * 300, false);
+      c.font = `700 ${Math.min(16, rh * 0.36)}px ${PIX}`; c.fillStyle = e.me ? '#ffc93c' : e.rook ? '#ffb04a' : '#fff'; c.textAlign = 'left'; c.textBaseline = 'middle';
+      c.fillText(e.name.replace(/^Rook's /, ''), 12 + nb + rh + 6, y + rh / 2, gx - (12 + nb + rh + 10)); c.restore(); });
+    c.fillStyle = 'rgba(10,10,24,.55)'; c.fillRect(gx, top, cs * n, rh * n);
+    c.strokeStyle = '#f4f0e6'; c.lineWidth = 2; c.strokeRect(gx, top, cs * n, rh * n);
+    for (let k = 1; k < n; k++) { c.beginPath(); c.moveTo(gx + k * cs, top); c.lineTo(gx + k * cs, top + rh * n); c.moveTo(gx, top + k * rh); c.lineTo(gx + cs * n, top + k * rh); c.stroke(); }
+    c.beginPath(); c.moveTo(gx, top); c.lineTo(gx + cs * n, top + rh * n); c.stroke();
+    F.forEach((_, i) => F.forEach((__, j) => { const r = info.res[i][j]; if (i === j || !r) return;
+      const fresh = info.last && (info.last[0] === i && info.last[1] === j || info.last[0] === j && info.last[1] === i), k = fresh ? back((t - 600) / 380) : 1; if (k <= 0) return;
+      const x = gx + j * cs + cs / 2, y = top + i * rh + rh / 2, rr = cs * 0.3 * k; c.lineWidth = Math.max(3, cs * 0.1); c.lineCap = 'round';
+      if (r === 'w') { c.strokeStyle = '#ff4a4a'; c.beginPath(); c.arc(x, y, rr, 0, 7); c.stroke(); }
+      else if (r === 'l') { c.strokeStyle = '#3d8bff'; c.beginPath(); c.moveTo(x - rr, y - rr); c.lineTo(x + rr, y + rr); c.moveTo(x + rr, y - rr); c.lineTo(x - rr, y + rr); c.stroke(); }
+      else { c.strokeStyle = '#ffd23f'; c.beginPath(); c.moveTo(x, y - rr); c.lineTo(x + rr, y + rr * 0.8); c.lineTo(x - rr, y + rr * 0.8); c.closePath(); c.stroke(); } }));
+    const me = F.findIndex(e => e.me); if (me >= 0) { c.strokeStyle = '#ffc93c'; c.lineWidth = 3; c.beginPath(); c.roundRect(8, top + me * rh, W - 16, rh, 6); c.stroke(); }
+  } });
+  /* the face-off: both Snabits framed like trading cards, VS between them, and their six stats side by side with bars
+     growing out from the middle, the way MR2 lines two monsters up before a match */
+  const ST_LAB = ['Sta', 'Pow', 'Con', 'Mnd', 'Ins', 'Spd'], ST_COL = ['#e2d44a', '#ff5a5a', '#5ad26a', '#d65ad6', '#4ad2e2', '#4a6aff'];
+  B.faceoff = (info, text) => ({ who: 'mc', face: 'happy', text, textAt: 1300, draw(c, W, H, t) {
+    stadium(c, W, H, t, { dark: 0.5, cheer: true });
+    c.font = `700 18px ${PIX}`; c.fillStyle = '#fff6d8'; c.textAlign = 'center'; c.textBaseline = 'alphabetic'; c.globalAlpha = cl(t / 300); c.fillText(info.round, W / 2, 32); c.globalAlpha = 1;
+    const cw = W * 0.4, ch = cw * 1.2, cy = 48, sl = eo(t / 450);
+    const card = (e, x, flip, cols) => { c.save(); c.translate(flip ? W * (1 - sl) : -W * (1 - sl), 0);
+      SC.depth(c, () => { c.beginPath(); c.roundRect(x, cy, cw, ch, 10); }, '#e9e2cf', 3, 0.3);
+      c.save(); c.beginPath(); c.roundRect(x + 6, cy + 6, cw - 12, ch - 12, 7); c.clip(); const g = c.createLinearGradient(0, cy, 0, cy + ch); g.addColorStop(0, cols[0]); g.addColorStop(1, cols[1]); c.fillStyle = g; c.fillRect(x, cy, cw, ch);
+      c.strokeStyle = 'rgba(255,255,255,.14)'; c.lineWidth = 10; for (let k = -4; k < 8; k++) { c.beginPath(); c.moveTo(x + k * 26, cy + ch); c.lineTo(x + k * 26 + ch * 0.7, cy); c.stroke(); }
+      mon(c, e.spec, x + cw / 2, cy + ch * 0.9, ch * 0.62, t > 500 && t < 1300 && !flip ? 'determined' : 'idle', t + (flip ? 500 : 0), flip); c.restore();
+      c.fillStyle = 'rgba(14,15,26,.92)'; c.beginPath(); c.roundRect(x - 2, cy + ch + 6, cw + 4, 30, 6); c.fill(); c.strokeStyle = e.me ? '#ffc93c' : e.rook ? '#ffb04a' : '#8a8fa8'; c.lineWidth = 2; c.stroke();
+      c.fillStyle = '#fff'; c.font = `700 17px ${PIX}`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(e.name.replace(/^Rook's /, ''), x + cw / 2, cy + ch + 21, cw - 8);
+      c.fillStyle = '#c9cde0'; c.font = `500 13px ${PIX}`; c.fillText(e.line, x + cw / 2, cy + ch + 50, cw); c.restore(); };
+    card(info.me, W * 0.06, false, info.me.cols || ['#4a7cc8', '#1c3264']); card(info.foe, W * 0.54, true, info.foe.cols || ['#d2505e', '#5c1a26']);
+    if (t > 450) { const k = t < 650 ? 1.8 - 0.8 * eo((t - 450) / 200) : 1; c.save(); c.translate(W / 2, cy + ch * 0.5); c.scale(k, k); c.font = `700 40px ${PIX}`; c.textAlign = 'center'; c.textBaseline = 'middle';
+      c.lineWidth = 7; c.strokeStyle = '#c0182a'; c.strokeText('VS', 0, 0); c.fillStyle = '#ffe14a'; c.fillText('VS', 0, 0); c.restore(); }
+    const ty = cy + ch + 72, rh = Math.min(38, (H - 190 - ty) / 6), lw = 52, half = (W - 24 - lw) / 2, mx = W / 2;
+    ST_LAB.forEach((lab, i) => { const y = ty + i * rh, k = eo((t - 700 - i * 70) / 420); if (k <= 0) return;
+      const a = info.me.st[i], b = info.foe.st[i], top = Math.max(...info.me.st, ...info.foe.st) * 1.08, bw = half - 50;   // one scale for all twelve bars, set by the highest stat on screen
+      c.fillStyle = 'rgba(14,15,26,.85)'; c.fillRect(12, y, W - 24, rh - 4);
+      c.fillStyle = '#6a6e80'; c.fillRect(mx - lw / 2, y, lw, rh - 4); c.fillStyle = '#fff'; c.font = `700 15px ${PIX}`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(lab, mx, y + rh / 2 - 1);
+      const la = bw * a / top * k, lb = bw * b / top * k;
+      c.fillStyle = ST_COL[i]; c.fillRect(mx - lw / 2 - 4 - la, y + 6, la, rh - 16); c.fillRect(mx + lw / 2 + 4, y + 6, lb, rh - 16);
+      c.fillStyle = 'rgba(255,255,255,.35)'; c.fillRect(mx - lw / 2 - 4 - la, y + 6, la, 3); c.fillRect(mx + lw / 2 + 4, y + 6, lb, 3);
+      c.font = `700 17px ${PIX}`; c.fillStyle = a > b ? '#fff' : '#b8bccb'; c.textAlign = 'left'; c.fillText(Math.round(a * k), 18, y + rh / 2 - 1);
+      c.fillStyle = b > a ? '#fff' : '#b8bccb'; c.textAlign = 'right'; c.fillText(Math.round(b * k), W - 18, y + rh / 2 - 1); });
+  } });
+  /* the knockout draw, MR2 style: the eight entrants numbered down the side, lines joining pairs round by round to the
+     trophy. Winners' lines turn gold and the ones knocked out fade, so the same picture shows the draw and every round after */
+  B.draw8 = (info, text) => ({ who: 'mc', face: 'talk', text, textAt: 1500, draw(c, W, H, t) {
+    stadium(c, W, H, t, { dark: 0.62 });
+    c.font = `700 24px ${PIX}`; c.fillStyle = '#ffc93c'; c.textAlign = 'center'; c.textBaseline = 'alphabetic'; c.fillText(info.cup.name, W / 2, 48);
+    c.font = `500 16px ${PIX}`; c.fillStyle = '#fff6d8'; c.fillText(info.round, W / 2, 72);
+    const F = info.field, Hs = info.hist || [], order = Hs[0] || F.map((_, i) => i), top = 96, avail = H - 190 - top - 10, rh = avail / 8, ph = Math.min(48, rh - 8), pw = W * 0.56;
+    const ys = order.map((_, r) => top + r * rh + rh / 2), cx = [12 + pw + 14, 12 + pw + 14 + (W - pw - 70) * 0.33, 12 + pw + 14 + (W - pw - 70) * 0.66], tx = W - 34, ty = (ys[3] + ys[4]) / 2;
+    const alive = (i, r) => r === 0 || (Hs[r] || []).includes(i), out = (i, r) => Hs[r + 1] && !Hs[r + 1].includes(i);
+    // lines: round 1 joins neighbours, round 2 joins pairs of pairs, the final joins the halves, then on to the trophy
+    let level = order.map((i, r) => ({ i: [i], y: ys[r], x: 12 + pw }));
+    const lineIn = cl((t - 300 - 8 * 110) / 500);
+    for (let r = 0; r < 3; r++) { const next = [];
+      for (let p = 0; p < level.length; p += 2) { const A = level[p], Bq = level[p + 1], mx = cx[r], my = (A.y + Bq.y) / 2, win = Hs[r + 1] ? A.i.concat(Bq.i).find(i => Hs[r + 1].includes(i)) : null;
+        for (const q of [A, Bq]) { const won = win != null && q.i.includes(win); c.strokeStyle = won ? '#ffc93c' : win != null ? 'rgba(255,255,255,.18)' : 'rgba(255,255,255,.55)'; c.lineWidth = won ? 4 : 2.5; c.globalAlpha = lineIn;
+          c.beginPath(); c.moveTo(q.x, q.y); c.lineTo(mx, q.y); c.lineTo(mx, my); c.stroke(); }
+        next.push({ i: A.i.concat(Bq.i), y: my, x: mx, win }); }
+      level = next; }
+    const champ = Hs[3] && Hs[3][0]; c.strokeStyle = champ != null ? '#ffc93c' : 'rgba(255,255,255,.55)'; c.lineWidth = champ != null ? 4 : 2.5; c.beginPath(); c.moveTo(level[0].x, level[0].y); c.lineTo(tx - 22, ty); c.stroke(); c.globalAlpha = 1;
+    const tk = back((t - 300 - 8 * 110 - 200) / 450); if (tk > 0) { c.save(); c.translate(tx, ty); c.scale(tk, tk); trophy(c, 0, 0, 22); c.restore(); }
+    order.forEach((i, r) => { const e = F[i], at = 200 + r * 110, k = eo((t - at) / 320); if (t < at) return; const y = ys[r] - ph / 2, gone = [0, 1, 2].some(q => out(i, q));
+      c.save(); c.globalAlpha = k * (gone ? 0.5 : 1); c.translate(-(1 - k) * 40, 0);
+      numBlock(c, r + 1, 12, y + (ph - 26) / 2, 26);
+      SC.depth(c, () => { c.beginPath(); c.roundRect(42, y, pw - 30, ph, 7); }, e.me ? '#ffe8a8' : e.rook ? '#ffd2a0' : '#e9dcbc', 2, 0.25);
+      tile(c, e, 46, y + 3, ph - 6, t + r * 300, false);
+      c.fillStyle = '#3a2618'; c.font = `700 ${Math.min(17, ph * 0.38)}px ${PIX}`; c.textAlign = 'left'; c.textBaseline = 'middle'; c.fillText(e.name.replace(/^Rook's /, ''), 46 + ph, y + ph * 0.38, pw - ph - 40);
+      c.fillStyle = '#7a6248'; c.font = `500 ${Math.min(13, ph * 0.28)}px ${PIX}`; c.fillText(e.me ? "Tala's ranch" : e.rook ? 'Rook' : e.breeder || '', 46 + ph, y + ph * 0.72, pw - ph - 40);
+      c.restore(); });
+  } });
   /* ---------- running a show ---------- */
   const CPS = 0.045;   // characters per millisecond while a line types out
   function frame(c, W, H, b, t, prev) {
@@ -314,22 +358,44 @@ const showSpec = fm => SUMMON.specFor(fm);
 const showCup = c => { const fm = c.format, n = CUP.field.length;
   return { name: c.name.replace(/ \([A-S]\)$/, ''), grade: c.major || c.legend ? 'S' : c.small ? 'F' : c.grade, format: fm, size: n, purse: cupPurse(c), prize: c.prize,
     sub: fm === 'single' ? 'One match' : `${fm === 'robin' ? 'Round robin' : fm === 'bo3' ? 'Knockout, best of 3' : 'Knockout'} · ${n} Snabits` }; };
+/* the six stats as the fight uses them, for the face-off */
+const showStats = e => { try { const b = (e.me ? playerFighter(RS) : makeFighter(e.o.fm, e.o.skills, e.o.level)).base; return ['sta', 'pow', 'grd', 'mnd', 'spr', 'spd'].map(k => Math.round(b[k] || 0)); } catch (err) { return [0, 0, 0, 0, 0, 0]; } };
+const shade = (h, k) => '#' + [1, 3, 5].map(i => Math.round(parseInt(h.slice(i, i + 2), 16) * k).toString(16).padStart(2, '0')).join('');
+const cardCols = el => { const h = typeof ELC === 'function' ? ELC(el) : '#888888'; return /^#[0-9a-f]{6}$/i.test(h) ? [h, shade(h, 0.35)] : null; };   // the face-off card takes its element's colour
 function showSide(i) { const e = CUP.field[i], s = RS;
-  if (e.me) return { name: displayName(s), spec: showSpec(fightMon(s)), line: `Lv ${s.level} · Grade ${s.grade}`, me: true };
-  return { name: e.name, spec: showSpec(e.o.fm), line: `Lv ${e.o.level} · ${e.rook ? 'Rook' : e.breeder}`, rook: !!e.rook, breeder: e.breeder }; }
+  if (e.me) { const fm = fightMon(s); return { name: displayName(s), spec: showSpec(fm), line: `Lv ${s.level} · Grade ${s.grade}`, me: true, st: showStats(e), cols: cardCols(fm.el1) }; }
+  return { name: e.name, spec: showSpec(e.o.fm), line: `Lv ${e.o.level} · ${e.rook ? 'Rook' : e.breeder}`, rook: !!e.rook, breeder: e.breeder, st: showStats(e), cols: cardCols(e.o.fm.el1) }; }
+const showField = () => CUP.field.map((_, i) => ({ ...showSide(i), me: !!CUP.field[i].me, breeder: CUP.field[i].breeder }));
+/* Mira's line over the round robin table: who leads, and where the player's Snabit stands */
+function tableLine(me) {
+  const F = CUP.field, n = CUP.rounds.length, done = CUP.round, order = F.map((_, i) => i).sort((a, b) => CUP.pts[b] - CUP.pts[a] || CUP.hp[b] - CUP.hp[a]), top = order[0], pts = p => `${p} point${p === 1 ? '' : 's'}`;
+  if (!done) return `Here's the table. ${F.length} Snabits, and each one meets every other once.`;
+  if (done >= n) return `That's the table after all ${n} rounds. ${F[top].me ? me : F[top].name} finishes on top with ${pts(CUP.pts[top])}.`;
+  if (top === 0) return `After round ${done} of ${n}, ${me} leads with ${pts(CUP.pts[0])}.`;
+  return `After round ${done} of ${n}, ${F[top].name} leads with ${pts(CUP.pts[top])}, and ${me} has ${pts(CUP.pts[0])}.`;
+}
+/* Mira's line over the knockout draw after a round */
+function drawLine(me) {
+  const H = CUP.hist, r = H.length - 1, F = CUP.field, al = CUP.alive;
+  if (al.length === 1) return `That's the draw finished. ${al[0] === 0 ? me : F[al[0]].name} takes the cup.`;
+  const done = ['', 'The quarter-finals are done', 'The semi-finals are done'][r] || 'That round is done', next = al.length === 2 ? 'final' : 'semi-final', k = al.indexOf(0);
+  if (k < 0) return `${done}, and ${al.length} Snabits are left.`;
+  const foe = al[k % 2 ? k - 1 : k + 1]; return `${done}. ${me} meets ${F[foe].rook ? F[foe].name : `${F[foe].breeder}'s ${F[foe].name}`} in the ${next}.`;
+}
 const showOk = () => CUP && CUP.c.format !== 'team5';
 /* before a match: the opening the first time, then the VS card with the square-off sting */
 function cupBeforeShow(opp) {
   if (!showOk()) return Promise.resolve();
   const c = CUP.c, cup = showCup(c), me = showSide(0), foe = showSide(opp), L = CUPLINE, B = CUPSHOW.B, e = CUP.field[opp];
-  const info = { cup, me, foe, round: roundName(), field: CUP.field.map((_, i) => ({ ...showSide(i), me: !!CUP.field[i].me, breeder: CUP.field[i].breeder })) };
+  const info = { cup, me, foe, round: roundName(), field: showField() };
   const beats = [];
   if (!CUP.opened) { CUP.opened = true;
     const foeF = e.o ? makeFighter(e.o.fm, e.o.skills, e.o.level) : null;
     beats.push({ ...B.open(info), mus: 'arena' }, B.mc(info, L.open(cup)), B.mc(info, L.rules(cup), { pose: 'point' }));
     if (foeF) beats.push(B.gate(info, L.advice(playerFighter(RS), foeF, me.name, foe.name)));
-    if (c.format === 'elim' || c.format === 'bo3') beats.push(B.bracket(info, L.draw(me.name, foe.name))); }
-  beats.push({ ...B.vs(info, L.vs(roundName(), me, { ...e, name: e.name })), jingle: 'vs', mus: 'cup' });
+    if (c.format === 'robin') beats.push(B.table({ ...info, res: CUP.res, round: `${CUP.field.length} Snabits · ${CUP.rounds.length} rounds` }, tableLine(me.name)));
+    if (c.format === 'elim' || c.format === 'bo3') beats.push(B.draw8({ ...info, hist: CUP.hist, round: 'The draw' }, L.draw(me.name, foe.name))); }
+  beats.push({ ...B.faceoff(info, L.vs(roundName(), me, { ...e, name: e.name })), jingle: 'vs', mus: 'cup' });
   return CUPSHOW.run(beats);
 }
 /* after a match: Mira's recap, then Tala if the cup goes on */
@@ -341,6 +407,9 @@ function cupAfterShow(opp, res) {
   const series = c.format === 'bo3' && CUP.series && CUP.series.opp != null;
   const over = c.format === 'single' || CUP.out || (c.format === 'robin' ? CUP.round >= CUP.rounds.length : !series && CUP.alive.length === 1);
   const beats = [{ ...B.result(info, 'mc', L.recap(res, me.name, foe.name), won ? 'happy' : 'talk'), mus: 'arena' }];
+  const field = showField();
+  if (c.format === 'robin') beats.push(B.table({ cup: info.cup, field, res: CUP.res, last: [0, opp], round: over ? 'Final table' : `After round ${CUP.round} of ${CUP.rounds.length}` }, tableLine(me.name)));
+  if ((c.format === 'elim' || c.format === 'bo3') && !series) beats.push(B.draw8({ cup: info.cup, field, hist: CUP.hist, round: CUP.alive.length === 1 ? 'Champion' : CUP.alive.length === 2 ? 'Final' : 'Semi-final' }, drawLine(me.name)));
   if (!over) beats.push(B.result(info, 'tala', series ? `${won ? `Good job, ${me.name}!` : `We lost that one, ${me.name}.`} It's ${CUP.series.me} to ${CUP.series.them} in the series.` : L.after(res, me.name, c, CUP), won || draw ? 'happy' : 'worried'));
   return CUPSHOW.run(beats);
 }

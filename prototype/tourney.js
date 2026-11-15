@@ -74,9 +74,11 @@ function nextCupText(){
 function cupPurse(c){ if(c.rival) return Math.round(GRADE_INFO[c.grade].purse/4); return c.legend?30000:c.major?15000:c.open?150:c.official?Math.round(GRADE_INFO[c.grade].purse*1.5):c.small?Math.round(GRADE_INFO[c.grade].purse/10):c.exhibition?Math.round(GRADE_INFO[c.grade].purse*1.5):GRADE_INFO[c.grade].purse; }
 function cupFee(c){ return c.exhibition?2000:c.grade!=="E"&&!c.small&&!c.open?Math.round(cupPurse(c)/10):0; }
 function cupFormat(c){ return c.format==="team5"?"Team exhibition, 5 bouts":c.format==="robin"?`Round robin, ${c.size} monsters`:c.format==="elim"?"Knockout, 8 monsters":c.format==="bo3"?"Knockout of 8, best of 3":"One match"; }
+/* Cups opens the calendar on the ranch. The stadium lobby (venueLobby) stays for the test drivers */
 function openCups(){
   const s=RS;
   CUP=null;
+  if(typeof openCupCal==="function") return openCupCal();
   const go=()=>{ openVenue(); venueLobby(); const d=el("r-dusk"); if(d){ d.style.transition="none"; d.style.backgroundColor="transparent"; } };
   if(typeof smoothRanch==="function"&&smoothRanch()&&!s.busy) sceneFade(true,500).then(go,go); else go();
 }

@@ -78,9 +78,10 @@ async def week_action(pg, st, k, C, did):
     if out_open and st['cupNow'] and st['fat'] <= 60:
         await click(pg, '#r-menu [data-m="Out"]'); await click(pg, '#r-cup', 900)
         nm = st['cupNow'][0]
-        ok = await pg.evaluate("n=>{ const b=[...document.querySelectorAll('#v-body [data-c]')].find(b=>b.textContent.includes(n.replace(/ \\([A-S]\\)$/,''))); if(b){ b.click(); return true; } return false; }", nm)
+        # Cups opens the calendar on the ranch: pick this week's tile, then Enter (twice when Tala asks again)
+        ok = await pg.evaluate("n=>{ const w=PLAYER.week, i=cupsOfWeek(w).findIndex(c=>c.name===n), b=document.querySelector(`#r-cal .ct[data-w='${w}'][data-i='${i}']`); if(b){ b.click(); return true; } closeCupCal(); return false; }", nm)
         if ok:
-            await pg.wait_for_timeout(300); await click(pg, '#v-enter', 300); await click(pg, '#v-enter', 300)
+            await pg.wait_for_timeout(300); await click(pg, '#cal-go', 300); await click(pg, '#cal-go', 300)
             did['cups'] = did.get('cups', 0) + 1
             fine = await settle(pg, {'fight': did['cups'] % 3 == 0, 'control': True}, max_s=400, label=f'cup-w{st["week"]}')
             C.ok(fine, f'week {st["week"]}: the {nm} ran to the end')
