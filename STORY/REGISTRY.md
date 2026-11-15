@@ -37,6 +37,13 @@ Every piece of story in the game, one row each, seeded from `story.js` and `onbo
 | nesta-form | week note | ranch.js `endWeek` | the first fusion | Dr. Ines | ranch | Nesta can be scanned | PLAYER.famOpen, PLAYER.fused | PLAYER.fused | lab | league |
 | magna-form | week note | ranch.js `endWeek` | the Drifter is caught | the Drifter | ranch | Magna can be scanned | PLAYER.famOpen | PLAYER.roam.caught | drifter | league |
 | helm-form | week note | ranch.js `endWeek` | 100 kinds seen in the bestiary | Dr. Ines | ranch | Helm can be scanned | PLAYER.famOpen | PLAYER.dex | bestiary | league |
+| jingle-form | week note | ranch.js `endWeek` | 20,000 bits saved | the League | ranch | Jingle can be scanned | PLAYER.famOpen | PLAYER.bits | | league |
+| presto-form | week note | ranch.js `endWeek` | 6 different week events seen | a travelling magician | ranch | Presto can be scanned | PLAYER.famOpen | PLAYER.evSeen | week-events | league |
+| vroom-form | week note | ranch.js `endWeek` | the Better hut upgrade is bought | Walt, a wild Vroom | ranch | Vroom can be scanned | PLAYER.famOpen | PLAYER.upgrades | town-upgrades | league |
+| shutter-form | week note | ranch.js `endWeek` | the first costume is open | a town paper photographer | ranch | Shutter can be scanned | PLAYER.famOpen | cosOpenList() | costumes | league |
+| yoyo-form | week note | ranch.js `endWeek` | 20 wins | a young fan | ranch | Yoyo can be scanned | PLAYER.famOpen | s.wins | | league |
+| lava-form | week note | ranch.js `endWeek` | a heatwave week at grade C or higher | Walt | ranch | Lava can be scanned | PLAYER.famOpen | s.weather, bestGrade() | | league |
+| pogo-form | week note | ranch.js `endWeek` | 5 hearts of loyalty | Walt, a wild Pogo | ranch | Pogo can be scanned | PLAYER.famOpen | hearts() | | league |
 | stones-15nov | Pattern Stones | scenes.js `stoneGlyph`, explore.js `EX_DEEP_STONE` | deep map guardians at Tanglewood, Coral Shallows, Granite Steps, Dawn Temple | Walt | deep maps | Jack, Kraken, Golem, Unicorn can be called | PLAYER.stones | stoneOpen() | pattern-stones | specials |
 | costume-cards | unlock lines | contests.js, ranch.js, trips.js, dex.js, town.js | contest wins, festivals, good trip weeks, bestiary counts, the Duck pattern | judges, League stand, Walt, Dr. Ines, Nora | various | a costume can be scanned | PLAYER.cosOpen | cosOpen() | festivals | league |
 | expeditions | exploration | explore.js `runExpedition`, `exMap` | Out, Expeditions, from 1 heart; each region once a season | Walt | each open region | a week, +12 fatigue, +4 stress; items, bits from wild bounties | PLAYER.explore, PLAYER.stones, PLAYER.journal | tripRegionCount(), rankIdx() | | exploration |

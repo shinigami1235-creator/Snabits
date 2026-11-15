@@ -192,13 +192,28 @@ const SIG_SKILLS={
   "Nesting Stack":{el:null,kind:"Strike",cost:3,power:18,hits:4,acc:90},
   "Attract":{el:null,kind:"Cast",cost:3,power:40,acc:95,lower:{spd:1},lowerChance:40},
   "Air Hose":{el:null,kind:"Cast",cost:3,power:40,acc:95,status:["Soak",40]},
+  "Jelly Zap":{el:null,kind:"Cast",cost:3,power:45,acc:95,status:["Shock",35]},
+  "Sock It":{el:null,kind:"Strike",cost:4,power:80,acc:90},
+  "Frosting Splat":{el:null,kind:"Cast",cost:3,power:40,acc:95,lower:{spd:1},lowerChance:50},
+  "Foam Burst":{el:null,kind:"Cast",cost:3,power:20,hits:3,acc:95},
+  "Brain Freeze":{el:null,kind:"Cast",cost:3,power:40,acc:95,status:["Freeze",30]},
+  "Read Aloud":{el:null,kind:"Cast",cost:3,power:35,acc:95,status:["Daze",40]},
+  "Gumball Rain":{el:null,kind:"Cast",cost:3,power:20,hits:3,acc:95},
+  "Crown Spin":{el:null,kind:"Strike",cost:3,power:22,hits:3,acc:95},
+  "Pay Day":{el:null,kind:"Cast",cost:3,power:20,hits:3,acc:95},
+  "Rabbit Out":{el:null,kind:"Cast",cost:3,power:40,acc:95,status:["Daze",35]},
+  "Suction":{el:null,kind:"Cast",cost:3,power:45,acc:95,lower:{spd:1},lowerChance:40},
+  "Photo Flash":{el:null,kind:"Cast",cost:3,power:35,acc:100,status:["Blind",40]},
+  "Around the World":{el:null,kind:"Strike",cost:3,power:22,hits:3,acc:95},
+  "Eruption":{el:null,kind:"Cast",cost:4,power:55,acc:90,status:["Burn",35]},
+  "Pogo Stomp":{el:null,kind:"Strike",cost:4,power:75,acc:90},
   "Avalanche":{el:null,kind:"Strike",cost:5,power:90,acc:85,lower:{spd:1},lowerChance:40},
 };
 /* Fizz's Potion Toss carries a status from its element, the way Skit's webs do */
 const POTION_BY_EL={Blaze:"Burn",Frost:"Freeze",Tide:"Soak",Venom:"Poison",Spark:"Shock",Wild:"Root",Stone:"Crack",Light:"Blind",Shade:"Curse",Charm:"Daze",Steel:"Crack",Brawl:"Daze",Void:"Dread"};
 SIG_SKILLS["Potion Toss"]={el:null,kind:"Cast",cost:3,power:45,acc:95,status:["Poison",40]};
 for(const [el,[n,st]] of Object.entries(WEB_BY_EL)) SIG_SKILLS[n]={el,kind:"Cast",cost:3,power:40,acc:95,lower:{spd:1},lowerChance:100,...(st?{status:[st,30]}:{})};
-const FAMILY_SIG={Pinch:"Bunker Down",Chomp:"Crunch",Squib:"Ink Jet",Antik:"Static Screen",Moko:"Glare",Stilt:"High Kick",Booly:"Phase Shift",Plod:"Trunk Slam",Bipped:"One-Two",Fizz:"Potion Toss",Teep:"Steam Jet",Lern:"Flash",Eagle:"Talon Dive",Vampire:"Night Bite",Phoenix:"Sun Flare",Kitsune:"Foxfire",Naga:"Venom Coil",Yeti:"Avalanche",Puff:"Drowsy Spores",Flit:"Sonar",Glop:"Engulf",Tock:"Second Hand",Mitt:"Big Swing",Brolly:"Rain Shot",Spine:"Cactus Punch",Burr:"Claw Swipe",Kraken:"Crushing Grip",Golem:"Boulder Smash",Unicorn:"Prism Beam",Jack:"Spooky Grin",Wick:"Melt Down",Lumo:"Lantern Flash",Snooze:"Sleepy Slam",Inky:"Ink Blot",Cobble:"Rubble Roll",Nimbo:"Downdraft",Dango:"Triple Stack",Oaklet:"Root Snare",Roly:"Curl Up",Trundle:"Sticky Trail",Clank:"Wind-Up Barrage",Crease:"Thousand Cranes",Twiglet:"Pruning Snip",Swirl:"Shake Up",Ditty:"Music Box Waltz",Sizzle:"Toast Pop",Aero:"Updraft",Nesta:"Nesting Stack",Magna:"Attract",Helm:"Air Hose"};
+const FAMILY_SIG={Pinch:"Bunker Down",Chomp:"Crunch",Squib:"Ink Jet",Antik:"Static Screen",Moko:"Glare",Stilt:"High Kick",Booly:"Phase Shift",Plod:"Trunk Slam",Bipped:"One-Two",Fizz:"Potion Toss",Teep:"Steam Jet",Lern:"Flash",Eagle:"Talon Dive",Vampire:"Night Bite",Phoenix:"Sun Flare",Kitsune:"Foxfire",Naga:"Venom Coil",Yeti:"Avalanche",Puff:"Drowsy Spores",Flit:"Sonar",Glop:"Engulf",Tock:"Second Hand",Mitt:"Big Swing",Brolly:"Rain Shot",Spine:"Cactus Punch",Burr:"Claw Swipe",Kraken:"Crushing Grip",Golem:"Boulder Smash",Unicorn:"Prism Beam",Jack:"Spooky Grin",Wick:"Melt Down",Lumo:"Lantern Flash",Snooze:"Sleepy Slam",Inky:"Ink Blot",Cobble:"Rubble Roll",Nimbo:"Downdraft",Dango:"Triple Stack",Oaklet:"Root Snare",Roly:"Curl Up",Trundle:"Sticky Trail",Clank:"Wind-Up Barrage",Crease:"Thousand Cranes",Twiglet:"Pruning Snip",Swirl:"Shake Up",Ditty:"Music Box Waltz",Sizzle:"Toast Pop",Aero:"Updraft",Nesta:"Nesting Stack",Magna:"Attract",Helm:"Air Hose",Bloop:"Jelly Zap",Sox:"Sock It",Cuppy:"Frosting Splat",Suds:"Foam Burst",Scoop:"Brain Freeze",Tome:"Read Aloud",Gumball:"Gumball Rain",Pina:"Crown Spin",Jingle:"Pay Day",Presto:"Rabbit Out",Vroom:"Suction",Shutter:"Photo Flash",Yoyo:"Around the World",Lava:"Eruption",Pogo:"Pogo Stomp"};
 function sigSkills(s){
   const out=[], fam=FAMILY[s.m.family]&&FAMILY[s.m.family].of?FAMILY[s.m.family].of[0]:s.m.family; if((s.level||1)>=5){ if(fam==="Skit") out.push(WEB_BY_EL[s.m.el1][0]); else if(FAMILY_SIG[fam]) out.push(FAMILY_SIG[fam]); }
   const w=s.worn||{}; if(w.back==="Bat wings"||w.back==="Angel wings") out.push("Fly");

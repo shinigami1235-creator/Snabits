@@ -44,6 +44,22 @@ const FAMILY = {
   Nesta: {body:[3,[4,5,5,4,6,7,7,7,6]], legs:"stubby", base:[62,42,58,52,58,40], ability:["Inner Doll","Once a fight, a hit that would knock it out leaves it at 1 HP"]},
   Magna: {body:[4,[7,7,7,3,3,3,3,3]], legs:"stubby", base:[55,55,60,55,45,40], ability:["Pull","Its Strikes pull the target closer"]},
   Helm:  {body:[3,[4,6,7,7,7,7,7,7,6]], legs:"twolegs", base:[62,52,65,40,48,36], ability:["Pressure","Tide moves hit it 25% softer"]},
+  /* batch 4, wired 16 Nov 2026: eight commons from vivid photos, seven uncommons the ranch registers its own way */
+  Bloop: {body:[4,[3,5,6,7,7,7,5,3]], legs:"ghost", base:[52,40,45,62,58,52], ability:["Sting","A Close Strike that hits it has a 20% chance to Shock the attacker"]},
+  Sox:   {body:[3,[4,5,5,5,5,5,5,5,6,6]], legs:"stubby", base:[56,52,50,42,48,55], ability:["Cosy","Freeze can't land on it, and Frost moves hit it 15% softer"]},
+  Cuppy: {body:[4,[5,6,7,7,6,6,5,5]], legs:"stubby", base:[56,46,52,52,52,48], ability:["Sugar Rush","Its Speed goes up 1 step the first time it drops under half HP"]},
+  Suds:  {body:[4,[4,6,7,7,7,7,6,4]], legs:"stubby", base:[54,40,50,60,58,48], ability:["Bubble Up","Once a fight, dropping under half HP wraps it in a bubble that stops the next Mid or Far hit"]},
+  Scoop: {body:[3,[4,6,7,7,7,5,3,2]], legs:"stubby", base:[52,55,46,48,50,54], ability:["Chill Touch","Its Close Strikes have a 10% chance to Freeze"]},
+  Tome:  {body:[4,[6,7,7,7,7,7,7,7]], legs:"stubby", base:[50,38,48,68,62,44], ability:["Study","Its Mind goes up 1 step every 12 seconds"]},
+  Gumball:{body:[3,[4,6,7,7,7,7,6,4]], legs:"stubby", base:[58,50,56,46,46,44], ability:["Bouncy","A Close Strike that hits it bounces the attacker back"]},
+  Pina:  {body:[3,[3,5,6,6,6,6,6,5,3]], legs:"stubby", base:[56,56,52,42,46,48], ability:["Tropical","Heals 2% every time it lands a hit"]},
+  Jingle:{body:[4,[4,6,7,7,7,7,6,4]], legs:"stubby", base:[55,55,52,48,50,46], ability:["Lucky Coin","Its hits crit 12% more often"]},
+  Presto:{body:[3,[3,3,3,3,3,3,3,7]], legs:"stubby", base:[48,42,46,66,62,52], ability:["Misdirect","Its Casts have a 20% chance to lower the opponent's Insight 1 step"]},
+  Vroom: {body:[6,[7,7,7,7,7,7]], legs:"stubby", base:[55,52,55,40,46,60], ability:["Clean Sweep","Shakes off a status after a moment, once every 10 seconds"]},
+  Shutter:{body:[4,[6,7,7,7,7,7,7,6]], legs:"stubby", base:[50,44,48,62,64,48], ability:["Flash Bulb","The first Cast it lands each fight Blinds the target"]},
+  Yoyo:  {body:[4,[3,5,6,6,6,5,3]], legs:"ghost", base:[48,56,44,44,52,66], ability:["Spin Up","Its Speed goes up 1 step for every 3 hits it lands"]},
+  Lava:  {body:[4,[3,5,6,7,7,7,7,7]], legs:"stubby", base:[56,52,55,58,45,40], ability:["Molten","A Close Strike that hits it has a 20% chance to Burn the attacker"]},
+  Pogo:  {body:[4,[4,6,7,7,7,7,6,4]], legs:"stubby", base:[50,52,46,44,50,62], ability:["Spring Step","After a Close Strike hits it, it bounces back out of reach"]},
   Cobble:{body:[4,[3,5,6,7,7,7,7,7,6]], legs:"stubby", base:[60,56,68,30,42,34], ability:["Rock Shed","Its Constitution goes up 2 steps the first time it drops under half HP"]},
   /* special Snabits: only a colour easter egg finds them (EGGS below), they always have their own ability, and only fusion changes their element */
   Eagle:  {special:1, body:[3,[3,5,6,7,7,7,7,6,5]], legs:"twolegs", base:[50,62,45,35,55,73], ability:["Sky High","The first hit it lands in a fight is always a critical"]},
@@ -109,8 +125,10 @@ function pickFamily(cells,res){
   /* a pale photo (snow, a white wall, a washed-out sky, pastels) gives the other five */
   if(res&&res.bright>0.8&&res.sat<0.2) return {family:pick5(["Nimbo","Dango","Oaklet","Roly","Trundle"]), band, shape};
   /* a busy photo with four or more colours can find one of the batch 3 uncommons, once the ranch can register it */
-  if(res&&res.colours>=4){ const s=res.second||res.ranked&&res.ranked[1], k=Math.max(0,s?G.indexOf(s.g):0), U=["Clank","Crease","Twiglet","Swirl","Ditty","Sizzle","Aero","Nesta","Magna","Helm"], f=U[(k+["top","middle","bottom"].indexOf(band)*3+(shape==="wide"?1:0))%10];
+  if(res&&res.colours>=4){ const s=res.second||res.ranked&&res.ranked[1], k=Math.max(0,s?G.indexOf(s.g):0), U=["Clank","Crease","Twiglet","Swirl","Ditty","Sizzle","Aero","Nesta","Magna","Helm","Jingle","Presto","Vroom","Shutter","Yoyo","Lava","Pogo"], f=U[(k+["top","middle","bottom"].indexOf(band)*5+(shape==="wide"?1:0))%17];
     if(FAMILY[f]&&(typeof famOpen!=="function"||famOpen(f))) return {family:f, band, shape}; }
+  /* a vivid photo, bright and strongly coloured, gives one of the eight commons of batch 4 */
+  if(res&&res.sat>0.78&&res.bright>0.45){ const s=res.second||res.ranked&&res.ranked[1], k=Math.max(0,s?G.indexOf(s.g):Math.floor(rgbToHsv(res.main.rgb)[0]/45)); return {family:["Bloop","Sox","Cuppy","Suds","Scoop","Tome","Gumball","Pina"][(k+["top","middle","bottom"].indexOf(band)*3+(shape==="wide"?1:0))%8], band, shape}; }
   if(cells[4]/t<0.08&&vx+vy>0.125){ const rf=ringR[band][shape], ro=cx>0.5&&(typeof famOpen!=="function"||famOpen(rf)); return {family:ro?rf:ring[band][shape], band, shape}; }
   const solid = vx+vy<0.137;   // an evenly spread colour sits near 0.148 and one spot near 0, so about 5 in 13 random photos land here
   const nf=near[band][shape], open=typeof famOpen!=="function"||famOpen(nf);   // a family still waiting on its Licence Cup falls back to the first eight

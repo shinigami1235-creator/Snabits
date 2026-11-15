@@ -98,7 +98,27 @@ When both branches pass their tests, Chat A merges `batch-specials` into `batch-
 
 ## Batch 4, drawn 16 Nov 2026 for Gid's look-over
 
-Fifteen more families, drawn in `chibi.js` on `batch-regular` and not wired yet. Gid checks the sheets in `docs/art/batch4-1.png` to `batch4-3.png` first.
+Fifteen more families, drawn in `chibi.js` on `batch-regular`. Gid passed the sheets in `docs/art/batch4-1.png` to `batch4-3.png` once Bloop's Mega lost its sail, and all fifteen were wired the same night: stats, ability, scan, 8 moves, a signature, animations, a cry, a summon entrance, sizes, cousins and bestiary rows. The bestiary is 56 families by 12 elements, 672 kinds.
+
+| Family | Ability | Signature | Comes from |
+|---|---|---|---|
+| Bloop | Sting: a Close Strike that hits it has a 20% chance to Shock the attacker | Jelly Zap | vivid photo |
+| Sox | Cosy: no Freeze, Frost hits 15% softer | Sock It | vivid photo |
+| Cuppy | Sugar Rush: Speed up 1 the first time it drops under half HP | Frosting Splat | vivid photo |
+| Suds | Bubble Up: a bubble once a fight under half HP | Foam Burst | vivid photo |
+| Scoop | Chill Touch: Close Strikes have a 10% chance to Freeze | Brain Freeze | vivid photo |
+| Tome | Study: Mind up 1 every 12 s | Read Aloud | vivid photo |
+| Gumball | Bouncy: a Close Strike that hits it bounces the attacker back | Gumball Rain | vivid photo |
+| Pina | Tropical: heals 2% on every hit it lands | Crown Spin | vivid photo |
+| Jingle | Lucky Coin: crits 12% more often | Pay Day | 20,000 bits, licence C |
+| Presto | Misdirect: Casts have a 20% chance to lower Insight 1 | Rabbit Out | 6 week events seen, licence B |
+| Vroom | Clean Sweep: shakes off a status after 1.5 s, once every 10 s | Suction | Better hut, licence D |
+| Shutter | Flash Bulb: its first Cast landed each fight Blinds | Photo Flash | first costume, licence C |
+| Yoyo | Spin Up: Speed up 1 every 3 hits it lands | Around the World | 20 wins, licence B |
+| Lava | Molten: a Close Strike that hits it has a 20% chance to Burn the attacker | Eruption | heatwave week at C, licence C |
+| Pogo | Spring Step: bounces back out of reach after a Close Strike hits it | Pogo Stomp | 5 hearts, licence A |
+
+Every one wins 43 to 53% in sim2 against the whole field.
 
 - Commons: Bloop (jellyfish, glowing jellyfish, jellyfish queen with a coral crown and baby jellies), Sox (sock, sock puppet, sock dragon), Cuppy (muffin, frosted cupcake, three-tier cake), Suds (soap bubble, soap bar, clawfoot tub), Scoop (cone, double scoop, sundae), Tome (notebook, open book, spellbook), Gumball (gumball, gumball machine, candy carousel), Pina (pineapple bud, pineapple, tiki totem).
 - Uncommons: Jingle (coin, piggy bank, treasure chest), Presto (top hat, hat with bunny ears, the full magic act), Vroom (dust bunny, robot vacuum, floor polisher), Shutter (film roll, instant camera, bellows camera), Yoyo (yo-yo, round the world, battle top), Lava (wax blob, lava lamp, volcano), Pogo (bouncy ball, pogo stick, jack-in-the-box).

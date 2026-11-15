@@ -7,7 +7,7 @@ const arBand=gap=>gap<10?"Close":gap<25?"Near":gap<45?"Mid":"Far";
 /* hitting from further away is harder to set up, so it pays a little more */
 const AR_BAND_DMG={Close:0.8,Near:0.95,Mid:1.2,Far:1.5,Any:1};
 /* a family's damage, tuned so every family wins about half its fights in the balance sim */
-const AR_FAM_DMG={Chomp:0.88,Pinch:1.03,Stilt:0.97,Skit:1.18,Antik:0.89,Squib:1.02,Moko:1.27,Booly:1.16,Plod:0.9,Bipped:0.99,Fizz:1.19,Teep:0.95,Lern:1.48,Eagle:0.96,Vampire:1.0,Phoenix:0.83,Kitsune:1.03,Naga:0.78,Yeti:0.72,Puff:1.2,Flit:1.22,Glop:0.78,Tock:1.24,Mitt:0.82,Brolly:0.98,Spine:0.83,Burr:0.99,Kraken:0.95,Golem:0.84,Unicorn:1.03,Jack:1.1,Wick:1,Lumo:1.17,Snooze:1.06,Inky:1.42,Cobble:0.97,Nimbo:1.35,Dango:1,Oaklet:1.14,Roly:0.98,Trundle:1.2,Clank:0.92,Crease:1.04,Twiglet:1,Swirl:1,Ditty:1.14,Sizzle:1,Aero:1.32,Nesta:1.16,Magna:1,Helm:0.9};   // retuned 15 Nov 2026 after melee lost Leap Back
+const AR_FAM_DMG={Chomp:0.88,Pinch:1.03,Stilt:0.97,Skit:1.18,Antik:0.89,Squib:1.02,Moko:1.27,Booly:1.16,Plod:0.9,Bipped:0.99,Fizz:1.19,Teep:0.95,Lern:1.48,Eagle:0.96,Vampire:1.0,Phoenix:0.83,Kitsune:1.03,Naga:0.78,Yeti:0.72,Puff:1.2,Flit:1.22,Glop:0.78,Tock:1.24,Mitt:0.82,Brolly:0.98,Spine:0.83,Burr:0.99,Kraken:0.95,Golem:0.84,Unicorn:1.03,Jack:1.1,Wick:1,Lumo:1.17,Snooze:1.06,Inky:1.42,Cobble:0.97,Nimbo:1.35,Dango:1,Oaklet:1.14,Roly:0.98,Trundle:1.2,Clank:0.92,Crease:1.04,Twiglet:1,Swirl:1,Ditty:1.14,Sizzle:1,Aero:1.32,Nesta:1.16,Magna:1,Helm:0.9,Bloop:1.12,Sox:1.05,Cuppy:1,Suds:1.28,Scoop:0.98,Tome:1.06,Gumball:1.13,Pina:0.97,Jingle:1.18,Presto:1.08,Vroom:0.97,Shutter:1.05,Yoyo:0.96,Lava:0.93,Pogo:1.16};   // retuned 15 Nov 2026 after melee lost Leap Back
 
 /* [name, learned at, range, damage, accuracy, sharpness, wither, push, cost, windup, extras] */
 const FAM_MOVES={
@@ -97,6 +97,37 @@ const FAM_MOVES={
     ["Repel",14,"Near",30,85,5,0,30,20,0.5,{cast:1}],["Scrap Storm",20,"Near",14,85,8,0,0,26,0.5,{cast:1,hits:4}],["Overcharge",30,"Mid",56,75,8,0,0,32,0.8,{cast:1,status:["Shock",30]}],["Field Crush",40,"Far",90,66,12,0,-20,42,1.2,{cast:1}]],
   Helm:[["Brass Bonk",1,"Close",26,88,8,0,10,10,0.3],["Bubble Shot",3,"Mid",24,90,5,0,0,12,0.35,{cast:1}],["Air Hose",5,"Near",30,85,5,0,0,22,0.6,{cast:1,status:["Soak",40]}],["Dive Swap",8,"Close",15,80,0,0,0,12,0.35,{swap:1}],
     ["Seal Up",14,"Any",0,100,0,0,0,18,0.2,{buff:"bunker"}],["Lead Boots",20,"Close",48,80,10,0,22,26,0.6],["Sonar Ping",30,"Far",50,82,5,10,0,30,0.8,{cast:1}],["Depth Charge",40,"Mid",92,64,12,0,28,42,1.2,{cast:1}]],
+  /* batch 4 */
+  Bloop:[["Jelly Bump",1,"Close",24,90,8,0,8,9,0.25],["Sting Shot",3,"Mid",26,90,5,0,0,12,0.35,{cast:1}],["Jelly Zap",5,"Near",30,85,5,0,0,22,0.6,{cast:1,status:["Shock",35]}],["Drift Swap",8,"Close",14,85,0,0,0,12,0.3,{swap:1}],
+    ["Glow Soak",14,"Any",0,100,0,0,0,20,0.3,{support:1,heal:0.2}],["Tentacle Flurry",20,"Near",14,85,8,0,0,24,0.5,{hits:4}],["Bubble Net",30,"Mid",24,85,0,0,0,24,0.6,{cast:1,slow:3}],["Bloom Pulse",40,"Far",88,68,12,0,15,40,1.2,{cast:1}]],
+  Sox:[["Toe Poke",1,"Close",24,90,10,0,8,9,0.25],["Lint Ball",3,"Mid",26,88,5,0,0,12,0.35],["Sock It",5,"Close",60,75,12,0,22,26,0.8],["Laundry Swap",8,"Close",14,85,0,0,0,12,0.3,{swap:1}],
+    ["Darn It",14,"Any",0,100,0,0,0,20,0.3,{support:1,heal:0.2}],["Thread Whip",20,"Near",44,82,10,0,10,24,0.6],["Yarn Snare",30,"Mid",24,85,0,0,0,26,0.6,{cast:1,hold:1.5}],["Woolly Roar",40,"Far",88,68,10,10,20,40,1.2,{cast:1}]],
+  Cuppy:[["Sprinkle Toss",1,"Mid",14,90,5,0,0,10,0.3,{cast:1,hits:2}],["Cake Bump",3,"Close",26,88,8,0,10,12,0.3],["Frosting Splat",5,"Mid",26,88,0,0,0,22,0.6,{cast:1,status:["Root",35]}],["Cupcake Swap",8,"Close",14,85,0,0,0,12,0.3,{swap:1}],
+    ["Bake",14,"Any",0,100,0,0,0,22,0.4,{support:1,heal:0.22}],["Cherry Bomb",20,"Mid",48,80,8,0,15,26,0.7,{cast:1}],["Birthday Blaze",30,"Near",58,78,8,0,10,30,0.8,{cast:1,status:["Burn",20]}],["Layer Cake",40,"Close",88,66,15,0,28,40,1.1]],
+  Suds:[["Bubble Pop",1,"Mid",24,90,5,0,0,10,0.3,{cast:1}],["Soap Slide",3,"Mid",28,85,8,0,8,14,0.4,{dash:"in"}],["Foam Burst",5,"Near",14,88,5,0,0,22,0.6,{cast:1,hits:3,status:["Soak",25]}],["Rinse Swap",8,"Close",14,85,0,0,0,12,0.3,{swap:1}],
+    ["Lather Up",14,"Any",0,100,0,0,0,18,0.2,{buff:"bubble"}],["Scrub",20,"Any",0,100,0,0,0,22,0.4,{support:1,heal:0.2,cleanse:1}],["Suds Slam",30,"Close",56,78,10,0,20,30,0.8],["Bath Flood",40,"Far",88,68,10,0,20,40,1.2,{cast:1}]],
+  Scoop:[["Cone Jab",1,"Near",26,88,10,0,8,10,0.3],["Sprinkle Shot",3,"Mid",14,88,5,0,0,12,0.35,{hits:2}],["Brain Freeze",5,"Mid",26,85,5,0,0,22,0.6,{cast:1,status:["Freeze",30]}],["Scoop Swap",8,"Close",14,85,0,0,0,12,0.3,{swap:1}],
+    ["Sweet Treat",14,"Any",0,100,0,0,0,20,0.3,{support:1,heal:0.2}],["Melt Drip",20,"Mid",22,85,0,0,0,22,0.5,{cast:1,slow:2}],["Sundae Slam",30,"Close",60,76,12,0,22,30,0.8],["Gelato Glacier",40,"Far",88,68,12,0,15,40,1.2,{cast:1,status:["Freeze",15]}]],
+  Tome:[["Page Cut",1,"Close",22,92,15,0,4,8,0.2],["Word Bolt",3,"Mid",26,90,5,0,0,12,0.35,{cast:1}],["Read Aloud",5,"Mid",22,88,0,10,0,22,0.6,{cast:1,status:["Daze",40]}],["Chapter Swap",8,"Close",14,85,0,0,0,12,0.3,{swap:1}],
+    ["Bookmark",14,"Any",0,100,0,0,0,20,0.3,{support:1,heal:0.2}],["Paper Storm",20,"Near",13,88,8,0,0,24,0.5,{cast:1,hits:4}],["Spell Rune",30,"Far",58,78,8,10,0,30,0.8,{cast:1}],["Grand Grimoire",40,"Far",92,66,12,0,15,42,1.2,{cast:1}]],
+  Gumball:[["Gum Shot",1,"Mid",24,90,5,0,6,10,0.3],["Chew",3,"Close",28,88,8,0,6,12,0.3],["Gumball Rain",5,"Mid",15,88,5,0,0,22,0.6,{cast:1,hits:3}],["Twist Swap",8,"Close",14,85,0,0,0,12,0.3,{swap:1}],
+    ["Bubblegum Bubble",14,"Any",0,100,0,0,0,18,0.2,{buff:"bubble"}],["Sticky Gum",20,"Mid",22,85,0,0,0,22,0.5,{cast:1,slow:3}],["Jawbreaker",30,"Close",64,74,12,0,24,32,0.9],["Candy Crash",40,"Mid",90,66,12,0,28,42,1.2,{dash:"in"}]],
+  Pina:[["Leaf Slice",1,"Close",24,90,15,0,4,9,0.25],["Pineapple Toss",3,"Mid",26,88,5,0,6,12,0.4],["Crown Spin",5,"Near",16,85,8,0,0,22,0.6,{hits:3}],["Tiki Swap",8,"Close",15,80,0,0,0,12,0.35,{swap:1}],
+    ["Juice Up",14,"Any",0,100,0,0,0,22,0.4,{support:1,heal:0.22}],["Spiky Roll",20,"Mid",56,76,10,0,20,28,0.8,{dash:"in"}],["Tiki Torch",30,"Near",58,78,8,0,10,30,0.8,{cast:1,status:["Burn",25]}],["Luau Blast",40,"Far",90,68,12,0,15,40,1.2,{cast:1}]],
+  Jingle:[["Coin Toss",1,"Mid",26,88,8,0,0,10,0.3],["Piggy Charge",3,"Mid",28,85,8,0,10,14,0.4,{dash:"in"}],["Pay Day",5,"Mid",15,88,8,0,0,22,0.6,{cast:1,hits:3}],["Change Swap",8,"Close",14,85,0,0,0,12,0.3,{swap:1}],
+    ["Save Up",14,"Any",0,100,0,0,0,18,0.2,{buff:"bunker"}],["Gold Rush",20,"Close",14,85,10,0,0,26,0.5,{hits:4}],["Treasure Trap",30,"Close",44,80,8,0,0,28,0.7,{hold:1.5}],["Jackpot",40,"Far",92,66,15,0,15,42,1.2,{cast:1}]],
+  Presto:[["Wand Tap",1,"Close",22,92,8,0,4,8,0.2],["Card Throw",3,"Mid",14,90,10,0,0,12,0.35,{hits:2}],["Rabbit Out",5,"Mid",26,88,0,10,0,22,0.6,{cast:1,status:["Daze",35]}],["Hat Swap",8,"Close",14,85,0,0,0,12,0.3,{swap:1}],
+    ["Disappear",14,"Any",0,100,0,0,0,18,0.2,{buff:"phase"}],["Dove Flight",20,"Near",15,85,5,0,0,24,0.5,{cast:1,hits:3}],["Saw in Half",30,"Close",58,78,15,0,10,30,0.8],["Grand Illusion",40,"Far",90,66,12,10,10,42,1.2,{cast:1}]],
+  Vroom:[["Bumper",1,"Close",26,88,8,0,12,10,0.3],["Dust Cloud",3,"Mid",18,90,0,0,0,12,0.4,{cast:1,status:["Blind",30]}],["Suction",5,"Mid",28,88,5,0,-30,22,0.5,{cast:1}],["Dock Swap",8,"Close",14,85,0,0,0,12,0.3,{swap:1}],
+    ["Recharge",14,"Any",0,100,0,0,0,20,0.3,{support:1,heal:0.2}],["Brush Spin",20,"Close",14,85,8,0,0,24,0.5,{hits:4}],["Full Power",30,"Mid",60,75,10,0,22,32,0.9,{dash:"in"}],["Deep Clean",40,"Far",90,66,12,0,20,40,1.2,{cast:1}]],
+  Shutter:[["Snap",1,"Close",24,90,10,0,4,9,0.25],["Film Lash",3,"Near",26,88,8,0,8,12,0.3],["Photo Flash",5,"Mid",20,90,0,10,0,22,0.6,{cast:1,status:["Blind",40]}],["Reel Swap",8,"Close",14,85,0,0,0,12,0.3,{swap:1}],
+    ["Develop",14,"Any",0,100,0,0,0,20,0.3,{support:1,heal:0.2}],["Burst Mode",20,"Mid",13,88,8,0,0,24,0.5,{cast:1,hits:4}],["Zoom Lens",30,"Far",58,80,10,0,0,30,0.8,{cast:1}],["Grand Exposure",40,"Far",90,66,12,10,10,42,1.2,{cast:1}]],
+  Yoyo:[["String Whip",1,"Near",26,88,8,0,8,10,0.3],["Spin Bump",3,"Close",26,88,8,0,10,12,0.3],["Around the World",5,"Near",16,88,8,0,0,22,0.6,{hits:3}],["Sleeper Swap",8,"Close",14,85,0,0,0,12,0.3,{swap:1}],
+    ["Wind Back",14,"Any",0,100,0,0,0,20,0.3,{support:1,heal:0.2}],["Cat's Cradle",20,"Mid",22,85,0,0,0,24,0.6,{cast:1,hold:1.5}],["Top Grind",30,"Close",58,78,15,0,15,30,0.8],["Tornado Spin",40,"Mid",90,66,12,0,28,42,1.2,{dash:"in"}]],
+  Lava:[["Hot Blob",1,"Mid",26,88,5,0,0,10,0.3,{cast:1,status:["Burn",15]}],["Magma Bump",3,"Close",26,88,8,0,10,12,0.3],["Eruption",5,"Mid",30,85,8,0,10,22,0.6,{cast:1,status:["Burn",35]}],["Glow Swap",8,"Close",14,85,0,0,0,12,0.3,{swap:1}],
+    ["Cool Down",14,"Any",0,100,0,0,0,22,0.4,{support:1,heal:0.22}],["Molten Rain",20,"Mid",15,85,5,0,0,24,0.5,{cast:1,hits:3}],["Magma Wave",30,"Near",58,78,8,0,15,30,0.8,{cast:1}],["Volcano Blast",40,"Far",92,66,12,0,20,42,1.2,{cast:1,status:["Burn",25]}]],
+  Pogo:[["Boing",1,"Close",24,90,8,0,12,9,0.25],["Bounce Shot",3,"Mid",26,88,5,0,6,12,0.35],["Pogo Stomp",5,"Mid",56,76,10,0,20,26,0.8,{dash:"in"}],["Spring Swap",8,"Close",14,85,0,0,0,12,0.3,{swap:1}],
+    ["Rebound",14,"Any",0,100,0,0,0,20,0.3,{support:1,heal:0.2}],["Jack Pop",20,"Near",46,82,8,10,15,26,0.6,{cast:1,status:["Daze",25]}],["Spring Kick",30,"Close",15,85,10,0,0,28,0.6,{hits:3}],["Mega Boing",40,"Mid",92,66,12,0,30,42,1.2,{dash:"in"}]],
   /* the special Snabits */
   Eagle:[["Peck",1,"Close",24,92,10,0,4,9,0.2],["Swoop",3,"Near",32,85,10,0,8,14,0.4,{dash:"in"}],["Talon Dive",5,"Close",62,80,18,0,18,28,0.7],["Dive",8,"Mid",30,85,10,0,8,16,0.4,{dash:"in"}],
     ["Wing Gust",14,"Mid",36,85,5,0,28,22,0.5,{cast:1}],["Keen Sight",20,"Any",0,100,0,0,0,16,0.2,{buff:"unblink"}],["Feather Volley",30,"Far",18,85,8,0,0,28,0.6,{cast:1,hits:3}],["Sky Strike",40,"Far",88,70,15,0,20,40,1.0,{dash:"in"}]],
@@ -124,7 +155,7 @@ const FAM_MOVES={
 const SHARED_MOVES=[["Rush",1,"Any",14,85,5,0,0,10,0.25,{dash:"in",melee:1}],["Leap Back",1,"Any",0,100,0,0,0,10,0.2,{step:-20,ranged:1}],["Brace",1,"Any",0,100,0,0,0,10,0.1,{buff:"brace"}]];
 const arMelee=fam=>{ const d=(FAM_MOVES[fam]||[]).map(arMove).filter(m=>m.dmg); return d.filter(m=>!m.cast&&(m.range==="Close"||m.range==="Near"||m.dash)).length>=d.length/2; };
 /* how fast each family gets around: Booly floats and Squib jets, while Chomp and Pinch plod */
-const FAM_WALK={Chomp:0.8,Pinch:0.85,Stilt:1.05,Skit:1.15,Antik:1,Squib:1.15,Moko:1.05,Booly:1.25,Plod:0.75,Bipped:1.05,Fizz:1,Teep:0.85,Lern:1.15,Eagle:1.2,Vampire:1,Phoenix:1.05,Kitsune:1.15,Naga:0.95,Yeti:0.8,Puff:0.9,Flit:1.3,Glop:0.85,Tock:1.05,Mitt:0.95,Brolly:1,Spine:0.7,Burr:0.95,Kraken:0.9,Golem:0.7,Unicorn:1.15,Jack:0.9,Wick:1.05,Lumo:1.1,Snooze:0.85,Inky:1,Cobble:0.8,Nimbo:1.1,Dango:1.05,Oaklet:0.9,Roly:1.2,Trundle:0.55,Clank:0.9,Crease:1.25,Twiglet:0.75,Swirl:0.95,Ditty:1,Sizzle:1.05,Aero:1.35,Nesta:0.85,Magna:0.9,Helm:0.8};
+const FAM_WALK={Chomp:0.8,Pinch:0.85,Stilt:1.05,Skit:1.15,Antik:1,Squib:1.15,Moko:1.05,Booly:1.25,Plod:0.75,Bipped:1.05,Fizz:1,Teep:0.85,Lern:1.15,Eagle:1.2,Vampire:1,Phoenix:1.05,Kitsune:1.15,Naga:0.95,Yeti:0.8,Puff:0.9,Flit:1.3,Glop:0.85,Tock:1.05,Mitt:0.95,Brolly:1,Spine:0.7,Burr:0.95,Kraken:0.9,Golem:0.7,Unicorn:1.15,Jack:0.9,Wick:1.05,Lumo:1.1,Snooze:0.85,Inky:1,Cobble:0.8,Nimbo:1.1,Dango:1.05,Oaklet:0.9,Roly:1.2,Trundle:0.55,Clank:0.9,Crease:1.25,Twiglet:0.75,Swirl:0.95,Ditty:1,Sizzle:1.05,Aero:1.35,Nesta:0.85,Magna:0.9,Helm:0.8,Bloop:1.05,Sox:1,Cuppy:0.95,Suds:0.95,Scoop:1,Tome:0.9,Gumball:0.9,Pina:0.95,Jingle:0.95,Presto:1.05,Vroom:1.25,Shutter:1,Yoyo:1.25,Lava:0.85,Pogo:1.2};
 /* a family's first move takes its element, the way Skit's Web already does: a Blaze Chomp bites with Flame Bite */
 const EL_PREFIX={Blaze:"Flame",Frost:"Frost",Tide:"Aqua",Spark:"Volt",Wild:"Leaf",Venom:"Toxic",Charm:"Heart",Stone:"Rock",Light:"Shine",Steel:"Iron",Shade:"Shadow",Void:"Void"};
 const arMove=r=>({name:r[0],lv:r[1],range:r[2],dmg:r[3],acc:r[4],sharp:r[5]/100,wither:r[6],push:r[7],cost:r[8],wind:r[9],...(r[10]||{})});
@@ -259,6 +290,8 @@ class Arena{
       if(q.f.ability==="Short Fuse"&&!q.fuse&&q.hp>0&&q.hp<q.maxhp/2){ q.fuse=1; this.ab(q,"Short Fuse"); this.stage(q,{pow:1},1,q); }   // Wick
       if(q.f.ability==="Rock Shed"&&!q.shed&&q.hp>0&&q.hp<q.maxhp/2){ q.shed=1; this.ab(q,"Rock Shed"); this.stage(q,{grd:2},1,q); }   // Cobble
       if(q.f.ability==="Sprout"&&!q.sprout&&q.hp>0&&q.hp<q.maxhp*0.3){ q.sprout=1; this.ab(q,"Sprout"); this.heal(q,q.maxhp*0.2,"heal"); }   // Oaklet
+      if(q.f.ability==="Sugar Rush"&&!q.rush&&q.hp>0&&q.hp<q.maxhp/2){ q.rush=1; this.ab(q,"Sugar Rush"); this.stage(q,{spd:1},1,q); }   // Cuppy
+      if(q.f.ability==="Bubble Up"&&!q.bubbled&&q.hp>0&&q.hp<q.maxhp/2){ q.bubbled=1; q.buff.bubble=true; this.ab(q,"Bubble Up"); }   // Suds
       if(q.f.ability==="Healing Horn"&&!q.horn&&q.hp>0&&q.hp<q.maxhp*0.4){ q.horn=1; this.ab(q,"Healing Horn"); this.heal(q,q.maxhp*0.3,"heal"); }   // Unicorn
       if(q.f.ability==="Last Stand"&&!q.lastStand&&q.hp<q.maxhp/4){ q.lastStand=1; this.ab(q,"Last Stand"); this.heal(q,q.maxhp*0.2,"stand"); } }   // Brawl's Last Stand
     for(const q of this.p){ const o=this.p[1-q.i]; if(q.hp<=0&&q.f.ability==="Haunt"&&!q.haunted&&o.hp>0){ q.haunted=1; this.ab(q,"Haunt"); const d=Math.round(o.maxhp/4); o.hp=Math.max(0,o.hp-d); q.dealt+=d; this.ev.push({t:"recoil",i:o.i,dmg:d}); } }   // Shade's Haunt
@@ -267,7 +300,7 @@ class Arena{
   heal(f,amt,src,from){ const n=Math.max(0,Math.min(Math.round(amt),f.maxhp-f.hp)); if(f.hp<=0) return 0; f.hp+=n; this.ev.push({t:"heal",i:f.i,amt:n,src,from}); return n; }
   inflict(f,name,pct,from){
     if(f.hp<=0||f.st||f.buff.ward||!AR_STATUS[name]) return false;
-    if(name==="Freeze"&&(f.thawT>0||f.f.ability==="Thick Fur")) return false;
+    if(name==="Freeze"&&(f.thawT>0||f.f.ability==="Thick Fur"||f.f.ability==="Cosy")) return false;
     if(name==="Poison"&&(f.f.el1==="Steel"||f.f.el2==="Steel")&&!(from&&from.f.ability==="Corrosion")) return false;   // Venom's Corrosion can Poison metal
     if(name==="Freeze"&&from&&from.f.ability==="Permafrost") pct*=2;
     if(name==="Root"&&f.f.ability==="Slow and Sure"){ this.ab(f,"Slow and Sure"); return false; }   // Trundle
@@ -298,6 +331,9 @@ class Arena{
       for(const k in p.stgT){ p.stgT[k]-=AR.DT; if(p.stgT[k]<=0){ delete p.stgT[k]; p.stg[k]=0; this.ev.push({t:"stage",i:p.i,k,n:0,end:1}); } }
       if(p.f.ability==="Nap"&&p.hp>0){ if(p.walkT!=null&&this.t-p.walkT<0.3) p.napT=0; else { p.napT=(p.napT||0)+AR.DT; if(p.napT>=2){ p.napT-=2; if(p.hp<p.maxhp){ this.ab(p,"Nap",true); this.heal(p,p.maxhp*0.03,"heal"); } } } }   // Snooze
       if(p.f.ability==="Wind-Up Key"&&p.hp>0){ p.keyT=(p.keyT||0)+AR.DT; if(p.keyT>=10){ p.keyT-=10; this.ab(p,"Wind-Up Key"); this.stage(p,{spd:1},1,p); } }   // Clank
+      if(p.f.ability==="Study"&&p.hp>0){ p.studyT=(p.studyT||0)+AR.DT; if(p.studyT>=12){ p.studyT-=12; this.ab(p,"Study"); this.stage(p,{mnd:1},1,p); } }   // Tome
+      if(p.f.ability==="Clean Sweep"&&p.hp>0){ p.sweepCD=Math.max(0,(p.sweepCD||0)-AR.DT); p.sweepHeld=p.st&&!p.sweepCD?(p.sweepHeld||0)+AR.DT:0;
+        if(p.sweepHeld>=1.5){ this.ev.push({t:"cure",i:p.i,name:p.st.name}); p.st=null; p.sweepHeld=0; p.sweepCD=10; this.ab(p,"Clean Sweep"); } }   // Vroom
       if(p.f.ability==="Regrow"&&p.hp>0){ p.regT=(p.regT||0)+AR.DT; if(p.regT>=3){ p.regT-=3; if(p.hp<p.maxhp){ this.ab(p,"Regrow",true); this.heal(p,p.maxhp*0.02,"heal"); } } }   // Glop's Regrow
       if(p.f.ability==="Sunbather"&&p.hp>0){ p.sunT+=AR.DT; if(p.sunT>=4){ p.sunT-=4; if(p.hp<p.maxhp){ this.ab(p,"Sunbather",true); this.heal(p,p.maxhp*0.01,"sun"); } } }   // Wild's Sunbather: 1% every 4 seconds
       if(p.buff.regen){ p.regenT+=AR.DT; if(p.regenT>=1){ p.regenT-=1; this.heal(p,p.maxhp*0.025,"regen"); } } else p.regenT=0;
@@ -385,6 +421,7 @@ class Arena{
       if(tg.f.ability==="Roll Up"&&!m.cast&&m.range==="Close"&&tg.hp<tg.maxhp/2){ dmg*=0.75; if(h===0) this.ab(tg,"Roll Up",true); }   // Roly
       if(tg.f.ability==="Paper Fold"&&!m.cast&&m.range==="Close"){ dmg*=0.85; if(h===0) this.ab(tg,"Paper Fold",true); }   // Crease
       if(tg.f.ability==="Pressure"&&m.el==="Tide"){ dmg*=0.75; if(h===0) this.ab(tg,"Pressure",true); }   // Helm
+      if(tg.f.ability==="Cosy"&&m.el==="Frost"){ dmg*=0.85; if(h===0) this.ab(tg,"Cosy",true); }   // Sox
       if(tg.f.ability==="Stone Skin"){ dmg*=0.9; if(h===0) this.ab(tg,"Stone Skin",true); }   // Golem
       if(tg.f.ability==="Wobble"&&!tg.wob){ tg.wob=1; dmg*=0.7; this.ab(tg,"Wobble"); }   // Squib's Wobble
       if(m.hpScale) dmg*=0.4+0.6*p.hp/p.maxhp;
@@ -393,8 +430,8 @@ class Arena{
       if(m.el==="Spark"&&this.has(tg,"Soak")) dmg*=1.25;
       let shatter=false; if(this.has(tg,"Freeze")){ dmg*=1.25*(p.f.ability==="Permafrost"?1.2:1); shatter=true; if(p.f.ability==="Permafrost") this.ab(p,"Permafrost",true); }
       const sky=p.f.ability==="Sky High"&&!p.sky&&tg===o; if(sky){ p.sky=1; this.ev.push({t:"ability",i:p.i,name:"Sky High"}); }   // Eagle's Sky High
-      const rolled=!tg.buff.bulwark&&R()<m.sharp+edge(this.eff(p,"pow"),con,0.2,0,0.12)+(p.f.critBonus||0), shell=(tg.f.ability==="Shell"||tg.f.ability==="Stone Skin")&&rolled&&!sky&&!sure;
-      const crit=sky||sure||rolled&&!shell; if(crit) dmg*=1.5; if(shell) this.ab(tg,"Shell",true);   // Pinch's Shell stops crits; Lucky bit and Sunglasses add to them
+      const rolled=!tg.buff.bulwark&&R()<m.sharp+edge(this.eff(p,"pow"),con,0.2,0,0.12)+(p.f.critBonus||0)+(p.f.ability==="Lucky Coin"?0.12:0), shell=(tg.f.ability==="Shell"||tg.f.ability==="Stone Skin")&&rolled&&!sky&&!sure;
+      const crit=sky||sure||rolled&&!shell; if(crit) dmg*=1.5; if(crit&&rolled&&p.f.ability==="Lucky Coin") this.ab(p,"Lucky Coin",true); if(shell) this.ab(tg,"Shell",true);   // Pinch's Shell stops crits; Lucky bit and Sunglasses add to them
       if(p.cpunch&&!m.cast&&tg===o) dmg*=1.2;
       if(tg.buff.brace) dmg*=0.6; if(tg.buff.bunker) dmg*=0.8; if(tg.buff.castWard&&m.cast) dmg*=0.5;
       dmg=Math.max(1,Math.round(dmg*(0.9+R()*0.1)));
@@ -411,11 +448,20 @@ class Arena{
     if(m.drain&&total&&tg===o) this.heal(p,total*m.drain,"drain",o.i);
     if(p.f.ability==="Bloodsuck"&&!m.cast&&total&&tg===o&&p.hp<p.maxhp){ this.ev.push({t:"ability",i:p.i,name:"Bloodsuck"}); this.heal(p,total*0.15,"drain",o.i); }   // Vampire
     if(tg===o&&total) o.stack=(o.stack||0)+1;   // Dango's Stack counts the hits it has taken
+    if(tg===o&&total&&p.hp>0){ if(p.f.ability==="Tropical"&&p.hp<p.maxhp){ this.ab(p,"Tropical",true); this.heal(p,p.maxhp*0.02,"heal"); }   // Pina
+      if(p.f.ability==="Spin Up"){ p.spinHits=(p.spinHits||0)+1; if(p.spinHits%3===0){ this.ab(p,"Spin Up"); this.stage(p,{spd:1},1,p); } } }   // Yoyo
+    if(tg===o&&m.cast&&total&&o.hp>0&&p.f.ability==="Misdirect"&&R()<0.2){ this.ab(p,"Misdirect"); this.stage(o,{spr:1},-1,p); }   // Presto
+    if(tg===o&&m.cast&&total&&o.hp>0&&p.f.ability==="Flash Bulb"&&!p.flashed){ p.flashed=1; if(!o.st&&this.inflict(o,"Blind",100,p)) this.ab(p,"Flash Bulb"); }   // Shutter
     if(tg===o&&m.cast&&total&&o.hp>0&&p.f.ability==="Drizzle"&&!o.st&&R()<0.15&&this.inflict(o,"Soak",100,p)) this.ab(p,"Drizzle");   // Nimbo
     if(tg===o&&m.cast&&total&&o.hp>0&&p.f.ability==="Shaken"&&!o.st&&R()<0.15&&this.inflict(o,"Daze",100,p)) this.ab(p,"Shaken");   // Swirl
     if(tg===o&&m.cast&&total&&o.hp>0&&p.f.ability==="Smudge"&&!o.st&&R()<0.15&&this.inflict(o,"Blind",100,p)) this.ab(p,"Smudge");   // Inky
     if(tg===o&&!m.cast&&m.range==="Close"&&total&&o.hp>0){
       if(o.f.ability==="Spores"&&!p.st&&R()<0.2&&this.inflict(p,"Daze",100,o)) this.ab(o,"Spores");   // Puff
+      if(o.f.ability==="Sting"&&!p.st&&R()<0.2&&this.inflict(p,"Shock",100,o)) this.ab(o,"Sting");   // Bloop
+      if(o.f.ability==="Molten"&&!p.st&&R()<0.2&&this.inflict(p,"Burn",100,o)) this.ab(o,"Molten");   // Lava
+      if(p.f.ability==="Chill Touch"&&!o.st&&R()<0.1&&this.inflict(o,"Freeze",100,p)) this.ab(p,"Chill Touch");   // Scoop
+      if(o.f.ability==="Bouncy"&&p.hp>0&&!this.over){ this.ab(o,"Bouncy",true); this.stepMove(p,{step:-14}); }   // Gumball
+      if(o.f.ability==="Spring Step"&&o.hp>0&&!this.over){ this.ab(o,"Spring Step",true); this.stepMove(o,{step:-18}); }   // Pogo
       if(o.f.ability==="Prickly"&&p.hp>0){ const back=Math.max(1,Math.round(p.maxhp/16)); p.hp=Math.max(0,p.hp-back); o.dealt+=back; this.ab(o,"Prickly",true); this.ev.push({t:"recoil",i:p.i,dmg:back}); }   // Spine
       if(p.f.ability==="Dirt Kick"&&!o.st&&R()<0.15&&this.inflict(o,"Blind",100,p)) this.ab(p,"Dirt Kick");   // Burr
       if(p.f.ability==="Grapple"&&!o.st&&R()<0.25&&this.inflict(o,"Root",100,p)) this.ab(p,"Grapple");   // Kraken

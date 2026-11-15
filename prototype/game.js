@@ -6,7 +6,7 @@ const GRADES=["E","D","C","B","A","S"];
    Plod and Teep through their Licence Cup at grade D and A, Bipped by winning a Strength contest, Fizz when Dr. Ines comes
    at grade B, and Lern at the Lantern Festival once the ranch is grade C. Until then a scan that would have made one of them
    makes one of the first eight. A save from before this keeps any family it already raised. */
-const LICENCE={Plod:"D",Bipped:"C",Fizz:"B",Teep:"A",Lern:"C",Mitt:"C",Brolly:"D",Spine:"B",Burr:"C",Clank:"C",Crease:"D",Twiglet:"B",Swirl:"C",Ditty:"D",Sizzle:"C",Aero:"B",Nesta:"B",Magna:"A",Helm:"B"};   // the grade each one's way in needs
+const LICENCE={Plod:"D",Bipped:"C",Fizz:"B",Teep:"A",Lern:"C",Mitt:"C",Brolly:"D",Spine:"B",Burr:"C",Clank:"C",Crease:"D",Twiglet:"B",Swirl:"C",Ditty:"D",Sizzle:"C",Aero:"B",Nesta:"B",Magna:"A",Helm:"B",Jingle:"C",Presto:"B",Vroom:"D",Shutter:"C",Yoyo:"B",Lava:"C",Pogo:"A"};   // the grade each one's way in needs
 const LICENCE_CUP={Plod:true,Teep:true};
 function famOpenList(){ if(!PLAYER) return null;
   if(!PLAYER.famOpen){ PLAYER.famOpen=[]; for(const e of PLAYER.roster||[]){ const f=e.m&&(FAMILY[e.m.family]&&FAMILY[e.m.family].of?FAMILY[e.m.family].of:[e.m.family]); for(const x of f||[]) if(LICENCE[x]&&!PLAYER.famOpen.includes(x)) PLAYER.famOpen.push(x); } }
@@ -190,7 +190,7 @@ function gradedOpponent(grade,level,rand,wantEl,earned,base){
   let m=base||randomOpponent(rand);   // base: train up a given monster instead of a random one
   if(wantEl) for(let k=0;k<300&&m.el1!==wantEl;k++) m=randomOpponent(rand);
   // random photos give some families far more often than others (Squib and Pinch about 1 in 100), so pick the family evenly first
-  else if(!base){ const fams=["Chomp","Pinch","Stilt","Skit","Antik","Squib","Moko","Booly","Plod","Bipped","Fizz","Teep","Lern","Puff","Flit","Glop","Tock","Mitt","Brolly","Spine","Burr","Wick","Lumo","Snooze","Inky","Cobble","Nimbo","Dango","Oaklet","Roly","Trundle","Clank","Crease","Twiglet","Swirl","Ditty","Sizzle","Aero","Nesta","Magna","Helm"], want=fams[Math.floor(rand()*fams.length)];
+  else if(!base){ const fams=["Chomp","Pinch","Stilt","Skit","Antik","Squib","Moko","Booly","Plod","Bipped","Fizz","Teep","Lern","Puff","Flit","Glop","Tock","Mitt","Brolly","Spine","Burr","Wick","Lumo","Snooze","Inky","Cobble","Nimbo","Dango","Oaklet","Roly","Trundle","Clank","Crease","Twiglet","Swirl","Ditty","Sizzle","Aero","Nesta","Magna","Helm","Bloop","Sox","Cuppy","Suds","Scoop","Tome","Gumball","Pina","Jingle","Presto","Vroom","Shutter","Yoyo","Lava","Pogo"], want=fams[Math.floor(rand()*fams.length)];
     for(let k=0;k<1500&&m.family!==want;k++) m=randomOpponent(rand); }
   const G=GRADE_INFO[grade], roll=Math.round(G.earned[0]+rand()*(G.earned[1]-G.earned[0])), total=earned!=null?earned:roll;
   const focus=Math.floor(rand()*6), second=(focus+1+Math.floor(rand()*5))%6, tp=[0,0,0,0,0,0];

@@ -1,7 +1,7 @@
 /* Puts the chibi drawings (chibi.js) into the ranch and battle screens while the pixel art stays the default.
    It's on by default. #art=pixel in the address, or localStorage "snabits-art" set to "pixel", brings back the pixel art.
    Only families listed in CHIBI_FAMS are drawn smooth; the rest keep their pixels. */
-const CHIBI_FAMS = ['Chomp', 'Squib', 'Antik', 'Moko', 'Pinch', 'Stilt', 'Skit', 'Booly', 'Plod', 'Bipped', 'Fizz', 'Teep', 'Lern', 'Puff', 'Flit', 'Glop', 'Tock', 'Mitt', 'Brolly', 'Spine', 'Burr', 'Wick', 'Lumo', 'Snooze', 'Inky', 'Cobble', 'Nimbo', 'Dango', 'Oaklet', 'Roly', 'Trundle', 'Clank', 'Crease', 'Twiglet', 'Swirl', 'Ditty', 'Sizzle', 'Aero', 'Nesta', 'Magna', 'Helm', 'Eagle', 'Vampire', 'Phoenix', 'Kitsune', 'Naga', 'Yeti', 'Kraken', 'Golem', 'Unicorn', 'Jack'];
+const CHIBI_FAMS = ['Chomp', 'Squib', 'Antik', 'Moko', 'Pinch', 'Stilt', 'Skit', 'Booly', 'Plod', 'Bipped', 'Fizz', 'Teep', 'Lern', 'Puff', 'Flit', 'Glop', 'Tock', 'Mitt', 'Brolly', 'Spine', 'Burr', 'Wick', 'Lumo', 'Snooze', 'Inky', 'Cobble', 'Nimbo', 'Dango', 'Oaklet', 'Roly', 'Trundle', 'Clank', 'Crease', 'Twiglet', 'Swirl', 'Ditty', 'Sizzle', 'Aero', 'Nesta', 'Magna', 'Helm', 'Bloop', 'Sox', 'Cuppy', 'Suds', 'Scoop', 'Tome', 'Gumball', 'Pina', 'Jingle', 'Presto', 'Vroom', 'Shutter', 'Yoyo', 'Lava', 'Pogo', 'Eagle', 'Vampire', 'Phoenix', 'Kitsune', 'Naga', 'Yeti', 'Kraken', 'Golem', 'Unicorn', 'Jack'];
 const CHIBI_ART = !/(^#|&)art=pixel(&|$)/.test(location.hash) && (() => { try { return localStorage.getItem('snabits-art') !== 'pixel'; } catch (e) { return true; } })();
 
 /* m is a hatched monster or a fight snapshot; s is the ranch state when there is one */
@@ -25,7 +25,9 @@ const SIZE_CM = { Chomp: [50, 100, 170], Squib: [40, 85, 150], Antik: [60, 120, 
   Wick: [30, 60, 110], Lumo: [25, 50, 95], Snooze: [45, 90, 150], Inky: [30, 65, 115], Cobble: [40, 85, 150],
   Nimbo: [40, 80, 160], Dango: [25, 45, 90], Oaklet: [30, 70, 180], Roly: [20, 40, 80], Trundle: [25, 50, 110],
   Clank: [35, 70, 180], Crease: [20, 45, 110], Twiglet: [25, 55, 120], Swirl: [30, 60, 120], Ditty: [25, 50, 130],
-  Sizzle: [20, 40, 120], Aero: [40, 90, 320], Nesta: [15, 35, 90], Magna: [20, 45, 160], Helm: [35, 70, 300] };
+  Sizzle: [20, 40, 120], Aero: [40, 90, 320], Nesta: [15, 35, 90], Magna: [20, 45, 160], Helm: [35, 70, 300],
+  Bloop: [20, 45, 140], Sox: [30, 60, 130], Cuppy: [15, 35, 110], Suds: [20, 45, 120], Scoop: [20, 45, 120], Tome: [25, 50, 120], Gumball: [25, 55, 140], Pina: [25, 55, 130],
+  Jingle: [20, 45, 120], Presto: [25, 55, 150], Vroom: [25, 45, 110], Shutter: [20, 45, 130], Yoyo: [15, 35, 110], Lava: [25, 55, 150], Pogo: [30, 60, 160] };
 function sizeK(m) {
   if (!m) return 1; if (m.sizeK) return m.sizeK;
   const t = JSON.stringify([m.pal, m.stats, m.lifespan, m.family]); let h = 2166136261;
@@ -384,6 +386,21 @@ function cry(fam, stage) {
       case 'Nesta': [0, 0.1].forEach((dt, i) => { dKick(d, t + dt, 0.2); voice(t + dt, 'triangle', [[0, 1100 + i * 300], [0.05, 1100 + i * 300]], 0.06); }); voice(t + 0.25, 'triangle', [[0, 1500], [0.12, 1900]], 0.07); break;   // wooden knock-knock and a giggle
       case 'Magna': voice(t, 'sawtooth', [[0, 120], [0.4, 125]], 0.05, 4); voice(t + 0.05, 'sine', [[0, 600], [0.3, 1200]], 0.06); dNoise(d, t + 0.35, 0.04, 0.15, 'bandpass', 3000); break;   // a magnetic hum, a rising pull and a clink
       case 'Helm': for (let i = 0; i < 4; i++) voice(t + i * 0.08, 'sine', [[0, 400 + i * 90], [0.06, 600 + i * 90]], 0.06); voice(t + 0.35, 'sine', [[0, 1400], [0.5, 1400]], 0.04, 4); break;   // bubbles and a sonar ping
+      case 'Bloop': voice(t, 'sine', [[0, 300], [0.1, 700], [0.18, 400]], 0.1); dNoise(d, t + 0.2, 0.06, 0.08, 'highpass', 6000); voice(t + 0.22, 'square', [[0, 2400], [0.03, 3200]], 0.03); break;   // a wobbly "bloop" and a little zap
+      case 'Sox': dNoise(d, t, 0.15, 0.08, 'lowpass', 700); voice(t + 0.1, 'triangle', [[0, 500], [0.08, 750], [0.16, 650]], 0.1); break;   // a soft flump and a "mrrp"
+      case 'Cuppy': [1568, 2093].forEach((f, i) => voice(t + i * 0.09, 'sine', [[0, f], [0.15, f]], 0.06)); voice(t + 0.2, 'triangle', [[0, 900], [0.06, 1300]], 0.08); break;   // a birthday-candle ting-ting and a squeak
+      case 'Suds': for (let i = 0; i < 5; i++) voice(t + i * 0.05, 'sine', [[0, 700 + i * 160], [0.04, 1100 + i * 160]], 0.05); dNoise(d, t + 0.28, 0.12, 0.06, 'highpass', 5000); break;   // bubbles popping, then a fizzy rinse
+      case 'Scoop': voice(t, 'triangle', [[0, 1100], [0.1, 1500], [0.2, 1300]], 0.09); [2637, 3136].forEach((f, i) => voice(t + 0.22 + i * 0.07, 'sine', [[0, f], [0.25, f]], 0.035)); break;   // a happy "yum" and an icy tinkle
+      case 'Tome': dNoise(d, t, 0.12, 0.1, 'bandpass', 2500); dNoise(d, t + 0.14, 0.12, 0.1, 'bandpass', 2200); voice(t + 0.3, 'sine', [[0, 600], [0.1, 800], [0.2, 700]], 0.08); break;   // two page flips and a thoughtful "hm"
+      case 'Gumball': voice(t, 'sine', [[0, 200], [0.25, 500]], 0.09); dKick(d, t + 0.26, 0.25); [0.34, 0.42, 0.48].forEach(dt => voice(t + dt, 'triangle', [[0, 1400], [0.03, 1700]], 0.05)); break;   // a gum bubble swells, pops, and balls rattle
+      case 'Pina': dNoise(d, t, 0.18, 0.08, 'bandpass', 3500); voice(t + 0.12, 'triangle', [[0, 800], [0.06, 1200], [0.14, 1000], [0.22, 1400]], 0.09); break;   // leaves rustling and a sunny "aloha" trill
+      case 'Jingle': [2349, 2793, 3136, 3729].forEach((f, i) => voice(t + i * 0.06, 'sine', [[0, f], [0.3, f]], 0.04)); dNoise(d, t, 0.25, 0.05, 'highpass', 7000); break;   // coins jingling
+      case 'Presto': dNoise(d, t, 0.2, 0.1, 'highpass', 3000); [1047, 1319, 1568, 2093].forEach((f, i) => voice(t + 0.15 + i * 0.05, 'sine', [[0, f], [0.2, f]], 0.05)); break;   // a puff of smoke and a ta-da arpeggio
+      case 'Vroom': voice(t, 'sawtooth', [[0, 90], [0.3, 160], [0.5, 140]], 0.05, 3); dNoise(d, t, 0.45, 0.06, 'lowpass', 1500); voice(t + 0.5, 'square', [[0, 1200], [0.05, 1200]], 0.04); voice(t + 0.58, 'square', [[0, 1600], [0.05, 1600]], 0.04); break;   // a motor spins up and it beeps twice
+      case 'Shutter': dNoise(d, t, 0.03, 0.2, 'bandpass', 4000); dNoise(d, t + 0.06, 0.03, 0.18, 'bandpass', 3000); voice(t + 0.12, 'sine', [[0, 300], [0.4, 2000]], 0.05); break;   // click-clack of the shutter and a flash whining up
+      case 'Yoyo': voice(t, 'sine', [[0, 500], [0.2, 1200]], 0.08); voice(t + 0.22, 'sine', [[0, 1200], [0.2, 500]], 0.08); dNoise(d, t, 0.42, 0.03, 'bandpass', 1800); break;   // a whirr down the string and back up
+      case 'Lava': voice(t, 'sine', [[0, 120], [0.3, 90]], 0.12, 3); for (let i = 0; i < 3; i++) voice(t + 0.15 + i * 0.1, 'sine', [[0, 250 + i * 60], [0.06, 450 + i * 60]], 0.06); dNoise(d, t + 0.2, 0.3, 0.05, 'highpass', 4000); break;   // a low rumble, bubbling and a hiss
+      case 'Pogo': [0, 0.16, 0.3].forEach((dt, i) => voice(t + dt, 'sine', [[0, 300 + i * 100], [0.05, 900 + i * 150], [0.12, 500 + i * 100]], 0.08)); break;   // boing, boing, boing
       default: voice(t, 'triangle', [[0, 800], [0.12, 1200], [0.22, 1000]], 0.13);
     } } catch (err) {}
 }
