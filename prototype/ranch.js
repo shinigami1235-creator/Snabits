@@ -279,6 +279,10 @@ function say(t,who){ RS.say=t; RS.sayWho=who||null; sayBox(t,who); }
 /* small ranch sounds for the drills, trips and care: a pop for hearts, a twinkle for sparkles, a thud for dust, a ding for a bright idea,
    and a stinger for each drill result. Each kind waits 120 ms before it can sound again, so a burst of particles is one sound. */
 const RSFX_T={};
+/* a burst of noise through a filter that sweeps from f0 to f1: splashes, whooshes, page flips */
+function nsw(d,t,dur,v,type,f0,f1,q=1){ const s=nsrc(t,dur+0.02),fl=MC.createBiquadFilter(),g=MC.createGain(); fl.type=type; fl.Q.value=q;
+  fl.frequency.setValueAtTime(f0,t); fl.frequency.exponentialRampToValueAtTime(f1,t+dur); g.gain.setValueAtTime(0.0001,t); g.gain.linearRampToValueAtTime(v,t+Math.min(0.02,dur*0.2)); g.gain.exponentialRampToValueAtTime(0.001,t+dur);
+  s.connect(fl); fl.connect(g); g.connect(d); }
 function rsfx(kind){ try{ if(typeof sfxBus!=="function"||typeof sTone!=="function") return; const d=sfxBus(); if(!d) return; MC=AC; const now=AC.currentTime;
   if(RSFX_T[kind]&&now-RSFX_T[kind]<0.12) return; RSFX_T[kind]=now; const t=now+0.01;
   const S={heart:()=>[1047,1319].forEach((f,k)=>sTone(d,t+k*0.07,"sine",f,f,0.14,0.05)),
@@ -287,6 +291,29 @@ function rsfx(kind){ try{ if(typeof sfxBus!=="function"||typeof sTone!=="functio
     dust:()=>dNoise(d,t,0.14,0.12,"lowpass",500), q:()=>sTone(d,t,"sine",500,900,0.14,0.05), sweat:()=>sTone(d,t,"sine",1400,700,0.08,0.04),
     drip:()=>sTone(d,t,"sine",1600,600,0.1,0.05), crumb:()=>dNoise(d,t,0.05,0.1,"bandpass",3000,2), smoke:()=>dNoise(d,t,0.3,0.12,"lowpass",700),
     hop:()=>sTone(d,t,"sine",300,700,0.12,0.06),
+    // drill sounds: footsteps, water, balls, the machine, stone, wood, books, the waterfall
+    step:()=>{ dNoise(d,t,0.07,0.1,"lowpass",rnd(500,800)); sTone(d,t,"sine",120,70,0.06,0.04); },
+    stroke:()=>{ nsw(d,t,0.22,0.13,"bandpass",rnd(1500,2200),600,1.2); sTone(d,t+0.02,"sine",rnd(500,700),250,0.07,0.025); },
+    stroke2:()=>{ nsw(d,t,0.2,0.12,"bandpass",rnd(1300,2000),550,1.2); sTone(d,t+0.02,"sine",rnd(450,650),230,0.07,0.025); },
+    splash:()=>{ nsw(d,t,0.5,0.2,"lowpass",3500,500); nsw(d,t,0.3,0.1,"bandpass",2500,900,1); sTone(d,t,"sine",300,90,0.15,0.06); },
+    launch:()=>{ dKick(d,t,0.18); nsw(d,t,0.12,0.08,"bandpass",800,2400,1); },
+    whiz:()=>smp("whoosh",0.35,0,1.4), duck:()=>smp("whoosh",0.35,0,1.6), throw:()=>smp("whoosh",0.5,0,1.2), leap:()=>smp("whoosh",0.45,0,1), creak:()=>smp("whoosh",0.3,0,0.7),
+    hit:()=>smp("hitM",0.6), hitH:()=>smp("hitH",0.7), catch:()=>smp("hitL",0.6),
+    thud:()=>{ smp("hitH",0.8,0,0.6); dKick(d,t,0.2); },
+    rumble:()=>dNoise(d,t,0.35,0.08,"lowpass",180),
+    rattle:()=>{ for(let i=0;i<6;i++) sTone(d,t+i*0.035,"square",rnd(300,500),null,0.02,0.03); },
+    ember:()=>dNoise(d,t,0.05,0.07,"highpass",4000),
+    zap:()=>{ sTone(d,t,"sawtooth",110,90,0.25,0.05); sTone(d,t,"square",3000,800,0.12,0.02); },
+    puff:()=>nsw(d,t,0.6,0.05,"lowpass",900,300),
+    crack:()=>{ dNoise(d,t,0.08,0.2,"bandpass",1800,1.5); dNoise(d,t+0.02,0.25,0.12,"lowpass",600); sTone(d,t,"square",900,200,0.05,0.04); },
+    chip:()=>sTone(d,t,"triangle",rnd(2500,3500),1800,0.04,0.03),
+    snap:()=>{ dNoise(d,t,0.04,0.2,"highpass",2500); sTone(d,t,"square",420,140,0.18,0.035); },
+    wood:()=>{ dNoise(d,t,0.06,0.22,"bandpass",1100,2); dNoise(d,t+0.03,0.3,0.1,"lowpass",500); sTone(d,t,"sawtooth",260,90,0.12,0.04); },
+    splinter:()=>sTone(d,t,"triangle",rnd(1200,1800),900,0.03,0.02),
+    page:()=>nsw(d,t,0.09,0.07,"bandpass",3000,1800,1.5), flap:()=>dNoise(d,t,0.05,0.05,"bandpass",1200,1),
+    thock:()=>{ sTone(d,t,"sine",260,180,0.06,0.05); dNoise(d,t,0.03,0.05,"lowpass",900); },
+    rush:()=>nsw(d,t,0.9,0.09,"lowpass",600,2400),
+    popper:()=>{ dNoise(d,t,0.06,0.18,"highpass",1800); sTone(d,t,"sine",900,300,0.05,0.04); },
     great:()=>{ [784,988,1175,1568].forEach((f,k)=>sTone(d,t+k*0.07,"triangle",f,f,0.25,0.07)); dNoise(d,t+0.28,0.4,0.06,"highpass",5000); },
     success:()=>[784,1047].forEach((f,k)=>sTone(d,t+k*0.1,"triangle",f,f,0.25,0.07)),
     fail:()=>{ sTone(d,t,"triangle",440,330,0.25,0.07); sTone(d,t+0.22,"triangle",330,220,0.4,0.07); },
@@ -368,7 +395,8 @@ function walkTo(x,speed=45,pose="walk",id=RS.cur){
   return new Promise((res,rej)=>{ const s=RS; s.pose=pose; s.dir=x<s.x?-1:1;
     const step=()=>{ if(id!==RACT) return rej(RSTOP); const d=x-s.x, v=speed*rk()/60;
       if(Math.abs(d)<=v){s.x=x;return res();} s.x+=Math.sign(d)*v;
-      if(pose==="run"&&Math.random()<0.25) spark(s.x-s.dir*8,GROUND-1,"dust");
+      if(pose==="run"&&Math.random()<0.25) spark(s.x-s.dir*8,GROUND-1,"dust",1,true);
+      if(pose==="run"&&s.training){ s.strideL=(s.strideL||0)+v; if(s.strideL>12){ s.strideL=0; rsfx("step"); } }   // footsteps on a running drill
       setTimeout(step,16);}; step(); });
 }
 function hop(h,ms,id=RS.cur){
@@ -489,13 +517,13 @@ function unprop(o){ RS.props=RS.props.filter(p=>p!==o); }
 /* the end of every great drill: a burst of gold stars at the Snabit, confetti falling across the screen, two happy hops */
 async function greatBurst(hops=true){   // hops off when it's sitting on a stone or swimming
   const s=RS, cols=["#e2483f","#3b6fb8","#f2c14e","#4caf6a","#c08cff"], cf=[];
-  s.shake=Math.max(s.shake||0,6); s.pose="happy"; spark(s.x,headY()-6,"star",10); spark(s.x,headY()-6,"sparkle",10);
+  s.shake=Math.max(s.shake||0,6); s.pose="happy"; rsfx("popper"); spark(s.x,headY()-6,"star",10); spark(s.x,headY()-6,"sparkle",10);
   if(smoothRanch()) for(let i=0;i<30;i++) cf.push(prop({k:"conf",x:s.x+rnd(-130,130),y:GROUND-150-rnd(0,40),cvx:rnd(-0.5,0.5),cvy:rnd(1.2,2.2),rot:rnd(0,6),col:cols[i%5]}));
   try{ for(let f=0;f<56;f++){ for(const q of cf){ q.x+=q.cvx+Math.sin(f/5+q.rot)*0.4; q.y=Math.min(GROUND+4,q.y+q.cvy); q.rot+=0.2; }
       if(hops&&(f===4||f===26)) hop(14,360).catch(()=>{}); if(f===14) spark(s.x,headY()-4,"heart",2); await rwait(26); } }
   finally{ cf.forEach(unprop); }
 }
-function spark(x,y,kind,n=1){ rsfx(kind); for(let i=0;i<n;i++){ const p={x,y,kind,life:0,max:40,vx:rnd(-.4,.4),vy:-rnd(.3,.8),g:0};
+function spark(x,y,kind,n=1,quiet){ if(!quiet) rsfx(kind); for(let i=0;i<n;i++){ const p={x,y,kind,life:0,max:40,vx:rnd(-.4,.4),vy:-rnd(.3,.8),g:0};
   if(kind==="dust"){p.vy=-rnd(.1,.4);p.vx=rnd(-.6,.6);p.max=24;}
   if(kind==="star"){p.vx=rnd(-1,1);p.vy=-rnd(.6,1.4);p.g=0.04;p.max=50;}
   if(kind==="crumb"){p.vx=rnd(-.6,.6);p.vy=-rnd(.2,.8);p.g=.08;p.max=30;}
@@ -652,16 +680,18 @@ const SCENE_FN=[
       /* a length of the pool: rings spread behind it as it swims, and the faster it goes the more it throws up
          at the front, with speed lines streaming off behind and a bigger splash when it turns at the wall */
       const swim=async tx=>{ const d=Math.sign(tx-s.x); s.dir=d; s.pose="walk"; let f=0;
+        let beat=0;
         while(Math.abs(tx-s.x)>v){ s.x+=d*v; f++; s.jy=-sink+Math.sin(f/(v>3?2:4))*(v>3?1.2:0.8);
+          beat+=20; if(beat>=Math.max(130,900/v)){ beat=0; rsfx(f%2?"stroke":"stroke2"); }   // a stroke every ~0.45 s at an easy pace, faster as it speeds up
           if(f%Math.max(2,Math.round(8/v))===0) spark(s.x-d*bw*0.7,surf,"wave");
           if(v>3){ spark(s.x+d*bw*0.5,surf-1,"drip"); if(f%2===0){ const q={x:s.x-d*(bw+rnd(0,10)),y:surf+rnd(-2,3),kind:"streak",life:0,max:16,vx:-d*v*0.6,vy:0,g:0}; RS.parts.push(q); } }
           else if(Math.random()<0.15) spark(s.x-d*10,surf-1,"drip");
           await rwait(20); }
-        s.x=tx; s.jy=-sink; spark(s.x+d*bw*0.6,surf-2,"drip",v>4?10:3); spark(s.x+d*bw*0.6,surf,"wave"); if(v>4) s.shake=2; };
+        s.x=tx; s.jy=-sink; spark(s.x+d*bw*0.6,surf-2,"drip",v>4?10:3,true); spark(s.x+d*bw*0.6,surf,"wave"); rsfx(v>3?"splash":"stroke"); if(v>4) s.shake=2; };
       if(r==="great"){ s.x=226; s.jy=30; s.pose="crouch"; await rwait(450); s.pose="jump";
         for(let f=0;f<=36;f++){ const k=f/36; s.x-=1.2; s.jy=30+Math.sin(k*Math.PI)*24-k*(30+sink); await rwait(18); }
-        s.waterY=surf; spark(s.x,surf-2,"drip",14); s.shake=6; await rwait(300); }
-      else { s.waterY=surf; s.jy=-sink; spark(s.x,surf-2,"drip",6); await rwait(400); }
+        s.waterY=surf; spark(s.x,surf-2,"drip",14,true); rsfx("splash"); s.shake=6; await rwait(300); }
+      else { s.waterY=surf; s.jy=-sink; spark(s.x,surf-2,"drip",6,true); rsfx("splash"); await rwait(400); }
       if(r==="great"){ s.ghosts=true; for(let k=0;k<5;k++){ v=2.4+k*1.3; await swim(205); await swim(45); } s.ghosts=false; v=2; }   // five lengths, each faster than the last
       else for(let k=0;k<laps;k++){
         await swim(205);
@@ -685,12 +715,12 @@ const SCENE_FN=[
     const s=RS, b=placed("boulder",{k:"boulder",x:80+16+RS.P.scale*4,y:GROUND,r:11,rot:0});
     await walkTo(80,50); s.pose="effort"; await rwait(700);
     if(r==="fail"){ for(let k=0;k<25;k++){ s.x-=0.5; if(k%5===0) spark(s.x,GROUND-1,"dust"); await rwait(40);} s.pose="tired"; spark(s.x,headY(),"sweat",3); await rwait(1000); unprop(b); return; }
-    while(b.x<185){ b.x+=1; s.x+=1; b.rot+=0.09; if(b.x%6===0) spark(s.x-8,GROUND-1,"dust"); await rwait(r==="great"?22:40); }
+    while(b.x<185){ b.x+=1; s.x+=1; b.rot+=0.09; if(b.x%6===0) spark(s.x-8,GROUND-1,"dust",1,true); if(b.x%8===0) rsfx("rumble"); await rwait(r==="great"?22:40); }
     if(r==="great"){   // it gets under the boulder, lifts it over its head and throws it down the trail
       s.pose="crouch"; await rwait(300); const x0=b.x, br=b.r*1.4; s.pose="slamup"; s.flash=2;
       for(let f=1;f<=16;f++){ const k=f/16; b.x=x0+(s.x-x0)*k; b.y=GROUND-(GROUND-headY()+2)*k; await rwait(26); }
       spark(s.x,GROUND-1,"dust",4); await rwait(450);
-      s.pose="slam"; b.vx=2.3; b.vy=-3.4; b.g=0.22; await until(()=>b.y>=GROUND); b.vx=1.6; b.vy=undefined; b.g=0; b.y=GROUND;
+      s.pose="slam"; rsfx("throw"); b.vx=2.3; b.vy=-3.4; b.g=0.22; await until(()=>b.y>=GROUND); rsfx("thud"); b.vx=1.6; b.vy=undefined; b.g=0; b.y=GROUND;
       s.shake=14; spark(b.x,GROUND-2,"dust",14); spark(b.x,GROUND-br,"star",4); await rwait(300); b.vx=undefined;
       await greatBurst(); unprop(b); }
     else { s.pose="tired"; spark(s.x,headY(),"sweat",2); await rwait(800); unprop(b); }
@@ -703,22 +733,22 @@ const SCENE_FN=[
     for(let k=0;k<4;k++){
       const heavy=k===2, top=headY(), tall=GROUND-top, tx=s.x-tall*0.32, ty=top+tall*0.42, x0=HELPX+6, y0=GROUND-26, vx=heavy?2.8:3.4, g=0.08, T=Math.max(8,(tx-x0)/vx);
       // aim each throw at its chest, whatever its size: the arc lands where the body is, not at a fixed height. The third one is a heavy ball.
-      const ball=prop({k:"ball",x:x0,y:y0,vx,vy:(ty-y0-g*T*(T-1)/2)/T,g,c:heavy?"#8a3a2a":"#e8453c",r:heavy?3:2});
+      const ball=prop({k:"ball",x:x0,y:y0,vx,vy:(ty-y0-g*T*(T-1)/2)/T,g,c:heavy?"#8a3a2a":"#e8453c",r:heavy?3:2}); rsfx("launch");
       await until(()=>ball.x>=tx-30); if(heavy&&r!=="great") s.pose="crouch";   // it sees the big one coming and gets low
       await until(()=>ball.x>=tx);
-      if(r==="fail"&&k===2){ ball.vx=-1.4; ball.vy=-1.5; s.pose="hit"; s.flash=4; s.shake=10; spark(tx,ty,"star",4); await back(16,8); unprop(ball);
+      if(r==="fail"&&k===2){ ball.vx=-1.4; ball.vy=-1.5; rsfx("hitH"); s.pose="hit"; s.flash=4; s.shake=10; spark(tx,ty,"star",4); await back(16,8); unprop(ball);
         s.upside=true; s.pose="walk"; spark(s.x,GROUND-3,"dust",5); await rwait(1300); s.upside=false; s.pose="dizzy"; spark(s.x,headY()-4,"star",3); await rwait(600); return; }
       if(r==="great"&&k===3){   // the last ball it punches straight back into the launcher, which coughs smoke and stops
-        s.pose="punch"; const T2=22; ball.vx=(x0-tx)/T2; ball.vy=(y0-ty)/T2-0.04*T2/2; ball.g=0.04; s.flash=3; s.shake=6; spark(tx,ty,"star",4);
-        await until(()=>ball.x<=x0+2); unprop(ball); s.shake=10; spark(x0,y0,"star",6); s.pose="guard";
+        s.pose="punch"; rsfx("hitH"); rsfx("throw"); const T2=22; ball.vx=(x0-tx)/T2; ball.vy=(y0-ty)/T2-0.04*T2/2; ball.g=0.04; s.flash=3; s.shake=6; spark(tx,ty,"star",4);
+        await until(()=>ball.x<=x0+2); unprop(ball); s.shake=10; rsfx("thud"); spark(x0,y0,"star",6,true); s.pose="guard";
         // the machine takes it: it rattles, spits sparks, sags, then smoke rolls out of it while the Snabit watches
-        for(let f=0;f<34;f++){ s.mShake=4*(1-f/40); if(f%3===0) spark(46+rnd(-8,8),GROUND-30+rnd(-6,4),"ember",3); if(f===12) spark(46,GROUND-38,"zap",3); await rwait(26); }
+        for(let f=0;f<34;f++){ s.mShake=4*(1-f/40); if(f%6===0) rsfx("rattle"); if(f%3===0) spark(46+rnd(-8,8),GROUND-30+rnd(-6,4),"ember",3); if(f===12) spark(46,GROUND-38,"zap",3); await rwait(26); }
         s.mShake=0; s.mBroke=true; s.shake=4; spark(46,GROUND-16,"dust",6);
         for(let j=0;j<14;j++){ spark(48+rnd(-6,6),GROUND-38,"puff"); if(j===6) s.pose="happy"; await rwait(110); }
         await greatBurst(); return; }
-      if(r==="great"){ ball.vx=-2.2; ball.vy=-2; spark(tx,ty,"sparkle",4); await rwait(380); unprop(ball); continue; }   // a great week: the balls bounce off its guard and it doesn't move
+      if(r==="great"){ ball.vx=-2.2; ball.vy=-2; rsfx("catch"); spark(tx,ty,"sparkle",4); await rwait(380); unprop(ball); continue; }   // a great week: the balls bounce off its guard and it doesn't move
       // the hit: it takes the ball on its guard and slides back a step, harder for the heavy one and less the better its week
-      ball.vx=-2.2; ball.vy=-2; s.flash=4; s.pose="hit"; s.shake=heavy?8:3; spark(tx,ty,"star",heavy?3:1);
+      ball.vx=-2.2; ball.vy=-2; s.flash=4; s.pose="hit"; s.shake=heavy?8:3; rsfx(heavy?"hitH":"hit"); spark(tx,ty,"star",heavy?3:1);
       await back((heavy?12:6)*(r==="great"?0.4:r==="success"?1:1.4),6);
       if(heavy&&r!=="great"){ s.pose="hurt"; spark(s.x,headY(),"sweat",2); await rwait(380); }
       else if(r==="great"){ s.pose="determined"; await rwait(220); }
@@ -751,18 +781,18 @@ const SCENE_FN=[
     // low balls along the floor get jumped, high ones at head height get ducked under
     for(let k=0;k<4;k++){
       const high=k%2===1, top=headY(), tall=GROUND-top, y=high?GROUND-tall*0.6-Math.max(7,tall*0.14):GROUND-7;   // a high ball passes just over it squashed flat
-      const ball=prop({k:"ball",x:RW+6,y,vx:-4.2,vy:0,g:0,c:"#3c8ce8"});
+      const ball=prop({k:"ball",x:RW+6,y,vx:-4.2,vy:0,g:0,c:"#3c8ce8"}); rsfx("launch");
       await until(()=>ball.x<s.x+RS.P.scale*7+(high?14:0));
-      if(r==="fail"&&k===2){ ball.vx=2; ball.vy=-2.6; ball.g=0.15; s.pose="dizzy"; s.flash=4; spark(s.x,headY()-4,"star",5); await rwait(1400); unprop(ball); return; }
+      if(r==="fail"&&k===2){ ball.vx=2; ball.vy=-2.6; ball.g=0.15; rsfx("hit"); s.pose="dizzy"; s.flash=4; spark(s.x,headY()-4,"star",5); await rwait(1400); unprop(ball); return; }
       if(r==="great"&&k===3){   // the last ball it catches, then fires back at the launcher
         s.ghosts=false; s.pose="guard"; const bx=()=>s.bbox?s.bbox[2]-2:s.x+tall*0.4; ball.vx=0;
         for(let f=1;f<=5;f++){ ball.x+=(bx()-ball.x)*0.5; ball.y+=(GROUND-tall*0.45-ball.y)*0.5; await rwait(20); }   // into its arms, against its chest
-        ball.x=bx(); ball.y=GROUND-tall*0.45; s.flash=2; spark(ball.x,ball.y,"sparkle",4); await rwait(450);
+        ball.x=bx(); ball.y=GROUND-tall*0.45; rsfx("catch"); s.flash=2; spark(ball.x,ball.y,"sparkle",4); await rwait(450);
         s.pose="slamup"; const top=()=>s.bbox?s.bbox[1]-3:headY()-3;
         for(let f=1;f<=10;f++){ const k=f/10; ball.x=bx()+(s.x-bx())*k; ball.y=GROUND-tall*0.45+(top()-(GROUND-tall*0.45))*k; await rwait(24); } await rwait(250);
-        s.pose="slam"; const T3=18; ball.vx=(RW-4-ball.x)/T3; ball.vy=(GROUND-16-ball.y)/T3; await until(()=>ball.x>=RW-4,1500); unprop(ball); s.shake=10; spark(RW-6,GROUND-16,"star",6); spark(RW-6,GROUND-16,"puff",4);
+        s.pose="slam"; rsfx("throw"); const T3=18; ball.vx=(RW-4-ball.x)/T3; ball.vy=(GROUND-16-ball.y)/T3; await until(()=>ball.x>=RW-4,1500); unprop(ball); s.shake=10; rsfx("thud"); spark(RW-6,GROUND-16,"star",6,true); spark(RW-6,GROUND-16,"puff",4);
         await greatBurst(); return; }
-      if(high){ s.pose="duck"; await until(()=>ball.x<s.x-tall*0.6,1500); s.pose="idle"; if(r!=="great") spark(s.x,headY(),"sweat"); }
+      if(high){ s.pose="duck"; rsfx("duck"); await until(()=>ball.x<s.x-tall*0.6,1500); s.pose="idle"; if(r!=="great") spark(s.x,headY(),"sweat"); }
       else { s.pose="walk"; await hop(26,420); s.pose="idle"; }
       await until(()=>ball.x<-10,1500); unprop(ball);
     }

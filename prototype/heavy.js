@@ -56,33 +56,33 @@ function drawProp2(c,p,t,front){
 const HEAVY_FN=[
   async r=>{ // Marathon
     const s=RS; s.bg="road"; s.x=110; s.pose="run";
-    for(let k=0;k<70;k++){ s.bgOff=(s.bgOff||0)+3; if(k%4===0) spark(s.x-10,GROUND-1,"dust"); if(k%9===0) spark(s.x,headY()+2,"sweat"); await rwait(30); }
+    for(let k=0;k<70;k++){ s.bgOff=(s.bgOff||0)+3; if(k%4===0){ spark(s.x-10,GROUND-1,"dust",1,true); rsfx("step"); } if(k%9===0) spark(s.x,headY()+2,"sweat"); await rwait(30); }
     if(r==="fail"){ s.pose="tired"; await rwait(500); s.upside=true; s.pose="sleep"; await rwait(900); s.upside=false; banner("The assistant carries it home","#ffffff"); await rwait(900); banner(""); return; }
-    if(r==="great"){ const rb=prop({k:"ribbon",x:RW+10,y:GROUND}); s.ghosts=true; while(rb.x>s.x-10){ rb.x-=3.5; s.bgOff+=4; await rwait(25);} s.ghosts=false; rb.broken=true; await greatBurst(); return; }   // a sprint finish through the tape
+    if(r==="great"){ const rb=prop({k:"ribbon",x:RW+10,y:GROUND}); s.ghosts=true; let ft=0; while(rb.x>s.x-10){ rb.x-=3.5; s.bgOff+=4; if(++ft%3===0) rsfx("step"); await rwait(25);} s.ghosts=false; rb.broken=true; rsfx("snap"); await greatBurst(); return; }   // a sprint finish through the tape
     s.pose="tired"; spark(s.x,headY(),"sweat",4); await rwait(900);
   },
   async r=>{ // Quarry
     const s=RS; s.bg="quarry"; s.x=90; const rock=placed("rock",{k:"rock",x:150,y:GROUND,r:16});
-    for(let k=0;k<3;k++){ await walkTo(118-RS.P.scale*3,90,"run"); s.flash=4; s.shake=6; spark(150-14,GROUND-14,"dust",4); s.x-=8; await rwait(260);
+    for(let k=0;k<3;k++){ await walkTo(118-RS.P.scale*3,90,"run"); s.flash=4; s.shake=6; rsfx("hitH"); spark(150-14,GROUND-14,"dust",4,true); s.x-=8; await rwait(260);
       if(r==="fail"&&k===2){ s.pose="dizzy"; spark(s.x,headY()-4,"star",5); await rwait(1400); return; } await walkTo(90,60,"walk"); }
     if(r==="great"){   // the rock splits down the middle and each half tips over sideways
-      rock.side=-1; rock.tilt=0; const h2=prop({k:"rock",x:150,y:GROUND,r:16,side:1,tilt:0}); s.shake=12; spark(150,GROUND-16,"star",6); spark(150,GROUND-20,"chip",10);
+      rock.side=-1; rock.tilt=0; rsfx("crack"); const h2=prop({k:"rock",x:150,y:GROUND,r:16,side:1,tilt:0}); s.shake=12; spark(150,GROUND-16,"star",6); spark(150,GROUND-20,"chip",10);
       for(let f=1;f<=18;f++){ const k=f/18; rock.tilt=h2.tilt=0.5*k*k; rock.x=150-9*k; h2.x=150+9*k; await rwait(24); }
-      s.shake=8; spark(132,GROUND-2,"dust",8); spark(168,GROUND-2,"dust",8); await rwait(300); await greatBurst(); return; }
+      s.shake=8; rsfx("thud"); spark(132,GROUND-2,"dust",8,true); spark(168,GROUND-2,"dust",8,true); await rwait(300); await greatBurst(); return; }
     s.pose="tired"; await rwait(800);
   },
   async r=>{ // Fortress
     const s=RS, home=fortX(); s.bg="gate"; s.x=home; s.pose="guard"; const log=placed("log",fortLog());
     s.dir=-1;   // the log swings in from the left and lands at the bottom of its swing
-    for(let k=0;k<3;k++){ for(let j=0;j<12;j++){ log.t+=0.1; if(j===7) s.pose="crouch"; await rwait(32);} log.t=0; s.flash=4; s.shake=6; spark(s.x-fortTall()*0.4,GROUND-fortTall()*0.5,"dust",4);   // it gets low just before the log lands
+    for(let k=0;k<3;k++){ rsfx("creak"); for(let j=0;j<12;j++){ log.t+=0.1; if(j===7) s.pose="crouch"; await rwait(32);} log.t=0; s.flash=4; s.shake=6; spark(s.x-fortTall()*0.4,GROUND-fortTall()*0.5,"dust",4,true); rsfx("hitH");   // it gets low just before the log lands
       if(r==="fail"&&k===1){ s.pose="hit"; for(let f=0;f<8;f++){ s.x+=2; if(f%2===0) spark(s.x+6,GROUND-1,"dust"); await rwait(28);} s.upside=true; s.pose="walk"; await rwait(1200); s.upside=false; s.pose="dizzy"; await rwait(500); return; }
       if(r==="great"&&k===2){   // the third log it catches dead, tears off its rope, throws it and the log breaks in two
         const L=log.L||60, tall=fortTall(); s.pose="guard"; s.shake=8; spark(s.x-tall*0.4,GROUND-tall*0.5,"star",5);
         for(let f=0;f<22;f++){ log.t=Math.sin(f*1.7)*0.03*(1-f/22); s.pose=f%8<4?"effort":"guard"; if(f%4===0) spark(s.x+6,GROUND-1,"dust"); await rwait(28); }
-        log.free=true; log.fx=150; log.fy=GROUND-128+L; log.rot=0; spark(150,GROUND-128,"dust",4); s.pose="slamup"; s.shake=6;
+        log.free=true; log.fx=150; log.fy=GROUND-128+L; log.rot=0; rsfx("snap"); spark(150,GROUND-128,"dust",4,true); s.pose="slamup"; s.shake=6;
         const lx=log.fx, ly=log.fy; for(let f=1;f<=14;f++){ const k=f/14; log.fx=lx+(s.x-lx)*k; log.fy=ly+(headY()-6-ly)*k; await rwait(26); } await rwait(300);
-        s.pose="slam"; let vx=-3.2, vy=-2.6; while(log.fy<GROUND-5){ log.fx+=vx; log.fy+=vy; vy+=0.22; log.rot-=0.16; await rwait(20); }
-        log.fy=GROUND-5; log.rot=0; s.shake=14; spark(log.fx,GROUND-6,"splinter",14); spark(log.fx,GROUND-4,"dust",10);
+        s.pose="slam"; rsfx("throw"); let vx=-3.2, vy=-2.6; while(log.fy<GROUND-5){ log.fx+=vx; log.fy+=vy; vy+=0.22; log.rot-=0.16; await rwait(20); }
+        log.fy=GROUND-5; log.rot=0; s.shake=14; rsfx("thud"); rsfx("wood"); spark(log.fx,GROUND-6,"splinter",14); spark(log.fx,GROUND-4,"dust",10);
         for(let f=1;f<=10;f++){ log.split=f/10; await rwait(24); } await rwait(250); await greatBurst(); return; }
       // the log shoves it back along the ground, and it pushes its way back to the gate as the log swings away
       s.pose="hit"; const push=r==="great"?3:6; for(let f=0;f<6;f++){ s.x+=push/6*2; if(f%2===0) spark(s.x+6,GROUND-1,"dust"); await rwait(28);}
@@ -93,15 +93,15 @@ const HEAVY_FN=[
   async r=>{ // Library
     const s=RS; s.bg="library"; s.x=110; s.pose="sit"; const bk=placed("books",{k:"books",x:150,y:GROUND,n:1});
     // a book at a time: it leans in to read, a spark or a question goes up, and the book goes on the read pile
-    for(let k=0;k<(r==="great"?3:5);k++){ s.pose="lean"; await rwait(200); spark(s.x+rnd(-6,6),headY()-4,k%3?"sparkle":"q"); await rwait(160); s.pose="sit"; bk.n++; spark(bk.x,GROUND-6-bk.n*2,"dust"); await rwait(180); }
+    for(let k=0;k<(r==="great"?3:5);k++){ s.pose="lean"; rsfx("page"); await rwait(200); spark(s.x+rnd(-6,6),headY()-4,k%3?"sparkle":"q"); await rwait(160); s.pose="sit"; bk.n++; rsfx("thock"); spark(bk.x,GROUND-6-bk.n*2,"dust",1,true); await rwait(180); }
     if(r==="fail"){ bk.fall=true; bk.x=s.x+4; s.pose="hurt"; await rwait(900); s.pose="dizzy"; await rwait(700); return; }
     if(r==="great"){   // it lifts off its seat, books fly off the shelves and circle it flapping, then stack themselves on the pile
       const tall=GROUND-headY(), cy=()=>GROUND-tall*0.5-s.jy, au=prop({k:"aura",x:s.x,y:cy(),r:10,a:0,col:[255,214,110]});
       s.pose="float"; for(let f=1;f<=20;f++){ s.jy=f*0.7; au.a=f/20; au.r=10+f*1.4; au.y=cy(); await rwait(26); }
       const cols=["#b8463b","#3b6fb8","#3f8f4a","#c9a33b","#7a4fb0"], fb=[...Array(8)].map((_,i)=>prop({k:"fbook",x:s.x+rnd(-110,110),y:GROUND-130+(i%4)*26,col:cols[i%5],ph:i,rot:0})), st=fb.map(b=>[b.x,b.y]);
       for(let f=1;f<=24;f++){ const k=f/24; fb.forEach((b,i)=>{ const a=i/8*6.283; b.x=st[i][0]+(s.x+Math.cos(a)*30-st[i][0])*k; b.y=st[i][1]+(cy()+Math.sin(a)*14-st[i][1])*k; }); await rwait(26); }
-      for(let f=0;f<50;f++){ fb.forEach((b,i)=>{ const a=i/8*6.283+f/8; b.x=s.x+Math.cos(a)*30; b.y=cy()+Math.sin(a)*14; b.rot=Math.sin(a)*0.3; }); if(f%5===0) spark(s.x+rnd(-26,26),cy()+rnd(-14,14),"sparkle"); await rwait(26); }
-      for(const b of fb){ for(let f=1;f<=6;f++){ b.x+=(bk.x-b.x)*0.45; b.y+=(GROUND-8-bk.n*4-b.y)*0.45; await rwait(18); } unprop(b); bk.n++; spark(bk.x,GROUND-6-bk.n*4,"dust"); }
+      for(let f=0;f<50;f++){ fb.forEach((b,i)=>{ const a=i/8*6.283+f/8; b.x=s.x+Math.cos(a)*30; b.y=cy()+Math.sin(a)*14; b.rot=Math.sin(a)*0.3; }); if(f%4===0) rsfx("flap"); if(f%5===0) spark(s.x+rnd(-26,26),cy()+rnd(-14,14),"sparkle"); await rwait(26); }
+      for(const b of fb){ for(let f=1;f<=6;f++){ b.x+=(bk.x-b.x)*0.45; b.y+=(GROUND-8-bk.n*4-b.y)*0.45; await rwait(18); } unprop(b); bk.n++; rsfx("thock"); spark(bk.x,GROUND-6-bk.n*4,"dust",1,true); }
       spark(s.x,headY()-10,"bulb"); s.flash=3; spark(s.x,headY()-8,"sparkle",8); await rwait(500);
       for(let f=1;f<=12;f++){ s.jy=14*(1-f/12); au.a=1-f/12; au.y=cy(); await rwait(26); } unprop(au); s.jy=0; await greatBurst(); return; }
     s.pose="happy"; await rwait(900);
@@ -112,20 +112,20 @@ const HEAVY_FN=[
     if(r==="fail"){ s.pose="hurt"; await walkTo(RW+40,120,"walk"); await rwait(500); s.x=-40; await walkTo(130,70,"walk"); s.pose="tired"; await rwait(500); return; }
     if(r==="great"){   // the waterfall parts wide around it, it rises glowing with drops hanging still in the air, then the water crashes back down
       const tall=GROUND-headY(), cy=()=>GROUND-tall*0.5-s.jy, au=prop({k:"aura",x:s.x,y:cy(),r:10,a:0,col:[150,215,255]});
-      s.pose="float"; for(let f=1;f<=26;f++){ const k=f/26; s.parted=k*(2-k); s.jy=k*16; au.a=k; au.r=10+k*30; au.y=cy(); s.shake=f%4===0?2:0; await rwait(28); }
+      s.pose="float"; rsfx("rush"); for(let f=1;f<=26;f++){ const k=f/26; s.parted=k*(2-k); s.jy=k*16; au.a=k; au.r=10+k*30; au.y=cy(); s.shake=f%4===0?2:0; await rwait(28); }
       const dr=[...Array(10)].map((_,i)=>prop({k:"pebble",x:s.x,y:cy(),glow:true,col:"#9fd8ff",rot:i})); 
       for(let f=0;f<60;f++){ dr.forEach((d,i)=>{ const a=i/10*6.283+f/10; d.x=s.x+Math.cos(a)*(22+Math.sin(f/6+i)*3); d.y=cy()+Math.sin(a)*12; }); au.y=cy(); if(f%6===0) spark(s.x+rnd(-20,20),cy()+rnd(-16,16),"sparkle"); await rwait(26); }
       dr.forEach(unprop); for(let f=1;f<=8;f++){ s.parted=1-f/8; s.jy=16*(1-f/8); au.a=1-f/8; await rwait(22); } s.parted=false; s.jy=0; unprop(au);
-      s.shake=12; spark(s.x,GROUND-6,"drip",20); await rwait(250); await greatBurst(); return; }
+      s.shake=12; rsfx("splash"); spark(s.x,GROUND-6,"drip",20,true); await rwait(250); await greatBurst(); return; }
     s.pose="idle"; await rwait(500);
   },
   async r=>{ // Obstacle course
     const s=RS; s.bg="course"; s.x=20; placed("rope",{k:"rope"}); const hs=[70,120,210].map(x=>placed("hurdle",{k:"hurdle",x,y:GROUND}));
     for(let k=0;k<hs.length;k++){ await walkTo(hs[k].x-RS.P.scale*7,90,"run");
       if(r==="great"&&k===1){   // one long leap over the last two hurdles
-        const x0=s.x, x1=hs[2].x+RS.P.scale*5; s.ghosts=true; s.pose="crouch"; await rwait(160); s.pose="jump";
+        const x0=s.x, x1=hs[2].x+RS.P.scale*5; s.ghosts=true; s.pose="crouch"; await rwait(160); s.pose="jump"; rsfx("leap");
         for(let f=0;f<=40;f++){ const q=f/40; s.x=x0+(x1-x0)*q; s.jy=Math.sin(q*Math.PI)*46; await rwait(20); }
-        s.jy=0; s.ghosts=false; s.pose="land"; s.shake=6; spark(s.x,GROUND-1,"dust",8); await rwait(250); break; }
+        s.jy=0; s.ghosts=false; s.pose="land"; s.shake=6; rsfx("thud"); spark(s.x,GROUND-1,"dust",8); await rwait(250); break; }
       if(r==="fail"&&k===1){ s.x=hs[k].x; s.jy=10; s.pose="hurt"; await rwait(1300); s.jy=0; s.pose="dizzy"; await rwait(500); return; }
       s.pose="walk"; await hop(24,380); s.x=hs[k].x+RS.P.scale*4; }
     await walkTo(226,90,"run");
