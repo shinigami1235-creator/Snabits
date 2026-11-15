@@ -71,6 +71,7 @@ async function runTrip(reg){
       let line=`Week ${w+1}, ${A.name}: ${STATS[main]} +${a}, ${STATS[second]} +${b}.${ok?"":" It was a rough week."}`;
       await stageResult(ok,ok?`That was a good week. ${STATS[main]} went up by ${a} and ${STATS[second]} by ${b}.`:`That was a rough week, so ${STATS[main]} only went up by ${a} and ${STATS[second]} by ${b}.`,"guide");
       if(ok){
+        { const ck={"Saffron Dojo":"Tiger","Coral Shallows":"Clownfish","Tanglewood":"Ladybug"}[reg.n], cl=ck&&typeof openCos==="function"&&openCos(ck,`${nm} found a League pattern card on the trail.`); if(cl){ line+=" "+cl; K(cl); await rwait(1800); } }   // a costume found on a good week
         s.uses=s.uses||{}; for(const n of knownSkills(s)) if(SKILLS[n].el===reg.el) s.uses[n]=(s.uses[n]||0)+5;
         if(learned.length<max){
           const opts=tripOptions(s,reg).filter(x=>x.chainOk&&x.score>=x.need);

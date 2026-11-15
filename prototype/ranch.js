@@ -951,7 +951,8 @@ async function endWeek(weeks,line){
   if(PLAYER.week>s.born&&(PLAYER.week-s.born)%52===0){ const g=COMMON_FINDS[Math.floor(Math.random()*COMMON_FINDS.length)]; addItem(g); s.spoil+=5; notes.push(`It's its birthday! There was cake, and a ${g} as a present.`); }
   { const mo=Math.floor(PLAYER.week/4)%12, wk=PLAYER.week%4; if(mo%3===2&&wk===2&&typeof rookMon==="function"&&story().seen.intro){ const r=rookMon(s.grade); notes.push(`Rook dropped by with ${r.m.name} to show off before the official cup. It's a ${r.m.el1} ${r.m.family}, so plan for that.`); } }
   { const fest=typeof festivalOf==="function"&&festivalOf(PLAYER.week); if(fest&&fest[0]==="Lantern Festival"&&!famOpen("Lern")&&GRADES.indexOf(bestGrade())>=2){ openFam("Lern"); notes.push("Lern came out of the lanterns at the festival, and the League stand registered the ranch for them. A scan can find one now."); }   // Lern opens at the Lantern Festival from grade C
-    if(fest){ addItem(fest[1]); s.stress-=10; notes.push(`The ${fest[0]} is on in town this week. Nora gave every ranch ${/^[AEIOU]/.test(fest[1])?"an":"a"} ${fest[1]}, and the music took 10 stress off.`); } }
+    if(fest){ const fk={"Blossom Festival":"Strawberry","Harvest Fair":"Watermelon","Snow Fair":"Candy cane"}[fest[0]], fl=fk&&openCos(fk,`A League stand at the ${fest[0]} was giving out pattern cards.`); if(fl) notes.push(fl);
+      addItem(fest[1]); s.stress-=10; notes.push(`The ${fest[0]} is on in town this week. Nora gave every ranch ${/^[AEIOU]/.test(fest[1])?"an":"a"} ${fest[1]}, and the music took 10 stress off.`); } }
   clampAll();   // the festival, a visitor, the plants and worn things move stress after the clamp at the top
   notes.push(condition());
   if(s.stress>50) notes.push("It seems tense lately, maybe give it a rest.");

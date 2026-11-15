@@ -57,14 +57,20 @@ Voice samples:
 ## What can be scanned (Gid's tiers, decided 15 Nov 2026)
 
 1. **Basic Snabits:** the first eight families (Chomp, Squib, Antik, Moko, Pinch, Stilt, Skit, Booly), scanned from the start.
-2. **Registered Snabits:** the League only lets a ranch register the other five families once it has proven itself, and each opens a different way, since Gid wants locked Snabits but not one route for all of them (`LICENCE`, `UNLOCK_HOW`, `famOpen` in `game.js`). Until then a scan that would give one gives one of the first eight, and the bestiary says how each one opens. A save from before keeps any of the five it had already raised.
+2. **Registered Snabits:** the League only lets a ranch register the other five families once it has proven itself, and each opens a different way, since Gid wants locked Snabits but not one route for all of them (`LICENCE`, `UNLOCK_HOW`, `famOpen` in `game.js`). Until then a scan that would give one gives one of the first eight. Nothing in the game says how any of them opens, since Gid wants it found by playing (15 Nov 2026). A save from before keeps any of the five it had already raised.
    - Plod: win the Plod Licence Cup, grade D.
    - Bipped: win a Strength contest. The judges are Bipped breeders and sign the League form.
    - Fizz: Dr. Ines signs the form when the ranch reaches grade B.
    - Teep: win the Teep Licence Cup, grade A.
    - Lern: go to the Lantern Festival at grade C or higher.
    - Licence Cups run in week 4 of the first two months of each season except Summer, with a field of that family only. They grow with the grade (Gid, 15 Nov 2026): 4 entrants at E and D, 6 at C and B, 8 at A and S, where 8 is a knockout.
-3. **Specials:** unlocked by finding their Pattern Stone on an expedition, deeper into the story. The six in the game (Eagle, Vampire, Phoenix, Kitsune, Naga, Yeti) and the seven planned (Garuda, Sarimanok, Kraken, Golem, Unicorn, Bakunawa, Jack-o'-lantern).
+3. **Costumes:** twelve, each opened its own way and never explained in the game (`cosOpen`, `openCos` in `game.js`). A costume's pattern scanned before then makes a plain Snabit, and its Secrets hint shows ??? until it opens. Each brings a skill and teaches a second at level 6 (`COSTUME_SKILLS` in `skills.js`).
+   - Contests: Bee (Smarts), Zebra (Speed), Penguin (Style).
+   - Festivals: Strawberry (Blossom Festival), Watermelon (Harvest Fair), Candy cane (Snow Fair).
+   - A good trip week: Tiger (Saffron Dojo), Clownfish (Coral Shallows), Ladybug (Tanglewood).
+   - The bestiary: Panda (30 kinds seen), Cow (10 kinds raised).
+   - Nora's shop: Rubber duck, as a Duck pattern card for 5,000 bits.
+4. **Specials:** unlocked by finding their Pattern Stone on an expedition, deeper into the story. The six in the game (Eagle, Vampire, Phoenix, Kitsune, Naga, Yeti) and the seven planned (Garuda, Sarimanok, Kraken, Golem, Unicorn, Bakunawa, Jack-o'-lantern).
 
 ## Story spine (Proposed)
 
@@ -93,7 +99,6 @@ Usual game names that read well anywhere, not tied to one country (Gid, 15 Nov 2
 
 ## Holes
 
-- More costumes are coming (Gid, 15 Nov 2026), each with its own way to unlock, spread across festivals, contests, cups, trips and the bestiary. Today the five costumes can be scanned from the start (`eggOf` in `monster.js`).
 - More families are planned to fill more roles (Gid, 15 Nov 2026).
 - Who the ancient people were and why they left the stones.
 - What the Rift Lord wants, and whether it knew Helena.

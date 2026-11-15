@@ -41,7 +41,34 @@ def candy():
     for k in range(n):
         if k%2: d.rectangle([k*W/n,0,(k+1)*W/n,H],fill=RED)
     return im
-EGGS={'Eagle':eagle,'Vampire':vampire,'Phoenix':phoenix,'Kitsune':kitsune,'Naga':naga,'Yeti':yeti,'Panda':panda,'Bee':bee,'Ladybug':ladybug,'Watermelon':watermelon,'Candy cane':candy}
+def tiger():
+    im=Image.new('RGB',(W,H),ORANGE); d=ImageDraw.Draw(im); n=10
+    for k in range(n):
+        if k%2: d.rectangle([0,k*H/n,W,k*H/n+H/n*0.6],fill=BLACK)
+    return im
+def zebra():
+    im=Image.new('RGB',(W,H),WHITE); d=ImageDraw.Draw(im); n=10
+    for k in range(n):
+        if k%2: d.rectangle([k*W/n,0,(k+1)*W/n,H],fill=BLACK)
+    return im
+def cow():
+    im=Image.new('RGB',(W,H),WHITE); d=ImageDraw.Draw(im)
+    for x,y,rx,ry in [(0.15,0.15,0.2,0.08),(0.8,0.4,0.18,0.09),(0.3,0.7,0.22,0.08),(0.75,0.85,0.15,0.06)]: d.ellipse([W*(x-rx),H*(y-ry),W*(x+rx),H*(y+ry)],fill=BLACK)
+    return im
+def penguin():
+    im=Image.new('RGB',(W,H),BLACK); d=ImageDraw.Draw(im); d.ellipse([W*0.2,H*0.3,W*0.8,H*0.85],fill=WHITE); d.polygon([(W*0.42,H*0.25),(W*0.58,H*0.25),(W*0.5,H*0.31)],fill=ORANGE); d.rectangle([W*0.25,H*0.9,W*0.75,H*0.95],fill=ORANGE); return im
+def strawberry():
+    im=Image.new('RGB',(W,H),RED); d=ImageDraw.Draw(im); d.rectangle([0,0,W,H*0.14],fill=GREEN); rnd=random.Random(7)
+    for k in range(40):
+        x=rnd.uniform(0.05,0.95)*W; y=rnd.uniform(0.2,0.95)*H; d.ellipse([x-6,y-9,x+6,y+9],fill=YELLOW)
+    return im
+def duck():
+    im=Image.new('RGB',(W,H),YELLOW); d=ImageDraw.Draw(im); d.ellipse([W*0.35,H*0.3,W*0.75,H*0.38],fill=ORANGE); return im
+def clownfish():
+    im=Image.new('RGB',(W,H),ORANGE); d=ImageDraw.Draw(im)
+    for f in (0.2,0.5,0.8): d.rectangle([W*(f-0.06),0,W*(f+0.06),H],fill=WHITE); d.rectangle([W*(f-0.075),0,W*(f-0.06),H],fill=BLACK); d.rectangle([W*(f+0.06),0,W*(f+0.075),H],fill=BLACK)
+    return im
+EGGS={'Eagle':eagle,'Vampire':vampire,'Phoenix':phoenix,'Kitsune':kitsune,'Naga':naga,'Yeti':yeti,'Panda':panda,'Bee':bee,'Ladybug':ladybug,'Watermelon':watermelon,'Candy cane':candy,'Tiger':tiger,'Zebra':zebra,'Cow':cow,'Penguin':penguin,'Strawberry':strawberry,'Rubber duck':duck,'Clownfish':clownfish}
 
 def plain(seed):
     """an ordinary snapshot: a soft two-tone background with one object in it"""

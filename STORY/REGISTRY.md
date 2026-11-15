@@ -23,3 +23,4 @@ Every piece of story in the game, one row each, seeded from `story.js` and `onbo
 | bipped-form | contest result | contests.js | first Strength contest win | judges | town | Bipped can be scanned | PLAYER.famOpen | famOpen() | | league |
 | fizz-form | beat line | story.js gradeB | the grade B scene | Dr. Ines | ranch | Fizz can be scanned | PLAYER.famOpen | famOpen() | gradeB | league |
 | lern-lanterns | week note | ranch.js | the Lantern Festival at grade C or higher | League stand | town | Lern can be scanned | PLAYER.famOpen | famOpen(), bestGrade() | festivals | league |
+| costume-cards | unlock lines | contests.js, ranch.js, trips.js, dex.js, town.js | contest wins, festivals, good trip weeks, bestiary counts, the Duck pattern | judges, League stand, Walt, Dr. Ines, Nora | various | a costume can be scanned | PLAYER.cosOpen | cosOpen() | festivals | league |

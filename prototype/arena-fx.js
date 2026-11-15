@@ -616,9 +616,13 @@ Object.assign(AR_KIND,{Peck:"punch",Swoop:"tackle","Talon Dive":"talondive","Win
   "Fox Swipe":"claw",Foxfire:"foxfire","Spirit Lantern":"bolt","Nine Tails":"lash",Kitsunebi:"foxfire",
   Fang:"bite","Tail Whip":"lash","Venom Coil":"venomcoil","Hood Flare":"glare","Acid Spit":"bolt","Serpent King":"jawlock",
   "Snow Paw":"punch",Snowball:"bolt",Avalanche:"avalanche","Frost Breath":"steam","Glacier Slam":"hammer","Blizzard Roar":"icefall",
-  "Bamboo Smack":"hammer",Stinger:"punch",Swarm:"volley","Shell Bash":"tackle","Seed Spit":"volley","Melon Smash":"hammer","Cane Hook":"lash"});
+  "Bamboo Smack":"hammer",Stinger:"punch",Swarm:"volley","Shell Bash":"tackle","Seed Spit":"volley","Melon Smash":"hammer","Cane Hook":"lash",
+  "Tiger Swipe":"claw",Pounce:"tackle","Stripe Dash":"tackle","Dazzle Stripes":"glare","Moo Rush":"tackle","Belly Slide":"tackle","Flipper Slap":"lash",
+  "Berry Toss":"bolt",Squeak:"push","Anemone Sting":"punch","Reef Dart":"tackle"});
 if(typeof MOVE_KIND!=="undefined") Object.assign(MOVE_KIND,{"Talon Dive":"fly","Night Bite":"bite","Sun Flare":"bolt",Foxfire:"volley","Venom Coil":"bite",Avalanche:"stomp",
-  "Bamboo Smack":"stomp","Roly-Poly":"heal",Stinger:"punch",Swarm:"volley","Shell Bash":"tackle","Lucky Spots":"buff","Seed Spit":"volley","Melon Smash":"stomp","Cane Hook":"claw","Sugar Rush":"buff"});
+  "Bamboo Smack":"stomp","Roly-Poly":"heal",Stinger:"punch",Swarm:"volley","Shell Bash":"tackle","Lucky Spots":"buff","Seed Spit":"volley","Melon Smash":"stomp","Cane Hook":"claw","Sugar Rush":"buff",
+  "Tiger Swipe":"claw",Pounce:"tackle","Stripe Dash":"tackle","Dazzle Stripes":"glare","Moo Rush":"tackle","Milk Break":"heal","Belly Slide":"tackle","Flipper Slap":"claw",
+  "Berry Toss":"volley","Sweet Scent":"heal",Squeak:"glare","Bubble Bath":"heal","Anemone Sting":"punch","Reef Dart":"tackle"});
 
 /* ---------- abilities: when one works, its name shows over the Snabit with its own colour, particles and sound ---------- */
 const AT_ABIL={ "Sky High":{c:[255,236,170],k:"feather"}, Bloodsuck:{c:[230,50,70],k:"suck"}, Rebirth:{c:[255,170,60],k:"flame"}, Illusion:{c:[160,200,255],k:"wisp"},

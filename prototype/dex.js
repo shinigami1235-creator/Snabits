@@ -12,7 +12,9 @@ const dexKey = m => { const f = m && FAMILY[m.family] && FAMILY[m.family].of ? F
 const DEX_SECRETS = [['Eagle', 'Hides in stars and stripes.'], ['Vampire', 'Mostly night, a little moon and a drop of red.'], ['Phoenix', 'Red at the bottom and yellow at the top, like a flame.'],
   ['Kitsune', 'A red sun on white snow.'], ['Naga', 'A green band with gold.'], ['Yeti', 'Snow and silver with a little ice blue.'],
   ['c:Panda', 'Half black, half white.'], ['c:Bee', 'Yellow and black in stripes.'], ['c:Ladybug', 'Red with black spots.'],
-  ['c:Watermelon', 'Green outside, red inside, a few black seeds.'], ['c:Candy cane', 'Red and white in stripes.']];
+  ['c:Watermelon', 'Green outside, red inside, a few black seeds.'], ['c:Candy cane', 'Red and white in stripes.'],
+  ['c:Tiger', 'Orange with black stripes.'], ['c:Zebra', 'Black and white in stripes.'], ['c:Cow', 'White with black patches.'], ['c:Penguin', 'Black and white with a little orange.'],
+  ['c:Strawberry', 'Red with yellow seeds and green on top.'], ['c:Rubber duck', 'Yellow with a little orange.'], ['c:Clownfish', 'Orange with white bands.']];
 function dexSecret(m, bits) { if (!m || typeof PLAYER === 'undefined' || !PLAYER) return; const S = PLAYER.dexSecret = PLAYER.dexSecret || {};
   const keys = []; if (FAMILY[m.family] && FAMILY[m.family].special) keys.push(m.family); if (m.costume) keys.push('c:' + m.costume);
   for (const k of keys) S[k] = (S[k] || 0) | bits | 1; }
@@ -36,6 +38,7 @@ function dexPrizes() {
     lines.push(`${p[0]} kinds ${what} in the bestiary, so Dr. Ines sent ${p[1] === 'bits' ? p[2] + ' bits' : (/^[AEIOU]/.test(p[1]) ? 'an ' : 'a ') + p[1]}.`); };
   for (const p of DEX_SEEN_PRIZE) if (seen >= p[0]) give('s' + p[0], p, 'seen');
   for (const p of DEX_RAISE_PRIZE) if (raised >= p[0]) give('r' + p[0], p, 'raised');
+  if (typeof openCos === 'function') { const a = seen >= 30 && openCos('Panda', 'Dr. Ines sent a League pattern card for seeing 30 kinds.'), b = raised >= 10 && openCos('Cow', 'Dr. Ines sent a League pattern card for raising 10 kinds.'); if (a) lines.push(a); if (b) lines.push(b); }
   if (lines.length && typeof RS !== 'undefined' && RS && typeof say === 'function') { PLAYER.dexNote = lines.join(' '); setTimeout(() => { if (PLAYER.dexNote && RS && !RS.busy) { say(PLAYER.dexNote); PLAYER.dexNote = null; } }, 400); }
 }
 /* everything already on the ranch counts, for saves from before the bestiary */
@@ -63,8 +66,8 @@ function openDex(fam) {
   dexBackfill(); if (fam) DEX_FAM = fam; const D = dex(), n = dexCount();
   if (DEX_FAM === 'Secrets') return openSecrets(n);
   panel(`<div class="full lab-head"><b>Bestiary</b><button class="small" id="dx-back">Back</button></div>
-    <div class="full lab-info">${n.seen} of ${n.total} seen and ${n.raised} raised. ${n.next || "It's complete."}${typeof famOpen === 'function' && !famOpen(DEX_FAM) ? ` The Snaboscope can't find ${DEX_FAM} yet. ${UNLOCK_HOW[DEX_FAM]}` : ''}</div>
-    <div class="full dex-tabs">${DEX_FAMS.map(f => { const k = DEX_ELS.filter(e => D[f + '|' + e]).length; return `<button class="small ${f === DEX_FAM ? 'on' : ''}" data-f="${f}">${f}<i>${typeof famOpen === 'function' && !famOpen(f) && !k ? 'Locked' : k + '/12'}</i></button>`; }).join('')}${dexSecretTab()}</div>
+    <div class="full lab-info">${n.seen} of ${n.total} seen and ${n.raised} raised. ${n.next || "It's complete."}${typeof famOpen === 'function' && !famOpen(DEX_FAM) ? ` The Snaboscope can't find ${DEX_FAM} yet.` : ''}</div>
+    <div class="full dex-tabs">${DEX_FAMS.map(f => { const k = DEX_ELS.filter(e => D[f + '|' + e]).length; return `<button class="small ${f === DEX_FAM ? 'on' : ''}" data-f="${f}">${f}<i>${k}/12</i></button>`; }).join('')}${dexSecretTab()}</div>
     <div class="full dex-grid">${DEX_ELS.map(e => { const b = D[DEX_FAM + '|' + e] || 0;
       return `<div class="dex-t ${b ? '' : 'unk'}"><canvas data-e="${e}"></canvas><b>${b ? speciesName(DEX_FAM, e) : '???'}</b><small>${b ? (b & 14 ? ['Bit', 'Byte', 'Mega'].filter(st => b & DEX_STAGE[st]).map(() => '★').join('') : 'Seen') : e}</small></div>`; }).join('')}</div>`);
   el('dx-back').onclick = () => menu('Out');
@@ -82,7 +85,8 @@ function openSecrets(n) {
     <div class="full lab-info">Secrets turn up when a photo has just the right colours. Each hint says what to look for.</div>
     <div class="full dex-tabs">${DEX_FAMS.map(f => { const k = DEX_ELS.filter(e => D[f + '|' + e]).length; return `<button class="small" data-f="${f}">${f}<i>${k}/12</i></button>`; }).join('')}${dexSecretTab()}</div>
     <div class="full dex-grid">${DEX_SECRETS.map(([k, hint]) => { const b = S[k] || 0, nm = k.startsWith('c:') ? k.slice(2) + ' costume' : k;
-      return `<div class="dex-t ${b ? '' : 'unk'}"><canvas data-k="${k}"></canvas><b>${b ? nm : '???'}</b><small>${b ? (b & 14 ? 'Raised' : 'Seen') : hint}</small></div>`; }).join('')}</div>`);
+      const shut = k.startsWith('c:') && typeof cosOpen === 'function' && !cosOpen(k.slice(2));   // a costume not opened yet keeps its hint hidden too
+      return `<div class="dex-t ${b ? '' : 'unk'}"><canvas data-k="${k}"></canvas><b>${b ? nm : '???'}</b><small>${b ? (b & 14 ? 'Raised' : 'Seen') : shut ? '???' : hint}</small></div>`; }).join('')}</div>`);
   el('dx-back').onclick = () => menu('Out');
   el('r-panel').querySelectorAll('[data-f]').forEach(b => b.onclick = () => openDex(b.dataset.f));
   el('r-panel').querySelectorAll('canvas[data-k]').forEach(cv => { const k = cv.dataset.k, b = S[k] || 0, d = devicePixelRatio || 1, Z = (cv.clientWidth || 64) * d; cv.width = Z; cv.height = Z;

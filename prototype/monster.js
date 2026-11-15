@@ -195,7 +195,7 @@ function speciesName(family,el1,el2){
    res.raw gives each colour's share of the picture in percent, and res.g12 gives where each colour sits on a 12 by 12 grid
    (the share of each cell that colour fills). Specials are checked first since their mixes are the stricter ones. */
 const EGG_SPECIAL=["Eagle","Vampire","Phoenix","Kitsune","Naga","Yeti"];
-const COSTUMES=["Panda","Bee","Ladybug","Watermelon","Candy cane"];
+const COSTUMES=["Panda","Bee","Ladybug","Watermelon","Candy cane","Tiger","Zebra","Cow","Penguin","Strawberry","Rubber duck","Clownfish"];
 function eggStats(res,g){ const G=res.g12&&res.g12[g]; if(!G) return null; let t=0,cx=0,cy=0;
   for(let i=0;i<144;i++){ const v=G[i]; t+=v; cx+=v*((i%12)+0.5)/12; cy+=v*(Math.floor(i/12)+0.5)/12; }
   if(t<=0) return null; cx/=t; cy/=t; let vv=0; for(let i=0;i<144;i++){ const v=G[i]; vv+=v*((((i%12)+0.5)/12-cx)**2+((Math.floor(i/12)+0.5)/12-cy)**2); }
@@ -215,7 +215,15 @@ function eggOf(res){
   if(R("white")>=55&&R("red")>=6&&R("red")<=35&&sum("white","red")>=85){ const r=S("red"); if(r&&Math.abs(r.cx-0.5)<0.12&&Math.abs(r.cy-0.5)<0.12&&r.spread<0.2) return {special:"Kitsune"}; }
   if(R("green")>=40&&R("yellow")>=8&&sum("green","yellow")>=65){ const g=S("green"); if(g&&(Math.max(...g.rows)>0.55||Math.max(...g.cols)>0.55)) return {special:"Naga"}; }
   if(sum("white","silver")>=72&&sum("cyan","blue")>=3&&sum("cyan","blue")<=22){ const w=S("white"); if(w&&w.spread>0.2) return {special:"Yeti"}; }
-  // costumes
+  // costumes. The second set goes first where it could be read as one of the first five: Penguin and Zebra before Panda,
+  // Clownfish and Tiger before Bee, Rubber duck before Bee
+  if(R("black")>=28&&R("white")>=12&&R("orange")>=2&&R("orange")<=14&&sum("black","white","orange")>=82) return {costume:"Penguin"};
+  if(R("black")>=25&&R("white")>=25&&sum("black","white")>=82&&striped("black")&&striped("white")) return {costume:"Zebra"};
+  if(R("white")>=45&&R("black")>=10&&R("black")<28&&sum("white","black")>=80){ const k=S("black"); if(k&&k.spread>0.22) return {costume:"Cow"}; }
+  if(R("orange")>=30&&R("white")>=15&&R("black")<=18&&sum("orange","white","black")>=72&&striped("white")) return {costume:"Clownfish"};
+  if(R("orange")>=30&&R("black")>=15&&sum("orange","black")>=70&&striped("black")) return {costume:"Tiger"};
+  if(R("yellow")>=55&&R("orange")>=1.5&&R("orange")<=20&&R("black")<=10&&sum("yellow","orange")>=72) return {costume:"Rubber duck"};
+  if(R("red")>=40&&R("green")>=4&&R("green")<=22&&R("yellow")>=2&&R("black")<=8){ const r=S("red"),g=S("green"); if(r&&g&&g.cy<r.cy-0.15) return {costume:"Strawberry"}; }
   if(R("black")>=28&&R("white")>=28&&sum("black","white")>=82) return {costume:"Panda"};
   if(R("yellow")>=25&&R("black")>=18&&sum("yellow","black")>=65&&striped("black")) return {costume:"Bee"};
   if(R("red")>=40&&R("black")>=8&&R("black")<=35&&sum("red","black")>=72){ const k=S("black"); if(k&&k.spread>0.22) return {costume:"Ladybug"}; }
@@ -227,7 +235,8 @@ function eggOf(res){
 
 function hatch(res,now=new Date(),ov={}){
   const el1=EL[res.main.g], el2=res.second?EL[res.second.g]:null;
-  const pf=pickFamily(res.cells), egg=ov.family?null:eggOf(res), family=ov.family||(egg&&egg.special)||pf.family, band=pf.band, shape=pf.shape;
+  let egg0=ov.family?null:eggOf(res); if(egg0&&egg0.costume&&!ov.costume&&typeof cosOpen==="function"&&!cosOpen(egg0.costume)) egg0=null;   // a costume still waiting to be opened makes a plain Snabit
+  const pf=pickFamily(res.cells), egg=egg0, family=ov.family||(egg&&egg.special)||pf.family, band=pf.band, shape=pf.shape;
   const F=FAMILY[family];
   const sat=res.sat, con=res.contrast, bri=res.bright;
   const parts={

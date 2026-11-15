@@ -213,7 +213,21 @@ const COSTUME_SKILLS={
   "Seed Spit":{costume:"Watermelon",lv:1,el:null,kind:"Cast",cost:3,power:12,hits:5,acc:90},
   "Melon Smash":{costume:"Watermelon",lv:6,el:null,kind:"Strike",cost:4,power:75,acc:90,status:["Soak",30]},
   "Cane Hook":{costume:"Candy cane",lv:1,el:null,kind:"Strike",cost:2,power:40,acc:100,push:-22},
-  "Sugar Rush":{costume:"Candy cane",lv:6,el:null,kind:"Support",cost:2,raise:{spd:2}}};
+  "Sugar Rush":{costume:"Candy cane",lv:6,el:null,kind:"Support",cost:2,raise:{spd:2}},
+  "Tiger Swipe":{costume:"Tiger",lv:1,el:null,kind:"Strike",cost:3,power:55,acc:95},
+  "Pounce":{costume:"Tiger",lv:6,el:null,kind:"Strike",cost:4,power:80,acc:90,push:18},
+  "Stripe Dash":{costume:"Zebra",lv:1,el:null,kind:"Strike",cost:2,power:40,acc:100,push:22},
+  "Dazzle Stripes":{costume:"Zebra",lv:6,el:null,kind:"Cast",cost:3,power:30,acc:95,status:["Daze",40]},
+  "Moo Rush":{costume:"Cow",lv:1,el:null,kind:"Strike",cost:3,power:55,acc:95,push:25},
+  "Milk Break":{costume:"Cow",lv:6,el:null,kind:"Support",cost:3,heal:0.25},
+  "Belly Slide":{costume:"Penguin",lv:1,el:null,kind:"Strike",cost:2,power:45,acc:100,push:15},
+  "Flipper Slap":{costume:"Penguin",lv:6,el:null,kind:"Strike",cost:3,power:65,acc:95,status:["Soak",30]},
+  "Berry Toss":{costume:"Strawberry",lv:1,el:null,kind:"Cast",cost:3,power:45,acc:95},
+  "Sweet Scent":{costume:"Strawberry",lv:6,el:null,kind:"Support",cost:2,heal:0.15,raise:{mnd:1}},
+  "Squeak":{costume:"Rubber duck",lv:1,el:null,kind:"Cast",cost:2,power:30,acc:100,status:["Daze",25]},
+  "Bubble Bath":{costume:"Rubber duck",lv:6,el:null,kind:"Support",cost:3,heal:0.2,raise:{grd:1}},
+  "Anemone Sting":{costume:"Clownfish",lv:1,el:null,kind:"Strike",cost:2,power:40,acc:100,status:["Poison",30]},
+  "Reef Dart":{costume:"Clownfish",lv:6,el:null,kind:"Strike",cost:4,power:70,acc:95}};
 for(const [n,d] of Object.entries(COSTUME_SKILLS)) SKILLS[n]={sig:true,...d};
 
 /* Pool order: the scan's pool size (6 to 12) takes skills from the front of this list. */
