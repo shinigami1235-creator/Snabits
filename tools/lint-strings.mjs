@@ -110,6 +110,8 @@ const RULES = [
   { id: 'beat', err: true, why: 'a short fragment used as a beat', test: (s, i) => i > 0 && /^(Not (often|really|quite|always|yet|much)|Mostly|Barely|Almost|Sort of|Kind of|Fair enough|For now|Probably|Somehow|Anyway|Just in case|Until now)[.!]$/.test(s) },
   { id: 'fragment-lead', err: true, why: 'a sentence opening on a verbless fragment ("Four weeks, and ...")', test: s => /^(One|Two|Three|Four|Five|Six|Ten|\d+) \w+, and\b|^\w+ first, \w+ (later|second)\b/i.test(s) },
   { id: 'state-no-instruction', err: true, why: 'a balanced "X and nothing Y" state with nothing to do', test: s => /\band nothing (is|was|has)\b/i.test(s) },
+  // Gid, 15 Nov 2026: "would a regular person use that language in a conversation?" Nobody explains the game's rules out loud
+  { id: 'explains-rules', err: true, why: 'a line explaining the game\'s rules or numbers in someone\'s mouth; let the screen show it', test: s => /\b(loses?|gets?|gives?|costs?) (\d+|some|all) (energy|stamina)\b|\benergy back\b|\bthe leader (goes|walks|makes)\b|\bthe others follow\b|\bso it (backs off|goes back)\b|\bnobody else on the team\b/i.test(s) },
   { id: 'banned-word', err: true, why: 'a word on the banned list', test: s => { const w = (s.toLowerCase().match(/[a-z-]+/g) || []); return BANNED.find(b => w.includes(b)) || TICS.find(r => r.test(s)); } },
   { id: 'fragment', err: false, why: 'a short verbless sentence; join it to the next one or give it a verb', test: (s, i, all) => all.length > 1 && /^[A-Z][\w']*( [\w']+){0,2}[.]$/.test(s) && !/^(Rest|Train|Feed|Look|Tap|Pick|Come|Go|Wait|Try|Hold|Stop|Run|Watch|Again|Thanks|Thank you|Good|Well done|Welcome)\b/.test(s) && !/\b(is|are|was|were|has|have|had|can|will|did|does|do|it'?s|i'?m|you'?re|we'?re|they'?re|learned|won|lost|got|went|came|gets|goes|takes|ran|ate|here'?s|there'?s|pays)\b/i.test(s) },
   { id: 'colon', err: false, why: 'a colon in the middle of a spoken line', test: s => /\w: [a-z0-9]/.test(s) && !/^\w+( \w+)?: /.test(s) },
@@ -140,9 +142,9 @@ function lintFile(f) {
 function selfTest() {
   const bad = ["Walt's here to take it to Glacier Rim. Four weeks, and it comes back in a month.", 'Set to Lower face. That is the treated area.', 'Wrinkles compared. Displacement was not.',
     'It is not a song, it is a statement.', 'Tall post 3:4, nothing cut', 'People still come this far out sometimes. Not often.', 'The photo is loaded and nothing is marked.',
-    'The shadow is the lamp, not the treatment.', 'It came off clean and sharp — that was Ice Shard.', 'This boasts a vibrant shop.', 'Out like a light. Mostly.'];
+    'The shadow is the lamp, not the treatment.', 'It came off clean and sharp — that was Ice Shard.', 'This boasts a vibrant shop.', 'Out like a light. Mostly.', 'Past here the League only sends teams. The leader goes first, and the others follow it.', 'Brickplod couldn\'t get through, so it goes back and loses 3 energy.'];
   const good = ['Walt is here to take Toxichomp to Glacier Rim. They\'ll train there for four weeks.', 'Well done! Toxichomp has learned Ice Shard.', 'Wrinkles were compared while displacement was not.',
-    'Welcome! Feel free to look around. The skill chips are in the glass case.', 'Hit the post again and put your weight behind it.', 'It isn\'t well enough to travel. Rest it or give it medicine first.'];
+    'Welcome! Feel free to look around. The skill chips are in the glass case.', 'Hit the post again and put your weight behind it.', 'It isn\'t well enough to travel. Rest it or give it medicine first.', 'Only League teams come out this far. Stay close, you three.', 'It won\'t budge.'];
   let fail = 0;
   const caught = t => lint([{ text: t, line: 0 }], 'test.js').some(h => h.err);
   // the first bad line is caught by restate/beat only as a warning, so it counts if any hit fires

@@ -158,7 +158,7 @@ async function deepNode(reg, n, st, g, need, T, leadOf, setLead, K, used, found,
   if (n.k === 'camp') {
     if (n.start || used.includes(n.id)) { await rwait(300); return; } used.push(n.id);
     for (const m of T) { m.out = false; m.e = Math.min(m.max, Math.max(0, m.e) + 8); }
-    await campNight(`${reg.n}, deep · night ${dayOf()}`, 'We camp here tonight. Everyone gets their energy back, and anyone who was out is back on their feet.');
+    await campNight(`${reg.n}, deep · night ${dayOf()}`, "We'll camp here tonight.");
     // overnight a wild Snabit can wander onto a path next to camp
     if (Math.random() < 0.5) { const k = M.near(n.id).find(k => M.N[k].c > n.c && M.N[k].k === 'path'); if (k) { M.N[k].k = 'wild'; K('Something was moving around out there last night. Keep your eyes open.'); await rwait(1200); } }
     return 'camp'; }
