@@ -90,13 +90,13 @@ None of the 40 names repeats a family already in the game. Commons and uncommons
 
 ## Merging
 
-When both branches pass their tests, Chat A merges `batch-specials` into `batch-regular`, sorts out the conflicts in the shared lists (both chats add lines to the same tables), reruns `sim2.py` with all 71 families, then merges into main and pushes.
+When both branches pass their tests, Chat A merges `batch-specials` into `batch-regular`, sorts out the conflicts in the shared lists (both chats add lines to the same tables), reruns `sim2.py` with all 86 families (71 plus batch 4), then merges into main and pushes.
 
 ## To fix later
 
 - Guard. Roly's ability was meant to make Guard hold 30% longer, but the fight code has no Guard timer to hook into. It's Roll Up (Close Strikes hit it 25% softer under half HP) until Guard gets one (Gid, 16 Nov 2026).
 
-## Batch 4, drawn 16 Nov 2026 for Gid's look-over
+## Batch 4, 16 Nov 2026
 
 Fifteen more families, drawn in `chibi.js` on `batch-regular`. Gid passed the sheets in `docs/art/batch4-1.png` to `batch4-3.png` once Bloop's Mega lost its sail, and all fifteen were wired the same night: stats, ability, scan, 8 moves, a signature, animations, a cry, a summon entrance, sizes, cousins and bestiary rows. The bestiary is 56 families by 12 elements, 672 kinds.
 
@@ -119,6 +119,8 @@ Fifteen more families, drawn in `chibi.js` on `batch-regular`. Gid passed the sh
 | Pogo | Spring Step: bounces back out of reach after a Close Strike hits it | Pogo Stomp | 5 hearts, licence A |
 
 Every one wins 44 to 52% in sim2 against the whole field.
+
+The arena's HP bar sat on tall Mega headgear, so a family can now set `topUp` in `chibi.js` to raise it: Bloop, Cuppy, Pina, Presto, Gumball, Oaklet, Twiglet and Aero have one. Videos of every batch 3 and batch 4 signature move and level 40 move went to Gid the same night.
 
 - Commons: Bloop (jellyfish, glowing jellyfish, jellyfish queen with a coral crown and baby jellies), Sox (sock, sock puppet, sock dragon), Cuppy (muffin, frosted cupcake, three-tier cake), Suds (soap bubble, soap bar, clawfoot tub), Scoop (cone, double scoop, sundae), Tome (notebook, open book, spellbook), Gumball (gumball, gumball machine, candy carousel), Pina (pineapple bud, pineapple, tiki totem).
 - Uncommons: Jingle (coin, piggy bank, treasure chest), Presto (top hat, hat with bunny ears, the full magic act), Vroom (dust bunny, robot vacuum, floor polisher), Shutter (film roll, instant camera, bellows camera), Yoyo (yo-yo, round the world, battle top), Lava (wax blob, lava lamp, volcano), Pogo (bouncy ball, pogo stick, jack-in-the-box).
