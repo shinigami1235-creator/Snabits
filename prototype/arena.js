@@ -7,7 +7,7 @@ const arBand=gap=>gap<10?"Close":gap<25?"Near":gap<45?"Mid":"Far";
 /* hitting from further away is harder to set up, so it pays a little more */
 const AR_BAND_DMG={Close:0.8,Near:0.95,Mid:1.2,Far:1.5,Any:1};
 /* a family's damage, tuned so every family wins about half its fights in the balance sim */
-const AR_FAM_DMG={Chomp:0.88,Pinch:1.03,Stilt:0.97,Skit:1.18,Antik:0.89,Squib:1.02,Moko:1.27,Booly:1.16,Plod:0.9,Bipped:0.99,Fizz:1.19,Teep:0.95,Lern:1.48,Eagle:0.96,Vampire:1.0,Phoenix:0.83,Kitsune:1.03,Naga:0.78,Yeti:0.72,Puff:1.2,Flit:1.22,Glop:0.78,Tock:1.24,Mitt:0.82,Brolly:0.98,Spine:0.83,Burr:0.99,Kraken:0.95,Golem:0.84,Unicorn:1.03,Jack:1.1};   // retuned 15 Nov 2026 after melee lost Leap Back
+const AR_FAM_DMG={Chomp:0.88,Pinch:1.03,Stilt:0.97,Skit:1.18,Antik:0.89,Squib:1.02,Moko:1.27,Booly:1.16,Plod:0.9,Bipped:0.99,Fizz:1.19,Teep:0.95,Lern:1.48,Eagle:0.96,Vampire:1.0,Phoenix:0.83,Kitsune:1.03,Naga:0.78,Yeti:0.72,Puff:1.2,Flit:1.22,Glop:0.78,Tock:1.24,Mitt:0.82,Brolly:0.98,Spine:0.83,Burr:0.99,Kraken:0.95,Golem:0.84,Unicorn:1.03,Jack:1.1,Wick:1,Lumo:1.17,Snooze:1.06,Inky:1.42,Cobble:0.97};   // retuned 15 Nov 2026 after melee lost Leap Back
 
 /* [name, learned at, range, damage, accuracy, sharpness, wither, push, cost, windup, extras] */
 const FAM_MOVES={
@@ -55,6 +55,17 @@ const FAM_MOVES={
     ["Thorn Wall",14,"Any",0,100,0,0,0,18,0.2,{buff:"bunker"}],["Needle Spray",20,"Near",14,85,8,0,0,24,0.5,{hits:3}],["Desert Bloom",30,"Any",0,100,0,0,0,26,0.5,{support:1,heal:0.25}],["Saguaro Slam",40,"Close",88,68,15,0,25,40,1.0]],
   Burr:[["Scratch",1,"Close",24,90,10,0,4,9,0.25],["Dig Under",3,"Mid",30,82,8,0,0,14,0.45,{dash:"in"}],["Claw Swipe",5,"Close",58,75,15,0,10,28,0.7],["Tunnel Swap",8,"Close",15,85,0,0,0,12,0.3,{swap:1}],
     ["Mud Fling",14,"Mid",28,85,5,0,0,20,0.5,{status:["Blind",35]}],["Burrow",20,"Any",0,100,0,0,0,18,0.2,{buff:"phase"}],["Drill Claw",30,"Close",20,80,10,0,0,30,0.6,{hits:3}],["Cave In",40,"Mid",86,70,10,0,20,40,1.1,{dash:"in"}]],
+  /* batch 3, 16 Nov 2026: the commons from dark photos */
+  Wick:[["Hot Wax",1,"Near",26,88,5,0,6,10,0.3,{cast:1}],["Wick Whip",3,"Close",26,88,8,0,8,12,0.3],["Melt Down",5,"Mid",30,85,5,0,0,22,0.6,{cast:1,status:["Burn",35]}],["Wax Swap",8,"Close",14,85,0,0,0,12,0.3,{swap:1}],
+    ["Relight",14,"Any",0,100,0,0,0,20,0.3,{support:1,heal:0.2}],["Candle Burst",20,"Near",16,85,8,0,0,24,0.5,{cast:1,hits:3}],["Blowtorch",30,"Mid",58,75,10,0,10,32,0.8,{cast:1,status:["Burn",20]}],["Bonfire",40,"Far",90,68,12,0,15,40,1.2,{cast:1}]],
+  Lumo:[["Glow Bump",1,"Close",22,92,8,0,6,8,0.2],["Light Dart",3,"Mid",26,90,8,0,0,12,0.35,{cast:1}],["Lantern Flash",5,"Mid",22,88,0,10,0,22,0.6,{cast:1,status:["Blind",40]}],["Blink Swap",8,"Close",14,85,0,0,0,12,0.3,{swap:1}],
+    ["Firefly Swarm",14,"Near",13,88,8,0,0,24,0.5,{cast:1,hits:4}],["Afterglow",20,"Any",0,100,0,0,0,20,0.3,{support:1,heal:0.2}],["Lamp Beam",30,"Far",58,80,8,0,0,32,0.8,{cast:1}],["Swarm Light",40,"Far",90,68,12,10,10,40,1.2,{cast:1}]],
+  Snooze:[["Pillow Bop",1,"Close",26,88,6,0,10,10,0.3],["Yawn",3,"Mid",10,90,0,10,0,12,0.4,{cast:1,status:["Daze",35]}],["Sleepy Slam",5,"Close",54,75,8,0,20,26,0.8,{status:["Daze",25]}],["Fluff Swap",8,"Close",14,85,0,0,0,12,0.3,{swap:1}],
+    ["Nap Time",14,"Any",0,100,0,0,0,24,0.5,{support:1,heal:0.25}],["Feather Burst",20,"Near",15,85,5,0,0,24,0.5,{cast:1,hits:3}],["Dream Drift",30,"Any",0,100,0,0,0,18,0.2,{buff:"bubble"}],["Big Snore",40,"Far",86,70,10,10,20,40,1.2,{cast:1}]],
+  Inky:[["Ink Flick",1,"Mid",26,90,5,0,0,10,0.3,{cast:1}],["Splotch",3,"Close",26,88,8,0,8,12,0.3],["Ink Blot",5,"Mid",26,88,5,0,0,22,0.6,{cast:1,status:["Blind",40]}],["Smear Swap",8,"Close",14,85,0,0,0,12,0.3,{swap:1}],
+    ["Redraw",14,"Any",0,100,0,0,0,22,0.4,{support:1,heal:0.2}],["Scribble",20,"Close",14,85,8,0,0,26,0.5,{hits:4}],["Pen Stab",30,"Near",58,78,15,0,10,30,0.8],["Ink Flood",40,"Far",86,70,10,0,15,40,1.2,{cast:1,status:["Blind",20]}]],
+  Cobble:[["Rock Bump",1,"Close",26,88,8,0,10,10,0.3],["Skip Stone",3,"Mid",26,88,5,0,6,12,0.4],["Rubble Roll",5,"Mid",56,75,10,0,20,26,0.8,{dash:"in"}],["Stack Swap",8,"Close",15,80,0,0,0,12,0.35,{swap:1}],
+    ["Hunker",14,"Any",0,100,0,0,0,18,0.2,{buff:"bunker"}],["Gravel Spray",20,"Near",15,85,8,0,0,24,0.5,{hits:3}],["Crystal Shard",30,"Far",56,78,15,0,0,32,0.9,{cast:1}],["Geode Crash",40,"Close",90,66,15,0,28,40,1.1]],
   /* the special Snabits */
   Eagle:[["Peck",1,"Close",24,92,10,0,4,9,0.2],["Swoop",3,"Near",32,85,10,0,8,14,0.4,{dash:"in"}],["Talon Dive",5,"Close",62,80,18,0,18,28,0.7],["Dive",8,"Mid",30,85,10,0,8,16,0.4,{dash:"in"}],
     ["Wing Gust",14,"Mid",36,85,5,0,28,22,0.5,{cast:1}],["Keen Sight",20,"Any",0,100,0,0,0,16,0.2,{buff:"unblink"}],["Feather Volley",30,"Far",18,85,8,0,0,28,0.6,{cast:1,hits:3}],["Sky Strike",40,"Far",88,70,15,0,20,40,1.0,{dash:"in"}]],
@@ -82,7 +93,7 @@ const FAM_MOVES={
 const SHARED_MOVES=[["Rush",1,"Any",14,85,5,0,0,10,0.25,{dash:"in",melee:1}],["Leap Back",1,"Any",0,100,0,0,0,10,0.2,{step:-20,ranged:1}],["Brace",1,"Any",0,100,0,0,0,10,0.1,{buff:"brace"}]];
 const arMelee=fam=>{ const d=(FAM_MOVES[fam]||[]).map(arMove).filter(m=>m.dmg); return d.filter(m=>!m.cast&&(m.range==="Close"||m.range==="Near"||m.dash)).length>=d.length/2; };
 /* how fast each family gets around: Booly floats and Squib jets, while Chomp and Pinch plod */
-const FAM_WALK={Chomp:0.8,Pinch:0.85,Stilt:1.05,Skit:1.15,Antik:1,Squib:1.15,Moko:1.05,Booly:1.25,Plod:0.75,Bipped:1.05,Fizz:1,Teep:0.85,Lern:1.15,Eagle:1.2,Vampire:1,Phoenix:1.05,Kitsune:1.15,Naga:0.95,Yeti:0.8,Puff:0.9,Flit:1.3,Glop:0.85,Tock:1.05,Mitt:0.95,Brolly:1,Spine:0.7,Burr:0.95,Kraken:0.9,Golem:0.7,Unicorn:1.15,Jack:0.9};
+const FAM_WALK={Chomp:0.8,Pinch:0.85,Stilt:1.05,Skit:1.15,Antik:1,Squib:1.15,Moko:1.05,Booly:1.25,Plod:0.75,Bipped:1.05,Fizz:1,Teep:0.85,Lern:1.15,Eagle:1.2,Vampire:1,Phoenix:1.05,Kitsune:1.15,Naga:0.95,Yeti:0.8,Puff:0.9,Flit:1.3,Glop:0.85,Tock:1.05,Mitt:0.95,Brolly:1,Spine:0.7,Burr:0.95,Kraken:0.9,Golem:0.7,Unicorn:1.15,Jack:0.9,Wick:1.05,Lumo:1.1,Snooze:0.85,Inky:1,Cobble:0.8};
 /* a family's first move takes its element, the way Skit's Web already does: a Blaze Chomp bites with Flame Bite */
 const EL_PREFIX={Blaze:"Flame",Frost:"Frost",Tide:"Aqua",Spark:"Volt",Wild:"Leaf",Venom:"Toxic",Charm:"Heart",Stone:"Rock",Light:"Shine",Steel:"Iron",Shade:"Shadow",Void:"Void"};
 const arMove=r=>({name:r[0],lv:r[1],range:r[2],dmg:r[3],acc:r[4],sharp:r[5]/100,wither:r[6],push:r[7],cost:r[8],wind:r[9],...(r[10]||{})});
@@ -214,6 +225,8 @@ class Arena{
   checkEnd(){
     for(const q of this.p){ if(q.hp<=0) continue;
       if(q.f.lifeSeed&&!q.seed&&q.hp<q.maxhp/2){ q.seed=1; this.ab(q,"Life seed"); this.heal(q,q.maxhp*0.25*this.hm(q),"seed"); }   // the held Life seed
+      if(q.f.ability==="Short Fuse"&&!q.fuse&&q.hp>0&&q.hp<q.maxhp/2){ q.fuse=1; this.ab(q,"Short Fuse"); this.stage(q,{pow:1},1,q); }   // Wick
+      if(q.f.ability==="Rock Shed"&&!q.shed&&q.hp>0&&q.hp<q.maxhp/2){ q.shed=1; this.ab(q,"Rock Shed"); this.stage(q,{grd:2},1,q); }   // Cobble
       if(q.f.ability==="Healing Horn"&&!q.horn&&q.hp>0&&q.hp<q.maxhp*0.4){ q.horn=1; this.ab(q,"Healing Horn"); this.heal(q,q.maxhp*0.3,"heal"); }   // Unicorn
       if(q.f.ability==="Last Stand"&&!q.lastStand&&q.hp<q.maxhp/4){ q.lastStand=1; this.ab(q,"Last Stand"); this.heal(q,q.maxhp*0.2,"stand"); } }   // Brawl's Last Stand
     for(const q of this.p){ const o=this.p[1-q.i]; if(q.hp<=0&&q.f.ability==="Haunt"&&!q.haunted&&o.hp>0){ q.haunted=1; this.ab(q,"Haunt"); const d=Math.round(o.maxhp/4); o.hp=Math.max(0,o.hp-d); q.dealt+=d; this.ev.push({t:"recoil",i:o.i,dmg:d}); } }   // Shade's Haunt
@@ -250,6 +263,7 @@ class Arena{
       for(const k of ["cool","hold","slow","stun","sleep","thawT","shoveCool","think"]) p[k]=Math.max(0,p[k]-AR.DT);
       for(const k in p.buff){ p.buff[k]-=AR.DT; if(p.buff[k]<=0){ delete p.buff[k]; this.ev.push({t:"unbuff",i:p.i,k}); } }
       for(const k in p.stgT){ p.stgT[k]-=AR.DT; if(p.stgT[k]<=0){ delete p.stgT[k]; p.stg[k]=0; this.ev.push({t:"stage",i:p.i,k,n:0,end:1}); } }
+      if(p.f.ability==="Nap"&&p.hp>0){ if(p.walkT!=null&&this.t-p.walkT<0.3) p.napT=0; else { p.napT=(p.napT||0)+AR.DT; if(p.napT>=2){ p.napT-=2; if(p.hp<p.maxhp){ this.ab(p,"Nap",true); this.heal(p,p.maxhp*0.03,"heal"); } } } }   // Snooze
       if(p.f.ability==="Regrow"&&p.hp>0){ p.regT=(p.regT||0)+AR.DT; if(p.regT>=3){ p.regT-=3; if(p.hp<p.maxhp){ this.ab(p,"Regrow",true); this.heal(p,p.maxhp*0.02,"heal"); } } }   // Glop's Regrow
       if(p.f.ability==="Sunbather"&&p.hp>0){ p.sunT+=AR.DT; if(p.sunT>=4){ p.sunT-=4; if(p.hp<p.maxhp){ this.ab(p,"Sunbather",true); this.heal(p,p.maxhp*0.01,"sun"); } } }   // Wild's Sunbather: 1% every 4 seconds
       if(p.buff.regen){ p.regenT+=AR.DT; if(p.regenT>=1){ p.regenT-=1; this.heal(p,p.maxhp*0.025,"regen"); } } else p.regenT=0;
@@ -312,6 +326,7 @@ class Arena{
     if(o.buff.bubble&&(m.range==="Mid"||m.range==="Far")){ delete o.buff.bubble; this.ev.push({t:"miss",i:p.i,m,why:"block"}); return; }
     if(o.buff.protect&&(m.dmg||m.status)){ delete o.buff.protect; this.ev.push({t:"block",i:p.i,m}); return; }
     if(o.f.ability==="Illusion"&&!o.illusion&&m.dmg){ o.illusion=1; this.ev.push({t:"ability",i:o.i,name:"Illusion"}); this.ev.push({t:"miss",i:p.i,m,why:"phase"}); return; }
+    if(o.f.ability==="Flicker"&&m.dmg&&R()<0.1){ this.ab(o,"Flicker"); this.ev.push({t:"miss",i:p.i,m,why:"phase"}); return; }   // Lumo
     const slip=this.slips(p,m,roll); if(slip) this.ab(o,"Slippery");
     if(slip||roll>this.hitChance(p,m)){ this.ev.push({t:"miss",i:p.i,m,why:o.buff.phase&&!m.noDodge&&!slip?"phase":"dodge"}); if(o.f.ability==="Counterpunch"){ o.cpunch=1; this.ev.push({t:"ability",i:o.i,name:"Counterpunch"}); } return; }   // Bipped's Counterpunch
     if(m.el==="Spark"&&m.dmg&&o.f.ability==="Lightning Rod"){ this.ab(o,"Lightning Rod"); this.heal(o,o.maxhp*0.25,"rod"); return; }   // Spark's Lightning Rod soaks it up
@@ -355,6 +370,7 @@ class Arena{
     if(p.cpunch&&!m.cast&&m.dmg) p.cpunch=0;
     if(m.drain&&total&&tg===o) this.heal(p,total*m.drain,"drain",o.i);
     if(p.f.ability==="Bloodsuck"&&!m.cast&&total&&tg===o&&p.hp<p.maxhp){ this.ev.push({t:"ability",i:p.i,name:"Bloodsuck"}); this.heal(p,total*0.15,"drain",o.i); }   // Vampire
+    if(tg===o&&m.cast&&total&&o.hp>0&&p.f.ability==="Smudge"&&!o.st&&R()<0.15&&this.inflict(o,"Blind",100,p)) this.ab(p,"Smudge");   // Inky
     if(tg===o&&!m.cast&&m.range==="Close"&&total&&o.hp>0){
       if(o.f.ability==="Spores"&&!p.st&&R()<0.2&&this.inflict(p,"Daze",100,o)) this.ab(o,"Spores");   // Puff
       if(o.f.ability==="Prickly"&&p.hp>0){ const back=Math.max(1,Math.round(p.maxhp/16)); p.hp=Math.max(0,p.hp-back); o.dealt+=back; this.ab(o,"Prickly",true); this.ev.push({t:"recoil",i:p.i,dmg:back}); }   // Spine

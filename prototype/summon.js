@@ -116,6 +116,30 @@ const SUMMON = (() => {
         under(c, x, y, h) { if (tt > 1200) return; c.fillStyle = 'rgba(110,80,50,.7)'; c.beginPath(); c.ellipse(x, y + 2, h * 0.5, h * 0.08, 0, 0, 7); c.fill(); },
         over(c, x, y, h) { const r = rng(41); for (let i = 0; i < 10; i++) { const p = seg(tt, i * 50, 600 + i * 50); if (p <= 0 || p >= 1) continue; const sd = r() > 0.5 ? 1 : -1, vx = sd * h * (0.3 + r() * 0.4);
           c.fillStyle = `rgba(140,100,60,${1 - p})`; c.beginPath(); c.arc(x + vx * p, y - h * 0.8 * Math.sin(p * Math.PI) * (0.6 + r() * 0.4), h * 0.035, 0, 7); c.fill(); } } }; },
+    /* batch 3, 16 Nov 2026 */
+    Wick(tt, H) { const lit = tt > 700;   // it stands dark, a match strikes, and the flame catches
+      return { pose: tt < 1000 ? 'idle' : 'happy', filter: lit ? null : 'brightness(0.4)', sx: lit ? 1 + spring(tt - 700, 0.1) : 1, sy: lit ? 1 - spring(tt - 700, 0.1) : 1,
+        under(c, x, y, h) { if (lit) glow(c, x, y - h * 0.9, h * 0.8, [255, 170, 60], 0.45 * (1 - seg(tt, 700, 1500) * 0.6)); },
+        over(c, x, y, h) { const p = seg(tt, 300, 700); if (p > 0 && p < 1) { const mx = x - h * 0.6 + p * h * 0.6, my = y - h * 1.1; c.strokeStyle = '#b07a40'; c.lineWidth = 3; c.lineCap = 'round'; c.beginPath(); c.moveTo(mx - h * 0.25, my + h * 0.12); c.lineTo(mx, my); c.stroke();
+            c.fillStyle = '#ff9a3c'; c.beginPath(); c.arc(mx, my, 5 + 3 * Math.sin(tt / 30), 0, 7); c.fill(); }
+          const s = seg(tt, 650, 1000); if (s > 0 && s < 1) for (let i = 0; i < 8; i++) { const a = i / 8 * 7; c.fillStyle = `rgba(255,200,90,${1 - s})`; c.beginPath(); c.arc(x + Math.cos(a) * h * 0.4 * s, y - h * 1.05 + Math.sin(a) * h * 0.3 * s, 2.5, 0, 7); c.fill(); } } }; },
+    Lumo(tt, H, W) { const k = out3(seg(tt, 0, 1000));   // it drifts down from the dark trailing light, and its lamp pulses on
+      return { dx: W * 0.3 * (1 - k) * Math.cos(tt / 200), dy: -H * 0.4 * (1 - k) - Math.sin(tt / 300) * H * 0.01, pose: tt < 1000 ? 'hover' : tt < 1250 ? 'idle' : 'happy',
+        under(c, x, y, h) { for (let i = 1; i < 10; i++) { const t2 = tt - i * 50; if (t2 < 0 || t2 > 1000) continue; const k2 = out3(seg(t2, 0, 1000)), px = x - W * 0.3 * (1 - k) * Math.cos(tt / 200) + W * 0.3 * (1 - k2) * Math.cos(t2 / 200), py = y + H * 0.4 * (1 - k) - H * 0.4 * (1 - k2);
+            c.fillStyle = `rgba(240,255,140,${0.6 * (1 - i / 10)})`; c.beginPath(); c.arc(px, py - h * 0.2, 4 - i * 0.3, 0, 7); c.fill(); }
+          const p = seg(tt, 1000, 1600); if (p > 0 && p < 1) { c.strokeStyle = `rgba(240,255,140,${1 - p})`; c.lineWidth = 3; c.beginPath(); c.arc(x, y - h * 0.3, h * (0.2 + p * 0.6), 0, 7); c.stroke(); } } }; },
+    Snooze(tt, H) { const k = seg(tt, 0, 450), land = tt - 450;   // it drops flat like a thrown pillow, squashes, and feathers puff out
+      return { dy: -H * 0.42 * (1 - k * k), sx: tt < 450 ? 1 : 1 + spring(land, 0.35, 220, 60), sy: tt < 450 ? 1 : 1 - spring(land, 0.35, 220, 60), pose: tt < 450 ? 'jump' : tt < 1100 ? poseWith('idle', { eyes: 'shut' }) : 'happy',
+        over(c, x, y, h) { const r = rng(61); for (let i = 0; i < 9; i++) { const p = seg(tt, 450 + i * 20, 1500 + i * 30); if (p <= 0 || p >= 1) continue; const vx = (r() - 0.5) * h * 1.6, vy = -h * (0.3 + r() * 0.4);
+            c.save(); c.translate(x + vx * p, y - h * 0.3 + vy * Math.sin(p * Math.PI) + p * h * 0.2); c.rotate(Math.sin(tt / 150 + i) * 0.8); c.fillStyle = `rgba(255,255,255,${1 - p})`; c.beginPath(); c.ellipse(0, 0, h * 0.05, h * 0.018, 0, 0, 7); c.fill(); c.restore(); } } }; },
+    Inky(tt, H) { const k = out3(seg(tt, 250, 950));   // a drop of ink falls into a puddle, and it rises out of the splash
+      return { sy: Math.max(0.05, k), sx: 1 + (1 - k) * 0.4, pose: tt < 950 ? 'idle' : 'happy',
+        under(c, x, y, h) { const a = 1 - seg(tt, 900, 1400); if (a > 0) { c.fillStyle = `rgba(30,30,50,${0.8 * a})`; c.beginPath(); c.ellipse(x, y + 1, h * 0.6 * Math.min(1, tt / 300), h * 0.09, 0, 0, 7); c.fill(); }
+          if (tt < 260) { c.fillStyle = 'rgba(30,30,50,.9)'; c.beginPath(); c.ellipse(x, y - h * 1.2 + (tt / 260) * h * 1.2, h * 0.05, h * 0.08, 0, 0, 7); c.fill(); } },
+        over(c, x, y, h) { const p = seg(tt, 250, 800); if (p <= 0 || p >= 1) return; for (let i = 0; i < 8; i++) { const a = Math.PI + (i + 0.5) / 8 * Math.PI, r = h * (0.2 + p * 0.5); c.fillStyle = `rgba(30,30,50,${1 - p})`; c.beginPath(); c.arc(x + Math.cos(a) * r, y + Math.sin(a) * r * 0.7 + p * p * h * 0.3, h * 0.035, 0, 7); c.fill(); } } }; },
+    Cobble(tt, H, W) { const k = seg(tt, 0, 900), hop = Math.abs(Math.sin(k * Math.PI * 3)) * (1 - k);   // it bounces in like a skipped stone, three hops, and lands with a thud
+      return { dx: W * 0.55 * (1 - out3(k)), dy: -hop * H * 0.12, sx: tt > 900 ? 1 + spring(tt - 900, 0.18) : 1, sy: tt > 900 ? 1 - spring(tt - 900, 0.18) : 1, pose: tt < 900 ? 'jump' : tt < 1100 ? 'land' : 'happy',
+        under(c, x, y, h) { for (let i = 0; i < 4; i++) { const p = seg(tt, i * 300, i * 300 + 500); if (p <= 0 || p >= 1) continue; c.fillStyle = `rgba(190,170,140,${0.5 * (1 - p)})`; c.beginPath(); c.ellipse(x + (W * 0.55 * (i < 3 ? 1 - out3(i / 3) : 0) - W * 0.55 * (1 - out3(k))), y, h * (0.2 + p * 0.4), h * 0.05, 0, 0, 7); c.fill(); } } }; },
     /* the special Snabits */
     Eagle(tt, H, W) { const k = seg(tt, 0, 700), e = out3(k), land = tt - 700, sp = spring(land, 0.2);   // it swoops down in an arc and lands with its wings out
       return { dx: W * 0.45 * (1 - e), dy: -H * 0.45 * (1 - e) + Math.sin(k * Math.PI) * H * 0.06, sx: 1 + (tt > 700 ? sp : 0), sy: 1 - (tt > 700 ? sp : 0), pose: tt < 700 ? 'jump' : tt < 860 ? 'land' : 'happy',

@@ -9,7 +9,8 @@ const FAM_COUSINS={Squib:["Booly","Moko","Skit"],Booly:["Squib","Moko","Stilt"],
   Pinch:["Chomp","Skit","Squib"],Chomp:["Pinch","Antik","Moko"],
   Plod:["Chomp","Pinch","Teep"],Bipped:["Antik","Stilt","Chomp"],Fizz:["Squib","Moko","Lern"],Teep:["Antik","Fizz","Plod"],Lern:["Booly","Fizz","Moko"],
   Puff:["Moko","Booly","Spine"],Flit:["Skit","Booly","Stilt"],Glop:["Squib","Moko","Fizz"],Tock:["Antik","Teep","Lern"],
-  Mitt:["Bipped","Chomp","Pinch"],Brolly:["Stilt","Lern","Flit"],Spine:["Puff","Pinch","Plod"],Burr:["Chomp","Plod","Skit"]};
+  Mitt:["Bipped","Chomp","Pinch"],Brolly:["Stilt","Lern","Flit"],Spine:["Puff","Pinch","Plod"],Burr:["Chomp","Plod","Skit"],
+  Wick:["Lumo","Teep","Antik"],Lumo:["Wick","Flit","Lern"],Snooze:["Moko","Puff","Booly"],Inky:["Squib","Glop","Booly"],Cobble:["Pinch","Plod","Burr"]};
 
 function wildLeft(s){ const n=typeof wildPerWeek==="function"?wildPerWeek():WILD_PER_WEEK; return s.wildWeek===PLAYER.week?n-(s.wildCount||0):n; }
 function wildBlock(s){
@@ -35,7 +36,7 @@ function wildFrom(res,s,R){
   if(res.second&&third&&roll<0.3) r2={...res,second:third};          // the third colour takes the second element
   else if(res.second&&roll<0.42) r2={...res,second:null,mono:true};  // the second colour drops out
   else if(!res.second&&third&&roll<0.25) r2={...res,second:third,mono:false};
-  const base=pickFamily(res.cells).family, fam=R()<0.45?FAM_COUSINS[base][Math.floor(R()*3)]:base;
+  const base=pickFamily(res.cells,res).family, fam=R()<0.45?FAM_COUSINS[base][Math.floor(R()*3)]:base;
   const jig=(v,n)=>R()<0.5?v:(v+(R()<0.5?n-1:1))%n;
   const m=hatch(r2,new Date(Math.floor(R()*4e12)),{family:fam,parts:p=>({eyes:jig(p.eyes,7),mouth:jig(p.mouth,5),top:jig(p.top,5),arms:jig(p.arms,5)})});
   // stats wobble a little on top of the new talent roll

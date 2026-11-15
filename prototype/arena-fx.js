@@ -567,7 +567,13 @@ const AR_KIND={Lunge:"bite","Jaw Lock":"jawlock",Gnash:"gnash",
   "Tentacle Slap":"lash","Ink Cloud":"steam","Crushing Grip":"vicegrip",Reach:"lash",Whirlpool:"wave","Eight Arms":"legflurry","Deep Vortex":"wave",
   "Rock Fist":"punch","Pebble Toss":"bolt","Boulder Smash":"hammer",Tremor:"rockpath","Rune Pulse":"beam","Mountain Fall":"avalanche",
   "Horn Jab":"spear",Gallop:"tackle","Prism Beam":"beam",Starlight:"volley","Rainbow Charge":"tackle",Wish:"meteor",
-  "Vine Slap":"lash","Candle Flick":"bolt","Spooky Grin":"push","Pip Spit":"volley","Hollow Howl":"push","Pumpkin Bomb":"meteor"};
+  "Vine Slap":"lash","Candle Flick":"bolt","Spooky Grin":"push","Pip Spit":"volley","Hollow Howl":"push","Pumpkin Bomb":"meteor",
+  // batch 3, 16 Nov 2026
+  "Hot Wax":"bolt","Wick Whip":"lash","Melt Down":"foxfire","Candle Burst":"volley",Blowtorch:"beam",Bonfire:"pillar",
+  "Glow Bump":"tackle","Light Dart":"bolt","Lantern Flash":"flash","Firefly Swarm":"volley","Lamp Beam":"beam","Swarm Light":"sunflare",
+  "Pillow Bop":"tackle",Yawn:"push","Sleepy Slam":"stomp","Feather Burst":"volley","Big Snore":"wave",
+  "Ink Flick":"bolt",Splotch:"tackle","Ink Blot":"steam",Scribble:"punchflurry","Pen Stab":"spear","Ink Flood":"wave",
+  "Rock Bump":"tackle","Skip Stone":"bolt","Rubble Roll":"boulder","Gravel Spray":"volley","Crystal Shard":"spear","Geode Crash":"hammer"};
 
 /* ---------- the special Snabits' signature moves ---------- */
 function atBat(c,x,y,s,flap){ c.save(); c.translate(x,y); c.scale(s,s); c.fillStyle="#2a1d33"; const w=Math.sin(flap)*0.5+0.6;

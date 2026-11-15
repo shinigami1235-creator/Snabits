@@ -11,6 +11,9 @@ Two chats build the next 40 families at the same time. Chat A makes the 10 commo
 
 ## How each chat works
 
+Gid, 16 Nov 2026: a Mega is a new form, never the Byte made bigger with a few effects added. Wick turns into a candelabra, Lumo into a firefly queen on a lantern, Snooze into a floating dream cloud, and Cobble into a geode with stones orbiting it.
+
+
 1. Draw the families in `chibi.js` in groups of 5, with Bit, Byte and Mega looking clearly different.
 2. Show Gid a sheet of the group for his OK before wiring anything, since he wants stills before big art builds.
 3. Wire each approved group: `FAMILY` stats and ability, `FAM_MOVES` (8 moves at Lv 1, 3, 5, 8, 14, 20, 30, 40), a signature skill in `SKILLS` and `FAMILY_SIG`, `AR_KIND` animations, `FAM_WALK`, `AR_FAM_DMG`, `AT_FAMCOL`, `CHIBI_FAMS`, `SIZE_CM`, the cry, the `ENTER` entrance, `EVO_TOTAL` and the dex.
@@ -30,7 +33,7 @@ These come from scans from the start. They need a new scan layer, so the share o
 | Lumo | a firefly with a glowing tail | dark | Flicker: 1 hit in 10 on it misses |
 | Snooze | a sleepy pillow with a nightcap | dark | Nap: heals 3% when it hasn't moved for 2 s |
 | Inky | an ink blot with a pen nib | dark | Smudge: its Casts have a 15% chance to Blind |
-| Cobble | a little pile of pebbles | dark | Pebble Skin: Strikes hit it 10% softer |
+| Cobble | a little pile of pebbles | dark | Rock Shed: Constitution up 2 steps the first time it drops under half HP |
 | Nimbo | a small rain cloud | pale | Drizzle: its Casts have a 15% chance to Soak |
 | Dango | three dumplings on a stick | pale | Stack: takes one less damage per hit for each hit it took this fight, up to 3 |
 | Oaklet | an acorn with a leaf cap | pale | Sprout: once a fight, under 30% HP, heals 20% |

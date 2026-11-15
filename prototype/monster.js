@@ -23,6 +23,12 @@ const FAMILY = {
   Brolly:{body:[3,[2,4,6,7,7,1,1,1,1]], legs:"longlegs", base:[50,40,60,45,55,50], ability:["Parasol","Cast moves hit it 20% softer"]},
   Spine: {body:[2,[2,3,3,4,4,4,4,4,4,5,5]], legs:"stubby", base:[55,55,63,30,45,35], ability:["Prickly","A Close Strike that hits it costs the attacker 1/16 of its HP"]},
   Burr:  {body:[5,[3,5,6,7,7,7,6,4]], legs:"stubby", base:[55,60,55,35,45,50], ability:["Dirt Kick","Its Close Strikes have a 15% chance to Blind"]},
+  /* batch 3, 16 Nov 2026 (docs/BATCH-PLAN.md): the commons from dark photos */
+  Wick:  {body:[3,[4,5,5,5,5,5,5,5,5,5]], legs:"stubby", base:[45,62,40,50,45,58], ability:["Short Fuse","Its Power goes up 1 step the first time it drops under half HP"]},
+  Lumo:  {body:[4,[3,5,6,6,6,6,5,3]], legs:"ghost", base:[45,35,40,62,65,58], ability:["Flicker","1 hit in 10 on it misses"]},
+  Snooze:{body:[5,[7,7,7,7,7,7,7,7]], legs:"stubby", base:[66,35,60,50,50,39], ability:["Nap","Heals 3% for every 2 seconds it stays put"]},
+  Inky:  {body:[4,[4,6,7,7,7,7,6,5]], legs:"stubby", base:[52,42,48,68,58,48], ability:["Smudge","Its Casts have a 15% chance to Blind"]},
+  Cobble:{body:[4,[3,5,6,7,7,7,7,7,6]], legs:"stubby", base:[60,56,68,30,42,34], ability:["Rock Shed","Its Constitution goes up 2 steps the first time it drops under half HP"]},
   /* special Snabits: only a colour easter egg finds them (EGGS below), they always have their own ability, and only fusion changes their element */
   Eagle:  {special:1, body:[3,[3,5,6,7,7,7,7,6,5]], legs:"twolegs", base:[50,62,45,35,55,73], ability:["Sky High","The first hit it lands in a fight is always a critical"]},
   Vampire:{special:1, body:[3,[3,5,6,6,6,6,6,6,6,5]], legs:"stubby", base:[55,55,50,60,55,45], ability:["Bloodsuck","Its Strikes heal it for 15% of the damage they deal"]},
@@ -62,7 +68,7 @@ function rng(seed){let a=seed>>>0;return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.im
 function hashStr(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
 
 /* Family from where the main colour sits in the 3x3 grid. */
-function pickFamily(cells){
+function pickFamily(cells,res){
   let t=0,cx=0,cy=0; cells.forEach((v,i)=>{t+=v;cx+=v*((i%3)+0.5)/3;cy+=v*(Math.floor(i/3)+0.5)/3;});
   if(t<=0) return {family:"Antik",band:"middle",shape:"compact"};
   cx/=t; cy/=t; let vx=0,vy=0;
@@ -79,6 +85,9 @@ function pickFamily(cells){
      the place (under 8% of it in the middle ninth of the shot): the four common ones always, and the four registered ones on the right half once the ranch can register them */
   const ring = {top:{wide:"Flit",tall:"Puff",compact:"Flit"},middle:{wide:"Glop",tall:"Tock",compact:"Tock"},bottom:{wide:"Glop",tall:"Puff",compact:"Puff"}};
   const ringR = {top:{wide:"Brolly",tall:"Brolly",compact:"Mitt"},middle:{wide:"Burr",tall:"Spine",compact:"Mitt"},bottom:{wide:"Burr",tall:"Spine",compact:"Burr"}};
+  /* a dark photo (a night shot, a dim room) gives the five commons of batch 3 that live in the dark */
+  const dark = {top:{wide:"Lumo",tall:"Wick",compact:"Lumo"},middle:{wide:"Snooze",tall:"Wick",compact:"Inky"},bottom:{wide:"Snooze",tall:"Cobble",compact:"Cobble"}};
+  if(res&&res.bright<0.28) return {family:dark[band][shape], band, shape};
   if(cells[4]/t<0.08&&vx+vy>0.125){ const rf=ringR[band][shape], ro=cx>0.5&&(typeof famOpen!=="function"||famOpen(rf)); return {family:ro?rf:ring[band][shape], band, shape}; }
   const solid = vx+vy<0.137;   // an evenly spread colour sits near 0.148 and one spot near 0, so about 5 in 13 random photos land here
   const nf=near[band][shape], open=typeof famOpen!=="function"||famOpen(nf);   // a family still waiting on its Licence Cup falls back to the first eight
@@ -260,7 +269,7 @@ function hatch(res,now=new Date(),ov={}){
   const el1=EL[res.main.g], el2=res.second?EL[res.second.g]:null;
   let egg0=ov.family?null:eggOf(res); if(egg0&&egg0.costume&&!ov.costume&&typeof cosOpen==="function"&&!cosOpen(egg0.costume)) egg0=null;
   if(egg0&&egg0.special&&typeof stoneOpen==="function"&&!stoneOpen(egg0.special)) egg0=null;   // a special needs its Pattern Stone found on an expedition first   // a costume still waiting to be opened makes a plain Snabit
-  const pf=pickFamily(res.cells), egg=egg0, family=ov.family||(egg&&egg.special)||pf.family, band=pf.band, shape=pf.shape;
+  const pf=pickFamily(res.cells,res), egg=egg0, family=ov.family||(egg&&egg.special)||pf.family, band=pf.band, shape=pf.shape;
   const F=FAMILY[family];
   const sat=res.sat, con=res.contrast, bri=res.bright;
   const parts={

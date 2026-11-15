@@ -68,7 +68,7 @@ Voice samples:
 
 ## What can be scanned (Gid's tiers, decided 15 Nov 2026)
 
-1. **Basic Snabits:** the first eight families (Chomp, Squib, Antik, Moko, Pinch, Stilt, Skit, Booly), scanned from the start, plus four commons added 15 Nov 2026 (Puff, Flit, Glop, Tock) that come from a scan whose main colour surrounds the middle of the shot (`ring` in `pickFamily`).
+1. **Basic Snabits:** the first eight families (Chomp, Squib, Antik, Moko, Pinch, Stilt, Skit, Booly), scanned from the start, plus four commons added 15 Nov 2026 (Puff, Flit, Glop, Tock) that come from a scan whose main colour surrounds the middle of the shot (`ring` in `pickFamily`), and five added 16 Nov 2026 (Wick, Lumo, Snooze, Inky, Cobble) that come from dark photos (`dark` in `pickFamily`).
 2. **Registered Snabits:** the League only lets a ranch register nine families once it has proven itself, and each opens a different way, since Gid wants locked Snabits but not one route for all of them (`LICENCE`, `UNLOCK_HOW`, `famOpen` in `game.js`). Until then a scan that would give one gives one of the first eight. Nothing in the game says how any of them opens, since Gid wants it found by playing (15 Nov 2026). A save from before keeps any of the five it had already raised.
    - Plod: win the Plod Licence Cup, grade D.
    - Bipped: win a Strength contest. The judges are Bipped breeders and sign the League form.
