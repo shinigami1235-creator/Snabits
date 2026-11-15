@@ -1567,6 +1567,7 @@ const CHIBI = (() => {
     /* Oaklet: an acorn. A round nut with a pointed bottom under a textured cap with a stem, and a leaf on the stem from Byte.
        Mega is an oak guardian: the nut grows into a bark trunk, the cap opens into a leafy canopy with acorns hanging from it, branches for arms and roots for feet */
     Oaklet: {
+      topUp: { Mega: 70 },
       dims: { Bit: [60, 62], Byte: [74, 78], Mega: [74, 88] }, ll: st => by(st, 4, 6, 6),
       bottom(st) { return 182 - this.ll(st); }, height(st) { return this.dims[st][1] + this.ll(st) + by(st, 16, 26, 64); },
       cap: 0.36,
@@ -1762,6 +1763,7 @@ const CHIBI = (() => {
     /* Twiglet: a little potted plant. Bit is a sprout with two leaves in a small clay pot. Byte is a bonsai with a twisting trunk and cloud pads of leaves in a glazed pot.
        Mega is a bonsai garden on a wide tray: a cherry bonsai in blossom, a stone lantern, rocks and moss, with petals falling */
     Twiglet: {
+      topUp: { Mega: 52 },
       dims: { Bit: [50, 44], Byte: [62, 50], Mega: [112, 46] }, ll: st => by(st, 4, 5, 8),
       bottom(st) { return 182 - this.ll(st); }, height(st) { return this.dims[st][1] + this.ll(st) + by(st, 30, 56, 84); },
       path(c, g) { if (g.stage === 'Mega') { roundBox(c, g.left, g.top, g.bw, g.bh, 8); return; } const ins = g.stage === 'Bit' ? 7 : 4;
@@ -1904,6 +1906,7 @@ const CHIBI = (() => {
     /* Aero: the wind. Bit is a pinwheel spinning on a stick, the face in its hub. Byte is a diamond kite with a bow tail on a string.
        Mega is a hot-air balloon: a striped envelope with the face, a burner flaring under it, a wicker basket with sandbags, and birds flying past */
     Aero: {
+      topUp: { Mega: 14 },
       dims: { Bit: [50, 50], Byte: [60, 70], Mega: [96, 92] }, float: true, slots: { feet: false },
       bottom(st) { return st === 'Bit' ? 142 : st === 'Byte' ? 124 : 112; }, height(st) { return this.dims[st][1] + by(st, 44, 62, 72); },
       path(c, g) { if (g.stage === 'Bit') { c.beginPath(); c.arc(g.cx, g.top + g.bh / 2, g.bw * 0.34, 0, 7); return; }
