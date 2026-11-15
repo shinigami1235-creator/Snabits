@@ -1980,7 +1980,9 @@ const CHIBI = (() => {
           limb(c, tq, 7, [90, 150, 80], x.L.tail, x.t); c.fillStyle = 'rgb(90,150,80)'; c.beginPath(); c.ellipse(tq[4], tq[5] - 3, 6, 7, 0, 0, 7); c.fill(); c.fillStyle = '#fff'; c.beginPath(); c.arc(tq[4] - 2, tq[5] - 5, 1.6, 0, 7); c.arc(tq[4] + 2, tq[5] - 5, 1.6, 0, 7); c.fill();
           c.strokeStyle = '#d23a3a'; c.lineWidth = 1.4; c.beginPath(); c.moveTo(tq[4], tq[5] + 3); c.lineTo(tq[4], tq[5] + 7); c.lineTo(tq[4] - 2, tq[5] + 9); c.moveTo(tq[4], tq[5] + 7); c.lineTo(tq[4] + 2, tq[5] + 9); c.stroke(); }
         else { const tw = Math.sin(x.t / 200) * 0.3; c.save(); c.translate(g.cx + g.bw * 0.4, g.bot - 10); c.rotate(-0.8 + tw); c.fillStyle = rgb(dk(x.body, 0.1)); c.beginPath(); c.ellipse(9, 0, 10, 4, 0, 0, 7); c.fill(); c.restore(); }   // a wagging tail
-        const hr = by(S, 10, 17, 21), dx = g.bw * by(S, 0.5, 0.6, 0.64), dy = by(S, 0.62, 0.3, 0.26);   // the side heads
+        const hr = by(S, 10, 17, 21), dx = g.bw * by(S, 0.5, 0.56, 0.58), dy = by(S, 0.6, 0.34, 0.3);   // the side heads, each on a thick neck from the shoulder
+        for (const sd of [-1, 1]) { const hx = g.cx + sd * dx, hy = g.top + g.bh * dy; limb(c, [g.cx + sd * g.bw * 0.22, g.top + g.bh * 0.7, g.cx + sd * dx * 0.9, g.top + g.bh * (dy + 0.25), hx, hy + hr * 0.2], hr * 1.15, dk(x.body, 0.14), sd < 0 ? x.L.armL : x.L.armR, x.t);
+          c.fillStyle = rgb(x.parts); c.save(); c.translate(hx, hy + hr * 0.95); c.rotate(-sd * 0.35); roundBox(c, -hr * 0.62, -hr * 0.14, hr * 1.24, hr * 0.3, hr * 0.12); c.fill(); c.restore(); }
         for (const sd of [-1, 1]) this.dog(c, g.cx + sd * dx, g.top + g.bh * dy + Math.sin(x.t / 600 + sd) * 1.5, hr, dk(x.body, 0.06), red, stud, S !== 'Bit', look, x.t);
         for (const sd of [-1, 1]) { const fx = g.cx + sd * g.bw * 0.22, lift = Math.max(0, sd * x.walk) * 4; limb(c, [fx, g.bot - 8, fx, g.bot - 1 - lift / 2, fx, 180 - lift], by(S, 9, 11, 13), dk(x.body, 0.1), sd < 0 ? x.L.legL : x.L.legR, x.t);
           blob(c, fx, 182 - lift, by(S, 8, 10, 12), 5, dk(x.body, 0.1), sd < 0 ? x.L.legL : x.L.legR, x.t, 'foot'); x.feet.push([fx, 182 - lift, 8]);
@@ -2106,12 +2108,15 @@ const CHIBI = (() => {
       head: g => [g.cx, g.top - 6, g.bw * 0.42],
       face(c, g, x, look) { const S = g.stage, fi = faceTwo(c, g, x, look, { ey: 0.36, ex: 0.2, my: 0.62, s: by(S, 0.74, 0.82, 0.9) }), s = fi.s, y0 = g.top + g.bh * 0.46;
         if (x.back) return fi;
-        if (S !== 'Bit') { c.fillStyle = rgb(x.parts); c.beginPath(); c.ellipse(g.cx + 1, y0 + 16 * s, 4 * s, 7 * s, 0, 0, 7); c.fill(); }   // the wattle
-        c.fillStyle = '#d9921c'; c.beginPath(); c.moveTo(g.cx - 7 * s, y0 + 1); c.lineTo(g.cx + 8 * s, y0 + 4 * s); c.lineTo(g.cx - 7 * s, y0 + 10 * s); c.closePath(); c.fill();   // the beak
-        c.fillStyle = '#f6c445'; c.beginPath(); c.moveTo(g.cx - 7 * s, y0); c.lineTo(g.cx + 8 * s, y0 + 3 * s); c.lineTo(g.cx - 7 * s, y0 + 8 * s); c.closePath(); c.fill();
-        if (S !== 'Bit') { const fx = g.cx + 8 * s, fy = y0 + 5 * s, fl = by(S, 0, 14, 18) * s, sw = Math.sin(x.t / 150) * 0.15;   // a fish in its beak
-          c.save(); c.translate(fx, fy); c.rotate(0.15 + sw); c.fillStyle = '#7fa8c8'; c.beginPath(); c.ellipse(fl * 0.4, 0, fl * 0.55, fl * 0.24, 0, 0, 7); c.fill();
-          c.beginPath(); c.moveTo(fl * 0.85, 0); c.lineTo(fl * 1.2, -fl * 0.28); c.lineTo(fl * 1.2, fl * 0.28); c.closePath(); c.fill(); c.fillStyle = '#b8d4e8'; c.beginPath(); c.ellipse(fl * 0.4, -fl * 0.06, fl * 0.4, fl * 0.09, 0, 0, 7); c.fill(); c.restore(); }
+        if (S !== 'Bit') { c.fillStyle = rgb(x.parts); c.beginPath(); c.ellipse(g.cx - 4 * s, y0 + 14 * s, 3.5 * s, 6 * s, 0.3, 0, 7); c.fill(); }   // the wattle
+        const fish = S !== 'Bit', gape = fish ? 4 * s : 0;
+        c.fillStyle = '#d9921c'; c.beginPath(); c.moveTo(g.cx - 7 * s, y0 + 4 * s); c.lineTo(g.cx + 9 * s, y0 + 6 * s + gape); c.lineTo(g.cx - 7 * s, y0 + 10 * s); c.closePath(); c.fill();   // the lower beak, dropped open when it holds a fish
+        if (fish) { const fl = by(S, 0, 26, 32) * s, sw = Math.sin(x.t / 150) * 0.1;   // the fish: its head between the jaws, its body and tail hanging out and flapping
+          c.save(); c.translate(g.cx + 1 * s, y0 + 5 * s); c.rotate(0.28 + sw); c.fillStyle = '#5e88ad'; c.beginPath(); c.ellipse(fl * 0.5, 1, fl * 0.55, fl * 0.24, 0, 0, 7); c.fill(); c.fillStyle = '#86b0d2'; c.beginPath(); c.ellipse(fl * 0.5, 0, fl * 0.55, fl * 0.22, 0, 0, 7); c.fill();
+          c.fillStyle = '#5e88ad'; c.save(); c.translate(fl * 1.02, 0); c.rotate(Math.sin(x.t / 120) * 0.35); c.beginPath(); c.moveTo(-2, 0); c.lineTo(fl * 0.32, -fl * 0.26); c.lineTo(fl * 0.24, 0); c.lineTo(fl * 0.32, fl * 0.26); c.closePath(); c.fill(); c.restore();
+          c.fillStyle = '#c4dcee'; c.beginPath(); c.ellipse(fl * 0.55, -fl * 0.07, fl * 0.38, fl * 0.07, 0, 0, 7); c.fill(); c.strokeStyle = 'rgba(40,60,90,.5)'; c.lineWidth = 1; for (const k of [0.45, 0.62, 0.79]) { c.beginPath(); c.arc(fl * k, 0, fl * 0.1, -1, 1); c.stroke(); } c.restore(); }
+        c.fillStyle = '#f6c445'; c.beginPath(); c.moveTo(g.cx - 7 * s, y0); c.lineTo(g.cx + 10 * s, y0 + 3 * s); c.lineTo(g.cx - 7 * s, y0 + 7 * s); c.closePath(); c.fill();   // the upper beak, over the fish
+        c.fillStyle = 'rgba(255,255,255,.5)'; c.beginPath(); c.ellipse(g.cx - 1 * s, y0 + 2 * s, 4 * s, 1 * s, 0.15, 0, 7); c.fill();
         return fi; }
     },
 
@@ -2277,6 +2282,23 @@ const CHIBI = (() => {
 
   /* ---------- fusion hybrids: the first family's body on the second family's legs ----------
      Chomp is drawn by its own function, so a Chomp body or Chomp feet use this stand-in built from STAGE. */
+  /* ---------- how the specials grow (Gid, 16 Nov 2026): a Bit is a round baby, a Byte is taller on longer legs,
+     and a Mega takes a grown-up build, broad at the shoulders and narrower at the base. A family whose own shape is
+     the point (a pumpkin, a mantle, a hood, coils, a round belly, four legs) keeps that shape and still changes proportion ---------- */
+  const EVO_K = { Bit: [1.06, 0.9], Byte: [0.96, 1.12], Mega: [1.06, 1.14] }, EVO_LEG = { Bit: 0, Byte: 4, Mega: 8 };
+  function evoRound(c, g) { c.beginPath(); c.ellipse(g.cx, g.top + g.bh / 2, g.bw / 2, g.bh / 2, 0, 0, 7); }
+  function evoHero(c, g) { const L = g.left, R = g.left + g.bw, T = g.top, B = g.bot, w = g.bw, nb = w * 0.1, r = w * 0.46;   // broad shoulders, sides drawing in to a narrower base
+    c.beginPath(); c.moveTo(L + r, T); c.lineTo(R - r, T); c.quadraticCurveTo(R, T, R, T + r * 0.9); c.bezierCurveTo(R, T + g.bh * 0.62, R - nb, B - w * 0.06, R - nb - w * 0.2, B);
+    c.lineTo(L + nb + w * 0.2, B); c.bezierCurveTo(L + nb, B - w * 0.06, L, T + g.bh * 0.62, L, T + r * 0.9); c.quadraticCurveTo(L, T, L + r, T); c.closePath(); }
+  const EVO_KEEP = { Jack: 'both', Kraken: 'both', Naga: 'both', Hydra: 'both', Bakunawa: 'both', Yeti: 'both', Golem: 'bit', Tanuki: 'mega', Diwata: 'mega', Unicorn: 'mega', Kirin: 'mega',
+    Sphinx: 'mega', Griffin: 'mega', Cerberus: 'mega', Troll: 'mega', Salamander: 'mega', Mermaid: 'mega' };
+  const EVO_LOW = { Salamander: 1 };   // a lizard stays low to the ground at every stage
+  for (const [n, F] of Object.entries(FAM)) { if (!F.special || F.hybridOf) continue;
+    const D = F.dims; F.dims = {}; for (const st in D) F.dims[st] = [Math.round(D[st][0] * EVO_K[st][0] * (EVO_LOW[n] && st !== 'Bit' ? 1.06 : 1)), Math.round(D[st][1] * (EVO_LOW[n] ? (st === 'Bit' ? 0.94 : 0.96) : EVO_K[st][1]))];
+    if (F.ll) { const l0 = F.ll; F.ll = st => l0(st) + EVO_LEG[st]; }
+    const keep = EVO_KEEP[n], p0 = F.path;
+    F.path = function (c, g, x) { if (g.stage === 'Bit' && keep !== 'both' && keep !== 'bit') return evoRound(c, g); if (g.stage === 'Mega' && keep !== 'both' && keep !== 'mega') return evoHero(c, g); return p0.call(this, c, g, x); }; }
+
   const CHOMP_F = {
     dims: { Bit: [STAGE.Bit.bw, STAGE.Bit.bh], Byte: [STAGE.Byte.bw, STAGE.Byte.bh], Mega: [STAGE.Mega.bw, STAGE.Mega.bh] },
     bottom() { return 174; }, height(st) { return STAGE[st].bh + 18; },
