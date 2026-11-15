@@ -7,15 +7,15 @@ const arBand=gap=>gap<10?"Close":gap<25?"Near":gap<45?"Mid":"Far";
 /* hitting from further away is harder to set up, so it pays a little more */
 const AR_BAND_DMG={Close:0.8,Near:0.95,Mid:1.2,Far:1.5,Any:1};
 /* a family's damage, tuned so every family wins about half its fights in the balance sim */
-const AR_FAM_DMG={Chomp:0.88,Pinch:0.97,Stilt:0.95,Skit:1.15,Antik:0.95,Squib:1.1,Moko:1.31,Booly:1.23,Plod:0.87,Bipped:0.93,Fizz:1.2,Teep:0.95,Lern:1.43,Eagle:0.91,Vampire:0.95,Phoenix:0.88,Kitsune:1.06,Naga:0.78,Yeti:0.73};
+const AR_FAM_DMG={Chomp:0.88,Pinch:1.03,Stilt:0.97,Skit:1.18,Antik:0.89,Squib:1.02,Moko:1.27,Booly:1.16,Plod:0.9,Bipped:0.99,Fizz:1.19,Teep:0.95,Lern:1.48,Eagle:0.96,Vampire:1.0,Phoenix:0.83,Kitsune:1.03,Naga:0.78,Yeti:0.72};   // retuned 15 Nov 2026 after melee lost Leap Back
 
 /* [name, learned at, range, damage, accuracy, sharpness, wither, push, cost, windup, extras] */
 const FAM_MOVES={
   Chomp:[["Bite",1,"Close",24,85,10,2,4,10,0.3],["Lunge",3,"Near",35,75,8,0,0,16,0.5,{dash:"in"}],["Crunch",5,"Close",64,70,12,0,6,30,0.8],["Leapfrog Bite",8,"Close",20,70,5,0,0,14,0.4,{swap:1}],
     ["Body Slam",14,"Close",46,70,5,5,25,26,0.7],["Jaw Lock",20,"Close",25,80,0,12,0,20,0.4,{hold:2}],["Charge",30,"Mid",60,65,10,0,20,34,1.0,{dash:"in"}],["Gnash",40,"Close",15,80,20,1,0,38,0.6,{hits:4}]],
   Pinch:[["Pinch",1,"Close",25,88,10,0,4,10,0.3],["Claw Jab",3,"Near",32,80,8,0,6,14,0.4],["Bunker Down",5,"Any",0,100,0,0,0,20,0.2,{buff:"bunker"}],["Scuttle Under",8,"Close",15,80,0,0,0,12,0.3,{swap:1}],
-    ["Riposte",14,"Close",0,100,0,0,0,18,0.1,{buff:"riposte"}],["Shell Ram",20,"Near",45,70,5,0,20,24,0.6],["Vice Grip",30,"Close",36,75,5,15,0,28,0.5,{hold:1.5}],["Crab Hammer",40,"Close",72,60,20,0,15,40,1.0]],
-  Stilt:[["Kick",1,"Near",30,85,8,0,8,10,0.3],["Kick Off",3,"Close",20,85,8,0,0,12,0.3,{step:-25}],["High Kick",5,"Near",74,65,15,0,12,32,0.8],["Vault",8,"Close",18,75,5,0,0,12,0.3,{swap:1}],
+    ["Riposte",14,"Close",0,100,0,0,0,18,0.1,{buff:"riposte"}],["Shell Ram",20,"Mid",45,70,5,0,20,24,0.6,{dash:"in"}],["Vice Grip",30,"Close",36,75,5,15,0,28,0.5,{hold:1.5}],["Crab Hammer",40,"Close",72,60,20,0,15,40,1.0]],
+  Stilt:[["Kick",1,"Near",30,85,8,0,8,10,0.3],["Jump Kick",3,"Near",24,85,8,0,6,12,0.35,{dash:"in"}],["High Kick",5,"Near",74,65,15,0,12,32,0.8],["Vault",8,"Close",18,75,5,0,0,12,0.3,{swap:1}],
     ["Sweep",14,"Close",30,80,5,0,0,16,0.4,{slow:3}],["Long Stride",20,"Mid",40,70,10,0,0,22,0.6,{dash:"near"}],["Axe Kick",30,"Near",75,70,20,0,10,36,0.9],["Stampede",40,"Near",20,75,10,0,10,38,0.6,{hits:3}]],
   Skit:[["Nip",1,"Close",24,90,10,0,0,8,0.2],["Skitter Bite",3,"Near",18,85,8,0,0,12,0.25,{dash:"in"}],["Web",5,"Mid",42,80,5,0,0,18,0.5,{slow:3}],["Web Swing",8,"Close",15,80,0,0,0,12,0.3,{swap:1}],
     ["Reel In",14,"Mid",20,75,0,0,-25,18,0.5],["Trap Line",20,"Mid",0,100,0,0,0,20,0.4,{slow:4}],["Leg Flurry",30,"Close",14,80,10,0,0,30,0.5,{hits:4}],["Cocoon",40,"Mid",30,60,0,0,0,34,0.9,{hold:2}]],
@@ -28,7 +28,7 @@ const FAM_MOVES={
   Booly:[["Wisp Shot",1,"Far",36,85,5,0,0,10,0.3,{cast:1}],["Boo!",3,"Close",5,90,0,5,35,10,0.2,{cast:1}],["Phase Shift",5,"Any",0,100,0,0,0,18,0.2,{buff:"phase"}],["Soul Pass",8,"Close",14,95,0,0,0,14,0.2,{swap:1,cast:1,drain:1}],
     ["Haunt",14,"Near",30,80,0,20,20,18,0.4,{cast:1}],["Will-o'-Wisp",20,"Far",56,75,5,0,0,24,0.6,{cast:1}],["Poltergeist",30,"Mid",60,70,5,0,15,30,0.7,{cast:1}],["Spirit Lance",40,"Far",92,70,15,0,0,38,1.2,{cast:1}]],
   /* the five families added 14 Nov 2026: Plod the slow tank, Bipped the boxer, Fizz the potion thrower, Teep the steady caster, Lern the quick caster */
-  Plod:[["Trunk Swat",1,"Close",25,88,8,0,8,10,0.3],["Stomp",3,"Near",32,80,5,0,6,14,0.5,{slow:2}],["Trunk Slam",5,"Close",66,70,12,0,25,30,0.8],["Trunk Toss",8,"Close",15,80,0,0,0,12,0.35,{swap:1}],
+  Plod:[["Trunk Swat",1,"Close",25,88,8,0,8,10,0.3],["Stomp",3,"Mid",32,80,5,0,6,14,0.5,{slow:2,dash:"in"}],["Trunk Slam",5,"Close",66,70,12,0,25,30,0.8],["Trunk Toss",8,"Close",15,80,0,0,0,12,0.35,{swap:1}],
     ["Trumpet",14,"Mid",18,85,0,15,30,20,0.5,{cast:1}],["Thick Hide",20,"Any",0,100,0,0,0,18,0.2,{buff:"bunker"}],["Quake Stomp",30,"Mid",58,70,8,0,15,32,0.9],["Mammoth Charge",40,"Far",80,65,10,0,30,40,1.1,{dash:"in"}]],
   Bipped:[["Jab",1,"Close",22,92,10,0,4,8,0.2],["Dash Punch",3,"Near",30,80,8,0,6,14,0.4,{dash:"in"}],["One-Two",5,"Close",28,85,10,0,6,22,0.4,{hits:2}],["Hip Toss",8,"Close",15,80,0,0,0,12,0.3,{swap:1}],
     ["Uppercut",14,"Close",48,75,15,0,15,24,0.6],["Guard Up",20,"Any",0,100,0,0,0,16,0.1,{buff:"riposte"}],["Haymaker",30,"Close",78,65,15,0,20,36,0.9],["Flurry Punch",40,"Close",14,85,10,0,0,38,0.6,{hits:5}]],
@@ -36,23 +36,26 @@ const FAM_MOVES={
     ["Brew Up",14,"Any",0,100,0,0,0,20,0.3,{support:1,heal:0.18}],["Beaker Splash",20,"Near",44,80,8,0,0,22,0.5,{cast:1,status:["Crack",25]}],["Boil Over",30,"Mid",66,75,8,0,10,32,0.8,{cast:1,status:["Burn",25]}],["Explosive Brew",40,"Far",94,65,10,0,20,40,1.2,{cast:1}]],
   Teep:[["Splash",1,"Near",26,90,5,0,4,10,0.3,{cast:1}],["Lid Bonk",3,"Close",28,85,8,0,8,12,0.3],["Steam Jet",5,"Far",50,80,8,0,0,24,0.7,{cast:1,status:["Blind",30]}],["Spin Pour",8,"Close",14,85,0,0,0,12,0.3,{swap:1,cast:1}],
     ["Tea Time",14,"Any",0,100,0,0,0,22,0.4,{support:1,heal:0.2}],["Scald",20,"Mid",46,80,8,0,6,24,0.6,{cast:1,status:["Burn",25]}],["Whistle",30,"Far",22,85,0,25,0,24,0.5,{cast:1,status:["Daze",35]}],["Boiling Point",40,"Mid",92,65,12,0,15,40,1.2,{cast:1}]],
-  Lern:[["Ember",1,"Far",32,88,5,0,0,10,0.3,{cast:1}],["Float Back",3,"Any",0,100,0,0,0,10,0.15,{step:-28}],["Flash",5,"Mid",34,95,5,8,0,20,0.4,{cast:1,status:["Blind",50]}],["Lantern Swing",8,"Close",16,85,0,0,0,12,0.3,{swap:1}],
+  Lern:[["Ember",1,"Far",32,88,5,0,0,10,0.3,{cast:1}],["Float Back",3,"Close",14,90,5,0,0,10,0.2,{step:-28,cast:1}],["Flash",5,"Mid",34,95,5,8,0,20,0.4,{cast:1,status:["Blind",50]}],["Lantern Swing",8,"Close",16,85,0,0,0,12,0.3,{swap:1}],
     ["Paper Fold",14,"Any",0,100,0,0,0,18,0.2,{buff:"phase"}],["Spark Shower",20,"Mid",16,80,5,0,0,24,0.6,{cast:1,hits:3}],["Beacon",30,"Far",68,75,10,8,0,32,0.9,{cast:1}],["Sky Lantern",40,"Far",94,65,12,0,0,40,1.3,{cast:1}]],
   /* the special Snabits */
-  Eagle:[["Peck",1,"Close",24,92,10,0,4,9,0.2],["Swoop",3,"Near",32,85,10,0,8,14,0.4,{dash:"in"}],["Talon Dive",5,"Close",62,80,18,0,18,28,0.7],["Updraft",8,"Any",0,100,0,0,0,10,0.15,{step:-30}],
+  Eagle:[["Peck",1,"Close",24,92,10,0,4,9,0.2],["Swoop",3,"Near",32,85,10,0,8,14,0.4,{dash:"in"}],["Talon Dive",5,"Close",62,80,18,0,18,28,0.7],["Dive",8,"Mid",30,85,10,0,8,16,0.4,{dash:"in"}],
     ["Wing Gust",14,"Mid",36,85,5,0,28,22,0.5,{cast:1}],["Keen Sight",20,"Any",0,100,0,0,0,16,0.2,{buff:"unblink"}],["Feather Volley",30,"Far",18,85,8,0,0,28,0.6,{cast:1,hits:3}],["Sky Strike",40,"Far",88,70,15,0,20,40,1.0,{dash:"in"}]],
-  Vampire:[["Nip",1,"Close",22,92,8,0,0,9,0.2,{drain:0.3}],["Bat Swarm",3,"Mid",26,85,5,0,0,14,0.4,{cast:1}],["Night Bite",5,"Close",50,85,10,0,6,26,0.6,{drain:0.5}],["Mist Step",8,"Close",12,85,0,0,0,12,0.3,{swap:1}],
+  Vampire:[["Nip",1,"Close",22,92,8,0,0,9,0.2,{drain:0.3}],["Bat Swarm",3,"Mid",26,85,5,0,0,14,0.4,{cast:1}],["Night Bite",5,"Near",50,85,10,0,6,26,0.6,{drain:0.5,dash:"in"}],["Mist Step",8,"Close",12,85,0,0,0,12,0.3,{swap:1}],
     ["Hypnotic Gaze",14,"Mid",18,85,0,12,0,20,0.5,{cast:1,status:["Daze",40]}],["Cloak",20,"Any",0,100,0,0,0,18,0.2,{buff:"phase"}],["Blood Moon",30,"Far",62,75,8,8,0,32,0.9,{cast:1,drain:0.3}],["Crimson Feast",40,"Close",80,75,12,0,10,40,1.0,{drain:0.6}]],
   Phoenix:[["Ember Peck",1,"Close",24,90,8,0,4,9,0.2,{status:["Burn",15]}],["Flame Wing",3,"Near",32,85,8,0,10,14,0.4],["Sun Flare",5,"Mid",54,80,8,0,0,26,0.7,{cast:1,status:["Burn",35]}],["Blaze Swap",8,"Close",12,85,0,0,0,12,0.3,{swap:1}],
     ["Warm Glow",14,"Any",0,100,0,0,0,22,0.4,{support:1,heal:0.2}],["Fire Ring",20,"Near",44,80,8,0,20,24,0.5,{cast:1}],["Ash Storm",30,"Far",20,80,5,0,0,30,0.7,{cast:1,hits:3,status:["Blind",20]}],["Supernova",40,"Far",92,70,10,0,15,42,1.1,{cast:1}]],
-  Kitsune:[["Fox Swipe",1,"Close",22,92,10,0,4,9,0.2],["Foxfire",3,"Mid",18,90,5,0,0,16,0.5,{cast:1,hits:3,status:["Daze",20]}],["Trick Step",5,"Any",0,100,0,0,0,10,0.15,{step:-26}],["Tail Swap",8,"Close",14,85,0,0,0,12,0.3,{swap:1}],
+  Kitsune:[["Fox Swipe",1,"Close",22,92,10,0,4,9,0.2],["Foxfire",3,"Mid",18,90,5,0,0,16,0.5,{cast:1,hits:3,status:["Daze",20]}],["Trick Step",5,"Close",14,90,5,0,0,12,0.2,{step:-26,cast:1}],["Tail Swap",8,"Close",14,85,0,0,0,12,0.3,{swap:1}],
     ["Mirage",14,"Any",0,100,0,0,0,18,0.2,{buff:"phase"}],["Spirit Lantern",20,"Far",46,85,5,10,0,24,0.6,{cast:1}],["Nine Tails",30,"Near",14,85,8,0,0,30,0.7,{hits:5}],["Kitsunebi",40,"Far",86,75,10,8,0,40,1.0,{cast:1,status:["Daze",30]}]],
-  Naga:[["Fang",1,"Close",26,90,8,0,4,10,0.25],["Tail Whip",3,"Near",30,85,5,0,18,14,0.4],["Venom Coil",5,"Close",44,85,8,0,0,24,0.6,{status:["Poison",50],hold:1.2}],["Slither Swap",8,"Close",14,85,0,0,0,12,0.3,{swap:1}],
+  Naga:[["Fang",1,"Close",26,90,8,0,4,10,0.25],["Tail Whip",3,"Mid",26,85,5,0,-20,14,0.4],["Venom Coil",5,"Close",44,85,8,0,0,24,0.6,{status:["Poison",50],hold:1.2}],["Slither Swap",8,"Close",14,85,0,0,0,12,0.3,{swap:1}],
     ["Hood Flare",14,"Mid",14,90,0,14,0,18,0.4,{cast:1,status:["Dread",35]}],["Shed Skin",20,"Any",0,100,0,0,0,20,0.3,{support:1,cleanse:1,heal:0.1}],["Acid Spit",30,"Far",56,80,8,0,0,30,0.8,{cast:1,status:["Poison",40]}],["Serpent King",40,"Close",88,70,12,0,25,40,1.0]],
   Yeti:[["Snow Paw",1,"Close",28,88,8,0,10,10,0.3],["Snowball",3,"Mid",26,88,5,0,8,14,0.4,{cast:1}],["Avalanche",5,"Close",66,75,10,0,22,30,0.9],["Big Toss",8,"Close",16,80,0,0,0,12,0.35,{swap:1}],
-    ["Frost Breath",14,"Near",34,85,5,0,0,22,0.5,{cast:1,status:["Freeze",20]}],["Thick Coat",20,"Any",0,100,0,0,0,18,0.2,{buff:"bunker"}],["Glacier Slam",30,"Near",62,75,10,0,20,34,0.9],["Blizzard Roar",40,"Far",84,70,8,10,15,42,1.1,{cast:1,status:["Freeze",25]}]]
+    ["Frost Breath",14,"Near",34,85,5,0,0,22,0.5,{cast:1,status:["Freeze",20]}],["Thick Coat",20,"Any",0,100,0,0,0,18,0.2,{buff:"bunker"}],["Glacier Slam",30,"Mid",62,75,10,0,20,34,0.9,{dash:"in"}],["Blizzard Roar",40,"Far",84,70,8,10,15,42,1.1,{cast:1,status:["Freeze",25]}]]
 };
-const SHARED_MOVES=[["Dash In",1,"Any",0,100,0,0,0,10,0.2,{step:20}],["Leap Back",1,"Any",0,100,0,0,0,10,0.2,{step:-20}],["Brace",1,"Any",0,100,0,0,0,6,0.1,{buff:"brace"}]];
+/* every Snabit has Brace. Melee families get Rush, which closes the gap and hits; the casters get Leap Back to keep their distance
+   (Gid, 15 Nov 2026: fewer moves that only move, and melee fighters closing in rather than backing off) */
+const SHARED_MOVES=[["Rush",1,"Any",14,85,5,0,0,10,0.25,{dash:"in",melee:1}],["Leap Back",1,"Any",0,100,0,0,0,10,0.2,{step:-20,ranged:1}],["Brace",1,"Any",0,100,0,0,0,10,0.1,{buff:"brace"}]];
+const arMelee=fam=>{ const d=(FAM_MOVES[fam]||[]).map(arMove).filter(m=>m.dmg); return d.filter(m=>!m.cast&&(m.range==="Close"||m.range==="Near"||m.dash)).length>=d.length/2; };
 /* how fast each family gets around: Booly floats and Squib jets, while Chomp and Pinch plod */
 const FAM_WALK={Chomp:0.8,Pinch:0.85,Stilt:1.05,Skit:1.15,Antik:1,Squib:1.15,Moko:1.05,Booly:1.25,Plod:0.75,Bipped:1.05,Fizz:1,Teep:0.85,Lern:1.15,Eagle:1.2,Vampire:1,Phoenix:1.05,Kitsune:1.15,Naga:0.95,Yeti:0.8};
 /* a family's first move takes its element, the way Skit's Web already does: a Blaze Chomp bites with Flame Bite */
@@ -78,7 +81,7 @@ function arFromSkill(n){
 }
 /* every move a Snabit can use in the arena: its family's up to its level, the shared moves, and its element skills */
 function arMoves(fam,level,known,el){
-  const fm=(FAM_MOVES[fam]||[]).map(arMove).filter(m=>m.lv<=level), sh=SHARED_MOVES.map(arMove);
+  const fm=(FAM_MOVES[fam]||[]).map(arMove).filter(m=>m.lv<=level), mel=arMelee(fam), sh=SHARED_MOVES.map(arMove).filter(m=>!(m.melee&&!mel)&&!(m.ranged&&mel));
   if(fm[0]) fm[0].basic=true;
   if(el&&EL_PREFIX[el]&&fm[0]){ fm[0].base=fm[0].name; fm[0].name=`${EL_PREFIX[el]} ${fm[0].name}`; fm[0].el=el; }
   for(const m of fm) if(m.name==="Potion Toss"&&el&&typeof POTION_BY_EL!=="undefined"&&POTION_BY_EL[el]) m.status=[POTION_BY_EL[el],45];   // the bottle holds its element's status
@@ -97,7 +100,8 @@ const AR_STATUS={Burn:{d:7,dot:0.016,stat:{pow:0.8}},Poison:{d:8,dot:0.02},Root:
 const AR_STAGE_T=12, AR_STATS=["pow","grd","mnd","spr","spd"];
 const arStageMul=n=>n>0?1+0.25*n:1/(1-0.25*n);
 /* family buffs, in seconds */
-const AR_BUFF_T={bunker:4,unblink:3,feedback:2,phase:3,bubble:6,riposte:1.5,brace:1.5};
+/* a guard lasts a few seconds and then needs a rest before it can go up again, so it can't be spammed (Gid, 15 Nov 2026) */
+const AR_BUFF_T={bunker:6,unblink:4,feedback:3,phase:3,bubble:6,riposte:3,brace:5}, AR_BUFF_REST=5;
 
 class Arena{
   /* a and b: fighters from makeFighter, each with .moves (arMoves) and .family; ai: "smart" or "naive" per side */
@@ -144,6 +148,7 @@ class Arena{
     if(this.has(p,"Dread")&&m.name===p.last) return false;
     if(p.buff.taunt&&(m.support||m.buff)) return false;
     if(this.has(p,"Root")&&(m.step||m.dash||m.swap)) return false;
+    if(m.buff&&(p.buff[m.buff]||(p.bcd&&p.bcd[m.buff]>this.t))) return false;   // still up, or resting before it can go up again
     return true; }
   /* Using a move takes a turn, the way MR2 does it: whoever acts first goes, the fight and the clock stop while the move plays out,
      then both carry on from where they stand. On screen (live) the turn waits for the animation; in a simulation it resolves at once.
@@ -258,7 +263,7 @@ class Arena{
   }
   resolve(p,m,roll=this.rand()){
     const o=this.p[1-p.i], d=this.dirTo(p), R=this.rand;
-    if(m.buff){ this.ev.push({t:"buff",i:p.i,m}); p.buff[m.buff]=AR_BUFF_T[m.buff]||1.5;
+    if(m.buff){ this.ev.push({t:"buff",i:p.i,m}); p.buff[m.buff]=AR_BUFF_T[m.buff]||1.5; (p.bcd=p.bcd||{})[m.buff]=this.t+(AR_BUFF_T[m.buff]||1.5)+AR_BUFF_REST;
       if(m.buff==="brace"&&p.f.ability==="Halo"&&p.hp<p.maxhp){ this.ab(p,"Halo"); this.heal(p,p.maxhp/8*Math.pow(0.75,p.halo++),"halo"); }   // Light's Halo, a quarter weaker each time
       return; }
     if(m.support){ this.support(p,m,roll); return; }

@@ -544,7 +544,7 @@ Object.assign(ANIM,{
 /* which animation a family move plays in the arena, by its own name (a Blaze Snabit's "Flame Kick" is still Kick) */
 const AR_KIND={Lunge:"bite","Jaw Lock":"jawlock",Gnash:"gnash",
   Pinch:"pinch","Claw Jab":"claw","Vice Grip":"vicegrip","Crab Hammer":"hammer",
-  Kick:"kick","High Kick":"highkick","Axe Kick":"axekick",Sweep:"sweep","Long Stride":"kick",Stampede:"stampede","Kick Off":"kick",
+  Kick:"kick","High Kick":"highkick","Axe Kick":"axekick",Sweep:"sweep","Long Stride":"kick",Stampede:"stampede","Kick Off":"kick","Jump Kick":"kick",Rush:"tackle",Dive:"talondive",
   Nip:"bite","Skitter Bite":"bite",Web:"web","Reel In":"web","Trap Line":"web",Cocoon:"web","Leg Flurry":"legflurry",
   "Tentacle Lash":"lash",Riptide:"wave","Eye Beam":"beam","Scan Beam":"beam",Stare:"beam","Spirit Lance":"spear",Poltergeist:"push","Boo!":"push",Dread:"push",
   "Flurry Kick":"kickflurry","Comet Punch":"punchflurry",Barrage:"punchflurry",

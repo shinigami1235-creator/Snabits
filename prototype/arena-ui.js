@@ -29,6 +29,13 @@ function atStyle(){
 #atest .sc svg{width:20px;height:20px}#atest .sc i{position:absolute;right:2px;bottom:0;font-style:normal;font-size:8px;color:#ffc93c;font-weight:700}#atest .sc.none{opacity:.35}
 #atest .sc.lit{background:#ffc93c;color:#14151d}#atest .sc.lit i{color:#14151d}#atest .sc.foe.lit{background:#ff8a7a}
 #atest .sc.lit::after{content:"";position:absolute;left:50%;bottom:-8px;margin-left:-5px;border:5px solid transparent;border-top-color:#fff}
+#atest .atnear{position:absolute;left:0;top:0;display:flex;gap:5px;pointer-events:none;z-index:2}
+#atest .atnear .ni{position:relative;width:32px;height:32px;border-radius:9px;background:#f3e6c6;color:#3a2a18;border:2.5px solid var(--rc);box-shadow:0 3px 0 rgba(60,40,20,.45);display:flex;align-items:center;justify-content:center;opacity:.35;filter:grayscale(.85)}
+#atest .atnear .ni.reach{opacity:.6;filter:grayscale(.3)}#atest .atnear .ni.ok{opacity:1;filter:none;background:#fff8e6;box-shadow:0 3px 0 rgba(60,40,20,.45),0 0 10px var(--rc)}#atest .atnear .ni.here{transform:translateY(-4px)}
+#atest .atnear .ni.none{opacity:.15}#atest .atnear .ni svg{width:22px;height:22px}
+#atest .atnear .ni b{position:absolute;right:-6px;bottom:-6px;min-width:14px;padding:0 2px;border-radius:7px;background:#14151d;color:#fff;font:700 9px system-ui;text-align:center;line-height:13px}
+#atest .atnear .ni.rest b{color:#8fb8ff}
+#atest .hbot .strip,#atest .hbot .fob{display:none}   /* the move icons sit under your Snabit now, and focus under each HP bar */
 #atest .fob{height:7px;border-radius:4px;background:#262836;margin-top:6px;position:relative;overflow:hidden}
 #atest .fob i{position:absolute;top:0;bottom:0;left:0;background:linear-gradient(#ffd75a,#f2a92c)}#atest .foe .fob i{left:auto;right:0}
 #atest .fob .need{position:absolute;top:0;bottom:0;width:2px;background:#fff}
@@ -92,6 +99,10 @@ function atStart(meFam,foeFam){   // picks: see atMake
   atBegin(A,B,{me:meFam,foe:foeFam,rand:R});
 }
 /* the fight screen for any two sides. opts: mode ("control" or "auto"), title, rand, noDraw, mus, wild, onEnd(result) for the game's own fights */
+/* The punch poses reach out to the drawing's right, but in the arena the opponent sits on the drawing's left, so Haymaker
+   and the other punches swung away from the target (Gid, 15 Nov 2026). These poses get their arms swapped and their lean turned. */
+const AT_FWD=new Set(["punch","punchwind"]);
+function atFace(P){ const Q=typeof P==="string"?CHIBI.blend(P,P,1):P; return {...Q,arm:[Q.arm[1],Q.arm[0]],lean:-(Q.lean||0),tilt:-(Q.tilt||0)}; }
 function atBegin(A,B,opts){
   atStop(); atStyle(); let dv=document.getElementById("atest"); if(!dv){ dv=document.createElement("div"); dv.id="atest"; document.body.appendChild(dv); } dv.style.display="flex";
   const R=opts.rand||Math.random, meFam=opts.me, foeFam=opts.foe, auto=opts.mode==="auto", ar=new Arena(A.f,B.f,R,[auto?"smart":"human","smart"]); ar.live=true; ar.noDraw=!!opts.noDraw; if(opts.foeHp!=null) ar.p[1].hp=Math.max(1,Math.round(ar.p[1].maxhp*opts.foeHp));   // a tag team: the next Snabit steps in against what the last one left   // each move pauses the fight while it plays
@@ -109,7 +120,7 @@ function atBegin(A,B,opts){
   // MR2's way: each Snabit's four range cells sit on the fight screen and meet in the middle, Close at the centre.
   // ◀ ▶ walk left and right on screen. After a swap the two really trade places, and your row and numbers move to your side.
   const cells=side=>(side?AR.BANDS:AR.BANDS.slice().reverse()).map(b=>`<div class="sc${side?" foe":""}" style="--rc:${AT_RC[b]}" id="at-${side?"f":"y"}-${b}"></div>`).join("");
-  d.innerHTML=`<div class="scr"><canvas id="at-cv"></canvas>
+  d.innerHTML=`<div class="scr"><canvas id="at-cv"></canvas><div class="atnear" id="at-near"></div>
       <div class="htop"><div class="clock2" id="at-clock">60</div></div>${opts.title?`<div class="ttl">${opts.title}</div>`:""}
       <div class="hbot" id="at-hbot"><div class="side me"><div class="mv" id="at-mv0"></div><div class="strip">${cells(0)}</div><div class="fob" id="at-fb0"><i id="at-fo0"></i><span class="need" id="at-need"></span></div></div>
         <div class="mid"><div><span>Hit</span><b><i id="at-hit0"></i><em id="at-hit1"></em></b></div><div><span>Focus</span><b><i id="at-fn0"></i><em id="at-fn1"></em></b></div></div>
@@ -142,6 +153,16 @@ function atSize(){ const cv=document.getElementById("at-cv"), scr=cv.parentEleme
   const hb=document.getElementById("at-hbot"); AT.floorS=Math.round(Math.min(H-(hb?hb.offsetHeight:90)-22,H*0.6)); AT.zMin=W/AT.WW; AT.HH=Math.ceil(H/AT.zMin); AT.FY=Math.round(AT.floorS/AT.zMin); }
 window.addEventListener("resize",()=>{ if(AT&&document.getElementById("at-cv")) atSize(); });
 /* the range cells on the fight screen: yours and the opponent's, lit where the two of you stand now */
+/* your four moves sit in a row under your feet, Close nearest the opponent, so you can see at a glance which are in reach,
+   which you have the focus for and which are resting (Gid, 15 Nov 2026) */
+function atNear(x,y,dir){
+  const d=document.getElementById("at-near"); if(!d||!AT.lists) return; const ar=AT.ar, p=ar.p[0], band=ar.band();
+  const order=dir>0?AR.BANDS.slice().reverse():AR.BANDS.slice(), cells=order.map(b=>{ const m=AT.lists[b][AT.idx[b]]; if(!m) return {b,m:null};
+    const reach=ar.inRange(m)||!!m.dash, rest=!ar.allowed(p,m), afford=p.focus>=ar.cost(p,m); return {b,m,ok:reach&&afford&&!rest&&!(ar.turn||p.cool>0),reach,rest,afford,here:b===band}; });
+  const key=cells.map(q=>q.m?`${q.m.name}${q.ok}${q.reach}${q.rest}${q.afford}${q.here}`:"-").join("|");
+  if(key!==d.dataset.k){ d.dataset.k=key;
+    d.innerHTML=cells.map(q=>q.m?`<span class="ni${q.ok?" ok":""}${q.reach?" reach":""}${q.here?" here":""}${q.rest?" rest":""}" style="--rc:${AT_RC[q.b]}">${atIcon(q.m)}<b>${q.rest?"…":ar.cost(p,q.m)}</b></span>`:`<span class="ni none" style="--rc:${AT_RC[q.b]}"></span>`).join(""); }
+  d.style.transform=`translate(${Math.round(x)}px,${Math.round(y)}px) translateX(-50%)`; }
 function atRows(){
   const ar=AT.ar, p=ar.p[0], band=ar.band(), key=band+"|"+AR.BANDS.map(b=>AT.idx[b]).join(",")+"|"+(p.focus>=ar.cost(p,AT.lists[band][AT.idx[band]]||{cost:0}))+"|"+!!(ar.turn||p.cool>0)+"|"+!!(p.st&&p.st.name==="Curse");
   if(key===AT.rowsHtml) return; AT.rowsHtml=key;
@@ -640,6 +661,7 @@ function atDraw(now,dte){
     let pose=atStatusPose(i,st.pose||(moving?"walk":"idle"));
     if(pose!==S.shown){ S.from=S.shown||"idle"; S.shown=pose; S.t0=te; }
     const k=(te-S.t0)/110; let P=k>=0&&k<1&&CHIBI.POSES.includes(S.from)&&CHIBI.POSES.includes(pose)?CHIBI.blend(S.from,pose,k):pose, dte2=te;
+    if(AT_FWD.has(pose)||AT_FWD.has(S.from)) P=atFace(P);   // punches are drawn reaching right, and the arena faces the drawing the other way, so turn the reach round to the opponent
     // frozen solid: it holds whatever pose it was caught in until the ice goes
     if(frozen){ if(!S.frz) S.frz={P,te}; P=S.frz.P; dte2=S.frz.te; } else S.frz=null;
     P=atStatusEyes(i,P);
@@ -728,8 +750,12 @@ function atDraw(now,dte){
     c.fillStyle=g; c.beginPath(); c.roundRect(x,y,Math.max(0,bw*Math.min(f,S.hpUp)),bh,4); c.fill();
     c.font="700 10px system-ui"; c.textAlign="center"; c.lineWidth=3; c.strokeStyle="#14151d"; c.fillStyle="#fff";
     c.strokeText(`${p.hp}/${p.maxhp}`,x+bw/2,y+bh-2.5); c.fillText(`${p.hp}/${p.maxhp}`,x+bw/2,y+bh-2.5);
+    { const fy=y+bh+3, fw=bw*Math.min(1,p.focus/99); c.fillStyle="rgba(20,21,29,.85)"; c.beginPath(); c.roundRect(x-2,fy-1,bw+4,7,3.5); c.fill();   // focus, under the HP
+      c.fillStyle=i?"#8fb8ff":"#ffd75a"; c.beginPath(); c.roundRect(x,fy,Math.max(0,fw),5,2.5); c.fill();
+      if(!i&&AT.lists){ const sel=AT.lists[ar.band()]&&AT.lists[ar.band()][AT.idx[ar.band()]]; if(sel){ const cx=x+bw*Math.min(1,ar.cost(p,sel)/99); c.fillStyle="#fff"; c.fillRect(cx-1,fy-1,2,7); } } }
     const nm=p.f.name.split(",")[0]; c.font="700 11px system-ui"; c.fillStyle=i?"#ffb4a8":"#ffe07a"; c.strokeText(nm,x+bw/2,y-6); c.fillText(nm,x+bw/2,y-6);
-    atChips(c,i,x,y-33,bw); });
+    atChips(c,i,x,y-33,bw);
+    if(!i) atNear((P.x-AT.cam)*z+sx,AT.floorS+sy+12,AT.side[0].dir||1); });
   { const chg=[0,1].map(i=>AT.side[i].charge).find(ch=>ch&&te-ch.t0<ch.d); if(chg){ const k=Math.min(1,(te-chg.t0)/chg.d), g=c.createRadialGradient(W/2,H*0.45,H*0.25,W/2,H*0.45,H*0.75);
       g.addColorStop(0,"rgba(0,0,0,0)"); g.addColorStop(1,`rgba(8,6,20,${(chg.tier==="special"?0.75:0.45)*k})`); c.fillStyle=g; c.fillRect(0,0,W,H); } }
   if(cine){ const inn=Math.min(1,ck/0.14), out=ck>0.74?Math.min(1,(ck-0.74)/0.12):0, x=-W*(1-eo(inn))+W*1.1*out*out, y=H*0.2, col=cine.col;
