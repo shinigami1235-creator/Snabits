@@ -20,6 +20,7 @@ window.__pump = (o = {}) => {
   const b = __badText(); if (b && !A.bad.includes(b)) A.bad.push(b);
   if (document.querySelector('canvas.summon-cv')) { const c = document.querySelector('canvas.summon-cv'); c.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })); c.click(); return 'summon'; }
   if (hit('tip-skip') || hit('tip-ok')) return 'tip';
+  { const sk = document.querySelector('.show-skip'); if (sk && !o.watchShows) { sk.click(); return 'show-skip'; } }   // the cup show's Skip, so a long run doesn't sit through every table and face-off
   if (hit(o.scold ? 'r-sc' : 'r-pr')) return 'react';
   if (hit(o.no ? 'yn-n' : 'yn-y')) return 'yesno';
   { const v = document.querySelector('#r-panel [data-v]'); if (__vis(v)) { v.click(); return 'variant'; } }   // an evolution with more than one variant on offer waits for a pick
