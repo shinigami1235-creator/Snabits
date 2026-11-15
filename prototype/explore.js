@@ -88,38 +88,58 @@ function openJournal() {
 }
 
 /* ---------- the map under the scene ---------- */
-function exDraw(cv, M, st, at, energy, emax, blocked) {
-  const d = devicePixelRatio || 1, W = cv.clientWidth || 340, H = 230; cv.width = W * d; cv.height = H * d; cv.style.height = H + 'px';
-  const x = cv.getContext('2d'); x.setTransform(d, 0, 0, d, 0, 0); const ink = '#5a4128';
+function exDraw(cv, M, st, at, energy, emax, blocked, title) {
+  const d = devicePixelRatio || 1, W = cv.clientWidth || 340, H = 236; cv.width = W * d; cv.height = H * d; cv.style.height = H + 'px';
+  const x = cv.getContext('2d'); x.setTransform(d, 0, 0, d, 0, 0); const ink = '#5a4128', R = SC.rng(7);
+  // parchment with a few stains and an inked double border
   x.fillStyle = '#efe2c2'; x.beginPath(); x.roundRect(0, 0, W, H, 10); x.fill();
-  x.fillStyle = ink; x.font = '700 12px Fredoka, system-ui'; x.fillText('Energy', 12, 20); x.fillStyle = '#d9c8a0'; x.beginPath(); x.roundRect(62, 10, W - 140, 11, 5); x.fill();
-  x.fillStyle = energy > 3 ? '#6fae4f' : '#d8823a'; x.beginPath(); x.roundRect(62, 10, (W - 140) * Math.max(0, energy) / emax, 11, 5); x.fill(); x.fillStyle = ink; x.fillText(`${Math.max(0, energy)} of ${emax}`, W - 68, 20);
-  const P = n => [22 + n.c * (W - 44) / 6, 62 + n.r * 64], near = M.near(at), vis = k => st.seen.includes(k) || near.includes(k) || k === at;
+  for (let i = 0; i < 7; i++) { const sx = R() * W, sy = R() * H, sr = 20 + R() * 40, g = x.createRadialGradient(sx, sy, 1, sx, sy, sr); g.addColorStop(0, 'rgba(196,165,110,.16)'); g.addColorStop(1, 'rgba(196,165,110,0)'); x.fillStyle = g; x.fillRect(sx - sr, sy - sr, sr * 2, sr * 2); }
+  x.strokeStyle = 'rgba(122,90,55,.55)'; x.lineWidth = 1.5; x.beginPath(); x.roundRect(5, 5, W - 10, H - 10, 7); x.stroke(); x.lineWidth = 0.7; x.beginPath(); x.roundRect(8.5, 8.5, W - 17, H - 17, 5); x.stroke();
+  // energy: a pill with depth
+  x.fillStyle = ink; x.font = '700 12px Fredoka, system-ui'; x.fillText('Energy', 16, 27);
+  const bx = 64, bw = W - 146; SC.depth(x, () => { x.beginPath(); x.roundRect(bx, 17, bw, 12, 6); }, '#d9c8a0', 2, 0.25);
+  if (energy > 0) SC.depth(x, () => { x.beginPath(); x.roundRect(bx, 17, Math.max(12, bw * energy / emax), 12, 6); }, energy > 3 ? '#6fae4f' : '#d8823a', 0, 0);
+  x.fillStyle = 'rgba(255,255,255,.35)'; x.fillRect(bx + 5, 19, Math.max(0, bw * Math.max(0, energy) / emax - 10), 2);
+  x.fillStyle = ink; x.fillText(`${Math.max(0, energy)} of ${emax}`, W - 74, 27);
+  const P = n => [26 + n.c * (W - 52) / 6, 72 + n.r * 62], near = M.near(at), vis = k => st.seen.includes(k) || near.includes(k) || k === at;
   x.lineCap = 'round';
-  for (const [a, b] of M.E) { const A = P(M.N[a]), B = P(M.N[b]), lit = vis(a) && vis(b); x.strokeStyle = lit ? '#8a6a45' : 'rgba(138,106,69,.35)'; x.lineWidth = 3; x.setLineDash(lit ? [] : [4, 6]); x.beginPath(); x.moveTo(...A); x.lineTo(...B); x.stroke(); }
+  for (const [a, b] of M.E) { const A = P(M.N[a]), B = P(M.N[b]), lit = vis(a) && vis(b);
+    if (lit) { x.strokeStyle = '#9c7b52'; x.lineWidth = 5; x.setLineDash([]); x.beginPath(); x.moveTo(...A); x.lineTo(...B); x.stroke(); x.strokeStyle = '#d9c39a'; x.lineWidth = 2; x.setLineDash([3, 5]); x.beginPath(); x.moveTo(...A); x.lineTo(...B); x.stroke(); }
+    else { x.strokeStyle = 'rgba(138,106,69,.35)'; x.lineWidth = 2; x.setLineDash([2, 6]); x.beginPath(); x.moveTo(...A); x.lineTo(...B); x.stroke(); } }
   x.setLineDash([]);
-  for (const k in M.N) { const n = M.N[k], [cx, cy] = P(n), v = vis(k), can = near.includes(k) && !blocked.includes(k);
-    x.fillStyle = can ? '#fff8e6' : '#f6ead0'; x.strokeStyle = can ? '#c8861f' : '#b79c6e'; x.lineWidth = can ? 3 : 2; x.beginPath(); x.arc(cx, cy, 14, 0, 7); x.fill(); x.stroke();
+  for (const k in M.N) { const n = M.N[k], [cx, cy] = P(n), v = vis(k), can = near.includes(k) && !blocked.includes(k), seen = st.seen.includes(k) || k === at;
+    SC.depth(x, () => { x.beginPath(); x.arc(cx, cy, 16, 0, 7); }, can ? '#fff6dc' : seen ? '#f3e6c6' : '#ebdcba', 2.5, 0.3);
+    x.strokeStyle = can ? '#d39a2c' : '#b59a6c'; x.lineWidth = can ? 2.6 : 1.4; x.beginPath(); x.arc(cx, cy, can ? 16 : 15, 0, 7); x.stroke();
     if (v) exIcon(x, n, cx, cy, st.got.includes(k), blocked.includes(k));
-    if (v && n.k === 'block') { x.fillStyle = blocked.includes(k) ? '#a04a3a' : '#8a5a20'; x.font = '700 9px Fredoka, system-ui'; x.textAlign = 'center'; x.fillText(EX_STAT[n.stat], cx, cy + 25); x.textAlign = 'left'; }
-    if (!v) for (const [dx, dy, r] of [[0, 0, 22], [-12, 5, 14], [12, -5, 16]]) { const g = x.createRadialGradient(cx + dx, cy + dy, 2, cx + dx, cy + dy, r); g.addColorStop(0, 'rgba(226,212,180,.97)'); g.addColorStop(1, 'rgba(226,212,180,0)'); x.fillStyle = g; x.beginPath(); x.arc(cx + dx, cy + dy, r, 0, 7); x.fill(); } }
-  const [tx, ty] = P(M.N[at]); x.fillStyle = '#e9852e'; x.strokeStyle = '#fff'; x.lineWidth = 3; x.beginPath(); x.arc(tx, ty, 8, 0, 7); x.fill(); x.stroke();
+    if (v && n.k === 'block') { const lab = EX_STAT[n.stat]; x.font = '700 9px Fredoka, system-ui'; const tw = x.measureText(lab).width + 10;
+      SC.depth(x, () => { x.beginPath(); x.roundRect(cx - tw / 2, cy + 19, tw, 13, 6); }, blocked.includes(k) ? '#c86a55' : '#8a6a3c', 1.5, 0.3);
+      x.fillStyle = '#fff6dc'; x.textAlign = 'center'; x.fillText(lab, cx, cy + 29); x.textAlign = 'left'; }
+    if (!v) { const fog = () => SC.blob(x, cx, cy + 2, [[0, -4, 13], [-12, 3, 10], [12, 3, 10], [-5, 6, 9], [6, 7, 9]]); x.globalAlpha = 0.96; SC.depth(x, fog, '#e3d4b2', 2, 0.12); x.fillStyle = 'rgba(255,255,255,.25)'; x.beginPath(); x.arc(cx - 4, cy - 6, 6, 3.4, 4.9); x.fill(); x.globalAlpha = 1; } }
+  // the Snabit's pin over where it stands
+  const [tx, ty] = P(M.N[at]), py = ty - 22;
+  x.fillStyle = 'rgba(40,25,10,.25)'; x.beginPath(); x.ellipse(tx, ty + 13, 6, 2, 0, 0, 7); x.fill();
+  SC.depth(x, () => { x.beginPath(); x.moveTo(tx, py + 15); x.bezierCurveTo(tx - 11, py + 2, tx - 9, py - 11, tx, py - 11); x.bezierCurveTo(tx + 9, py - 11, tx + 11, py + 2, tx, py + 15); }, '#e9852e', 1.5, 0.3);
+  x.fillStyle = '#fff6dc'; x.beginPath(); x.arc(tx, py - 2, 3.6, 0, 7); x.fill();
+  if (title) { x.fillStyle = ink; x.font = '700 10px Fredoka, system-ui'; x.textAlign = 'right'; x.fillText(title, W - 16, H - 14); x.textAlign = 'left'; }
   return P;
 }
+/* the map icons reuse the scene props from explore-art.js, scaled down onto the circle */
 function exIcon(x, n, cx, cy, got, shut) {
-  x.save(); x.translate(cx, cy); x.lineWidth = 2; const k = n.k, ink = '#5a4128'; if (got) x.globalAlpha = 0.35;
-  if (k === 'camp') { x.fillStyle = '#c8553d'; x.beginPath(); x.moveTo(-8, 6); x.lineTo(0, -8); x.lineTo(8, 6); x.fill(); }
-  else if (k === 'chest') { x.fillStyle = '#a8692e'; x.fillRect(-7, -5, 14, 10); x.fillStyle = '#f2c14e'; x.fillRect(-2, -1, 4, 3); }
-  else if (k === 'spring') { x.fillStyle = '#4aa3d8'; x.beginPath(); x.moveTo(0, -8); x.quadraticCurveTo(7, 2, 0, 7); x.quadraticCurveTo(-7, 2, 0, -8); x.fill(); }
-  else if (k === 'wild') { x.fillStyle = ink; x.beginPath(); x.ellipse(0, 3, 4.5, 3.5, 0, 0, 7); x.fill(); for (const [a, b] of [[-5, -2], [-2, -6], [2, -6], [5, -2]]) { x.beginPath(); x.arc(a, b, 1.8, 0, 7); x.fill(); } }
-  else if (k === 'page') { x.fillStyle = '#fffaf0'; x.fillRect(-5, -7, 10, 14); x.strokeStyle = '#b49a6e'; x.lineWidth = 1; for (let i = 0; i < 4; i++) { x.beginPath(); x.moveTo(-3, -4 + i * 3); x.lineTo(3, -4 + i * 3); x.stroke(); } }
-  else if (k === 'stone') { x.fillStyle = '#8f8a83'; x.beginPath(); x.moveTo(-6, 8); x.lineTo(-6, -4); x.quadraticCurveTo(0, -10, 6, -4); x.lineTo(6, 8); x.fill(); x.fillStyle = '#f2c14e'; x.fillRect(-3, -2, 6, 6); }
-  else if (k === 'block') { const s = n.stat; if (shut) { x.strokeStyle = '#a04a3a'; x.beginPath(); x.moveTo(-6, -6); x.lineTo(6, 6); x.moveTo(6, -6); x.lineTo(-6, 6); x.stroke(); }
-    else if (s === 1) { x.fillStyle = '#8f8a83'; x.beginPath(); x.arc(0, 1, 7, 0, 7); x.fill(); }
-    else if (s === 5) { x.fillStyle = '#2a2420'; x.beginPath(); x.moveTo(-7, -5); x.lineTo(7, -5); x.lineTo(4, 7); x.lineTo(-4, 7); x.fill(); }
-    else if (s === 3) { x.fillStyle = '#7d776f'; x.fillRect(-6, -8, 12, 15); x.fillStyle = '#e2483f'; x.beginPath(); x.arc(0, -2, 2.6, 0, 7); x.fill(); }
-    else if (s === 4) { x.strokeStyle = ink; x.beginPath(); x.ellipse(0, 0, 8, 4.5, 0, 0, 7); x.stroke(); x.fillStyle = ink; x.beginPath(); x.arc(0, 0, 2.2, 0, 7); x.fill(); }
-    else { x.strokeStyle = '#4e5a2e'; for (const d of [-4, 0, 4]) { x.beginPath(); x.moveTo(d, 7); x.lineTo(d + 2, -7); x.stroke(); } } }
+  x.save(); const k = n.k; if (got) x.globalAlpha = 0.4;
+  if (k === 'camp') { const y = cy + 7; SC.depth(x, () => { x.beginPath(); x.moveTo(cx - 10, y); x.lineTo(cx, y - 15); x.lineTo(cx + 10, y); x.closePath(); }, '#c8553d', 1.2, 0.3); x.fillStyle = '#5a2a1e'; x.beginPath(); x.moveTo(cx - 3, y); x.lineTo(cx, y - 7); x.lineTo(cx + 3, y); x.fill(); }
+  else if (k === 'chest') XA.chest(x, cx, cy + 6, got, 0, n.big ? 0.55 : 0.45);
+  else if (k === 'spring') XA.spring(x, cx, cy + 4, 0, 0.42);
+  else if (k === 'page') XA.page(x, cx, cy, 0, 0.62, false);
+  else if (k === 'stone') XA.stone(x, cx, cy + 8, null, false, 0, 0.3);
+  else if (k === 'wild') { x.fillStyle = '#5a4128'; x.beginPath(); x.ellipse(cx, cy + 3, 5, 4, 0, 0, 7); x.fill(); for (const [a, b] of [[-6, -2], [-2.4, -6.5], [2.4, -6.5], [6, -2]]) { x.beginPath(); x.ellipse(cx + a, cy + b, 2, 2.5, a * 0.08, 0, 7); x.fill(); } }
+  else if (k === 'path') { x.fillStyle = 'rgba(110,80,50,.5)'; for (const [a, b] of [[-5, 4], [0, -1], [5, 4]]) { x.beginPath(); x.ellipse(cx + a, cy + b, 1.8, 2.6, 0, 0, 7); x.fill(); } }
+  else if (k === 'block') { const s = n.stat;
+    if (s === 1) XA.rock(x, cx, cy + 9, 0.6);
+    else if (s === 5) { x.fillStyle = '#9c8a6a'; x.fillRect(cx - 12, cy - 1, 8, 9); x.fillRect(cx + 4, cy - 1, 8, 9); XA.chasm(x, cx - 4, cy, 8, null, 0.2); }
+    else if (s === 3) XA.door(x, cx, cy + 10, 0, 0, 0, 0.32);
+    else if (s === 4) XA.thicket(x, cx, cy + 8, '#3f7a44', false, 0, 0.55);
+    else XA.bramble(x, cx, cy + 8, 0.48);
+    if (shut) { x.globalAlpha = 1; x.strokeStyle = '#b8402e'; x.lineWidth = 3; x.beginPath(); x.moveTo(cx - 7, cy - 7); x.lineTo(cx + 7, cy + 7); x.moveTo(cx + 7, cy - 7); x.lineTo(cx - 7, cy + 7); x.stroke(); } }
   x.restore();
 }
 /* waits for a tap on a circle next to the Snabit, or the Head home button */
@@ -148,12 +168,12 @@ async function runExpedition(reg) {
     try {
       for (;;) {
         for (const k of M.near(at)) if (!st.seen.includes(k)) st.seen.push(k);
-        const cv = el('ex-map'), P = exDraw(cv, M, st, at, energy, emax, blocked);
+        const cv = el('ex-map'), P = exDraw(cv, M, st, at, energy, emax, blocked, reg.n);
         if (energy <= 0) { K(`${nm} is worn out, so that's it for this expedition.`); await rwait(1600); break; }
         const to = await exPick(cv, M, P, at, blocked); if (!to) break;
         const n = M.N[to], back = at; energy -= 1; at = to;
         const ai = n.c <= 1 ? 0 : n.c <= 3 ? 1 : 2, key = (reg.rift && n.c === 6 ? areas[2] : areas[Math.min(ai, areas.length - 2)]).key;
-        exDraw(el('ex-map'), M, st, at, energy, emax, blocked);
+        exDraw(el('ex-map'), M, st, at, energy, emax, blocked, reg.n);
         await sceneFade(true, 250); s.props = []; s.parts = []; s.bg = `area:${reg.el}:${key}`; s.x = 50; s.camJump = true; s.jy = 0; await sceneFade(false, 250);
         const r = await exNode(reg, n, st, need, nm, K, used, found);
         if (r === 'fail') { energy -= 3; blocked.push(to); at = back; }
@@ -174,9 +194,9 @@ async function exNode(reg, n, st, need, nm, K, used, found) {
   const s = RS, once = st.got.includes(n.id);
   await walkTo(100, 70, 'walk'); s.pose = 'idle';
   if (n.k === 'camp' || n.k === 'path') { await rwait(250); return; }
-  if (n.k === 'spring') { if (used.includes(n.id)) { await rwait(200); return; } used.push(n.id); s.pose = 'happy'; spark(s.x + 20, GROUND - 6, 'drip', 10); spark(s.x, headY() - 6, 'sparkle', 3); K(`There's a spring here. ${nm} drinks from it and gets 4 energy back.`); await rwait(1300); return 'spring'; }
+  if (n.k === 'spring') { if (used.includes(n.id)) { await rwait(200); return; } used.push(n.id); const sp = prop({ k: 'spring', x: 150, y: GROUND }); await walkTo(124, 60, 'walk'); s.pose = 'happy'; spark(150, GROUND - 10, 'drip', 8); rsfx('splash'); spark(s.x, headY() - 6, 'sparkle', 3); K(`There's a spring here. ${nm} drinks from it and gets 4 energy back.`); await rwait(1300); unprop(sp); return 'spring'; }
   if (n.k === 'chest') { if (once) { K('The chest here is empty now.'); await rwait(900); return; }
-    const c = prop({ k: 'crate', x: 140, y: GROUND }); await walkTo(122, 60, 'walk'); s.pose = 'happy'; spark(140, GROUND - 16, 'sparkle', 5);
+    const c = prop({ k: 'chest', x: 144, y: GROUND }); await walkTo(120, 60, 'walk'); s.pose = 'idle'; await rwait(300); c.open = true; rsfx('creak'); s.pose = 'happy'; spark(144, GROUND - 22, 'sparkle', 6);
     const R = rng(hashStr(reg.n + n.id)), item = n.big ? EX_RARE[Math.floor(R() * EX_RARE.length)] : EX_FINDS[Math.floor(R() * EX_FINDS.length)];
     addItem(item); found.push(`${/^[AEIOU]/.test(item) ? 'an' : 'a'} ${item}`); st.got.push(n.id); K(`${nm} found ${/^[AEIOU]/.test(item) ? 'an' : 'a'} ${item} in an old chest.`); await rwait(1400); unprop(c); return; }
   if (n.k === 'page') { if (once) { await rwait(300); return; }
@@ -206,21 +226,21 @@ async function exNode(reg, n, st, need, nm, K, used, found) {
 /* what each obstacle looks like, getting through or not */
 async function exObstacle(stat, ok) {
   const s = RS;
-  if (stat === 1) { const b = prop({ k: 'boulder', x: 150, y: GROUND, r: 12, rot: 0 }); await walkTo(150 - 14 - RS.P.scale * 4, 50, 'walk'); s.pose = 'effort'; await rwait(700);
+  if (stat === 1) { const b = prop({ k: 'xrock', x: 152, y: GROUND, rot: 0 }); await walkTo(152 - 20 - RS.P.scale * 4, 50, 'walk'); s.pose = 'effort'; await rwait(700);
     if (ok) { for (let i = 0; i < 20; i++) { b.x += 1.2; s.x += 1.2; b.rot += 0.1; if (i % 5 === 0) spark(s.x - 8, GROUND - 1, 'dust'); await rwait(30); } b.vx = 2.5; rsfx('rumble'); s.pose = 'happy'; await rwait(700); }
     else { for (let i = 0; i < 3; i++) { s.bx = 1; await rwait(160); s.bx = 0; await rwait(160); } spark(s.x, headY(), 'sweat', 3); s.pose = 'tired'; await rwait(700); s.dir = -1; await walkTo(70, 60, 'walk'); }
     unprop(b); return; }
-  if (stat === 5) { prop({ k: 'chasm', x: 128, y: GROUND, w: 44 }); await walkTo(118, 60, 'walk'); s.pose = 'crouch'; await rwait(300); s.pose = 'jump'; rsfx('leap');
+  if (stat === 5) { prop({ k: 'chasm', x: 126, y: GROUND, w: 54 }); await walkTo(118, 60, 'walk'); s.pose = 'crouch'; await rwait(300); s.pose = 'jump'; rsfx('leap');
     const x0 = s.x, x1 = ok ? 186 : 140; for (let f = 0; f <= 28; f++) { const q = f / 28; s.x = x0 + (x1 - x0) * q; s.jy = Math.sin(q * Math.PI) * (ok ? 30 : 14); await rwait(20); }
     s.jy = 0; if (ok) { s.pose = 'land'; spark(s.x, GROUND - 1, 'dust', 5); rsfx('thud'); await rwait(500); }
     else { s.pose = 'hurt'; for (let f = 0; f < 14; f++) { s.x -= 2; s.jy = Math.sin(f / 14 * Math.PI) * 10; await rwait(20); } s.jy = 0; spark(s.x, headY(), 'sweat', 2); await rwait(600); }
     return; }
-  if (stat === 3) { const d = prop({ k: 'sealdoor', x: 165, y: GROUND, lit: 0 }); await walkTo(132, 60, 'walk'); s.pose = 'idle'; spark(s.x, headY() - 6, 'q');
+  if (stat === 3) { const d = prop({ k: 'sealdoor', x: 168, y: GROUND, lit: 0, drop: 0 }); await walkTo(132, 60, 'walk'); s.pose = 'idle'; spark(s.x, headY() - 6, 'q');
     for (let i = 1; i <= 3; i++) { await rwait(420); if (!ok && i === 3) { d.lit = 0; s.flash = 2; spark(165, GROUND - 40, 'zap', 3); break; } d.lit = i; rsfx('chip'); }
-    if (ok) { spark(s.x, headY() - 10, 'bulb'); await rwait(400); for (let f = 0; f < 16; f++) { d.y += 4; await rwait(20); } spark(165, GROUND - 4, 'dust', 6); rsfx('rumble'); await walkTo(190, 60, 'walk'); }
+    if (ok) { spark(s.x, headY() - 10, 'bulb'); await rwait(400); for (let f = 0; f < 16; f++) { d.drop += 4; await rwait(20); } spark(165, GROUND - 4, 'dust', 6); rsfx('rumble'); await walkTo(190, 60, 'walk'); }
     else { s.pose = 'sad'; await rwait(800); }
     unprop(d); return; }
-  if (stat === 4) { const b1 = prop({ k: 'bush', x: 150, y: GROUND }), b2 = prop({ k: 'bush', x: 176, y: GROUND }); s.pose = 'idle'; spark(s.x, headY() - 6, 'q'); await rwait(700);
+  if (stat === 4) { const b1 = prop({ k: 'xbush', x: 150, y: GROUND }), b2 = prop({ k: 'xbush', x: 178, y: GROUND }); s.pose = 'idle'; spark(s.x, headY() - 6, 'q'); await rwait(700);
     if (ok) { spark(s.x, headY() - 10, 'bulb'); const gp = prop({ k: 'glowpath', x: 128, y: GROUND - 4, n: 5 }); await rwait(500); b1.shake = b2.shake = 1; await walkTo(196, 50, 'walk'); unprop(gp); }
     else { spark(s.x, headY() - 6, 'q'); await rwait(700); s.pose = 'sad'; await rwait(700); }
     unprop(b1); unprop(b2); return; }
