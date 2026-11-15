@@ -693,6 +693,18 @@ function stoneGlyph(c, sp) {
   else if (sp === 'Thunderbird') { c.fillStyle = a(44, 98, 200, 0.97); c.fillRect(-10, -13, 20, 26); c.strokeStyle = a(242, 206, 50, 0.97); c.lineWidth = 2; c.lineJoin = 'miter';   // a zigzag bolt spreading out both ways from the middle of blue
     for (const d of [-1, 1]) { c.beginPath(); c.moveTo(0, -1); c.lineTo(d * 3, -5); c.lineTo(d * 5, 0); c.lineTo(d * 8, -5); c.lineTo(d * 10, -1); c.stroke(); }
     c.fillStyle = a(242, 206, 50, 0.97); c.beginPath(); c.moveTo(-1.5, 1); c.lineTo(1.5, 1); c.lineTo(0, 8); c.closePath(); c.fill(); }
+  else if (sp === 'Hydra') { c.fillStyle = a(130, 80, 200, 0.97); c.fillRect(-10, -13, 20, 26); c.strokeStyle = a(70, 150, 70, 0.97); c.lineWidth = 2.6; c.lineCap = 'round';   // three green necks rising from one point on violet
+    for (const d of [-1, 0, 1]) { c.beginPath(); c.moveTo(0, 11); c.quadraticCurveTo(d * 9, 2, d * 6, -8); c.stroke(); c.fillStyle = a(70, 150, 70, 0.97); c.beginPath(); c.arc(d * 6, -9, 2.4, 0, 7); c.fill(); } }
+  else if (sp === 'Griffin') { c.fillStyle = a(236, 136, 40, 0.97); c.fillRect(-10, -13, 20, 26); c.fillStyle = a(244, 242, 236, 0.97); c.beginPath(); c.moveTo(-10, -13); c.lineTo(10, -13);   // a white cap with a scalloped edge over orange, and a small yellow beak
+    for (let k = 0; k <= 5; k++) c.lineTo(10 - k * 4, k % 2 ? 0 : 2.5); c.closePath(); c.fill(); c.fillStyle = a(244, 200, 50, 0.97); c.beginPath(); c.moveTo(-2, -5); c.lineTo(2, -5); c.lineTo(0, 0); c.closePath(); c.fill(); }
+  else if (sp === 'Kirin') { c.fillStyle = a(80, 196, 196, 0.97); c.fillRect(-10, -13, 20, 26); c.save(); c.beginPath(); c.rect(-10, -13, 20, 26); c.clip(); c.strokeStyle = a(40, 130, 140, 0.9); c.lineWidth = 1;   // dark scales on teal over three orange flames
+    for (let r = 0; r < 4; r++) for (let k = -2; k <= 2; k++) { c.beginPath(); c.arc(k * 4 + (r % 2) * 2, -10 + r * 3.4, 2, 0.1, Math.PI - 0.1); c.stroke(); } c.restore();
+    c.fillStyle = a(238, 128, 40, 0.97); for (const d of [-1, 0, 1]) { c.beginPath(); c.moveTo(d * 6 - 3, 13); c.quadraticCurveTo(d * 6 - 3, 6, d * 6, 3); c.quadraticCurveTo(d * 6 + 3, 6, d * 6 + 3, 13); c.closePath(); c.fill(); } }
+  else if (sp === 'Salamander') { c.fillStyle = a(28, 26, 30, 0.97); c.fillRect(-10, -13, 20, 26); c.fillStyle = a(238, 128, 40, 0.97);   // bright spots scattered on black, and a small flame
+    for (const [px, py, r] of [[-6, -8, 2], [5, -5, 1.8], [-3, 0, 1.6], [6, 4, 2], [-7, 7, 1.8], [2, 9, 1.6], [-1, -10, 1.4]]) { c.beginPath(); c.arc(px, py, r, 0, 7); c.fill(); }
+    c.fillStyle = a(244, 200, 50, 0.97); c.beginPath(); c.moveTo(6, -12); c.quadraticCurveTo(9, -8, 7, -6); c.quadraticCurveTo(5, -5, 4, -7); c.quadraticCurveTo(4, -9, 6, -12); c.fill(); }
+  else if (sp === 'Bakunawa') { c.fillStyle = a(30, 50, 140, 0.97); c.fillRect(-10, -13, 20, 26); c.fillStyle = a(244, 242, 228, 0.97); c.beginPath(); c.arc(-3, -6, 4, 0, 7); c.fill();   // a pale moon over dark blue, and a teal serpent curving under it
+    c.strokeStyle = a(90, 200, 200, 0.97); c.lineWidth = 2.6; c.lineCap = 'round'; c.beginPath(); c.moveTo(-9, 10); c.bezierCurveTo(-4, 2, 4, 12, 8, 3); c.quadraticCurveTo(9, -2, 4, -3); c.stroke(); }
 }
 function awayProps(c, p, t, front) {
   const x = p.x, y = p.y;
