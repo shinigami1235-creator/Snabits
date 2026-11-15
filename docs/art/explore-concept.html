@@ -1,0 +1,42 @@
+<!doctype html><html><body style="margin:0;background:#f6f3ec"><canvas id="c"></canvas><script>
+/* Concept: the expedition map (15 Nov 2026). Nodes joined by paths across a region, fog over what hasn't been reached,
+   the Snabit's token, and the energy bar its Stamina sets. Obstacles name the stat they need. */
+const cv=document.getElementById('c'), x=cv.getContext('2d'), W=390, H=430, D=3; cv.width=W*D; cv.height=H*D; x.scale(D,D);
+const ink='#5a4128', paper='#efe2c2';
+x.fillStyle='#7a5636'; x.fillRect(0,0,W,H); x.fillStyle=paper; x.beginPath(); x.roundRect(8,8,W-16,H-16,12); x.fill();
+x.fillStyle=ink; x.font='800 17px system-ui'; x.fillText('Granite Steps expedition',22,36); x.font='600 12px system-ui'; x.fillStyle='#8a6a45'; x.fillText('League permit, grade D',22,53);
+// energy
+x.fillStyle=ink; x.font='700 12px system-ui'; x.fillText('Energy',22,78); x.fillStyle='#d9c8a0'; x.beginPath(); x.roundRect(72,68,200,12,6); x.fill();
+x.fillStyle='#6fae4f'; x.beginPath(); x.roundRect(72,68,200*(location.hash==='#later'?7:14)/20,12,6); x.fill(); x.fillStyle=ink; x.fillText(location.hash==='#later'?'7 of 20':'14 of 20',282,78);
+// nodes: [id,x,y,kind,label,state] state: 0 fog, 1 seen, 2 visited
+const N={a:[40,330,'camp','',2],b:[95,300,'path','',2],c:[150,330,'boulder','Power',1],d:[140,250,'chest','',1],e:[205,280,'gap','Speed',0],
+ f:[200,200,'door','Mind',0],g:[260,330,'thorns','Constitution',0],h:[265,230,'eye','Insight',0],i:[320,280,'paw','',0],j:[300,165,'stone','',0],k:[250,140,'page','',0],l:[345,340,'flag','',0],m:[95,190,'spring','',1]};
+if(location.hash==='#later'){ for(const k of 'abceh') N[k][4]=2; for(const k of 'dgifjm') N[k][4]=Math.max(N[k][4],1); }
+const E=[['a','b'],['b','c'],['b','d'],['b','m'],['c','e'],['c','g'],['d','e'],['d','f'],['m','f'],['e','h'],['e','i'],['g','l'],['g','i'],['f','k'],['h','j'],['i','l'],['k','j']];
+x.lineCap='round';
+for(const [p,q] of E){ const A=N[p],B=N[q]; x.strokeStyle=(A[4]===2&&B[4]>=1)?'#8a6a45':'rgba(138,106,69,.45)'; x.lineWidth=3; x.setLineDash(A[4]===2&&B[4]>=1?[]:[4,6]); x.beginPath(); x.moveTo(A[0],A[1]); x.lineTo(B[0],B[1]); x.stroke(); }
+x.setLineDash([]);
+function icon(k,cx,cy){ x.save(); x.translate(cx,cy); x.lineWidth=2;
+  if(k==='camp'){ x.fillStyle='#c8553d'; x.beginPath(); x.moveTo(-9,7); x.lineTo(0,-9); x.lineTo(9,7); x.fill(); }
+  else if(k==='boulder'){ x.fillStyle='#8f8a83'; x.beginPath(); x.arc(0,1,8,0,7); x.fill(); }
+  else if(k==='chest'){ x.fillStyle='#a8692e'; x.fillRect(-8,-5,16,11); x.fillStyle='#f2c14e'; x.fillRect(-2,-1,4,4); }
+  else if(k==='gap'){ x.fillStyle='#2a2420'; x.beginPath(); x.moveTo(-8,-6); x.lineTo(8,-6); x.lineTo(4,8); x.lineTo(-4,8); x.fill(); }
+  else if(k==='door'){ x.fillStyle='#7d776f'; x.fillRect(-7,-9,14,17); x.fillStyle='#e2483f'; x.beginPath(); x.arc(0,-2,3,0,7); x.fill(); }
+  else if(k==='thorns'){ x.strokeStyle='#4e5a2e'; for(const d of [-5,0,5]){ x.beginPath(); x.moveTo(d,8); x.lineTo(d+2,-8); x.stroke(); } }
+  else if(k==='eye'){ x.strokeStyle=ink; x.beginPath(); x.ellipse(0,0,9,5,0,0,7); x.stroke(); x.fillStyle=ink; x.beginPath(); x.arc(0,0,2.5,0,7); x.fill(); }
+  else if(k==='paw'){ x.fillStyle=ink; x.beginPath(); x.ellipse(0,3,5,4,0,0,7); x.fill(); for(const [a,b] of [[-6,-3],[-2,-7],[3,-7],[7,-3]]){ x.beginPath(); x.arc(a,b,2,0,7); x.fill(); } }
+  else if(k==='stone'){ x.fillStyle='#8f8a83'; x.beginPath(); x.moveTo(-7,9); x.lineTo(-7,-5); x.quadraticCurveTo(0,-12,7,-5); x.lineTo(7,9); x.fill(); x.fillStyle='#f2c14e'; x.fillRect(-3,-3,6,7); }
+  else if(k==='page'){ x.fillStyle='#fffaf0'; x.fillRect(-6,-8,12,16); x.strokeStyle='#b49a6e'; x.lineWidth=1; for(let i=0;i<4;i++){ x.beginPath(); x.moveTo(-4,-4+i*3.5); x.lineTo(4,-4+i*3.5); x.stroke(); } }
+  else if(k==='flag'){ x.strokeStyle=ink; x.beginPath(); x.moveTo(-4,9); x.lineTo(-4,-9); x.stroke(); x.fillStyle='#3b6fb8'; x.beginPath(); x.moveTo(-4,-9); x.lineTo(8,-5); x.lineTo(-4,-1); x.fill(); }
+  else if(k==='spring'){ x.fillStyle='#4aa3d8'; x.beginPath(); x.moveTo(0,-9); x.quadraticCurveTo(8,2,0,8); x.quadraticCurveTo(-8,2,0,-9); x.fill(); }
+  x.restore(); }
+for(const id in N){ const [cx,cy,k,lab,st]=N[id];
+  x.fillStyle=st===2?'#fff8e6':'#f8edd2'; x.strokeStyle=st===2?'#8a6a45':'#b79c6e'; x.lineWidth=2; x.beginPath(); x.arc(cx,cy,15,0,7); x.fill(); x.stroke();
+  if(st>=1) icon(k,cx,cy);
+  if(st===1&&lab){ x.fillStyle='#8a5a20'; x.font='700 10px system-ui'; x.textAlign='center'; x.fillText(lab,cx,cy+27); x.textAlign='left'; } }
+// fog over what hasn't been reached: soft paper-coloured clouds
+for(const id in N){ const [cx,cy,,,st]=N[id]; if(st) continue; for(const [dx,dy,r] of [[0,0,24],[-14,6,16],[14,-6,18],[10,10,14]]){ const g=x.createRadialGradient(cx+dx,cy+dy,2,cx+dx,cy+dy,r); g.addColorStop(0,'rgba(226,212,180,.97)'); g.addColorStop(1,'rgba(226,212,180,0)'); x.fillStyle=g; x.beginPath(); x.arc(cx+dx,cy+dy,r,0,7); x.fill(); } }
+// the Snabit's token at b
+x.fillStyle='#e9852e'; x.strokeStyle='#fff'; x.lineWidth=3; x.beginPath(); x.arc(...(location.hash==='#later'?[265,230]:[95,300]),9,0,7); x.fill(); x.stroke();
+x.fillStyle=ink; x.font='600 11px system-ui'; x.fillText('Tap a lit circle next to it to move there. Each step costs 1 energy.',22,H-28);
+</script></body></html>

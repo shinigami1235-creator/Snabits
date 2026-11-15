@@ -642,6 +642,22 @@ function awayProps(c, p, t, front) {
   switch (p.k) {
     case 'npc': if (front) return; npcFull(c, p.who, x, y, npcPx(p.who), p.face || 'happy', p.pose || 'stand', t, !!p.flip); return;
     case 'tent': if (front) return; tentProp(c, x, y); return;
+    // exploration finds and obstacles (concept 15 Nov 2026): a Pattern Stone, a sealed rune door, a chasm, a thorn wall, a journal page
+    case 'pstone': if (front) return; { const gl = 0.5 + 0.5 * Math.sin(t / 400); if (p.glow) { const g = c.createRadialGradient(x, y - 26, 4, x, y - 26, 40); g.addColorStop(0, `rgba(255,236,150,${0.35 * gl})`); g.addColorStop(1, 'rgba(255,236,150,0)'); c.fillStyle = g; c.fillRect(x - 40, y - 66, 80, 80); }
+      SC.depth(c, () => { c.beginPath(); c.moveTo(x - 15, y); c.lineTo(x - 15, y - 38); c.quadraticCurveTo(x, y - 52, x + 15, y - 38); c.lineTo(x + 15, y); c.closePath(); }, '#8f8a83', 1.5, 0.3);
+      c.save(); c.beginPath(); c.rect(x - 10, y - 38, 20, 26); c.clip(); const P = p.pat || [[214, 40, 52], [245, 245, 245]];   // the pattern painted on it, faded
+      for (let i = 0; i < 7; i++) { c.fillStyle = `rgba(${P[i % 2]},.75)`; c.fillRect(x - 10, y - 38 + i * 26 / 7, 20, 26 / 7 + 0.5); } if (P[2]) { c.fillStyle = `rgba(${P[2]},.85)`; c.fillRect(x - 10, y - 38, 9, 11); } c.restore();
+      c.strokeStyle = 'rgba(60,55,50,.55)'; c.lineWidth = 1.2; c.strokeRect(x - 10, y - 38, 20, 26); } return;
+    case 'sealdoor': if (front) return; SC.depth(c, () => { c.beginPath(); c.roundRect(x - 22, y - 60, 44, 60, 3); }, '#7d776f', 1.5, 0.3);
+      c.strokeStyle = 'rgba(50,45,40,.5)'; c.lineWidth = 1; c.beginPath(); c.moveTo(x, y - 58); c.lineTo(x, y); c.stroke();
+      [['#e2483f', 'tri', -11, -42], ['#3b6fb8', 'sq', 11, -42], ['#f2c14e', 'circ', 0, -24]].forEach(([col, sh, dx, dy], i) => { const on = (p.lit || 0) > i; c.fillStyle = on ? col : 'rgba(40,36,32,.45)'; c.beginPath();
+        if (sh === 'tri') { c.moveTo(x + dx, y + dy - 6); c.lineTo(x + dx + 6, y + dy + 5); c.lineTo(x + dx - 6, y + dy + 5); } else if (sh === 'sq') c.rect(x + dx - 5, y + dy - 5, 10, 10); else c.arc(x + dx, y + dy, 6, 0, 7); c.fill(); }); return;
+    case 'chasm': if (front) return; c.fillStyle = '#2a2420'; c.beginPath(); c.moveTo(x, y - 1); c.lineTo(x + (p.w || 40), y - 1); c.lineTo(x + (p.w || 40) - 6, y + 60); c.lineTo(x + 6, y + 60); c.closePath(); c.fill();
+      c.fillStyle = 'rgba(255,255,255,.12)'; c.fillRect(x, y - 1, p.w || 40, 2); return;
+    case 'thorns': if (front) return; for (let i = 0; i < 6; i++) { const tx = x + i * 7 - 18, h = 18 + (i * 7) % 10; c.strokeStyle = '#4e5a2e'; c.lineWidth = 2.4; c.lineCap = 'round'; c.beginPath(); c.moveTo(tx, y);
+        c.quadraticCurveTo(tx + 6, y - h / 2, tx + (i % 2 ? 4 : -4), y - h); c.stroke(); c.fillStyle = '#8a3b6a'; c.beginPath(); c.arc(tx + 3, y - h * 0.6, 1.6, 0, 7); c.fill(); } return;
+    case 'page': if (!front) return; { const fl = Math.sin(t / 200) * 0.2; c.save(); c.translate(x, y); c.rotate(fl); c.fillStyle = '#f2ead6'; c.fillRect(-7, -9, 14, 18); c.strokeStyle = 'rgba(120,100,70,.6)'; c.lineWidth = 0.8;
+      for (let i = 0; i < 4; i++) { c.beginPath(); c.moveTo(-5, -5 + i * 4); c.lineTo(5, -5 + i * 4); c.stroke(); } c.restore(); } return;
     case 'teacher': if (front) return; if (typeof teacherProp === 'function') teacherProp(c, p, t); return;
     case 'faller': if (!front) return; if (typeof fallerProp === 'function') fallerProp(c, p, t); return;
     case 'hole': if (front) return; SC.depth(c, () => { c.beginPath(); c.ellipse(x, y - 2, 12, 3.6, 0, 0, 7); }, p.col || '#2f6f9a', 0.8, 0.3);
