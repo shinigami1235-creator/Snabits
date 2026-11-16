@@ -202,11 +202,11 @@ const SIG_SKILLS={
   "Crown Spin":{el:null,kind:"Strike",cost:3,power:24,hits:3,acc:95},
   "Pay Day":{el:null,kind:"Cast",cost:3,power:24,hits:3,acc:95},
   "Rabbit Out":{el:null,kind:"Cast",cost:4,power:60,acc:95,status:["Daze",35]},
-  "Suction":{el:null,kind:"Cast",cost:3,power:45,acc:95,lower:{spd:1},lowerChance:40},
-  "Photo Flash":{el:null,kind:"Cast",cost:3,power:35,acc:100,status:["Blind",40]},
-  "Around the World":{el:null,kind:"Strike",cost:3,power:22,hits:3,acc:95},
-  "Eruption":{el:null,kind:"Cast",cost:4,power:55,acc:90,status:["Burn",35]},
-  "Pogo Stomp":{el:null,kind:"Strike",cost:4,power:75,acc:90},
+  "Suction":{el:null,kind:"Cast",cost:4,power:60,acc:95,lower:{spd:1},lowerChance:40},
+  "Photo Flash":{el:null,kind:"Cast",cost:4,power:60,acc:100,status:["Blind",40]},
+  "Around the World":{el:null,kind:"Strike",cost:3,power:24,hits:3,acc:95},
+  "Eruption":{el:null,kind:"Cast",cost:4,power:65,acc:90,status:["Burn",35]},
+  "Pogo Stomp":{el:null,kind:"Strike",cost:4,power:80,acc:90},
   "Avalanche":{el:null,kind:"Strike",cost:5,power:90,acc:85,lower:{spd:1},lowerChance:40},
 };
 /* Fizz's Potion Toss carries a status from its element, the way Skit's webs do */
