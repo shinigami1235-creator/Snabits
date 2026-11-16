@@ -749,8 +749,8 @@ function horrorGlyph(c, sp) {
   else if (sp === 'Ghoul') { bg('brown'); f('red'); c.fillRect(-10, -13, 20, 10);   // a silver bone in brown earth under a red sky
     st('silver', 3); c.beginPath(); c.moveTo(-5, 6); c.lineTo(5, -2); c.stroke(); f('silver'); for (const [x, y] of [[-5, 6], [5, -2]]) { disc(x - 1.3, y - 1.1, 2); disc(x + 1.3, y + 1.1, 2); }
     f('red'); disc(-4, 10.5, 1.4); disc(4, 9, 1); }
-  else if (sp === 'Gug') { bg('brown'); f('white'); oval(0, 0, 6.2, 11); f('pink'); oval(0, 0, 3.9, 9);   // one tall mouth, white teeth round a pink throat
-    f('white'); for (let k = -3; k <= 3; k++) { c.beginPath(); c.moveTo(-3.4, k * 2.3 - 0.8); c.lineTo(-1.9, k * 2.3); c.lineTo(-3.4, k * 2.3 + 0.8); c.fill(); c.beginPath(); c.moveTo(3.4, k * 2.3 - 0.8); c.lineTo(1.9, k * 2.3); c.lineTo(3.4, k * 2.3 + 0.8); c.fill(); } }
+  else if (sp === 'Gug') { bg('brown'); f('pink'); c.beginPath(); c.moveTo(-4.4, 12); c.lineTo(-4.4, -5); c.arc(0, -5, 4.4, Math.PI, 0); c.lineTo(4.4, 12); c.closePath(); c.fill();   // the Sealed Gate: a pink door in brown rock, barred with white
+    st('white', 1.6); c.beginPath(); c.moveTo(-5.2, 12); c.lineTo(-5.2, -5); c.arc(0, -5, 5.2, Math.PI, 0); c.lineTo(5.2, 12); c.stroke(); f('white'); for (const y of [-3.2, 2.2, 7.6]) c.fillRect(-5.8, y, 11.6, 2.8); for (const y of [-1.5, 3.9, 9.3]) { f('brown'); disc(-3.5, y, 0.6); disc(3.5, y, 0.6); } f('white'); disc(0, -7, 1.6); }
   else if (sp === 'Yog') { bg('violet'); for (const [x, y, r, n] of [[-3.5, -5, 4.5, 'cyan'], [3.5, -1, 4.1, 'pink'], [-2.5, 3.5, 3.9, 'pink'], [3.5, 7.5, 3.7, 'cyan'], [-5.5, 10.5, 2, 'cyan'], [6, -9, 2, 'pink']]) { f(n); disc(x, y, r); }   // globes on violet
     st('white', 0.6); c.beginPath(); c.ellipse(0, 0, 9, 3, -0.6, 0, 7); c.stroke(); }
   else if (sp === 'Shub') { bg('green'); st('brown', 3.2); c.beginPath(); c.arc(0, -1, 6, 0, 7); c.stroke();   // a ring of brown trees with black kids round it

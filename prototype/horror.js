@@ -203,7 +203,7 @@ const HORROR_SECRET = {
   Migo: ["Its mine is in the Rift's Outer Ring.", 'A silver jar under pink lights on brown rock, late, when the hills are dark.'],
   Nightgaunt: ["Its cliffs are in the Rift's Outer Ring.", 'Black wings across a white moon on violet, in the witching hour.'],
   Ghoul: ["Its burrows are in the Rift's Outer Ring.", 'A grey bone in brown earth under a red sky, near midnight.'],
-  Gug: ["Its gate is in the Rift's Middle Ring.", 'A tall white mouth in brown rock, in the dead of night.'],
+  Gug: ["Its gate is in the Rift's Middle Ring.", 'A pink door barred in white, set in brown rock, in the dead of night.'],
   Yog: ['Its gate stands at the heart of the Rift.', 'Teal and pink globes on violet, between the last bell and the first.'],
   Shub: ["Its grove is in the Rift's Outer Ring.", 'Black kids round a brown ring on green, when the forest is asleep.'] };
 function horrorSecretsHtml(S) {
