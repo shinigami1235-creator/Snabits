@@ -1059,18 +1059,18 @@ ANIM.capewrap={C:780,D:1560,contact:false,marks:true,
     atImpact(t,780,0.6,0.15); }};
 if(typeof KSND!=="undefined") KSND.capewrap=(d,t)=>{ for(let i=0;i<6;i++) dNoise(d,t+0.02+i*0.035,0.03,0.06,'bandpass',3000+i*200,3); dNoise(d,t+0.46,0.2,0.1,'bandpass',600,0.6); dNoise(d,t+0.64,0.14,0.14,'bandpass',500,0.8); dKick(d,t+0.78,0.8); dNoise(d,t+0.78,0.3,0.25,'lowpass',500); for(let i=0;i<5;i++) dNoise(d,t+1.16+i*0.04,0.03,0.05,'bandpass',3200,3); };
 /* Gid (17 Nov 2026): the cape hangs vertical, shoulders to floor with the bat-wing hem at the bottom, and closes round the target slowly, a wrap rather than a slap */
-ANIM.capewrap={C:1100,D:1900,contact:false,marks:true,
+ANIM.capewrap={C:1800,D:2600,contact:false,marks:true,behind:true,
   atk:(t,o)=>{ if(t<220){ const k=eo(t/220); return {alpha:1-k,sy:1-0.3*k,pose:"cast"}; }
-    if(t<1480){ const k=t<380?eo((t-220)/160):1; return {f:1.8,sx:-1,alpha:k,pose:atPose(t<640?"cast":"push",{noCape:t>=440?1:0})}; }
-    if(t<1620){ const k=eo((t-1480)/140); return {f:1.8,sx:-1,alpha:1-k,pose:"cast"}; }
-    const k=eo((t-1620)/260); return {f:0,alpha:k,pose:"idle"}; },
-  def(t){ if(t<1100||t>1550) return null; const sq=t<1440?0.1:0; return {sx:1-sq,sy:1+sq*0.25,off:[Math.sin(t/16)*1.5,0],pose:"hurt",flash:t<1160?3:0}; },
+    if(t<2180){ const k=t<380?eo((t-220)/160):1; return {f:1.8,sx:-1,alpha:k,pose:atPose(t<640?"cast":"push",{noCape:t>=440?1:0})}; }
+    if(t<2320){ const k=eo((t-2180)/140); return {f:1.8,sx:-1,alpha:1-k,pose:"cast"}; }
+    const k=eo((t-2320)/260); return {f:0,alpha:k,pose:"idle"}; },
+  def(t){ if(t<760||t>2250) return null; const pull=t<1800?eio((t-760)/1040):t<2060?1:1-eio((t-2060)/190), sq=t>=1800&&t<2060?0.1:0; return {sx:1-sq,sy:1+sq*0.25,off:[22*pull+(t>=1800&&t<2060?Math.sin(t/16)*1.5:0),0],rot:0.12*pull,pose:"hurt",flash:t>=1800&&t<1860?3:0}; },   // drawn in toward Vampire as the cape closes
   fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, d=atDir(x);
-    if(t<420||(t>1440&&t<1900)){ const k=t<420?t/420:(t-1440)/460; for(let i=0;i<7;i++){ const q=((k*1.3)+i/7)%1, px=s.x+(i-3)*R*0.2, py=s.y-s.r*(0.4+q*1.2)+Math.sin(t/60+i)*6;
+    if(t<420||(t>2140&&t<2600)){ const k=t<420?t/420:(t-2140)/460; for(let i=0;i<7;i++){ const q=((k*1.3)+i/7)%1, px=s.x+(i-3)*R*0.2, py=s.y-s.r*(0.4+q*1.2)+Math.sin(t/60+i)*6;
         c.fillStyle=`rgba(40,20,50,${0.85*(1-q)})`; c.beginPath(); c.moveTo(px,py); c.quadraticCurveTo(px-8,py-7,px-14,py-1); c.quadraticCurveTo(px-8,py-2,px,py+3); c.quadraticCurveTo(px+8,py-2,px+14,py-1); c.quadraticCurveTo(px+8,py-7,px,py); c.fill(); } }
-    if(t<440||t>1480) return;
+    if(t<440||t>2180) return;
     const parts=x.parts||[120,40,140], outer=parts.map(v=>Math.max(0,v*0.6)), red=[184,36,58], dt=Math.sign(tg.x-s.x)||-d;
-    const lift=t<640?eo((t-440)/200):1, wrap=t<640?0:t<1100?eio((t-640)/460):t<1360?1:1-eio((t-1360)/120);   // a slow close
+    const lift=t<640?eo((t-440)/200):1, wrap=t<640?0:t<1800?eio((t-640)/1160):t<2060?1:1-eio((t-2060)/120);   // a slow one-armed shoulder hug, about 1.2 s   // a slow close
     const top=s.y-s.r*0.6-R*0.25*lift, floor=Math.max(s.foot,tg.foot)+2, x0=s.x, far=tg.x+dt*R*1.25, xe=x0+(far-x0)*wrap+dt*s.r*0.5*lift*(1-wrap), bulge=R*0.55*wrap;
     const topY=u=>top+(tg.y-R*1.35-top)*Math.sin(Math.min(1,u)*Math.PI/2)*wrap;   // the top edge drops over the target's head as it wraps
     const shape=()=>{ c.beginPath(); c.moveTo(x0,top); const n=16; for(let i=1;i<=n;i++){ const u=i/n; c.lineTo(x0+(xe-x0)*u,topY(u)); }
@@ -1080,5 +1080,6 @@ ANIM.capewrap={C:1100,D:1900,contact:false,marks:true,
     shape(); c.fillStyle=atRgba(outer,0.97); c.fill();
     c.save(); c.clip(); c.strokeStyle=atRgba(red,0.95); c.lineWidth=Math.max(4,R*0.14); shape(); c.stroke();   // red lining at the edges
       c.strokeStyle="rgba(0,0,0,.18)"; c.lineWidth=1.5; for(let i=1;i<5;i++){ const xx=x0+(xe-x0)*i/5; c.beginPath(); c.moveTo(xx,topY(i/5)+4); c.lineTo(xx+dt*bulge*0.3,floor-4); c.stroke(); } c.restore();   // vertical folds
-    if(t>=1100&&t<1400){ const k=(t-1100)/300; atPow(c,{x:tg.x,y:tg.y-R*0.3},Math.min(1,k*1.5),R/20); }
-    atImpact(t,1100,0.55,0.12); }};
+    if(t>=1800&&t<2100){ const k=(t-1800)/300; atPow(c,{x:tg.x,y:tg.y-R*0.3},Math.min(1,k*1.5),R/20); }
+    atImpact(t,1800,0.55,0.12); }};
+if(typeof KSND!=="undefined") KSND.capewrap=(d,t)=>{ for(let i=0;i<6;i++) dNoise(d,t+0.02+i*0.035,0.03,0.06,'bandpass',3000+i*200,3); dNoise(d,t+0.64,1.1,0.06,'bandpass',500,0.5); dKick(d,t+1.8,0.8); dNoise(d,t+1.8,0.3,0.25,'lowpass',500); for(let i=0;i<5;i++) dNoise(d,t+2.16+i*0.04,0.03,0.05,'bandpass',3200,3); };

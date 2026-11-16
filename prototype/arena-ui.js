@@ -674,7 +674,8 @@ function atDraw(now,dte){
   }
   const placed=[null,null];
   const lunging=i=>{ const A=AT.side[i].anim; return A&&A.contact&&te>=A.t0; };
-  (lunging(0)?[1,0]:[0,1]).forEach(i=>{ const S=AT.side[i], O=AT.side[1-i], sp=S.spec; if(!sp) return;
+  const behindFoe=i=>{ const A=AT.side[i].anim, K=A&&ANIM[A.kind]; return !!(K&&K.behind&&te>=A.t0&&(te-A.t0)*A.rate<K.D); };   // a move that puts the attacker behind its target draws it first
+  (behindFoe(0)?[0,1]:behindFoe(1)?[1,0]:lunging(0)?[1,0]:[0,1]).forEach(i=>{ const S=AT.side[i], O=AT.side[1-i], sp=S.spec; if(!sp) return;
     S.dir=O.dx>S.dx?1:-1; S.foe=O;
     const h=CHIBI.height(sp.stage,sp.marks,sp.family), u=Math.min(0.5,96/(h+20))*scale;
     // walking comes from the engine, so the pose doesn't flicker between walk and idle on fast screens
