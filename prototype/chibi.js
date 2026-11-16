@@ -3300,7 +3300,7 @@ x.feet.push([g.cx, 182, 10]); },
         c.moveTo(g.cx + tw / 2, g.top + hh * 0.8); c.roundRect(g.cx - tw / 2, g.top + hh * 0.8, tw, g.bot - g.top - hh * 0.8, [tw * 0.3, tw * 0.3, tw * 0.46, tw * 0.46]); },
       arms: 'stub', armW: st => by(st, 7, 8, 9), handR: st => by(st, 5, 6, 7), shoulderY: 0.7, shoulderIn: 0.1, armK: 1.35,
       hand(g, x, side) { const a = x.P.arm[side < 0 ? 0 : 1], k = this.armK, sx = g.cx + side * (g.bw / 2 - 4 - g.bw * this.shoulderIn), sy = g.top + g.bh * this.shoulderY; return [sx + side * a[2] * k, sy + a[3] * k]; },
-      wing(c, sx, sy, sd, span, h, ribs, col, t) { const fl = Math.sin(t / 320) * 0.1; c.save(); c.translate(sx, sy); c.scale(sd, 1); c.rotate(0.12 - fl);   // a bat wing: ribs fanning out with the skin scalloped between them
+      wing(c, sx, sy, sd, span, h, ribs, col, t) { const ph = (t % 3400) / 700, flap = ph < 1 ? Math.sin(ph * Math.PI * 2) * 0.5 : 0, fl = Math.sin(t / 320) * 0.1 + flap; c.save(); c.translate(sx, sy); c.scale(sd, 1); c.rotate(0.12 - fl);   // a slow sway and a big flap every few seconds   // a bat wing: ribs fanning out with the skin scalloped between them
         const tips = []; for (let k = 0; k < ribs; k++) { const f = ribs > 1 ? k / (ribs - 1) : 0; tips.push([span * (0.45 + f * 0.55), -h * (1 - f * 1.05)]); }
         c.fillStyle = rgb(col); c.beginPath(); c.moveTo(0, 0); c.lineTo(tips[0][0], tips[0][1]);
         for (let k = 1; k < ribs; k++) { const a = tips[k - 1], b = tips[k]; c.quadraticCurveTo((a[0] + b[0]) * 0.42, (a[1] + b[1]) * 0.42, b[0], b[1]); }
@@ -3317,7 +3317,7 @@ x.feet.push([g.cx, 182, 10]); },
         for (const [fx, fy, r] of [[0.3, 0.14, 5], [0.62, 0.1, 4], [0.8, 0.26, 3], [0.18, 0.32, 3]].slice(0, by(S, 2, 3, 4))) { c.beginPath(); c.arc(g.left + g.bw * fx, g.top + hh * fy, r * by(S, 1, 1.15, 1.3), 0, 7); c.fill(); }
         c.fillStyle = rgb(lt(x.body, 0.2)); c.beginPath(); c.ellipse(g.cx, g.bot - (g.bot - g.top - hh) * 0.42, g.bw * 0.24, (g.bot - g.top - hh) * 0.36, 0, 0, 7); c.fill(); },   // a round belly
       front(c, g, x) { const S = g.stage, hh = this.hh(g), n = by(S, 3, 4, 5), y0 = g.top + hh * 0.72, len = by(S, 18, 26, 34), span = g.bw * by(S, 0.42, 0.52, 0.56), col = dk(x.body, 0.18);
-        if (!x.back) for (let i = 0; i < n; i++) { const f = i / (n - 1) - 0.5, tx = g.cx + f * span, sw = Math.sin(x.t / 300 + i * 1.7) * 4, cu = f < 0 ? -1 : 1, l = len * (1 - Math.abs(f) * 0.45);   // the beard of feelers
+        if (!x.back) for (let i = 0; i < n; i++) { const f = i / (n - 1) - 0.5, tx = g.cx + f * span, sw = Math.sin(x.t / 260 + i * 1.7) * 7, cu = f < 0 ? -1 : 1, l = len * (1 - Math.abs(f) * 0.45);   // the beard of feelers
           const q = [tx, y0, tx + f * 12 + sw * 0.5, y0 + l * 0.6, tx + f * 22 + sw + cu * 4, y0 + l]; limb(c, q, by(S, 7, 9, 10) - Math.abs(f) * 2, col, x.L.armL, x.t);
           c.strokeStyle = rgb(col); c.lineWidth = by(S, 4, 4.5, 5); c.lineCap = 'round'; c.beginPath(); c.arc(q[4] + cu * 3, q[5], 3.5, cu > 0 ? Math.PI : 0, cu > 0 ? Math.PI * 2.2 : -Math.PI * 1.2, cu < 0); c.stroke();
           if (S !== 'Bit') { c.fillStyle = rgb(lt(x.body, 0.35)); for (const k of [0.35, 0.65]) { const p = qpt(q, k); c.beginPath(); c.arc(p[0], p[1], 1.5, 0, 7); c.fill(); } } }   // suckers
@@ -3450,7 +3450,7 @@ x.feet.push([g.cx, 182, 10]); },
       head: g => [g.cx, g.top + 2, g.bw * 0.44],
       face(c, g, x, look) { const S = g.stage, ey = by(S, 0.36, 0.2, 0.18), fi = faceTwo(c, g, x, look, { ey, ex: 0.21, my: ey + by(S, 0.24, 0.15, 0.13), s: by(S, 0.8, 0.84, 0.9) });
         if (x.back) return fi; c.fillStyle = rgb(dk(x.body, 0.06)); for (const sd of [-1, 1]) { c.beginPath(); c.arc(g.cx + sd * fi.ex, fi.ey - 2, 12 * fi.s, Math.PI * 1.05, Math.PI * 1.95); c.fill(); }   // bulging eye ridges
-        if (S !== 'Bit') FAM.Shoggoth.mouth(c, g.cx, fi.my - 2, g.bw * 0.52, by(S, 0, 5, 6) * (x.open ? 1.4 : 1), by(S, 0, 7, 9), '#d06070'); return fi; }   // a wide fish mouth full of little teeth
+        if (S !== 'Bit') FAM.Shoggoth.mouth(c, g.cx, fi.my - 2, g.bw * 0.52, by(S, 0, 5, 6) * (x.open ? 1.4 : 1) * (1 + 0.7 * Math.max(0, Math.sin(x.t / 220)) * ((x.t % 2600) < 900 ? 1 : 0)), by(S, 0, 7, 9), '#d06070'); return fi; }   // a wide fish mouth full of little teeth
     },
     /* Migo: a fungus-insect from the stars. A big round head with huge eyes and two short feelers on a small ridged body, thin jointed legs and veined insect wings. Two legs and one pair of wings; four legs, crab pincers and longer wings from Byte; six legs, two pairs of wings, a glowing head and a brain in a jar at Mega */
     Migo: {
@@ -3492,7 +3492,7 @@ x.feet.push([g.cx, 182, 10]); },
         c.moveTo(g.cx + tw / 2, g.top + hh * 0.85); c.roundRect(g.cx - tw / 2, g.top + hh * 0.85, tw, g.bot - g.top - hh * 0.85, [tw * 0.3, tw * 0.3, tw * 0.5, tw * 0.5]); },
       arms: 'stub', armW: st => by(st, 4, 5, 5), handR: st => by(st, 3.5, 4, 4.5), armK: 1.5,
       shoulder(g) { return { y: g.top + this.hh(g) + 6, dx: g.bw * 0.24 }; },
-      wing(c, sx, sy, sd, span, h, ribs, col, t) { const fl = Math.sin(t / 260) * 0.1; c.save(); c.translate(sx, sy); c.scale(sd, 1); c.rotate(0.05 - fl);   // a bat wing raised over its head
+      wing(c, sx, sy, sd, span, h, ribs, col, t) { const ph = ((t + 1500) % 3000) / 600, flap = ph < 1 ? Math.sin(ph * Math.PI * 2) * 0.45 : 0, fl = Math.sin(t / 260) * 0.1 + flap; c.save(); c.translate(sx, sy); c.scale(sd, 1); c.rotate(0.05 - fl);   // a bat wing raised over its head, flapping now and then
         const tips = []; for (let k = 0; k < ribs; k++) { const f = ribs > 1 ? k / (ribs - 1) : 0; tips.push([span * (0.35 + f * 0.65), -h * (1 - f * 0.95)]); }
         c.fillStyle = rgb(col); c.beginPath(); c.moveTo(0, 0); c.lineTo(tips[0][0], tips[0][1]);
         for (let k = 1; k < ribs; k++) { const a = tips[k - 1], b = tips[k]; c.quadraticCurveTo((a[0] + b[0]) * 0.42, (a[1] + b[1]) * 0.42, b[0], b[1]); }
@@ -3540,7 +3540,7 @@ x.feet.push([g.cx, 182, 10]); },
         if (S !== 'Bit') { c.fillStyle = rgb(x.parts); c.beginPath(); c.moveTo(g.cx - g.bw * 0.3, g.bot - 10); c.lineTo(g.cx + g.bw * 0.3, g.bot - 10); for (let k = 0; k <= 6; k++) c.lineTo(g.cx + g.bw * (0.3 - k * 0.1), g.bot + (k % 2 ? 6 : 0)); c.closePath(); c.fill(); } },   // a tattered loincloth
       front(c, g, x) { const S = g.stage; if (x.back) return;
         for (const sd of [-1, 1]) { const [hx, hy] = this.hand(g, x, sd); c.fillStyle = rgb(lt(x.acc, 0.4)); for (const k of [-1, 0, 1]) { c.beginPath(); c.moveTo(hx + k * 4 - 1.8, hy + 3); c.lineTo(hx + k * 5, hy + 9); c.lineTo(hx + k * 4 + 1.8, hy + 3); c.closePath(); c.fill(); } }   // claws
-        if (S === 'Mega') { const [hx, hy] = this.hand(g, x, 1); c.save(); c.translate(hx, hy); c.rotate(-0.6); c.fillStyle = '#efe6d2'; c.fillRect(-2, -18, 4, 22); for (const y of [-18, 4]) for (const sd of [-1, 1]) { c.beginPath(); c.arc(sd * 3, y, 3, 0, 7); c.fill(); } c.restore(); } },   // a bone
+        if (S === 'Mega') { const [hx, hy] = this.hand(g, x, 1); c.save(); c.translate(hx, hy); c.rotate(-0.6 + Math.sin(x.t / 280) * 0.25); c.fillStyle = '#efe6d2'; c.fillRect(-2, -18, 4, 22); for (const y of [-18, 4]) for (const sd of [-1, 1]) { c.beginPath(); c.arc(sd * 3, y, 3, 0, 7); c.fill(); } c.restore(); } },   // a bone
       hl: g => [g.left + g.bw * 0.12, g.top + g.bh * 0.3, g.left + g.bw * 0.16, g.top + g.bh * 0.12, g.left + g.bw * 0.36, g.top + g.bh * 0.03],
       head: g => [g.cx, g.top + 2, g.bw * 0.44],
       face(c, g, x, look) { const S = g.stage, hh = FAM.Ghoul.hh(g), fi = faceTwo(c, g, x, look, { ey: hh * 0.4 / g.bh, ex: 0.18, my: hh * 0.74 / g.bh, s: by(S, 0.72, 0.76, 0.8) }), s = fi.s;
@@ -3572,7 +3572,7 @@ x.feet.push([g.cx, 182, 10]); },
       hl: g => [g.left + g.bw * 0.12, g.top + g.bh * 0.56, g.left + g.bw * 0.16, g.top + g.bh * 0.3, g.left + g.bw * 0.34, g.top + g.bh * 0.08],
       head: g => [g.cx, g.top + 2, g.bw * 0.4],
       face(c, g, x, look) { const S = g.stage, fi = faceTwo(c, g, x, look, { ey: 0.24, ex: 0.24, my: 0.5, s: by(S, 0.74, 0.8, 0.86) });
-        if (x.back) return fi; const mh = g.bh * by(S, 0.3, 0.46, 0.6) * (x.open ? 1.08 : 1), mw = by(S, 9, 13, 18) * (x.open ? 1.3 : 1), my0 = g.top + g.bh * by(S, 0.4, 0.3, 0.2);   // the mouth runs top to bottom
+        if (x.back) return fi; const chew = Math.max(0, Math.sin(x.t / 240)), mh = g.bh * by(S, 0.3, 0.46, 0.6) * (x.open ? 1.08 : 1) * (1 + chew * 0.08), mw = by(S, 9, 13, 18) * (x.open ? 1.3 : 1) * (1 + chew * 0.5), my0 = g.top + g.bh * by(S, 0.4, 0.3, 0.2);   // the mouth runs top to bottom
         c.fillStyle = '#3a1f2a'; c.beginPath(); c.moveTo(g.cx, my0); c.quadraticCurveTo(g.cx + mw, my0 + mh / 2, g.cx, my0 + mh); c.quadraticCurveTo(g.cx - mw, my0 + mh / 2, g.cx, my0); c.fill();
         if (S !== 'Bit') { c.fillStyle = '#f2ece0'; const n = by(S, 0, 4, 6); for (let i = 0; i < n; i++) { const f = (i + 0.5) / n, y = my0 + f * mh, w = Math.sin(f * Math.PI) * mw * 0.5; for (const sd of [-1, 1]) { c.beginPath(); c.moveTo(g.cx + sd * w, y - 2.5); c.lineTo(g.cx + sd * (w - 4), y); c.lineTo(g.cx + sd * w, y + 2.5); c.closePath(); c.fill(); } } }   // teeth down both sides
         if (S === 'Mega') { c.fillStyle = '#d06070'; c.beginPath(); c.ellipse(g.cx, my0 + mh * 0.72, mw * 0.32, mh * 0.16, 0, 0, 7); c.fill(); }   // a fat tongue
@@ -3631,7 +3631,7 @@ x.feet.push([g.cx, 182, 10]); },
           c.strokeStyle = rgba(dk(x.parts, 0.35), 0.8); c.lineWidth = 1.4; for (let k = 1; k <= 4; k++) { const p = qpt([hx, hy + 4, hx + sd * hr * 0.4, hy - hr * 1.1, hx + sd * hr * 1.3, hy - hr * 0.5], k / 5); c.beginPath(); c.moveTo(p[0] - 3, p[1] - 1); c.lineTo(p[0] + 3, p[1] + 1); c.stroke(); } } },   // ridges on the horns
       inside(c, g, x) { const S = g.stage; c.strokeStyle = rgba(dk(x.body, 0.3), 0.55); c.lineWidth = 2; c.lineCap = 'round';   // shaggy locks of fur
         for (let r = 0; r < 3; r++) for (let k = 0; k < 6; k++) { const px = g.left + g.bw * (0.12 + k * 0.15 + (r % 2) * 0.07), py = g.top + g.bh * (0.5 + r * 0.14); c.beginPath(); c.moveTo(px, py); c.quadraticCurveTo(px + 3, py + 5, px - 1, py + 9); c.stroke(); }
-        if (x.back || S !== 'Mega') return; for (const sd of [-1, 1]) { const px = g.cx + sd * g.bw * 0.34, py = g.top + g.bh * 0.72, w = 12, o = 0.6 + 0.4 * Math.sin(x.t / 450 + sd), h = w * 0.36 * o;   // a drooling mouth on each side
+        if (x.back || S !== 'Mega') return; for (const sd of [-1, 1]) { const px = g.cx + sd * g.bw * 0.34, py = g.top + g.bh * 0.72, w = 13, o = 0.45 + 0.55 * Math.abs(Math.sin(x.t / 260 + sd)), h = w * 0.4 * o;   // a drooling mouth on each side
           c.fillStyle = '#5a1f2e'; c.beginPath(); c.ellipse(px, py, w / 2, h, 0, 0, 7); c.fill(); c.fillStyle = '#f2ece0'; for (let i = 0; i < 3; i++) { const tx = px - w * 0.25 + i * w * 0.25; c.beginPath(); c.moveTo(tx - 2, py - h); c.lineTo(tx, py - h + 4); c.lineTo(tx + 2, py - h); c.closePath(); c.fill(); }
           c.strokeStyle = 'rgba(150,210,110,.85)'; c.lineWidth = 2; c.beginPath(); c.moveTo(px + 2, py + h); c.lineTo(px + 3, py + h + 6 + 4 * o); c.stroke(); } },
       front(c, g, x) { this.leg(c, g, x, g.cx - g.bw * 0.26, 0, false); this.leg(c, g, x, g.cx + g.bw * 0.26, 2, false); },
