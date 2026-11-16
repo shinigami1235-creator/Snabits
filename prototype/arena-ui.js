@@ -702,6 +702,8 @@ function atDraw(now,dte){
     S.moving=moving;
     c.fillStyle="rgba(0,0,0,.2)"; c.beginPath(); c.ellipse(x,floor+2,24*scale*(st.alpha),6*scale,0,0,7); c.fill();
     atFxBack(c,i,{i,x,foot:floor,by:y,H:h*u,r:CHIBI.width(sp.stage,sp.family)*u*0.55},te);
+    // the part of a move that passes behind this Snabit (a cape reaching round its back) is drawn here, after the attacker and before this body
+    { const OA=O.anim, OK=OA&&ANIM[OA.kind]; if(OK&&OK.back&&placed[1-i]&&te>=OA.t0&&(te-OA.t0)*OA.rate<OK.D){ try{ OK.back(c,(te-OA.t0)*OA.rate,{self:placed[1-i],target:{x,y:y-h*u*0.45,foot:y,r:CHIBI.width(sp.stage,sp.family)*u*0.55},parts:O.spec&&O.spec.pal&&typeof atRGBof==="function"?atRGBof(O.spec.pal.parts):null,fam:O.spec&&O.spec.family,stage:O.spec&&O.spec.stage}); }catch(err){} } }
     S.trail=(S.trail||[]).filter(g=>te-g.t<120);
     if((lunging(i)||S.ghost!=null&&te-S.ghost<40)&&st.alpha>0.3&&S.lastX!=null&&Math.hypot(x-S.lastX,y-(S.lastY||y))>3) S.trail.push({x,y,P,t:te,rot:st.rot,sx:st.sx,sy:st.sy});
     S.lastX=x; S.lastY=y;
