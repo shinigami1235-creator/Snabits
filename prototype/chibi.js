@@ -723,7 +723,7 @@ const CHIBI = (() => {
     capFace(c, g.cx, ey, ex, my, false);
     if (eyes === 'fierce') for (const side of [-1, 1]) lid(c, g.cx + side * ex, ey, s, side, look, rgb(o.lidCol || x.body));
     if (o.extraEyes) for (const side of [-1, 1]) eye(c, g.cx + side * g.bw * o.extraEyes, ey - 7 * s, s * 0.45, eyes === 'fierce' ? 'open' : eyes, side, look);
-    smallMouth(c, g.cx, my, s, x.open, x.P.ouch ? 'ouch' : VAR === 'Feral' ? 'two' : x.stage === 'Mega' || o.fang, x.P.frown);
+    if (!o.noMouth) smallMouth(c, g.cx, my, s, x.open, x.P.ouch ? 'ouch' : VAR === 'Feral' ? 'two' : x.stage === 'Mega' || o.fang, x.P.frown);   // noMouth: for a face with nothing there, like Cthulhu's feelers or the Nightgaunt's blank skin
     if (o.chelicerae) { c.fillStyle = rgb(lt(x.parts, 0.6)); for (const side of [-1, 1]) { c.beginPath(); c.moveTo(g.cx + side * 3 * s, my + 5 * s); c.lineTo(g.cx + side * 8 * s, my + 5 * s); c.lineTo(g.cx + side * 5 * s, my + 11 * s); c.closePath(); c.fill(); } }
     return { my, ey, ex, s, cx: g.cx };
   }
@@ -3325,7 +3325,7 @@ x.feet.push([g.cx, 182, 10]); },
         if (S === 'Mega') { c.fillStyle = rgb(dk(x.parts, 0.1)); for (const [dx, h] of [[-14, 10], [0, 16], [14, 10]]) { c.beginPath(); c.moveTo(g.cx + dx - 6, g.top + 3); c.quadraticCurveTo(g.cx + dx - 2, g.top - h * 0.6, g.cx + dx + 2, g.top - h); c.quadraticCurveTo(g.cx + dx + 3, g.top - h * 0.4, g.cx + dx + 6, g.top + 3); c.closePath(); c.fill(); } } },   // a ridge of spines
       hl: g => [g.left + g.bw * 0.12, g.top + g.bh * 0.3, g.left + g.bw * 0.16, g.top + g.bh * 0.1, g.left + g.bw * 0.36, g.top + g.bh * 0.02],
       head: g => [g.cx, g.top, g.bw * 0.46],
-      face(c, g, x, look) { const hh = FAM.Cthulhu.hh(g); return faceTwo(c, g, x, look, { ey: hh * 0.44 / g.bh, ex: 0.18, my: hh * 0.66 / g.bh, s: by(g.stage, 0.74, 0.8, 0.86) }); }
+      face(c, g, x, look) { const hh = FAM.Cthulhu.hh(g); return faceTwo(c, g, x, look, { ey: hh * 0.44 / g.bh, ex: 0.18, my: hh * 0.66 / g.bh, noMouth: true, s: by(g.stage, 0.74, 0.8, 0.86) }); }
     },
     /* Hastur: the King in Yellow. A tall hood with a pale mask deep inside it, a long tattered robe to the ground, a torn mantle over its shoulders and a crown on the hood. A small crown; torn sleeves, a staff, a taller crown and rags drifting round it from Byte; a huge crown, a dark halo behind it, glowing eyes, a staff with its sign and a flared, ragged robe at Mega */
     Hastur: {
@@ -3513,8 +3513,8 @@ x.feet.push([g.cx, 182, 10]); },
           c.strokeStyle = rgb(dk(x.parts, 0.1)); c.lineWidth = 1.8; c.lineCap = 'round'; for (const j of [-1, 0, 1]) { c.beginPath(); c.moveTo(hx + j * 2, hy + 2); c.quadraticCurveTo(hx + j * 4, hy + 7, hx + j * 3 + sd * 2, hy + 11); c.stroke(); } } },
       hl: g => [g.left + g.bw * 0.16, g.top + g.bh * 0.3, g.left + g.bw * 0.2, g.top + g.bh * 0.12, g.left + g.bw * 0.38, g.top + g.bh * 0.03],
       head: g => [g.cx, g.top, g.bw * 0.4],
-      face(c, g, x, look) { const S = g.stage, hh = FAM.Nightgaunt.hh(g), fi = faceTwo(c, g, x, look, { ey: hh * 0.46 / g.bh, ex: 0.18, my: hh * 0.74 / g.bh, s: by(S, 0.7, 0.72, 0.76) });
-        if (x.back) return fi; c.fillStyle = rgb(dk(x.body, 0.02)); c.beginPath(); c.ellipse(g.cx, fi.my + 2, 14 * fi.s, 8 * fi.s, 0, 0, 7); c.fill();   // it has no mouth: smooth skin over where one would be
+      face(c, g, x, look) { const S = g.stage, hh = FAM.Nightgaunt.hh(g), fi = faceTwo(c, g, x, look, { ey: hh * 0.46 / g.bh, ex: 0.18, my: hh * 0.74 / g.bh, noMouth: true, s: by(S, 0.7, 0.72, 0.76) });   // it has no mouth
+        if (x.back) return fi;
         if (S === 'Mega') { c.save(); c.globalCompositeOperation = 'lighter'; for (const sd of [-1, 1]) { c.fillStyle = rgba(lt(x.acc, 0.3), 0.35 + Math.sin(x.t / 250) * 0.1); c.beginPath(); c.arc(g.cx + sd * fi.ex, fi.ey, 11 * fi.s, 0, 7); c.fill(); } c.restore(); }   // its eyes glow at Mega
         return fi; }
     },

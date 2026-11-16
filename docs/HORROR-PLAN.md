@@ -19,7 +19,7 @@ This plan covers how the ten horror Snabits turn up in the game and how each one
 
 ## Where they turn up
 
-The horrors are late game and they're the only Snabits that can't be scanned. The ancient people painted every other special onto a Pattern Stone, but they never painted these, so no colour calls them. A horror only joins a ranch that has followed its myth to the end and beaten it in its lair.
+The horrors are late game. The first of each joins a ranch that has followed its myth to the end and beaten it in its lair. After that, it can only come back through its Pattern Stone (see Stones and the witching hour).
 
 **The Deep Rift.** A team expedition past the Rift's edge, built on `deep.js`. It opens at grade A, once the Rift's edge map has been crossed, the same week Walt takes the player in (story step 9). It has three rings, and each one opens later than the last:
 
@@ -58,8 +58,16 @@ Every horror has a myth told in three parts, kept in a new Myths tab in the Jour
 - **The lair fight:** the horror at Mega against the team, tag-team style as on any deep map, but nobody is let back in at camp. A lair can be tried once a season.
 - **Losing:** the team goes home with everything it found, and all three come back with extra stress.
 - **Winning:** the horror goes back through the Rift, and a little one stays behind and follows the ranch home at Bit (Gid). Its lair stays open for a rematch each season, though only the first win sends a little one home.
-- **Fusion:** a child fused from a horror can come out as the same horror family (Gid), so a ranch can raise more than one.
-- **The Secrets tab:** a new Horrors row after the specials, with ten hints that show ??? until the myth's first part is found.
+- **Fusion:** a child fused from a horror can come out as the same horror family (Gid). Fusion uses up both parents, so the ranch still has only one.
+- **One at a time (Gid):** a ranch can hold one horror at once, counting the Freezer. While it has one, a lair win sends no little one home and a horror's stone scan gives a regular Snabit.
+
+## Stones and the witching hour (Gid, 16 Nov 2026)
+
+- **Leaving:** a horror that reaches the end of its lifespan outside the Freezer doesn't retire. A week event plays instead, and it vanishes or flies off into the night, leaving its Pattern Stone behind on the ranch. A horror retired to the Hall of Fame gets a statue like any Snabit, and after 4 weeks the statue is gone and its stone sits on the empty plinth.
+- **The stone:** abstract like every other Pattern Stone, drawn in the horror's colours, so it hints at the colour combination that calls it. Each one needs its own colour egg in `eggOf`, tested against the costumes, the specials and the clutter pictures the same way.
+- **Calling it back:** once its stone is on the ranch, a scan that matches the stone, with the stone's colours filling the middle of the shot, calls the horror at Bit. It only works between 9pm and 3am on the phone's own clock, and only while the ranch has no other horror. Outside those hours the same scan gives a regular Snabit.
+- **The clues stay vague:** nothing in the game names the hours or the colours. The stone's Secrets hint and a few lines around the ranch point at them, such as a line about the hour when the town is asleep and the lamps are out, or a hint at the colours read off the stone. Every line goes past Gid first.
+- **The Secrets tab:** a new Horrors row after the specials, with ten hints that show ??? until the myth's first part is found. Once a horror's stone is on the ranch, its hint becomes a vague clue to the colours and the hour.
 
 ## What this chat builds
 
@@ -94,3 +102,7 @@ The other chat builds their moves, signature skills, arena animations and entran
 3. The rings open as planned: the Outer Ring at A, the Middle Ring at S and the Heart after the Legend Cup.
 4. The Shoggoth myth can say the ancient people made it.
 5. The ten abilities are OK to build.
+6. Horrors have Pattern Stones, and a ranch can hold one horror at a time.
+7. A horror that reaches the end of its lifespan outside the Freezer vanishes or flies off in a week event and leaves its stone. A retired one's statue is gone after 4 weeks and leaves its stone on the plinth.
+8. A stone scan calls its horror only between 9pm and 3am on the phone's clock, with vague clues to the hour and the colours.
+9. Cthulhu has no mouth.
