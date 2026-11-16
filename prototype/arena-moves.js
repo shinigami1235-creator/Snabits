@@ -113,9 +113,9 @@ Object.assign(ANIM,{
       atImpact(t,560,0.55,0.1); if(t>=560){ const k=(t-560)/640; atPow(c,{x:tg.x-d*R*0.2,y:tg.y-R*0.3},Math.min(1,k*1.3),R/24); SG.dust(c,tg.x,tg.foot,R,k,8); } }},
   /* Chomp Combo: three snapping bites as it closes in, then a leap into one huge bite */
   chompcombo:{C:760,D:1440,contact:true,marks:true,
-    atk:t=>{ if(t<480){ const j=Math.floor(t/160), p=(t%160)/160; return {f:0.25+j*0.17+0.08*Math.sin(p*Math.PI),arc:-8*Math.sin(p*Math.PI),pose:p<0.5?"bitewide":"chomp"}; }
-      if(t<760){ const k=(t-480)/280; return {f:0.6+0.15*eo(k),arc:-48*Math.sin(k*Math.PI),sx:1+0.35*eo(k),sy:1+0.4*eo(k),pose:"bitewide"}; }
-      if(t<940) return {f:0.75,pose:"chomp",sx:1.35,sy:1.25,off:[Math.sin(t/14)*2,0]};
+    atk:(t,o)=>{ if(t<480){ const j=Math.floor(t/160), p=(t%160)/160, d=(o&&o.dir)||1; return {f:0.25+j*0.17+0.08*Math.sin(p*Math.PI),arc:-8*Math.sin(p*Math.PI),rot:d*(p<0.5?-0.12:0.22),pose:p<0.5?"bitewide":"chomp"}; }
+      if(t<760){ const k=(t-480)/280; return {f:0.6+0.15*eo(k),arc:-48*Math.sin(k*Math.PI),rot:-0.25*eo(k)*((o&&o.dir)||1),pose:"bitewide"}; }
+      if(t<940) return {f:0.75,pose:"chomp",rot:0.32*((o&&o.dir)||1),sx:1.06,sy:0.96,off:[Math.sin(t/14)*2,0]};
       const k=(t-940)/500; return {f:0.75*(1-eio(k)),arc:-20*Math.sin(Math.min(1,k)*Math.PI),pose:"happy"}; },
     def(t){ if(t>=120&&t<480){ const p=(t%160)/160; return {off:[(1-p)*5,0],pose:"hit"}; } return SG.squash(t,760,0.35,560); },
     fx(c,t,x){ const tg=x.target, R=tg.r, col=mvCol(x);
@@ -496,7 +496,7 @@ if(typeof KSND!=="undefined") KSND.trunkflurry=(d,t)=>{ for(let i=0;i<4;i++){ dN
 /* ===== Own-body pass (Gid, 16 Nov 2026): a contact move uses the Snabit's own body. Arms swing and push, Squib, Kraken and Hydra
    reach with their own tentacles, arms or heads (lash, lash2), Plod with its own trunk, and anything else leads with its body.
    Projectiles come out of the part that makes them, like water from Plod's trunk. Drawn stand-in limbs are gone. ===== */
-const MV_REACH={Squib:"tent",Kraken:"tent",Hydra:"tent",Plod:"trunk"};
+const MV_REACH={Squib:"tent",Kraken:"tent",Hydra:"tent",Plod:"trunk",Naga:"tail"};
 const mvMode=o=>{ const f=o&&o.fam; if(f&&MV_REACH[f]) return MV_REACH[f]; return f&&typeof hasArms==="function"&&hasArms(f,o.stage)?"arms":"body"; };
 /* the pose for reaching a part out by k (0 to 1); two:1 reaches both tentacles */
 function mvReach(o,k,two){ const m=mvMode(o);
@@ -510,6 +510,7 @@ Object.assign(ANIM,{
     atk:(t,o)=>{ const m=mvMode(o), d=(o&&o.dir)||1, f=atReach(t,340,0.5,220,320);
       if(m==="tent"||m==="trunk"){ const k=t<200?0.3*eo(t/200):t<340?0.3+0.7*eo((t-200)/140):t<560?1:1-eio(Math.min(1,(t-560)/300)); return {f,pose:mvReach(o,k)}; }
       if(m==="arms") return {f,pose:t<200?"swipeup":t<560?"swipedown":"idle",rot:t<200?-d*0.1*eo(t/200):t<560?d*0.12:0};
+      if(m==="tail"){ const T=t<200?eo(t/200):t<560?1:1-eio(Math.min(1,(t-560)/300)), sw=t<200?-1:t<340?-1+2*eo((t-200)/140):1; return {f:f*0.5,pose:atPose("attack",{tail:T,tailSw:sw,eyes:"fierce"}),rot:t>200&&t<480?-d*0.06:0}; }   // Naga stretches its tail out long and swings it over
       const sp=t>160&&t<480?Math.cos((t-160)/320*Math.PI*2):1; return {f,pose:t<160?"crouch":t<480?"tackle":"idle",sx:t>160&&t<480?Math.max(0.2,Math.abs(sp))*(sp<0?-1:1):1}; },
     fx(c,t,x){ if(t>=240&&t<640) atLash(c,x.target,(t-240)/400,x.col,atDir(x),atBig(x)); }},
   /* a stab with its own point: a reached tentacle or trunk, a pushed arm, or the whole body leading with a horn, nose or spout */
@@ -560,3 +561,54 @@ if(typeof KSND!=="undefined") Object.assign(KSND,{
 /* Plod trumpets through its own raised trunk, and Kraken's Eight Arms whips its own two long arms in turn */
 { const ch=ANIM.chatter, base=ch.atk; ch.atk=(t,o)=>{ const r=base(t,o); if(o&&o.fam==="Plod"&&t<800){ r.pose=atPose("push",{trunk:0.3,trunkUp:1.4,eyes:"fierce"}); } return r; }; }
 AR_KIND["Eight Arms"]="tentaclefrenzy";
+
+/* Gid's notes (16 Nov 2026, evening): Pinch's claws open and snap shut, Unicorn and Kirin dip their heads and run the horn in,
+   Dango tips over and pokes with the point of its skewer, three clear bites in Gate Fang, and real sound waves for Trumpet */
+const mvClaw=(open,lean=0)=>({...AT_P.clawOpen,clawOpen:open,clawAng:-0.15+lean,eyes:"fierce",open:0.6});
+Object.assign(ANIM,{
+  pinch:{C:380,D:920,contact:true,marks:true,
+    atk:t=>({f:atReach(t,380,0.66,220,320),pose:t<300?mvClaw(1*eo(t/300)):t<380?mvClaw(1):t<640?mvClaw(-0.3,0.1):"idle",off:[t>=380&&t<460?Math.sin(t/8)*2:0,0]}),
+    fx(c,t,x){ const tg=x.target, R=tg.r, k=(t-380)/300; if(k>=0&&k<1){ atStar4(c,tg.x,tg.y-R*0.2,R*0.45*(1-k),`rgba(255,255,255,${1-k})`); for(const sd of [-1,1]){ c.strokeStyle=`rgba(255,255,255,${1-k})`; c.lineWidth=3; c.beginPath(); c.moveTo(tg.x-R*0.3,tg.y-R*0.2+sd*R*(0.5-0.3*k)); c.lineTo(tg.x+R*0.1,tg.y-R*0.2+sd*R*0.1); c.stroke(); } } }},
+  vicegrip:{C:380,D:1250,contact:true,marks:true,
+    atk:(t,o)=>{ const m=mvMode(o), f=atReach(t,380,0.7,560,300); if(m==="tent"){ const k=t<380?eo(t/380):t<940?1:1-eio(Math.min(1,(t-940)/300)); return {f,pose:mvReach(o,k,true),off:[t>380&&t<940?Math.sin(t/30)*2:0,0]}; }
+      return {f,pose:t<300?mvClaw(eo(t/300)):t<380?mvClaw(1):t<940?mvClaw(-0.3+0.08*Math.sin(t/35),0.1):"idle",off:[t>380&&t<940?Math.sin(t/30)*2:0,0]}; },
+    def(t){ if(t<380||t>940) return null; return {sx:0.88+0.03*Math.sin(t/40),sy:1.07,pose:"hurt",off:[Math.sin(t/25)*2,0]}; },
+    fx(c,t,x){ const tg=x.target, R=tg.r; if(t>=380&&t<940) for(let i=0;i<4;i++){ const ph=((t/160)+i/4)%1; atStar4(c,tg.x+(i%2?1:-1)*R*0.5,tg.y-R*(0.5+0.4*ph),R*0.14*(1-ph),"#fff6c4"); }
+      const k=(t-380)/300; if(k>=0&&k<1) atStar4(c,tg.x,tg.y-R*0.2,R*0.5*(1-k),`rgba(255,255,255,${1-k})`); }},
+  /* the horn goes in first: it rears back, dips its head so the horn points at the target, and drives in */
+  hornjab:{C:380,D:960,contact:true,marks:true,
+    atk:(t,o)=>{ const d=(o&&o.dir)||1; if(t<200){ const k=eo(t/200); return {f:-0.06*k,rot:-d*0.12*k,sy:1-0.06*k,pose:"crouch"}; }
+      if(t<380){ const k=ei((t-200)/180); return {f:-0.06+0.66*k,rot:-d*0.12+d*0.6*k,pose:"tackle",sx:1.04}; }
+      if(t<560) return {f:0.6,rot:d*0.48,pose:"tackle",off:[Math.sin(t/12)*1.5,0]};
+      const k=(t-560)/400; return {f:0.6*(1-eio(k)),rot:d*0.48*(1-eo(k)),pose:"idle"}; },
+    def:t=>SG.knock(t,380,1,22,420),
+    fx(c,t,x){ const tg=x.target, R=tg.r, d=atDir(x); if(t>=220&&t<400){ const k=(t-220)/180; c.strokeStyle=`rgba(255,255,255,${0.7*k})`; c.lineWidth=2.5; for(let i=0;i<4;i++){ const yy=tg.y-R*(0.6-i*0.2); c.beginPath(); c.moveTo(tg.x-d*R*(1.2+0.8*(1-k)),yy); c.lineTo(tg.x-d*R*(2.2+0.8*(1-k)),yy); c.stroke(); } }
+      if(t>=380&&t<760){ const k=(t-380)/380; atGlowA(c,tg.x-d*R*0.3,tg.y-R*0.45,R*(0.5+0.6*k),[255,240,170],0.8*(1-k)); atStar4(c,tg.x-d*R*0.3,tg.y-R*0.45,R*0.6*(1-k),"rgba(255,255,230,.95)"); } }},
+  /* Dango tips forward so the point of its skewer leads, hops in and pokes */
+  skewerpoke:{C:400,D:980,contact:true,marks:true,
+    atk:(t,o)=>{ const d=(o&&o.dir)||1, h=26; if(t<180){ const k=eo(t/180); return {f:-0.04*k,sy:1-0.1*k,pose:"crouch",...MV.roll(-d*0.15*k,h)}; }
+      if(t<400){ const k=eio((t-180)/220); return {...MV.roll(d*1.3*k,h),f:-0.04+0.66*k,arc:-h*(1-Math.cos(d*1.3*k))-14*Math.sin(k*Math.PI),pose:"attack"}; }
+      if(t<560) return {...MV.roll(d*1.3,h),f:0.62,pose:"attack"};
+      const k=(t-560)/420; return {...MV.roll(d*1.3*(1-eo(k)),h),f:0.62*(1-eio(k)),pose:"idle"}; },
+    def:t=>SG.knock(t,400,1,20,400),
+    fx(c,t,x){ const tg=x.target, R=tg.r, d=atDir(x); if(t>=400&&t<760){ const k=(t-400)/360; atStar4(c,tg.x-d*R*0.35,tg.y-R*0.2,R*0.55*(1-k),"rgba(255,255,235,.95)"); c.strokeStyle=`rgba(255,255,255,${1-k})`; c.lineWidth=2.5;
+        for(let i=0;i<6;i++){ const a=(i/6-0.5)*1.4+(d>0?0:Math.PI); c.beginPath(); c.moveTo(tg.x+Math.cos(a)*R*0.3,tg.y-R*0.2+Math.sin(a)*R*0.3); c.lineTo(tg.x+Math.cos(a)*R*(0.5+0.6*k),tg.y-R*0.2+Math.sin(a)*R*(0.5+0.6*k)); c.stroke(); } } }},
+  /* Plod's Trumpet: its own trunk goes up and a blast of sound rolls out of it in thick rings that shove the target back */
+  trumpet:{C:440,D:1120,
+    atk:t=>{ const k=t<220?eo(t/220):t<860?1:1-eio(Math.min(1,(t-860)/240)); return {pose:atPose("push",{trunk:0.45*k,trunkUp:1.5*k,eyes:"shut",open:0.2}),sy:1+0.05*k*(t>220&&t<860?Math.abs(Math.sin(t/30)):1),off:[t>220&&t<860?Math.sin(t/11)*1.2:0,0]}; },
+    def:t=>{ const a=SG.knock(t,440,1,34,520); if(a) a.off[1]=Math.sin(t/9)*2; return a; },
+    fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, d=atDir(x), tip={x:s.x+d*s.r*0.95,y:s.y-s.r*0.95}, L=Math.abs(tg.x-tip.x)+R;
+      if(t>200&&t<860){ c.save(); c.globalCompositeOperation="lighter"; atGlowA(c,tip.x,tip.y,s.r*0.4,[255,230,170],0.7); c.restore(); }
+      for(let i=0;i<6;i++){ const k=(t-200-i*95)/520; if(k<0||k>1) continue; const rr=s.r*0.3+L*eo(k), a=1-k, wob=Math.sin(t/25+i)*0.04;
+        for(const [w,col] of [[9,`rgba(255,200,120,${0.45*a})`],[4,`rgba(255,250,225,${0.95*a})`]]){ c.strokeStyle=col; c.lineWidth=w*(1-k*0.5); c.beginPath();
+          for(let j=0;j<=24;j++){ const q=-0.55+j/24*1.1, rad=rr*(1+0.03*Math.sin(j*1.6+t/30)); c.lineTo(tip.x+d*Math.cos(q+wob)*rad,tip.y+R*0.5*k+Math.sin(q+wob)*rad*0.85); } c.stroke(); } }
+      if(t>260&&t<860) for(let i=0;i<5;i++){ const ph=((t/300)+i/5)%1; c.strokeStyle=`rgba(255,240,200,${0.7*(1-ph)})`; c.lineWidth=2; const px=tip.x+d*L*ph, py=tip.y+R*0.5*ph+(i-2)*R*0.35; c.beginPath(); c.moveTo(px,py); c.lineTo(px+d*R*0.5,py+Math.sin(t/20+i)*3); c.stroke(); }
+      atImpact(t,440,0.4,0); }}
+});
+Object.assign(AR_KIND,{"Horn Jab":"hornjab","Horn Thrust":"hornjab","Skewer Poke":"skewerpoke","Skewer Thrust":"skewerpoke","Trumpet":"trumpet"});
+if(typeof KSND!=="undefined") Object.assign(KSND,{
+  pinch:(d,t)=>{ dNoise(d,t+0.1,0.06,0.08,'bandpass',2000,2); sTone(d,t+0.38,'square',1400,700,0.04,0.06); dNoise(d,t+0.38,0.05,0.25,'highpass',3500,2); },
+  hornjab:(d,t)=>{ dNoise(d,t+0.2,0.18,0.12,'bandpass',900,0.8); sTone(d,t+0.38,'triangle',2200,1400,0.15,0.07); dKick(d,t+0.38,0.4); },
+  skewerpoke:(d,t)=>{ dNoise(d,t+0.18,0.2,0.1,'bandpass',1200,1); sTone(d,t+0.4,'triangle',1800,1000,0.08,0.06); dNoise(d,t+0.4,0.05,0.2,'highpass',3000,1.5); },
+  trumpet:(d,t)=>{ [0,0.004].forEach(o=>{ sTone(d,t+0.2+o,'sawtooth',233,247,0.6,0.09); sTone(d,t+0.2+o,'square',466,494,0.6,0.035); }); sTone(d,t+0.2,'sawtooth',349,370,0.6,0.05); dNoise(d,t+0.2,0.6,0.08,'bandpass',900,0.6); }
+});

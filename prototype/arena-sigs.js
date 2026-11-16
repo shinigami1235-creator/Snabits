@@ -1013,14 +1013,17 @@ Object.assign(ANIM,{
           c.fillStyle="#fffaf0"; for(let j=0;j<7;j++){ const tx=tg.x-W*0.8+j*W*1.6/6, ty=sd<0?by-gap+R*0.3:by; c.beginPath(); c.moveTo(tx-R*0.12,ty); c.lineTo(tx,ty+(sd<0?R*0.35:-R*0.35)); c.lineTo(tx+R*0.12,ty); c.fill(); } }
         c.restore(); if(shut>0) atImpact(t,800,0.85,0.2); } }},
   /* Cerberus: a dark gate opens behind the target and its three heads lunge through in turn, high, low and middle, each bite trailing purple fire */
-  sg_gatefang:{C:760,D:1460,contact:true,marks:true,sig:true,
-    atk:(t,o)=>{ const d=(o&&o.dir)||1; if(t<360){ const k=eo(t/360); return {f:-0.05*k,sy:1-0.12*k,pose:"crouch"}; } if(t<760){ const k=eio((t-360)/400); return {f:-0.05+0.68*k,rot:d*0.15*k,pose:"bitewide"}; } if(t<1100){ const j=Math.floor((t-760)/110), p=((t-760)%110)/110; return {f:0.6+0.08*Math.sin(p*Math.PI),rot:d*(j%2?0.12:-0.06),pose:p<0.4?"bitewide":"chomp",sx:1+0.12*Math.sin(p*Math.PI),sy:1+0.06*Math.sin(p*Math.PI)}; } const k=(t-1100)/360; return {f:0.63*(1-eio(k)),pose:"idle"}; },
-    def(t){ for(let i=0;i<3;i++){ const T0=760+i*110; if(t>=T0&&t<T0+100) return {off:[8,(i-1)*4],pose:"hit",flash:3}; } return t>=1090&&t<1460?{pose:"hurt",off:[Math.sin(t/16)*2,0]}:null; },
-    fx(c,t,x){ const tg=x.target, R=tg.r, d=atDir(x), PU=[170,80,255], g=Math.min(1,t/400)*(t>1300?1-(t-1300)/160:1); if(g<=0) return;
+  sg_gatefang:{C:640,D:1340,contact:true,marks:true,sig:true,
+    // three clear bites, one from each head: high, low, then the middle head clamps on (Gid: maybe 3 bites)
+    atk:(t,o)=>{ const d=(o&&o.dir)||1; if(t<320){ const k=eo(t/320); return {f:-0.05*k,sy:1-0.12*k,pose:"crouch"}; } if(t<580){ const k=eio((t-320)/260); return {f:-0.05+0.65*k,rot:-d*0.1*k,pose:"bitewide"}; }
+      if(t<1120){ const j=Math.floor((t-580)/180), p=((t-580)%180)/180, tilt=[-0.18,0.2,0.04][j]; return {f:0.58+0.07*Math.sin(p*Math.PI),rot:d*tilt*Math.sin(Math.min(1,p*1.6)*Math.PI/2),arc:j===0?-8*Math.sin(p*Math.PI):0,pose:p<0.35?"bitewide":"chomp",sx:1+0.06*Math.sin(p*Math.PI)}; }
+      const k=Math.min(1,(t-1120)/220); return {f:0.6*(1-eio(k)),pose:"idle"}; },
+    def(t){ for(let i=0;i<3;i++){ const T0=640+i*180; if(t>=T0&&t<T0+120) return {off:[9,[-4,4,0][i]],pose:"hit",flash:3}; } return t>=1100&&t<1340?{pose:"hurt",off:[Math.sin(t/16)*2,0]}:null; },
+    fx(c,t,x){ const tg=x.target, R=tg.r, d=atDir(x), PU=[170,80,255], g=Math.min(1,t/400)*(t>1200?1-(t-1200)/140:1); if(g<=0) return;
       c.save(); const gx=tg.x+d*R*1.1, gy=tg.y-R*0.3; c.fillStyle=`rgba(20,8,30,${0.85*g})`; c.beginPath(); c.ellipse(gx,gy,R*0.9*g,R*1.6*g,0,0,7); c.fill(); c.strokeStyle=`rgba(190,110,255,${0.9*g})`; c.lineWidth=4; c.stroke();
       c.save(); c.globalCompositeOperation="lighter"; for(let i=0;i<10;i++){ const a=i/10*Math.PI*2+t/400; SG.flame(c,gx+Math.cos(a)*R*0.9*g,gy+Math.sin(a)*R*1.6*g+R*0.2,R*0.4*g,R*0.1,t,i,0.6); } c.restore(); c.restore();
-      for(let i=0;i<3;i++){ const T0=760+i*110, k=(t-T0+180)/480; if(k<0||k>1) continue; const yy=tg.y+[-0.55,0.35,-0.1][i]*R, open=k<0.37?1-k/0.37:0.05, fade=k>0.6?1-(k-0.6)/0.4:1;
-        chompMarks(c,{x:tg.x-d*R*0.1,y:yy},Math.min(1,k*1.4)); c.save(); c.globalCompositeOperation="lighter"; atGlowA(c,tg.x+d*R*0.2,yy,R*0.6,PU,0.5*fade); c.restore(); if(k>=0.37) atImpact(t,T0,0.4,0.1); } }},
+      for(let i=0;i<3;i++){ const T0=640+i*180, k=(t-T0)/300; if(k<0||k>1) continue; const yy=tg.y+[-0.5,0.3,-0.1][i]*R; atImpact(t,T0,0.4+i*0.1,0.1); chompMarks(c,{x:tg.x-d*R*0.1,y:yy},k);
+        c.save(); c.globalCompositeOperation="lighter"; atGlowA(c,tg.x-d*R*0.1,yy,R*0.6,PU,0.6*(1-k)); c.restore(); } }},
   /* Djinn: it rubs up a giant golden lamp that shakes and glows, smoke roars out of the spout into a towering genie arm, and the fist slams down on the target in a purple and gold explosion */
   sg_lampblast:{C:900,D:1600,sig:true,
     atk:(t,o)=>{ const d=(o&&o.dir)||1; if(t<380) return {arc:-10-Math.sin(t/60)*3,rot:Math.sin(t/45)*0.1,pose:"cast",sx:1+0.04*Math.sin(t/30)};

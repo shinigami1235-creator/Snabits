@@ -263,7 +263,7 @@ function atEvent(e,now){
   if(e.t==="hit"){ const o=AT.side[1-e.i], mt=S.anim&&S.anim.tier||"light", tier=e.crit?(mt==="special"?"special":mt==="heavy"?"special":"heavy"):mt==="light"&&e.dmg>=25?"medium":mt, T=AT_TIER[tier];
     if(e.h===0||!o.react||te-o.react.t0>120){ o.react={kind:"hit",t0:te,tier}; if(mt==="special") AT.freeze=Math.max(AT.freeze,now+T.stop); AT.trauma=Math.min(1,AT.trauma+T.trauma);
       AT.hitJuice={i:1-e.i,t0:te,tier,col:S.anim?S.anim.col:[255,236,160]};
-      if(S.anim&&!(ANIM[S.anim.kind]&&ANIM[S.anim.kind].marks)) AT.strikes.push({t0:/bite/.test(S.anim.kind)?te-0.16*560:te,d:/bite/.test(S.anim.kind)?560:340,kind:/bite/.test(S.anim.kind)?"jaws":/claw/.test(S.anim.kind)?"slash":"lines",i:1-e.i,col:S.anim.col,big:{light:1,medium:1.15,heavy:1.4,special:1.9}[tier],dir:S.dir,ranged:!S.anim.contact,body:sp.pal&&sp.pal.body}); AT.punch={t0:te,amt:T.punch,i:1-e.i};
+      if(S.anim&&!(ANIM[S.anim.kind]&&ANIM[S.anim.kind].marks)) AT.strikes.push({t0:te,d:340,kind:/bite/.test(S.anim.kind)?"lines":/claw/.test(S.anim.kind)?"slash":"lines",i:1-e.i,col:S.anim.col,big:{light:1,medium:1.15,heavy:1.4,special:1.9}[tier],dir:S.dir,ranged:!S.anim.contact,body:sp.pal&&sp.pal.body}); AT.punch={t0:te,amt:T.punch,i:1-e.i};
       if(T.screen) AT.flash={t0:now+T.stop*0.4,a:T.screen};
       if(T.slow&&mt==="special") AT.slow={from:now+T.stop,until:now+T.stop+T.slow*(AT.ar.over?2.2:1),k:AT.ar.over?0.22:0.32};
       if(tier==="heavy"||tier==="special") AT.dust={i:1-e.i,t0:te,n:tier==="special"?14:8};
@@ -687,6 +687,11 @@ function atDraw(now,dte){
     if(fp.buff.phase) st.alpha*=0.6+0.2*Math.sin(te/60);
     // a contact move reaches the opponent, but never further than a short lunge when it's out of reach
     const reach=Math.max(-(SEP+40),Math.min(SEP+40,(O.dx-S.dx)-S.dir*SEP*0.42));
+    // a contact move lands as the bodies touch, not after the attacker has passed into the target (Gid, 16 Nov 2026): the lunge is scaled so its
+    // reach at the contact frame C puts its front edge against the target's front edge, which is when the hit, the impact frame and the recoil happen
+    if(S.anim&&ANIM[S.anim.kind]&&ANIM[S.anim.kind].contact&&st.f>0&&O.spec&&te>=S.anim.t0){ const K=ANIM[S.anim.kind]; if(K._fC==null){ try{ K._fC=K.atk(K.C,{foeH:60,perp:[0,-1],dir:1,fam:sp.family,stage:sp.stage}).f||0; }catch(err){ K._fC=0; } }
+      if(K._fC>0.2&&Math.abs(reach)>1){ const oh=CHIBI.height(O.spec.stage,O.spec.marks,O.spec.family), ou=Math.min(0.5,96/(oh+20))*scale, touch=(CHIBI.width(sp.stage,sp.family)*u+CHIBI.width(O.spec.stage,O.spec.family)*ou)*0.42,
+          fT=((O.dx-S.dx)-S.dir*touch)/reach; if(fT>0) st.f*=Math.max(0.25,Math.min(1.6,fT/K._fC)); } }
     const x=S.dx+reach*st.f+st.off[0], y=floor+st.arc+st.lift+st.off[1], mir=S.dir>0?-1:1;
     if(moving!==!!S.moving&&S.ko==null&&typeof spawnPuff==="function") spawnPuff(x-S.dir*10,y-2,moving?5:7,S.dir>0?Math.PI:0,1.2,0.08,5*scale,"rgba(235,228,214,1)",320);
     S.moving=moving;
@@ -710,7 +715,7 @@ function atDraw(now,dte){
   // the game's own attack effects, from the attacker's eyes, mouth or hands to the target. A dodging target is aimed at where it stood, so the attack whiffs
   [0,1].forEach(i=>{ const A=AT.side[i].anim; if(!A||te<A.t0||!placed[i]||!placed[1-i]||!ANIM[A.kind].fx) return;
     const T1=placed[1-i], dx=T1.doff?T1.doff[0]:0, dy=T1.doff?T1.doff[1]:0, T0={...T1,x:T1.x-dx,foot:T1.foot-dy,top:{x:T1.top.x-dx,y:T1.top.y-dy},center:T1.center&&{x:T1.center.x-dx,y:T1.center.y-dy}}, tgt={...T0,x:T0.center?T0.center.x:T0.x,y:T0.center?T0.center.y:T0.y};
-    if(/bite/.test(A.kind)&&!A.mega){ const t=(te-A.t0)*A.rate, C=ANIM[A.kind].C;
+    if(false&&/bite/.test(A.kind)&&!A.mega){   // the floating jaws over the target are gone (Gid: the bite comes from its own mouth) const t=(te-A.t0)*A.rate, C=ANIM[A.kind].C;
       if(t>=C-200&&t<C){ c.save(); c.translate(tgt.x,tgt.y); atJaws(c,(t-(C-200))/200*0.159,({light:1,heavy:1.4,special:1.9}[A.tier]||1)*scale/2.3,A.col,AT.side[i].dir,AT.side[i].spec.pal&&AT.side[i].spec.pal.body); c.restore(); } }
     if(A.mega){ const t=(te-A.t0)*A.rate, C=ANIM[A.kind].C, s2=scale/2.3;
       if(A.mega==="beam") atMegaBeam(c,t,C,originOf(placed[i],A.src,tgt)[0],tgt,A.col,s2);

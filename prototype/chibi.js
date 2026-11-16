@@ -728,13 +728,13 @@ const CHIBI = (() => {
     return { my, ey, ex, s, cx: g.cx };
   }
   /* a crab claw at the end of an arm, opening outward; side flips it for the left arm */
-  function claw(c, x, y, ang, sz, col, side, serrate) {
+  function claw(c, x, y, ang, sz, col, side, serrate, open) {   // open: from about -0.3 (snapped shut) to 1 (gaping), left out for the resting claw
     if (CAP) (CAP.hands = CAP.hands || []).push(capPt(c, x, y));
     c.save(); c.translate(x, y); c.scale(side, 1); c.rotate(ang);
     const jaw = (up) => { const k = up ? -1 : 1; c.beginPath(); c.moveTo(-sz * 0.1, 0);
       c.bezierCurveTo(sz * 0.1, k * sz * (up ? 0.95 : 0.7), sz * 0.9, k * sz * (up ? 0.8 : 0.55), sz * 1.15, k * sz * (up ? 0.22 : 0.1));
       c.quadraticCurveTo(sz * 0.6, k * sz * 0.2, sz * 0.15, k * sz * 0.08); c.closePath(); };
-    for (const up of [false, true]) { c.save(); c.translate(0, 2.5); jaw(up); c.fillStyle = rgb(dk(col, 0.32)); c.fill(); c.restore(); jaw(up); c.fillStyle = rgb(lt(col, 0.12)); c.fill(); }
+    for (const up of [false, true]) { c.save(); if (open != null) c.rotate(up ? -0.25 - open * 0.65 : 0.2 + open * 0.45); c.save(); c.translate(0, 2.5); jaw(up); c.fillStyle = rgb(dk(col, 0.32)); c.fill(); c.restore(); jaw(up); c.fillStyle = rgb(lt(col, 0.12)); c.fill(); c.restore(); }
     if (serrate) { c.fillStyle = '#fff'; for (const f of [0.45, 0.7]) { c.beginPath(); c.moveTo(sz * f, -sz * 0.2); c.lineTo(sz * (f + 0.12), -sz * 0.2); c.lineTo(sz * (f + 0.06), -sz * 0.05); c.closePath(); c.fill(); } }
     c.fillStyle = rgb(col); c.beginPath(); c.arc(0, 0, sz * 0.42, 0, 7); c.fill();
     c.fillStyle = 'rgba(255,255,255,.4)'; c.beginPath(); c.ellipse(sz * 0.35, -sz * 0.5, sz * 0.18, sz * 0.08, -0.4, 0, 7); c.fill();
@@ -2521,29 +2521,44 @@ x.feet.push([g.cx, 182, 10]); },
       head: g => [g.cx, g.top, g.bw * 0.48],
       face: (c, g, x, look) => faceTwo(c, g, x, look, { ey: 0.36, ex: 0.17, my: 0.58, s: by(g.stage, 0.72, 0.82, 0.9) })
     },
-    /* Unicorn: a round body on four slim legs with gold hooves, a spiral horn, a curly mane and tail in its accent colours, and sparkles at Mega */
+    /* Unicorn (redrawn 16 Nov 2026 so it reads as a horse without its colours): a long horse face with a pale muzzle and nostrils,
+       pointed ears, a long spiral horn, a mane down its neck and a forelock, a barrel body behind on four slim legs with gold hooves,
+       and a swishing tail. Sparkles at Mega */
     Unicorn: {
-      special: true, dims: { Bit: [66, 58], Byte: [84, 72], Mega: [100, 86] }, ll: st => by(st, 12, 16, 20),
-      bottom(st) { return 182 - this.ll(st); }, height(st) { return this.dims[st][1] + this.ll(st) + by(st, 18, 24, 30); },
-      path(c, g) { c.beginPath(); c.roundRect(g.left, g.top, g.bw, g.bh, [g.bw * 0.48, g.bw * 0.48, g.bh * 0.32, g.bh * 0.32]); },
-      leg(c, g, x, lx, i, back) { const ll = this.ll(g.stage), lift = Math.max(0, Math.sin(x.t / 150 + i * Math.PI / 2)) * 5 * Math.abs(x.walk), lw = by(g.stage, 7, 8, 9), fy = (back ? 178 : 182) - lift, col = dk(x.body, back ? 0.18 : 0.04);
-        limb(c, [lx, g.bot - 8, lx, (g.bot + fy) / 2, lx, fy - 3], lw, col, i % 2 ? x.L.legR : x.L.legL, x.t); roundBox(c, lx - lw * 0.62, fy - 4, lw * 1.24, 6, 2); c.fillStyle = '#e9b23a'; c.fill(); x.feet.push([lx, fy, lw * 0.6]); },
-      behind(c, g, x) { const sw = Math.sin(x.t / 420) * 0.15; c.save(); c.translate(g.left + 4, g.top + g.bh * 0.5); c.rotate(-0.4 + sw);
-          for (let k = 0; k < 3; k++) { c.fillStyle = rgb(k % 2 ? x.acc : x.parts); c.beginPath(); c.ellipse(-12 - k * 2, 4 + k * 8, 12, 7, 0.4 + k * 0.2, 0, 7); c.fill(); } c.restore();
-        this.leg(c, g, x, g.cx - g.bw * 0.3, 1, true); this.leg(c, g, x, g.cx + g.bw * 0.3, 3, true);
-        const n = by(g.stage, 4, 5, 6); for (let k = n - 1; k >= 0; k--) { const a = -0.2 + k * 0.42, mr = by(g.stage, 9, 11, 13), mx = g.cx + g.bw * 0.1 + Math.cos(a) * g.bw * 0.42, my = g.top + g.bh * 0.32 + Math.sin(a) * g.bh * 0.5 - g.bh * 0.12 + Math.sin(x.t / 500 + k) * 1.5;
-          c.fillStyle = rgb(dk(k % 2 ? x.acc : x.parts, 0.2)); c.beginPath(); c.arc(mx, my + 2, mr, 0, 7); c.fill(); c.fillStyle = rgb(k % 2 ? x.acc : x.parts); c.beginPath(); c.arc(mx, my, mr, 0, 7); c.fill(); }
-        const hx = g.cx - g.bw * 0.08, hl = by(g.stage, 20, 26, 32), hw = by(g.stage, 5, 6, 7), hb = g.top + 8, hy = hb - hl;
-        c.fillStyle = '#c99a24'; c.beginPath(); c.moveTo(hx - hw, hb + 2); c.lineTo(hx + 2, hy + 2); c.lineTo(hx + hw, hb + 2); c.closePath(); c.fill();
-        c.fillStyle = '#f2cf5a'; c.beginPath(); c.moveTo(hx - hw, hb); c.lineTo(hx + 1, hy); c.lineTo(hx + hw, hb); c.closePath(); c.fill();
-        c.strokeStyle = '#c99a24'; c.lineWidth = 1.5; for (let k = 1; k < 4; k++) { const yy = hb - hl * k / 4, w2 = hw * (1 - k / 4); c.beginPath(); c.moveTo(hx - w2, yy + 2); c.lineTo(hx + w2, yy - 2); c.stroke(); }
-        if (g.stage === 'Mega') { c.save(); c.globalCompositeOperation = 'lighter'; c.fillStyle = `rgba(255,240,180,${0.35 + Math.sin(x.t / 300) * 0.15})`; c.beginPath(); c.arc(hx, hy + 4, 10, 0, 7); c.fill(); c.restore(); } },
-      front(c, g, x) { this.leg(c, g, x, g.cx - g.bw * 0.22, 0, false); this.leg(c, g, x, g.cx + g.bw * 0.22, 2, false);
-        for (let k = 0; k < 2; k++) { const mx = g.cx + g.bw * (0.06 + k * 0.1), my = g.top + 3 + k * 2; c.fillStyle = rgb(k % 2 ? x.acc : x.parts); c.beginPath(); c.arc(mx, my, by(g.stage, 6, 7, 8), 0, 7); c.fill(); }   // the forelock
-        if (g.stage === 'Mega') for (let k = 0; k < 4; k++) { const a = x.t / 700 + k * 1.6; star(c, g.cx + Math.cos(a) * g.bw * 0.66, g.top + g.bh * 0.4 + Math.sin(a) * 18, 0.4, k % 2 ? '#fff6c4' : rgb(lt(x.acc, 0.3))); } },
-      hl: g => [g.left + g.bw * 0.14, g.top + g.bh * 0.5, g.left + g.bw * 0.14, g.top + g.bh * 0.16, g.left + g.bw * 0.36, g.top + g.bh * 0.06],
-      head: g => [g.cx - 6, g.top - 2, g.bw * 0.44],
-      face: (c, g, x, look) => faceTwo(c, g, x, look, { ey: 0.42, ex: 0.18, my: 0.64, s: by(g.stage, 0.76, 0.86, 0.94) })
+      special: true, dims: { Bit: [50, 60], Byte: [60, 74], Mega: [70, 86] }, ll: st => by(st, 16, 22, 28), bb: st => by(st, 26, 32, 38), hl2: st => by(st, 30, 42, 54),
+      bottom(st) { return 182 - this.ll(st) - Math.round(this.bb(st) * 0.5); }, height(st) { return this.dims[st][1] + Math.round(this.bb(st) * 0.5) + this.ll(st) + this.hl2(st) + 6; },
+      path(c, g) { const L = g.left, T = g.top, w = g.bw, h = g.bh; c.beginPath(); c.moveTo(g.cx, T);
+        c.bezierCurveTo(L + w * 1.04, T, L + w * 1.02, T + h * 0.5, L + w * 0.86, T + h * 0.74); c.bezierCurveTo(L + w * 0.8, T + h * 1.04, L + w * 0.2, T + h * 1.04, L + w * 0.14, T + h * 0.74);
+        c.bezierCurveTo(L - w * 0.02, T + h * 0.5, L - w * 0.04, T, g.cx, T); c.closePath(); },
+      leg(c, g, x, lx, i, back) { const ll = this.ll(g.stage), lift = Math.max(0, Math.sin(x.t / 150 + i * Math.PI / 2)) * 5 * Math.abs(x.walk), lw = by(g.stage, 6, 7, 8), fy = (back ? 178 : 182) - lift, top = g.bot + this.bb(g.stage) * 0.4, col = dk(x.body, back ? 0.2 : 0.05);
+        limb(c, [lx, top, lx, (top + fy) / 2, lx, fy - 3], lw, col, i % 2 ? x.L.legR : x.L.legL, x.t); roundBox(c, lx - lw * 0.7, fy - 5, lw * 1.4, 7, 2); c.fillStyle = '#e9b23a'; c.fill(); x.feet.push([lx, fy, lw * 0.6]); },
+      behind(c, g, x) { const S = g.stage, bb = this.bb(S), by0 = g.bot + bb * 0.12, bw2 = g.bw * 0.78, sw = Math.sin(x.t / 420) * 0.18;
+        // the tail swishes out to one side behind the body
+        c.save(); c.translate(g.cx + bw2 * 0.95, by0 - bb * 0.1); c.rotate(-0.5 + sw); for (let k = 0; k < 4; k++) { c.fillStyle = rgb(dk(k % 2 ? x.acc : x.parts, k ? 0 : 0.15)); c.beginPath(); c.ellipse(8 + k * 3, 6 + k * 8, 9 - k, 6, 0.6 + k * 0.15, 0, 7); c.fill(); } c.restore();
+        this.leg(c, g, x, g.cx - bw2 * 0.6, 1, true); this.leg(c, g, x, g.cx + bw2 * 0.62, 3, true);
+        // the barrel body, set back behind the head
+        c.fillStyle = rgb(dk(x.body, 0.22)); c.beginPath(); c.ellipse(g.cx, by0 + 3, bw2, bb * 0.62, 0, 0, 7); c.fill(); c.fillStyle = rgb(dk(x.body, 0.08)); c.beginPath(); c.ellipse(g.cx, by0, bw2, bb * 0.62, 0, 0, 7); c.fill();
+        // pointed horse ears, then the mane falling down the back of the neck
+        for (const sd of [-1, 1]) { const ex = g.cx + sd * g.bw * 0.3, ey = g.top + g.bh * 0.12; c.fillStyle = rgb(dk(x.body, 0.1)); c.beginPath(); c.moveTo(ex - sd * 9, ey + 6); c.quadraticCurveTo(ex + sd * 3, ey - by(S, 16, 20, 24), ex + sd * 8, ey - by(S, 18, 22, 27)); c.quadraticCurveTo(ex + sd * 10, ey - 4, ex + sd * 6, ey + 8); c.closePath(); c.fill();
+          c.fillStyle = rgb(lt(x.parts, 0.25)); c.beginPath(); c.moveTo(ex - sd * 4, ey + 3); c.quadraticCurveTo(ex + sd * 3, ey - by(S, 10, 13, 16), ex + sd * 6, ey - by(S, 13, 16, 20)); c.quadraticCurveTo(ex + sd * 6, ey, ex + sd * 3, ey + 5); c.closePath(); c.fill(); }
+        const n = by(S, 4, 5, 6), mr = by(S, 7, 8, 10); for (let k = 0; k < n; k++) { const f = k / (n - 1), mx = g.left + g.bw * (0.96 + 0.12 * Math.sin(f * 2.4)), my = g.top + g.bh * (0.08 + f * 0.9) + Math.sin(x.t / 500 + k) * 1.5;
+          c.fillStyle = rgb(dk(k % 2 ? x.acc : x.parts, 0.2)); c.beginPath(); c.arc(mx, my + 2, mr * (1 - f * 0.2), 0, 7); c.fill(); c.fillStyle = rgb(k % 2 ? x.acc : x.parts); c.beginPath(); c.arc(mx, my, mr * (1 - f * 0.2), 0, 7); c.fill(); } },
+      inside(c, g, x) { const T = g.top, h = g.bh;   // the pale muzzle with its nostrils
+        c.fillStyle = rgb(lt(x.body, 0.42)); c.beginPath(); c.ellipse(g.cx, T + h * 0.86, g.bw * 0.36, h * 0.2, 0, 0, 7); c.fill();
+        c.fillStyle = rgb(dk(x.body, 0.45)); for (const sd of [-1, 1]) { c.beginPath(); c.ellipse(g.cx + sd * g.bw * 0.13, T + h * 0.86, 2.6, 3.6, sd * 0.3, 0, 7); c.fill(); } },
+      front(c, g, x) { const S = g.stage; this.leg(c, g, x, g.cx - g.bw * 0.3, 0, false); this.leg(c, g, x, g.cx + g.bw * 0.3, 2, false);
+        for (let k = 0; k < 3; k++) { const mx = g.cx + g.bw * (-0.08 + k * 0.1), my = g.top + 2 + Math.abs(k - 1) * 3; c.fillStyle = rgb(k % 2 ? x.acc : x.parts); c.beginPath(); c.arc(mx, my, by(S, 5, 6, 7), 0, 7); c.fill(); }   // the forelock
+        // a long spiral horn standing straight up from the forehead
+        const hx = g.cx + 1, hl = this.hl2(S), hw = by(S, 5, 6, 7.5), hb = g.top + 4, hy = hb - hl;
+        c.fillStyle = '#c99a24'; c.beginPath(); c.moveTo(hx - hw, hb + 2); c.lineTo(hx + 1.5, hy + 2); c.lineTo(hx + hw, hb + 2); c.closePath(); c.fill();
+        c.fillStyle = '#f6d465'; c.beginPath(); c.moveTo(hx - hw, hb); c.lineTo(hx, hy); c.lineTo(hx + hw, hb); c.closePath(); c.fill();
+        c.strokeStyle = '#c99a24'; c.lineWidth = 1.6; const turns = by(S, 4, 5, 6); for (let k = 1; k <= turns; k++) { const yy = hb - hl * k / (turns + 1), w2 = hw * (1 - k / (turns + 1)); c.beginPath(); c.moveTo(hx - w2, yy + 2.5); c.lineTo(hx + w2, yy - 2.5); c.stroke(); }
+        c.fillStyle = 'rgba(255,255,255,.55)'; c.beginPath(); c.moveTo(hx - hw * 0.5, hb - 2); c.lineTo(hx - 0.5, hy + hl * 0.25); c.lineTo(hx - hw * 0.15, hb - 2); c.closePath(); c.fill();
+        if (S === 'Mega') { c.save(); c.globalCompositeOperation = 'lighter'; c.fillStyle = `rgba(255,240,180,${0.35 + Math.sin(x.t / 300) * 0.15})`; c.beginPath(); c.arc(hx, hy + 4, 11, 0, 7); c.fill(); c.restore();
+          for (let k = 0; k < 4; k++) { const a = x.t / 700 + k * 1.6; star(c, g.cx + Math.cos(a) * g.bw * 0.9, g.top + g.bh * 0.5 + Math.sin(a) * 18, 0.4, k % 2 ? '#fff6c4' : rgb(lt(x.acc, 0.3))); } } },
+      hl: g => [g.left + g.bw * 0.16, g.top + g.bh * 0.5, g.left + g.bw * 0.18, g.top + g.bh * 0.18, g.left + g.bw * 0.4, g.top + g.bh * 0.05],
+      head: g => [g.cx, g.top - 2, g.bw * 0.46],
+      face: (c, g, x, look) => faceTwo(c, g, x, look, { ey: 0.4, ex: 0.2, my: 0.66, s: by(g.stage, 0.72, 0.82, 0.9) })
     },
     /* Jack: a jack-o'-lantern. A ribbed pumpkin with a carved face that glows from inside, a curly stem and leaf, vine feet, and floating flames at Mega */
     Jack: {
@@ -3419,7 +3434,10 @@ x.feet.push([g.cx, 182, 10]); },
         c.fillStyle = rgb(dk(x.body, 0.35)); c.beginPath(); c.ellipse(g.cx, cy + 6, cw + th, th * 0.9, 0, 0, 7); c.fill();
         c.fillStyle = rgb(dk(x.body, 0.1)); c.beginPath(); c.ellipse(g.cx, cy + 2, cw + th, th * 0.9, 0, 0, 7); c.fill();
         c.fillStyle = rgb(x.body); c.beginPath(); c.ellipse(g.cx - 4, cy - th * 0.8, cw * 0.8 + th * 0.6, th * 0.8, 0, 0, 7); c.fill();
-        limb(c, [g.cx + cw + 6, cy + 4, g.cx + cw + 22 + sw, cy - 6, g.cx + cw + 16 + sw, cy - 24], by(g.stage, 9, 10, 12), x.body, null, x.t);
+        if (x.P.tail) { const T = x.P.tail, a = -0.9 - ((x.P.tailSw || 0) + 1) / 2 * 1.85, L = 30 + T * 110, bx = g.cx + cw + 6, by0 = cy + 4;   // tail and tailSw: stretch the tail long and swing it up and over to the front
+          const ex = bx + Math.cos(a) * L, ey = by0 + Math.sin(a) * L, mx = bx + Math.cos(a + 0.5) * L * 0.55, my = by0 + Math.sin(a + 0.5) * L * 0.55;
+          limb(c, [bx, by0, mx, my, ex, ey], by(g.stage, 9, 10, 12) + T * 2, x.body, null, x.t); c.fillStyle = rgb(dk(x.body, 0.15)); c.beginPath(); c.arc(ex, ey, 4 + T * 2, 0, 7); c.fill(); }
+        else limb(c, [g.cx + cw + 6, cy + 4, g.cx + cw + 22 + sw, cy - 6, g.cx + cw + 16 + sw, cy - 24], by(g.stage, 9, 10, 12), x.body, null, x.t);
         c.fillStyle = rgb(x.body); c.beginPath(); c.moveTo(g.cx - nw / 2, g.bot - 6); c.quadraticCurveTo(g.cx - nw * 0.6 + sw * 0.4, (g.bot + cy) / 2, g.cx - nw * 0.4, cy - th); c.lineTo(g.cx + nw * 0.5, cy - th); c.quadraticCurveTo(g.cx + nw * 0.6 + sw * 0.4, (g.bot + cy) / 2, g.cx + nw / 2, g.bot - 6); c.closePath(); c.fill();
         c.fillStyle = rgb(lt(x.parts, 0.35)); for (let i = 0; i < 4; i++) { const yy = g.bot + 2 + i * ((cy - th - g.bot) / 4); c.beginPath(); c.ellipse(g.cx + sw * 0.1 * i, yy, nw * 0.26, 3.2, 0, 0, 7); c.fill(); }
         x.feet.push([g.cx - cw * 0.5, 180, 8], [g.cx + cw * 0.5, 180, 8]); },
@@ -3555,7 +3573,7 @@ x.feet.push([g.cx, 182, 10]); },
         [[-1, P.arm[0], L.armL], [1, P.arm[1], L.armR]].forEach(([side, a, mat]) => {
           const sx = g.cx + side * (g.bw / 2 - inset), hx = sx + side * a[2] * k, hy = sy + a[3] * k - (stage === 'Bit' ? 10 : 6);
           if (aw) limb(c, [sx, sy, sx + side * a[0] * k, sy + a[1] * k, hx, hy], aw, parts, mat, t);
-          claw(c, stage === 'Bit' ? sx + side * 6 : hx, stage === 'Bit' ? sy - 2 : hy, -0.75 + (P.eyes === 'happy' ? -0.4 : 0), sz, parts, side, stage === 'Mega'); });
+          claw(c, stage === 'Bit' ? sx + side * 6 : hx, stage === 'Bit' ? sy - 2 : hy, P.clawAng != null ? P.clawAng : -0.75 + (P.eyes === 'happy' ? -0.4 : 0), sz * (P.clawOpen != null ? 1.12 : 1), parts, side, stage === 'Mega', P.clawOpen); });
       } else if (F.arms === 'stub' && F.armW(stage)) {
         const st = { arm: F.armW(stage), hand: F.handR(stage) };
         [[-1, P.arm[0], L.armL], [1, P.arm[1], L.armR]].forEach(([side, a, mat]) =>
