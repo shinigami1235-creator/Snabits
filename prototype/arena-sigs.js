@@ -393,7 +393,7 @@ Object.assign(ANIM,{
       if(t<380){ const k=eo(t/380); return {f:-0.1*k,rot:-d*0.5*k,sx:1+0.1*k,sy:1-0.12*k,pose:"crouch"}; }
       if(t<880){ const k=(t-380)/500; return {f:-0.1+0.72*eio(k),rot:-d*0.5+d*(Math.PI*2+0.7)*eio(k),arc:-14*Math.sin(k*Math.PI),pose:"punch",sx:1.08,sy:0.95}; }
       const k=(t-880)/700; return {f:0.62*(1-eio(k)),rot:d*0.2*(1-eo(k)),arc:-30*Math.sin(Math.min(1,k*2)*Math.PI),pose:k<0.5?"punch":"happy"}; },
-    def(t){ if(t<880||t>1580) return null; const k=(t-880)/700, up=Math.sin(Math.min(1,k*1.25)*Math.PI); return {lift:-70*up,off:[24*eo(k),0],rot:2.4*eo(Math.min(1,k*1.2)),pose:"hurt"}; },
+    def(t){ if(t<880||t>1580) return null; const k=(t-880)/700, up=Math.sin(Math.min(1,k*1.25)*Math.PI); return {lift:-70*up,off:[24*eo(k),0],rot:0.6*Math.sin(Math.min(1,k*1.2)*Math.PI),pose:"hurt"}; },
     fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, d=atDir(x), gc=x.col||[220,60,60];
       if(t>380&&t<900){ const k=(t-380)/500; c.save(); c.globalCompositeOperation="lighter"; atCrescent(c,s.x,s.y,s.r*1.5,-d*0.5+d*(Math.PI*2+0.7)*eio(k)-Math.PI/2,Math.min(0.95,k),[255,220,170]); c.restore();
         const gp={x:s.x+Math.cos(-Math.PI/2+d*(Math.PI*2+0.7)*eio(k))*s.r*1.2,y:s.y+Math.sin(-Math.PI/2+d*(Math.PI*2+0.7)*eio(k))*s.r*1.2}; SG.glove(c,gp.x,gp.y,s.r*(0.3+0.35*k),d,gc,0.9); }
@@ -456,6 +456,269 @@ if(typeof KSND!=="undefined") Object.assign(KSND,{
   sg_clawswipe:(d,t)=>{ dNoise(d,t,0.25,0.2,'lowpass',300); dNoise(d,t+0.26,0.46,0.15,'lowpass',200); dKick(d,t+0.72,0.6); dNoise(d,t+0.72,0.3,0.2,'lowpass',600); [0.9,0.93,0.96].forEach(x=>dNoise(d,t+x,0.1,0.22,'highpass',2800,2)); }   // digging in, rumbling underground, bursting up, three claw rakes
 });
 if(typeof SWING!=="undefined") ["sg_talondive","sg_bigswing","sg_cactuspunch","sg_clawswipe","sg_venomcoil"].forEach(k=>SWING.add(k));
+
+
+/* ---------- group C ---------- */
+SG.ball=(c,x,y,r,col)=>{ const g=c.createRadialGradient(x-r*0.35,y-r*0.35,r*0.1,x,y,r); g.addColorStop(0,atRgba(col.map(v=>Math.min(255,v+50)),1)); g.addColorStop(1,atRgba(col,1)); c.fillStyle=g; c.beginPath(); c.arc(x,y,r,0,7); c.fill();
+  c.strokeStyle="rgba(80,50,50,.35)"; c.lineWidth=1.5; c.stroke(); c.fillStyle="rgba(255,255,255,.6)"; c.beginPath(); c.ellipse(x-r*0.35,y-r*0.4,r*0.25,r*0.15,-0.5,0,7); c.fill(); };
+SG.crane=(c,x,y,z,a,col="#fff8f0")=>{ c.save(); c.translate(x,y); c.rotate(a); c.fillStyle=col; c.strokeStyle="rgba(150,120,110,.7)"; c.lineWidth=1;
+  c.beginPath(); c.moveTo(-z,0); c.lineTo(0,-z*0.15); c.lineTo(z,-z*0.5); c.lineTo(z*0.3,z*0.1); c.closePath(); c.fill(); c.stroke();
+  c.fillStyle="#ffd4d4"; c.beginPath(); c.moveTo(-z*0.2,0); c.lineTo(z*0.1,-z*0.9); c.lineTo(z*0.35,0); c.closePath(); c.fill(); c.stroke(); c.restore(); };
+SG.note=(c,x,y,z,col,a)=>{ if(typeof atNote==="function") atNote(c,x,y,z,col,a,false); };
+Object.assign(ANIM,{
+  /* Wick: its flame shoots up tall and wax pours down its sides, then it flings a wave of burning wax that coats the target and catches */
+  sg_meltdown:{C:800,D:1500,sig:true,
+    atk:(t,o)=>{ const d=(o&&o.dir)||1; if(t<480){ const k=eo(t/480); return {sy:1+0.1*k-0.04*Math.sin(t/40),sx:1-0.05*k,pose:"cast"}; } if(t<640){ const k=eo((t-480)/160); return {rot:d*0.3*k,sy:0.92,sx:1.08,pose:"push"}; } const k=(t-640)/860; return {rot:d*0.3*(1-eo(k)),sy:0.92+0.08*eo(k),sx:1.08-0.08*eo(k),pose:"idle"}; },
+    def(t){ const a=SG.shake(t,800,650,3); if(a){ a.sy=1-0.06; } return a; },
+    fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, d=atDir(x), WAX=[255,236,200], top={x:s.x,y:s.top.y+s.r*0.1};
+      if(t<700){ const k=Math.min(1,t/480); SG.flame(c,top.x,top.y,s.r*(0.6+1.4*k),s.r*(0.2+0.2*k),t,1,1); for(let i=0;i<4;i++){ const dr=Math.min(1,Math.max(0,(t-i*90)/400)); c.fillStyle=atRgba(WAX,1); c.beginPath(); c.ellipse(s.x+(i-1.5)*s.r*0.45,s.top.y+s.r*0.3+dr*s.r*0.8,s.r*0.09,s.r*0.12+dr*s.r*0.12,0,0,7); c.fill(); } }
+      if(t>480&&t<820){ const k=(t-480)/320; for(let i=0;i<9;i++){ const q=Math.max(0,Math.min(1,k*1.3-i*0.04)), p=lerpP({x:s.x+d*s.r*0.5,y:s.y-s.r*0.3},{x:tg.x,y:tg.top.y+R*0.3},eio(q),R*(1+0.4*(i%3)),(i-4)*R*0.08);
+          c.fillStyle=atRgba(i%3?WAX:[255,170,90],1); c.beginPath(); c.arc(p.x,p.y,R*(0.12+0.05*(i%2)),0,7); c.fill(); c.save(); c.globalCompositeOperation="lighter"; atGlowA(c,p.x,p.y,R*0.25,[255,160,60],0.5); c.restore(); } }
+      if(t>=800){ atImpact(t,800,0.55,0.25); const k=(t-800)/700, out=k>0.8?1-(k-0.8)/0.2:1; c.save(); c.globalAlpha=out;
+        c.fillStyle=atRgba(WAX,1); c.strokeStyle="rgba(200,160,110,.6)"; c.lineWidth=1.5; c.beginPath(); c.ellipse(tg.x,tg.top.y+R*0.25,R*1.05,R*0.32,0,0,7); c.fill(); c.stroke();
+        for(let i=0;i<6;i++){ const dr=Math.min(1,Math.max(0,k*1.6-i*0.06)), dx=tg.x+(i-2.5)*R*0.38; c.fillStyle=atRgba(WAX,1); c.fillRect(dx-R*0.07,tg.top.y+R*0.25,R*0.14,dr*R*(0.4+0.4*atH(i))); c.beginPath(); c.arc(dx,tg.top.y+R*0.25+dr*R*(0.4+0.4*atH(i)),R*0.09,0,7); c.fill(); }
+        for(let i=0;i<4;i++) SG.flame(c,tg.x+(i-1.5)*R*0.5,tg.top.y+R*0.2,R*(0.5+0.3*(i%2))*Math.min(1,k*3),R*0.16,t,i*2,1); c.restore(); } }},
+  /* Lumo: its tail lights up and a swarm of fireflies pours out, circles the target in a ball of light, then they all flash at once */
+  sg_lanternflash:{C:820,D:1500,sig:true,
+    atk:t=>({pose:t<820?"cast":t<1200?"push":"idle",arc:-6*Math.sin(Math.min(1,t/820)*Math.PI),sx:1+0.05*Math.sin(t/80),flash:t>780&&t<880?3:0}),
+    def(t){ if(t<820||t>1500) return null; return {pose:"hurt",off:[Math.sin(t/22)*2,0],sx:0.95,sy:0.95}; },
+    fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, FY=[220,255,120], cen={x:tg.x,y:tg.y-R*0.2}; c.save(); c.globalCompositeOperation="lighter";
+      for(let i=0;i<22;i++){ const st=atH(i*3)*250, k=Math.min(1,Math.max(0,(t-st)/520)); if(k<=0) continue; const orbit=t/220+i*0.9, rr=R*(1.0+0.4*atH(i*7)), op={x:cen.x+Math.cos(orbit)*rr,y:cen.y+Math.sin(orbit)*rr*0.75};
+        const p=k<1?lerpP({x:s.x,y:s.y},op,eio(k),R*(0.5+atH(i)),(atH(i*5)-0.5)*R*1.5):op, on=0.5+0.5*Math.sin(t/60+i*2), fade=t>1200?1-(t-1200)/300:1; atGlowA(c,p.x,p.y,R*0.12,FY,(0.4+0.6*on)*fade); c.fillStyle=`rgba(255,255,220,${fade})`; c.fillRect(p.x-1,p.y-1,2,2); }
+      if(t>=820){ atImpact(t,820,0.4,0.6); const k=(t-820)/600; atGlowA(c,cen.x,cen.y,R*(1.2+1.6*eo(k)),FY,0.9*(1-k)); for(let i=0;i<22;i++){ const a=i/22*Math.PI*2; atStar4(c,cen.x+Math.cos(a)*R*(1+k*0.8),cen.y+Math.sin(a)*R*0.75*(1+k*0.8),R*0.2*(1-k),"rgba(255,255,200,.95)"); } }
+      c.restore(); }},
+  /* Snooze: it yawns, floats up like a drifting pillow and flops down on the target with a thump that bursts feathers out */
+  sg_sleepyslam:{C:880,D:1560,contact:true,marks:true,sig:true,
+    atk:(t,o)=>{ const d=(o&&o.dir)||1; if(t<300){ const k=eo(t/300); return {sy:1+0.12*k,sx:1-0.06*k,pose:"cast"}; }
+      if(t<700){ const k=eio((t-300)/400); return {f:0.6*k,arc:-120*Math.sin(k*Math.PI/2)-Math.sin(t/80)*4,rot:Math.sin(t/120)*0.15,pose:"float"}; }
+      if(t<880){ const k=ei((t-700)/180); return {f:0.62,arc:-120*(1-k),rot:d*0.15*k,sx:1+0.25*k,sy:1-0.2*k,pose:"tackle"}; }
+      const k=(t-880)/680; return {f:0.62*(1-eio(Math.max(0,k-0.25)/0.75)),sx:1.25-0.25*eo(k),sy:0.8+0.2*eo(k),pose:k<0.4?"land":"happy"}; },
+    def:t=>SG.squash(t,880,0.42,600),
+    fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r;
+      if(t<700) for(let i=0;i<3;i++){ const ph=((t/700)+i/3)%1; SG.zzz(c,s.x+s.r*(0.4+ph*0.5),s.top.y-ph*s.r*1.1,s.r*(0.16+0.08*i),Math.sin(ph*Math.PI)); }
+      atImpact(t,880,0.8,0.25);
+      if(t>=880){ const k=(t-880)/680; for(let i=0;i<16;i++){ const a=-Math.PI*(atH(i*3)), sp=R*(0.4+1.8*eo(k)), fl=Math.sin(t/120+i)*R*0.2; SG.feather(c,tg.x+Math.cos(a)*sp*(i%2?1:-1)+fl,tg.y+Math.sin(a)*sp+k*R*1.2,R*0.18,t/200+i,"#fbf8ff",1-k); }
+        SG.dust(c,tg.x,tg.foot,R*1.2,k,10); for(let i=0;i<3;i++){ const ph=(k+i/3)%1; SG.zzz(c,tg.x+R*(0.4+ph*0.6),tg.top.y-ph*R,R*(0.15+0.1*i),Math.sin(ph*Math.PI)*(1-k*0.5)); } } }},
+  /* Inky: it melts into a puddle, the puddle races across, and splashes up round the target into a huge mirrored ink blot that drains away */
+  sg_inkblot:{C:760,D:1460,sig:true,
+    atk:t=>{ if(t<300){ const k=eo(t/300); return {sy:1-0.85*k,sx:1+0.4*k,pose:"crouch"}; } if(t<1100) return {sy:0.15,sx:1.4,pose:"crouch"}; const k=eo((t-1100)/300); return {sy:0.15+0.85*k,sx:1.4-0.4*k,pose:"idle"}; },
+    def(t){ if(t<760||t>1460) return null; return {pose:"hurt",off:[Math.sin(t/30)*2,0],flash:0}; },
+    fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, INK=[34,26,52];
+      if(t>250&&t<800){ const k=Math.min(1,(t-250)/450), px=s.x+(tg.x-s.x)*eio(k); c.fillStyle=atRgba(INK,0.9); c.beginPath(); c.ellipse(px,tg.foot,R*0.8,R*0.18,0,0,7); c.fill(); for(let i=0;i<5;i++){ c.beginPath(); c.arc(px-atDir(x)*R*(0.7+i*0.3),tg.foot,R*0.1*(1-i*0.15),0,7); c.fill(); } }
+      if(t<700) return; atImpact(t,760,0.5,0.15);
+      const g=eo(Math.min(1,(t-700)/250)), drain=t>1150?Math.min(1,(t-1150)/300):0, cy=tg.y-R*0.15; c.save(); c.fillStyle=atRgba(INK,0.88*(1-drain*0.8));
+      for(const sd of [-1,1]){ c.beginPath(); for(let j=0;j<=24;j++){ const a=-Math.PI/2+j/24*Math.PI, rr=R*(0.9+0.5*Math.sin(a*3+1)+0.25*Math.sin(a*7+2))*g*(1-drain*0.3); c.lineTo(tg.x+sd*Math.cos(a)*rr,cy+Math.sin(a)*rr*1.05+drain*R*0.8); } c.closePath(); c.fill(); }
+      for(let i=0;i<6;i++){ const a=i/6*Math.PI*2+0.4, rr=R*(1.5+0.3*atH(i))*g; for(const sd of [-1,1]){ c.beginPath(); c.arc(tg.x+sd*Math.abs(Math.cos(a))*rr,cy+Math.sin(a)*rr+drain*R,R*(0.1+0.08*atH(i*3)),0,7); c.fill(); } }
+      c.fillStyle=`rgba(160,140,220,${0.4*(1-drain)})`; c.beginPath(); c.ellipse(tg.x-R*0.4,cy-R*0.5,R*0.25,R*0.1,-0.4,0,7); c.fill(); c.restore(); }},
+  /* Cobble: it curls into a boulder and rolls across the arena, gathering speed and rubble, and crashes through the target in a spray of stones */
+  sg_rubbleroll:{C:780,D:1460,contact:true,marks:true,sig:true,
+    atk:(t,o)=>{ const d=(o&&o.dir)||1; if(t<280){ const k=eo(t/280); return {sx:1-0.1*k,sy:1-0.18*k,rot:-d*0.6*k,pose:"crouch"}; }
+      if(t<780){ const k=ei((t-280)/500); return {f:0.7*k,rot:-d*0.6+d*Math.PI*4*k,arc:-Math.abs(Math.sin(k*Math.PI*3))*10,sx:0.9,sy:0.82,pose:"crouch"}; }
+      const k=(t-780)/680; return {f:0.7-0.7*eio(Math.max(0,k-0.15)/0.85),arc:-40*Math.sin(Math.min(1,k*2)*Math.PI),rot:d*Math.PI*4-d*(Math.PI*4)*eo(k)*0+d*0.4*(1-k),sx:0.9+0.1*eo(k),sy:0.82+0.18*eo(k),pose:k<0.5?"jump":"idle"}; },
+    def(t){ const a=SG.knock(t,780,1,30,560); if(a) a.rot=0.3*(1-(t-780)/560); return a; },
+    fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, d=atDir(x);
+      if(t>280&&t<800){ const k=(t-280)/500, px=s.x; for(let i=0;i<6;i++){ const ph=((t/180)+i/6)%1; SG.puff(c,px-d*s.r*(0.5+ph*1.4),s.foot-ph*s.r*0.4,s.r*(0.12+0.2*ph),(1-ph)*0.7*Math.min(1,k*3),[220,205,180]); }
+        for(let i=0;i<4;i++){ const ph=((t/150)+i/4)%1; SG.shard(c,px-d*s.r*(0.4+ph),s.foot-Math.sin(ph*Math.PI)*s.r*0.6,s.r*0.1,t/50+i,"#a89a88"); }
+        c.strokeStyle="rgba(255,255,255,.5)"; c.lineWidth=2; for(let i=0;i<4;i++){ const yy=s.y+(i-1.5)*s.r*0.35; c.beginPath(); c.moveTo(px-d*s.r*1.1,yy); c.lineTo(px-d*s.r*(1.8+k),yy); c.stroke(); } }
+      atImpact(t,780,0.9,0.3);
+      if(t>=780){ const k=(t-780)/680; for(let i=0;i<16;i++){ const a=-Math.PI*(0.05+0.9*atH(i*3)), sp=R*(0.5+2.2*eo(k))*(0.6+0.5*atH(i)); SG.shard(c,tg.x+d*Math.abs(Math.cos(a))*sp*(i%3?1:-0.5),tg.y+Math.sin(a)*sp*0.8+k*k*R*2,R*(0.1+0.08*atH(i*5)),t/90+i,i%2?"#9c8e7c":"#c4b6a0"); }
+        SG.dust(c,tg.x,tg.foot,R*1.2,k,10); atPow(c,{x:tg.x-d*R*0.3,y:tg.y-R*0.3},Math.min(1,k*1.3),R/24); } }},
+  /* Nimbo: it rises up and a column of wind and rain slams straight down on the target, pressing it flat, with a splash ring round its feet */
+  sg_downdraft:{C:760,D:1460,sig:true,
+    atk:t=>({arc:t<760?-30*eo(t/760):-30*(1-eo((t-760)/700)),pose:t<760?"cast":"push",sx:1+0.06*Math.sin(t/60),sy:1-0.06*Math.sin(t/60)}),
+    def(t){ if(t<760||t>1460) return null; const a=t<1150?1:1-(t-1150)/310; return {sx:1+0.25*a,sy:1-0.35*a,pose:"hurt",off:[Math.sin(t/14)*2*a,0]}; },
+    fx(c,t,x){ const tg=x.target, R=tg.r, top=Math.max(0,tg.top.y-R*4), WC=[170,210,255], col=x.col||WC, show=t<500?eo(t/500):t>1250?1-(t-1250)/210:1; if(show<=0) return;
+      const w=R*(0.6+0.6*Math.min(1,Math.max(0,(t-500)/260))); c.save(); c.globalAlpha=show;
+      const g=c.createLinearGradient(tg.x-w,0,tg.x+w,0); g.addColorStop(0,"rgba(200,225,255,0)"); g.addColorStop(0.5,atRgba(WC,0.4)); g.addColorStop(1,"rgba(200,225,255,0)"); c.fillStyle=g; c.fillRect(tg.x-w,top,w*2,tg.foot-top);
+      c.strokeStyle="rgba(255,255,255,.7)"; c.lineWidth=2; c.lineCap="round"; for(let i=0;i<12;i++){ const ph=((t/200)+atH(i*3))%1, px=tg.x+(atH(i)-0.5)*w*1.8, py=top+ph*(tg.foot-top); c.beginPath(); c.moveTo(px,py); c.lineTo(px,py+R*0.5); c.stroke(); }
+      for(let i=0;i<5;i++){ const ph=((t/260)+i/5)%1, y=top+ph*(tg.foot-top); c.strokeStyle=atRgba(col,0.5*(1-ph*0.5)); c.lineWidth=2.5; c.beginPath(); c.ellipse(tg.x,y,w*(0.9+0.2*Math.sin(t/80+i)),R*0.15,0,0,Math.PI); c.stroke(); }
+      if(t>=760){ atImpact(t,760,0.6,0.15); const k=(t-760)/700; for(let i=0;i<3;i++){ const kk=Math.min(1,Math.max(0,k*1.5-i*0.15)); SG.ring(c,tg.x,tg.foot,R*(0.6+2.2*eo(kk)),R*(0.18+0.5*eo(kk)),[220,240,255],4*(1-kk),1-kk); }
+        for(let i=0;i<12;i++){ const a=-Math.PI*(i/11), sp=R*(0.6+1.4*eo(Math.min(1,k*1.5))); c.fillStyle=`rgba(210,235,255,${1-k})`; c.beginPath(); c.arc(tg.x+Math.cos(a)*sp,tg.foot+Math.sin(a)*sp*0.5+k*k*R*0.5,R*0.06,0,7); c.fill(); } }
+      c.restore(); }},
+  /* Dango: it fires its three dumplings one after another; they bonk the target, bounce, stack on its head, and a skewer spears all three */
+  sg_triplestack:{C:600,D:1300,sig:true,
+    atk:(t,o)=>{ const d=(o&&o.dir)||1; for(let i=0;i<3;i++){ const T0=300+i*120; if(t>=T0&&t<T0+120) return {sx:1.12,sy:0.88,rot:d*0.12,pose:"push"}; } return {pose:t<300?"cast":t<1000?"happy":"idle",sy:t<300?1-0.1*eo(t/300):1}; },
+    def(t){ for(let i=0;i<3;i++){ const T0=600+i*120; if(t>=T0&&t<T0+110) return {sx:1.1,sy:0.85,off:[6,0],pose:"hit"}; } return t>=960&&t<1300?{pose:"hurt",sy:0.94}:null; },
+    fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, d=atDir(x), cols=[[255,160,190],[250,245,235],[150,210,120]], head={x:tg.x,y:tg.top.y};
+      for(let i=0;i<3;i++){ const T0=300+i*120, T1=600+i*120, br=R*0.32, rest={x:head.x,y:head.y-br*(0.9+1.8*i)};
+        if(t<T0) continue; let p;
+        if(t<T1){ const k=(t-T0)/(T1-T0); p=lerpP({x:s.x+d*s.r*0.6,y:s.y-s.r*0.3},{x:tg.x-d*R*0.3,y:tg.y-R*0.2},eio(k),R*1.2); }
+        else if(t<T1+220){ const k=(t-T1)/220; p=lerpP({x:tg.x-d*R*0.3,y:tg.y-R*0.2},rest,eo(k),R*1.4); if(k<0.4){ atImpact(t,T1,0.3,0); atPow(c,{x:tg.x-d*R*0.3,y:tg.y-R*0.2},k/0.4*0.8,R/34); } }
+        else p=rest;
+        const out=t>1200?1-(t-1200)/100:1; c.globalAlpha=Math.max(0,out); SG.ball(c,p.x,p.y,br,cols[i]); c.globalAlpha=1; }
+      if(t>960&&t<1300){ const k=Math.min(1,(t-960)/160), out=t>1200?1-(t-1200)/100:1; c.globalAlpha=Math.max(0,out); c.strokeStyle="#c89a5a"; c.lineWidth=R*0.08; c.lineCap="round"; c.beginPath(); c.moveTo(head.x,head.y+R*0.1); c.lineTo(head.x,head.y-R*0.32*(0.9+1.8*2)-R*0.5*k); c.stroke(); c.globalAlpha=1; atImpact(t,960,0.2,0); } }},
+  /* Oaklet: the ground splits under the target and roots burst up, curl round it and grip, with new leaves sprouting along them */
+  sg_rootsnare:{C:700,D:1400,sig:true,
+    atk:t=>({pose:t<700?"cast":t<1200?"push":"idle",sy:1-0.08*Math.sin(Math.min(1,t/700)*Math.PI),rot:Math.sin(t/90)*0.04}),
+    def(t){ if(t<700||t>1400) return null; return {pose:"hurt",off:[Math.sin(t/35)*2.5,0],rot:Math.sin(t/70)*0.06}; },
+    fx(c,t,x){ const tg=x.target, R=tg.r, h=tg.foot-tg.top.y;
+      if(t>300&&t<760){ const k=(t-300)/460; SG.cracks(c,tg.x,tg.foot,R*1.6*k,7,0.8,1); SG.dust(c,tg.x,tg.foot,R,k*0.6,6); }
+      if(t<560) return; const g=eo(Math.min(1,(t-560)/320)), out=t>1250?1-(t-1250)/150:1; if(out<=0) return; atImpact(t,700,0.45,0); c.save(); c.globalAlpha=out; c.lineCap="round";
+      for(let r=0;r<5;r++){ const sd=r%2?1:-1, bx=tg.x+sd*R*(0.5+0.25*(r>>1)), N=20; c.beginPath(); c.moveTo(bx,tg.foot);
+        for(let j=1;j<=N*g;j++){ const q=j/N, px=bx-sd*R*0.9*Math.sin(q*Math.PI*1.2)+Math.sin(q*9+r)*R*0.08, py=tg.foot-q*h*(0.75+0.15*(r%3)); c.lineTo(px,py); }
+        c.strokeStyle="#5a3a22"; c.lineWidth=R*0.2*(1-0.3*(r%2)); c.stroke(); c.strokeStyle="#8a5c34"; c.lineWidth=R*0.12*(1-0.3*(r%2)); c.stroke();
+        for(let j=4;j<=N*g;j+=5){ const q=j/N, px=bx-sd*R*0.9*Math.sin(q*Math.PI*1.2), py=tg.foot-q*h*(0.75+0.15*(r%3)); c.save(); c.translate(px,py); c.rotate(sd*0.8+q); c.fillStyle="#6fbf4a"; c.beginPath(); c.ellipse(R*0.12,0,R*0.14,R*0.06,0,0,7); c.fill(); c.restore(); } }
+      c.restore(); }},
+  /* Roly: it curls into a ball, its armour bands slide shut one by one and shine, and it rocks in place */
+  sg_curlup:{C:480,D:1150,sig:true,
+    atk:t=>{ const k=eo(Math.min(1,t/320)), un=t>980?eo((t-980)/170):0; return {sx:1-0.1*k*(1-un),sy:1-0.22*k*(1-un),rot:(t>480&&t<980?Math.sin((t-480)/90)*0.18:0),pose:"crouch"}; },
+    def:()=>null,
+    fx(c,t,x){ const s=x.self, R=s.r, cx=s.x, cy=s.y+R*0.1, out=t>1000?1-(t-1000)/150:1; if(out<=0) return; c.save(); c.globalAlpha=out; const rot=t>480&&t<980?Math.sin((t-480)/90)*0.18:0;
+      for(let i=0;i<5;i++){ const k=Math.min(1,Math.max(0,(t-60-i*70)/200)); if(k<=0) continue; const a0=-Math.PI*0.95+i*0.38+rot; c.strokeStyle="#5a4a3a"; c.lineWidth=R*0.46; c.lineCap="round"; c.beginPath(); c.arc(cx,cy,R*0.92,a0,a0+0.34*eo(k)); c.stroke();
+        c.strokeStyle="#b8a284"; c.lineWidth=R*0.34; c.stroke(); c.strokeStyle="rgba(255,255,255,.55)"; c.lineWidth=R*0.07; c.beginPath(); c.arc(cx,cy,R*1.02,a0,a0+0.34*eo(k)); c.stroke(); }
+      if(t>=480){ const k=Math.min(1,(t-480)/420); atImpact(t,480,0.2,0); c.globalCompositeOperation="lighter"; atStar4(c,cx-R*0.7+k*R*1.4,cy-R*1.0,R*0.35*Math.sin(k*Math.PI),"rgba(255,255,255,.95)"); SG.ring(c,cx,cy,R*(1.2+0.5*k),R*(1.2+0.5*k),[255,240,200],3*(1-k),1-k); }
+      c.restore(); }},
+  /* Trundle: it glides forward leaving a shining trail of slime that races to the target, gloops round its feet and holds it in sticky strands */
+  sg_stickytrail:{C:720,D:1420,sig:true,
+    atk:(t,o)=>{ const d=(o&&o.dir)||1; return t<720?{f:0.12*eo(t/720),sx:1+0.08*Math.sin(t/70),sy:1-0.05*Math.sin(t/70),pose:"cast"}:{f:0.12*(1-eo((t-720)/700)),pose:t<1150?"push":"idle"}; },
+    def(t){ if(t<720||t>1420) return null; return {pose:"hurt",sy:0.92+0.04*Math.sin(t/70),sx:1.06,off:[Math.sin(t/50)*2,0]}; },
+    fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, SL=[170,230,150], fy=tg.foot, out=t>1270?1-(t-1270)/150:1; if(out<=0) return; c.save(); c.globalAlpha=out;
+      const k=Math.min(1,t/720), ex=s.x+(tg.x-s.x)*eio(k); c.fillStyle=atRgba(SL,0.55); c.beginPath(); c.moveTo(s.x,fy-R*0.06); for(let j=0;j<=20;j++){ const q=j/20, px=s.x+(ex-s.x)*q; c.lineTo(px,fy-R*(0.06+0.04*Math.sin(q*10+t/90))); } for(let j=20;j>=0;j--){ const q=j/20, px=s.x+(ex-s.x)*q; c.lineTo(px,fy+R*(0.06+0.04*Math.sin(q*12))); } c.closePath(); c.fill();
+      c.save(); c.globalCompositeOperation="lighter"; for(let i=0;i<8;i++){ const q=((t/500)+i/8)%1; atStar4(c,s.x+(ex-s.x)*q,fy-R*0.03,R*0.08*Math.sin(q*Math.PI),"rgba(230,255,220,.9)"); } c.restore();
+      if(t>=720){ atImpact(t,720,0.35,0); const g=eo(Math.min(1,(t-720)/250)); c.fillStyle=atRgba(SL,0.7); c.beginPath(); c.ellipse(tg.x,fy,R*1.3*g,R*0.32*g,0,0,7); c.fill();
+        c.strokeStyle=atRgba(SL,0.85); c.lineCap="round"; for(let i=0;i<7;i++){ const bx=tg.x+(i-3)*R*0.3, hh=R*(0.4+0.4*atH(i))*g*(1+0.1*Math.sin(t/80+i)); c.lineWidth=R*(0.06+0.04*(i%2)); c.beginPath(); c.moveTo(bx,fy); c.quadraticCurveTo(bx+Math.sin(t/120+i)*R*0.15,fy-hh*0.6,bx+(i-3)*R*0.05,fy-hh); c.stroke(); }
+        c.fillStyle="rgba(255,255,255,.6)"; c.beginPath(); c.ellipse(tg.x-R*0.5,fy-R*0.05,R*0.25,R*0.05,0,0,7); c.fill(); }
+      c.restore(); }},
+  /* Clank: the key on its back cranks round, then it lets loose five clockwork punches in a blur, sparks and springs flying off the target */
+  sg_windup:{C:560,D:1260,contact:true,marks:true,sig:true,
+    atk:(t,o)=>{ const d=(o&&o.dir)||1; if(t<360){ const k=eo(t/360); return {f:0.4*k,rot:Math.sin(t/25)*0.05,sy:1-0.06*k,pose:"crouch"}; }
+      if(t<1000){ const i=Math.floor((t-360)/128), ph=((t-360)%128)/128, hit=Math.sin(ph*Math.PI); return {f:0.48+0.16*hit,rot:d*(i%2?0.18:-0.05)*hit,off:[Math.sin(t/9)*1.5,0],pose:"punch",sx:1+0.05*hit}; }
+      const k=(t-1000)/260; return {f:0.48*(1-eio(k)),pose:"idle"}; },
+    def(t){ if(t<480||t>1260) return null; const ph=((t-480)%128)/128; return {off:[8*Math.sin(ph*Math.PI)+(t>1000?0:3),0],pose:"hit",flash:Math.floor(t/64)%2?2:0}; },
+    fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, d=atDir(x), MT=[190,200,210];
+      if(t<700){ const k=Math.min(1,t/360), kx=s.x-d*s.r*0.95, ky=s.y-s.r*0.2, sp=t/40; c.save(); c.translate(kx,ky); c.scale(Math.cos(sp),1); c.fillStyle="#d8b85a"; c.strokeStyle="#7a5a20"; c.lineWidth=2;
+        for(const sd of [-1,1]){ c.beginPath(); c.ellipse(sd*s.r*0.25,0,s.r*0.22,s.r*0.16,0,0,7); c.fill(); c.stroke(); } c.fillRect(-s.r*0.05,-s.r*0.05,s.r*0.1,s.r*0.1); c.restore(); }
+      for(let i=0;i<5;i++){ const T0=488+i*128, k=(t-T0)/260; if(k<0||k>1) continue; atImpact(t,T0,0.22+i*0.04,0); const p={x:tg.x-d*R*(0.5+0.1*(i%2)),y:tg.y+(i%2?-1:1)*R*0.25};
+        SG.glove(c,p.x,p.y,R*(0.35+0.05*i),d,MT,1-ei(k)); c.save(); c.globalCompositeOperation="lighter"; for(let j=0;j<6;j++){ const a=atH(i*9+j)*Math.PI*2, L=R*(0.3+0.6*k); c.strokeStyle=`rgba(255,220,120,${1-k})`; c.lineWidth=2; c.beginPath(); c.moveTo(p.x+Math.cos(a)*R*0.2,p.y+Math.sin(a)*R*0.2); c.lineTo(p.x+Math.cos(a)*L,p.y+Math.sin(a)*L); c.stroke(); } c.restore(); }
+      if(t>1000&&t<1260){ const k=(t-1000)/260; c.strokeStyle=`rgba(150,160,170,${1-k})`; c.lineWidth=2; c.beginPath(); for(let j=0;j<=24;j++){ const q=j/24; c.lineTo(tg.x+R*0.6+Math.cos(q*Math.PI*8)*R*0.12,tg.top.y-k*R*0.8-q*R*0.6); } c.stroke(); } }},
+  /* Crease: it unfolds into a flock of paper cranes that swirl up and dive on the target in four waves, leaving paper scraps fluttering */
+  sg_cranes:{C:640,D:1340,sig:true,
+    atk:t=>({pose:t<640?"cast":t<1100?"push":"idle",sx:t<500?1-0.25*eo(t/500):0.75+0.25*eo((t-500)/600),sy:t<500?1-0.1*eo(t/500):0.9+0.1*eo((t-500)/600),rot:Math.sin(t/70)*0.06}),
+    def(t){ for(let i=0;i<4;i++){ const T0=640+i*110; if(t>=T0&&t<T0+100) return {off:[7,0],pose:"hit",flash:2}; } return t>=1080&&t<1340?{pose:"hurt"}:null; },
+    fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, d=atDir(x), cols=["#fff8f0","#ffd6d6","#d6e8ff","#fff0b8"];
+      for(let i=0;i<20;i++){ const wave=i%4, T0=120+i*14, T1=640+wave*110; if(t<T0||t>T1+300) continue;
+        let p, a; if(t<T1-260){ const k=(t-T0)/(T1-260-T0), orb=t/180+i*0.8; p={x:s.x+Math.cos(orb)*s.r*(0.9+0.6*k),y:s.y-s.r*(0.5+1.2*k)+Math.sin(orb)*s.r*0.35}; a=orb+Math.PI/2; }
+        else if(t<T1){ const k=(t-(T1-260))/260, from={x:s.x+Math.cos((T1-260)/180+i*0.8)*s.r*1.5,y:s.y-s.r*1.7}; p=lerpP(from,{x:tg.x+(atH(i)-0.5)*R*0.8,y:tg.y+(atH(i*3)-0.5)*R*0.8},ei(k),R*0.5); a=Math.atan2(tg.y-from.y,tg.x-from.x); }
+        else { const k=(t-T1)/300; p={x:tg.x+(atH(i)-0.5)*R*(0.8+2*k),y:tg.y+(atH(i*3)-0.5)*R+k*R*1.2}; a=t/100+i; c.globalAlpha=1-k; }
+        SG.crane(c,p.x,p.y,R*0.22,a,cols[i%4]); c.globalAlpha=1; if(t>=T1&&t<T1+60) atImpact(t,T1,0.2,0); } }},
+  /* Twiglet: a pair of giant garden shears opens beside the target and snips shut through it, scattering leaves and twigs */
+  sg_snip:{C:760,D:1460,contact:false,sig:true,
+    atk:(t,o)=>{ const d=(o&&o.dir)||1; return t<760?{rot:-d*0.15*eo(t/760),pose:"cast",sx:1+0.04*Math.sin(t/60)}:{rot:d*0.15*(1-eo((t-760)/600)),pose:t<1100?"push":"idle"}; },
+    def(t){ const a=SG.knock(t,760,1,14,500); if(a){ a.flash=t<850?3:0; } return a; },
+    fx(c,t,x){ const tg=x.target, R=tg.r, d=atDir(x), piv={x:tg.x-d*R*1.5,y:tg.y-R*0.1}, L=R*2.6, show=Math.min(1,t/200)*(t>1250?1-(t-1250)/200:1); if(show<=0) return;
+      const open=t<560?0.55*eo(t/560):t<760?0.55*(1-ei((t-560)/200)):0.0, base=d>0?0:Math.PI; c.save(); c.globalAlpha=show;
+      for(const sd of [-1,1]){ const a=base+sd*open; c.save(); c.translate(piv.x,piv.y); c.rotate(a);
+        c.fillStyle="#d8dde4"; c.strokeStyle="#5a6068"; c.lineWidth=2; c.beginPath(); c.moveTo(0,0); c.lineTo(L,-sd*R*0.05); c.lineTo(L*0.98,sd*R*0.12); c.quadraticCurveTo(L*0.5,sd*R*0.3,0,sd*R*0.12); c.closePath(); c.fill(); c.stroke();
+        c.fillStyle="rgba(255,255,255,.6)"; c.fillRect(L*0.2,-sd*R*0.02-1,L*0.6,2);
+        c.fillStyle="#3f8a3a"; c.beginPath(); c.ellipse(-R*0.9,sd*R*0.15,R*0.9,R*0.16,sd*0.15,0,7); c.fill(); c.strokeStyle="#2a5a26"; c.stroke(); c.restore(); }
+      c.fillStyle="#8a8f96"; c.beginPath(); c.arc(piv.x,piv.y,R*0.12,0,7); c.fill(); c.restore();
+      atImpact(t,760,0.6,0.2);
+      if(t>=760){ const k=(t-760)/700; c.save(); c.globalCompositeOperation="lighter"; c.strokeStyle=`rgba(255,255,255,${1-k})`; c.lineWidth=4*(1-k); c.beginPath(); c.moveTo(tg.x-R*1.1,tg.y-R*0.1); c.lineTo(tg.x+R*1.1,tg.y-R*0.1); c.stroke(); c.restore();
+        for(let i=0;i<14;i++){ const a=-Math.PI*(atH(i*3)), sp=R*(0.4+1.6*eo(k)); if(i%3) atLeafBlade(c,tg.x+Math.cos(a)*sp*(i%2?1:-1),tg.y+Math.sin(a)*sp+k*k*R*1.2,R*0.3,t/150+i,i%2?"#6fbf4a":"#4f9a3a"); else SG.shard(c,tg.x+Math.cos(a)*sp,tg.y+Math.sin(a)*sp+k*k*R,R*0.08,t/90+i,"#8a5c34"); } } }},
+  /* Swirl: it shakes itself hard, a snow-globe dome drops over the target and a blizzard of snow and glitter whirls round inside it */
+  sg_shakeup:{C:760,D:1460,sig:true,
+    atk:t=>({off:[t<760?Math.sin(t/14)*6:0,t<760?Math.cos(t/17)*2:0],rot:t<760?Math.sin(t/20)*0.15:0,pose:t<760?"effort":t<1150?"push":"idle"}),
+    def(t){ if(t<760||t>1460) return null; return {rot:Math.sin((t-760)/90)*0.25,off:[Math.sin(t/40)*4,0],pose:"hurt"}; },
+    fx(c,t,x){ const tg=x.target, R=tg.r, cx=tg.x, cy=tg.y-R*0.25, DR=R*1.6, drop=t<560?0:Math.min(1,(t-560)/200), out=t>1300?1-(t-1300)/160:1; if(drop<=0||out<=0) return; c.save(); c.globalAlpha=out;
+      const yy=cy-(1-eo(drop))*R*3; c.fillStyle="rgba(200,230,255,.18)"; c.beginPath(); c.arc(cx,yy,DR,0,7); c.fill(); c.strokeStyle="rgba(240,250,255,.9)"; c.lineWidth=3; c.stroke();
+      c.fillStyle="rgba(255,255,255,.55)"; c.beginPath(); c.ellipse(cx-DR*0.45,yy-DR*0.45,DR*0.18,DR*0.1,-0.7,0,7); c.fill();
+      c.fillStyle="#8a5a34"; c.fillRect(cx-DR*0.8,yy+DR*0.82,DR*1.6,R*0.3); c.fillStyle="#a8744a"; c.fillRect(cx-DR*0.8,yy+DR*0.82,DR*1.6,R*0.08);
+      if(drop>=1){ atImpact(t,760,0.4,0.1); c.save(); c.beginPath(); c.arc(cx,cy,DR-2,0,7); c.clip(); for(let i=0;i<30;i++){ const a=t/(200+atH(i)*200)+i*0.7, rr=DR*(0.2+0.75*atH(i*3)), px=cx+Math.cos(a)*rr, py=cy+Math.sin(a)*rr*0.9;
+          if(i%3) atFlake(c,px,py,R*0.08,t/300+i); else { c.fillStyle=["#ffd84a","#ff8ac0","#8ad0ff"][i%9/3|0]; c.fillRect(px-2,py-2,4,4); } } c.restore(); }
+      c.restore(); if(t>900) SG.stars(c,tg.x,tg.top.y-R*0.15,R*0.6,t,3,"#e8f4ff"); }},
+  /* Ditty: a ballerina rises on a little stage and pirouettes while a ribbon of notes spirals round the target, which can't help swaying along */
+  sg_waltz:{C:760,D:1460,sig:true,
+    atk:t=>({rot:Math.sin(t/150)*0.12,arc:-4*Math.abs(Math.sin(t/150)),pose:t<760?"cast":t<1200?"happy":"idle"}),
+    def(t){ if(t<760||t>1460) return null; return {rot:Math.sin((t-760)/160)*0.3,off:[Math.sin((t-760)/160)*8,-Math.abs(Math.sin((t-760)/160))*5],pose:"hurt"}; },
+    fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, mid={x:(s.x+tg.x)/2,y:Math.min(s.top.y,tg.top.y)-R*0.4}, col=x.col||[255,170,220], show=Math.min(1,t/250)*(t>1300?1-(t-1300)/160:1); if(show<=0) return;
+      c.save(); c.globalAlpha=show; c.fillStyle="#c8a46a"; c.beginPath(); c.ellipse(mid.x,mid.y+R*0.6,R*0.6,R*0.14,0,0,7); c.fill(); c.fillStyle="#e8c88a"; c.beginPath(); c.ellipse(mid.x,mid.y+R*0.55,R*0.6,R*0.14,0,0,7); c.fill();
+      const sp=Math.cos(t/90); c.save(); c.translate(mid.x,mid.y+R*0.1); c.scale(sp,1); c.fillStyle="#ffd0e6"; c.beginPath(); c.ellipse(0,-R*0.05,R*0.32,R*0.1,0,0,7); c.fill(); c.fillStyle="#fff"; c.beginPath(); c.arc(0,-R*0.38,R*0.1,0,7); c.fill(); c.fillRect(-R*0.05,-R*0.3,R*0.1,R*0.28);
+      c.strokeStyle="#fff"; c.lineWidth=R*0.05; c.lineCap="round"; c.beginPath(); c.moveTo(0,-R*0.25); c.lineTo(-R*0.25,-R*0.45); c.moveTo(0,-R*0.25); c.lineTo(R*0.25,-R*0.45); c.moveTo(0,0); c.lineTo(0,R*0.4); c.moveTo(0,R*0.1); c.lineTo(R*0.2,R*0.25); c.stroke(); c.restore(); c.restore();
+      const k=Math.min(1,Math.max(0,(t-300)/460)); for(let i=0;i<14;i++){ const q=Math.max(0,k*1.4-i*0.03); if(q<=0) continue; const p=q<1?lerpP(mid,{x:tg.x,y:tg.y-R*0.3},eio(q),R*0.6):{x:tg.x+Math.cos(t/200+i*0.45)*R*1.3,y:tg.y-R*0.3+Math.sin(t/200+i*0.45)*R*0.5};
+        SG.note(c,p.x,p.y,R*0.18,atRgba(i%2?col:[255,255,255],1),show*(t>1200?1-(t-1200)/260:1)); }
+      if(t>=760){ atImpact(t,760,0.3,0); SG.stars(c,tg.x,tg.top.y-R*0.15,R*0.6,t,3,"#ffd0f0"); } }},
+  /* Sizzle: it dashes in, two slices of toast shoot out of its slots, spin high and crash down on the target's head red-hot */
+  sg_toastpop:{C:780,D:1480,contact:true,marks:true,sig:true,
+    atk:(t,o)=>{ const d=(o&&o.dir)||1; if(t<360){ const k=eio(t/360); return {f:0.5*k,rot:d*0.1,pose:"tackle",sy:0.95}; } if(t<440){ const k=(t-360)/80; return {f:0.5,sy:1-0.3*Math.sin(k*Math.PI),sx:1+0.15*Math.sin(k*Math.PI),pose:"crouch"}; }
+      if(t<1100) return {f:0.5,pose:"happy",arc:-3*Math.abs(Math.sin(t/60))}; const k=(t-1100)/380; return {f:0.5*(1-eio(k)),pose:"idle"}; },
+    def(t){ for(const T0 of [780,880]){ if(t>=T0&&t<T0+200){ const a=1-(t-T0)/200; return {sx:1+0.15*a,sy:1-0.25*a,pose:"hurt",flash:3}; } } return t>=1080&&t<1480?{pose:"hurt",off:[Math.sin(t/20)*2,0]}:null; },
+    fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, slot={x:s.x,y:s.top.y}, head={x:tg.x,y:tg.top.y};
+      const toast=(p,a,z)=>{ c.save(); c.translate(p.x,p.y); c.rotate(a); c.fillStyle="#c27a32"; c.beginPath(); c.roundRect?c.roundRect(-z,-z*1.1,z*2,z*2.1,z*0.5):c.rect(-z,-z*1.1,z*2,z*2.1); c.fill(); c.fillStyle="#f0c47a"; c.beginPath(); c.roundRect?c.roundRect(-z*0.78,-z*0.85,z*1.56,z*1.65,z*0.35):c.rect(-z*0.78,-z*0.85,z*1.56,z*1.65); c.fill();
+        c.strokeStyle="#7a4416"; c.lineWidth=2; for(let j=-1;j<=1;j++){ c.beginPath(); c.moveTo(-z*0.6,j*z*0.5); c.lineTo(z*0.6,j*z*0.5-z*0.15); c.stroke(); } c.restore(); };
+      for(let i=0;i<2;i++){ const T0=380+i*60, T1=780+i*100; if(t<T0||t>T1+500) continue; const z=R*0.28;
+        if(t<T1){ const k=(t-T0)/(T1-T0), top={x:(slot.x+head.x)/2+(i-0.5)*R,y:Math.min(slot.y,head.y)-R*3.2}, p=k<0.5?lerpP(slot,top,eo(k*2),0):lerpP(top,{x:head.x+(i-0.5)*R*0.5,y:head.y-z},ei((k-0.5)*2),0); toast(p,t/60*(i?-1:1),z);
+          if(k>0.5){ c.save(); c.globalCompositeOperation="lighter"; atGlowA(c,p.x,p.y,z*1.6,[255,140,40],0.4); c.restore(); } }
+        else { const k=(t-T1)/500; atImpact(t,T1,0.4,0.1); toast({x:head.x+(i-0.5)*R*0.5,y:head.y-z*0.6+k*k*R*2},(i?0.3:-0.3)+k*3*(i?1:-1),z); c.globalAlpha=1; for(let j=0;j<4;j++) SG.puff(c,head.x+(j-1.5)*R*0.4,head.y-R*0.3-k*R*0.8,R*(0.15+0.2*k),(1-k)*0.6,[120,110,100]); } }
+      if(t<380) for(let i=0;i<4;i++){ const ph=((t/200)+i/4)%1; SG.puff(c,slot.x+(i-1.5)*s.r*0.2,slot.y-ph*s.r*0.8,s.r*(0.08+0.1*ph),(1-ph)*0.6); } }},
+  /* Aero: it dives into the wind, a whirling updraft lifts the target off its feet and spins it up, then drops it with a second gust */
+  sg_updraft:{C:620,D:1320,sig:true,
+    atk:t=>({arc:-12*Math.sin(Math.min(1,t/1000)*Math.PI)-Math.sin(t/90)*3,rot:Math.sin(t/110)*0.2,pose:t<620?"cast":t<1150?"push":"idle"}),
+    def(t){ if(t<620||t>1320) return null; const k=(t-620)/700, up=t<1000?eo(Math.min(1,(t-620)/300)):1-ei((t-1000)/200); return {lift:-60*Math.max(0,up),rot:Math.sin((t-620)/90)*0.45*Math.max(0,up),pose:"hurt",flash:t>1000&&t<1100?3:0}; },
+    fx(c,t,x){ const tg=x.target, R=tg.r, col=x.col||[200,230,255], show=t<300?t/300:t>1200?1-(t-1200)/120:1; if(show<=0) return; c.save(); c.globalAlpha=show; c.globalCompositeOperation="lighter"; c.lineCap="round";
+      for(let i=0;i<8;i++){ const ph=((t/420)+i/8)%1, y=tg.foot-ph*R*4, rx=R*(0.5+1.1*ph), a0=t/90+i*1.3; c.strokeStyle=atRgba(i%2?col:[255,255,255],0.8*Math.sin(ph*Math.PI)); c.lineWidth=4*(1-ph*0.5); c.beginPath(); c.ellipse(tg.x,y,rx,rx*0.25,0,a0,a0+Math.PI*1.1); c.stroke(); }
+      for(let i=0;i<8;i++){ const ph=((t/500)+i/8)%1, a=t/120+i*0.8; atLeafBlade(c,tg.x+Math.cos(a)*R*(0.6+ph),tg.foot-ph*R*3.5,R*0.25,a,"rgba(160,230,140,.9)"); }
+      c.restore(); atImpact(t,620,0.35,0); atImpact(t,1000,0.5,0); if(t>=1000) SG.dust(c,tg.x,tg.foot,R,(t-1000)/320,8); }},
+  /* Nesta: it pops open and smaller and smaller dolls fly out one after another, each bonking the target, then they all hop back inside */
+  sg_nesting:{C:560,D:1280,sig:true,
+    atk:t=>({pose:t<560?"cast":t<1100?"happy":"idle",sy:t<400?1+0.08*eo(t/400):1,sx:1+0.04*Math.sin(t/50)}),
+    def(t){ for(let i=0;i<4;i++){ const T0=560+i*110; if(t>=T0&&t<T0+100) return {sx:1.08,sy:0.9,off:[6,0],pose:"hit"}; } return null; },
+    fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, d=atDir(x), cols=[[220,60,70],[250,180,60],[90,160,220],[140,200,110]];
+      const doll=(p,z,col,a)=>{ c.save(); c.translate(p.x,p.y); c.rotate(a); c.fillStyle=atRgba(col,1); c.strokeStyle="rgba(80,40,40,.6)"; c.lineWidth=1.5; c.beginPath(); c.ellipse(0,z*0.35,z*0.75,z*0.85,0,0,7); c.fill(); c.stroke(); c.beginPath(); c.arc(0,-z*0.55,z*0.55,0,7); c.fill(); c.stroke();
+        c.fillStyle="#ffe8d8"; c.beginPath(); c.arc(0,-z*0.5,z*0.36,0,7); c.fill(); c.fillStyle="#3a2020"; c.fillRect(-z*0.17,-z*0.55,z*0.08,z*0.08); c.fillRect(z*0.09,-z*0.55,z*0.08,z*0.08);
+        c.fillStyle="#ffffff"; c.beginPath(); c.arc(0,z*0.4,z*0.25,0,7); c.fill(); c.fillStyle=atRgba(col.map(v=>v-40),1); c.beginPath(); c.arc(0,z*0.4,z*0.12,0,7); c.fill(); c.restore(); };
+      for(let i=0;i<4;i++){ const T0=200+i*110, T1=560+i*110, z=s.r*(0.55-i*0.1), home={x:s.x,y:s.y-s.r*0.1}; if(t<T0) continue; let p, a=0;
+        if(t<T1){ const k=(t-T0)/(T1-T0); p=lerpP(home,{x:tg.x-d*R*0.4,y:tg.y-R*0.2},eio(k),R*(0.8+i*0.3)); a=d*k*6; }
+        else if(t<T1+200){ const k=(t-T1)/200; p=lerpP({x:tg.x-d*R*0.4,y:tg.y-R*0.2},{x:tg.x-d*R*(1+i*0.3),y:tg.foot-z},eo(k),R*0.8); a=-d*k*3; if(k<0.5){ atImpact(t,T1,0.25,0); atPow(c,{x:tg.x-d*R*0.4,y:tg.y-R*0.3},k*1.6,R/40); } }
+        else if(t<1100) p={x:tg.x-d*R*(1+i*0.3),y:tg.foot-z+(-Math.abs(Math.sin(t/90+i))*R*0.15)};
+        else { const k=(t-1100)/180; if(k>1) continue; p=lerpP({x:tg.x-d*R*(1+i*0.3),y:tg.foot-z},home,eio(k),R*0.8); }
+        doll(p,z,cols[i],a); } }},
+  /* Magna: magnetic field lines arc out between it and the target, sparks crackle along them and the target is dragged in toward it */
+  sg_attract:{C:700,D:1420,sig:true,
+    atk:(t,o)=>{ const d=(o&&o.dir)||1; return {rot:-d*0.12*Math.min(1,t/400),pose:t<700?"cast":t<1250?"push":"idle",off:[Math.sin(t/20)*1.2,0],sx:1+0.04*Math.sin(t/40)}; },
+    def(t){ if(t<700||t>1420) return null; const k=Math.min(1,(t-700)/350), back=t>1150?1-(t-1150)/270:1; return {off:[-34*eo(k)*back,0],rot:-0.2*eo(k)*back,pose:"hurt",flash:Math.floor(t/80)%2?2:0}; },
+    fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, d=atDir(x), show=Math.min(1,t/300)*(t>1250?1-(t-1250)/170:1); if(show<=0) return; const pull=t<700?0:-34*eo(Math.min(1,(t-700)/350))*(t>1150?1-(t-1150)/270:1);
+      const A={x:s.x+d*s.r*0.6,y:s.y-s.r*0.1}, B={x:tg.x+d*pull,y:tg.y-R*0.1}; c.save(); c.globalAlpha=show; c.globalCompositeOperation="lighter"; c.lineCap="round";
+      for(let i=-3;i<=3;i++){ if(!i) continue; const bow=i*R*0.45; c.strokeStyle=i>0?"rgba(255,90,90,.6)":"rgba(90,140,255,.6)"; c.lineWidth=2; c.setLineDash([R*0.15,R*0.12]); c.lineDashOffset=-t/20; c.beginPath(); c.moveTo(A.x,A.y); c.bezierCurveTo(A.x+(B.x-A.x)*0.3,A.y+bow,A.x+(B.x-A.x)*0.7,B.y+bow,B.x,B.y); c.stroke(); }
+      c.setLineDash([]); if(t>500){ const fr=Math.floor(t/50); c.strokeStyle="rgba(200,230,255,.9)"; c.lineWidth=2; atZig(c,A,B,8,R*0.4,fr); }
+      for(let i=0;i<8;i++){ const ph=((t/400)+i/8)%1, p=lerpP(B,A,ph,R*0.6*(i%2?1:-1)); SG.shard(c,p.x,p.y,R*0.06,t/40+i,"rgba(200,200,215,.9)"); }
+      c.restore(); atImpact(t,700,0.45,0.1); }},
+  /* Helm: its air hose kicks and fires a roaring spray of water and bubbles that shoves the target back and leaves it dripping */
+  sg_airhose:{C:720,D:1420,sig:true,
+    atk:(t,o)=>{ const d=(o&&o.dir)||1; return t<420?{sy:1-0.06*eo(t/420),rot:-d*0.08,pose:"cast"}:t<1150?{off:[-d*6,0],rot:-d*0.12+Math.sin(t/25)*0.03,pose:"push"}:{pose:"idle"}; },
+    def(t){ const a=SG.knock(t,720,1,36,650); if(a){ a.pose="hurt"; } return a; },
+    fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, d=atDir(x), noz={x:s.x+d*s.r*0.9,y:s.y-s.r*0.05}, WC=[150,205,255];
+      if(t<420){ const k=t/420; for(let i=0;i<5;i++){ const ph=((t/250)+i/5)%1; atBubble(c,noz.x+d*ph*s.r*0.5,noz.y-ph*s.r*0.5,s.r*0.06,1-ph); } c.save(); c.globalCompositeOperation="lighter"; atWisp(c,noz.x,noz.y,s.r*0.1*k,WC); c.restore(); return; }
+      if(t<1200){ const head=Math.min(1,(t-420)/300), tail=t>1100?(t-1100)/100:0; c.save(); for(let j=0;j<28;j++){ const q=j/28; if(q>head||q<tail) continue; const p=lerpP(noz,{x:tg.x,y:tg.y-R*0.1},q,0), spread=R*(0.08+0.5*q), jit=(atH(j*7+Math.floor(t/40))-0.5)*spread;
+          c.fillStyle=atRgba(j%3?WC:[230,245,255],0.75); c.beginPath(); c.ellipse(p.x,p.y+jit,R*0.12*(1+q),R*0.07*(1+q),0,0,7); c.fill(); if(j%4===0) atBubble(c,p.x,p.y-jit,R*0.07*(1+q),0.9); } c.restore(); }
+      if(t>=720){ atImpact(t,720,0.55,0.1); const k=(t-720)/700; for(let i=0;i<12;i++){ const a=(atH(i*3)-0.5)*Math.PI*0.9+(d>0?0:Math.PI), sp=R*(0.6+1.6*eo(k)); c.fillStyle=`rgba(210,235,255,${1-k})`; c.beginPath(); c.arc(tg.x+Math.cos(a)*sp,tg.y+Math.sin(a)*sp+k*k*R,R*0.07,0,7); c.fill(); }
+        for(let i=0;i<4;i++){ const dr=Math.min(1,k*1.5-i*0.1); if(dr>0){ c.fillStyle="rgba(150,205,255,.85)"; c.beginPath(); c.ellipse(tg.x+(i-1.5)*R*0.4,tg.y+dr*R*0.6,R*0.05,R*0.08,0,0,7); c.fill(); } } } }}
+});
+Object.assign(AR_KIND,{"Melt Down":"sg_meltdown","Lantern Flash":"sg_lanternflash","Sleepy Slam":"sg_sleepyslam","Ink Blot":"sg_inkblot","Rubble Roll":"sg_rubbleroll","Downdraft":"sg_downdraft","Triple Stack":"sg_triplestack",
+  "Root Snare":"sg_rootsnare","Curl Up":"sg_curlup","Sticky Trail":"sg_stickytrail","Wind-Up Barrage":"sg_windup","Thousand Cranes":"sg_cranes","Pruning Snip":"sg_snip","Shake Up":"sg_shakeup",
+  "Music Box Waltz":"sg_waltz","Toast Pop":"sg_toastpop","Updraft":"sg_updraft","Nesting Stack":"sg_nesting","Attract":"sg_attract","Air Hose":"sg_airhose"});
+if(typeof KSND!=="undefined") Object.assign(KSND,{
+  sg_meltdown:(d,t)=>{ dNoise(d,t,0.48,0.12,'lowpass',700); sTone(d,t,'sawtooth',100,260,0.48,0.03); for(let i=0;i<4;i++) sTone(d,t+0.1+i*0.1,'sine',500,250,0.08,0.03); dNoise(d,t+0.5,0.3,0.14,'bandpass',900,1); dKick(d,t+0.8,0.5); dNoise(d,t+0.8,0.6,0.2,'bandpass',1500,1); for(let i=0;i<5;i++) dNoise(d,t+0.85+i*0.07,0.05,0.1,'bandpass',2000,2); },   // a flame roaring up, wax dripping, a hot splash and crackling
+  sg_lanternflash:(d,t)=>{ for(let i=0;i<10;i++) sTone(d,t+i*0.07,'sine',1800+(i%4)*300,1900+(i%4)*300,0.05,0.015); [1319,1760,2349,2637].forEach((f,k)=>sTone(d,t+0.82+k*0.015,'triangle',f,f,0.5,0.035)); dNoise(d,t+0.82,0.4,0.1,'highpass',6000,0.6); },   // fireflies twinkling in, then all flashing at once
+  sg_sleepyslam:(d,t)=>{ sTone(d,t,'sine',400,250,0.4,0.04); sTone(d,t+0.05,'sine',420,260,0.4,0.03); sTone(d,t+0.3,'sine',300,600,0.4,0.03); sTone(d,t+0.7,'sine',900,300,0.18,0.04); dKick(d,t+0.88,0.7); dNoise(d,t+0.88,0.3,0.25,'lowpass',800); dNoise(d,t+0.9,0.5,0.06,'bandpass',3000,1); },   // a yawn, floating up, a falling whistle, a soft heavy flop
+  sg_inkblot:(d,t)=>{ sTone(d,t,'sine',500,150,0.3,0.05); dNoise(d,t+0.25,0.5,0.1,'lowpass',400); dNoise(d,t+0.7,0.25,0.25,'lowpass',900); sTone(d,t+0.7,'sine',150,450,0.2,0.05); sTone(d,t+1.15,'sine',400,120,0.3,0.04); },   // melting down, sliding across, a splash up and draining
+  sg_rubbleroll:(d,t)=>{ dNoise(d,t,0.28,0.1,'lowpass',500); dNoise(d,t+0.28,0.5,0.2,'lowpass',250); for(let i=0;i<6;i++) dKick(d,t+0.3+i*0.08,0.15+i*0.03); dKick(d,t+0.78,1); dNoise(d,t+0.78,0.5,0.28,'lowpass',600); for(let i=0;i<6;i++) dNoise(d,t+0.82+i*0.05,0.05,0.12,'bandpass',1200,2); },   // curling up, a rolling rumble, the crash and stones clattering
+  sg_downdraft:(d,t)=>{ dNoise(d,t,0.5,0.1,'bandpass',600,0.7); dNoise(d,t+0.4,0.4,0.18,'lowpass',500); sTone(d,t+0.5,'sine',900,200,0.26,0.04); dKick(d,t+0.76,0.7); dNoise(d,t+0.76,0.5,0.25,'lowpass',1200); dNoise(d,t+0.8,0.5,0.1,'highpass',3000,0.8); },   // wind gathering, a rushing fall, a wet slam and spray
+  sg_triplestack:(d,t)=>{ [0.3,0.42,0.54].forEach(x=>sTone(d,t+x,'sine',300,800,0.08,0.05)); [0.6,0.72,0.84].forEach((x,k)=>{ dKick(d,t+x,0.3); sTone(d,t+x,'sine',600+k*120,300+k*80,0.08,0.05); }); sTone(d,t+0.96,'triangle',2400,1800,0.06,0.04); },   // three pops out, three bonks, the skewer
+  sg_rootsnare:(d,t)=>{ dNoise(d,t+0.3,0.4,0.15,'lowpass',300); for(let i=0;i<5;i++) dNoise(d,t+0.56+i*0.06,0.08,0.12,'bandpass',600+i*100,2); sTone(d,t+0.7,'sawtooth',90,70,0.5,0.04); for(let i=0;i<4;i++) sTone(d,t+0.8+i*0.08,'sine',1200,1500,0.05,0.02); },   // the ground splitting, roots cracking up, a creaking grip, leaves sprouting
+  sg_curlup:(d,t)=>{ for(let i=0;i<5;i++) sTone(d,t+0.06+i*0.07,'square',500-i*30,400-i*30,0.03,0.04); dKick(d,t+0.48,0.4); sTone(d,t+0.55,'triangle',2400,2600,0.3,0.03); },   // armour bands clicking shut, a thud and a glint
+  sg_stickytrail:(d,t)=>{ dNoise(d,t,0.72,0.08,'lowpass',400); for(let i=0;i<6;i++) sTone(d,t+i*0.12,'sine',250,400,0.08,0.025); sTone(d,t+0.72,'sine',200,100,0.3,0.06); for(let i=0;i<4;i++) sTone(d,t+0.8+i*0.1,'sawtooth',220,300,0.08,0.015); },   // a wet slide, a gloop round its feet, sticky stretching
+  sg_windup:(d,t)=>{ for(let i=0;i<6;i++) sTone(d,t+i*0.055,'square',1400+i*80,1400+i*80,0.02,0.03); for(let i=0;i<5;i++){ dNoise(d,t+0.49+i*0.128,0.05,0.2,'bandpass',1500+i*100,1.4); sTone(d,t+0.49+i*0.128,'square',900,600,0.03,0.025); } sTone(d,t+1.0,'sine',600,1400,0.25,0.03); },   // the key cranking, five clanking punches, a spring boing
+  sg_cranes:(d,t)=>{ for(let i=0;i<8;i++) dNoise(d,t+0.1+i*0.05,0.05,0.06,'bandpass',3000,2); [0.64,0.75,0.86,0.97].forEach(x=>{ dNoise(d,t+x,0.06,0.16,'highpass',3500,1.5); sTone(d,t+x,'triangle',1600,1200,0.05,0.025); }); },   // paper fluttering and four waves of cranes diving in
+  sg_snip:(d,t)=>{ sTone(d,t+0.1,'sawtooth',800,1100,0.4,0.02); dNoise(d,t+0.56,0.2,0.12,'highpass',3000,1); sTone(d,t+0.76,'square',2200,1800,0.04,0.06); dNoise(d,t+0.76,0.06,0.3,'highpass',4000,2); for(let i=0;i<5;i++) dNoise(d,t+0.82+i*0.05,0.06,0.07,'bandpass',2500,2); },   // shears opening, a big snip, leaves rustling
+  sg_shakeup:(d,t)=>{ for(let i=0;i<10;i++) dNoise(d,t+i*0.07,0.05,0.08,'bandpass',1800+(i%2)*600,2); sTone(d,t+0.56,'sine',1200,400,0.2,0.04); sTone(d,t+0.76,'triangle',1800,1800,0.05,0.04); [2093,2637,3136,2637,2093].forEach((f,k)=>sTone(d,t+0.8+k*0.08,'sine',f,f,0.2,0.02)); },   // shaking hard, the dome dropping with a clink, a twinkling swirl
+  sg_waltz:(d,t)=>{ [1047,1319,1568,1319,1175,1397,1760,1397].forEach((f,k)=>sTone(d,t+k*0.11,'triangle',f,f,0.25,0.03)); sTone(d,t+0.76,'sine',700,500,0.6,0.02); },   // a music box playing a little waltz
+  sg_toastpop:(d,t)=>{ dNoise(d,t,0.35,0.1,'lowpass',600); sTone(d,t+0.36,'square',220,180,0.05,0.05); sTone(d,t+0.38,'sine',500,1500,0.12,0.05); sTone(d,t+0.44,'sine',520,1550,0.12,0.04); [0.78,0.88].forEach(x=>{ dKick(d,t+x,0.4); dNoise(d,t+x,0.2,0.18,'bandpass',900,1); }); dNoise(d,t+0.9,0.4,0.06,'highpass',4000,0.8); },   // rushing in, the toaster ding-pop, two slices thumping down, a sizzle
+  sg_updraft:(d,t)=>{ dNoise(d,t,0.6,0.1,'bandpass',500,0.6); for(let i=0;i<6;i++) dNoise(d,t+0.3+i*0.1,0.15,0.08+i*0.015,'bandpass',500+i*150,2); sTone(d,t+0.62,'sine',300,900,0.4,0.04); sTone(d,t+1.0,'sine',900,250,0.2,0.04); dKick(d,t+1.1,0.4); },   // wind whipping up, the target lifted, dropped with a thud
+  sg_nesting:(d,t)=>{ sTone(d,t+0.1,'sine',300,900,0.06,0.05); [0.56,0.67,0.78,0.89].forEach((x,k)=>{ sTone(d,t+x-0.3,'sine',400+k*150,900+k*200,0.08,0.03); dKick(d,t+x,0.25-k*0.03); sTone(d,t+x,'triangle',900+k*250,700+k*250,0.06,0.04); }); [1.1,1.15,1.2,1.25].forEach(x=>sTone(d,t+x,'square',1500,1500,0.02,0.02)); },   // a pop open, four little dolls bonking, clicking back together
+  sg_attract:(d,t)=>{ sTone(d,t,'sawtooth',60,60,1.1,0.04); sTone(d,t,'sine',120,240,0.7,0.04); for(let i=0;i<8;i++) dNoise(d,t+0.5+i*0.06,0.03,0.08,'highpass',5000,2); sTone(d,t+0.7,'sine',800,200,0.35,0.05); dKick(d,t+1.0,0.3); },   // a magnetic hum, crackling sparks, the target dragged in
+  sg_airhose:(d,t)=>{ dNoise(d,t,0.4,0.06,'bandpass',600,1); for(let i=0;i<4;i++) sTone(d,t+i*0.09,'sine',300,700,0.06,0.03); dNoise(d,t+0.42,0.75,0.25,'bandpass',1200,0.5); dNoise(d,t+0.42,0.75,0.1,'highpass',4000,0.6); dKick(d,t+0.72,0.4); }   // pressure building with bubbles, a roaring spray, a splash
+});
+if(typeof SWING!=="undefined") ["sg_sleepyslam","sg_rubbleroll","sg_windup","sg_toastpop"].forEach(k=>SWING.add(k));
 
 /* an error inside one of these effects is logged once instead of silently cutting the animation */
 for(const [k,v] of Object.entries(ANIM)) if(k.startsWith("sg_")&&v.fx&&!v._w){ const f=v.fx; v.fx=function(c,t,x){ c.save(); try{ f.call(this,c,t,x); }catch(err){ if(!SG.err) console.error(SG.err=k+": "+err.message); } c.restore(); }; v._w=1; }
