@@ -3611,14 +3611,16 @@ x.feet.push([g.cx, 182, 10]); },
         for (const sd of [-1, 1]) { const q = J(sd);
           c.fillStyle = rgb(dk(x.body, 0.06)); q.path(0); c.fill();   // the jaw, in its own colour, with a thick lip
           c.fillStyle = '#d96c7c'; q.path(3.4 * u0); c.fill();   // the gums
-          // teeth rooted in the gums and reaching out over the lip, along the rim and longest near the top
-          c.fillStyle = '#f6f0e4'; c.strokeStyle = 'rgba(90,60,50,.45)'; c.lineWidth = 0.6 * u0; for (let k2 = 0; k2 < n; k2++) { const u = 0.05 + k2 / n * 0.82, [px, py] = q.at(u), [qx, qy] = q.at(u + 0.025), dx = qx - px, dy = qy - py, L = Math.hypot(dx, dy) || 1, nx = dy / L * sd, ny = -dx / L * sd, len = tl * (1.25 - u * 0.55), wd = 2.1 * u0;
-            const ix = px - nx * 4.4 * u0, iy = py - ny * 4.4 * u0; c.beginPath(); c.moveTo(ix - dx / L * wd, iy - dy / L * wd); c.quadraticCurveTo(px + nx * len * 0.6, py + ny * len * 0.6, px + nx * len - dx / L * len * 0.3, py + ny * len - dy / L * len * 0.3); c.lineTo(ix + dx / L * wd, iy + dy / L * wd); c.closePath(); c.fill(); c.stroke(); }
           const gx = (q.mid[0] + q.o1[0]) / 2, gy = (q.mid[1] + q.o2[1]) / 2, gr = c.createRadialGradient(bx, gy, 1, gx, gy, W * 0.95);
           gr.addColorStop(0, '#4a0f1e'); gr.addColorStop(0.6, '#7d1a30'); gr.addColorStop(1, '#a52a44'); c.fillStyle = gr; q.path(5.4 * u0); c.fill();   // inside the mouth
-          c.fillStyle = 'rgba(255,255,255,.18)'; c.beginPath(); c.ellipse(q.o1[0] - sd * W * 0.2, q.o1[1] + H * 0.12, W * 0.12, H * 0.07, sd * 0.6, 0, 7); c.fill(); }   // a gleam inside
+          // teeth along the rim pointing in towards the inside of the mouth, so the jaws can bite; longest near the top
+          c.fillStyle = '#f6f0e4'; c.strokeStyle = 'rgba(90,60,50,.45)'; c.lineWidth = 0.6 * u0;
+          for (let k2 = 0; k2 < n; k2++) { const u = 0.05 + k2 / n * 0.82, [px, py] = q.at(u), [qx, qy] = q.at(u + 0.025), dx = qx - px, dy = qy - py, L = Math.hypot(dx, dy) || 1, tx = dx / L, ty = dy / L, nx = -ty * sd, ny = tx * sd, len = tl * (1.05 - u * 0.45), wd = 2.1 * u0;
+            const bx2 = px + nx * 3.4 * u0, by2 = py + ny * 3.4 * u0, ex = bx2 + nx * len + tx * len * 0.25, ey = by2 + ny * len + ty * len * 0.25;   // rooted on the gum line, curving a little as it points in
+            c.beginPath(); c.moveTo(bx2 - tx * wd, by2 - ty * wd); c.quadraticCurveTo(bx2 + nx * len * 0.5 - tx * wd * 0.3, by2 + ny * len * 0.5 - ty * wd * 0.3, ex, ey); c.lineTo(bx2 + tx * wd, by2 + ty * wd); c.closePath(); c.fill(); c.stroke(); }
+        }
       },
-      hl: g => [g.left + g.bw * 0.14, g.top + g.bh * 0.62, g.left + g.bw * 0.16, g.top + g.bh * 0.5, g.left + g.bw * 0.24, g.top + g.bh * 0.42],
+      hl: () => null,   // its fur has no shine streak
       head: g => [g.cx, g.top + 2, g.bw * 0.32],
       face(c, g, x, look) { const S = g.stage, hh = FAM.Gug.hh(g), fi = faceTwo(c, g, x, look, { ey: hh * 0.5 / g.bh, ex: 0.13, my: hh * 0.78 / g.bh, noMouth: true, s: by(S, 0.72, 0.76, 0.8) });
         if (x.back) return fi;
@@ -3989,8 +3991,8 @@ x.feet.push([g.cx, 182, 10]); },
     variantOutline(c, pathF);
     capBody(c, g); if (CAP && F.topUp && F.topUp[stage]) CAP.top = capPt(c, g.cx, g.top + g.bh * 0.18 - F.topUp[stage]);   // headgear the bar above it has to clear
     const h = F.hl ? F.hl(g) : [g.left + g.bw * 0.13, g.top + g.bh * 0.42, g.left + g.bw * 0.12, g.top + g.bh * 0.12, g.left + g.bw * 0.4, g.top + g.bh * 0.08];
-    c.strokeStyle = 'rgba(255,255,255,.55)'; c.lineWidth = stage === 'Bit' ? 4.5 : 5.5; c.lineCap = 'round';
-    c.beginPath(); c.moveTo(h[0], h[1]); c.quadraticCurveTo(h[2], h[3], h[4], h[5]); c.stroke();
+    if (h) { c.strokeStyle = 'rgba(255,255,255,.55)'; c.lineWidth = stage === 'Bit' ? 4.5 : 5.5; c.lineCap = 'round';   // a family's hl can return null for no shine streak
+      c.beginPath(); c.moveTo(h[0], h[1]); c.quadraticCurveTo(h[2], h[3], h[4], h[5]); c.stroke(); }
     let my = g.top + g.bh * 0.65;
     if (x.back) {                  // seen from behind: no face; wings sit on the back in front of the body
       if (F.front) F.front.call(F, c, g, x);
