@@ -234,7 +234,9 @@ function atEvent(e,now){
     if(m.swap){ S.pose={p:"crouch",until:te+220}; AT.turn={t0:te,C:220,D:560}; if(e.pred==="dodge"||e.pred==="phase") atPlanDodge(e.i,te+220,"tackle",e.pred); return; }
     if((m.step||m.dash)&&!m.dmg){ S.pose={p:"crouch",until:te+140}; AT.turn={t0:te,C:140,D:420}; return; }
     let kind;
-    if(m.buff) kind={bunker:"bunker",phase:"phase",brace:"shield",riposte:"shield",bubble:"shield",feedback:"shield",unblink:"buff"}[m.buff]||"buff";
+    const sk=typeof AR_KIND!=="undefined"&&AR_KIND[m.base||m.name];
+    if(sk&&ANIM[sk]&&ANIM[sk].sig) kind=sk;   // a signature always plays its own animation, buffs included
+    else if(m.buff) kind={bunker:"bunker",phase:"phase",brace:"shield",riposte:"shield",bubble:"shield",feedback:"shield",unblink:"buff"}[m.buff]||"buff";
     else if(m.support){ kind=typeof supportKind==="function"?supportKind(m.name):"buff"; if(kind==="mistcast") kind="mist"; if(m.protect) S.protName=m.name; }
     else if(m.lower&&!m.dmg) kind="glare";
     else if(m.shove) kind="tackle";
