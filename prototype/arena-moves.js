@@ -640,3 +640,14 @@ ANIM.trunkflurry.atk=(t,o)=>{ const C=320, gap=140, n=4, end=C+n*gap, L=mvLimbHi
   if(t<C){ const k=eo(t/C); return {f:0,pose:atPose("attack",{trunk:0,trunkUp:1.0*k,eyes:"fierce"})}; }
   if(t<end){ const j=Math.floor((t-C)/gap), p=((t-C)%gap)/gap, hit=p<0.35?eo(p/0.35):1-eio((p-0.35)/0.65)*0.7; return {f:0,pose:atPose("attack",{trunk:L*hit,trunkUp:(j%2?-0.4:0.9)*(1-hit),eyes:"fierce"}),sy:1-0.03*hit}; }
   const k=eio(Math.min(1,(t-end)/320)); return {f:0,pose:k<0.6?atPose("idle",{trunk:L*0.3*(1-k)}):"idle"}; };
+
+/* Gid's notes (16 Nov 2026, late): the whip mark follows a limb that swings up from below, Unicorn charges with its own head lowered
+   so the horn leads while its body runs, and Cerberus walks in and tilts its body into each bite */
+{ const fx0=ANIM.lash.fx; ANIM.lash.fx=(c,t,x)=>{ if(t<240||t>=640) return; const m=mvMode({fam:x.fam,stage:x.stage}); if(m==="tent"||m==="trunk"||m==="tail"){ const P=x.target; c.save(); c.translate(0,2*(P.y-8)); c.scale(1,-1); atLash(c,P,(t-240)/400,x.col,atDir(x),atBig(x)); c.restore(); } else fx0(c,t,x); }; }
+{ const H0=ANIM.hornjab, a0=H0.atk;
+  H0.tipU=(fam,st)=>fam==="Unicorn"?{Bit:26,Byte:36,Mega:46}[st]||36:fam==="Kirin"?20:0;
+  H0.atk=(t,o)=>{ if(!o||o.fam!=="Unicorn") return a0(t,o); const d=o.dir||1;
+    if(t<160){ const k=eo(t/160); return {f:-0.05*k,pose:atPose("crouch",{headRot:0.25*k,eyes:"fierce"}),sy:1-0.05*k}; }   // rears its head up and back
+    if(t<380){ const k=ei((t-160)/220); return {f:-0.05+0.62*k,pose:atPose("run",{headRot:0.25-1.3*k,eyes:"fierce",open:0.3}),arc:-Math.abs(Math.sin(k*Math.PI*2))*5}; }   // gallops in with the horn coming down level
+    if(t<560) return {f:0.57,pose:atPose("tackle",{headRot:-1.05+0.06*Math.sin(t/25),eyes:"fierce"}),off:[Math.sin(t/12)*1.5,0]};
+    const k=(t-560)/400; return {f:0.57*(1-eio(k)),pose:atPose("idle",{headRot:-1.05*(1-eo(k))})}; }; }

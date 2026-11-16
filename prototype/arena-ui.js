@@ -694,7 +694,7 @@ function atDraw(now,dte){
     // a contact move lands as the bodies touch, not after the attacker has passed into the target (Gid, 16 Nov 2026): the lunge is scaled so its
     // reach at the contact frame C puts its front edge against the target's front edge, which is when the hit, the impact frame and the recoil happen
     if(S.anim&&ANIM[S.anim.kind]&&ANIM[S.anim.kind].contact&&st.f>0&&O.spec&&te>=S.anim.t0){ const K=ANIM[S.anim.kind]; if(K._fC==null){ try{ K._fC=K.atk(K.C,{foeH:60,perp:[0,-1],dir:1,fam:sp.family,stage:sp.stage}).f||0; }catch(err){ K._fC=0; } }
-      if(K._fC>0.2&&Math.abs(reach)>1){ const oh=CHIBI.height(O.spec.stage,O.spec.marks,O.spec.family), ou=Math.min(0.5,96/(oh+20))*scale, touch=(CHIBI.width(sp.stage,sp.family)*u+CHIBI.width(O.spec.stage,O.spec.family)*ou)*0.42,
+      if(K._fC>0.2&&Math.abs(reach)>1){ const oh=CHIBI.height(O.spec.stage,O.spec.marks,O.spec.family), ou=Math.min(0.5,96/(oh+20))*scale, touch=(CHIBI.width(sp.stage,sp.family)*u+CHIBI.width(O.spec.stage,O.spec.family)*ou)*0.42+(typeof K.tipU==="function"?K.tipU(sp.family,sp.stage):K.tipU||0)*u,   // tipU: how far a horn or point sticks out past the body
           fT=((O.dx-S.dx)-S.dir*touch)/reach; if(fT>0) st.f*=Math.max(0.25,Math.min(1.6,fT/K._fC)); } }
     const x=S.dx+reach*st.f+st.off[0], y=floor+st.arc+st.lift+st.off[1], mir=S.dir>0?-1:1;
     if(moving!==!!S.moving&&S.ko==null&&typeof spawnPuff==="function") spawnPuff(x-S.dir*10,y-2,moving?5:7,S.dir>0?Math.PI:0,1.2,0.08,5*scale,"rgba(235,228,214,1)",320);

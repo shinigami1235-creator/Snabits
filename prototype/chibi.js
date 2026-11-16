@@ -2538,6 +2538,9 @@ x.feet.push([g.cx, 182, 10]); },
         this.leg(c, g, x, g.cx - bw2 * 0.6, 1, true); this.leg(c, g, x, g.cx + bw2 * 0.62, 3, true);
         // the barrel body, set back behind the head
         c.fillStyle = rgb(dk(x.body, 0.22)); c.beginPath(); c.ellipse(g.cx, by0 + 3, bw2, bb * 0.62, 0, 0, 7); c.fill(); c.fillStyle = rgb(dk(x.body, 0.08)); c.beginPath(); c.ellipse(g.cx, by0, bw2, bb * 0.62, 0, 0, 7); c.fill();
+        this.leg(c, g, x, g.cx - g.bw * 0.3, 0, false); this.leg(c, g, x, g.cx + g.bw * 0.3, 2, false); },   // the front legs stand in front of the barrel, under the head
+      headPivot: g => [g.cx, g.bot - 4],
+      headBehind(c, g, x) { const S = g.stage;
         // pointed horse ears, then the mane falling down the back of the neck
         for (const sd of [-1, 1]) { const ex = g.cx + sd * g.bw * 0.3, ey = g.top + g.bh * 0.12; c.fillStyle = rgb(dk(x.body, 0.1)); c.beginPath(); c.moveTo(ex - sd * 9, ey + 6); c.quadraticCurveTo(ex + sd * 3, ey - by(S, 16, 20, 24), ex + sd * 8, ey - by(S, 18, 22, 27)); c.quadraticCurveTo(ex + sd * 10, ey - 4, ex + sd * 6, ey + 8); c.closePath(); c.fill();
           c.fillStyle = rgb(lt(x.parts, 0.25)); c.beginPath(); c.moveTo(ex - sd * 4, ey + 3); c.quadraticCurveTo(ex + sd * 3, ey - by(S, 10, 13, 16), ex + sd * 6, ey - by(S, 13, 16, 20)); c.quadraticCurveTo(ex + sd * 6, ey, ex + sd * 3, ey + 5); c.closePath(); c.fill(); }
@@ -2546,7 +2549,7 @@ x.feet.push([g.cx, 182, 10]); },
       inside(c, g, x) { const T = g.top, h = g.bh;   // the pale muzzle with its nostrils
         c.fillStyle = rgb(lt(x.body, 0.42)); c.beginPath(); c.ellipse(g.cx, T + h * 0.86, g.bw * 0.36, h * 0.2, 0, 0, 7); c.fill();
         c.fillStyle = rgb(dk(x.body, 0.45)); for (const sd of [-1, 1]) { c.beginPath(); c.ellipse(g.cx + sd * g.bw * 0.13, T + h * 0.86, 2.6, 3.6, sd * 0.3, 0, 7); c.fill(); } },
-      front(c, g, x) { const S = g.stage; this.leg(c, g, x, g.cx - g.bw * 0.3, 0, false); this.leg(c, g, x, g.cx + g.bw * 0.3, 2, false);
+      front(c, g, x) { const S = g.stage;
         for (let k = 0; k < 3; k++) { const mx = g.cx + g.bw * (-0.08 + k * 0.1), my = g.top + 2 + Math.abs(k - 1) * 3; c.fillStyle = rgb(k % 2 ? x.acc : x.parts); c.beginPath(); c.arc(mx, my, by(S, 5, 6, 7), 0, 7); c.fill(); }   // the forelock
         // a long spiral horn standing straight up from the forehead
         const hx = g.cx + 1, hl = this.hl2(S), hw = by(S, 5, 6, 7.5), hb = g.top + 4, hy = hb - hl;
@@ -3581,6 +3584,9 @@ x.feet.push([g.cx, 182, 10]); },
       }
     };
     if (!P.front || x.back) arms();
+    const hp = F.headPivot && P.headRot ? F.headPivot(g) : null;   // headRot turns just the head round its neck (Unicorn's horn charge)
+    if (hp) { c.save(); c.translate(hp[0], hp[1]); c.rotate(P.headRot); c.translate(-hp[0], -hp[1]); }
+    if (F.headBehind) F.headBehind.call(F, c, g, x);
     if (F.glow && F.glow(stage)) { c.save(); c.shadowColor = rgba(lt(body, 0.5), 0.9); c.shadowBlur = 18; F.path(c, g, x); c.fillStyle = rgb(body); c.fill(); c.restore(); }
     const shell = F.glass ? lt(body, 0.72) : body;
     c.save(); c.translate(0, 4); F.path.call(F, c, g, x); c.restore(); c.fillStyle = rgb(dk(body, F.glass ? 0.3 : 0.38)); c.fill();
@@ -3615,6 +3621,7 @@ x.feet.push([g.cx, 182, 10]); },
       wornFront(c, { head: headAt, eyes: { cx: fi.cx, y: fi.ey, ex: fi.ex, s: fi.s, one: fi.one }, mouth: [fi.cx, my, fi.s] }, W, t);
     }
     if (P.front && !x.back) arms();
+    if (hp) c.restore();
     variantFront(c, g, t, x.back);
     marksOver(c, m, g, headAt, t, F.wingY, F.al ? F.al(stage) + 10 : 0);
     if (m.fx) fxFront(c, m.fx, () => F.path.call(F, c, g, x), g, t);

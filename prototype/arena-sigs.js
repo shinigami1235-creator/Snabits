@@ -1015,8 +1015,8 @@ Object.assign(ANIM,{
   /* Cerberus: a dark gate opens behind the target and its three heads lunge through in turn, high, low and middle, each bite trailing purple fire */
   sg_gatefang:{C:640,D:1340,contact:true,marks:true,sig:true,
     // three clear bites, one from each head: high, low, then the middle head clamps on (Gid: maybe 3 bites)
-    atk:(t,o)=>{ const d=(o&&o.dir)||1; if(t<320){ const k=eo(t/320); return {f:-0.05*k,sy:1-0.12*k,pose:"crouch"}; } if(t<580){ const k=eio((t-320)/260); return {f:-0.05+0.65*k,rot:-d*0.1*k,pose:"bitewide"}; }
-      if(t<1120){ const j=Math.floor((t-580)/180), p=((t-580)%180)/180, tilt=[-0.18,0.2,0.04][j]; return {f:0.58+0.07*Math.sin(p*Math.PI),rot:d*tilt*Math.sin(Math.min(1,p*1.6)*Math.PI/2),arc:j===0?-8*Math.sin(p*Math.PI):0,pose:p<0.35?"bitewide":"chomp",sx:1+0.06*Math.sin(p*Math.PI)}; }
+    atk:(t,o)=>{ const d=(o&&o.dir)||1; if(t<320){ const k=eo(t/320); return {f:-0.05*k,sy:1-0.12*k,pose:"crouch"}; } if(t<580){ const k=eio((t-320)/260); return {f:-0.05+0.6*k,pose:"walk",rot:-d*0.08*k}; }   // walks up rather than tackling
+      if(t<1120){ const j=Math.floor((t-580)/180), p=((t-580)%180)/180, tilt=[-0.18,0.2,0.04][j]; const lean=p<0.35?-0.12*(p/0.35):0.4*Math.sin(Math.min(1,(p-0.35)/0.4)*Math.PI/2)*(1-Math.max(0,(p-0.75)/0.25)); return {f:0.55,rot:d*(lean+tilt*0.4),pose:p<0.35?"bitewide":"chomp"}; }   // each bite is the body tilting in
       const k=Math.min(1,(t-1120)/220); return {f:0.6*(1-eio(k)),pose:"idle"}; },
     def(t){ for(let i=0;i<3;i++){ const T0=640+i*180; if(t>=T0&&t<T0+120) return {off:[9,[-4,4,0][i]],pose:"hit",flash:3}; } return t>=1100&&t<1340?{pose:"hurt",off:[Math.sin(t/16)*2,0]}:null; },
     fx(c,t,x){ const tg=x.target, R=tg.r, d=atDir(x), PU=[170,80,255], g=Math.min(1,t/400)*(t>1200?1-(t-1200)/140:1); if(g<=0) return;
