@@ -817,6 +817,107 @@ Object.assign(ANIM,{
 });
 Object.assign(AR_KIND,{"Jelly Zap":"jellyzap","Sock It":"sockit","Frosting Splat":"frostingsplat","Foam Burst":"foamburst","Brain Freeze":"brainfreeze"});
 
+/* ---------- batch 4 signatures, second group (16 Nov 2026) ---------- */
+function atBall(c,x,y,r,col){ c.fillStyle=col; c.beginPath(); c.arc(x,y,r,0,7); c.fill(); c.strokeStyle="rgba(60,30,50,.35)"; c.lineWidth=Math.max(1,r*0.12); c.stroke();
+  c.fillStyle="rgba(255,255,255,.75)"; c.beginPath(); c.ellipse(x-r*0.35,y-r*0.38,r*0.28,r*0.18,-0.6,0,7); c.fill(); }
+function atCoin(c,x,y,r,spin,a=1){ const w=Math.max(r*0.12,r*Math.abs(Math.cos(spin))); c.save(); c.globalAlpha*=a;
+  c.fillStyle="#c98a12"; c.beginPath(); c.ellipse(x+r*0.08,y,w,r,0,0,7); c.fill(); c.fillStyle="#ffd23f"; c.beginPath(); c.ellipse(x,y,w,r,0,0,7); c.fill();
+  c.strokeStyle="#e6a514"; c.lineWidth=Math.max(1,r*0.16); c.beginPath(); c.ellipse(x,y,w*0.68,r*0.68,0,0,7); c.stroke();
+  c.fillStyle="rgba(255,255,255,.7)"; c.beginPath(); c.ellipse(x-w*0.35,y-r*0.4,w*0.18,r*0.22,0,0,7); c.fill(); c.restore(); }
+function atPuff(c,x,y,R,k){ if(k<0||k>1) return; c.save(); c.globalAlpha=1-k; for(let i=0;i<8;i++){ const a=i/8*Math.PI*2, r=R*(0.3+k*0.9);
+    c.fillStyle=i%2?"#f4f1f6":"#dcd6e2"; c.beginPath(); c.arc(x+Math.cos(a)*r,y+Math.sin(a)*r*0.7-k*R*0.3,R*(0.32-k*0.15),0,7); c.fill(); }
+  c.fillStyle="#ffffff"; c.beginPath(); c.arc(x,y-k*R*0.3,R*0.35*(1-k),0,7); c.fill(); c.restore(); }
+function atRabbit(c,x,y,S,d,sq=0,ear=0){ c.save(); c.translate(x,y); c.scale(d*S*(1+sq*0.3),S*(1-sq*0.3));
+  c.strokeStyle="#4a3a48"; c.lineWidth=2.4/S; c.lineJoin="round";
+  for(const [ex,ang] of [[-4,-0.25-ear],[4,0.18-ear*0.6]]){ c.save(); c.translate(ex+6,-30); c.rotate(ang); c.fillStyle="#ffffff"; c.beginPath(); c.ellipse(0,-13,5.5,15,0,0,7); c.fill(); c.stroke(); c.fillStyle="#ffb4c8"; c.beginPath(); c.ellipse(0,-12,2.6,10,0,0,7); c.fill(); c.restore(); }
+  c.fillStyle="#ffffff"; c.beginPath(); c.ellipse(-4,0,18,14,0,0,7); c.fill(); c.stroke(); c.beginPath(); c.arc(-21,-2,6,0,7); c.fill(); c.stroke();
+  c.beginPath(); c.arc(8,-18,13,0,7); c.fill(); c.stroke();
+  c.fillStyle="#2a2030"; c.beginPath(); c.arc(13,-20,2.6,0,7); c.fill(); c.fillStyle="#fff"; c.beginPath(); c.arc(13.8,-21,0.9,0,7); c.fill();
+  c.fillStyle="#ff8fb0"; c.beginPath(); c.arc(20,-15,2.2,0,7); c.fill(); c.fillStyle="rgba(255,150,180,.55)"; c.beginPath(); c.ellipse(9,-12,3.4,2,0,0,7); c.fill();
+  c.fillStyle="#ffffff"; c.beginPath(); c.ellipse(4,12,7,4,0,0,7); c.fill(); c.stroke(); c.beginPath(); c.ellipse(-12,12,7,4,0,0,7); c.fill(); c.stroke(); c.restore(); }
+function atLeafBlade(c,x,y,L,a,col){ c.save(); c.translate(x,y); c.rotate(a); c.fillStyle=col; c.beginPath(); c.moveTo(0,0); c.quadraticCurveTo(L*0.5,-L*0.28,L,0); c.quadraticCurveTo(L*0.5,L*0.16,0,0); c.fill();
+  c.strokeStyle="rgba(40,90,30,.5)"; c.lineWidth=1.2; c.beginPath(); c.moveTo(L*0.1,0); c.lineTo(L*0.85,-L*0.02); c.stroke(); c.restore(); }
+function atCrescent(c,x,y,R,a,k,col){ if(k<0||k>1) return; c.save(); c.translate(x,y); c.rotate(a); c.globalAlpha=1-ei(k); const sw=Math.PI*(0.3+0.9*eo(k));
+  c.fillStyle=col; c.beginPath(); c.arc(0,0,R,-sw/2,sw/2); c.arc(R*0.22,0,R*0.86,sw/2,-sw/2,true); c.closePath(); c.fill();
+  c.fillStyle="rgba(255,255,255,.8)"; c.beginPath(); c.arc(0,0,R,-sw/2*0.7,sw/2*0.7); c.arc(R*0.1,0,R*0.93,sw/2*0.7,-sw/2*0.7,true); c.closePath(); c.fill(); c.restore(); }
+const AT_GUMS=["#ff4f7b","#ffd23f","#3fb8ff","#5ad35a","#b46bff","#ff8a3d"];
+Object.assign(ANIM,{
+  /* Tome: its pages flap open, then big bold letters fly out of it, circle the target's head and leave it dizzy */
+  readaloud:{C:900,D:2100,sig:true,
+    atk:t=>t<560?{f:0,arc:-10*eo(t/560),sx:1+0.1*Math.sin(t/28),sy:1-0.06*Math.sin(t/28),pose:"cast"}:t<1300?{f:0.05,arc:-10+10*eo((t-560)/300),pose:"push",sx:1.06,sy:0.96}:{f:0,pose:"idle"},
+    def(t){ if(t<900||t>1850) return null; const w=Math.sin((t-900)/120); return {pose:"hurt",rot:0.12*w,off:[w*5,0]}; },
+    fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, d=atDir(x), out=t>1800?1-(t-1800)/300:1; if(out<=0) return; c.save(); c.globalAlpha=out;
+      if(t<700) for(let i=0;i<6;i++){ const a=t/220+i*1.05, px=s.x+Math.cos(a)*s.r*0.9, py=s.y-s.r*0.3+Math.sin(a)*s.r*0.35-Math.min(1,t/400)*s.r*0.3;
+        c.save(); c.translate(px,py); c.rotate(Math.sin(t/90+i)*0.6); c.fillStyle="#fbf6e8"; c.strokeStyle="rgba(120,100,70,.6)"; c.lineWidth=1.2; c.beginPath(); c.rect(-s.r*0.13,-s.r*0.17,s.r*0.26,s.r*0.34); c.fill(); c.stroke();
+        c.fillStyle="rgba(120,100,70,.45)"; for(let j=0;j<3;j++) c.fillRect(-s.r*0.08,-s.r*0.1+j*s.r*0.08,s.r*0.16,s.r*0.025); c.restore(); }
+      const L=["A","B","C","!","?","Z"], cols=[x.col.map(v=>Math.min(255,v+40)),[255,214,90],[120,200,255],[255,120,170],[150,230,120],[200,150,255]], head={x:tg.x,y:tg.top.y-R*0.15};
+      atImpact(t,900,0.4,0.2);
+      for(let i=0;i<6;i++){ const t0=560+i*55, k=(t-t0)/340; if(k<0) continue; let px,py,sz=R*0.85;
+        if(k<1){ const p=lerpP({x:s.x+d*s.r*0.7,y:s.y-s.r*0.3},head,eio(k),R*1.4,(i-2.5)*R*0.12); px=p.x; py=p.y; sz*=0.6+0.4*k; }
+        else { const a=(t-t0-340)/260+i*1.047; px=head.x+Math.cos(a)*R*1.05; py=head.y+Math.sin(a)*R*0.35; if(t>1550){ const pk=(t-1550-i*30)/220; if(pk>1) continue; if(pk>0){ atStar4(c,px,py,R*0.35*pk+R*0.1,`rgba(255,240,170,${1-pk})`); continue; } } }
+        c.save(); c.font=`900 ${Math.round(sz)}px system-ui,Arial Black,sans-serif`; c.textAlign="center"; c.textBaseline="middle"; c.lineJoin="round";
+        c.strokeStyle="#3a2a40"; c.lineWidth=sz*0.16; c.strokeText(L[i],px,py); c.fillStyle=atRgba(cols[i],1); c.fillText(L[i],px,py);
+        c.fillStyle="rgba(255,255,255,.55)"; c.fillText(L[i],px-sz*0.04,py-sz*0.05); c.fillStyle=atRgba(cols[i],1); c.fillText(L[i],px,py+sz*0.02); c.restore(); }
+      c.restore(); }},
+  /* Gumball: it rattles like a machine, its lid pops, and a fountain of gumballs arcs over and rains down on the target, bouncing off */
+  gumballrain:{C:900,D:2000,sig:true,
+    atk:t=>{ if(t<560){ const k=t/560; return {off:[Math.sin(t/14)*3*k,Math.cos(t/19)*1.5*k],sx:1+0.06*k,sy:1-0.1*k,pose:"crouch"}; }
+      if(t<700){ const k=(t-560)/140; return {sx:1-0.15*Math.sin(k*Math.PI),sy:1+0.28*Math.sin(k*Math.PI),pose:"cast"}; }
+      const sp=Math.sin((t-700)/50)*Math.max(0,1-(t-700)/400); return {sx:1+0.08*sp,sy:1-0.08*sp,pose:t<1300?"push":"idle"}; },
+    def(t){ if(t<880||t>1450) return null; const h=Math.floor((t-880)/160)%2; return {pose:"hurt",sy:h?0.92:1,sx:h?1.06:1,off:[0,h?3:0]}; },
+    fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, src={x:s.x,y:s.top.y-s.r*0.1}, rr=R*0.23;
+      for(let i=0;i<14;i++){ const t0=560+i*28, fly=360, k=(t-t0)/fly; if(k<0) continue; const tx=tg.x+((i*37)%9-4)*R*0.16, ty=tg.y-R*0.15-((i*13)%5)*R*0.1, col=AT_GUMS[i%6];
+        if(k<1){ const p=lerpP(src,{x:tx,y:ty},k,R*2.6,0); atBall(c,p.x,p.y,rr*(0.7+0.3*k),col); continue; }
+        const b=(t-t0-fly)/700; if(b>1) continue; const dirx=(i%2?1:-1)*(0.6+((i*7)%5)*0.15), bx=tx+dirx*R*1.4*b, fy=tg.foot-rr, y0=ty, by=b<0.45?y0+(fy-y0)*(b/0.45)*(b/0.45):fy-Math.sin((b-0.45)/0.55*Math.PI)*R*0.45*(1-b);
+        c.save(); c.globalAlpha=b>0.7?1-(b-0.7)/0.3:1; atBall(c,bx,by,rr,col); c.restore(); }
+      for(let h=0;h<3;h++){ const T0=900+h*150; atImpact(t,T0,0.35+0.1*h,h===2?0.2:0); const k=(t-T0)/200; if(k>=0&&k<1) atStar4(c,tg.x+(h-1)*R*0.35,tg.y-R*0.3,R*0.45*(1-k)+R*0.1,`rgba(255,255,255,${1-k})`); } }},
+  /* Pina: it crouches, spins up like a top with its crown whirling, drills into the target three times and hops back */
+  crownspin:{C:520,D:1550,contact:true,marks:true,sig:true,
+    atk:t=>{ if(t<380){ const k=eo(t/380); return {f:-0.05*k,sx:1+0.12*k,sy:1-0.16*k,pose:"crouch"}; }
+      const spin=Math.cos((t-380)/32);
+      if(t<520){ const k=eo((t-380)/140); return {f:0.72*k,arc:-12*Math.sin(k*Math.PI),sx:0.35+0.65*Math.abs(spin),pose:"jump"}; }
+      if(t<1130) return {f:0.72+0.04*Math.sin((t-520)/40),arc:-4*Math.abs(Math.sin((t-520)/60)),sx:(0.35+0.65*Math.abs(spin))*(spin<0?-1:1),pose:"hover"};
+      const k=(t-1130)/420; return {f:0.72*(1-eio(k)),arc:-40*Math.sin(Math.min(1,k)*Math.PI),pose:k<0.8?"jump":"land",sx:1}; },
+    def(t){ if(t<520||t>1250) return null; const p=((t-520)%200)/200; return {pose:"hit",off:[(1-p)*8,0],rot:0.06*Math.sin(t/30)}; },
+    fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, d=atDir(x), crown={x:s.x,y:s.top.y+s.r*0.05};
+      if(t>300&&t<1180){ const n=6, rot=(t-300)/50; for(let i=0;i<n;i++){ const a=rot+i/n*Math.PI*2; c.save(); c.globalAlpha=0.9; atLeafBlade(c,crown.x+Math.cos(a)*s.r*0.15,crown.y+Math.sin(a)*s.r*0.05,s.r*1.15,a*0.999,i%2?"#7cc84e":"#4fa83a"); c.restore(); }
+        c.fillStyle="rgba(255,255,255,.35)"; c.beginPath(); c.ellipse(crown.x,crown.y,s.r*0.85,s.r*0.2,0,0,7); c.fill(); }
+      for(let h=0;h<3;h++){ const T0=520+h*200; atImpact(t,T0,0.3+h*0.12,h===2?0.25:0); const k=(t-T0)/280;
+        atCrescent(c,tg.x-d*R*0.1,tg.y-R*0.1+(h-1)*R*0.25,R*0.95,(d>0?Math.PI:0)+(h-1)*0.5,k,h===2?"#ffd23f":"#7cc84e");
+        if(k>0&&k<1) for(let j=0;j<4;j++){ const a=-Math.PI*(0.2+0.6*j/3)+h, r=R*(0.4+k*1.2); atLeafBlade(c,tg.x+Math.cos(a)*r,tg.y+Math.sin(a)*r*0.7+k*k*R*0.5,R*0.3*(1-k*0.5),a+t/100,"#5fb844"); } } }},
+  /* Jingle: it rattles like a piggy bank with coins circling it, then fires three fans of spinning coins that clink off the target and scatter */
+  payday:{C:880,D:2100,sig:true,
+    atk:t=>{ if(t<560){ const k=t/560; return {off:[Math.sin(t/16)*3*k,0],arc:-Math.abs(Math.sin(t/90))*8*k,pose:"crouch",sx:1+0.05*k,sy:1-0.07*k}; }
+      const v=Math.floor((t-560)/160), q=((t-560)%160)/160; return t<1050?{pose:"push",sx:1-0.1*Math.sin(q*Math.PI),sy:1+0.1*Math.sin(q*Math.PI),f:-0.02*v}:{pose:t<1500?"happy":"idle"}; },
+    def(t){ if(t<880||t>1450) return null; const p=((t-880)%160)/160; return {pose:"hurt",off:[(1-p)*6,0]}; },
+    fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, d=atDir(x), cr=R*0.27;
+      if(t<620) for(let i=0;i<5;i++){ const a=t/160+i*1.2566, k=Math.min(1,t/300); atCoin(c,s.x+Math.cos(a)*s.r*1.05*k,s.y-s.r*0.2+Math.sin(a)*s.r*0.45*k,cr*0.8,t/60+i,k); }
+      const mouth={x:s.x+d*s.r*0.7,y:s.y-s.r*0.25};
+      for(let v=0;v<3;v++) for(let i=0;i<4;i++){ const t0=560+v*160+i*20, k=(t-t0)/320; if(k<0) continue; const off=(i-1.5)*R*0.32, hit={x:tg.x-d*R*0.2,y:tg.y-R*0.2+off*0.6};
+        if(k<1){ const p=lerpP(mouth,hit,k,R*0.5*(i-1.5),0); atCoin(c,p.x,p.y,cr,t/40+i); continue; }
+        const b=(t-t0-320)/800; if(b>1) continue; const fx2=hit.x-d*R*(0.3+i*0.25)*b*1.6+off*0.4*b, fl=tg.foot-cr*0.3-i*2, fy=b<0.35?hit.y-R*0.7*Math.sin(b/0.35*Math.PI*0.5)+(fl-hit.y)*0*b:hit.y-R*0.7+(fl-hit.y+R*0.7)*Math.min(1,ei((b-0.35)/0.4));
+        if(b<0.75) atCoin(c,fx2,fy,cr,t/30+i*2,1); else { c.save(); c.globalAlpha=1-(b-0.75)/0.25; c.fillStyle="#e6a514"; c.beginPath(); c.ellipse(fx2,fl,cr,cr*0.35,0,0,7); c.fill(); c.fillStyle="#ffd23f"; c.beginPath(); c.ellipse(fx2,fl-1,cr*0.92,cr*0.3,0,0,7); c.fill(); c.restore(); } }
+      for(let v=0;v<3;v++){ const T0=880+v*160; atImpact(t,T0,0.3+v*0.1,v===2?0.2:0); const k=(t-T0)/240; if(k>=0&&k<1) for(let j=0;j<5;j++){ const a=j*1.26+v, r=R*(0.3+k*0.9); atStar4(c,tg.x-d*R*0.2+Math.cos(a)*r,tg.y-R*0.2+Math.sin(a)*r*0.8,R*0.16*(1-k),"#fff3b0"); } } }},
+  /* Presto: it hops and flips, a puff of smoke bursts from its brim, a rabbit leaps out, bounds across and headbutts the target, then vanishes in smoke */
+  rabbitout:{C:1000,D:2100,sig:true,
+    atk:t=>{ if(t<480){ const k=t/480; return {arc:-30*Math.sin(k*Math.PI),rot:0.0,sx:1,sy:1+0.08*Math.sin(k*Math.PI),pose:"jump"}; }
+      if(t<700){ const k=(t-480)/220; return {sx:1+0.2*Math.sin(k*Math.PI),sy:1-0.22*Math.sin(k*Math.PI),pose:"land"}; } return {pose:t<1500?"cast":"happy"}; },
+    def(t){ if(t<1000||t>1750) return null; const a=1-eo((t-1000)/300), w=Math.sin((t-1000)/110); return {pose:"hurt",sx:1-0.15*a,sy:1+0.1*a,off:[20*a,0],rot:0.1*w*(1-a)}; },
+    fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, d=atDir(x), brim={x:s.x,y:s.top.y-s.r*0.1}, S=R/32;
+      if(t<520){ for(let i=0;i<3;i++){ const ph=((t/300)+i/3)%1; atStar4(c,s.x+Math.cos(i*2.1+t/200)*s.r*0.9,s.y-s.r*0.4-ph*s.r*0.6,R*0.12*(1-ph),`rgba(255,240,170,${1-ph})`); } return; }
+      atPuff(c,brim.x,brim.y,R*0.75,(t-500)/420);
+      const land={x:tg.x-d*R*0.9,y:tg.y-R*0.1};
+      if(t<640){ const k=(t-520)/120; atRabbit(c,brim.x,brim.y-R*0.3*k,S*(0.4+0.6*k),d,0,0.3*(1-k)); return; }
+      if(t<1000){ const k=(t-640)/360, mid={x:(brim.x+land.x)/2,y:tg.foot-R*0.25}, hop=k<0.5?k*2:(k-0.5)*2, a=k<0.5?{x:brim.x,y:brim.y-R*0.3}:mid, b=k<0.5?mid:land, p=lerpP(a,b,hop,R*1.1);
+        atRabbit(c,p.x,p.y,S,d,hop<0.1?0.4:0,0.5*Math.sin(hop*Math.PI)); return; }
+      atImpact(t,1000,0.55,0.3);
+      if(t<1380){ const k=(t-1000)/380, p={x:land.x+d*R*0.25-d*R*1.1*eo(k),y:land.y-R*0.7*Math.sin(Math.min(1,k*1.4)*Math.PI*0.9)}; atRabbit(c,p.x,p.y,S,d,k<0.2?0.6*(1-k*5):0,-0.3);
+        if(k<0.6) atPow(c,{x:tg.x-d*R*0.3,y:tg.y-R*0.15},k/0.6,R/34); }
+      else { const k=(t-1380)/420; atPuff(c,land.x-d*R*0.85,land.y-R*0.6,R*0.6,k); if(k<1) for(let i=0;i<4;i++) atStar4(c,land.x-d*R*0.85+Math.cos(i*1.6)*R*0.7*k,land.y-R*0.6+Math.sin(i*1.6)*R*0.5*k,R*0.14*(1-k),"#fff3b0"); }
+      if(t>1100&&t<1800){ const k=(t-1100)/700; for(let i=0;i<3;i++){ const a=t/180+i*2.09; atStar4(c,tg.x+Math.cos(a)*R*0.7,tg.top.y-R*0.25+Math.sin(a)*R*0.2,R*0.13,`rgba(255,226,90,${1-k})`); } } }}
+});
+Object.assign(AR_KIND,{"Read Aloud":"readaloud","Gumball Rain":"gumballrain","Crown Spin":"crownspin","Pay Day":"payday","Rabbit Out":"rabbitout"});
+
 /* ---------- abilities: when one works, its name shows over the Snabit with its own colour, particles and sound ---------- */
 const AT_ABIL={ "Sky High":{c:[255,236,170],k:"feather"}, Bloodsuck:{c:[230,50,70],k:"suck"}, Rebirth:{c:[255,170,60],k:"flame"}, Illusion:{c:[160,200,255],k:"wisp"},
   Coil:{c:[120,200,90],k:"ring"}, "Thick Fur":{c:[220,236,255],k:"snow"}, Bright:{c:[255,246,190],k:"shine"}, Counterpunch:{c:[255,160,80],k:"ring"}, Steady:{c:[200,170,130],k:"ring"},
