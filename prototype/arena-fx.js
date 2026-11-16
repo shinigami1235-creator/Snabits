@@ -285,6 +285,13 @@ function atFlameFront(c,ch,cx,cy,foot,R,te,k){ const col=atSigCol(ch), lt=col.ma
     c.fillStyle=`rgba(255,255,255,${0.9*(1-ph)*e})`; c.beginPath(); for(let j=0;j<8;j++){ const q=j/8*Math.PI*2, rr=j%2?z*0.35:z; c[j?"lineTo":"moveTo"](px+Math.cos(q)*rr,py+Math.sin(q)*rr); } c.closePath(); c.fill(); }
   const g=c.createRadialGradient(cx,cy,0,cx,cy,R*(0.7+0.3*e)); g.addColorStop(0,atRgba(lt,0.06*e*(0.8+0.2*Math.sin(te/70)))); g.addColorStop(1,atRgba(col,0)); c.fillStyle=g; c.beginPath(); c.arc(cx,cy,R*(0.7+0.3*e),0,7); c.fill();
   c.restore(); }
+/* a cartoon cloud with a flat bottom, one big bump and smaller ones round it, drawn as a single outlined shape; y is its bottom */
+function atCloud(c,x,y,w,top,bot,line,a=1,sq=0){ if(a<=0||w<=1) return; c.save(); c.globalAlpha*=a; c.translate(x,y); c.scale(1+sq,1-sq);
+  const B=[[-0.37,0.13,0.13],[-0.18,0.27,0.19],[0.06,0.33,0.25],[0.28,0.22,0.17],[0.4,0.12,0.11]], path=()=>{ c.beginPath(); for(const [dx,dy,r] of B){ c.moveTo(dx*w+r*w,-dy*w); c.arc(dx*w,-dy*w,r*w,0,Math.PI*2); } c.rect(-0.37*w,-0.2*w,0.77*w,0.2*w); };
+  path(); c.strokeStyle=line; c.lineWidth=Math.max(2,w*0.05); c.lineJoin="round"; c.stroke();
+  const g=c.createLinearGradient(0,-0.6*w,0,0); g.addColorStop(0,top); g.addColorStop(1,bot); c.fillStyle=g; path(); c.fill();
+  c.strokeStyle="rgba(255,255,255,.35)"; c.lineWidth=Math.max(1.5,w*0.025); c.lineCap="round"; for(const [dx,dy,r] of B.slice(1,4)){ c.beginPath(); c.arc(dx*w,-dy*w,r*w*0.78,Math.PI*1.1,Math.PI*1.55); c.stroke(); }
+  c.fillStyle="rgba(0,0,0,.12)"; c.beginPath(); c.rect(-0.37*w,-0.06*w,0.77*w,0.06*w); c.fill(); c.restore(); }
 /* ---------- each family's signature wind-up (16 Nov 2026): seventeen ways to charge, picked from what the family is ---------- */
 const AT_WIND={Phoenix:"flame",Teep:"flame",Wick:"flame",Sizzle:"flame",Lava:"flame",Dragon:"flame",Salamander:"flame",
   Antik:"storm",Brolly:"storm",Nimbo:"storm",Magna:"storm",Thunderbird:"storm",
@@ -334,9 +341,8 @@ const AT_WINDS={
   flame:{back:(c,G,ch,te,T,k)=>atFlameBack(c,ch,G.x,G.foot,G.H,G.r,te,k), front:(c,G,ch,te,T,k)=>atFlameFront(c,ch,G.cx,G.cy,G.foot,G.R,te,k)},
   /* a storm cloud gathers over its head and lightning drops onto it, then crackles over its body */
   storm:{back(c,G,ch,te,T,k,e,col,lt){ const {x,foot,H,r}=G, cy=foot-H*1.3, w=r*(0.9+0.7*e);
-      c.globalAlpha=Math.min(1,e*1.5); for(let n=0;n<8;n++){ const a=n/8*Math.PI*2+te/800, px=x+Math.cos(a)*w*0.62, py=cy+Math.sin(a)*w*0.16, rr=w*(0.3+0.08*Math.sin(n*1.7+te/260));
-        const g=c.createRadialGradient(px,py-rr*0.4,rr*0.1,px,py,rr); g.addColorStop(0,"rgb(134,138,166)"); g.addColorStop(1,"rgb(46,48,68)"); c.fillStyle=g; c.beginPath(); c.arc(px,py,rr,0,7); c.fill(); }
-      c.globalAlpha=1; c.globalCompositeOperation="lighter"; atGlowA(c,x,cy+w*0.2,w*1.2,col,0.4*e);
+      atCloud(c,x-w*0.05+Math.sin(te/400)*w*0.05,cy+w*0.32,w*1.6,"rgb(140,144,170)","rgb(58,60,84)","rgb(34,36,54)",Math.min(1,e*1.5),0.03*Math.sin(te/180));
+      if(Math.floor(te/85)%3===2) atCloud(c,x-w*0.05+Math.sin(te/400)*w*0.05,cy+w*0.32,w*1.6,"rgba(255,250,200,.5)","rgba(255,250,200,0)","rgba(0,0,0,0)",0.5*e,0.03*Math.sin(te/180)); c.globalCompositeOperation="lighter"; atGlowA(c,x,cy+w*0.2,w*1.2,col,0.4*e);
       const sd=Math.floor(te/85); if(e>0.2&&sd%3){ const a={x:x+(atH(sd)-0.5)*w,y:cy+w*0.2}, b={x:x+(atH(sd*3)-0.5)*r*0.7,y:foot-H*0.8}; c.lineCap="round";
         c.strokeStyle=atRgba(lt,0.9*e); c.lineWidth=6; atZig(c,a,b,7,r*0.45,sd); c.strokeStyle="#fff"; c.lineWidth=2.2; atZig(c,a,b,7,r*0.45,sd); atGlowA(c,b.x,b.y,r*0.5,lt,0.7*e); } },
     front(c,G,ch,te,T,k,e,col,lt){ const {cx,cy,foot,R}=G, sd=Math.floor(te/55); c.globalCompositeOperation="lighter"; c.lineCap="round";
@@ -1071,20 +1077,27 @@ Object.assign(ANIM,{
         const rr=rng(7); for(let i=0;i<22;i++){ const land=t-950-i*22; if(land<0) continue; const f=Math.min(1,land/150), sx=head.x+(rr()-0.5)*R*2, sy=head.y-rr()*R*0.8*g;
           c.save(); c.translate(sx,sy-(1-f)*R*1.2); c.rotate(rr()*3); c.fillStyle=["#ff3f7f","#3fa8ff","#ffc61a","#4cc94c","#9b5cff"][i%5]; c.fillRect(-R*0.09,-R*0.03,R*0.18,R*0.06); c.restore(); } }
       c.restore(); }},
-  /* Suds: it blows one giant bubble that floats over and swallows the target, smaller bubbles burst inside it, then the big one pops */
-  foamburst:{C:820,D:2150,sig:true,
-    atk:t=>({f:0,pose:t<560?"cast":t<1600?"push":"idle",sx:t<560?1+0.1*eo(t/560):1,sy:t<560?1-0.08*eo(t/560):1}),
-    def(t){ if(t<820||t>1750) return null; return {pose:"hurt",lift:t<1550?10*Math.sin(Math.min(1,(t-820)/300)*Math.PI/2):10*(1-(t-1550)/200),off:[Math.sin(t/40)*3,0]}; },
-    fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, d=atDir(x), mouth={x:s.x+d*s.r*0.9,y:s.y-s.r*0.1};
-      if(t<560){ const g=eo(t/560); atBubble(c,mouth.x+d*R*0.5*g,mouth.y-R*0.1*g,R*(0.15+0.75*g)*(1+0.04*Math.sin(t/40)),1); for(let i=0;i<4;i++){ const ph=((t/400)+i/4)%1; atBubble(c,mouth.x+d*ph*R,mouth.y-ph*R*1.2,R*0.08,1-ph); } return; }
-      const Big=R*1.35, fly=Math.min(1,(t-560)/260), pos=fly<1?lerpP({x:mouth.x+d*R*0.5,y:mouth.y-R*0.1},{x:tg.x,y:tg.y-R*0.1},eio(fly),R*0.8):{x:tg.x,y:tg.y-R*0.1-(t<1550?10*Math.sin(Math.min(1,(t-820)/300)*Math.PI/2):0)};
-      const rad=fly<1?R*0.9+(Big-R*0.9)*fly:Big*(1+0.03*Math.sin(t/50));
-      if(t<1560) atBubble(c,pos.x,pos.y,rad,0.95);
-      const r=rng(13); for(let w=0;w<3;w++){ const T0=900+w*220; for(let i=0;i<6;i++){ const a=r()*7, rr=r()*Big*0.6, bx=pos.x+Math.cos(a+t/400)*rr, by=pos.y+Math.sin(a+t/400)*rr*0.8, br=R*(0.12+r()*0.1);
-          if(t>820&&t<T0) atBubble(c,bx,by,br,0.9); else if(t>=T0&&t<T0+260) atPop(c,bx,by,br*1.4,(t-T0)/260); } atImpact(t,T0,0.3,0); }
-      atImpact(t,1560,0.6,0.35);
-      if(t>=1560&&t<2150){ const k=(t-1560)/590; atPop(c,pos.x,pos.y,Big,k); for(let i=0;i<16;i++){ const a=i/16*Math.PI*2, rr=Big*(1+k*0.9); c.fillStyle=`rgba(235,250,255,${1-k})`; c.beginPath(); c.arc(pos.x+Math.cos(a)*rr,pos.y+Math.sin(a)*rr*0.8+k*k*R*0.8,R*0.1*(1-k*0.6),0,7); c.fill(); }
-        c.fillStyle=`rgba(255,255,255,${0.7*(1-k)})`; c.beginPath(); c.ellipse(tg.x,tg.foot-2,R*1.4*(0.6+k*0.6),R*0.22,0,0,7); c.fill(); } }},
+  /* Suds: it froths up, a heap of soapy suds swells up out of the floor round the target until it's buried, then the whole heap blows apart in a burst of bubbles */
+  foamburst:{C:860,D:1560,sig:true,
+    atk:t=>({f:0,pose:t<500?"cast":t<1200?"push":"idle",sx:t<500?1+0.1*Math.sin(t/40)*eo(t/500):1,sy:t<500?1-0.08*Math.sin(t/40)*eo(t/500):1,arc:t>860&&t<1100?-6*Math.sin((t-860)/240*Math.PI):0}),
+    def(t){ if(t>=380&&t<860){ const k=(t-380)/480; return {pose:"hurt",off:[Math.sin(t/35)*2*k,0],sy:1-0.05*k}; } if(t>=860&&t<1560){ const k=(t-860)/700; return {pose:"hurt",lift:-34*Math.sin(Math.min(1,k*1.6)*Math.PI),rot:0.25*Math.sin(Math.min(1,k*1.6)*Math.PI),flash:k<0.15?3:0}; } return null; },
+    fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, h=tg.foot-tg.top.y, rr=rng(31);
+      if(t<600){ for(let i=0;i<10;i++){ const ph=((t/420)+i/10)%1; atBubble(c,s.x+(atH(i)-0.5)*s.r*1.8,s.foot-ph*s.r*2.2,s.r*(0.07+0.06*(i%3)),Math.sin(ph*Math.PI)); } }
+      const B=[]; for(let i=0;i<34;i++){ const ring=atH(i*3), a=atH(i*7)*Math.PI*2, layer=atH(i*11); B.push({dx:Math.cos(a)*R*(0.5+0.9*ring),dy:layer,r:R*(0.22+0.22*atH(i*5)),t0:330+layer*420+atH(i)*80}); }
+      if(t<860){ for(const b of B){ const g=Math.min(1,Math.max(0,(t-b.t0)/180)); if(g<=0) continue; const by=tg.foot-b.dy*(h+R*0.4)-b.r*0.6, wob=Math.sin(t/70+b.dx)*R*0.03;
+          c.fillStyle=`rgba(250,252,255,${0.92*g})`; c.beginPath(); c.arc(tg.x+b.dx+wob,by,b.r*eo(g),0,7); c.fill(); }
+        for(const b of B){ const g=Math.min(1,Math.max(0,(t-b.t0)/180)); if(g<=0) continue; const by=tg.foot-b.dy*(h+R*0.4)-b.r*0.6; if(atH(b.dx*13)<0.4) atBubble(c,tg.x+b.dx,by-b.r*0.3,b.r*0.55*eo(g),0.9);
+          else { c.fillStyle="rgba(200,225,250,.45)"; c.beginPath(); c.arc(tg.x+b.dx+b.r*0.25,by+b.r*0.3,b.r*0.55*eo(g),0,7); c.fill(); } }
+        const pile=Math.min(1,Math.max(0,(t-330)/500)); for(let i=0;i<6;i++){ const ph=((t/300)+i/6)%1, px=tg.x+(atH(i*9)-0.5)*R*2, py=tg.foot-pile*(h+R*0.4)-ph*R*0.8; if(ph>0.8) atPop(c,px,py,R*0.1,(ph-0.8)/0.2); else atBubble(c,px,py,R*0.1,0.9); }
+        if(t>700) atImpact(t,700,0.15,0); return; }
+      atImpact(t,860,0.9,0.5); const k=(t-860)/700;
+      c.save(); c.globalCompositeOperation="lighter"; atGlowA(c,tg.x,tg.y-R*0.2,R*(1.4+2.2*eo(k)),[220,240,255],0.8*(1-k)); c.restore();
+      for(let w=0;w<3;w++){ const kk=Math.min(1,Math.max(0,k*1.4-w*0.12)); SG.ring?SG.ring(c,tg.x,tg.y-R*0.2,R*(0.8+3*eo(kk)),R*(0.7+2.4*eo(kk)),[235,248,255],5*(1-kk),1-kk):0; }
+      for(const b of B){ const a=Math.atan2(-b.dy*(h+R*0.4)-b.r*0.6+h*0.5,b.dx||0.01), sp=R*(1.2+2.4*atH(b.dx*7+1))*eo(k), bx=tg.x+b.dx+Math.cos(a)*sp, by=tg.foot-b.dy*(h+R*0.4)-b.r*0.6+Math.sin(a)*sp+k*k*R*1.2;
+        if(atH(b.dx*5+2)<0.5){ if(k<0.6) atBubble(c,bx,by,b.r*0.6*(1-k*0.5),1-k/0.6); else atPop(c,bx,by,b.r*0.6,(k-0.6)/0.4); }
+        else { c.fillStyle=`rgba(250,252,255,${0.9*(1-k)})`; c.beginPath(); c.arc(bx,by,b.r*0.5*(1-k*0.6),0,7); c.fill(); } }
+      for(let i=0;i<16;i++){ const a=i/16*Math.PI*2, sp=R*(0.8+2.6*eo(k)); c.fillStyle=`rgba(200,230,255,${1-k})`; c.beginPath(); c.arc(tg.x+Math.cos(a)*sp,tg.y-R*0.2+Math.sin(a)*sp*0.8+k*k*R,R*0.06,0,7); c.fill(); }
+      c.fillStyle=`rgba(250,252,255,${0.7*(1-k)})`; c.beginPath(); c.ellipse(tg.x,tg.foot,R*1.8*(0.6+0.6*k),R*0.3,0,0,7); c.fill(); }},
   /* Scoop: cold mist gathers into a huge scoop over its head, it flicks the scoop across, the scoop lands on the target and freezes it solid */
   brainfreeze:{C:950,D:2300,sig:true,
     atk:t=>({f:0,rot:t<600?-0.15*eo(t/600):t<760?-0.15+0.4*eo((t-600)/160):0.25*(1-eo((t-760)/400)),pose:t<600?"cast":t<1100?"push":"idle"}),
