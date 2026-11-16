@@ -3414,11 +3414,14 @@ x.feet.push([g.cx, 182, 10]); },
       path(c, g) { roundBox(c, g.left, g.top, g.bw, g.bh, g.bh * 0.46); },
       arms: 'stub', armW: st => by(st, 0, 6, 7), handR: st => by(st, 0, 5.5, 6.5), shoulderY: 0.64,
       behind(c, g, x) { const n = by(g.stage, 1, 3, 9), L = g.bh * by(g.stage, 0.9, 1.0, 1.05);
-        for (let i = 0; i < n; i++) { const k = n === 1 ? 0.5 : i / (n - 1), a = -1.1 + k * 2.2 + Math.sin(x.t / 500 + i) * 0.08;
-          c.save(); c.translate(g.cx, g.bot - 8); c.rotate(a * (n === 1 ? 0.6 : 1) + (n === 1 ? 0.9 : 0));
-          c.fillStyle = rgb(dk(x.body, 0.25)); c.beginPath(); c.ellipse(0, -L * 0.55, L * 0.2, L * 0.55, 0, 0, 7); c.fill();
-          c.fillStyle = rgb(lt(x.body, 0.05)); c.beginPath(); c.ellipse(0, -L * 0.55 - 2, L * 0.19, L * 0.52, 0, 0, 7); c.fill();
-          c.fillStyle = '#f7f4ee'; c.beginPath(); c.ellipse(0, -L * 0.98, L * 0.12, L * 0.14, 0, 0, 7); c.fill(); c.restore(); }
+        // bushy fox tails rising behind it from the back of its body, each curling at a white tip; one, three, then nine fanned up like a crown
+        const fan = n === 1 ? [0.75] : n === 3 ? [0.15, 0.6, 1.05] : Array.from({ length: n }, (_, i) => -0.55 + i * 1.75 / (n - 1));
+        for (let i = fan.length - 1; i >= 0; i--) { const a = fan[i] + Math.sin(x.t / 520 + i * 0.7) * 0.06, w = L * 0.3, cu = L * 0.36;
+          c.save(); c.translate(g.cx + g.bw * 0.12, g.bot - g.bh * 0.25); c.rotate(a);
+          const tail = () => { c.beginPath(); c.moveTo(-w * 0.55, 0); c.bezierCurveTo(-w * 1.5, -L * 0.45, -w * 0.9, -L * 0.95, cu, -L * 1.02); c.bezierCurveTo(w * 0.9, -L * 0.8, w * 1.3, -L * 0.4, w * 0.55, 0); c.closePath(); };
+          tail(); c.fillStyle = rgb(dk(x.body, 0.28)); c.fill(); c.save(); c.translate(-1.5, -1.5); tail(); c.fillStyle = rgb(lt(x.body, 0.06)); c.fill();
+          c.clip(); c.fillStyle = '#f7f4ee'; c.beginPath(); c.ellipse(cu * 0.75, -L * 1.0, w * 0.9, L * 0.17, 0.3, 0, 7); c.fill(); c.restore();   // the white tip
+          c.strokeStyle = rgba(dk(x.body, 0.35), 0.5); c.lineWidth = 1.4; c.beginPath(); c.moveTo(0, -L * 0.15); c.quadraticCurveTo(-w * 0.5, -L * 0.6, cu * 0.4, -L * 0.85); c.stroke(); c.restore(); }
         for (const sd of [-1, 1]) { const ex = g.cx + sd * g.bw * 0.3, ey = g.top + 4, eh = g.bh * by(g.stage, 0.55, 0.6, 0.62), ew = g.bw * 0.2, tw = Math.sin(x.t / 700 + sd) * 2;
           c.fillStyle = rgb(dk(x.body, 0.3)); c.beginPath(); c.moveTo(ex - ew, ey + 10); c.lineTo(ex + sd * 4 + tw, ey - eh + 3); c.lineTo(ex + ew, ey + 10); c.closePath(); c.fill();
           c.fillStyle = rgb(x.body); c.beginPath(); c.moveTo(ex - ew, ey + 8); c.lineTo(ex + sd * 4 + tw, ey - eh); c.lineTo(ex + ew, ey + 8); c.closePath(); c.fill();
@@ -3431,7 +3434,8 @@ x.feet.push([g.cx, 182, 10]); },
         if (g.stage === 'Mega') { c.fillStyle = '#d23a3a'; c.beginPath(); c.moveTo(g.cx, g.top + 6); c.lineTo(g.cx + 4, g.top + 12); c.lineTo(g.cx, g.top + 18); c.lineTo(g.cx - 4, g.top + 12); c.closePath(); c.fill(); } },
       hl: g => [g.left + g.bw * 0.12, g.top + g.bh * 0.5, g.left + g.bw * 0.12, g.top + g.bh * 0.22, g.left + g.bw * 0.3, g.top + g.bh * 0.1],
       head: g => [g.cx, g.top + 2, g.bw * 0.46],
-      face: (c, g, x, look) => faceTwo(c, g, x, look, { ey: 0.42, ex: 0.18, my: 0.66, s: by(g.stage, 0.78, 0.86, 0.94) })
+      face: (c, g, x, look) => { const F = faceTwo(c, g, x, look, { ey: 0.42, ex: 0.18, my: 0.66, s: by(g.stage, 0.78, 0.86, 0.94) }); if (x.back) return F; const s = by(g.stage, 0.8, 0.9, 1);
+        c.fillStyle = '#2a2230'; c.beginPath(); c.moveTo(g.cx - 4 * s, g.top + g.bh * 0.55); c.lineTo(g.cx + 4 * s, g.top + g.bh * 0.55); c.lineTo(g.cx, g.top + g.bh * 0.55 + 4 * s); c.closePath(); c.fill(); return F; }   // a little black fox nose
     },
     /* Naga: a serpent head with a cobra hood, rising from coils, with a flicking tongue and a gold jewel at Mega */
     Naga: {

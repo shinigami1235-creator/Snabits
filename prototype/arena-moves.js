@@ -976,3 +976,36 @@ if(typeof KSND!=="undefined") Object.assign(KSND,{
   yoyoloop:(d,t)=>{ dNoise(d,t+0.14,0.5,0.08,'bandpass',2000,1.2); sTone(d,t+0.14,'sine',400,1000,0.5,0.03); dKick(d,t+0.64,0.4); },
   dragunder:(d,t)=>{ dNoise(d,t+0.3,0.12,0.12,'bandpass',900,1); sTone(d,t+0.56,'sine',300,90,0.45,0.08); dNoise(d,t+0.56,0.5,0.14,'lowpass',500); dNoise(d,t+1.0,0.3,0.18,'lowpass',700); dKick(d,t+1.2,0.5); }
 });
+/* Gid (17 Nov 2026): Vampire's Wing Wrap drapes its cape round the target and squeezes, instead of a pair of wings */
+ANIM.capewrap={C:460,D:1360,contact:true,marks:true,
+  atk:t=>({f:t<460?0.55*eio(t/460):t<1050?0.55:0.55*(1-eio((t-1050)/300)),pose:t<300?"walk":t<1050?"push":"idle",sx:t>460&&t<1050?1.04:1}),
+  def(t){ if(t<460||t>1150) return null; const sq=t<1050?0.1*Math.min(1,(t-460)/200):0; return {sx:1-sq,sy:1+sq*0.4,off:[Math.sin(t/14)*1.5,0],pose:"hurt"}; },
+  fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, d=atDir(x); if(t<200||t>1200) return;
+    const k=t<460?eio((t-200)/260):t<1050?1:1-eio((t-1050)/150), S={x:s.x+d*s.r*0.15,y:s.y-s.r*0.75}, cx=tg.x, cy=tg.y-R*0.25, rr=R*1.18, a0=-Math.PI/2, sweep=d*Math.PI*1.25*k;
+    const red=[178,28,48], lining=[90,10,30], wob=t<1050?Math.sin(t/60)*R*0.04:0;
+    const flap=()=>{ c.beginPath(); c.moveTo(S.x,S.y); c.quadraticCurveTo((S.x+cx)/2,cy-rr*1.1,cx,cy-rr);
+      const n=20; for(let i=1;i<=n;i++){ const a=a0+sweep*i/n, r2=rr*(i%2?1.1:0.96)+wob*Math.sin(i); c.lineTo(cx+Math.cos(a)*r2,cy+Math.sin(a)*r2); }   // the bat-wing points along its edge
+      const e={x:cx+Math.cos(a0+sweep)*rr,y:cy+Math.sin(a0+sweep)*rr}, hem=Math.max(e.y,tg.foot); for(let i=0;i<=8;i++){ const q=i/8; c.lineTo(e.x+(S.x-e.x)*q,hem+Math.sin(q*Math.PI*4+t/80)*R*0.06-(hem-S.y-s.r*0.9)*q*q); } c.closePath(); };
+    c.save(); flap(); c.fillStyle=atRgba(lining,0.96); c.fill(); c.save(); c.clip(); c.fillStyle=atRgba(red,0.95); c.beginPath(); c.arc(cx-d*R*0.2,cy-R*0.2,rr*1.15,0,7); c.fill();
+    c.strokeStyle=atRgba(red.map(v=>v*0.6),0.7); c.lineWidth=2; for(let i=0;i<5;i++){ const a=a0+sweep*(0.2+i*0.17); c.beginPath(); c.moveTo(cx+Math.cos(a)*rr*0.2,cy+Math.sin(a)*rr*0.2); c.lineTo(cx+Math.cos(a)*rr,cy+Math.sin(a)*rr); c.stroke(); } c.restore();   // folds in the cloth
+    flap(); c.strokeStyle=atRgba(lining,1); c.lineWidth=2.4; c.stroke(); c.restore();
+    c.fillStyle="#e9b23a"; c.beginPath(); c.arc(S.x,S.y,s.r*0.12,0,7); c.fill(); c.fillStyle="#fff3c4"; c.beginPath(); c.arc(S.x-1,S.y-1,s.r*0.05,0,7); c.fill();   // the gold clasp it hangs from
+    if(t>=460&&t<1050) for(let i=0;i<3;i++){ const ph=((t/300)+i/3)%1; c.strokeStyle=`rgba(255,220,230,${0.6*(1-ph)})`; c.lineWidth=2; c.beginPath(); c.arc(cx,cy,rr*(1.05+0.25*ph),0,7); c.stroke(); }
+    atImpact(t,460,0.3,0); }};
+Object.assign(AR_KIND,{"Wing Wrap":"capewrap"});
+/* Lava's Bubble Over floods the target with boiling lava rather than water */
+/* the same rolling wave as Tide's, in molten lava with embers, so Lava's Bubble Over isn't water */
+ANIM.lavaflood = { C: 560, D: 1060,
+  atk: t => ({ f: 0, pose: t < 220 ? 'slamup' : t < 760 ? 'push' : 'idle' }),
+  def(t) { if (t < 560) return null; const k = (t - 560) / 500; return { f: -0.14 * Math.sin(Math.min(1, k * 1.5) * Math.PI), lift: -20 * Math.sin(Math.min(1, k * 2) * Math.PI), pose: k < 0.6 ? 'hit' : 'idle' }; },
+  fx(c, t, x) { if (t < 160 || t > 1000) return; const a = x.self, b = x.target, k = Math.min(1.1, (t - 160) / 420), p = lerpP(a, b, Math.min(1, k)), h = 70 * (x.pw || 1) * Math.min(1, (t - 160) / 200), A = Math.min(1, (1000 - t) / 200);
+    const dir = Math.sign(b.x - a.x) || 1, base = p.y + 30 + (b.foot - b.y - 30) * Math.min(1, k);
+    c.save(); c.globalAlpha = A; c.translate(p.x, base); c.scale(dir, 1);
+    const g = c.createLinearGradient(0, -h, 0, 0); g.addColorStop(0, '#ffe08a'); g.addColorStop(0.4, '#ff7a1a'); g.addColorStop(1, '#b8260f'); c.fillStyle = g;
+    c.beginPath(); c.moveTo(-80, 0); c.bezierCurveTo(-50, -h * 0.2, -30, -h * 0.95, 6, -h); c.bezierCurveTo(30, -h * 1.02, 40, -h * 0.7, 26, -h * 0.55);
+    c.bezierCurveTo(16, -h * 0.45, 10, -h * 0.62, 18, -h * 0.68); c.bezierCurveTo(8, -h * 0.5, 30, -h * 0.25, 40, 0); c.closePath(); c.fill();
+    c.fillStyle = 'rgba(255,255,255,.35)'; c.beginPath(); c.moveTo(-60, -4); c.bezierCurveTo(-40, -h * 0.2, -26, -h * 0.7, 0, -h * 0.86); c.lineTo(-6, -h * 0.7); c.bezierCurveTo(-28, -h * 0.5, -40, -h * 0.15, -60, -4); c.fill();
+    c.fillStyle = '#ffd25a'; for (let i = 0; i < 9; i++) { const a2 = i / 8 * 2.4 - 0.4; c.beginPath(); c.arc(8 + Math.cos(a2) * 20 + Math.sin(t / 50 + i) * 2, -h * 0.8 + Math.sin(a2) * 14, 4.5 - i * 0.3, 0, 7); c.fill(); }
+    c.restore(); for (let i = 0; i < 8; i++) { c.globalAlpha = A; ePart(c, 'Blaze', p.x + dir * (20 + i * 4), base - h * 0.9 - Math.abs(Math.sin(t / 80 + i)) * 20, 1.5, t, i); } c.globalAlpha = 1; } };
+Object.assign(AR_KIND,{"Bubble Over":"lavaflood"});
+if(typeof KSND!=="undefined"){ KSND.capewrap=(d,t)=>{ dNoise(d,t+0.2,0.3,0.12,'bandpass',700,0.6); dNoise(d,t+0.46,0.12,0.18,'lowpass',500); sTone(d,t+0.5,'sine',180,140,0.5,0.05); }; if(KSND.wave) KSND.lavaflood=(d,t)=>{ KSND.wave(d,t); dNoise(d,t+0.4,0.5,0.1,'bandpass',300,0.6); }; }
