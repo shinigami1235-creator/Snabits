@@ -2050,6 +2050,15 @@ const CHIBI = (() => {
         c.beginPath(); c.moveTo(L, g.bot); c.bezierCurveTo(L, g.top - g.bh * 0.3, L + w, g.top - g.bh * 0.3, L + w, g.bot);
         for (let i = 0; i < n; i++) c.quadraticCurveTo(L + w - (i + 0.5) * w / n, g.bot + 7, L + w - (i + 1) * w / n, g.bot); c.closePath(); },
       behind(c, g, x) { const st = g.stage, n = by(st, 3, 5, 9), len = by(st, 16, 48, 78), gl = 0.6 + 0.4 * Math.sin(x.t / 400);
+        const L = x.P && x.P.lash || 0;
+        if (L) {   // its own tentacles reach forward and swing (P.lash = reach, P.swat = -1 raised high to +1 swept low)
+          const th = Math.PI - 0.95 * (x.P.swat || 0), arms = st === 'Bit' ? n : n + 2;
+          for (let i = 0; i < arms; i++) { const oral = i >= n, bx = oral ? g.cx + (i - n ? 6 : -6) : g.left + g.bw * (0.15 + 0.7 * i / (n - 1)), a = th + (i - (arms - 1) / 2) * 0.05, R = len + L * 100 * (0.9 + 0.1 * (i % 3)),
+              tip = [bx + Math.cos(a) * R, g.bot + Math.sin(a) * R], ctl = [bx + Math.cos(a) * R * 0.5 - Math.sin(a) * R * 0.18 * (x.P.swat > 0 ? -1 : 1), g.bot + Math.sin(a) * R * 0.5 + Math.cos(a) * R * 0.18 * (x.P.swat > 0 ? -1 : 1)];
+            c.strokeStyle = oral ? rgba(lt(x.acc, 0.3), 0.85) : st === 'Mega' ? `rgba(${i % 2 ? '200,170,255' : '150,220,255'},${0.6 + 0.3 * gl})` : rgba(lt(x.body, 0.2), 0.9); c.lineCap = 'round';
+            for (let k = 0; k < 10; k++) { const u0 = k / 10, u1 = (k + 1) / 10, P = u => [(1 - u) * (1 - u) * bx + 2 * (1 - u) * u * ctl[0] + u * u * tip[0], (1 - u) * (1 - u) * g.bot + 2 * (1 - u) * u * ctl[1] + u * u * tip[1]], q0 = P(u0), q1 = P(u1);
+              c.lineWidth = (oral ? 8 : st === 'Bit' ? 6 : 4.5) * (1 - u0 * 0.6); c.beginPath(); c.moveTo(q0[0], q0[1]); c.lineTo(q1[0], q1[1]); c.stroke(); } }
+          x.feet.push([g.cx, 182, 10]); return; }
         for (let i = 0; i < n; i++) { const tx = g.left + g.bw * (0.15 + 0.7 * i / (n - 1)), col = st === 'Mega' ? `rgba(${i % 2 ? '200,170,255' : '150,220,255'},${0.5 + 0.4 * gl})` : rgba(lt(x.body, 0.2), 0.8);
           c.strokeStyle = col; c.lineWidth = st === 'Bit' ? 4 : 2.2; c.lineCap = 'round'; c.beginPath(); c.moveTo(tx, g.bot); for (let k = 1; k <= 6; k++) c.lineTo(tx + Math.sin(x.t / 300 + i + k * 0.9) * (st === 'Bit' ? 1.5 : 4) * k / 3, g.bot + k * len / 6); c.stroke(); }
         if (st !== 'Bit') for (const sd of [-1, 1]) { c.strokeStyle = rgba(lt(x.acc, 0.3), 0.75); c.lineWidth = 6; c.beginPath(); c.moveTo(g.cx + sd * 6, g.bot); for (let k = 1; k <= 5; k++) c.lineTo(g.cx + sd * 6 + Math.sin(x.t / 350 + k + sd) * 5, g.bot + k * len * 0.12); c.stroke(); }   // frilled arms

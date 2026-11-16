@@ -850,13 +850,18 @@ if(typeof KSND!=="undefined") Object.assign(KSND,{
 
 /* Bloop's Big Swat: it rears up, then its tentacles sweep sideways across the target in one big slap that knocks it spinning */
 ANIM.bigswat={C:440,D:1120,contact:true,marks:true,
-  atk:(t,o)=>{ const d=(o&&o.dir)||1; if(t<220){ const k=eo(t/220); return {f:0.2*k,rot:-d*0.35*k,arc:-12*k,sy:1+0.06*k,pose:"crouch"}; }
+  atk:(t,o)=>{ const d=(o&&o.dir)||1, len={Bit:16,Byte:48,Mega:78}[o&&o.stage]||48, reach=Math.max(0.3,Math.min(2.4,(((o&&o.gapU)||90)-len+14)/100));
+    if(o&&o.fam==="Bloop"){   // Gid: swat with its own tentacles
+      if(t<220){ const k=eo(t/220); return {f:0.12*k,arc:-10*k,rot:d*0.12*k,pose:atPose("attack",{lash:reach*0.55*k+0.01,swat:-1.2*k})}; }
+      if(t<620){ const k=(t-220)/220; return {f:0.12,arc:-10,rot:d*(0.12-0.2*Math.min(1,k)),pose:atPose("attack",{lash:reach*(k<1?0.55+0.45*ei(k):1),swat:-1.2+1.2*ei(Math.min(1,k))+(k>1?0.9*eo((k-1)/0.8):0)})}; }
+      const k=(t-620)/500; return {f:0.12*(1-eio(k)),arc:-10*(1-k),rot:-d*0.08*(1-eo(k)),pose:atPose("idle",{lash:reach*(1-eo(Math.min(1,k*1.4)))+0.001,swat:0.9*(1-k)})}; }
+    if(t<220){ const k=eo(t/220); return {f:0.2*k,rot:-d*0.35*k,arc:-12*k,sy:1+0.06*k,pose:"crouch"}; }
     if(t<440){ const k=ei((t-220)/220); return {f:0.2+0.38*k,rot:-d*0.35+d*0.85*k,arc:-12+6*k,pose:"attack"}; }
     if(t<620) return {f:0.58,rot:d*0.5,arc:-6,pose:"attack"};
     const k=(t-620)/500; return {f:0.58*(1-eio(k)),rot:d*0.5*(1-eo(k)),arc:-6*(1-k),pose:"idle"}; },
   def:t=>{ if(t<440||t>1000) return null; const k=(t-440)/560; return {off:[34*(1-eo(k)),-10*Math.sin(Math.min(1,k*2)*Math.PI)],rot:0.5*Math.sin(Math.min(1,k*1.5)*Math.PI),pose:"hit"}; },
   fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, d=atDir(x), col=x.parts||x.body||[200,170,230];
-    if(t>=140&&t<760){ const k=t<440?eio((t-140)/300):1, fade=t<580?1:1-(t-580)/180, base={x:s.x+d*s.r*0.2,y:s.y+s.r*0.15}, tc=col.map(v=>Math.min(255,v+30));
+    if(x.fam!=="Bloop"&&t>=140&&t<760){ const k=t<440?eio((t-140)/300):1, fade=t<580?1:1-(t-580)/180, base={x:s.x+d*s.r*0.2,y:s.y+s.r*0.15}, tc=col.map(v=>Math.min(255,v+30));
       c.save(); c.globalAlpha*=fade; c.lineCap="round";
       for(let i=0;i<4;i++){ const sw=-1.3+2.1*k+i*0.12, L=Math.abs(tg.x-base.x)+R*(0.4-i*0.08), tip={x:base.x+d*Math.cos(sw)*L,y:base.y+Math.sin(sw)*L*0.75}, mid={x:base.x+d*L*0.45,y:base.y-R*0.6*(1-k)+(i-1.5)*R*0.12};   // each tentacle swings from high over the target down across it
         for(let j=0;j<12;j++){ const u0=j/12, u1=(j+1)/12, P=u=>({x:(1-u)*(1-u)*base.x+2*(1-u)*u*mid.x+u*u*tip.x,y:(1-u)*(1-u)*base.y+2*(1-u)*u*mid.y+u*u*tip.y+Math.sin(u*6+t/50+i)*R*0.05}), a=P(u0), b=P(u1);
