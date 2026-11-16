@@ -166,8 +166,9 @@ function fightMon(s){
   return {...s.m,name:displayName(s),stats,flat,grid:s.grid||s.m.grid,pal:s.pal||s.m.pal,stage:s.stage,mark:s.mark,mark2:s.mark2,worn:s.worn};
 }
 /* family moves a Snabit already had by level before they moved to errantries keep working: it learned them already */
-const FAM_OLD_LV={Chomp:{"Body Slam":14,"Jaw Lock":20,"Charge":30,"Gnash":40}};
-function famKeep(s){ if(!s||!s.m||s.famV>=1) return; s.famV=1; const old=FAM_OLD_LV[s.m.family]; if(!old) return;
+const FAM_V=2;   // raise it when a new group of families moves level moves to errantries, so old saves keep them
+const FAM_OLD_LV={Chomp:{"Body Slam":14,"Jaw Lock":20,"Charge":30,"Gnash":40},Antik:{"Signal Jam":12,"Scan Beam":18,"Short Circuit":30,"Broadcast":40},Bipped:{"Uppercut":14,"Haymaker":30,"Flurry Punch":40},Booly:{"Haunt":14,"Will-o'-Wisp":20,"Poltergeist":30,"Spirit Lance":40},Fizz:{"Beaker Splash":20,"Boil Over":30,"Explosive Brew":40},Moko:{"Mind Prick":12,"Dread":18,"Eye Beam":30,"Hypnotize":40},Pinch:{"Shell Ram":20,"Vice Grip":30,"Crab Hammer":40},Plod:{"Trumpet":14,"Quake Stomp":30,"Mammoth Charge":40},Skit:{"Leg Flurry":30,"Cocoon":40},Squib:{"Tentacle Lash":14,"Undertow":30,"Riptide":40},Stilt:{"Axe Kick":30,"Stampede":40}};
+function famKeep(s){ if(!s||!s.m||s.famV>=FAM_V) return; s.famV=FAM_V; const old=FAM_OLD_LV[s.m.family]; if(!old) return;
   s.famMoves=s.famMoves||[]; for(const [n,lv] of Object.entries(old)) if((s.level||1)>=lv&&!s.famMoves.includes(n)) s.famMoves.push(n); }
 /* whether its family move is ready to use: by level, or learned on an errantry or in fights */
 function hasFamMove(s,n){ if((s.famMoves||[]).includes(n)) return true; const r=(FAM_MOVES[s.m.family]||[]).find(q=>q[0]===n); return !!r&&!(r[10]&&r[10].err)&&r[1]<=(s.level||1); }

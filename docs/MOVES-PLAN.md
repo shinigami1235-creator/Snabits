@@ -191,6 +191,6 @@ Built 16 Nov 2026. A Chomp that already had Body Slam, Jaw Lock, Charge or Gnash
 ## Order of work
 
 1. One family written out in full for Gid's OK: Chomp, 17 moves. Built with its learning (level, errantry, fights, shared by body) on 16 Nov 2026.
-2. The rest in groups of about 10 families, with the balance sim after each group.
+2. The rest in groups of about 10 families, with the balance sim after each group. Group 1 (Squib, Antik, Moko, Pinch, Stilt, Skit, Booly, Plod, Bipped, Fizz: 171 moves) was built on 16 Nov 2026, with eight new animations (Rocket Arm, Knee Strike, Sand Spray, Claw Spin, Dread Crawl, Ink Fog, Jet Spin, Wind Kick). The sim has all ten between 45% and 53% after Booly's damage went down and Bipped's went up. The family rows are in `FAM_MOVES` and every move's errantry region, chain and shared body parts are in its row.
 3. The element pools with body parts.
 4. The technique card in the Skills tab.
