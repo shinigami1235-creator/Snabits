@@ -513,8 +513,8 @@ Object.assign(ANIM,{
   /* Cobble: it curls into a boulder and rolls across the arena, gathering speed and rubble, and crashes through the target in a spray of stones */
   sg_rubbleroll:{C:780,D:1460,contact:true,marks:true,sig:true,
     atk:(t,o)=>{ const d=(o&&o.dir)||1; if(t<280){ const k=eo(t/280); return {sx:1-0.1*k,sy:1-0.18*k,rot:-d*0.6*k,pose:"crouch"}; }
-      if(t<780){ const k=ei((t-280)/500); return {f:0.7*k,rot:-d*0.6+d*Math.PI*4*k,arc:-Math.abs(Math.sin(k*Math.PI*3))*10,sx:0.9,sy:0.82,pose:"crouch"}; }
-      const k=(t-780)/680; return {f:0.7-0.7*eio(Math.max(0,k-0.15)/0.85),arc:-40*Math.sin(Math.min(1,k*2)*Math.PI),rot:d*Math.PI*4-d*(Math.PI*4)*eo(k)*0+d*0.4*(1-k),sx:0.9+0.1*eo(k),sy:0.82+0.18*eo(k),pose:k<0.5?"jump":"idle"}; },
+      if(t<780){ const k=ei((t-280)/500), th=-d*0.6+d*Math.PI*4*k, h=SG.half||26; return {f:0.7*k,rot:th,arc:-h*(1-Math.cos(th))-Math.abs(Math.sin(k*Math.PI*3))*8,off:[-h*Math.sin(th),0],sx:0.9,sy:0.82,pose:"crouch"}; }
+      const k=(t-780)/680; return {f:0.7-0.7*eio(Math.max(0,k-0.15)/0.85),arc:-40*Math.sin(Math.min(1,k*2)*Math.PI),rot:d*0.4*(1-k),sx:0.9+0.1*eo(k),sy:0.82+0.18*eo(k),pose:k<0.5?"jump":"idle"}; },
     def(t){ const a=SG.knock(t,780,1,30,560); if(a) a.rot=0.3*(1-(t-780)/560); return a; },
     fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, d=atDir(x);
       if(t>280&&t<800){ const k=(t-280)/500, px=s.x; for(let i=0;i<6;i++){ const ph=((t/180)+i/6)%1; SG.puff(c,px-d*s.r*(0.5+ph*1.4),s.foot-ph*s.r*0.4,s.r*(0.12+0.2*ph),(1-ph)*0.7*Math.min(1,k*3),[220,205,180]); }
@@ -894,6 +894,184 @@ if(typeof KSND!=="undefined") Object.assign(KSND,{
   sg_feralslash:(d,t)=>{ sTone(d,t,'sawtooth',300,600,0.18,0.04); sTone(d,t+0.18,'sawtooth',600,450,0.2,0.04); dNoise(d,t+0.36,0.2,0.12,'bandpass',900,1); [0.64,0.76].forEach(x=>[0,0.03,0.06].forEach(y=>dNoise(d,t+x+y,0.1,0.18,'highpass',2600,2))); dKick(d,t+0.76,0.5); }   // a howl, a rush, two sets of tearing claws
 });
 if(typeof SWING!=="undefined") ["sg_bouldersmash","sg_bellydrum","sg_garudadive","sg_feralslash"].forEach(k=>SWING.add(k));
+
+
+/* ---------- group D: the mythics, part 2 ---------- */
+SG.neck=(c,a,b,w,col,k,t,seed,head=true)=>{ const N=16, pts=[]; for(let j=0;j<=N;j++){ const q=j/N*k; const p=lerpP(a,b,q,w*1.5*(seed%2?1:-1)); p.y+=Math.sin(q*7+t/90+seed)*w*0.3; pts.push(p); }
+  c.lineCap="round"; c.lineJoin="round"; const line=(lw,st)=>{ c.strokeStyle=st; c.lineWidth=lw; c.beginPath(); pts.forEach((p,j)=>c[j?"lineTo":"moveTo"](p.x,p.y)); c.stroke(); };
+  line(w*1.15,atRgba(col.map(v=>v-50),1)); line(w,atRgba(col,1)); line(w*0.3,atRgba(col.map(v=>Math.min(255,v+60)),0.7));
+  if(head){ const e=pts[pts.length-1], pr=pts[pts.length-2]||a, ang=Math.atan2(e.y-pr.y,e.x-pr.x); c.save(); c.translate(e.x,e.y); c.rotate(ang); c.fillStyle=atRgba(col,1); c.strokeStyle=atRgba(col.map(v=>v-50),1); c.lineWidth=2;
+    c.beginPath(); c.ellipse(0,0,w*1.1,w*0.75,0,0,7); c.fill(); c.stroke(); c.fillStyle="#fff"; c.beginPath(); c.arc(w*0.2,-w*0.35,w*0.22,0,7); c.fill(); c.fillStyle="#200"; c.beginPath(); c.arc(w*0.28,-w*0.35,w*0.1,0,7); c.fill();
+    c.fillStyle="#fffaf0"; c.beginPath(); c.moveTo(w*0.8,w*0.1); c.lineTo(w*1.0,w*0.55); c.lineTo(w*0.6,w*0.2); c.fill(); c.restore(); } };
+SG.plank=(c,x,y,L,w,a)=>{ c.save(); c.translate(x,y); c.rotate(a); c.fillStyle="#9a6a3a"; c.strokeStyle="#5a3a1a"; c.lineWidth=2; c.fillRect(-L*0.1,-w/2,L,w); c.strokeRect(-L*0.1,-w/2,L,w);
+  c.strokeStyle="rgba(70,40,20,.6)"; c.lineWidth=1.2; for(let j=1;j<5;j++){ c.beginPath(); c.moveTo(-L*0.1+j*L/5,-w/2); c.lineTo(-L*0.1+j*L/5,w/2); c.stroke(); } c.fillStyle="#6a6a70"; for(let j=0;j<5;j++){ c.beginPath(); c.arc(-L*0.1+(j+0.5)*L/5,-w*0.28,w*0.07,0,7); c.arc(-L*0.1+(j+0.5)*L/5,w*0.28,w*0.07,0,7); c.fill(); } c.restore(); };
+Object.assign(ANIM,{
+  /* Minotaur: it paws the ground twice, lowers its horns and charges in a cloud of dust, goring the target and hurling it back */
+  sg_bullrush:{C:840,D:1540,contact:true,marks:true,sig:true,
+    atk:(t,o)=>{ const d=(o&&o.dir)||1; if(t<420){ const paw=Math.abs(Math.sin(t/105*Math.PI)); return {f:-0.08*Math.min(1,t/200),rot:d*0.25+d*0.08*paw,sy:1-0.08*paw,pose:"effort"}; }
+      if(t<840){ const k=ei((t-420)/420); return {f:-0.08+0.75*k,rot:d*0.35,sx:1.1,sy:0.9,arc:-Math.abs(Math.sin(k*Math.PI*4))*6,pose:"tackle"}; } const k=(t-840)/700; return {f:0.67*(1-eio(Math.max(0,k-0.1)/0.9)),rot:d*0.35*(1-eo(k)),pose:k<0.4?"punch":"idle"}; },
+    def(t){ if(t<840||t>1540) return null; const k=(t-840)/700; return {off:[60*eo(Math.min(1,k*1.5))*(1-k*0.5),-40*Math.sin(Math.min(1,k*1.4)*Math.PI)],rot:0.5*Math.sin(Math.min(1,k*1.4)*Math.PI),pose:"hurt",flash:k<0.1?3:0}; },
+    fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, d=atDir(x);
+      for(const T0 of [0,210]){ const k=(t-T0)/400; if(k>=0&&k<1) SG.dust(c,s.x-d*s.r*0.4,s.foot,s.r*0.8,k,6); }
+      if(t>=420&&t<880){ const k=(t-420)/420, px=s.x; for(let i=0;i<8;i++){ const ph=((t/160)+i/8)%1; SG.puff(c,px-d*s.r*(0.6+ph*2),s.foot-ph*s.r*0.5,s.r*(0.18+0.3*ph),(1-ph)*0.8,[220,200,170]); }
+        c.strokeStyle="rgba(255,255,255,.6)"; c.lineWidth=2.5; for(let i=0;i<5;i++){ const yy=s.y+(i-2)*s.r*0.32; c.beginPath(); c.moveTo(px-d*s.r*1.0,yy); c.lineTo(px-d*s.r*(2+k*1.5),yy); c.stroke(); } }
+      atImpact(t,840,1,0.4);
+      if(t>=840){ const k=(t-840)/700; for(const o of [-0.3,0.25]){ c.save(); c.globalCompositeOperation="lighter"; c.strokeStyle=`rgba(255,240,200,${1-k})`; c.lineWidth=R*0.14*(1-k); c.lineCap="round"; c.beginPath(); c.moveTo(tg.x-d*R*0.8,tg.y+o*R); c.quadraticCurveTo(tg.x,tg.y+o*R-R*0.5,tg.x+d*R*0.9,tg.y+o*R-R*1.0*eo(Math.min(1,k*3))); c.stroke(); c.restore(); }
+        atPow(c,{x:tg.x-d*R*0.4,y:tg.y-R*0.2},Math.min(1,k*1.2),R/20); SG.dust(c,tg.x,tg.foot,R*1.3,k,12); } }},
+  /* Dragon: it rears back and breathes in, embers rushing into its mouth, then roars a great cone of fire over the target that scorches the ground */
+  sg_wyrmbreath:{C:760,D:1460,sig:true,
+    atk:(t,o)=>{ const d=(o&&o.dir)||1; if(t<440){ const k=eo(t/440); return {rot:-d*0.28*k,sx:1+0.1*k,sy:1+0.06*k,pose:"cast"}; } if(t<1250) return {rot:d*0.12+Math.sin(t/30)*0.02,off:[-d*4,0],pose:"push"}; return {rot:d*0.12*(1-(t-1250)/210),pose:"idle"}; },
+    def(t){ const a=SG.shake(t,760,680,3.5); if(a){ a.sx=1.05; a.sy=0.94; } return a; },
+    fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, d=atDir(x), mouth={x:s.x+d*s.r*0.85,y:s.y-s.r*0.25}, dst={x:tg.x,y:tg.y-R*0.1};
+      if(t<440){ for(let i=0;i<14;i++){ const ph=((t/300)+i/14)%1, a=(atH(i)-0.5)*1.4+(d>0?0:Math.PI), r=s.r*(2.2-2*ph); c.fillStyle=`rgba(255,${150+(i%3)*30},60,${ph})`; c.fillRect(mouth.x+Math.cos(a)*r,mouth.y+Math.sin(a)*r,3,3); } return; }
+      const head=Math.min(1,(t-440)/240), tail=t>1180?Math.min(1,(t-1180)/240):0;
+      for(let j=0;j<34;j++){ const q=((j/34)+(t-440)/600)%1; if(q>head||q<tail) continue; const p=lerpP(mouth,dst,q,0), spread=R*(0.1+0.9*q), jy=(atH(j*3+Math.floor(t/80))-0.5)*spread*1.6, r=R*(0.12+0.42*q);
+        c.save(); c.globalCompositeOperation="lighter"; const g=c.createRadialGradient(p.x,p.y+jy,0,p.x,p.y+jy,r); g.addColorStop(0,`rgba(255,250,200,${0.9-q*0.4})`); g.addColorStop(0.45,`rgba(255,150,40,${0.75-q*0.3})`); g.addColorStop(1,"rgba(230,60,20,0)"); c.fillStyle=g; c.beginPath(); c.arc(p.x,p.y+jy,r,0,7); c.fill(); c.restore(); }
+      if(t>=760){ atImpact(t,760,0.75,0.35); const k=(t-760)/700; c.fillStyle=`rgba(40,26,20,${0.55*(1-k*0.5)})`; c.beginPath(); c.ellipse(tg.x,tg.foot,R*1.5,R*0.3,0,0,7); c.fill();
+        for(let i=0;i<6;i++) SG.flame(c,tg.x+(i-2.5)*R*0.42,tg.foot,R*(0.7+0.4*atH(i))*(1-k*0.6),R*0.2,t,i,1-k*0.7);
+        for(let i=0;i<10;i++){ const ph=(k*1.4+i/10)%1; c.fillStyle=`rgba(255,${170+i*6},70,${1-ph})`; c.fillRect(tg.x+(atH(i*3)-0.5)*R*2.6,tg.y-ph*R*2,3,3); } } }},
+  /* Thunderbird: it spreads its wings, the sky goes dark, and a giant lightning bolt drops on the target while arcs fork out from its wings */
+  sg_thunderwing:{C:760,D:1460,sig:true,
+    atk:t=>({arc:-20*Math.sin(Math.min(1,t/1100)*Math.PI),sx:t<760?1+0.2*eo(t/760):1.2-0.2*eo((t-760)/600),pose:t<760?"cast":"push",flash:t>740&&t<820?3:0}),
+    def(t){ if(t<760||t>1460) return null; return {pose:"hurt",off:[(atH(Math.floor(t/35))-0.5)*8,0],flash:Math.floor(t/50)%2?3:0,sy:0.92}; },
+    fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, YL=[255,240,140], top=Math.max(0,tg.top.y-R*5);
+      if(t<760){ const k=t/760; c.save(); c.fillStyle=`rgba(10,10,40,${0.3*k})`; c.fillRect(0,0,x.W||2000,x.H||2000); c.restore(); c.save(); c.globalCompositeOperation="lighter"; c.lineCap="round"; const fr=Math.floor(t/60);
+        for(const sd of [-1,1]) for(let i=0;i<2;i++){ const a={x:s.x+sd*s.r*0.8,y:s.y-s.r*0.3}, b={x:s.x+sd*s.r*(1.8+i*0.5),y:s.y-s.r*(1.2+i*0.6)}; c.strokeStyle=atRgba(YL,0.8*k); c.lineWidth=3; atZig(c,a,b,5,s.r*0.3,fr+i*7+sd); } c.restore(); return; }
+      atImpact(t,760,0.95,0.7); const k=(t-760)/700, fr=Math.floor(t/45); c.save(); c.globalCompositeOperation="lighter"; c.lineCap="round"; c.lineJoin="round";
+      if(k<0.55){ const a={x:tg.x+(atH(fr)-0.5)*R*0.6,y:top}, b={x:tg.x,y:tg.foot-R*0.2}; c.strokeStyle=atRgba(YL,0.5); c.lineWidth=R*0.5; atZig(c,a,b,9,R*0.8,fr); c.strokeStyle=atRgba(YL,0.95); c.lineWidth=R*0.16; atZig(c,a,b,9,R*0.8,fr); c.strokeStyle="#fff"; c.lineWidth=R*0.06; atZig(c,a,b,9,R*0.8,fr);
+        for(let i=0;i<3;i++){ const m=lerpP(a,b,0.3+i*0.2,0); c.strokeStyle=atRgba(YL,0.7); c.lineWidth=2.5; atZig(c,m,{x:m.x+(i%2?1:-1)*R*1.4,y:m.y+R*0.8},4,R*0.4,fr+i); } }
+      atGlowA(c,tg.x,tg.foot-R*0.3,R*(1.5+1.5*k),YL,0.8*(1-k)); SG.ring(c,tg.x,tg.foot,R*(0.6+2.4*eo(k)),R*(0.18+0.6*eo(k)),YL,5*(1-k),1-k);
+      for(let i=0;i<8;i++){ const a=i/8*Math.PI*2+fr*0.3, rr=R*(1+0.5*atH(i+fr)); c.strokeStyle=atRgba(YL,0.8*(1-k)); c.lineWidth=2; atZig(c,{x:tg.x,y:tg.y},{x:tg.x+Math.cos(a)*rr,y:tg.y+Math.sin(a)*rr*0.8},4,R*0.25,fr*3+i); } c.restore(); }},
+  /* Hydra: its three heads stretch out on long necks and strike one after another from high, low and straight on, leaving venom dripping */
+  sg_manyheads:{C:560,D:1260,sig:true,
+    atk:(t,o)=>{ const d=(o&&o.dir)||1; for(let i=0;i<3;i++){ const T0=400+i*120; if(t>=T0&&t<T0+120) return {rot:d*0.1*(i-1),sx:1.06,pose:"push"}; } return {pose:t<400?"cast":t<1100?"push":"idle",rot:t<400?-d*0.12*eo(t/400):0}; },
+    def(t){ for(let i=0;i<3;i++){ const T0=560+i*120; if(t>=T0&&t<T0+110) return {off:[8,(i-1)*3],pose:"hit",flash:2}; } return t>=920&&t<1260?{pose:"hurt",flash:Math.floor(t/120)%2?2:0}:null; },
+    fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, d=atDir(x), col=[90,160,110], ys=[-0.5,0.15,-0.15];
+      for(let i=0;i<3;i++){ const T0=260+i*120, T1=560+i*120; if(t<T0) continue; const back=t>1050?1-(t-1050)/200:1; if(back<=0) continue;
+        const k=Math.min(1,(t-T0)/(T1-T0))*back, a={x:s.x+d*s.r*0.3,y:s.y-s.r*(0.2+0.25*i)}, b={x:tg.x-d*R*0.3,y:tg.y+ys[i]*R};
+        SG.neck(c,a,b,s.r*0.22,col.map((v,j)=>v+(i-1)*15*(j===1?1:-0.5)),eio(k),t,i);
+        if(t>=T1&&t<T1+300){ const kk=(t-T1)/300; atImpact(t,T1,0.3+i*0.1,0); atPow(c,b,kk,R/34); for(let j=0;j<4;j++){ c.fillStyle=`rgba(150,90,210,${1-kk})`; c.beginPath(); c.ellipse(b.x+(j-1.5)*R*0.12,b.y+R*0.2+kk*R*0.6,R*0.04,R*0.07,0,0,7); c.fill(); } } } }},
+  /* Griffin: it climbs into a full loop high in the sky, then shoots across in a golden spear of wind and rakes the target as it passes */
+  sg_skytalon:{C:900,D:1580,contact:true,marks:true,sig:true,
+    atk:(t,o)=>{ const d=(o&&o.dir)||1; if(t<620){ const k=eio(t/620), a=k*Math.PI*2; return {f:0.12*Math.sin(a)*1,arc:-90*(1-Math.cos(a))*0.5-60*k,rot:-d*a,pose:"jump"}; }
+      if(t<900){ const k=ei((t-620)/280); return {f:0.68*k,arc:-60*(1-k),rot:d*0.45,sx:1.2,sy:0.85,pose:"tackle"}; } const k=(t-900)/680; return {f:0.68*(1-eio(k)),arc:-30*Math.sin(Math.min(1,k*1.5)*Math.PI),rot:d*0.45*(1-eo(k)),pose:k<0.4?"land":"idle"}; },
+    def(t){ const a=SG.knock(t,900,1,34,600); if(a) a.pose="hurt"; return a; },
+    fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, d=atDir(x), GD=[255,215,110];
+      if(t<620){ const k=t/620; c.save(); c.globalCompositeOperation="lighter"; c.strokeStyle=atRgba(GD,0.6); c.lineWidth=s.r*0.2; c.lineCap="round"; c.beginPath(); c.arc(s.x,s.y-s.r*1.4,s.r*1.4,Math.PI/2,Math.PI/2-d*Math.PI*2*eio(k),d>0); c.stroke(); c.restore();
+        for(let i=0;i<5;i++){ const ph=((t/200)+i/5)%1; SG.feather(c,s.x+(atH(i)-0.5)*s.r*2,s.y-s.r*(0.5+ph*2),s.r*0.15,t/100+i,"#ffe08a",1-ph); } }
+      if(t>=620&&t<920){ const k=(t-620)/280, tip={x:s.x+(tg.x-s.x)*ei(k),y:s.y-60*(1-ei(k))}; c.save(); c.globalCompositeOperation="lighter"; const g=c.createLinearGradient(tip.x,tip.y,tip.x-d*R*3,tip.y); g.addColorStop(0,atRgba(GD,0.9)); g.addColorStop(1,atRgba(GD,0)); c.fillStyle=g;
+        c.beginPath(); c.moveTo(tip.x+d*R*0.6,tip.y); c.lineTo(tip.x-d*R*3,tip.y-R*0.6); c.lineTo(tip.x-d*R*3,tip.y+R*0.6); c.closePath(); c.fill(); c.restore(); }
+      atImpact(t,900,0.9,0.35);
+      if(t>=900){ const k=(t-900)/680; SG.claws(c,tg.x,tg.y-R*0.1,R*1.8,k,Math.PI*0.05,[255,240,190]); SG.ring(c,tg.x,tg.y,R*(0.6+2*eo(k)),R*(0.8+1.8*eo(k)),GD,4*(1-k),1-k);
+        for(let i=0;i<10;i++){ const a=i/10*Math.PI*2, sp=R*(0.5+1.7*eo(k)); SG.feather(c,tg.x+Math.cos(a)*sp,tg.y+Math.sin(a)*sp*0.7+k*k*R,R*0.18,a+k*4,i%2?"#ffe08a":"#c89a40",1-k); } } }},
+  /* Kirin: it stamps once, and white-gold sacred flames rise in a ring round the target and close into a pillar of holy fire */
+  sg_holyflame:{C:800,D:1500,sig:true,
+    atk:(t,o)=>{ const d=(o&&o.dir)||1; if(t<360){ const k=eo(t/360); return {rot:-d*0.2*k,arc:-12*k,pose:"cast"}; } if(t<520){ const k=ei((t-360)/160); return {rot:-d*0.2+d*0.3*k,arc:-12*(1-k),pose:"punch",sy:1-0.1*k}; } return {pose:t<1200?"cast":"idle",sy:0.9+0.1*Math.min(1,(t-520)/300)}; },
+    def(t){ const a=SG.shake(t,800,700,3); if(a){ a.lift=-8*Math.min(1,(t-800)/300); } return a; },
+    fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, HW=[255,245,200], GD=[255,210,110];
+      if(t>=520&&t<900){ const k=(t-520)/380; SG.ring(c,s.x,s.foot,s.r*(0.5+2*k),s.r*(0.15+0.5*k),GD,4*(1-k),1-k); }
+      if(t<520) return; const g=Math.min(1,(t-520)/280), close=t<800?0:Math.min(1,(t-800)/200), out=t>1300?1-(t-1300)/200:1; if(out<=0) return; c.save(); c.globalAlpha=out;
+      const RR=R*(1.6-0.9*close); for(let i=0;i<12;i++){ const a=i/12*Math.PI*2+t/900, px=tg.x+Math.cos(a)*RR, py=tg.foot+Math.sin(a)*RR*0.3; if(Math.sin(a)<0){ c.save(); c.globalCompositeOperation="lighter"; SG.flame(c,px,py,R*(0.8+0.3*atH(i))*g,R*0.18,t,i,0.9); c.restore(); } }
+      if(close>0){ c.save(); c.globalCompositeOperation="lighter"; const top=tg.top.y-R*2.5*close, gg=c.createLinearGradient(0,tg.foot,0,top); gg.addColorStop(0,atRgba(HW,0.85)); gg.addColorStop(1,atRgba(HW,0)); c.fillStyle=gg; c.fillRect(tg.x-R*1.0,top,R*2.0,tg.foot-top);
+        for(let i=0;i<8;i++){ const ph=((t/400)+i/8)%1; atStar4(c,tg.x+(atH(i)-0.5)*R*1.6,tg.foot-ph*(tg.foot-top),R*0.15*(1-ph),"rgba(255,255,230,.95)"); } c.restore(); atImpact(t,800,0.7,0.5); }
+      for(let i=0;i<12;i++){ const a=i/12*Math.PI*2+t/900, px=tg.x+Math.cos(a)*RR, py=tg.foot+Math.sin(a)*RR*0.3; if(Math.sin(a)>=0){ c.save(); c.globalCompositeOperation="lighter"; SG.flame(c,px,py,R*(0.8+0.3*atH(i))*g,R*0.18,t,i,0.9); c.restore(); } }
+      c.restore(); }},
+  /* Salamander: it spins on the spot and whips its blazing tail round in a wide arc of fire that slashes the target and leaves the floor burning */
+  sg_flametail:{C:680,D:1380,contact:true,marks:true,sig:true,
+    atk:(t,o)=>{ const d=(o&&o.dir)||1; if(t<300){ const k=eo(t/300); return {f:0.3*k,rot:-d*0.2*k,pose:"crouch"}; } if(t<760){ const k=eio((t-300)/460); return {f:0.42,rot:-d*0.2*(1-k),sx:1.08*Math.cos(k*Math.PI*2),pose:"punch",arc:-10*Math.sin(k*Math.PI)}; } const k=(t-760)/620; return {f:0.42*(1-eio(k)),rot:0,pose:"idle"}; },
+    def(t){ const a=SG.knock(t,680,1,26,560); if(a){ a.flash=Math.floor(t/70)%2?3:0; } return a; },
+    fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, d=atDir(x);
+      if(t>=300&&t<900){ const k=(t-300)/460, a0=-d*0.2+d*Math.PI*2*eio(Math.min(1,k)), cx=s.x+(tg.x-s.x)*0.42*0.6; c.save(); c.globalCompositeOperation="lighter"; c.lineCap="round";
+        for(let j=0;j<10;j++){ const a=a0-d*j*0.12, rr=s.r*1.7, px=cx+Math.cos(a+Math.PI/2)*rr*0, py=0; const fx2=cx+Math.cos(a)*rr*d, fy=s.y+Math.sin(a)*rr*0.45; atGlowA(c,fx2,fy,s.r*(0.45-j*0.035),[255,140,40],0.8-j*0.07); } c.restore(); }
+      atImpact(t,680,0.7,0.3);
+      if(t>=680){ const k=(t-680)/700; c.save(); c.globalCompositeOperation="lighter"; atCrescent(c,tg.x,tg.y-R*0.1,R*1.5,d>0?Math.PI*0.9:Math.PI*0.1,Math.min(0.99,k*1.2),[255,170,60]); atCrescent(c,tg.x,tg.y-R*0.1,R*1.2,d>0?Math.PI*0.9:Math.PI*0.1,Math.min(0.99,k*1.2+0.05),[255,240,180]); c.restore();
+        for(let i=0;i<7;i++) SG.flame(c,tg.x-d*R*1.2+d*i*R*0.4,tg.foot,R*(0.5+0.3*atH(i))*(1-k),R*0.16,t,i,1-k); } }},
+  /* Bakunawa: the arena goes dark, a moon rises over the target, and a vast serpent's jaws come up from below and swallow the moon and the target with it */
+  sg_swallowmoon:{C:800,D:1500,sig:true,
+    atk:t=>({pose:t<800?"cast":t<1200?"push":"idle",arc:-10*Math.sin(Math.min(1,t/1200)*Math.PI),sx:1+0.05*Math.sin(t/80)}),
+    def(t){ if(t<800||t>1500) return null; const a=t<1200?1:1-(t-1200)/300; return {sx:1-0.15*a,sy:1-0.1*a,pose:"hurt",off:[Math.sin(t/30)*3*a,0]}; },
+    fx(c,t,x){ const tg=x.target, R=tg.r, my=tg.top.y-R*1.3, MR=R*0.9, dark=t<500?t/500:t>1250?1-(t-1250)/250:1, SC=[60,80,150];
+      c.save(); c.fillStyle=`rgba(5,8,30,${0.5*dark})`; c.fillRect(0,0,x.W||2000,x.H||2000); c.restore();
+      const eat=t<800?0:Math.min(1,(t-800)/250);
+      if(t>150&&eat<1){ c.save(); c.globalCompositeOperation="lighter"; atGlowA(c,tg.x,my,MR*2.2,[230,235,255],0.5*Math.min(1,(t-150)/300)*(1-eat)); c.restore(); c.save(); c.globalAlpha=Math.min(1,(t-150)/300)*(1-eat); c.fillStyle="#f4f4ff"; c.beginPath(); c.arc(tg.x,my,MR,0,7); c.fill(); c.fillStyle="rgba(170,170,200,.5)"; c.beginPath(); c.arc(tg.x-MR*0.3,my+MR*0.2,MR*0.2,0,7); c.arc(tg.x+MR*0.35,my-MR*0.2,MR*0.14,0,7); c.fill(); c.restore(); }
+      if(t>450){ const rise=eo(Math.min(1,(t-450)/350)), shut=t<800?0:Math.min(1,(t-800)/150), close=t>1150?Math.min(1,(t-1150)/250):0, H=(tg.foot-my+MR)*1.15, by=tg.foot+R*0.2, W=R*1.55; c.save(); c.globalAlpha=1-close;
+        const gap=H*(1-shut)*0.5; for(const sd of [-1,1]){ const jy=sd<0?by-H*rise:by; c.fillStyle=atRgba(SC,1); c.strokeStyle="#1a2440"; c.lineWidth=3; c.beginPath();
+          if(sd<0){ c.moveTo(tg.x-W,by-gap); c.quadraticCurveTo(tg.x,by-gap-H*rise*1.1,tg.x+W,by-gap); } else { c.moveTo(tg.x-W,by); c.quadraticCurveTo(tg.x,by+R*0.6,tg.x+W,by); } c.lineTo(tg.x+W,by+(sd<0?-gap+R*0.3:R*0.4)); c.lineTo(tg.x-W,by+(sd<0?-gap+R*0.3:R*0.4)); c.closePath(); c.fill(); c.stroke();
+          c.fillStyle="#fffaf0"; for(let j=0;j<7;j++){ const tx=tg.x-W*0.8+j*W*1.6/6, ty=sd<0?by-gap+R*0.3:by; c.beginPath(); c.moveTo(tx-R*0.12,ty); c.lineTo(tx,ty+(sd<0?R*0.35:-R*0.35)); c.lineTo(tx+R*0.12,ty); c.fill(); } }
+        c.restore(); if(shut>0) atImpact(t,800,0.85,0.2); } }},
+  /* Cerberus: a dark gate opens behind the target and its three heads lunge through in turn, high, low and middle, each bite trailing purple fire */
+  sg_gatefang:{C:760,D:1460,contact:true,marks:true,sig:true,
+    atk:(t,o)=>{ const d=(o&&o.dir)||1; if(t<360){ const k=eo(t/360); return {f:-0.05*k,sy:1-0.12*k,pose:"crouch"}; } if(t<760){ const k=eio((t-360)/400); return {f:-0.05+0.68*k,rot:d*0.15*k,pose:"tackle"}; } if(t<1100) return {f:0.63,rot:d*(Math.floor((t-760)/110)%2?0.2:-0.05),pose:"punch"}; const k=(t-1100)/360; return {f:0.63*(1-eio(k)),pose:"idle"}; },
+    def(t){ for(let i=0;i<3;i++){ const T0=760+i*110; if(t>=T0&&t<T0+100) return {off:[8,(i-1)*4],pose:"hit",flash:3}; } return t>=1090&&t<1460?{pose:"hurt",off:[Math.sin(t/16)*2,0]}:null; },
+    fx(c,t,x){ const tg=x.target, R=tg.r, d=atDir(x), PU=[170,80,255], g=Math.min(1,t/400)*(t>1300?1-(t-1300)/160:1); if(g<=0) return;
+      c.save(); const gx=tg.x+d*R*1.1, gy=tg.y-R*0.3; c.fillStyle=`rgba(20,8,30,${0.85*g})`; c.beginPath(); c.ellipse(gx,gy,R*0.9*g,R*1.6*g,0,0,7); c.fill(); c.strokeStyle=`rgba(190,110,255,${0.9*g})`; c.lineWidth=4; c.stroke();
+      c.save(); c.globalCompositeOperation="lighter"; for(let i=0;i<10;i++){ const a=i/10*Math.PI*2+t/400; SG.flame(c,gx+Math.cos(a)*R*0.9*g,gy+Math.sin(a)*R*1.6*g+R*0.2,R*0.4*g,R*0.1,t,i,0.6); } c.restore(); c.restore();
+      for(let i=0;i<3;i++){ const T0=760+i*110, k=(t-T0+180)/480; if(k<0||k>1) continue; const yy=tg.y+[-0.55,0.35,-0.1][i]*R, open=k<0.37?1-k/0.37:0.05, fade=k>0.6?1-(k-0.6)/0.4:1;
+        SG.jaws(c,tg.x+d*R*0.2,yy,R*0.65,open*0.8,[60,40,70],fade); c.save(); c.globalCompositeOperation="lighter"; atGlowA(c,tg.x+d*R*0.2,yy,R*0.6,PU,0.5*fade); c.restore(); if(k>=0.37) atImpact(t,T0,0.4,0.1); } }},
+  /* Djinn: a giant golden lamp appears, smoke pours from its spout and curls into a huge fist that punches the target */
+  sg_lampblast:{C:820,D:1520,sig:true,
+    atk:(t,o)=>{ const d=(o&&o.dir)||1; return {arc:-14*Math.sin(Math.min(1,t/1300)*Math.PI)-Math.sin(t/120)*3,rot:t<500?-d*0.1*eo(t/500):d*0.08,pose:t<500?"cast":t<1250?"push":"idle"}; },
+    def(t){ const a=SG.knock(t,820,1,30,600); if(a){ a.pose="hurt"; a.flash=t<900?3:0; } return a; },
+    fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, d=atDir(x), lamp={x:s.x+d*s.r*1.3,y:s.y+s.r*0.2}, spout={x:lamp.x+d*s.r*0.75,y:lamp.y-s.r*0.25}, SM=[170,110,220], show=Math.min(1,t/250)*(t>1350?1-(t-1350)/170:1); if(show<=0) return;
+      c.save(); c.globalAlpha=show; c.translate(lamp.x,lamp.y); c.scale(d,1); const L=s.r*0.6, g=c.createLinearGradient(-L,-L,L,L); g.addColorStop(0,"#fff0a0"); g.addColorStop(0.5,"#e8b030"); g.addColorStop(1,"#a8700e"); c.fillStyle=g; c.strokeStyle="#7a4e08"; c.lineWidth=2;
+      c.beginPath(); c.ellipse(0,0,L,L*0.55,0,0,7); c.fill(); c.stroke(); c.beginPath(); c.moveTo(L*0.7,-L*0.15); c.quadraticCurveTo(L*1.3,-L*0.2,L*1.3,-L*0.55); c.lineTo(L*1.1,-L*0.45); c.quadraticCurveTo(L*1.0,L*0.05,L*0.6,L*0.15); c.fill(); c.stroke();
+      c.beginPath(); c.ellipse(0,-L*0.55,L*0.4,L*0.15,0,0,7); c.fill(); c.stroke(); c.beginPath(); c.arc(-L*1.0,0,L*0.32,Math.PI*0.5,Math.PI*1.5); c.stroke(); c.restore();
+      if(t>=300){ const head=Math.min(1,(t-300)/520), tail=t>1180?Math.min(1,(t-1180)/200):0; for(let j=0;j<24;j++){ const q=j/24; if(q>head||q<tail) continue; const p=lerpP(spout,{x:tg.x-d*R*0.5,y:tg.y-R*0.2},q,R*1.2), w=Math.sin(q*9-t/80)*R*0.15; SG.puff(c,p.x,p.y+w,R*(0.18+0.25*q),0.8,SM.map((v,i2)=>Math.min(255,v+(j%3)*15))); }
+        if(head>0.85){ const fp=lerpP(spout,{x:tg.x-d*R*0.5,y:tg.y-R*0.2},head,R*1.2); c.save(); c.translate(fp.x,fp.y); c.scale(d,1); const F=R*0.7*Math.min(1,(head-0.85)/0.15)*(1+0.15*Math.max(0,(t-820)/400)); c.fillStyle=atRgba(SM,0.95); c.strokeStyle="rgba(90,50,130,.8)"; c.lineWidth=2;
+          c.beginPath(); c.ellipse(0,0,F,F*0.8,0,0,7); c.fill(); c.stroke(); for(let k2=0;k2<4;k2++){ c.beginPath(); c.ellipse(F*0.75,-F*0.55+k2*F*0.38,F*0.3,F*0.18,0,0,7); c.fill(); c.stroke(); } c.restore(); } }
+      c.restore(); atImpact(t,820,0.8,0.3); if(t>=820){ const k=(t-820)/600; if(k<1) atPow(c,{x:tg.x-d*R*0.3,y:tg.y-R*0.3},k,R/22); } }},
+  /* Troll: it wrenches up a whole section of wooden bridge, swings it overhead and smashes it down on the target, sending planks and splinters flying */
+  sg_bridgesmash:{C:880,D:1560,contact:true,marks:true,sig:true,
+    atk:(t,o)=>{ const d=(o&&o.dir)||1; if(t<520){ const k=eo(t/520); return {rot:-d*0.35*k,sy:1+0.08*k,f:0.15*k,pose:"effort"}; } if(t<880){ const k=ei((t-520)/360); return {rot:-d*0.35+d*0.75*k,f:0.15+0.3*k,sy:1.08-0.18*k,pose:"punch"}; } const k=(t-880)/680; return {rot:d*0.4*(1-eo(k)),f:0.45*(1-eio(k)),sy:0.9+0.1*eo(k),pose:k<0.4?"land":"idle"}; },
+    def:t=>SG.squash(t,880,0.42,620),
+    fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, d=atDir(x), L=Math.abs(tg.x-s.x)*0.95, piv={x:s.x+d*s.r*0.3,y:s.y-s.r*0.2};
+      const ang=t<520?-Math.PI/2-d*0.9*eo(t/520):t<880?-Math.PI/2-d*0.9+d*(Math.PI/2+0.9)*ei((t-520)/360):0, out=t>1250?1-(t-1250)/300:1;
+      if(t<1550&&out>0){ c.save(); c.globalAlpha=out; SG.plank(c,piv.x,piv.y,t<880?L:L*(1-0.15*Math.min(1,(t-880)/300)),s.r*0.55,d>0?ang:Math.PI-ang); c.restore(); }
+      if(t>500&&t<900){ c.save(); c.strokeStyle="rgba(255,255,255,.55)"; c.lineWidth=s.r*0.3; c.lineCap="round"; c.beginPath(); c.arc(piv.x,piv.y,L*0.9,d>0?ang-0.5:Math.PI-ang,d>0?ang:Math.PI-ang+0.5); c.stroke(); c.restore(); }
+      atImpact(t,880,1,0.45);
+      if(t>=880){ const k=(t-880)/680; for(let i=0;i<14;i++){ const a=-Math.PI*(0.05+0.9*atH(i*3)), sp=R*(0.5+2.2*eo(k)); c.save(); c.translate(tg.x+Math.cos(a)*sp*(i%2?1:-1),tg.top.y+Math.sin(a)*sp*0.8+k*k*R*2); c.rotate(k*6+i); c.globalAlpha=1-k; c.fillStyle=i%3?"#9a6a3a":"#c8955a"; c.fillRect(-R*0.25,-R*0.05,R*0.5,R*0.1); c.restore(); }
+        SG.cracks(c,tg.x,tg.foot,R*2.6,10,1.7,1-k*k); SG.dust(c,tg.x,tg.foot,R*1.3,k,12); SG.stars(c,tg.x,tg.top.y-R*0.2,R*0.7,t,3); } }},
+  /* Mummy: its bandages whip out across the arena and wind round and round the target until it is wrapped up tight, sand pouring off it */
+  sg_mummywrap:{C:720,D:1420,sig:true,
+    atk:(t,o)=>{ const d=(o&&o.dir)||1; return t<380?{rot:-d*0.15*eo(t/380),pose:"cast",sx:1+0.05*Math.sin(t/40)}:t<1150?{rot:d*0.1,off:[-d*3,0],pose:"push"}:{pose:"idle"}; },
+    def(t){ if(t<620||t>1420) return null; const w=Math.min(1,(t-620)/300); return {sx:1-0.1*w,sy:1+0.02*w,rot:Math.sin(t/60)*0.05,pose:"hurt"}; },
+    fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, d=atDir(x), BD=[240,228,200], h=tg.foot-tg.top.y, out=t>1260?1-(t-1260)/160:1; if(out<=0) return; c.save(); c.globalAlpha=out; c.lineCap="round";
+      for(let i=0;i<3;i++){ const k=Math.min(1,Math.max(0,(t-300-i*60)/320)); if(k<=0) continue; const a={x:s.x+d*s.r*0.5,y:s.y-s.r*(0.3-i*0.25)}, b={x:tg.x,y:tg.top.y+h*(0.3+i*0.22)}, N=16; c.beginPath();
+        for(let j=0;j<=N*k;j++){ const q=j/N, p=lerpP(a,b,q,R*0.4*(i-1)); p.y+=Math.sin(q*10+t/60+i)*R*0.12; c[j?"lineTo":"moveTo"](p.x,p.y); } c.strokeStyle="rgba(150,130,100,.8)"; c.lineWidth=R*0.2; c.stroke(); c.strokeStyle=atRgba(BD,1); c.lineWidth=R*0.15; c.stroke(); }
+      if(t>=620){ const w=Math.min(1,(t-620)/400); for(let i=0;i<6;i++){ const yy=tg.top.y+h*(0.12+i*0.15), wk=Math.min(1,Math.max(0,w*1.6-i*0.1)); if(wk<=0) continue; c.strokeStyle="rgba(150,130,100,.85)"; c.lineWidth=R*0.2; c.beginPath(); c.ellipse(tg.x,yy,R*1.02,R*0.2,0.15*(i%2?1:-1),-Math.PI,-Math.PI+Math.PI*2*wk); c.stroke(); c.strokeStyle=atRgba(BD,1); c.lineWidth=R*0.15; c.stroke(); }
+        c.save(); c.globalCompositeOperation="lighter"; for(let i=0;i<5;i++){ const tw=Math.max(0,Math.sin(t/150+i*1.6)); c.fillStyle=`rgba(255,210,100,${0.8*tw})`; c.font=`bold ${Math.round(R*0.25)}px serif`; c.textAlign="center"; c.fillText(["☥","☉","△","◇","☽"][i],tg.x+(atH(i*3)-0.5)*R*1.8,tg.top.y+h*(0.2+0.6*atH(i))); } c.restore();
+        for(let i=0;i<8;i++){ const ph=((t/400)+i/8)%1; c.fillStyle=`rgba(220,190,130,${0.8*(1-ph)})`; c.fillRect(tg.x+(atH(i)-0.5)*R*2,tg.foot-h*0.6+ph*h*0.6,2,2); } atImpact(t,720,0.35,0); }
+      c.restore(); }},
+  /* Sarimanok: it fans out its rainbow tail into a huge fan, then flings a spray of rainbow feathers that pin the target in a burst of colour */
+  sg_rainbowfan:{C:760,D:1460,sig:true,
+    atk:(t,o)=>{ const d=(o&&o.dir)||1; return t<480?{rot:-d*0.15*eo(t/480),sy:1+0.06*eo(t/480),pose:"cast"}:t<640?{rot:d*0.25*eo((t-480)/160),pose:"push"}:{rot:d*0.25*(1-eo((t-640)/800)),pose:t<1200?"happy":"idle"}; },
+    def(t){ const a=SG.knock(t,760,1,18,560); if(a){ a.flash=Math.floor(t/60)%2?3:0; a.pose="hurt"; } return a; },
+    fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, d=atDir(x), base={x:s.x-d*s.r*0.3,y:s.y}, fan=t<480?eo(t/480):t<700?1:1-eo((t-700)/400);
+      if(fan>0.01){ c.save(); c.globalAlpha=Math.min(1,fan*1.3); for(let i=0;i<7;i++){ const a=-Math.PI/2+(i-3)*0.32*fan, L=s.r*(1.4+0.6*fan); c.save(); c.translate(base.x,base.y); c.rotate(a); c.fillStyle=SG.rainbow[i]; c.beginPath(); c.ellipse(L*0.55,0,L*0.55,s.r*0.17,0,0,7); c.fill();
+          c.fillStyle="rgba(255,255,255,.85)"; c.beginPath(); c.arc(L*0.95,0,s.r*0.09,0,7); c.fill(); c.fillStyle="#2a2a6a"; c.beginPath(); c.arc(L*0.95,0,s.r*0.045,0,7); c.fill(); c.restore(); } c.restore(); }
+      if(t>=480&&t<1000){ for(let i=0;i<14;i++){ const k=Math.min(1,Math.max(0,(t-480-i*12)/280)); if(k<=0||k>=1) continue; const p=lerpP({x:base.x,y:base.y-s.r},{x:tg.x+(atH(i)-0.5)*R*1.2,y:tg.y+(atH(i*3)-0.5)*R*1.2},eio(k),R*(0.5+atH(i*5))*(i%2?1:-1)); SG.feather(c,p.x,p.y,R*0.2,Math.atan2(tg.y-p.y,tg.x-p.x)+Math.PI/2,SG.rainbow[i%7],1); } }
+      atImpact(t,760,0.65,0.3);
+      if(t>=760){ const k=(t-760)/700; for(let i=0;i<14;i++){ const px=tg.x+(atH(i)-0.5)*R*1.2, py=tg.y+(atH(i*3)-0.5)*R*1.2; SG.feather(c,px,py,R*0.2,-d*0.6+Math.PI/2,SG.rainbow[i%7],k<0.7?1:1-(k-0.7)/0.3); }
+        c.save(); c.globalCompositeOperation="lighter"; for(let i=0;i<14;i++){ const a=i/14*Math.PI*2, rr=R*(0.8+1.4*eo(k)); atStar4(c,tg.x+Math.cos(a)*rr,tg.y+Math.sin(a)*rr*0.8,R*0.16*(1-k),SG.rainbow[i%7]); } c.restore(); } }}
+});
+Object.assign(AR_KIND,{"Bull Rush":"sg_bullrush","Wyrm Breath":"sg_wyrmbreath","Thunder Wing":"sg_thunderwing","Many Heads":"sg_manyheads","Sky Talon":"sg_skytalon","Holy Flame":"sg_holyflame","Flame Tail":"sg_flametail",
+  "Swallow the Moon":"sg_swallowmoon","Gate Fang":"sg_gatefang","Lamp Blast":"sg_lampblast","Bridge Smash":"sg_bridgesmash","Mummy Wrap":"sg_mummywrap","Rainbow Fan":"sg_rainbowfan"});
+if(typeof KSND!=="undefined") Object.assign(KSND,{
+  sg_bullrush:(d,t)=>{ [0.05,0.26].forEach(x=>{ dNoise(d,t+x,0.15,0.15,'lowpass',500); dKick(d,t+x,0.3); }); sTone(d,t+0.35,'sawtooth',110,70,0.35,0.06); for(let i=0;i<6;i++) dKick(d,t+0.42+i*0.07,0.3); dKick(d,t+0.84,1); dNoise(d,t+0.84,0.5,0.3,'lowpass',600); sTone(d,t+0.9,'sine',500,1200,0.4,0.03); },   // hooves pawing, a snort, a thundering charge, the ram, the target flying
+  sg_wyrmbreath:(d,t)=>{ dNoise(d,t,0.44,0.1,'bandpass',400,1); sTone(d,t,'sine',200,90,0.44,0.04); sTone(d,t+0.44,'sawtooth',90,60,0.8,0.06); dNoise(d,t+0.44,0.85,0.3,'lowpass',900); for(let i=0;i<10;i++) dNoise(d,t+0.5+i*0.07,0.07,0.12,'bandpass',1500+(i%3)*500,2); },   // a deep breath in, a roar and a long rush of flame
+  sg_thunderwing:(d,t)=>{ dNoise(d,t,0.6,0.08,'lowpass',300); for(let i=0;i<4;i++) dNoise(d,t+0.2+i*0.12,0.06,0.1,'highpass',5000,2); dNoise(d,t+0.76,0.12,0.5,'highpass',2500); dNoise(d,t+0.78,1.0,0.35,'lowpass',250); dKick(d,t+0.76,1); },   // wings rustling, crackles, a blinding crack of thunder and a long rumble
+  sg_manyheads:(d,t)=>{ dNoise(d,t,0.3,0.1,'highpass',4500,1.2); [0.56,0.68,0.8].forEach((x,k)=>{ sTone(d,t+x-0.25,'sawtooth',200+k*40,320+k*40,0.2,0.025); sTone(d,t+x,'square',1000-k*100,300,0.05,0.05); dNoise(d,t+x,0.08,0.2,'bandpass',2600,2); }); },   // hissing, three necks lunging, three bites
+  sg_skytalon:(d,t)=>{ sTone(d,t,'sine',400,900,0.62,0.04); for(let i=0;i<4;i++) dNoise(d,t+i*0.15,0.08,0.12,'lowpass',1000); sTone(d,t+0.6,'sawtooth',2200,800,0.3,0.035); dNoise(d,t+0.62,0.28,0.2,'bandpass',2000,1); dKick(d,t+0.9,0.8); [0.9,0.94,0.98].forEach(x=>dNoise(d,t+x,0.08,0.2,'highpass',3000,2)); },   // a looping climb, the scream of the dive, a raking strike
+  sg_holyflame:(d,t)=>{ sTone(d,t,'sine',300,600,0.36,0.04); dKick(d,t+0.5,0.6); [523,659,784,1047].forEach((f,k)=>sTone(d,t+0.55+k*0.05,'triangle',f,f,0.9,0.03)); dNoise(d,t+0.55,0.6,0.12,'bandpass',1500,1); dNoise(d,t+0.8,0.6,0.2,'bandpass',1000,0.7); sTone(d,t+0.8,'sine',1568,1568,0.7,0.025); },   // a stamp, a choir of fire rising, the pillar roaring
+  sg_flametail:(d,t)=>{ dNoise(d,t+0.3,0.4,0.15,'bandpass',800,1); sTone(d,t+0.3,'sawtooth',200,600,0.4,0.03); dNoise(d,t+0.68,0.2,0.25,'bandpass',1500,1); dKick(d,t+0.68,0.6); for(let i=0;i<6;i++) dNoise(d,t+0.72+i*0.06,0.06,0.1,'bandpass',1800,2); },   // a spinning whoosh of fire, the lash, crackling
+  sg_swallowmoon:(d,t)=>{ sTone(d,t,'sine',80,60,0.8,0.08); [1319,1568,1976].forEach((f,k)=>sTone(d,t+0.2+k*0.05,'sine',f,f,0.6,0.015)); dNoise(d,t+0.45,0.35,0.2,'lowpass',300); sTone(d,t+0.8,'square',500,150,0.08,0.06); dKick(d,t+0.8,0.9); sTone(d,t+0.82,'sawtooth',70,45,0.6,0.08); },   // darkness, the moon chiming, the jaws rising, a huge snapping gulp
+  sg_gatefang:(d,t)=>{ sTone(d,t,'sawtooth',70,140,0.4,0.05); dNoise(d,t,0.4,0.1,'lowpass',400); [0.76,0.87,0.98].forEach((x,k)=>{ sTone(d,t+x-0.15,'sawtooth',180-k*20,110-k*20,0.15,0.05); sTone(d,t+x,'square',800,250,0.05,0.06); dNoise(d,t+x,0.1,0.2,'bandpass',2200,2); }); },   // the gate groaning open, three snarling bites
+  sg_lampblast:(d,t)=>{ [1568,2093,2637].forEach((f,k)=>sTone(d,t+k*0.05,'sine',f,f,0.3,0.03)); dNoise(d,t+0.3,0.5,0.15,'bandpass',600,0.7); sTone(d,t+0.3,'sine',200,500,0.5,0.03); dKick(d,t+0.82,1); dNoise(d,t+0.82,0.3,0.3,'lowpass',800); },   // a magic chime, smoke rushing out, a huge punch
+  sg_bridgesmash:(d,t)=>{ for(let i=0;i<4;i++) sTone(d,t+0.05+i*0.09,'sawtooth',90+i*15,70+i*15,0.08,0.04); sTone(d,t+0.2,'sawtooth',80,60,0.4,0.05); dNoise(d,t+0.52,0.36,0.15,'lowpass',500); dKick(d,t+0.88,1); dNoise(d,t+0.88,0.5,0.3,'lowpass',500); for(let i=0;i<8;i++) dNoise(d,t+0.9+i*0.04,0.05,0.12,'bandpass',1100+(i%3)*300,2); },   // wood creaking free, a grunt, a whooshing swing, a crash of splintering planks
+  sg_mummywrap:(d,t)=>{ dNoise(d,t,0.38,0.06,'highpass',3000,0.6); for(let i=0;i<3;i++) sTone(d,t+0.3+i*0.06,'sawtooth',1500,400,0.15,0.03); for(let i=0;i<6;i++) dNoise(d,t+0.62+i*0.07,0.08,0.08,'bandpass',1200,2); sTone(d,t+0.72,'sine',220,220,0.6,0.03); sTone(d,t+0.72,'sine',233,233,0.6,0.02); },   // dry sand, bandages lashing out, winding tight, an old drone
+  sg_rainbowfan:(d,t)=>{ for(let i=0;i<7;i++) sTone(d,t+i*0.06,'triangle',800+i*150,900+i*150,0.08,0.02); dNoise(d,t+0.48,0.25,0.15,'bandpass',1200,1); for(let i=0;i<10;i++) dNoise(d,t+0.55+i*0.022,0.04,0.08,'highpass',4000,2); [1047,1319,1568,2093].forEach((f,k)=>sTone(d,t+0.76+k*0.02,'triangle',f,f,0.4,0.03)); }   // the fan opening in a rising run, a flurry of feathers, a bright chord
+});
+if(typeof SWING!=="undefined") ["sg_bullrush","sg_skytalon","sg_flametail","sg_gatefang","sg_bridgesmash"].forEach(k=>SWING.add(k));
 
 /* an error inside one of these effects is logged once instead of silently cutting the animation */
 for(const [k,v] of Object.entries(ANIM)) if(k.startsWith("sg_")&&v.fx&&!v._w){ const f=v.fx; v.fx=function(c,t,x){ c.save(); try{ f.call(this,c,t,x); }catch(err){ if(!SG.err) console.error(SG.err=k+": "+err.message); } c.restore(); }; v._w=1; }
