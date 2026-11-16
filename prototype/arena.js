@@ -11,8 +11,18 @@ const AR_FAM_DMG={Chomp:0.88,Pinch:1.03,Stilt:0.97,Skit:1.18,Antik:0.89,Squib:0.
 
 /* [name, learned at, range, damage, accuracy, sharpness, wither, push, cost, windup, extras] */
 const FAM_MOVES={
-  Chomp:[["Bite",1,"Close",24,85,10,2,4,10,0.3],["Lunge",3,"Near",35,75,8,0,0,16,0.5,{dash:"in"}],["Crunch",5,"Close",64,70,12,0,6,30,0.8,{status:["Crack",30]}],["Leapfrog Bite",8,"Close",20,70,5,0,0,14,0.4,{swap:1}],
-    ["Body Slam",14,"Close",46,70,5,5,25,26,0.7],["Jaw Lock",20,"Close",25,80,0,12,0,20,0.4,{hold:2}],["Charge",30,"Mid",60,65,10,0,20,34,1.0,{dash:"in"}],["Gnash",40,"Close",15,80,20,1,0,38,0.6,{hits:4}]],
+  /* Chomp, the first family written out in full (16 Nov 2026): MR2's Gaboo move for move. lv is the level it comes by growth;
+     for an errantry move it's the level a computer Snabit has it by. err: the region whose errantry teaches it. from: the move whose
+     use in fights can teach it early. after: the move it needs first. need: the stat it leans on. share: the body parts another
+     family needs to learn it on that errantry. cat: Basic, Hit, Heavy, Sharp, Withering or Special */
+  Chomp:[["Bite",1,"Close",24,85,10,2,4,10,0.3,{cat:"Basic"}],["Nibble",2,"Near",22,88,8,1,0,11,0.3,{cat:"Basic",dash:"in"}],["Lunge",3,"Near",35,75,8,0,0,16,0.5,{dash:"in",cat:"Hit"}],
+    ["Crunch",5,"Close",64,70,12,0,6,30,0.8,{status:["Crack",30],cat:"Special"}],["Rolling Bite",6,"Near",34,80,10,0,8,19,0.5,{dash:"in",cat:"Basic",from:"Bite"}],
+    ["Leapfrog Bite",8,"Close",20,70,5,0,0,14,0.4,{swap:1,cat:"Basic"}],["Tooth Shot",10,"Far",26,92,8,0,0,18,0.4,{cast:1,cat:"Hit",share:["fangs"]}],["Chatter",12,"Near",24,94,5,2,22,17,0.4,{cast:1,cat:"Hit"}],
+    ["Body Slam",14,"Close",46,70,5,5,25,26,0.7,{cat:"Heavy",err:"Granite Steps"}],["Jaw Lock",18,"Close",25,80,0,12,0,20,0.4,{hold:2,cat:"Withering",err:"Hollow Moor",share:["fangs"]}],
+    ["Big Gulp",20,"Mid",18,82,5,14,0,16,0.5,{cast:1,cat:"Withering",err:"Dream Garden",need:"mnd"}],["Drool",22,"Far",26,72,5,8,0,24,0.6,{cast:1,status:["Poison",35],cat:"Withering",err:"Nightshade Marsh",need:"mnd"}],
+    ["Belly Flop",24,"Close",34,80,30,0,10,18,0.6,{cat:"Sharp",err:"Saffron Dojo",after:"Body Slam",share:["round"]}],["Jaw Drop",26,"Far",40,72,28,0,6,28,0.8,{dash:"in",cat:"Sharp",err:"Granite Steps"}],
+    ["Charge",30,"Mid",60,65,10,0,20,34,1.0,{dash:"in",cat:"Heavy",err:"Saffron Dojo",need:"pow",after:"Lunge"}],["Gnash",34,"Close",15,80,20,1,0,38,0.6,{hits:4,cat:"Special",err:"Hollow Moor"}],
+    ["Chomp Combo",40,"Close",70,86,12,0,12,40,1.0,{cat:"Special",err:"Saffron Dojo",need:"pow",after:"Rolling Bite"}]],
   Pinch:[["Pinch",1,"Close",25,88,10,0,4,10,0.3],["Claw Jab",3,"Near",32,80,8,0,6,14,0.4],["Bunker Down",5,"Any",0,100,0,0,0,20,0.2,{buff:"bunker"}],["Scuttle Under",8,"Close",15,80,0,0,0,12,0.3,{swap:1}],
     ["Riposte",14,"Close",0,100,0,0,0,18,0.1,{buff:"riposte"}],["Shell Ram",20,"Mid",45,70,5,0,20,24,0.6,{dash:"in"}],["Vice Grip",30,"Close",36,75,5,15,0,28,0.5,{hold:1.5}],["Crab Hammer",40,"Close",72,60,20,0,15,40,1.0]],
   Stilt:[["Kick",1,"Near",30,85,8,0,8,10,0.3],["Jump Kick",3,"Near",24,85,8,0,6,12,0.35,{dash:"in"}],["High Kick",5,"Near",74,65,15,0,12,32,0.8,{status:["Daze",25]}],["Vault",8,"Close",18,75,5,0,0,12,0.3,{swap:1}],
@@ -219,13 +229,41 @@ function arFromSkill(n){
     wind:support?0.3:Math.min(1.4,0.25+(s.power||0)/140)*(s.first?0.5:1),el:s.el,cast:s.kind==="Cast",hits:s.hits||1,status:s.status,support,skill:s,...X};
 }
 /* every move a Snabit can use in the arena: its family's up to its level, the shared moves, and its element skills */
-function arMoves(fam,level,known,el){
-  const fm=(FAM_MOVES[fam]||[]).map(arMove).filter(m=>m.lv<=level), mel=arMelee(fam), sh=SHARED_MOVES.map(arMove).filter(m=>!(m.melee&&!mel)&&!(m.ranged&&mel));
+/* a move's MR2 category, from its numbers when the family's row doesn't name one. It sets how big the wind-up is */
+function arCat(m){ if(m.cat) return m.cat; if(!m.dmg) return null;
+  if(m.skill){ const lv=m.skill.lv||1; return lv>=28||m.dmg>=120?"Special":lv>=14?"Heavy":"Basic"; }
+  const tot=m.dmg*(m.hits||1); return tot>=60?"Special":m.wither>=10?"Withering":m.sharp>=0.2?"Sharp":tot>=40?"Heavy":m.range==="Far"||m.range==="Mid"?"Hit":"Basic"; }
+/* the body parts each family has, for the family moves another family can learn on an errantry (share in the row) */
+const FAM_BODY={Chomp:"mouth fangs legs round",Squib:"mouth tentacles",Antik:"arms legs",Moko:"tentacles",Pinch:"claws shell arms legs",Stilt:"legs",Skit:"fangs legs",
+  Booly:"mouth arms",Plod:"trunk legs round",Bipped:"arms legs",Fizz:"arms legs",Teep:"mouth legs round",Lern:"arms legs",Puff:"legs round",Flit:"mouth fangs wings",
+  Glop:"mouth round",Tock:"arms legs",Mitt:"arms legs",Brolly:"legs",Spine:"arms legs",Burr:"mouth claws legs",Wick:"arms legs",Lumo:"wings",Snooze:"legs round",
+  Inky:"arms legs",Nimbo:"round",Dango:"legs round",Oaklet:"legs round",Roly:"shell legs round",Trundle:"mouth shell",Clank:"arms legs",Crease:"beak wings",
+  Twiglet:"arms legs",Swirl:"legs round",Ditty:"arms legs",Sizzle:"arms legs",Aero:"wings tail",Nesta:"legs round",Magna:"arms legs",Helm:"arms legs",Bloop:"tentacles",
+  Sox:"legs",Cuppy:"legs round",Suds:"mouth legs",Scoop:"legs round",Tome:"legs",Gumball:"legs round",Pina:"legs",Jingle:"mouth legs round",Presto:"legs",Vroom:"round",
+  Shutter:"legs",Yoyo:"round",Lava:"legs",Pogo:"legs",Cobble:"arms legs round",Eagle:"beak wings claws legs",Vampire:"mouth fangs wings arms",Phoenix:"beak wings legs tail",
+  Kitsune:"mouth fangs legs tail",Naga:"mouth fangs tail",Yeti:"mouth arms legs claws",Kraken:"mouth tentacles",Golem:"arms legs",Unicorn:"mouth horn legs",
+  Jack:"mouth arms legs",Tengu:"wings arms legs",Tanuki:"mouth legs tail round",Mermaid:"arms tail",Diwata:"arms wings",Sphinx:"mouth fangs claws wings legs",
+  Garuda:"beak wings claws arms legs",Werewolf:"mouth fangs claws arms legs",Minotaur:"horn arms legs",Dragon:"mouth fangs claws wings tail legs",
+  Thunderbird:"beak wings claws legs",Hydra:"mouth fangs tail legs",Griffin:"beak claws wings legs",Kirin:"mouth horn legs tail",Salamander:"mouth fangs tail legs",
+  Bakunawa:"mouth fangs tail",Cerberus:"mouth fangs claws legs",Djinn:"arms",Troll:"mouth fangs arms legs",Mummy:"arms legs",Sarimanok:"beak wings legs tail"};
+function famParts(fam){ const F=typeof FAMILY!=="undefined"&&FAMILY[fam], of=F&&F.of||[fam]; return new Set(of.flatMap(f=>(FAM_BODY[f]||"").split(" ").filter(Boolean))); }
+/* every family move a Snabit of this family can still learn on the errantry to this region: its own, and the shared ones its body fits */
+function famErrantry(fam,region){ const F=typeof FAMILY!=="undefined"&&FAMILY[fam], own=F&&F.of||[fam], parts=famParts(fam), out=[];
+  for(const [f,rows] of Object.entries(FAM_MOVES)) for(const r of rows){ const m=arMove(r); if(m.err!==region) continue;
+    if(own.includes(f)||m.share&&m.share.every(q=>parts.has(q))) out.push({...m,fam:f,ownFam:own.includes(f)}); }
+  return out; }
+/* learned: the family moves a player's Snabit has picked up on errantries and in fights. A computer Snabit leaves it out
+   and has every move up to its level */
+function arMoves(fam,level,known,el,learned){
+  const lrn=learned||null, mine=FAM_MOVES[fam]||[], extra=lrn?Object.values(FAM_MOVES).flat().filter(r=>lrn.includes(r[0])&&!mine.some(q=>q[0]===r[0])):[];
+  const fm=mine.concat(extra).map(arMove).filter(m=>lrn?(lrn.includes(m.name)||!m.err&&m.lv<=level):m.lv<=level), mel=arMelee(fam), sh=SHARED_MOVES.map(arMove).filter(m=>!(m.melee&&!mel)&&!(m.ranged&&mel));
   if(fm[0]) fm[0].basic=true;
+  for(const m of fm) m.cat=arCat(m);
   if(el&&EL_PREFIX[el]&&fm[0]){ fm[0].base=fm[0].name; fm[0].name=`${EL_PREFIX[el]} ${fm[0].name}`; fm[0].el=el; }
   for(const m of fm) if(m.name==="Potion Toss"&&el&&typeof POTION_BY_EL!=="undefined"&&POTION_BY_EL[el]) m.status=[POTION_BY_EL[el],45];   // the bottle holds its element's status
   const elm=(known||[]).map(arFromSkill).filter(Boolean), seen=new Set();
   // a skill with the same name as a family move (Crunch, High Kick) shows once, as the family move
+  for(const m of elm) m.cat=arCat(m);
   return fm.concat(sh,elm).filter(m=>!seen.has(m.name)&&seen.add(m.name));
 }
 
@@ -625,7 +663,7 @@ class Arena{
    mastered skills 10% stronger, and any moves the player switched off in the preset left out. */
 const arFamily=fam=>typeof FAMILY!=="undefined"&&FAMILY[fam]&&FAMILY[fam].of?FAMILY[fam].of[0]:fam;
 function arFighter(f,fam,level,known,el,o={}){
-  f.family=arFamily(fam); let mv=arMoves(f.family,level,(known||[]).filter(n=>SKILLS[n]),el);
+  f.family=arFamily(fam); let mv=arMoves(f.family,level,(known||[]).filter(n=>SKILLS[n]),el,o.learned);
   if(o.uses) mv=mv.map(m=>SKILLS[m.name]&&(o.uses[m.name]||0)>=(typeof MASTERY!=="undefined"?MASTERY:20)&&m.dmg?{...m,dmg:Math.round(m.dmg*1.1),mastered:true}:m);
   if(o.off&&o.off.length){ const keep=mv.filter(m=>!o.off.includes(m.name)); if(keep.some(m=>m.dmg)) mv=keep; }
   f.moves=mv; if(o.habit) f.habit=o.habit; return f;
@@ -634,7 +672,7 @@ function arFighter(f,fam,level,known,el,o={}){
 function arPlayer(s){
   const f=playerFighter(s), pre=s.arPresets&&s.arPresets[s.arPreset||0];
   s.arHabit=s.arHabit||{};
-  return arFighter(f,s.m.family,s.level,typeof knownSkills==="function"?knownSkills(s):(s.skillsKnown||s.equip||[]),s.m.el1,{uses:s.uses,off:pre,habit:s.arHabit});
+  return arFighter(f,s.m.family,s.level,typeof knownSkills==="function"?knownSkills(s):(s.skillsKnown||s.equip||[]),s.m.el1,{uses:s.uses,off:pre,habit:s.arHabit,learned:s.famMoves||[]});
 }
 /* a computer Snabit: its family moves and every skill in its pool it has reached */
 function arFoe(o){

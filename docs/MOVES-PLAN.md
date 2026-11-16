@@ -15,9 +15,9 @@ Element pool moves and fusion marks are learned on errantries too: element moves
 
 Nothing in the game says how a move is learned. The ranch report just says it learned one.
 
-## Fusion
+## Shared family moves
 
-Each family marks 2 to 4 moves its body could pass on, the way MR2 lets a Pixie/Kato learn Phantom Claw. A fused or hybrid Snabit can learn its other parent's marked moves on errantries, on top of its own set.
+Basic and Special moves belong to their family, and element moves are shared (Gid, 16 Nov 2026). Each family also marks 2 to 4 moves its body could pass on, with the body parts they need, the way MR2 lets a Pixie/Kato learn Phantom Claw. Any Snabit whose body has those parts can learn a marked move on the errantry that teaches it, and it needs more training for it than the family's own Snabits do. A fused Snabit has the parts of both parents. `FAM_BODY` in arena.js lists each family's parts: mouth, fangs, beak, arms, legs, claws, wings, tail, tentacles, horn, shell, trunk and round (a round body that rolls or flops).
 
 ## Element moves
 
@@ -29,7 +29,7 @@ The Skills tab shows each move the MR2 way: its name, Strike or Cast, its catego
 
 ## Animations
 
-Regular moves use the stock animation that fits them best. Every signature plays as a special: the long wind-up with the close-up, in one of 27 wind-up styles picked from what the family is (`AT_WIND` in arena-fx.js), then its own attack. Every signature also has its own attack, sound and reaction on the target. The 15 batch 4 attacks are in arena-fx.js, and the other 71 (16 Nov 2026) are in `arena-sigs.js` as `sg_` kinds, each with its sound in `KSND`. A signature always plays its own animation, Bunker Down, Curl Up and Phase Shift included. These signatures gained a status where the move called for one: Crunch, Claw Swipe and Feral Slash Crack; Static Screen, Attract and Thunder Wing Shock; Ink Jet and Prism Beam Blind; High Kick, Trunk Slam, Big Swing, Belly Drum and Bridge Smash Daze; Rain Shot Soak; Toast Pop, Garuda Dive, Wyrm Breath, Holy Flame and Flame Tail Burn; Avalanche Freeze; Many Heads Poison; Gate Fang Dread; Lamp Blast Curse.
+How big the wind-up is depends on the move's category (Gid, 16 Nov 2026). A Basic or Hit move only rears back for a moment. A Heavy, Sharp or Withering move gathers its colour or element for under half a second. A Special winds up in its family's style at a smaller size, without the close-up. Element moves sort into the same tiers by the level they come at. Every signature plays as the full special: the long wind-up with the close-up, in one of 27 wind-up styles picked from what the family is (`AT_WIND` in arena-fx.js), then its own attack. Every signature also has its own attack, sound and reaction on the target. The 15 batch 4 attacks are in arena-fx.js, and the other 71 (16 Nov 2026) are in `arena-sigs.js` as `sg_` kinds, each with its sound in `KSND`. A signature always plays its own animation, Bunker Down, Curl Up and Phase Shift included. These signatures gained a status where the move called for one: Crunch, Claw Swipe and Feral Slash Crack; Static Screen, Attract and Thunder Wing Shock; Ink Jet and Prism Beam Blind; High Kick, Trunk Slam, Big Swing, Belly Drum and Bridge Smash Daze; Rain Shot Soak; Toast Pop, Garuda Dive, Wyrm Breath, Holy Flame and Flame Tail Burn; Avalanche Freeze; Many Heads Poison; Gate Fang Dread; Lamp Blast Curse.
 
 | Wind-up | What it shows | Families |
 |---|---|---|
@@ -91,9 +91,9 @@ Chomp follows MR2's Gaboo move for move: 17 moves, the same mix of categories an
 
 Chains: Bite, then Rolling Bite, then Chomp Combo. Body Slam, then Belly Flop. Lunge, then Charge.
 
-Fusion marks: Jaw Lock, Tooth Shot and Belly Flop. A fused Snabit with Chomp as its other parent can learn these on errantries.
+Shared: Jaw Lock and Tooth Shot to any Snabit with fangs, Belly Flop to any with a round body.
 
-Body Slam, Jaw Lock, Charge and Gnash are learned by level today and move to errantries under this plan.
+Built 16 Nov 2026. A Chomp that already had Body Slam, Jaw Lock, Charge or Gnash by level keeps it. Each new move has its own animation and sound in `arena-moves.js`, and the sim has Chomp at 51%.
 
 ## Families and their MR2 breeds
 
@@ -190,7 +190,7 @@ Body Slam, Jaw Lock, Charge and Gnash are learned by level today and move to err
 
 ## Order of work
 
-1. One family written out in full for Gid's OK: Chomp, 17 moves.
+1. One family written out in full for Gid's OK: Chomp, 17 moves. Built with its learning (level, errantry, fights, shared by body) on 16 Nov 2026.
 2. The rest in groups of about 10 families, with the balance sim after each group.
-3. The errantry and fight learning, fusion marks and element pools.
+3. The element pools with body parts.
 4. The technique card in the Skills tab.

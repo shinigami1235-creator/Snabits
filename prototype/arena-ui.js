@@ -84,7 +84,7 @@ function atFromScan(m){ window.PRACTICE=false; AT_PICK.me={kind:"scan",m}; if(ty
 function atMake(src,R,level,grade){
   if(typeof src==="string") src=src==="Random"?{kind:"fam",fam:Object.keys(FAM_MOVES)[Math.floor(R()*Object.keys(FAM_MOVES).length)]}:{kind:"fam",fam:src};
   if(src.kind==="ros"){ const s=PLAYER.roster[src.k]&&atRanchOf(PLAYER.roster[src.k]); if(s){ const fm=fightMon(s), f=makeFighter(fm,s.equip,s.level); f.family=s.m.family;
-    f.moves=arMoves(s.m.family,s.level,(s.skillsKnown||s.equip||[]).filter(n=>SKILLS[n]),s.m.el1); f.name=typeof displayName==="function"?displayName(s):f.name; return {f,spec:chibiSpec(fm),level:s.level,grade:s.grade}; } src={kind:"fam",fam:"Chomp"}; }
+    f.moves=arMoves(s.m.family,s.level,(s.skillsKnown||s.equip||[]).filter(n=>SKILLS[n]),s.m.el1,s.famMoves||[]); f.name=typeof displayName==="function"?displayName(s):f.name; return {f,spec:chibiSpec(fm),level:s.level,grade:s.grade}; } src={kind:"fam",fam:"Chomp"}; }
   // a ranch Snabit's opponent matches its level and grade; presets and scans fight at level 30 with grade B training
   const lv=level||30, g=grade||"B", earned=grade?undefined:260; let o;
   if(src.kind==="scan") o=gradedOpponent(g,lv,R,null,earned,src.m);
@@ -224,8 +224,11 @@ const AT_TIER={light:{stop:45,trauma:0.14,sparks:6,flash:50,punch:0.035,ring:0.7
 /* the family a fighter counts as for its signature: a fused child keeps its first parent's */
 function atSigFam(i){ const f=AT.ar.p[i].f.family, F=typeof FAMILY!=="undefined"&&FAMILY[f]; return F&&F.of?F.of[0]:f; }
 function atIsSig(i,m){ if(typeof FAMILY_SIG==="undefined"||!AT.ar) return false; const fam=atSigFam(i), n=m.base||m.name; return FAMILY_SIG[fam]===n||(fam==="Skit"&&n==="Web"); }
-const atMoveTier=(i,m)=>(m.dmg>=70&&AT.special&&AT.special[i]===m.name)||atIsSig(i,m)||(ANIM[AR_KIND[m.name]]||{}).sig?"special":m.dmg>=40||m.cost>=24?"heavy":"light";
-const AT_CHARGE={light:0,heavy:430,special:1250};
+/* how big a move's wind-up is (Gid, 16 Nov 2026): Basic and Hit moves barely wind up, Heavy, Sharp and Withering moves gather
+   their element, a Special winds up in its family's own style at a smaller size, and only a signature gets the full show */
+const atMoveTier=(i,m)=>{ if(atIsSig(i,m)||(ANIM[AR_KIND[m.base||m.name]]||{}).sig) return "special"; const c=m.cat||(typeof arCat==="function"?arCat(m):null);
+  return c==="Special"?"special":c==="Heavy"||c==="Sharp"||c==="Withering"?"heavy":"light"; };
+const AT_CHARGE={light:170,heavy:430,special:760,sig:1250};
 /* what the engine reports becomes the game's own battle animation */
 function atEvent(e,now){
   const S=AT.side[e.i], m=e.m, te=AT.te, sp=S.spec;
@@ -243,15 +246,15 @@ function atEvent(e,now){
     else kind=typeof AR_KIND!=="undefined"&&AR_KIND[m.base||m.name]&&ANIM[AR_KIND[m.base||m.name]]?AR_KIND[m.base||m.name]:typeof animFor==="function"?animFor({name:m.name,kind:m.cast?"Cast":"Strike",el:m.el},sp):"tackle";
     if(!ANIM[kind]) kind="tackle";
     // the whole animation plays at its own pace now; a slow, heavy move gets a little longer windup on top
-    const K=ANIM[kind], rate=Math.max(0.75,Math.min(1.25,K.C/Math.max(300,m.wind*900))), isSig=atIsSig(e.i,m)||!!K.sig, tier=m.dmg||isSig?atMoveTier(e.i,m):"light", ch=AT_CHARGE[tier];
+    const K=ANIM[kind], rate=Math.max(0.75,Math.min(1.25,K.C/Math.max(300,m.wind*900))), isSig=atIsSig(e.i,m)||!!K.sig, tier=m.dmg||isSig?atMoveTier(e.i,m):"light", ch=!m.dmg&&!isSig?0:isSig&&tier==="special"?AT_CHARGE.sig:AT_CHARGE[tier];
     AT.turn={t0:te,C:ch+K.C/rate,D:ch+Math.min(K.D/rate,K.C/rate+700)};
     const col=m.el&&typeof ELC==="function"?hexRgb(ELC(m.el)):AT_FAMCOL[AT.ar.p[e.i].f.family]||[255,214,90];
     S.anim={kind,t0:te+ch,tier,rate,el:m.el||null,name:m.name,src:typeof sourceFor==="function"?sourceFor({name:m.name,kind:m.cast?"Cast":"Strike"},sp):"mouth",col,pw:m.dmg>=70?1.35:m.dmg>=40?1.05:0.8,contact:!!K.contact||/^(tackle|bite|stomp|punch|claw|shadowstrike|shadowclaw|fly)$/.test(kind)};
     if(tier==="special"&&!S.anim.contact&&!m.lower) S.anim.mega=/^(beam|bolt|spear|volley|drain|gust)$/.test(kind)?"beam":kind==="lightning"?"bolt":/^(meteor|icefall|boulder|rockpath)$/.test(kind)?"fall":kind==="pillar"&&m.el==="Frost"?"glacier":/^(tornado|firespin)$/.test(kind)?(m.el==="Blaze"?"inferno":"funnel"):kind==="wave"?"tsunami":kind==="push"?"shock":kind==="lift"?"nightmare":/^(pillar|mist|mistcast)$/.test(kind)?"rise":null;
     if(S.anim.mega) AT.turn.D=Math.max(AT.turn.D,ch+(K.C+900)/rate);   // the fight waits for a special's release to finish
     if(e.pred==="dodge"||e.pred==="phase") atPlanDodge(e.i,te+ch+K.C/rate,kind,e.pred);
-    if(ch){ S.charge={t0:te,d:ch,tier,col:S.anim.col,el:m.el||null,body:sp.pal&&sp.pal.body,sig:isSig&&tier==="special"}; if(S.charge.sig){ const fam=atSigFam(e.i); S.charge.wind=AT_WIND[fam]||"flame"; S.charge.seed=[...fam].reduce((a,q)=>a+q.charCodeAt(0),0); } if(tier==="special") AT.cine={t0:te,d:ch,i:e.i,name:m.name,col:S.anim.col}; }
-    try{ sfx(ch?"charge":m.cast?"charge":"whoosh"); if(typeof elSfx==="function") elSfx(m.el,"cast"); if(typeof kindSfx==="function"){ kindSfx(kind,(ch||0)/1000/(S.anim.rate||1)); if(tier==="special") kindSfx("special"); } }catch(err){}
+    if(ch){ S.charge={t0:te,d:ch,tier,col:S.anim.col,el:m.el||null,body:sp.pal&&sp.pal.body,sig:isSig&&tier==="special"}; const soft=tier==="special"&&!S.charge.sig&&!m.skill; if(S.charge.sig||soft){ const fam=atSigFam(e.i); S.charge.wind=AT_WIND[fam]||"flame"; S.charge.soft=soft; S.charge.seed=[...fam].reduce((a,q)=>a+q.charCodeAt(0),0); } if(S.charge.sig) AT.cine={t0:te,d:ch,i:e.i,name:m.name,col:S.anim.col}; }
+    try{ sfx(ch&&tier!=="light"?"charge":m.cast?"charge":"whoosh"); if(typeof elSfx==="function") elSfx(m.el,"cast"); if(typeof kindSfx==="function"){ kindSfx(kind,(ch||0)/1000/(S.anim.rate||1)); if(S.charge&&S.charge.sig) kindSfx("special"); } }catch(err){}
   }
   if(e.t==="step"){ S.hop={t0:te,h:16}; if(typeof atSfx==="function") atSfx("step"); }
   if(e.t==="sulk"){ S.pose={p:"droopy",until:te+900}; return; }   // it turns its nose up at the call
@@ -315,7 +318,7 @@ function atJaws(c,k,s,col,dir,body){
 }
 /* the charge-up looks different for each element. Drawn in arena units around the Snabit's middle (cx, cy) and its feet */
 function atChargeFx(c,ch,cx,cy,foot,R,te,k,s,big){
-  if(ch.sig&&typeof atSigAuraFront==='function'){ atSigAuraFront(c,ch,cx,cy,foot,R,te,k,s); return; }
+  if(ch.wind&&typeof atSigAuraFront==='function'){ atSigAuraFront(c,ch,cx,cy,foot,R,te,k,s); return; }
   const el=ch.el, col=ch.col, N=big?1.5:1; c.save();
   const glow=(x,y,r,cc,a)=>{ const g=c.createRadialGradient(x,y,0,x,y,r); g.addColorStop(0,atRgb(cc,a)); g.addColorStop(1,atRgb(cc,0)); c.fillStyle=g; c.beginPath(); c.arc(x,y,r,0,7); c.fill(); };
   if(el==="Blaze"){ c.globalCompositeOperation="lighter";
@@ -595,10 +598,11 @@ const AT_FAMCOL={Antik:[255,224,122],Squib:[127,211,242],Moko:[255,154,214],Bool
 function atSideState(S,te){
   const out={f:0,arc:0,lift:0,rot:0,sx:1,sy:1,pose:null,flash:0,off:[0,0],alpha:1};
   const A=S.anim; if(A&&te<A.t0){ const ch=S.charge, k=ch?(te-ch.t0)/ch.d:1, sp=ch&&ch.tier==="special";
-      out.pose=sp?(k<0.55?"determined":"cast"):"effort"; out.off[0]+=Math.sin(te/16)*(1+2.5*k); out.sy=1-0.07*k; out.sx=1+0.05*k; out.flash=k>0.82&&Math.floor(te/45)%2?3:0;
+      if(ch&&ch.tier==="light"){ const q=eo(Math.min(1,k)); out.pose="determined"; out.off[0]-=(S.dir||1)*7*q; out.sy=1-0.08*q; out.sx=1+0.06*q; out.rot-=(S.dir||1)*0.06*q; }   // a basic move just rears back
+      else { out.pose=sp?(k<0.55?"determined":"cast"):"effort"; out.off[0]+=Math.sin(te/16)*(1+2.5*k)*(ch&&ch.soft?0.6:1); out.sy=1-0.07*k; out.sx=1+0.05*k; out.flash=k>0.82&&Math.floor(te/45)%2?3:0; }
       // a signature's wind-up moves the body to match it: floating up, digging in or flickering in the dark
       const W=ch&&ch.wind, kk=Math.min(1,k);
-      if(W&&/^(vortex|halo|moon|sigil|melody|gold|storm|field|bubbles|fireflies|lava)$/.test(W)){ out.arc=-16*eo(kk)-Math.sin(te/200)*2*kk; out.off[0]*=0.4; }
+      if(W&&/^(vortex|halo|moon|sigil|melody|gold|storm|field|bubbles|fireflies|lava)$/.test(W)){ out.arc=-(ch.soft?9:16)*eo(kk)-Math.sin(te/200)*2*kk; out.off[0]*=0.4; }
       else if(W==="quake"||W==="fury"){ out.sy=1-0.13*kk; out.sx=1+0.09*kk; out.off[0]+=Math.sin(te/11)*2.5*kk; }
       else if(W==="shadow") out.alpha=0.78+0.22*Math.sin(te/60);
       else if(W==="gears"||W==="steam") out.rot+=Math.sin(te/40)*0.05*kk;
@@ -727,8 +731,9 @@ function atDraw(now,dte){
   AT.lastPlaced=placed;
   c.save(); c.globalCompositeOperation="lighter";
   [0,1].forEach(i=>{ const S=AT.side[i], ch=S.charge, P=placed[i]; if(!ch||!P) return; const k=(te-ch.t0)/ch.d; if(k>1.15){ S.charge=null; return; }
-    const cx=P.center?P.center.x:P.x, cy=P.center?P.center.y:P.y, col=ch.col, sp=ch.tier==="special", R=(sp?95:70)*scale/2.3, kk=Math.min(1,k);
-    if(!ch.sig){ const g=c.createRadialGradient(cx,cy,4,cx,cy,R*(1.1+0.25*Math.sin(te/60))); g.addColorStop(0,`rgba(${col},${0.5*kk})`); g.addColorStop(1,`rgba(${col},0)`);
+    if(ch.tier==="light") return;
+    const cx=P.center?P.center.x:P.x, cy=P.center?P.center.y:P.y, col=ch.col, sp=ch.tier==="special", R=(ch.sig?95:sp?82:70)*scale/2.3, kk=Math.min(1,k);
+    if(!ch.sig){ const g=c.createRadialGradient(cx,cy,4,cx,cy,R*(1.1+0.25*Math.sin(te/60))); g.addColorStop(0,`rgba(${col},${(ch.soft?0.32:0.5)*kk})`); g.addColorStop(1,`rgba(${col},0)`);
     c.fillStyle=g; c.beginPath(); c.arc(cx,cy,R*1.5,0,7); c.fill(); }
     c.restore(); atChargeFx(c,ch,cx,cy,P.foot,R,te,kk,scale/2.3,sp); c.save(); c.globalCompositeOperation="lighter";
     if(k>0.92&&k<1.08){ const f=1-Math.abs(k-1)/0.08; if(ch.sig){ c.strokeStyle=`rgba(255,255,255,${0.9*f})`; c.lineWidth=6*f+1; c.beginPath(); c.ellipse(cx,cy,R*(1.4-0.5*f),R*(1.1-0.4*f),0,0,7); c.stroke(); } else { c.fillStyle=`rgba(255,255,255,${0.6*f})`; c.beginPath(); c.arc(cx,cy,R*0.9,0,7); c.fill(); } } });
@@ -770,8 +775,8 @@ function atDraw(now,dte){
     const nm=p.f.name.split(",")[0]; c.font="700 11px system-ui"; c.fillStyle=i?"#ffb4a8":"#ffe07a"; c.strokeText(nm,x+bw/2,y-6); c.fillText(nm,x+bw/2,y-6);
     atChips(c,i,x,y-33,bw);
     if(!i) atNear((P.x-AT.cam)*z+sx,AT.floorS+sy+12,AT.side[0].dir||1); });
-  { const chg=[0,1].map(i=>AT.side[i].charge).find(ch=>ch&&te-ch.t0<ch.d); if(chg){ const k=Math.min(1,(te-chg.t0)/chg.d), g=c.createRadialGradient(W/2,H*0.45,H*0.25,W/2,H*0.45,H*0.75);
-      g.addColorStop(0,"rgba(0,0,0,0)"); g.addColorStop(1,`rgba(8,6,20,${(chg.tier==="special"?0.75:0.45)*k})`); c.fillStyle=g; c.fillRect(0,0,W,H); } }
+  { const chg=[0,1].map(i=>AT.side[i].charge).find(ch=>ch&&ch.tier!=="light"&&te-ch.t0<ch.d); if(chg){ const k=Math.min(1,(te-chg.t0)/chg.d), g=c.createRadialGradient(W/2,H*0.45,H*0.25,W/2,H*0.45,H*0.75);
+      g.addColorStop(0,"rgba(0,0,0,0)"); g.addColorStop(1,`rgba(8,6,20,${(chg.sig?0.75:chg.tier==="special"?0.5:0.4)*k})`); c.fillStyle=g; c.fillRect(0,0,W,H); } }
   if(cine){ const inn=Math.min(1,ck/0.14), out=ck>0.74?Math.min(1,(ck-0.74)/0.12):0, x=-W*(1-eo(inn))+W*1.1*out*out, y=H*0.2, col=cine.col;
     c.save(); c.translate(x,0); c.fillStyle="rgba(10,8,22,.92)"; c.beginPath(); c.moveTo(-20,y); c.lineTo(W+40,y-26); c.lineTo(W+40,y+48); c.lineTo(-20,y+74); c.closePath(); c.fill();
     c.fillStyle=`rgb(${col})`; c.beginPath(); c.moveTo(-20,y+66); c.lineTo(W+40,y+40); c.lineTo(W+40,y+48); c.lineTo(-20,y+74); c.closePath(); c.fill();
@@ -859,7 +864,7 @@ function arenaGame({s,foe,mode="control",title="",noDraw=false,record=false,lear
 function atPresetCard(s,done){
   atStop(); atStyle(); let d=document.getElementById("atest"); if(!d){ d=document.createElement("div"); d.id="atest"; document.body.appendChild(d); } d.style.display="flex";
   s.arPresets=s.arPresets||[[],[],[]]; s.arPreset=s.arPreset||0;
-  const all=arMoves(arFamily(s.m.family),s.level,(typeof knownSkills==="function"?knownSkills(s):[]).filter(n=>SKILLS[n]),s.m.el1);
+  const all=arMoves(arFamily(s.m.family),s.level,(typeof knownSkills==="function"?knownSkills(s):[]).filter(n=>SKILLS[n]),s.m.el1,s.famMoves||[]);
   const order=["Close","Near","Mid","Far","Any"]; all.sort((a,b)=>order.indexOf(a.range)-order.indexOf(b.range)||a.cost-b.cost);
   const draw=()=>{ const off=s.arPresets[s.arPreset];
     d.innerHTML=`<div class="pick"><h2>Moves</h2><p>Tap a move to keep it out of fights. Each preset keeps its own choice.</p>

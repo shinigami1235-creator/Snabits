@@ -24,6 +24,11 @@ function tripOptions(s,reg){
     const prev=chainBefore(n), chainOk=!prev||(known.includes(prev)&&((s.uses||{})[prev]||0)>=CHAIN_USES);
     out.push({n,need,score,chainOk,t});
   }
+  // family moves this errantry teaches: its own family's, and the ones other families share that its body fits
+  if(typeof famErrantry==="function") for(const m of famErrantry(s.m.family,reg.n)){ if(hasFamMove(s,m.name)) continue;
+    const t=m.cat==="Special"?3:2, st=m.need?["sta","pow","grd","mnd","spr","spd"].indexOf(m.need):m.cast?3:1, need=NEED[t]+(m.ownFam?0:40),
+      score=s.tp[st]+s.tp[main]+loy, chainOk=!m.after||hasFamMove(s,m.after);
+    out.push({n:m.name,need,score,chainOk,t,fam:true}); }
   return out;
 }
 function tutorLine(s,reg){
@@ -79,7 +84,7 @@ async function runTrip(reg){
             banner("Special training","#ffd23f"); K(teacher?`${Cap(tThe)} will show ${nm} how to do ${x.n}.`:`Let's try ${x.n} this week.`); if(s.guide) s.guide.pose="point"; await rwait(900); banner("");
             for(let k=0;k<3;k++){ s.pose="effort"; await hop(8,240); spark(s.x+14,headY()+6,k===2&&got?"sparkle":"dust",k===2&&got?8:3); s.pose="idle"; await rwait(260); }
             if(s.guide) s.guide.pose="stand";
-            if(got){ learned.push(x.n); s.skillsKnown=(s.skillsKnown||[]).concat(x.n); bookMark(s,x.n,"learned"); line+=` It learned ${x.n}.`; banner(`Learned ${x.n}!`,"#7dff9a"); if(s.guide) s.guide.face="surprised"; K(`Well done! ${nm} has learned ${x.n}.`); s.pose="happy"; await rwait(1500); banner(""); if(s.guide) s.guide.face="talk"; }
+            if(got){ learned.push(x.n); if(x.fam) s.famMoves=(s.famMoves||[]).concat(x.n); else { s.skillsKnown=(s.skillsKnown||[]).concat(x.n); bookMark(s,x.n,"learned"); } line+=` It learned ${x.n}.`; banner(`Learned ${x.n}!`,"#7dff9a"); if(s.guide) s.guide.face="surprised"; K(`Well done! ${nm} has learned ${x.n}.`); s.pose="happy"; await rwait(1500); banner(""); if(s.guide) s.guide.face="talk"; }
             else { line+=` It tried ${x.n} and couldn't get it yet.`; banner("Not yet","#ff8a8a"); K(`${nm} couldn't get ${x.n} this time.`); s.pose="sad"; await rwait(1200); banner(""); }
           }
         }

@@ -165,7 +165,14 @@ function fightMon(s){
   if(s.variant==="Lean") stats[5]=Math.round(stats[5]*1.05);
   return {...s.m,name:displayName(s),stats,flat,grid:s.grid||s.m.grid,pal:s.pal||s.m.pal,stage:s.stage,mark:s.mark,mark2:s.mark2,worn:s.worn};
 }
+/* family moves a Snabit already had by level before they moved to errantries keep working: it learned them already */
+const FAM_OLD_LV={Chomp:{"Body Slam":14,"Jaw Lock":20,"Charge":30,"Gnash":40}};
+function famKeep(s){ if(!s||!s.m||s.famV>=1) return; s.famV=1; const old=FAM_OLD_LV[s.m.family]; if(!old) return;
+  s.famMoves=s.famMoves||[]; for(const [n,lv] of Object.entries(old)) if((s.level||1)>=lv&&!s.famMoves.includes(n)) s.famMoves.push(n); }
+/* whether its family move is ready to use: by level, or learned on an errantry or in fights */
+function hasFamMove(s,n){ if((s.famMoves||[]).includes(n)) return true; const r=(FAM_MOVES[s.m.family]||[]).find(q=>q[0]===n); return !!r&&!(r[10]&&r[10].err)&&r[1]<=(s.level||1); }
 function knownSkills(s){
+  famKeep(s);
   const k=new Set(s.skillsKnown||[]);
   for(const n of s.m.pool) if(SKILLS[n].lv<=s.level) k.add(n);
   for(const n of s.learned||[]) k.add(n);
@@ -239,7 +246,7 @@ function styleText(s){
   if(tot>=12){ const top=Object.entries(A).sort((a,b)=>b[1]-a[1]), lines=[], pct=n=>Math.round(n/tot*100);
     lines.push(`Its favourite move is ${top[0][0]}, ${pct(top[0][1])}% of the moves you've picked.`);
     if(top[1]&&top[1][1]/tot>=0.15) lines.push(`It leans on ${top[1][0]} too.`);
-    try{ const mv=typeof arMoves==="function"?arMoves(arFamily(s.m.family),s.level,typeof knownSkills==="function"?knownSkills(s):(s.skillsKnown||[]),s.m.el1):[], rg={};
+    try{ const mv=typeof arMoves==="function"?arMoves(arFamily(s.m.family),s.level,typeof knownSkills==="function"?knownSkills(s):(s.skillsKnown||[]),s.m.el1,s.famMoves||[]):[], rg={};
       for(const [n,c] of top){ const m=mv.find(x=>x.name===n||x.base===n); if(m&&m.dmg&&m.range!=="Any") rg[m.range]=(rg[m.range]||0)+c; }
       const best=Object.entries(rg).sort((a,b)=>b[1]-a[1])[0], hit=Object.values(rg).reduce((a,b)=>a+b,0);
       if(best&&best[1]/hit>=0.5) lines.push(`It likes to fight ${{Close:"up close",Near:"at arm's length",Mid:"from mid range",Far:"from far off"}[best[0]]}.`); }catch(e){}
@@ -286,7 +293,7 @@ function addItem(name,n=1){ PLAYER.bag[name]=(PLAYER.bag[name]||0)+n; }
 
 /* A frozen copy of a monster for fights that must replay exactly. */
 function fightSnapshot(s){ return {worn:{...(s.worn||{})},held:s.held,m:s.m,variant:s.variant,pal:s.pal,mark2:s.mark2,uses:{...(s.uses||{})},tp:s.tp.slice(),stage:s.stage,mark:s.mark,grid:s.grid,level:s.level,equip:s.equip.slice(),habits:s.habits.slice(),lowLoyalty:RS===s&&hearts()<2,
-  arPresets:s.arPresets,arPreset:s.arPreset,arHabit:{...(s.arHabit||{})}}; }   // and its arena move preset and habits, so mission and trip fights go the way cup fights on Auto do
+  arPresets:s.arPresets,arPreset:s.arPreset,arHabit:{...(s.arHabit||{})},famMoves:(s.famMoves||[]).slice()}; }   // and its arena move preset and habits, so mission and trip fights go the way cup fights on Auto do
 
 /* Skill use counts, mastery, the Skill book and learning a skill by being hit with it. */
 const MASTERY=60, CHAIN_USES=30;
@@ -314,6 +321,11 @@ function afterFight(s,fighter,learn){
   for(const [n,c] of Object.entries(fighter.used||{})) s.uses[n]=(s.uses[n]||0)+c;
   for(const n of Object.keys(fighter.seen||{})) bookMark(s,n,"seen");
   for(const n of Object.keys(fighter.hitBy||{})) bookMark(s,n,"hit");
+  // a move used enough in fights can lead to the next one in its line before the level it would come at
+  if(typeof FAM_MOVES!=="undefined"&&s.m) for(const r of FAM_MOVES[s.m.family]||[]){ const m=arMove(r);
+    if(!m.from||m.err||hasFamMove(s,m.name)) continue; const used=Object.entries(s.uses).reduce((a,[n,c])=>a+(n===m.from||n.endsWith(" "+m.from)?c:0),0);   // a Flame Bite counts as Bite
+    if(used<CHAIN_USES||Math.random()>=0.25) continue;
+    s.famMoves=(s.famMoves||[]).concat(m.name); lines.push(`It learned ${m.name}.`); break; }
   if(learn){
     const known=knownSkills(s), chance=(RS===s&&hearts()>=4)?0.2:0.1;
     for(const n of Object.keys(fighter.hitBy||{})){
