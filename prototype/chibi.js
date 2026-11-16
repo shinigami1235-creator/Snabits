@@ -819,7 +819,7 @@ const CHIBI = (() => {
         for (let i = 0; i < n; i++) c.quadraticCurveTo(R - (i + 0.5) * w, g.bot + 9, R - (i + 1) * w, g.bot); c.closePath(); },
       behind(c, g, x) { const n = by(g.stage, 3, 4, 5), w = g.bw / n, tl = this.tl(g.stage), lw = by(g.stage, 9, 10, 11);
         for (let i = 0; i < n; i++) { const tx = g.left + (i + 0.5) * w, sw = Math.sin(x.t / 260 + i * 1.3) * 4 + x.walk * 3, curl = (i < n / 2 ? -1 : 1) * 7;
-          const mat = i < n / 2 ? x.L.legL : x.L.legR, L = x.P.lash && i === 0 ? x.P.lash : 0;
+          const mat = i < n / 2 ? x.L.legL : x.L.legR, L = i === 0 ? x.P.lash || 0 : i === 1 ? x.P.lash2 || 0 : 0;   // lash and lash2 stretch the two front tentacles out to strike
           const ex = tx + curl + sw * 0.5 - L * 70, ey = 182 - L * (182 - g.bot + g.bh * 0.35);
           limb(c, [tx, g.bot - 4, tx + sw - L * 30, g.bot + tl * 0.55 - L * 30, ex, ey], lw, x.parts, mat, x.t);
           blob(c, ex, ey, lw * 0.55, lw * 0.55, x.parts, mat, x.t, 'hand'); } },
@@ -985,10 +985,10 @@ const CHIBI = (() => {
           c.fillStyle = rgb(lt(x.acc, 0.2)); c.beginPath(); c.ellipse(sd * er * 0.5, 2, er * 0.42, er * 0.68, 0, 0, 7); c.fill(); c.restore(); }
         PLODLEG(c, g, x, g.cx - g.bw * 0.3, x.L.legL, 1, true); PLODLEG(c, g, x, g.cx + g.bw * 0.3, x.L.legR, 3, true); },
       front(c, g, x) { PLODLEG(c, g, x, g.cx - g.bw * 0.25, x.L.legL, 0, false); PLODLEG(c, g, x, g.cx + g.bw * 0.25, x.L.legR, 2, false);   // front legs set out wide, under the shoulders
-        const sw = Math.sin(x.t / 420) * 6, tw = by(g.stage, 9, 11, 13), y0 = g.top + g.bh * 0.5, y1 = g.bot + by(g.stage, 2, 6, 8);
+        const T = x.P.trunk || 0, V = x.P.trunkUp || 0, sw = Math.sin(x.t / 420) * 6 * (1 - Math.min(1, T)), tw = by(g.stage, 9, 11, 13), y0 = g.top + g.bh * 0.5, y1 = g.bot + by(g.stage, 2, 6, 8) - T * 26 - V * 30;   // trunk reaches it forward to swat, trunkUp lifts the tip
         if (g.stage === 'Mega') for (const sd of [-1, 1]) { c.strokeStyle = '#f6efe0'; c.lineWidth = 5; c.lineCap = 'round'; c.beginPath(); c.moveTo(g.cx + sd * 12, y0 + 18); c.quadraticCurveTo(g.cx + sd * 22, y0 + 34, g.cx + sd * 14, y0 + 40); c.stroke(); }
         // the trunk: a dark edge and a shade darker than the body so it reads against the face, a lighter ridge down the front and three wrinkles
-        const tq = [g.cx, y0, g.cx + sw * 0.4, (y0 + y1) / 2, g.cx + sw, y1], plain = !x.L.tail || x.L.tail === 'flesh';
+        const tq = [g.cx, y0, g.cx + sw * 0.4 - T * 30, (y0 + y1) / 2 + T * 14, g.cx + sw - T * 78, y1], plain = !x.L.tail || x.L.tail === 'flesh';
         if (plain) { c.lineCap = 'round'; c.strokeStyle = rgb(dk(x.body, 0.5)); c.lineWidth = tw + 3.5; c.beginPath(); c.moveTo(tq[0], tq[1]); c.quadraticCurveTo(tq[2], tq[3], tq[4], tq[5]); c.stroke(); }
         limb(c, tq, tw, plain ? dk(x.body, 0.14) : x.body, x.L.tail, x.t);
         if (plain) { const gr = c.createLinearGradient(0, y0 - tw, 0, y0 + tw * 1.4); gr.addColorStop(0, rgba(x.body, 1)); gr.addColorStop(0.55, rgba(x.body, 1)); gr.addColorStop(1, rgba(x.body, 0));   // the root of the trunk grows out of the face
@@ -996,7 +996,7 @@ const CHIBI = (() => {
         if (plain) { c.strokeStyle = rgba(lt(x.body, 0.35), 0.55); c.lineWidth = tw * 0.22; c.beginPath(); c.moveTo(tq[0] - tw * 0.15, tq[1] + 4); c.quadraticCurveTo(tq[2] - tw * 0.15, tq[3], tq[4] - tw * 0.15, tq[5] - 4); c.stroke();
           c.strokeStyle = rgb(dk(x.body, 0.45)); c.lineWidth = 1.4; for (const k of [0.45, 0.62, 0.78]) { const mt = 1 - k, px = mt * mt * tq[0] + 2 * mt * k * tq[2] + k * k * tq[4], py = mt * mt * tq[1] + 2 * mt * k * tq[3] + k * k * tq[5];
             c.beginPath(); c.moveTo(px - tw * 0.38, py - 1); c.quadraticCurveTo(px, py + 1.6, px + tw * 0.38, py - 1); c.stroke(); } }
-        c.fillStyle = rgb(dk(x.body, 0.4)); for (const sd of [-1, 1]) { c.beginPath(); c.arc(g.cx + sw + sd * tw * 0.2, y1 + 1, 1.6, 0, 7); c.fill(); } },
+        c.fillStyle = rgb(dk(x.body, 0.4)); for (const sd of [-1, 1]) { c.beginPath(); c.arc(tq[4] + sd * tw * 0.2, y1 + 1, 1.6, 0, 7); c.fill(); } },
       hl: g => [g.left + g.bw * 0.16, g.top + g.bh * 0.5, g.left + g.bw * 0.16, g.top + g.bh * 0.12, g.left + g.bw * 0.42, g.top + g.bh * 0.04],
       face: (c, g, x, look) => faceTwo(c, g, x, look, { ey: 0.38, ex: 0.2, my: 0.62, s: by(g.stage, 0.8, 0.9, 0.98) })
     },

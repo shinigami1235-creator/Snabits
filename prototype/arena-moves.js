@@ -465,31 +465,30 @@ if(typeof KSND!=="undefined") Object.assign(KSND,{
 });
 if(typeof SWING!=="undefined") ["trunkflurry","tentaclefrenzy","overheadsmash"].forEach(k=>SWING.add(k));
 
-/* Trunk Flurry, redone (Gid: it looked like Tentacle Frenzy): one thick trunk from its face, swatting the target
-   back and forth four times. Wrinkle bands across it, a curled tip, a swish arc on each swing and a dust slap where it lands */
-MV.trunk=(c,a,b,k,swing,col,R)=>{ if(k<=0) return; const N=16, pts=[];
-  for(let j=0;j<=N;j++){ const q=j/N, x=a.x+(b.x-a.x)*q*k, y=a.y+(b.y-a.y)*q*k+Math.sin(q*Math.PI)*swing*q; pts.push([x,y]); }
-  const e=pts[N], p=pts[N-1], ang=Math.atan2(e[1]-p[1],e[0]-p[0]);
-  for(let pass=0;pass<2;pass++) for(let j=0;j<N;j++){ const w=R*(0.46-0.24*j/N)+(pass?0:4); c.strokeStyle=pass?atRgba(col,1):atRgba(col.map(v=>v*0.55),1); c.lineWidth=w; c.lineCap="round"; c.beginPath(); c.moveTo(pts[j][0],pts[j][1]); c.lineTo(pts[j+1][0],pts[j+1][1]); c.stroke(); }
-  c.strokeStyle=atRgba(col.map(v=>v*0.62),0.9); c.lineWidth=2; for(let j=2;j<N;j+=2){ const w=R*(0.46-0.24*j/N)*0.5, dx=pts[j+1][0]-pts[j][0], dy=pts[j+1][1]-pts[j][1], L=Math.hypot(dx,dy)||1, nx=-dy/L, ny=dx/L;
-    c.beginPath(); c.moveTo(pts[j][0]+nx*w,pts[j][1]+ny*w); c.quadraticCurveTo(pts[j][0]+dx/L*3,pts[j][1]+dy/L*3,pts[j][0]-nx*w,pts[j][1]-ny*w); c.stroke(); }
-  c.save(); c.translate(e[0],e[1]); c.rotate(ang); c.fillStyle=atRgba(col,1); c.strokeStyle=atRgba(col.map(v=>v*0.55),1); c.lineWidth=2.5; c.beginPath(); c.ellipse(R*0.06,0,R*0.2,R*0.22,0,0,7); c.fill(); c.stroke();
-  c.fillStyle="rgba(60,30,30,.7)"; c.beginPath(); c.ellipse(R*0.16,-R*0.06,R*0.05,R*0.04,0,0,7); c.ellipse(R*0.16,R*0.06,R*0.05,R*0.04,0,0,7); c.fill(); c.restore(); };
+/* Trunk Flurry and Tentacle Frenzy, third pass (Gid: use its own trunk, and its own front tentacles while two stand).
+   The sprite's real trunk and tentacles reach out through pose values (trunk, trunkUp, lash, lash2 in chibi.js),
+   so they keep the monster's own colours; the effects only mark where each swat lands */
+const mvSlap=(c,b,R,k,col)=>{ if(k<0||k>1) return; SG.puff(c,b.x,b.y,R*(0.2+0.35*k),0.65*(1-k),[236,226,206]); c.strokeStyle=`rgba(255,255,255,${0.9*(1-k)})`; c.lineWidth=3;
+  for(let i=0;i<5;i++){ const an=i/5*Math.PI*2+0.4; c.beginPath(); c.moveTo(b.x+Math.cos(an)*R*0.25,b.y+Math.sin(an)*R*0.25); c.lineTo(b.x+Math.cos(an)*R*(0.4+0.35*k),b.y+Math.sin(an)*R*(0.4+0.35*k)); c.stroke(); }
+  atStar4(c,b.x,b.y-R*0.45*k,R*0.2*(1-k),"#fff3b0"); };
 Object.assign(ANIM,{
+  /* Plod swings its own trunk at the target, high, low, high, low */
   trunkflurry:(()=>{ const C=320, gap=140, n=4, end=C+n*gap;
     return {C,D:end+340,contact:true,marks:true,
-      atk:(t,o)=>{ const d=(o&&o.dir)||1, j=Math.floor((t-C)/gap), p=((t-C)%gap)/gap;
-        if(t<C) return {f:0.42*eo(t/C),pose:"determined",rot:-d*0.08*eo(t/C)};
-        if(t<end) return {f:0.42,pose:"attack",rot:d*(j%2?-0.1:0.1)*Math.sin(p*Math.PI),off:[Math.sin(p*Math.PI)*3*d,0],sy:1-0.04*Math.sin(p*Math.PI)};
-        return {f:0.42*(1-eio(Math.min(1,(t-end)/320))),pose:"idle"}; },
-      def(t){ if(t<C||t>end+80) return null; const j=Math.floor((t-C)/gap), p=((t-C)%gap)/gap; return {off:[(1-p)*6*(j%2?-0.6:1),0],rot:(j%2?-0.12:0.12)*(1-p),pose:"hit"}; },
-      fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, d=atDir(x), col=x.body||x.col||[180,180,190], a={x:s.x+d*s.r*0.45,y:s.y+s.r*0.05};
-        const reach=t<C?eo(t/C):t<end?1:1-eio(Math.min(1,(t-end)/280)), j=Math.max(0,Math.floor((t-C)/gap)), p=t<C?0:((t-C)%gap)/gap, side=j%2?1:-1,
-          swing=t<C?-R*1.2*eo(t/C):t<end?side*R*1.3*Math.cos(p*Math.PI):0, b={x:tg.x-d*R*0.15,y:tg.y-R*0.05};
-        if(t>=C&&t<end){ c.strokeStyle=`rgba(255,255,255,${0.6*(1-p)})`; c.lineWidth=3; c.beginPath(); c.arc(b.x-d*R*0.5,b.y,R*1.0,side>0?-1.4:0.2,side>0?-0.2:1.4); c.stroke(); }
-        MV.trunk(c,a,b,reach,swing,col,s.r);
-        for(let q=0;q<n;q++){ const hk=(t-C-q*gap-gap*0.5)/320; if(hk<0||hk>1) continue; const yy=b.y+(q%2?-1:1)*R*0.25;
-          SG.puff(c,b.x+d*R*0.3*hk,yy,R*(0.2+0.3*hk),0.6*(1-hk),[236,226,206]); atStar4(c,b.x+(q%2?-1:1)*R*0.4,yy-R*0.5*hk,R*0.2*(1-hk),"#fff3b0"); }
-        if(t>=C) atImpact(t,C+gap*0.5,0.25,0); }}; })()
+      atk:t=>{ if(t<C){ const k=eo(t/C); return {f:0.5*k,pose:atPose("attack",{trunk:0.3*k,trunkUp:1.0*k,eyes:"fierce"})}; }
+        if(t<end){ const j=Math.floor((t-C)/gap), p=((t-C)%gap)/gap, hit=Math.sin(p*Math.PI); return {f:0.5,pose:atPose("attack",{trunk:0.55+0.75*hit,trunkUp:(j%2?-0.4:0.9)*(1-hit)+(j%2?0.4:-0.2)*hit,eyes:"fierce"}),off:[0,0],sy:1-0.03*hit}; }
+        const k=eio(Math.min(1,(t-end)/320)); return {f:0.5*(1-k),pose:k<0.6?atPose("idle",{trunk:0.55*(1-k)}):"idle"}; },
+      def(t){ if(t<C||t>end+80) return null; const j=Math.floor((t-C)/gap), p=((t-C)%gap)/gap; return {off:[(1-p)*6,(j%2?2:-2)*(1-p)],rot:(j%2?-0.1:0.1)*(1-p),pose:"hit"}; },
+      fx(c,t,x){ const tg=x.target, R=tg.r, d=atDir(x); for(let q=0;q<n;q++){ const k=(t-C-q*gap-gap*0.45)/300; mvSlap(c,{x:tg.x-d*R*0.4,y:tg.y+(q%2?R*0.15:-R*0.35)},R,k); }
+        if(t>=C&&t<end){ const p=((t-C)%gap)/gap, j=Math.floor((t-C)/gap); c.strokeStyle=`rgba(255,255,255,${0.5*Math.sin(p*Math.PI)})`; c.lineWidth=3; c.beginPath(); c.arc(tg.x-d*R*0.9,tg.y-R*0.1,R*0.8,j%2?0.1:-1.2,j%2?1.2:-0.1); c.stroke(); } }}; })(),
+  /* Squib stands on its back tentacles and whips the two front ones at the target in turn */
+  tentaclefrenzy:(()=>{ const C=300, gap=115, n=5, end=C+n*gap;
+    return {C,D:end+340,contact:true,marks:true,
+      atk:t=>{ if(t<C){ const k=eo(t/C); return {f:0.45*k,arc:-6*k,pose:atPose("attack",{lash:0.3*k,lash2:0.3*k,eyes:"fierce"})}; }
+        if(t<end){ const j=Math.floor((t-C)/gap), p=((t-C)%gap)/gap, hit=Math.sin(p*Math.PI), a=j%2?0.25:0.25+1.15*hit, b=j%2?0.25+1.15*hit:0.25; return {f:0.45,arc:-6,pose:atPose("attack",{lash:a,lash2:b,eyes:"fierce"}),rot:(j%2?0.04:-0.04)*hit}; }
+        const k=eio(Math.min(1,(t-end)/320)); return {f:0.45*(1-k),arc:-6*(1-k),pose:k<0.6?atPose("idle",{lash:0.25*(1-k),lash2:0.25*(1-k)}):"idle"}; },
+      def(t){ if(t<C||t>end+80) return null; const p=((t-C)%gap)/gap; return {off:[(1-p)*7,0],pose:"hit"}; },
+      fx(c,t,x){ const tg=x.target, R=tg.r, d=atDir(x); for(let q=0;q<n;q++){ const k=(t-C-q*gap-gap*0.45)/280; mvSlap(c,{x:tg.x-d*R*0.4,y:tg.y+(q%2?-R*0.3:R*0.1)},R*0.85,k);
+          if(k>=0&&k<0.6) for(let i=0;i<3;i++){ c.fillStyle=`rgba(160,210,255,${0.8*(1-k/0.6)})`; c.beginPath(); c.arc(tg.x-d*R*(0.3+k)+i*6,tg.y-R*0.2+(i-1)*R*0.25-k*R*0.3,2.5,0,7); c.fill(); } } }}; })()
 });
 if(typeof KSND!=="undefined") KSND.trunkflurry=(d,t)=>{ for(let i=0;i<4;i++){ dNoise(d,t+0.33+i*0.14,0.09,0.14,'bandpass',500,0.8); dNoise(d,t+0.39+i*0.14,0.07,0.28,'lowpass',900); dKick(d,t+0.39+i*0.14,0.25); } sTone(d,t+0.1,'sawtooth',180,240,0.2,0.04); };
