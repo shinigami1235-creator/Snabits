@@ -29,29 +29,41 @@ The Skills tab shows each move the MR2 way: its name, Strike or Cast, its catego
 
 ## Animations
 
-Regular moves use the stock animation that fits them best. Every signature plays as a special: the long wind-up with the close-up, in one of 17 wind-up styles picked from what the family is (`AT_WIND` in arena-fx.js), then its own attack. Every signature also has its own attack, sound and reaction on the target. The 15 batch 4 attacks are in arena-fx.js, and the other 71 (16 Nov 2026) are in `arena-sigs.js` as `sg_` kinds, each with its sound in `KSND`. A signature always plays its own animation, Bunker Down, Curl Up and Phase Shift included. These signatures gained a status where the move called for one: Crunch, Claw Swipe and Feral Slash Crack; Static Screen, Attract and Thunder Wing Shock; Ink Jet and Prism Beam Blind; High Kick, Trunk Slam, Big Swing, Belly Drum and Bridge Smash Daze; Rain Shot Soak; Toast Pop, Garuda Dive, Wyrm Breath, Holy Flame and Flame Tail Burn; Avalanche Freeze; Many Heads Poison; Gate Fang Dread; Lamp Blast Curse.
+Regular moves use the stock animation that fits them best. Every signature plays as a special: the long wind-up with the close-up, in one of 27 wind-up styles picked from what the family is (`AT_WIND` in arena-fx.js), then its own attack. Every signature also has its own attack, sound and reaction on the target. The 15 batch 4 attacks are in arena-fx.js, and the other 71 (16 Nov 2026) are in `arena-sigs.js` as `sg_` kinds, each with its sound in `KSND`. A signature always plays its own animation, Bunker Down, Curl Up and Phase Shift included. These signatures gained a status where the move called for one: Crunch, Claw Swipe and Feral Slash Crack; Static Screen, Attract and Thunder Wing Shock; Ink Jet and Prism Beam Blind; High Kick, Trunk Slam, Big Swing, Belly Drum and Bridge Smash Daze; Rain Shot Soak; Toast Pop, Garuda Dive, Wyrm Breath, Holy Flame and Flame Tail Burn; Avalanche Freeze; Many Heads Poison; Gate Fang Dread; Lamp Blast Curse.
 
 | Wind-up | What it shows | Families |
 |---|---|---|
-| flame | a flame of light behind the body | Phoenix, Teep, Wick, Sizzle, Lava, Dragon, Salamander |
-| storm | a storm cloud overhead drops lightning on it | Antik, Brolly, Nimbo, Magna, Thunderbird |
+| flame | a flame of light behind the body | Phoenix, Wick, Dragon, Salamander |
+| steam | steam billows off the lid and spout, the whistle shrieks | Teep |
+| heat | the toaster coils glow red-hot, heat ripples, smoke curls up | Sizzle |
+| lava | lava-lamp blobs rise and wobble round it | Lava |
+| storm | a storm cloud overhead drops lightning on it | Brolly, Nimbo, Thunderbird |
+| signal | broadcast arcs from the antenna, static snow and scan lines | Antik |
+| field | red and blue field lines with metal bits orbiting | Magna |
 | vortex | wind rings spiral up with leaves and dust | Eagle, Crease, Aero, Vroom, Tengu, Garuda |
 | quake | the ground cracks with light in the seams, rocks float up | Plod, Burr, Golem, Cobble, Roly, Troll |
-| tide | water spirals up from a pool, with drops and bubbles | Pinch, Squib, Kraken, Helm, Bloop, Suds |
+| tide | water spirals up from a pool, with drops and bubbles | Pinch, Squib, Kraken, Helm, Bloop |
+| bubbles | foam piles up round its feet, soap bubbles rise and pop | Suds |
 | shadow | a dark pool and smoke tendrils, embers in its colour | Booly, Vampire, Jack, Cerberus, Inky |
-| halo | rays fan out behind, a halo lights up, feathers fall | Lern, Unicorn, Lumo, Kirin, Sarimanok |
+| halo | rays fan out behind, a halo lights up, feathers fall | Lern, Unicorn, Kirin, Sarimanok |
+| fireflies | a swarm of fireflies circles it, blinking brighter | Lumo |
 | frost | ice spikes grow in a ring, snowflakes spiral in | Yeti, Swirl, Scoop |
-| bloom | a flower opens behind, vines climb, petals swirl | Puff, Oaklet, Twiglet, Pina, Diwata |
-| sigil | a magic circle turns underfoot, runes rise | Moko, Tome, Presto, Sphinx, Mummy, Skit |
+| bloom | a flower opens behind, vines climb, petals swirl | Oaklet, Twiglet, Pina, Diwata |
+| spores | mushrooms pop up in a ring, glowing spores drift off its cap | Puff |
+| sigil | a magic circle turns underfoot, runes rise | Moko, Tome, Presto, Sphinx, Mummy |
+| web | a web spins out behind it strand by strand, dew glints on it | Skit |
 | fury | a spiky battle aura, speed lines, dust kicked up | Chomp, Stilt, Bipped, Mitt, Spine, Sox, Pogo, Minotaur |
-| gears | clockwork behind, a wind-up key spins, steam and sparks | Tock, Clank, Shutter, Yoyo |
+| gears | clockwork behind, a wind-up key spins, steam and sparks | Tock, Clank, Yoyo |
+| lens | an aperture iris turns behind it, focus brackets close in | Shutter |
 | toxic | a bubbling pool, rising bubbles that pop, drips | Fizz, Naga, Glop, Trundle, Hydra |
 | sweet | a candy swirl, orbiting sprinkles, hearts | Dango, Nesta, Cuppy, Gumball |
 | melody | sound rings under a wavy staff, notes spiral up | Flit, Ditty, Tanuki, Mermaid |
 | moon | a moon rises behind in silver mist, stars twinkle | Kitsune, Snooze, Werewolf, Bakunawa |
 | gold | gold light, orbiting coins, glints | Jingle, Djinn, Griffin |
 
-The body moves with its wind-up: it floats up for storm, vortex, halo, sigil, melody, moon and gold, digs in and shakes for quake and fury, flickers for shadow and rattles for gears.
+The body moves with its wind-up: it floats up for storm, field, vortex, halo, sigil, melody, moon, gold, bubbles, fireflies and lava, digs in and shakes for quake and fury, flickers for shadow, jitters for signal and rattles for gears and steam.
+
+Root takes its look from whoever put it on: Kraken's tentacles, Naga's coils, Mummy's bandages and Skit's silk, and otherwise the binder's main element. Wild binds with vines, Tide with water rings, Shade and Void with shadow, Steel with chains, Stone with rock shackles, Frost with ice cuffs, Blaze with a fire rope, Spark with crackling bands, Venom with dripping goo, Light with rings of light, Charm with ribbons and Brawl with rope. Any other element binds with bands in the binder's body colour. The status chip, the floating label and the tint on the body take the same colour.
 
 ## Chomp, written out in full
 
