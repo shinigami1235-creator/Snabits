@@ -3578,27 +3578,30 @@ x.feet.push([g.cx, 182, 10]); },
         if (S === 'Mega') { c.fillStyle = '#d06070'; c.beginPath(); c.ellipse(g.cx, my0 + mh * 0.72, mw * 0.32, mh * 0.16, 0, 0, 7); c.fill(); }   // a fat tongue
         return fi; }
     },
-    /* Yog: Yog-Sothoth, a floating globe with a crown of smaller glowing globes set round its top like a halo, and feelers trailing under it. Three halo globes and three feelers; five globes with eyes in them and five feelers from Byte; seven globes that change colour, a ring of sparks and seven feelers at Mega */
+    /* Yog: Yog-Sothoth, a floating globe with smaller glowing globes always drifting round it, passing in front and behind, and feelers trailing under it. Three globes and three feelers; five globes with eyes in them and five feelers from Byte; seven globes that change colour, a ring of sparks and seven feelers at Mega */
     Yog: {
       special: true, float: true, dims: { Bit: [58, 58], Byte: [70, 70], Mega: [82, 82] }, slots: { feet: false },
-      bottom(st) { return by(st, 158, 150, 142); }, height(st) { return this.dims[st][1] + by(st, 22, 30, 40) + (182 - this.bottom(st)); },
-      globes(g) { const n = by(g.stage, 3, 5, 7), R = g.bw * 0.5, cy = g.top + g.bh / 2, r = g.bw * by(g.stage, 0.2, 0.18, 0.16), out = [];   // the halo: small globes set evenly over the top half, half sunk into the big one
-        for (let k = 0; k < n; k++) { const a = Math.PI * (1.1 + k / (n - 1) * 0.8); out.push([g.cx + Math.cos(a) * R * 0.98, cy + Math.sin(a) * R * 0.98, r, k]); } return out; },
-      path(c, g) { c.beginPath(); c.ellipse(g.cx, g.top + g.bh / 2, g.bw / 2, g.bh / 2, 0, 0, 7); for (const [px, py, r] of this.globes(g)) { c.moveTo(px + r, py); c.ellipse(px, py, r, r, 0, 0, 7); } },
+      bottom(st) { return by(st, 158, 150, 142); }, height(st) { return this.dims[st][1] + by(st, 30, 38, 48) + (182 - this.bottom(st)); },
+      globes(g, t) { const n = by(g.stage, 3, 5, 7), cy = g.top + g.bh * 0.46, out = [];   // each globe on its own tilted orbit at its own speed, drifting in and out
+        for (let k = 0; k < n; k++) { const sp = (k % 2 ? -1 : 1) * (0.00045 + k * 0.00009), a = k * 2.399 + t * sp, rx = g.bw * (0.7 + 0.1 * Math.sin(t / 900 + k * 1.7)), tilt = 0.2 * Math.sin(k * 1.3 + 0.5), depth = Math.sin(a);
+          const r = g.bw * by(g.stage, 0.18, 0.16, 0.14) * (0.85 + 0.25 * (depth + 1) / 2); out.push([g.cx + Math.cos(a) * rx, cy + Math.cos(a) * rx * tilt + depth * g.bh * (0.4 + 0.04 * (k % 3)), r, k, depth]); }   // a ring seen from a little above: passing in front takes a globe under its face, passing behind takes it over its head
+        return out; },
+      path(c, g) { c.beginPath(); c.ellipse(g.cx, g.top + g.bh / 2, g.bw / 2, g.bh / 2, 0, 0, 7); },
+      globe(c, g, x, px, py, r, k) { const S = g.stage, hues = [x.acc, x.parts, lt(x.acc, 0.3), lt(x.parts, 0.3)], col = S === 'Mega' ? hues[(k + Math.floor(x.t / 900)) % hues.length] : hues[k % hues.length];
+        c.save(); c.shadowColor = rgba(lt(col, 0.3), 0.8); c.shadowBlur = 8; const gr = c.createRadialGradient(px - r * 0.3, py - r * 0.3, 1, px, py, r); gr.addColorStop(0, rgba(lt(col, 0.55), 1)); gr.addColorStop(1, rgba(col, 0.95)); c.fillStyle = gr; c.beginPath(); c.arc(px, py, r, 0, 7); c.fill(); c.restore();
+        c.strokeStyle = rgba(dk(col, 0.3), 0.6); c.lineWidth = 1.5; c.beginPath(); c.arc(px, py, r, 0, 7); c.stroke();
+        if (S !== 'Bit' && !x.back) { const er = r * 0.42, shut = (x.t + k * 700) % 3000 < 150; c.fillStyle = '#fff'; c.beginPath(); c.ellipse(px, py, er, shut ? 0.8 : er, 0, 0, 7); c.fill();
+          if (!shut) { c.fillStyle = '#2b2430'; c.beginPath(); c.arc(px + (g.cx - px) * 0.04, py + (g.top + g.bh / 2 - py) * 0.04, er * 0.5, 0, 7); c.fill(); } } },   // each eye keeps looking in at the big globe
       behind(c, g, x) { const S = g.stage, n = by(S, 3, 5, 7), col = x.parts;
         if (S === 'Mega') { c.save(); c.globalCompositeOperation = 'lighter'; for (let k = 0; k < 12; k++) { const a = k / 12 * Math.PI * 2 + x.t / 2400, r = g.bw * 0.86, px = g.cx + Math.cos(a) * r, py = g.top + g.bh / 2 + Math.sin(a) * r * 0.9;   // a ring of sparks turning round it
           c.fillStyle = rgba(lt(x.acc, 0.4), 0.35 + 0.25 * Math.sin(x.t / 300 + k)); c.beginPath(); c.arc(px, py, 2.5, 0, 7); c.fill(); } c.restore(); }
         for (let i = 0; i < n; i++) { const f = n > 1 ? i / (n - 1) - 0.5 : 0, bx = g.cx + f * g.bw * 0.7, by0 = g.top + g.bh * (0.86 - Math.abs(f) * 0.3), len = by(S, 22, 30, 38) * (1 - Math.abs(f) * 0.4), sw = Math.sin(x.t / 380 + i * 1.6) * 6, d = f < 0 ? -1 : f > 0 ? 1 : (i % 2 ? 1 : -1);   // feelers trailing under it
           const q = [bx, by0, bx + f * 12 + sw, by0 + len * 0.55, bx + f * 18 + sw * 0.5, by0 + len]; limb(c, q, by(S, 6, 7, 8) - Math.abs(f) * 2, dk(col, 0.05), i % 2 ? x.L.armR : x.L.armL, x.t);
           c.strokeStyle = rgb(dk(col, 0.05)); c.lineWidth = by(S, 4, 4.5, 5); c.lineCap = 'round'; c.beginPath(); c.arc(q[4] + d * 3.5, q[5], 3.5, d > 0 ? Math.PI : 0, d > 0 ? Math.PI * 2.3 : -Math.PI * 1.3, d < 0); c.stroke();
-          if (S !== 'Bit') { c.fillStyle = rgb(lt(col, 0.4)); for (const k of [0.4, 0.7]) { const p = qpt(q, k); c.beginPath(); c.arc(p[0], p[1], 1.4, 0, 7); c.fill(); } } } },
-      inside(c, g, x) { const S = g.stage, hues = [x.acc, x.parts, lt(x.acc, 0.3), lt(x.parts, 0.3)];
-        c.strokeStyle = rgba(lt(x.body, 0.3), 0.35); c.lineWidth = 2; c.beginPath(); c.ellipse(g.cx, g.top + g.bh * 0.56, g.bw * 0.4, g.bh * 0.34, 0, 0.3, Math.PI - 0.3); c.stroke();   // a soft band round the big globe
-        for (const [px, py, r, k] of this.globes(g)) { const col = S === 'Mega' ? hues[(k + Math.floor(x.t / 900)) % hues.length] : hues[k % hues.length];   // each halo globe glows its own colour
-          const gr = c.createRadialGradient(px - r * 0.3, py - r * 0.3, 1, px, py, r); gr.addColorStop(0, rgba(lt(col, 0.55), 1)); gr.addColorStop(1, rgba(col, 0.95)); c.fillStyle = gr; c.beginPath(); c.arc(px, py, r, 0, 7); c.fill();
-          c.strokeStyle = rgba(dk(col, 0.3), 0.6); c.lineWidth = 1.5; c.beginPath(); c.arc(px, py, r, 0, 7); c.stroke();
-          if (S !== 'Bit' && !x.back) { const er = r * 0.42, shut = (x.t + k * 700) % 3000 < 150; c.fillStyle = '#fff'; c.beginPath(); c.ellipse(px, py, er, shut ? 0.8 : er, 0, 0, 7); c.fill();
-            if (!shut) { c.fillStyle = '#2b2430'; c.beginPath(); c.arc(px + Math.sin(x.t / 800 + k) * er * 0.3, py, er * 0.5, 0, 7); c.fill(); } } } },
+          if (S !== 'Bit') { c.fillStyle = rgb(lt(col, 0.4)); for (const k of [0.4, 0.7]) { const p = qpt(q, k); c.beginPath(); c.arc(p[0], p[1], 1.4, 0, 7); c.fill(); } } }
+        for (const [px, py, r, k, depth] of this.globes(g, x.t)) if (depth < 0) this.globe(c, g, x, px, py, r, k); },   // the globes passing behind it
+      inside(c, g, x) { c.strokeStyle = rgba(lt(x.body, 0.3), 0.35); c.lineWidth = 2; c.beginPath(); c.ellipse(g.cx, g.top + g.bh * 0.56, g.bw * 0.4, g.bh * 0.34, 0, 0.3, Math.PI - 0.3); c.stroke(); },   // a soft band round the big globe
+      front(c, g, x) { for (const [px, py, r, k, depth] of this.globes(g, x.t).sort((a, b) => a[4] - b[4])) if (depth >= 0) this.globe(c, g, x, px, py, r, k); },   // the globes passing in front
       hl: g => [g.left + g.bw * 0.14, g.top + g.bh * 0.62, g.left + g.bw * 0.16, g.top + g.bh * 0.4, g.left + g.bw * 0.3, g.top + g.bh * 0.24],
       head: g => [g.cx, g.top + 2, g.bw * 0.44],
       face: (c, g, x, look) => faceTwo(c, g, x, look, { ey: 0.5, ex: 0.18, my: 0.7, s: by(g.stage, 0.74, 0.8, 0.86) })
