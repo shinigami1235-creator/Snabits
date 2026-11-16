@@ -221,7 +221,7 @@ function atLoop(now){
 }
 const AT_TIER={light:{stop:45,trauma:0.14,sparks:6,flash:50,punch:0.035,ring:0.7},medium:{stop:80,trauma:0.32,sparks:10,flash:70,punch:0.07,ring:1,screen:0.18},
   heavy:{stop:120,trauma:0.6,sparks:18,flash:100,white:1,punch:0.11,ring:1.4,screen:0.35},special:{stop:190,trauma:0.95,sparks:28,flash:140,white:1,punch:0.16,ring:2,screen:0.8,slow:420}};
-const atMoveTier=(i,m)=>m.dmg>=70&&AT.special&&AT.special[i]===m.name?"special":m.dmg>=40||m.cost>=24?"heavy":"light";
+const atMoveTier=(i,m)=>(m.dmg>=70&&AT.special&&AT.special[i]===m.name)||(ANIM[AR_KIND[m.name]]||{}).sig?"special":m.dmg>=40||m.cost>=24?"heavy":"light";
 const AT_CHARGE={light:0,heavy:430,special:1250};
 /* what the engine reports becomes the game's own battle animation */
 function atEvent(e,now){

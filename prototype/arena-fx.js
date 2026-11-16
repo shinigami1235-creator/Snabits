@@ -709,7 +709,7 @@ function atStar4(c,x,y,r,col){ c.save(); c.translate(x,y); c.fillStyle=col; c.be
 function atImpact(t,C,shake,flash){ if(typeof AT==='undefined'||!AT||t<C||t>C+70) return; AT.trauma=Math.max(AT.trauma||0,shake); if(flash&&(!AT.flash||performance.now()-AT.flash.t0>400)) AT.flash={t0:performance.now(),a:flash}; }
 Object.assign(ANIM,{
   /* Bloop: it lights up and floats over the target, lets its own tentacles hang over it, and pulses light down them three times */
-  jellyzap:{C:900,D:2000,contact:true,
+  jellyzap:{C:900,D:2000,contact:true,sig:true,
     atk:t=>{ const up=t<420?eo(t/420):t<1500?1:1-eio((t-1500)/450), go=t<420?0:t<880?eio((t-420)/460):t<1500?1:1-eio((t-1500)/450);
       return {f:1.15*go,arc:-14*up-22*go+3*Math.sin(t/90),pose:t<420?"cast":t<1550?"hover":"idle",sx:1+0.06*Math.sin(t/110),sy:1-0.06*Math.sin(t/110),flash:t>=900&&t<1500&&Math.floor((t-900)/100)%2===0?3:0}; },
     def(t){ if(t<900||t>1550) return null; const z=Math.floor((t-900)/100)%2; return {pose:"hurt",off:[Math.sin(t/16)*3,0],flash:z?0:3}; },
@@ -723,7 +723,7 @@ Object.assign(ANIM,{
         for(let i=0;i<8;i++){ const a=i/8*Math.PI*2+p*0.4, r=R*(0.7+k*1.1); atStar4(c,tg.x+Math.cos(a)*r,tg.y+Math.sin(a)*r*0.75,R*0.13*(1-k*0.5),"rgba(255,244,170,1)"); }
         c.restore(); } }},
   /* Sox: it squashes down like a coiled spring, then its whole body flings forward and slaps the target, and it bounces back into shape */
-  sockit:{C:620,D:1300,contact:true,marks:true,
+  sockit:{C:620,D:1300,contact:true,marks:true,sig:true,
     atk:(t,o)=>{ const d=(o&&o.dir)||1;
       if(t<420){ const k=eo(t/420); return {f:-0.06*k,sx:1+0.18*k,sy:1-0.28*k,rot:-d*0.12*k,pose:"crouch"}; }
       if(t<620){ const k=ei((t-420)/200); return {f:0.62*k,sx:1.18-0.38*k,sy:0.72+0.6*k,rot:-d*0.12+d*0.62*k,pose:"punch"}; }
@@ -735,7 +735,7 @@ Object.assign(ANIM,{
       atImpact(t,620,0.65,0.3);
       if(t>=610){ const k=(t-610)/420; atPow(c,{x:tg.x-d*R*0.45,y:tg.y-R*0.15},k,R/26); for(let i=0;i<7;i++) atFluff(c,{x:tg.x-d*R*0.3,y:tg.y},Math.min(1,(t-610)/700),i*0.8,R/30); } }},
   /* Cuppy: a big piping bag swells as it squeezes, fires a thick rope of frosting, and buries the target's head in a swirl with a cherry on top */
-  frostingsplat:{C:920,D:2300,
+  frostingsplat:{C:920,D:2300,sig:true,
     atk:t=>({f:0,rot:t<560?-0.1*Math.sin(t/90):0,pose:t<560?"cast":t<1100?"push":"idle",sx:t<560?1+0.05*t/560:1,sy:t<560?1-0.05*t/560:1}),
     def(t){ if(t<920||t>2000) return null; const a=1-eo((t-920)/260); return {sx:1+0.16*a,sy:1-0.2*a-0.04,off:[0,4*a],pose:"hurt"}; },
     fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, cream=[255,250,238], pink=[255,140,185], d=atDir(x), out=t>1950?1-(t-1950)/350:1; if(out<=0) return; c.save(); c.globalAlpha=out;
@@ -759,7 +759,7 @@ Object.assign(ANIM,{
           c.save(); c.translate(sx,sy-(1-f)*R*1.2); c.rotate(rr()*3); c.fillStyle=["#ff3f7f","#3fa8ff","#ffc61a","#4cc94c","#9b5cff"][i%5]; c.fillRect(-R*0.09,-R*0.03,R*0.18,R*0.06); c.restore(); } }
       c.restore(); }},
   /* Suds: it blows one giant bubble that floats over and swallows the target, smaller bubbles burst inside it, then the big one pops */
-  foamburst:{C:820,D:2150,
+  foamburst:{C:820,D:2150,sig:true,
     atk:t=>({f:0,pose:t<560?"cast":t<1600?"push":"idle",sx:t<560?1+0.1*eo(t/560):1,sy:t<560?1-0.08*eo(t/560):1}),
     def(t){ if(t<820||t>1750) return null; return {pose:"hurt",lift:t<1550?10*Math.sin(Math.min(1,(t-820)/300)*Math.PI/2):10*(1-(t-1550)/200),off:[Math.sin(t/40)*3,0]}; },
     fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, d=atDir(x), mouth={x:s.x+d*s.r*0.9,y:s.y-s.r*0.1};
@@ -773,7 +773,7 @@ Object.assign(ANIM,{
       if(t>=1560&&t<2150){ const k=(t-1560)/590; atPop(c,pos.x,pos.y,Big,k); for(let i=0;i<16;i++){ const a=i/16*Math.PI*2, rr=Big*(1+k*0.9); c.fillStyle=`rgba(235,250,255,${1-k})`; c.beginPath(); c.arc(pos.x+Math.cos(a)*rr,pos.y+Math.sin(a)*rr*0.8+k*k*R*0.8,R*0.1*(1-k*0.6),0,7); c.fill(); }
         c.fillStyle=`rgba(255,255,255,${0.7*(1-k)})`; c.beginPath(); c.ellipse(tg.x,tg.foot-2,R*1.4*(0.6+k*0.6),R*0.22,0,0,7); c.fill(); } }},
   /* Scoop: cold mist gathers into a huge scoop over its head, it flicks the scoop across, the scoop lands on the target and freezes it solid */
-  brainfreeze:{C:950,D:2300,
+  brainfreeze:{C:950,D:2300,sig:true,
     atk:t=>({f:0,rot:t<600?-0.15*eo(t/600):t<760?-0.15+0.4*eo((t-600)/160):0.25*(1-eo((t-760)/400)),pose:t<600?"cast":t<1100?"push":"idle"}),
     def(t){ if(t<950||t>2050) return null; const a=1-eo((t-950)/240); return {sx:1+0.22*a,sy:1-0.28*a,off:[Math.sin(t/12)*(t>1150?2.5:0),0],pose:"hurt"}; },
     fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, col=x.col.map(v=>Math.min(255,v*0.35+180)), ICE=[200,235,255], over={x:s.x+atDir(x)*s.r*1.05,y:s.y-s.r*0.55}, head={x:tg.x,y:tg.top.y+R*0.05}, S=R/12*0.55;
