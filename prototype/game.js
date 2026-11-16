@@ -165,7 +165,15 @@ function fightMon(s){
   if(s.variant==="Lean") stats[5]=Math.round(stats[5]*1.05);
   return {...s.m,name:displayName(s),stats,flat,grid:s.grid||s.m.grid,pal:s.pal||s.m.pal,stage:s.stage,mark:s.mark,mark2:s.mark2,worn:s.worn};
 }
+/* family moves a Snabit already had by level before they moved to errantries keep working: it learned them already */
+const FAM_V=7;   // raise it when a new group of families moves level moves to errantries, so old saves keep them
+const FAM_OLD_LV={Chomp:{"Body Slam":14,"Jaw Lock":20,"Charge":30,"Gnash":40},Antik:{"Signal Jam":12,"Scan Beam":18,"Short Circuit":30,"Broadcast":40},Bipped:{"Uppercut":14,"Haymaker":30,"Flurry Punch":40},Booly:{"Haunt":14,"Will-o'-Wisp":20,"Poltergeist":30,"Spirit Lance":40},Fizz:{"Beaker Splash":20,"Boil Over":30,"Explosive Brew":40},Moko:{"Mind Prick":12,"Dread":18,"Eye Beam":30,"Hypnotize":40},Pinch:{"Shell Ram":20,"Vice Grip":30,"Crab Hammer":40},Plod:{"Trumpet":14,"Quake Stomp":30,"Mammoth Charge":40},Skit:{"Leg Flurry":30,"Cocoon":40},Squib:{"Tentacle Lash":14,"Undertow":30,"Riptide":40},Stilt:{"Axe Kick":30,"Stampede":40},Brolly:{"Thunder Clap":30,"Downpour":40},Burr:{"Drill Claw":30,"Cave In":40},Flit:{"Leech Bite":30,"Screech":40},Glop:{"Body Splash":30,"Acid Flood":40},Lern:{"Spark Shower":20,"Beacon":30,"Sky Lantern":40},Mitt:{"Body Blow":20,"Knockout":30,"Combo Rush":40},Puff:{"Toxic Cloud":20,"Fairy Ring":30,"Bloom Burst":40},Spine:{"Saguaro Slam":40},Teep:{"Scald":20,"Whistle":30,"Boiling Point":40},Tock:{"Pendulum":20,"Time Stop":30,"Midnight":40},Clank:{"Rocket Fist":30,"Steam Blast":40},Cobble:{"Crystal Shard":30,"Geode Crash":40},Crease:{"Wing Slice":30,"Phoenix Fold":40},Dango:{"Mochi Smack":20,"Sakura Cut":30,"Skewer Thrust":40},Inky:{"Pen Stab":30,"Ink Flood":40},Nimbo:{"Thunderclap":30,"Cloudburst":40},Oaklet:{"Leaf Storm":20,"Branch Whip":30,"Old Growth":40},Roly:{"Pill Roll":20,"Wrecking Ball":40},Snooze:{"Yawn":3,"Big Snore":40},Trundle:{"House Slam":40},Aero:{"Dive Bomb":30,"Jet Stream":40},Bloop:{"Tentacle Flurry":20,"Bloom Pulse":40},Ditty:{"Crescendo":30,"Grand Finale":40},Helm:{"Lead Boots":20,"Sonar Ping":30,"Depth Charge":40},Magna:{"Scrap Storm":20,"Overcharge":30,"Field Crush":40},Nesta:{"Lid Clap":20,"Sister Parade":30,"Russian Roll":40},Sizzle:{"Kettle Steam":30,"Full Breakfast":40},Sox:{"Thread Whip":20,"Woolly Roar":40},Swirl:{"Blizzard Spin":20,"Whiteout":40},Twiglet:{"Trunk Twist":30,"Blossom Burst":40},Cuppy:{"Cherry Bomb":20,"Birthday Blaze":30,"Layer Cake":40},Gumball:{"Jawbreaker":30,"Candy Crash":40},Jingle:{"Gold Rush":20,"Treasure Trap":30,"Jackpot":40},Pina:{"Spiky Roll":20,"Tiki Torch":30,"Luau Blast":40},Presto:{"Saw in Half":30,"Grand Illusion":40},Scoop:{"Sundae Slam":30,"Gelato Glacier":40},Shutter:{"Zoom Lens":30,"Grand Exposure":40},Suds:{"Suds Slam":30,"Bath Flood":40},Tome:{"Spell Rune":30,"Grand Grimoire":40},Vroom:{"Brush Spin":20,"Full Power":30,"Deep Clean":40},Eagle:{"Feather Volley":30,"Sky Strike":40},Kitsune:{"Spirit Lantern":20,"Nine Tails":30,"Kitsunebi":40},Kraken:{"Whirlpool":20,"Eight Arms":30,"Deep Vortex":40},Lava:{"Magma Wave":30,"Volcano Blast":40},Naga:{"Hood Flare":14,"Acid Spit":30,"Serpent King":40},Phoenix:{"Fire Ring":20,"Ash Storm":30,"Supernova":40},Pogo:{"Jack Pop":20,"Spring Kick":30,"Mega Boing":40},Vampire:{"Hypnotic Gaze":14,"Blood Moon":30,"Crimson Feast":40},Yeti:{"Glacier Slam":30,"Blizzard Roar":40},Yoyo:{"Top Grind":30,"Tornado Spin":40}};
+function famKeep(s){ if(!s||!s.m||s.famV>=FAM_V) return; s.famV=FAM_V; const old=FAM_OLD_LV[s.m.family]; if(!old) return;
+  s.famMoves=s.famMoves||[]; for(const [n,lv] of Object.entries(old)) if((s.level||1)>=lv&&!s.famMoves.includes(n)) s.famMoves.push(n); }
+/* whether its family move is ready to use: by level, or learned on an errantry or in fights */
+function hasFamMove(s,n){ if((s.famMoves||[]).includes(n)) return true; const r=(FAM_MOVES[s.m.family]||[]).find(q=>q[0]===n); return !!r&&!(r[10]&&r[10].err)&&r[1]<=(s.level||1); }
 function knownSkills(s){
+  famKeep(s);
   const k=new Set(s.skillsKnown||[]);
   for(const n of s.m.pool) if(SKILLS[n].lv<=s.level) k.add(n);
   for(const n of s.learned||[]) k.add(n);
@@ -239,7 +247,7 @@ function styleText(s){
   if(tot>=12){ const top=Object.entries(A).sort((a,b)=>b[1]-a[1]), lines=[], pct=n=>Math.round(n/tot*100);
     lines.push(`Its favourite move is ${top[0][0]}, ${pct(top[0][1])}% of the moves you've picked.`);
     if(top[1]&&top[1][1]/tot>=0.15) lines.push(`It leans on ${top[1][0]} too.`);
-    try{ const mv=typeof arMoves==="function"?arMoves(arFamily(s.m.family),s.level,typeof knownSkills==="function"?knownSkills(s):(s.skillsKnown||[]),s.m.el1):[], rg={};
+    try{ const mv=typeof arMoves==="function"?arMoves(arFamily(s.m.family),s.level,typeof knownSkills==="function"?knownSkills(s):(s.skillsKnown||[]),s.m.el1,s.famMoves||[]):[], rg={};
       for(const [n,c] of top){ const m=mv.find(x=>x.name===n||x.base===n); if(m&&m.dmg&&m.range!=="Any") rg[m.range]=(rg[m.range]||0)+c; }
       const best=Object.entries(rg).sort((a,b)=>b[1]-a[1])[0], hit=Object.values(rg).reduce((a,b)=>a+b,0);
       if(best&&best[1]/hit>=0.5) lines.push(`It likes to fight ${{Close:"up close",Near:"at arm's length",Mid:"from mid range",Far:"from far off"}[best[0]]}.`); }catch(e){}
@@ -286,7 +294,7 @@ function addItem(name,n=1){ PLAYER.bag[name]=(PLAYER.bag[name]||0)+n; }
 
 /* A frozen copy of a monster for fights that must replay exactly. */
 function fightSnapshot(s){ return {worn:{...(s.worn||{})},held:s.held,m:s.m,variant:s.variant,pal:s.pal,mark2:s.mark2,uses:{...(s.uses||{})},tp:s.tp.slice(),stage:s.stage,mark:s.mark,grid:s.grid,level:s.level,equip:s.equip.slice(),habits:s.habits.slice(),lowLoyalty:RS===s&&hearts()<2,
-  arPresets:s.arPresets,arPreset:s.arPreset,arHabit:{...(s.arHabit||{})}}; }   // and its arena move preset and habits, so mission and trip fights go the way cup fights on Auto do
+  arPresets:s.arPresets,arPreset:s.arPreset,arHabit:{...(s.arHabit||{})},famMoves:(s.famMoves||[]).slice()}; }   // and its arena move preset and habits, so mission and trip fights go the way cup fights on Auto do
 
 /* Skill use counts, mastery, the Skill book and learning a skill by being hit with it. */
 const MASTERY=60, CHAIN_USES=30;
@@ -314,6 +322,11 @@ function afterFight(s,fighter,learn){
   for(const [n,c] of Object.entries(fighter.used||{})) s.uses[n]=(s.uses[n]||0)+c;
   for(const n of Object.keys(fighter.seen||{})) bookMark(s,n,"seen");
   for(const n of Object.keys(fighter.hitBy||{})) bookMark(s,n,"hit");
+  // a move used enough in fights can lead to the next one in its line before the level it would come at
+  if(typeof FAM_MOVES!=="undefined"&&s.m) for(const r of FAM_MOVES[s.m.family]||[]){ const m=arMove(r);
+    if(!m.from||m.err||hasFamMove(s,m.name)) continue; const used=Object.entries(s.uses).reduce((a,[n,c])=>a+(n===m.from||n.endsWith(" "+m.from)?c:0),0);   // a Flame Bite counts as Bite
+    if(used<CHAIN_USES||Math.random()>=0.25) continue;
+    s.famMoves=(s.famMoves||[]).concat(m.name); lines.push(`It learned ${m.name}.`); break; }
   if(learn){
     const known=knownSkills(s), chance=(RS===s&&hearts()>=4)?0.2:0.1;
     for(const n of Object.keys(fighter.hitBy||{})){

@@ -207,8 +207,8 @@ ANIM.gust = { C: 400, D: 820,
   atk: t => ({ f: 0, pose: t < 160 ? 'cast' : t < 600 ? 'push' : 'idle' }),
   def(t) { if (t < 400) return null; const k = (t - 400) / 420; return { f: -0.18 * (k < 0.3 ? eo(k / 0.3) : 1 - eio((k - 0.3) / 0.7)), pose: k < 0.5 ? 'hit' : 'idle' }; },
   fx(c, t, x) { const a = x.self, b = x.target, ang = Math.atan2(b.y - a.y, b.x - a.x);
-    for (let i = 0; i < 4; i++) { const k = (t - 120 - i * 60) / 300; if (k < 0 || k > 1.2) continue; const p = lerpP(a, b, Math.min(1, k), 6, (i - 1.5) * 10);
-      c.save(); c.translate(p.x, p.y); c.rotate(ang); c.globalAlpha = Math.max(0, 1 - Math.max(0, k - 0.9) * 4); c.strokeStyle = 'rgba(255,255,255,.95)'; c.lineCap = 'round';
+    for (let i = 0; i < 4; i++) { const k = (t - 120 - i * 60) / 300; if (k < 0 || k > 1.2) continue; const p = lerpP(a, b, Math.min(1, k), 6, (i - 1.5) * 22);
+      c.save(); c.translate(p.x, p.y); c.rotate(ang); c.scale(2.2, 2.2);   // Gid: bigger air waves c.globalAlpha = Math.max(0, 1 - Math.max(0, k - 0.9) * 4); c.strokeStyle = 'rgba(255,255,255,.95)'; c.lineCap = 'round';
       c.lineWidth = 3; c.beginPath(); c.arc(-6, 0, 18, -1.1, 1.1); c.stroke(); c.lineWidth = 1.6; c.beginPath(); c.arc(-14, 0, 14, -1, 1); c.stroke();
       c.lineWidth = 1.4; for (const dy of [-8, 0, 8]) { c.beginPath(); c.moveTo(-26, dy); c.lineTo(-46, dy); c.stroke(); } c.restore(); }
     if (t > 380 && t < 760) for (let i = 0; i < 6; i++) { const k = (t - 380) / 380; ePart(c, 'Wild', b.x - 20 + k * 60 + i * 6, b.y - 30 + i * 10 + Math.sin(t / 50 + i) * 6, 1.2, t, i); } } };
