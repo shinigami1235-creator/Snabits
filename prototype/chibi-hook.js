@@ -499,7 +499,13 @@ const KSND = {
   heal: (d, t) => [1319, 1568, 1976].forEach((f, k) => sTone(d, t + k * 0.06, 'sine', f, f * 1.01, 0.3, 0.03)),   // a soft sparkle before the heal lands
   mistcast: (d, t) => { dNoise(d, t, 0.6, 0.1, 'highpass', 3500, 0.7); sTone(d, t, 'sine', 620, 420, 0.5, 0.03); },   // a hiss of mist
   debuff: (d, t) => { sTone(d, t, 'triangle', 900, 300, 0.35, 0.04); dNoise(d, t + 0.05, 0.25, 0.06, 'lowpass', 900); },   // a falling sweep toward the target
-  avalanche: (d, t) => { dNoise(d, t, 0.5, 0.1, 'bandpass', 700, 0.7); dKick(d, t + 0.55, 0.9); dNoise(d, t + 0.55, 0.7, 0.3, 'lowpass', 400); dNoise(d, t + 0.6, 0.4, 0.1, 'highpass', 3000); }
+  avalanche: (d, t) => { dNoise(d, t, 0.5, 0.1, 'bandpass', 700, 0.7); dKick(d, t + 0.55, 0.9); dNoise(d, t + 0.55, 0.7, 0.3, 'lowpass', 400); dNoise(d, t + 0.6, 0.4, 0.1, 'highpass', 3000); },
+  /* batch 4 signatures, timed to their animations in arena-fx.js */
+  jellyzap: (d, t) => { sTone(d, t, 'sine', 300, 900, 0.3, 0.04); sTone(d, t + 0.3, 'sine', 500, 1100, 0.25, 0.03); for (let i = 0; i < 3; i++) { sTone(d, t + 0.62 + i * 0.17, 'square', 2400, 600, 0.09, 0.025); dNoise(d, t + 0.62 + i * 0.17, 0.12, 0.08, 'highpass', 4000, 1); } },   // a wobbly bloop, then three zaps
+  sockit: (d, t) => { sTone(d, t + 0.2, 'triangle', 300, 900, 0.22, 0.04); dKick(d, t + 0.44, 0.7); dNoise(d, t + 0.44, 0.18, 0.14, 'lowpass', 1200); dNoise(d, t + 0.5, 0.4, 0.04, 'bandpass', 3000, 0.8); },   // a spring boing out, a thump, lint puffing
+  frostingsplat: (d, t) => { dNoise(d, t + 0.28, 0.36, 0.08, 'bandpass', 600, 2.5); sTone(d, t + 0.28, 'sine', 220, 180, 0.36, 0.03); dNoise(d, t + 0.64, 0.2, 0.16, 'lowpass', 500); [0.7, 0.76, 0.82, 0.88].forEach(x => sTone(d, t + x, 'triangle', 2600, 2400, 0.04, 0.025)); },   // a long squeeze, a soft splat, sprinkles ticking down
+  foamburst: (d, t) => { for (let w = 0; w < 3; w++) { sTone(d, t + 0.18 + w * 0.22, 'sine', 500, 900, 0.12, 0.03); for (let i = 0; i < 4; i++) sTone(d, t + 0.95 + w * 0.34 + i * 0.03, 'sine', 900 + i * 220, 1800 + i * 200, 0.04, 0.035); } },   // bubbles blown out, then each wave popping
+  brainfreeze: (d, t) => { sTone(d, t + 0.32, 'sine', 600, 1500, 0.3, 0.035); dNoise(d, t + 0.64, 0.14, 0.18, 'lowpass', 700); [2637, 3136, 3520, 2093].forEach((f, k) => sTone(d, t + 0.7 + k * 0.06, 'sine', f, f, 0.3, 0.025)); sTone(d, t + 0.9, 'triangle', 1100, 1050, 0.6, 0.015); }   // whistle up, a splat, an icy tinkle and a shiver
 };
 const SWING = new Set(['tackle', 'bite', 'punch', 'claw', 'kick', 'highkick', 'axekick', 'sweep', 'hammer', 'lash', 'shadowclaw', 'shadowstrike', 'talondive', 'nightbite', 'pinch', 'vicegrip', 'jawlock', 'onetwo', 'spear', 'fly']);   // moves that swing through the air get a recorded whoosh too
 function kindSfx(kind, delay = 0) {
