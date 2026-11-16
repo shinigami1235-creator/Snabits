@@ -1,6 +1,6 @@
 # The horror series: wiring plan
 
-This plan covers how the ten horror Snabits turn up in the game and how each one joins a ranch. The drawings are done and on the batch-horror branch (`docs/art/horror-group1.png` to `horror-group3.png`). The other chat is doing their moves and animations, so this plan leaves those out. Everything here is a proposal until Gid OKs it, and the questions at the end are the calls he still needs to make.
+This plan covers how the ten horror Snabits turn up in the game and how each one joins a ranch. The drawings are done and on the batch-horror branch (`docs/art/horror-group1.png` to `horror-group3.png`). The other chat is doing their moves and animations, so this plan leaves those out. Gid OKed the plan and made the open calls on 16 Nov 2026, listed under his decisions at the end.
 
 ## The ten
 
@@ -57,12 +57,13 @@ Every horror has a myth told in three parts, kept in a new Myths tab in the Jour
 
 - **The lair fight:** the horror at Mega against the team, tag-team style as on any deep map, but nobody is let back in at camp. A lair can be tried once a season.
 - **Losing:** the team goes home with everything it found, and all three come back with extra stress.
-- **Winning:** the horror goes back through the Rift, and a little one stays behind and follows the ranch home at Bit. It's the only way to get one, so each save gets one of each unless Gid says fusion can pass a horror family on (see the questions).
+- **Winning:** the horror goes back through the Rift, and a little one stays behind and follows the ranch home at Bit (Gid). Its lair stays open for a rematch each season, though only the first win sends a little one home.
+- **Fusion:** a child fused from a horror can come out as the same horror family (Gid), so a ranch can raise more than one.
 - **The Secrets tab:** a new Horrors row after the specials, with ten hints that show ??? until the myth's first part is found.
 
 ## What this chat builds
 
-- `FAMILY` entries in `monster.js` with stats and abilities. Ability ideas are below and need Gid's OK.
+- `FAMILY` entries in `monster.js` with stats and the abilities below.
 - The Deep Rift in `deep.js`, with its three rings and ten lairs, plus tears on the deep maps of the eight regions.
 - The Myths tab in the Journal, and the town and ranch hooks for each myth's second part (`events.js`, `ranch.js`, `lab.js`, `tower.js`, `hall.js`, `dex.js`).
 - Cries, sizes, evolution totals and Secrets tiles, the same as for the specials.
@@ -71,7 +72,7 @@ Every horror has a myth told in three parts, kept in a new Myths tab in the Jour
 
 The other chat builds their moves, signature skills, arena animations and entrances. Balance comes last, once their moves are in, since `sim2.py` needs them.
 
-## Ability ideas
+## Abilities (OKed by Gid)
 
 | Family | Ability | What it does |
 |---|---|---|
@@ -86,10 +87,10 @@ The other chat builds their moves, signature skills, arena animations and entran
 | Yog | All Doors | Its swap moves cost nothing and it can't be Rooted |
 | Cthulhu | Dreamer | Its hits have a 15% chance to Dread, and Dread lasts twice as long on its foes |
 
-## Questions for Gid
+## Gid's decisions (16 Nov 2026)
 
-1. Does a horror join at Bit after its lair, or at Mega?
-2. One of each per save, or can fusion pass a horror family on to a child?
-3. Is the Deep Rift's opening right: Outer Ring at A, Middle Ring at S, the Heart after the Legend Cup?
-4. Can the Shoggoth myth say the ancient people made it, which answers part of one of the Holes?
-5. Are the ability ideas OK to build?
+1. A horror joins at Bit after its lair.
+2. Fusion can pass a horror family on to a child.
+3. The rings open as planned: the Outer Ring at A, the Middle Ring at S and the Heart after the Legend Cup.
+4. The Shoggoth myth can say the ancient people made it.
+5. The ten abilities are OK to build.
