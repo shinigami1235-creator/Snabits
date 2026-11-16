@@ -117,4 +117,4 @@ The other chat builds their moves, signature skills, arena animations and entran
 - Cries, sizes, evolution totals, arena colours and ability effects for all ten.
 - Tests: `tools/tests/audit/horrors.py` (hatching, abilities, stones, the hour) and `tools/tests/audit/rift.py` (rings, tears, a walk to the Ghoul's lair, the second parts, leaving and the Secrets row).
 - Every myth line, every Secrets hint and every leaving line waits on Gid's OK.
-- Waiting on the other chat: moves, signature skills, arena animations and entrances. Balance comes after.
+- Moves, two signatures each, arena animations and balance are built (17 Nov 2026). Each horror has 16 moves, and the sim has all ten between 47% and 54%. Entrances are still open.
