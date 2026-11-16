@@ -293,7 +293,7 @@ Object.assign(ANIM,{
       if(t>650&&t<900){ const k=(t-650)/250, fx2=tg.x-d*R*0.15, fy=tg.top.y+R*0.45, gap=R*0.55*(1-ei(k)); c.fillStyle="#fffaf4"; c.strokeStyle="rgba(120,40,60,.8)"; c.lineWidth=2;
         for(const sd of [-1,1]){ c.beginPath(); c.moveTo(fx2+sd*R*0.3-R*0.1,fy-gap); c.lineTo(fx2+sd*R*0.3+R*0.1,fy-gap); c.lineTo(fx2+sd*R*0.3,fy-gap+R*0.45); c.closePath(); c.fill(); c.stroke(); } }
       atImpact(t,780,0.6,0.2);
-      if(t>=780){ const k=(t-780)/700; c.save(); c.globalCompositeOperation="lighter"; atWisp(c,tg.x-d*R*0.15,tg.top.y+R*0.8,R*0.35*(1-k),[255,40,70]); c.restore();
+      if(t>=780){ const k=(t-780)/700; c.save(); c.globalCompositeOperation="lighter"; if(k<1) atWisp(c,tg.x-d*R*0.15,tg.top.y+R*0.8,R*0.35*(1-k)+0.5,[255,40,70]); c.restore();
         for(let i=0;i<8;i++){ const q=Math.min(1,Math.max(0,(t-860-i*55)/420)); if(q<=0||q>=1) continue; const p=lerpP({x:tg.x,y:tg.y-R*0.2},{x:s.x+d*s.r*0.2,y:s.y-s.r*0.3},eio(q),R*(0.6+0.5*atH(i)),(atH(i*7)-0.5)*R);
           c.save(); c.globalCompositeOperation="lighter"; atWisp(c,p.x,p.y,R*0.09,[255,60,90]); c.restore(); }
         for(let i=0;i<6;i++){ const a=-Math.PI*(0.15+0.7*atH(i*3)), sp=R*(0.3+0.9*eo(k)); c.fillStyle=`rgba(200,20,50,${1-k})`; c.beginPath(); c.arc(tg.x-d*R*0.15+Math.cos(a)*sp,tg.top.y+R*0.5+Math.sin(a)*sp+k*k*R,R*0.06,0,7); c.fill(); } } }},

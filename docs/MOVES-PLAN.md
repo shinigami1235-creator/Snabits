@@ -29,7 +29,7 @@ The Skills tab shows each move the MR2 way: its name, Strike or Cast, its catego
 
 ## Animations
 
-Regular moves use the stock animation that fits them best. Every signature plays as a special: the long wind-up with the close-up, in one of 17 wind-up styles picked from what the family is (`AT_WIND` in arena-fx.js), then its own attack. The 15 batch 4 signatures already have bespoke attacks, and the other 71 get theirs in groups of about 10, at the quality of the first batch's Talon Dive and Night Bite.
+Regular moves use the stock animation that fits them best. Every signature plays as a special: the long wind-up with the close-up, in one of 17 wind-up styles picked from what the family is (`AT_WIND` in arena-fx.js), then its own attack. Every signature also has its own attack, sound and reaction on the target. The 15 batch 4 attacks are in arena-fx.js, and the other 71 (16 Nov 2026) are in `arena-sigs.js` as `sg_` kinds, each with its sound in `KSND`. A signature always plays its own animation, Bunker Down, Curl Up and Phase Shift included. These signatures gained a status where the move called for one: Crunch, Claw Swipe and Feral Slash Crack; Static Screen, Attract and Thunder Wing Shock; Ink Jet and Prism Beam Blind; High Kick, Trunk Slam, Big Swing, Belly Drum and Bridge Smash Daze; Rain Shot Soak; Toast Pop, Garuda Dive, Wyrm Breath, Holy Flame and Flame Tail Burn; Avalanche Freeze; Many Heads Poison; Gate Fang Dread; Lamp Blast Curse.
 
 | Wind-up | What it shows | Families |
 |---|---|---|
@@ -52,6 +52,36 @@ Regular moves use the stock animation that fits them best. Every signature plays
 | gold | gold light, orbiting coins, glints | Jingle, Djinn, Griffin |
 
 The body moves with its wind-up: it floats up for storm, vortex, halo, sigil, melody, moon and gold, digs in and shakes for quake and fury, flickers for shadow and rattles for gears.
+
+## Chomp, written out in full
+
+Chomp follows MR2's Gaboo move for move: 17 moves, the same mix of categories and ranges, with Gaboo's chops and kicks turned into bites, since Chomp is mostly mouth. Its 8 moves today stay in the set. Rows use the arena's numbers: damage, accuracy, sharpness, withering, push and focus cost.
+
+| Move | From Gaboo | Category | Range | Damage / Acc | Cost | How it's learned |
+|---|---|---|---|---|---|---|
+| Bite | Slap | Basic | Close | 24 / 85 | 10 | level 1 |
+| Nibble | Chop | Basic | Near | 22 / 88 | 11 | level 2 |
+| Lunge | Long Punch | Hit | Near | 35 / 75 | 16 | level 3 |
+| Crunch | (signature) | Special | Close | 64 / 70, Crack | 30 | level 5 |
+| Rolling Bite | Rolling Chop | Basic | Near | 34 / 80 | 19 | level 6, then Bite leads to it |
+| Leapfrog Bite | | Basic | Close | 20 / 70, swaps sides | 14 | level 8 |
+| Tooth Shot | Long Punch | Hit | Far | 26 / 92 | 18 | level 10 |
+| Chatter | Shock Wave | Hit | Near | 24 / 94, push | 17 | level 12 |
+| Body Slam | Back Blow | Heavy | Close | 46 / 70 | 26 | errantry, Granite Steps |
+| Jaw Lock | | Withering | Close | 25 / 80, holds | 20 | errantry, Hollow Moor |
+| Big Gulp | Kiss | Withering | Mid | 18 / 82, drains focus | 16 | errantry, Dream Garden, needs Mind |
+| Drool | Spit | Withering | Far | 26 / 72, Poison | 24 | errantry, Nightshade Marsh, needs Mind |
+| Belly Flop | Diving Press | Sharp | Close | 34 / 80, high crit | 18 | errantry, Saffron Dojo, after Body Slam |
+| Jaw Drop | Jumping Chop | Sharp | Far | 40 / 72, high crit | 28 | errantry, Granite Steps |
+| Charge | Electric Blow | Heavy | Mid | 60 / 65 | 34 | errantry, Saffron Dojo, needs Power |
+| Gnash | Ninja Kick | Special | Close | 15 x4 / 80 | 38 | errantry, Hollow Moor |
+| Chomp Combo | Chop Combo | Special | Close | 70 / 86 | 40 | errantry, Saffron Dojo, top of the Bite chain, needs Power |
+
+Chains: Bite, then Rolling Bite, then Chomp Combo. Body Slam, then Belly Flop. Lunge, then Charge.
+
+Fusion marks: Jaw Lock, Tooth Shot and Belly Flop. A fused Snabit with Chomp as its other parent can learn these on errantries.
+
+Body Slam, Jaw Lock, Charge and Gnash are learned by level today and move to errantries under this plan.
 
 ## Families and their MR2 breeds
 
