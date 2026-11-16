@@ -1009,3 +1009,27 @@ ANIM.lavaflood = { C: 560, D: 1060,
     c.restore(); for (let i = 0; i < 8; i++) { c.globalAlpha = A; ePart(c, 'Blaze', p.x + dir * (20 + i * 4), base - h * 0.9 - Math.abs(Math.sin(t / 80 + i)) * 20, 1.5, t, i); } c.globalAlpha = 1; } };
 Object.assign(AR_KIND,{"Bubble Over":"lavaflood"});
 if(typeof KSND!=="undefined"){ KSND.capewrap=(d,t)=>{ dNoise(d,t+0.2,0.3,0.12,'bandpass',700,0.6); dNoise(d,t+0.46,0.12,0.18,'lowpass',500); sTone(d,t+0.5,'sine',180,140,0.5,0.05); }; if(KSND.wave) KSND.lavaflood=(d,t)=>{ KSND.wave(d,t); dNoise(d,t+0.4,0.5,0.1,'bandpass',300,0.6); }; }
+/* Gid (17 Nov 2026), from his reference picture: a vampire cape, black outside and red inside, with a tall stand-up collar,
+   a gold chain across it and a bat-wing hem. It spreads wide behind Vampire, then both sides swing forward and close round the target like a hug */
+ANIM.capewrap={C:720,D:1560,contact:false,marks:true,
+  atk:t=>({f:t<300?0.42*eio(t/300):t<1250?0.42:0.42*(1-eio((t-1250)/310)),pose:t<300?"walk":t<720?"cast":t<1250?"push":"idle",arc:t>300&&t<720?-6*Math.sin((t-300)/420*Math.PI):0}),
+  def(t){ if(t<720||t>1300) return null; const sq=t<1200?0.12*Math.min(1,(t-720)/160):0; return {sx:1-sq,sy:1+sq*0.3,off:[Math.sin(t/16)*1.2,0],pose:"hurt"}; },
+  fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, d=atDir(x); if(t<140||t>1520) return;
+    const P={x:s.x+d*s.r*0.1,y:s.y-s.r*0.6}, L=Math.abs(tg.x-P.x)+R*1.25, r0=s.r*0.75;
+    const open=t<520?eo((t-140)/380):1, close=t<520?0:t<720?eio((t-520)/200):t<1180?1:t<1340?1-eio((t-1180)/160):0, gone=t<1340?1:1-eo((t-1340)/180);
+    const lerp=(a,b,k)=>a+(b-a)*k, deg=Math.PI/180, T={x:tg.x,y:tg.y-R*0.25};
+    // open: two wings spread behind it round its shoulders; closed: each side wraps half way round the target and they meet on its far side
+    const panels=[[[-175,-100],[-178,-6]],[[100,175],[178,6]]], black=[26,18,30], red=[176,24,40];
+    const C0={x:lerp(P.x,T.x,close),y:lerp(P.y,T.y,close)}, rad=lerp(L*0.55,R*1.28,close)*Math.max(0.05,open*gone), sq=t>720&&t<1180?1-0.05*Math.abs(Math.sin((t-720)/90)):1;
+    for(const [opn,cls] of panels){ const a0=lerp(opn[0],cls[0],close)*deg, a1=lerp(opn[1],cls[1],close)*deg, side=close>0.5?C0:P;
+      const ang=a=>d>0?(close>0.5?a:a):Math.PI-a, pt=(a,r)=>({x:C0.x+Math.cos(ang(a))*r,y:C0.y+Math.sin(ang(a))*r*0.92});
+      const shape=()=>{ c.beginPath(); c.moveTo(P.x,P.y); const n=18; for(let i=0;i<=n;i++){ const a=a0+(a1-a0)*i/n, q=pt(a,rad*sq*(i%2?1.07:0.95)); c.lineTo(q.x,q.y); } c.closePath(); };
+      shape(); c.fillStyle=atRgba(red.map((v,j)=>v+(black[j]-v)*close),0.97); c.fill();
+      c.save(); c.clip(); c.strokeStyle=atRgba(close>0.5?red:black,0.95); c.lineWidth=Math.max(3,R*0.12); shape(); c.stroke(); c.restore();   // the lining showing at the edge
+      c.strokeStyle="rgba(0,0,0,.14)"; c.lineWidth=1.2; for(let i=1;i<4;i++){ const a=a0+(a1-a0)*i/4, q=pt(a,rad*0.9); c.beginPath(); c.moveTo(lerp(P.x,C0.x,0.6),lerp(P.y,C0.y,0.6)); c.lineTo(q.x,q.y); c.stroke(); } }   // soft folds
+    if(gone>0){ c.save(); c.globalAlpha*=gone*open; for(const sd of [-1,1]){ c.fillStyle=atRgba(black,1); c.beginPath(); c.moveTo(P.x+sd*s.r*0.08,P.y-s.r*0.1); c.lineTo(P.x+sd*s.r*0.62,P.y-s.r*0.95); c.lineTo(P.x+sd*s.r*0.5,P.y+s.r*0.1); c.closePath(); c.fill();
+        c.fillStyle=atRgba(red,1); c.beginPath(); c.moveTo(P.x+sd*s.r*0.14,P.y-s.r*0.05); c.lineTo(P.x+sd*s.r*0.52,P.y-s.r*0.78); c.lineTo(P.x+sd*s.r*0.42,P.y+s.r*0.06); c.closePath(); c.fill(); }   // the tall stand-up collar, red inside
+      c.strokeStyle="#e9b23a"; c.lineWidth=2; c.beginPath(); c.moveTo(P.x-s.r*0.32,P.y); c.quadraticCurveTo(P.x,P.y+s.r*0.18,P.x+s.r*0.32,P.y); c.stroke(); for(const sd of [-1,1]){ c.fillStyle="#e9b23a"; c.beginPath(); c.arc(P.x+sd*s.r*0.32,P.y,s.r*0.08,0,7); c.fill(); } c.restore(); }   // the gold chain clasp
+    if(t>=720&&t<1180) for(let i=0;i<3;i++){ const ph=((t/320)+i/3)%1; c.strokeStyle=`rgba(255,200,215,${0.5*(1-ph)})`; c.lineWidth=2; c.beginPath(); c.ellipse(tg.x,tg.y-R*0.25,R*(1.15+0.35*ph),R*(1+0.3*ph),0,0,7); c.stroke(); }
+    atImpact(t,720,0.35,0.05); }};
+if(typeof KSND!=="undefined") KSND.capewrap=(d,t)=>{ dNoise(d,t+0.15,0.35,0.1,'bandpass',600,0.6); dNoise(d,t+0.55,0.18,0.16,'bandpass',500,0.8); dNoise(d,t+0.72,0.14,0.2,'lowpass',400); sTone(d,t+0.74,'sine',160,110,0.5,0.05); };
