@@ -668,7 +668,7 @@ function mvBoomer(draw){ const C=520;
 MV.saw=(c,x,y,R,rot)=>{ const z=R*0.32; c.save(); c.translate(x,y); c.rotate(rot); c.fillStyle="#c9ced6"; c.strokeStyle="#6b7280"; c.lineWidth=1.5; c.beginPath();
   for(let i=0;i<24;i++){ const a=i/24*Math.PI*2, rr=i%2?z:z*1.22; c.lineTo(Math.cos(a)*rr,Math.sin(a)*rr); } c.closePath(); c.fill(); c.stroke();
   c.fillStyle="#8b929c"; c.beginPath(); c.arc(0,0,z*0.3,0,7); c.fill(); c.fillStyle="rgba(255,255,255,.7)"; c.beginPath(); c.ellipse(-z*0.35,-z*0.4,z*0.3,z*0.12,-0.6,0,7); c.fill(); c.restore(); };
-MV.boomer=(c,x,y,R,rot,X)=>{ const z=R*1.05, col=X.parts||X.body||[230,230,240]; c.save(); c.translate(x,y); c.rotate(rot); c.fillStyle=atRgba(col.map(v=>Math.min(255,v+30)),1); c.strokeStyle=atRgba(col.map(v=>v*0.45),1); c.lineWidth=2.4;
+MV.boomer=(c,x,y,R,rot,X)=>{ const z=R*1.05, col=X.body||[230,230,240]; c.save(); c.translate(x,y); c.rotate(rot); c.fillStyle=atRgba(col.map(v=>Math.min(255,v+30)),1); c.strokeStyle=atRgba(col.map(v=>v*0.45),1); c.lineWidth=2.4;
   c.beginPath(); c.moveTo(-z,-z*0.5); c.lineTo(0,z*0.35); c.lineTo(z,-z*0.5); c.lineTo(z*0.7,-z*0.62); c.lineTo(0,-z*0.05); c.lineTo(-z*0.7,-z*0.62); c.closePath(); c.fill(); c.stroke();
   c.strokeStyle=atRgba(col.map(v=>v*0.7),0.8); c.beginPath(); c.moveTo(0,z*0.35); c.lineTo(0,-z*0.05); c.stroke(); c.restore(); };
 /* a ball rolling in along the floor: tuck, roll, bump (Roll Bump, Big Roll, Rumble Roll), and the long fast roll with sparks (Edge Roll) */
@@ -798,3 +798,28 @@ ANIM.mosssmear={C:420,D:1300,contact:true,marks:true,
       if(k<1){ const p=P(k,j); c.fillStyle="rgba(150,205,110,.9)"; c.beginPath(); c.arc(p.x,p.y,R*0.12,0,7); c.fill(); } }
     if(t>820) for(let i=0;i<6;i++){ const g=Math.min(1,(t-820-i*40)/200); if(g<=0) continue; const p=P(atH(i*7),i%2); c.fillStyle="rgba(120,185,80,.95)"; c.beginPath(); c.arc(p.x,p.y-R*0.1,R*0.09*g,0,7); c.fill(); SG.feather(c,p.x+R*0.06,p.y-R*0.22*g,R*0.08*g,i,"rgba(140,200,90,.95)"); }
     c.restore(); atImpact(t,420,0.25,0); }};
+
+/* Gid (16 Nov 2026, night): the rolling pin roll has Dango's long body pointing at the camera, rolling sideways. The sprite can't turn end-on,
+   so for the roll it is drawn end-on here: the front dumpling as a spinning wheel with the skewer's point in the middle and the others peeking out behind */
+{ const B0=ANIM.bigroll, a0=B0.atk;
+  B0.atk=(t,o)=>{ if(!o||o.fam!=="Dango") return a0(t,o);
+    if(t<160){ const k=eio(t/160); return {sy:1-0.65*k,sx:1+0.1*k,alpha:1-k,pose:"crouch"}; }   // tips over toward the camera
+    if(t<560){ const k=ei((t-160)/400); return {f:0.8*k,alpha:0,pose:"tackle"}; }
+    if(t<700){ const k=(t-560)/140; return {f:0.8-0.08*Math.sin(k*Math.PI),arc:-16*Math.sin(k*Math.PI),alpha:0,pose:"tackle"}; }
+    if(t<860){ const k=eio((t-700)/160); return {f:0.72,sy:0.35+0.65*k,alpha:k,pose:"idle"}; }
+    const k=(t-860)/360; return {f:0.72*(1-eio(Math.min(1,k))),pose:"idle"}; };
+  const f0=B0.fx; B0.fx=(c,t,x)=>{ if(x.fam!=="Dango") return f0(c,t,x); const s=x.self, d=atDir(x), rr=s.r*0.95, a=t<160?eo(t/160):t<700?1:t<860?1-(t-700)/160:0;
+    if(a>0){ const n=x.stage==="Bit"?1:3, body=x.body||[220,180,220], mix=(q,w)=>body.map((v,j)=>Math.round(v*(1-w)+q[j]*w)), cols=n===1?[body]:[mix([255,175,195],0.6),body,mix([150,210,120],0.7)], lift=t>=560&&t<700?16*Math.sin((t-560)/140*Math.PI):0,
+        cx=s.x, cy=s.foot-rr-lift, th=t<160?0:d*Math.min(t-160,540)/55;
+      c.save(); c.globalAlpha*=a;
+      c.fillStyle="rgba(0,0,0,.18)"; c.beginPath(); c.ellipse(cx,s.foot,rr*0.9,rr*0.2,0,0,7); c.fill();
+      for(let i=n-1;i>=1;i--){ const z=rr*(1-0.1*i), oy=-rr*0.2*i, col=cols[i%3]; c.fillStyle=atRgba(col.map(v=>v*0.85),1); c.strokeStyle=atRgba(col.map(v=>v*0.55),1); c.lineWidth=2; c.beginPath(); c.arc(cx,cy+oy,z,0,7); c.fill(); c.stroke(); }   // the dumplings further back peek out above
+      c.translate(cx,cy); const g=c.createRadialGradient(-rr*0.35,-rr*0.35,rr*0.1,0,0,rr); g.addColorStop(0,atRgba(cols[0].map(v=>Math.min(255,v+50)),1)); g.addColorStop(1,atRgba(cols[0],1));
+      c.fillStyle=g; c.strokeStyle=atRgba(cols[0].map(v=>v*0.55),1); c.lineWidth=2.4; c.beginPath(); c.arc(0,0,rr,0,7); c.fill(); c.stroke();
+      c.save(); c.rotate(th); c.fillStyle=atRgba(cols[0].map(v=>v*0.78),0.9); for(let i=0;i<3;i++){ const an=i/3*Math.PI*2; c.beginPath(); c.ellipse(Math.cos(an)*rr*0.6,Math.sin(an)*rr*0.6,rr*0.13,rr*0.08,an,0,7); c.fill(); }
+      c.strokeStyle=atRgba(cols[0].map(v=>v*0.7),0.7); c.lineWidth=1.6; c.beginPath(); c.arc(0,0,rr*0.78,0.3,1.6); c.stroke(); c.beginPath(); c.arc(0,0,rr*0.78,3.4,4.7); c.stroke(); c.restore();
+      c.fillStyle="#b08850"; c.beginPath(); c.arc(0,0,rr*0.16,0,7); c.fill(); c.fillStyle="#f2dcae"; c.beginPath(); c.arc(-rr*0.04,-rr*0.04,rr*0.07,0,7); c.fill();   // the skewer's point facing the camera
+      c.fillStyle="rgba(255,255,255,.6)"; c.beginPath(); c.ellipse(-rr*0.4,-rr*0.5,rr*0.22,rr*0.1,-0.6,0,7); c.fill(); c.restore();
+      if(t>160&&t<560){ SG.dust(c,cx-d*rr*0.8,s.foot,rr*0.6,((t-160)%200)/200,4); MV.lines(c,cx,cy,rr*1.2,d,4,1); } }
+    const tg=x.target; if(t>=560&&t<960){ const k=(t-560)/400; atPow(c,{x:tg.x-d*tg.r*0.4,y:tg.y-tg.r*0.2},k,tg.r/20); }
+    atImpact(t,560,0.6,0.1); }; }
