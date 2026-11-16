@@ -3554,7 +3554,7 @@ x.feet.push([g.cx, 182, 10]); },
     /* Gug: a hunched, shaggy giant with a big head sunk between its shoulders, long arms that hang to its knees, and forearms that fork at the elbow into two clawed hands. A furry little lump with short arms and a wide grin; long forked arms, a crouch and a shaggy mane from Byte; huge shoulders, a ridge of spiky fur, arms to the ground and big claws at Mega */
     Gug: {
       special: true, dims: { Bit: [66, 62], Byte: [82, 80], Mega: [96, 96] }, ll: st => by(st, 10, 18, 24),
-      bottom(st) { return 182 - this.ll(st); }, height(st) { return this.dims[st][1] + this.ll(st) + by(st, 12, 16, 22); },
+      bottom(st) { return 182 - this.ll(st); }, height(st) { return this.dims[st][1] + this.ll(st) + by(st, 30, 40, 52); },   // room for the flytrap on its head
       hh: g => g.bh * by(g.stage, 0.6, 0.5, 0.46),
       path(c, g) { const hh = this.hh(g), sy = g.top + hh * 0.42, bw = g.bw, tw = bw * by(g.stage, 0.7, 0.6, 0.56);   // a head sunk between two big hunched shoulders over a body that narrows to the hips
         c.beginPath(); c.ellipse(g.cx, g.top + hh / 2, bw * 0.33, hh / 2, 0, 0, 7);
@@ -3580,32 +3580,31 @@ x.feet.push([g.cx, 182, 10]); },
         c.fillStyle = rgba(lt(x.body, 0.18), 0.6); c.beginPath(); c.ellipse(g.cx, sy + (g.bot - sy) * 0.55, g.bw * by(S, 0.2, 0.2, 0.19), (g.bot - sy) * 0.36, 0, 0, 7); c.fill();   // a paler chest
         c.strokeStyle = rgba(dk(x.body, 0.25), 0.55); c.lineWidth = 1.4;   // tufts of fur
         for (const [fx, fy] of [[0.18, 0.62], [0.82, 0.6], [0.24, 0.84], [0.76, 0.86]]) { const px = g.left + g.bw * fx, py = g.top + g.bh * fy; c.beginPath(); c.moveTo(px - 3, py - 3); c.lineTo(px, py + 2); c.lineTo(px + 3, py - 3); c.stroke(); } },
-      front(c, g, x) { const S = g.stage; if (x.back) return; const ck = by(S, 0.75, 0.85, 1.05), cc = rgb(lt(x.acc, 0.35)), aw = this.armW(S), hr = this.handR(S);
-        for (const sd of [-1, 1]) { const [hx, hy] = this.hand(g, x, sd), sh = this.shoulder(g), sx = g.cx + sd * sh.dx;
-          // each forearm splits at the elbow into two full forearms, one hanging down and one reaching out, each with its own clawed hand
-          const ex = sx + (hx - sx) * 0.45 + sd * 2, ey = sh.y + (hy - sh.y) * 0.45, sp = by(S, 12, 15, 17), h2x = hx + sd * sp, h2y = hy - sp * 0.75;
-          limb(c, [ex, ey, (ex + h2x) / 2 + sd * 3, (ey + h2y) / 2 - 2, h2x, h2y], aw, x.parts, sd < 0 ? x.L.armL : x.L.armR, x.t);
-          c.fillStyle = rgb(x.parts); c.beginPath(); c.arc(h2x, h2y, hr, 0, 7); c.fill();
-          c.fillStyle = rgb(dk(x.parts, 0.12)); c.beginPath(); c.arc(ex, ey, aw * 0.75, 0, 7); c.fill();   // the elbow where it splits
+      front(c, g, x) { const S = g.stage; if (x.back) return; const ck = by(S, 0.75, 0.85, 1.05), cc = rgb(lt(x.acc, 0.35)), aw = this.armW(S), hr = this.handR(S), k = this.armK;
+        for (const sd of [-1, 1]) { const a = x.P.arm[sd < 0 ? 0 : 1], sh = this.shoulder(g), sx = g.cx + sd * sh.dx, q = [sx, sh.y, sx + sd * a[0] * k, sh.y + a[1] * k, sx + sd * a[2] * k, sh.y + a[3] * k];
+          // each arm splits at the elbow, halfway along the arm as it's drawn, into a second forearm that reaches out with its own clawed hand
+          const [ex, ey] = qpt(q, 0.5), hx = q[4], hy = q[5], sp = by(S, 12, 15, 17), h2x = hx + sd * sp, h2y = hy - sp * 0.75;
+          limb(c, [ex, ey, (ex + h2x) / 2 + sd * 2, (ey + h2y) / 2 - 2, h2x, h2y], aw, x.parts, sd < 0 ? x.L.armL : x.L.armR, x.t);
+          c.fillStyle = rgb(x.parts); c.beginPath(); c.arc(ex, ey, aw * 0.62, 0, 7); c.fill();   // a round elbow where the two forearms meet
+          c.fillStyle = rgb(lt(x.parts, 0.22)); c.beginPath(); c.arc(h2x, h2y, hr, 0, 7); c.fill();
           this.claws(c, h2x, h2y + 2, ck, cc, sd); this.claws(c, hx, hy + 2, ck, cc, sd); } },
       hl: g => [g.left + g.bw * 0.14, g.top + g.bh * 0.62, g.left + g.bw * 0.16, g.top + g.bh * 0.5, g.left + g.bw * 0.24, g.top + g.bh * 0.42],
       head: g => [g.cx, g.top + 2, g.bw * 0.32],
-      face(c, g, x, look) { const S = g.stage, hh = FAM.Gug.hh(g), fi = faceTwo(c, g, x, look, { ey: hh * 0.6 / g.bh, ex: 0.13, my: hh * 0.8 / g.bh, noMouth: true, s: by(S, 0.72, 0.76, 0.8) });
+      face(c, g, x, look) { const S = g.stage, hh = FAM.Gug.hh(g), fi = faceTwo(c, g, x, look, { ey: hh * 0.5 / g.bh, ex: 0.13, my: hh * 0.78 / g.bh, noMouth: true, s: by(S, 0.72, 0.76, 0.8) });
         if (x.back) return fi;
-        // the mouth is on top of its head: two jaws like a flytrap's, open most of the time and snapping shut now and then
-        const ry = hh / 2, rx = g.bw * 0.33, rimY = g.top + hh * 0.34, hw = rx * Math.sqrt(1 - Math.pow((rimY - (g.top + ry)) / ry, 2)), ph = (x.t % 2600) / 2600,
-          snap = ph > 0.86 ? Math.abs(Math.sin((ph - 0.86) / 0.14 * Math.PI)) : 0, gap = hh * by(S, 0.24, 0.27, 0.3) * (x.open ? 1.25 : 1) * (1 - snap * 0.9), capH = rimY - g.top;
-        c.fillStyle = '#4a1a2a'; c.beginPath(); c.ellipse(g.cx, rimY, hw, gap + 1, 0, Math.PI, 0); c.fill();   // inside the jaws
-        c.fillStyle = '#c4506a'; c.beginPath(); c.ellipse(g.cx, rimY - 1, hw * 0.5, Math.max(1, gap * 0.45), 0, Math.PI, 0); c.fill();
-        const tw = by(S, 7, 9, 11), tl = by(S, 6.5, 8.5, 11), n = Math.max(3, Math.round(hw * 2 / tw)), lid = rimY - gap;
-        c.fillStyle = '#f4eee2';
-        for (let k = 0; k < n; k++) { const tx = g.cx - hw + (k + 0.5) * hw * 2 / n;   // teeth up from the lower jaw, and down from the upper one in between them
-          c.beginPath(); c.moveTo(tx - tw * 0.32, rimY); c.lineTo(tx, rimY - tl); c.lineTo(tx + tw * 0.32, rimY); c.fill();
-          if (k < n - 1) { const ux = tx + hw / n; c.beginPath(); c.moveTo(ux - tw * 0.32, lid); c.lineTo(ux, lid + tl); c.lineTo(ux + tw * 0.32, lid); c.fill(); } }
-        c.fillStyle = rgb(x.body); c.beginPath(); c.ellipse(g.cx, lid, hw, capH, 0, Math.PI, 0); c.fill();   // the upper jaw, lifted
-        c.strokeStyle = rgb(dk(x.body, 0.25)); c.lineWidth = 1.4; c.beginPath(); c.moveTo(g.cx - hw, lid); c.lineTo(g.cx + hw, lid); c.stroke(); c.beginPath(); c.moveTo(g.cx - hw, rimY); c.lineTo(g.cx + hw, rimY); c.stroke();
-        c.strokeStyle = rgba([255, 255, 255], 0.35); c.lineWidth = 2; c.beginPath(); c.ellipse(g.cx - hw * 0.2, lid - capH * 0.45, hw * 0.45, capH * 0.3, -0.2, Math.PI * 1.1, Math.PI * 1.6); c.stroke();
-        c.fillStyle = '#f4eee2'; for (const sd of [-1, 1]) for (const yy of [rimY, lid]) { c.beginPath(); c.moveTo(g.cx + sd * hw, yy - 1.5); c.lineTo(g.cx + sd * (hw + tl * 0.8), yy + (yy === lid ? -2 : 2)); c.lineTo(g.cx + sd * hw, yy + 1.5); c.fill(); }   // spikes at the corners, like a flytrap's
+        // its mouth is a flytrap on top of its head: two red lobes either side of a green middle, edged with long spikes. They stay open and snap shut now and then
+        const ph = (x.t % 2600) / 2600, snap = ph > 0.86 ? Math.abs(Math.sin((ph - 0.86) / 0.14 * Math.PI)) : 0, o = (x.open ? 1.15 : 1) * (1 - snap * 0.8);
+        const bx = g.cx, by0 = g.top + hh * 0.16, H = hh * by(S, 0.62, 0.72, 0.82), W = g.bw * by(S, 0.2, 0.21, 0.22), tl = by(S, 5, 6.5, 8), n = by(S, 6, 7, 8);
+        const sw = 0.25 + 0.75 * o;   // how far the two lobes lean apart
+        for (const sd of [-1, 1]) {
+          const peak = [bx + sd * W * 0.55 * sw + sd * 1.5, by0 - H], mid = [bx + sd * 1.2, by0 - H * (0.62 - 0.3 * (1 - sw))], o1 = [bx + sd * W * (0.55 * sw + 0.85), by0 - H * 0.85], o2 = [bx + sd * W * (0.4 * sw + 0.9), by0 - H * 0.12], base = [bx + sd * 1, by0];
+          const at = u => { const v = 1 - u; return [0, 1].map(i => v * v * v * peak[i] + 3 * v * v * u * o1[i] + 3 * v * u * u * o2[i] + u * u * u * base[i]); };
+          c.fillStyle = '#d84860'; for (let k2 = 0; k2 < n; k2++) { const u = 0.04 + k2 / n * 0.8, [px, py] = at(u), [qx, qy] = at(u + 0.03), dx = qx - px, dy = qy - py, L = Math.hypot(dx, dy) || 1, nx = -dy / L * -sd, ny = dx / L * -sd;   // spikes along the outer rim
+            c.beginPath(); c.moveTo(px - dx * 0.5, py - dy * 0.5); c.lineTo(px + nx * tl, py + ny * tl); c.lineTo(px + dx * 0.5, py + dy * 0.5); c.closePath(); c.fill(); }
+          c.beginPath(); c.moveTo(peak[0], peak[1]); c.lineTo(peak[0] + sd * 1.5, peak[1] - tl * 0.9); c.lineTo(peak[0] + sd * 3, peak[1] + 1); c.fill();
+          c.fillStyle = '#f0a0aa'; c.beginPath(); c.moveTo(...base); c.lineTo(...mid); c.lineTo(...peak); c.bezierCurveTo(...o1, ...o2, ...base); c.closePath(); c.fill();   // the lobe with a pale rim
+          c.fillStyle = '#c93a52'; c.beginPath(); c.moveTo(bx + sd * 1.2, by0 - 2); c.lineTo(mid[0], mid[1] + 1); c.lineTo(peak[0] - sd * 0.6, peak[1] + 3.5); c.bezierCurveTo(o1[0] - sd * 2.8, o1[1] + 1.5, o2[0] - sd * 3, o2[1] - 1, bx + sd * 1.2, by0 - 2); c.closePath(); c.fill(); }
+        c.strokeStyle = '#9cc45a'; c.lineWidth = 2.2; c.lineCap = 'round'; c.beginPath(); c.moveTo(bx, by0 + 1); c.lineTo(bx, by0 - H * (0.62 - 0.3 * (1 - sw)) + 1); c.stroke();   // the green middle
         return fi; }
     },
     /* Yog: Yog-Sothoth, a floating globe with smaller glowing globes always drifting round it, passing in front and behind, and feelers trailing under it. Three globes and three feelers; five globes with eyes in them and five feelers from Byte; seven globes that change colour, a ring of sparks and seven feelers at Mega */
