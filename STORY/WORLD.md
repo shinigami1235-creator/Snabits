@@ -168,6 +168,19 @@ Deep expeditions for a team of three trained Snabits, approved by Gid from `docs
   - A farmer at the Harvest Fair gives the ranch a painted stone from her stall once its best Snabit has reached grade B.
 - **The cost:** fatigue and stress on all three, so the player plans for it like a Major.
 
+## The horror series (Proposed, built 16 Nov 2026, `horror.js`)
+
+Ten cosmic horrors from past the Rift, drawn cute: Cthulhu, Hastur, Shoggoth, Dagon, Mi-Go, Nightgaunt, Ghoul, Gug, Yog-Sothoth and Shub-Niggurath. Gid OKed the plan in `docs/HORROR-PLAN.md` on 16 Nov 2026. They're late game, and no scan calls one until it has joined the ranch once.
+
+- **The Deep Rift.** A team expedition past the Rift's edge in three rings. The Outer Ring opens at grade A once the Rift's edge map has been crossed, the Middle Ring at S and the Heart after the Legend Cup. The lairs: the Burrows (Ghoul), the Night Cliffs (Nightgaunt), the Humming Mine (Mi-Go), the Drowned Steps (Dagon) and the Thousand Grove (Shub-Niggurath) in the Outer Ring; the Sealed Gate (Gug), the Empty Workshop (Shoggoth) and the Yellow Stage (Hastur) in the Middle Ring; the Gate (Yog-Sothoth) and the Sunken City (Cthulhu) at the Heart.
+- **Tears.** From grade A, the deep maps of Hollow Moor, Dream Garden, Granite Steps, Coral Shallows, Tanglewood, Cinder Peak, Iron Foundry and Static Plains show a tear about one season in four, on a different circle each time. The tear holds that region's horror at Byte, and beating it gives the first part of its myth.
+- **Myths.** Each horror has a myth in three parts, kept in the Journal's Myths tab. The second part comes from the ranch or town: a bone on the barn step (Ghoul), a week of giggling (Nightgaunt), a jar at the lab (Mi-Go), a fisher's song at the Harvest Fair (Dagon), a stray kid in spring (Shub-Niggurath), a knock under the barn in a heatwave (Gug), a mess in the Workshop that cleans itself (Shoggoth) and a ticket in the Town Hall's lost and found (Hastur). Yog-Sothoth's first part is a door on the Tower's floor 60 and its second the bestiary at 150 kinds. Cthulhu's first two parts are nightmare weeks at 15 and 30 specials called. The third part of each is on its lair's door.
+- **Lairs.** With all three parts, the lair opens and the horror waits inside at Mega, once a season. Losing sends the team home with extra stress. The first win sends a little one home at Bit.
+- **One at a time.** A ranch holds one horror at once, Freezer included. Fusion can pass a horror's family on and never makes a hybrid with one.
+- **Stones and the witching hour.** A horror at the end of its lifespan on the ranch leaves in the night and leaves its Pattern Stone. A retired horror's statue is gone after 4 weeks with its stone on the plinth. A scan with the stone's three colours filling the middle of the shot calls it back at Bit, only between 9pm and 3am on the phone's clock and only with no other horror on the ranch.
+- **The ancient people** made the Shoggoth as a helper and shut the Gugs below the world, and the Ghouls keep the tunnels to the Gugs' door (Gid OKed the Shoggoth part).
+- **Hastur's name** is left blank the third time it would be written in one place.
+
 ## Built on 15 Nov 2026 from Gid's MR2 and Pokemon list
 
 - **It doesn't always listen.** Below 2 hearts, a tapped move is sometimes ignored or swapped for another, up to about 1 in 3 at no hearts (`wilfulness` in `game.js`, the `sulk` and `wilful` events in `arena.js`).

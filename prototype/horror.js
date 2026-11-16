@@ -20,7 +20,7 @@ const MYTH = {
   Ghoul: ['The Diggers', [
     "People at Hollow Moor leave a bone on a grave so the diggers leave the rest alone. The diggers keep to their tunnels under the moor and only come up for what's left out for them.",
     "A bone turned up on the barn step one morning with a thank-you scratched into it. Some of the diggers used to be people who stayed underground too long, and they still have their manners.",
-    "Scratched on the door of the Burrows: the diggers keep the tunnels all the way down to a door far bigger than this one, so nothing on the other side can come up."]],
+    "The door of the Burrows says the diggers keep their tunnels all the way down to a door far bigger than this one, so nothing on the other side can come up."]],
   Nightgaunt: ['The Ones Who Tickle', [
     "Children who wander Dream Garden at night get carried off by something with no face and dropped home at dawn, giggling and unable to say why.",
     "One of the ranch's Snabits giggled for a whole week and couldn't say why either. The Nightgaunts can't talk, so tickling is the only way they have to tell anyone something.",
@@ -44,7 +44,7 @@ const MYTH = {
   Shoggoth: ['The Servant That Forgot', [
     "The ancient people made a helper out of living goo that could take any shape their work needed. When they left, it stayed.",
     "A mess in the Workshop cleaned itself up overnight. Nobody on the ranch did it, and the floor was covered in round prints like eyes.",
-    "The tools in the Empty Workshop still hang where the ancient people left them. It still copies whatever shape it saw last, which is why it has so many eyes."]],
+    "The tools in the Empty Workshop still hang where the ancient people left them. It has so many eyes since it still copies whatever shape it saw last."]],
   Hastur: ['The King in Yellow', [
     "There's a play nobody has read to the end, since everyone who tries falls asleep at the third act.",
     "Nora found a ticket in the Town Hall's lost and found, for a seat that doesn't exist. Hastur buys a seat in a yellow cloak at every performance of the play and never stays to the end.",
@@ -54,7 +54,7 @@ const MYTH = {
     "Dr. Ines found the same globe drawn faintly in the corner of every page of the bestiary. Nobody at the lab drew it.",
     "The Rift is the biggest door it knows about, and the Gate at its heart is where it waits. Yog-Sothoth is what's on the other side of every door."]],
   Cthulhu: ['The Sleeper', [
-    "Every Snabit on the ranch had the same nightmare this week: a city under the sea past the Rift, and something asleep in it.",
+    "Every Snabit on the ranch had the same nightmare this week, about a city under the sea past the Rift with something asleep in it.",
     "The nightmare came back louder. Every special called through Helena's lens makes the dream louder, and that's the signal Dr. Ines has been measuring.",
     "The doors of the Sunken City are open. Whatever's asleep in there dreams loud enough for every Snabit to hear."]]
 };

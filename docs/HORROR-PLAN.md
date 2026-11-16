@@ -106,3 +106,15 @@ The other chat builds their moves, signature skills, arena animations and entran
 7. A horror that reaches the end of its lifespan outside the Freezer vanishes or flies off in a week event and leaves its stone. A retired one's statue is gone after 4 weeks and leaves its stone on the plinth.
 8. A stone scan calls its horror only between 9pm and 3am on the phone's clock, with vague clues to the hour and the colours.
 9. Cthulhu has no mouth.
+
+## Built (16 Nov 2026, batch-horror)
+
+- `monster.js`: the ten `FAMILY` entries with their abilities, `HORROR_EGG`, `horrorEgg` and `horrorCall`. A stone scan calls its horror from 9pm to 3am on the phone's clock, with the stone on the ranch and no other horror there or in the Freezer.
+- `arena.js` and `battle.js`: the ten abilities. Gnaw, Tickle, Brain Jar, Dreamer, Mimic, Yellow Sign, Thousand Young, Deep Song and All Doors work in both fights, and Mountain works on the arena, since the old turn battle has no knockback.
+- `scenes.js`: `horrorGlyph`, the ten stones (`docs/art/horror-stones.png`).
+- `horror.js`: the Deep Rift's rings and lairs, the tears, the myths and their second parts, the lair fights, leaving at the end of a lifespan, the statue that goes after 4 weeks, and the Secrets tab's Horrors row.
+- `explore.js`: the ring buttons on the Expeditions screen, the Journal's Myths tab and the map icons for a tear and a lair.
+- Cries, sizes, evolution totals, arena colours and ability effects for all ten.
+- Tests: `tools/tests/audit/horrors.py` (hatching, abilities, stones, the hour) and `tools/tests/audit/rift.py` (rings, tears, a walk to the Ghoul's lair, the second parts, leaving and the Secrets row).
+- Every myth line, every Secrets hint and every leaving line waits on Gid's OK.
+- Waiting on the other chat: moves, signature skills, arena animations and entrances. Balance comes after.
