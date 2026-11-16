@@ -3,6 +3,14 @@
    thick lines. Each drawer works in yard units at (x, y) on the ground and takes a scale, so the map reuses them as icons. */
 
 const XA = {
+  // a tear in the air on a deep map: a jagged violet crack with a dark inside that pulses
+  tear(c, x, y, t, k = 1) { const h = 54 * k, cy = y - 40 * k, p = 0.5 + 0.5 * Math.sin(t / 300), pts = [];
+    for (let i = 0; i <= 8; i++) pts.push([x + (i % 2 ? 5 : -4) * k * (1 - Math.abs(i - 4) / 5), cy - h / 2 + i * h / 8]);
+    c.save(); c.shadowColor = `rgba(170,120,255,${0.5 + 0.4 * p})`; c.shadowBlur = 16 * k; c.fillStyle = 'rgba(150,100,240,.9)';
+    c.beginPath(); c.moveTo(x, cy - h / 2 - 4 * k); for (const [a, b] of pts) c.lineTo(a + 4 * k, b); c.lineTo(x, cy + h / 2 + 4 * k); for (const [a, b] of pts.slice().reverse()) c.lineTo(a - 4 * k, b); c.closePath(); c.fill();
+    c.shadowBlur = 0; c.fillStyle = 'rgba(20,10,40,.95)'; c.beginPath(); c.moveTo(x, cy - h / 2); for (const [a, b] of pts) c.lineTo(a + 1.6 * k, b); c.lineTo(x, cy + h / 2); for (const [a, b] of pts.slice().reverse()) c.lineTo(a - 1.6 * k, b); c.closePath(); c.fill();
+    c.fillStyle = `rgba(230,210,255,${0.6 * p})`; for (let i = 0; i < 3; i++) { const yy = cy - h / 3 + i * h / 3 + Math.sin(t / 200 + i) * 3; c.beginPath(); c.arc(x + Math.sin(t / 260 + i * 2) * 2, yy, 1.2 * k, 0, 7); c.fill(); }
+    c.restore(); },
   hi(c, x, y, r, a = 0.5, from = 3.5, to = 4.6) { c.strokeStyle = `rgba(255,255,255,${a})`; c.lineWidth = Math.max(0.8, r * 0.16); c.lineCap = 'round'; c.beginPath(); c.arc(x, y, r, from, to); c.stroke(); },
   shadow(c, x, y, w, a = 0.22) { c.fillStyle = `rgba(30,22,16,${a})`; c.beginPath(); c.ellipse(x, y, w, w * 0.18, 0, 0, 7); c.fill(); },
   poly(c, pts) { c.beginPath(); pts.forEach(([px, py], i) => i ? c.lineTo(px, py) : c.moveTo(px, py)); c.closePath(); },
@@ -217,6 +225,7 @@ function exProp(c, p, t, front) {
     case 'spring': if (!front) XA.spring(c, x, y, t); return true;
     case 'page': if (front) XA.page(c, x, y, t); return true;
     case 'pstone': if (!front) XA.stone(c, x, y, p.sp, p.glow, t); return true;
+    case 'tear': if (!front) XA.tear(c, x, y, t, p.s || 1); return true;
   }
   return false;
 }

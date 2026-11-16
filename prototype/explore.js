@@ -77,18 +77,22 @@ function openExpeditions() {
     <div class="full lab-info">Walt has the League's permits. An expedition takes the week, and each region can be explored once a season.</div>` +
     regs.map((r, i) => { const st = exState(r), done = st.season === season, M = exMap(r), seen = Object.keys(M.N).filter(k => st.seen.includes(k)).length;
       return `<button class="rb" data-x="${i}" ${done ? 'disabled' : ''}>${r.n}<small>${done ? 'Explored this season' : `${r.el}. ${seen} of ${Object.keys(M.N).length} places seen`}</small></button>`; }).join('') +
+    (typeof riftRings === 'function' ? riftRings().map((r, i) => { const done = deepState(r).season === season; return `<button class="rb" data-r="${i}" ${done ? 'disabled' : ''}>${r.n}<small>${done ? 'Explored this season' : 'A team of three, two weeks'}</small></button>`; }).join('') : '') +
     (typeof deepRegions === 'function' ? deepRegions().map((r, i) => { const done = deepState(r).season === season; return `<button class="rb" data-d="${i}" ${done ? 'disabled' : ''}>${r.n}, deep<small>${done ? 'Explored this season' : 'A team of three, two weeks'}</small></button>`; }).join('') : '') +
     `<button class="rb" id="ex-journal">Journal<small>${Object.keys(PLAYER.journal || {}).length} pages</small></button>`);
   el('ex-back').onclick = () => menu('Out');
   el('ex-journal').onclick = openJournal;
   el('r-panel').querySelectorAll('[data-x]').forEach(b => b.onclick = () => runExpedition(regs[+b.dataset.x]));
   el('r-panel').querySelectorAll('[data-d]').forEach(b => b.onclick = () => openDeepPick(deepRegions()[+b.dataset.d]));
+  el('r-panel').querySelectorAll('[data-r]').forEach(b => b.onclick = () => openDeepPick(riftRings()[+b.dataset.r]));
 }
-function openJournal() {
-  const J = PLAYER.journal || {}, order = Object.keys(EX_PAGES).filter(k => J[k]);
+function openJournal(tab) {
+  const J = PLAYER.journal || {}, order = Object.keys(EX_PAGES).filter(k => J[k]), myths = typeof mythsHtml === 'function' && PLAYER.myths && Object.values(PLAYER.myths).some(p => p.some(Boolean));
   panel(`<div class="full lab-head"><b>Journal</b><button class="small" id="jn-back">Back</button></div>` +
-    (order.length ? order.map(k => `<div class="full lab-info"><b>${k}</b><br>${EX_PAGES[k]}</div>`).join('') : `<div class="full lab-info">No pages yet.</div>`));
+    (myths ? `<button class="rb ${tab === 'myths' ? '' : 'on'}" id="jn-pages">Helena's pages</button><button class="rb ${tab === 'myths' ? 'on' : ''}" id="jn-myths">Myths</button>` : '') +
+    (tab === 'myths' && myths ? mythsHtml() : order.length ? order.map(k => `<div class="full lab-info"><b>${k}</b><br>${EX_PAGES[k]}</div>`).join('') : `<div class="full lab-info">No pages yet.</div>`));
   el('jn-back').onclick = openExpeditions;
+  if (myths) { el('jn-pages').onclick = () => openJournal(); el('jn-myths').onclick = () => openJournal('myths'); }
 }
 
 /* ---------- the map under the scene ---------- */
@@ -140,6 +144,10 @@ function exIcon(x, n, cx, cy, got, shut) {
   else if (k === 'wild') { x.fillStyle = '#5a4128'; x.beginPath(); x.ellipse(cx, cy + 3, 5, 4, 0, 0, 7); x.fill(); for (const [a, b] of [[-6, -2], [-2.4, -6.5], [2.4, -6.5], [6, -2]]) { x.beginPath(); x.ellipse(cx + a, cy + b, 2, 2.5, a * 0.08, 0, 7); x.fill(); } }
   else if (k === 'guard') { x.strokeStyle = '#e0ad3c'; x.lineWidth = 2.4; x.beginPath(); x.ellipse(cx, cy - 7, 7, 2.4, 0, 0, 7); x.stroke();   // the guardian: a halo over a big paw
     x.fillStyle = '#5a4128'; x.beginPath(); x.ellipse(cx, cy + 5, 5.5, 4.5, 0, 0, 7); x.fill(); for (const [a, b] of [[-6.5, -0.5], [-2.6, -4], [2.6, -4], [6.5, -0.5]]) { x.beginPath(); x.ellipse(cx + a, cy + b, 2.1, 2.6, a * 0.08, 0, 7); x.fill(); } }
+  else if (k === 'tear') { x.strokeStyle = '#8a5ad8'; x.lineWidth = 3; x.lineJoin = 'round'; x.beginPath(); x.moveTo(cx - 1, cy - 10); x.lineTo(cx + 3, cy - 4); x.lineTo(cx - 2, cy + 1); x.lineTo(cx + 2, cy + 6); x.lineTo(cx, cy + 10); x.stroke();
+    x.strokeStyle = '#2a1840'; x.lineWidth = 1.2; x.stroke(); }   // a horror's tear: a violet crack
+  else if (k === 'lair') { x.fillStyle = '#3a2a52'; x.beginPath(); x.moveTo(cx - 8, cy + 9); x.lineTo(cx - 8, cy - 3); x.arc(cx, cy - 3, 8, Math.PI, 0); x.lineTo(cx + 8, cy + 9); x.closePath(); x.fill();   // a lair: a dark door with a violet mark
+    x.strokeStyle = '#a77ef0'; x.lineWidth = 1.4; x.beginPath(); x.arc(cx, cy, 3, 0, 7); x.stroke(); }
   else if (k === 'path') { x.fillStyle = 'rgba(110,80,50,.5)'; for (const [a, b] of [[-5, 4], [0, -1], [5, 4]]) { x.beginPath(); x.ellipse(cx + a, cy + b, 1.8, 2.6, 0, 0, 7); x.fill(); } }
   else if (k === 'block') { for (const [st, dx] of (n.stat2 ? [[n.stat, -5], [n.stat2, 6]] : [[n.stat, 0]])) exBlockIcon(x, st, cx + dx, cy, n.stat2 ? 0.75 : 1);
     if (shut) { x.globalAlpha = 1; x.strokeStyle = '#b8402e'; x.lineWidth = 3; x.beginPath(); x.moveTo(cx - 7, cy - 7); x.lineTo(cx + 7, cy + 7); x.moveTo(cx + 7, cy - 7); x.lineTo(cx - 7, cy + 7); x.stroke(); } }

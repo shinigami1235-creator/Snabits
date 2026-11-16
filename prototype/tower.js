@@ -42,6 +42,7 @@ function towerAfter(r) {
   const pay = 60 + T.n * 25; PLAYER.bits += pay; T.bits += pay;
   if (TOWER_PRIZE[T.n]) { addItem(TOWER_PRIZE[T.n]); T.won.push(TOWER_PRIZE[T.n]); }
   { const sp = TOWER_STONE[T.n], L = sp && stoneList(); if (L && !L.includes(sp)) { L.push(sp); T.won.push('Pattern Stone'); } }
+  if (T.n === 60 && typeof mythFind === 'function' && mythFind('Yog', 0)) T.won.push('page of a myth');   // a door on floor 60 that wasn't there the week before
   T.n++; T.foe = null; drawUI(); saveGame(); towerFloor();
 }
 function towerEnd(lost) {

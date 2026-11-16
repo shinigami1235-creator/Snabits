@@ -26,6 +26,7 @@ function deepMap(reg) {
     else n = { k: finds[Math.floor(R() * finds.length)] };
     N[id(c, r)] = { ...n, c, r, id: id(c, r) };
   }
+  if (reg.ring != null && typeof riftLairs === 'function') riftLairs(reg, N);   // a Deep Rift ring's lairs (horror.js)
   for (let c = 0; c < 10; c++) {
     const here = Object.values(N).filter(n => n.c === c), next = Object.values(N).filter(n => n.c === c + 1);
     for (const a of here) for (const b of next) if (Math.abs(a.r - b.r) <= 1 && (here.length === 1 || next.length === 1 || R() < 0.7)) E.push([a.id, b.id]);
@@ -40,7 +41,7 @@ const DP = { reg: null, pick: [] };
 function openDeepPick(reg) {
   DP.reg = reg; DP.pick = DP.pick.filter(id => rosterStates().some(s => s.id === id)).slice(0, 3);
   const all = rosterStates();
-  panel(`<div class="full lab-head"><b>${reg.n}, deep</b><button class="small" id="dp-back">Back</button></div>
+  panel(`<div class="full lab-head"><b>${reg.ring != null ? reg.n : reg.n + ', deep'}</b><button class="small" id="dp-back">Back</button></div>
     <div class="full lab-info">${all.length < 3 ? `A deep expedition needs three Snabits. You have ${all.length}.` : 'Pick three. The first one you pick leads.'}</div>` +
     all.map(s => { const k = DP.pick.indexOf(s.id); return `<button class="rb tm-pick ${k >= 0 ? 'on' : ''}" data-id="${s.id}"><span class="tm-n">${k >= 0 ? k + 1 : ''}</span><b>${displayName(s)}</b><small>Lv ${s.level} · ${s.stage} · ${s.m.el1}</small></button>`; }).join('') +
     `<button class="big full" id="dp-go" ${DP.pick.length === 3 ? '' : 'disabled'}>Set off</button>`);
@@ -99,30 +100,32 @@ async function deepFight(T, leadI, foe, title, K) {
 
 /* ---------- the deep expedition ---------- */
 async function runDeep(reg, team) {
-  const home = RS, st = deepState(reg), M = deepMap(reg), g = DEEP_GRADE[exGrade(reg)], need = exNeed(g), areas = TRIP_AREAS[reg.el], K = t => say(t, 'guide'), found = [];
+  const home = RS, st = deepState(reg), M = deepMap(reg), g = reg.ring != null ? riftGrade(reg) : DEEP_GRADE[exGrade(reg)], need = exNeed(g), areas = TRIP_AREAS[reg.el], K = t => say(t, 'guide'), found = [];
+  if (reg.ring == null && typeof horrorTear === 'function') horrorTear(reg, M);   // a tear with a horror in it, now and then from grade A
+  const where = reg.ring != null ? reg.n : `${reg.n}, deep`;   // a Deep Rift ring has its own name
   const T = team.map(s => { const max = deepEnergyMax(s); return { s, e: max, max, out: false }; });
   let lead = 0, at = '0:1', blocked = [], used = [], day = 1, stop = null;
   st.season = exSeason(); saveGame();
   await scene(async () => {
     deepLead(T[0].s);
-    await tripLeave(`Walt has a League permit for deep ${reg.n}. ${T.map(m => displayName(m.s)).join(', ')} go with him for two weeks.`);
-    const s0 = RS; s0.bg = `area:${reg.el}:${areas[2].key}`; s0.trip = true; s0.night = 0; s0.dusk = 0; s0.props = []; s0.x = 90; s0.pose = 'idle'; s0.camJump = true; s0.tripLabel = `${reg.n}, deep`; drawUI();
+    await tripLeave(`Walt has a League permit for ${reg.ring != null ? reg.n.replace('The Rift, ', '') + ' of the Rift' : 'deep ' + reg.n}. ${T.map(m => displayName(m.s)).join(', ')} go with him for two weeks.`);
+    const s0 = RS; s0.bg = `area:${reg.el}:${areas[2].key}`; s0.trip = true; s0.night = 0; s0.dusk = 0; s0.props = []; s0.x = 90; s0.pose = 'idle'; s0.camJump = true; s0.tripLabel = where; drawUI();
     stop = deepFollow(T, () => T[lead]);
-    await sceneFade(false, 700); banner(`${reg.n}, deep`, '#fff'); K('Only League teams come out this far. Stay close, you three.'); await rwait(1400); banner('');
+    await sceneFade(false, 700); banner(where, '#fff'); K('Only League teams come out this far. Stay close, you three.'); await rwait(1400); banner('');
     el('r-panel').innerHTML = `<canvas id="dp-team" class="full" style="width:100%;display:block"></canvas><canvas id="ex-map" class="full" style="width:100%;display:block"></canvas><button class="rb full" id="ex-home">Head home<small>Keeps everything found so far</small></button>`;
     el('ranch').classList.add('exploring');
     try {
       for (;;) {
         for (const k of M.near(at)) if (!st.seen.includes(k)) st.seen.push(k);
         const col = M.N[at].c; M.off = clamp(col - 3, 0, 4);
-        const boxes = deepTeamDraw(el('dp-team'), T, lead), P = exDraw(el('ex-map'), M, st, at, null, 1, blocked, `${reg.n}, deep · Day ${day}`);
+        const boxes = deepTeamDraw(el('dp-team'), T, lead), P = exDraw(el('ex-map'), M, st, at, null, 1, blocked, `${where} · Day ${day}`);
         if (!T.some(m => !m.out && m.e > 0)) { K(T.every(m => m.out) ? "That's all three of you down. We're going home." : "You're all worn out. We're going home."); await rwait(1800); break; }
         if (T[lead].out || T[lead].e <= 0) { const nx = T.findIndex(m => !m.out && m.e > 0); lead = nx; deepLead(T[lead].s); K(`${displayName(T[lead].s)}, you go in front.`); await rwait(900); continue; }
         const pick = await deepPick(el('dp-team'), boxes, el('ex-map'), M, P, at, blocked);
         if (!pick) break;
         if (pick.sw != null) { const m = T[pick.sw]; if (pick.sw === lead || m.out || m.e < 1) continue; m.e -= 1; lead = pick.sw; deepLead(m.s); K(`${displayName(m.s)}, you go in front.`); await rwait(700); continue; }
         const to = pick.to, n = M.N[to], back = at, L = T[lead]; L.e -= 1; at = to;
-        exDraw(el('ex-map'), M, st, at, null, 1, blocked, `${reg.n}, deep · Day ${day}`); deepTeamDraw(el('dp-team'), T, lead);
+        exDraw(el('ex-map'), M, st, at, null, 1, blocked, `${where} · Day ${day}`); deepTeamDraw(el('dp-team'), T, lead);
         await sceneFade(true, 250); RS.props = []; RS.parts = []; RS.bg = `area:${reg.el}:${areas[Math.min(3, 1 + Math.floor(n.c / 4))].key}`; RS.x = 70; RS.camJump = true; RS.jy = 0; await sceneFade(false, 250);
         const r = await deepNode(reg, n, st, g, need, T, () => lead, i => { lead = i; deepLead(T[i].s); }, K, used, found, M, () => day);
         if (r === 'fail') { blocked.push(to); at = back; }
@@ -138,7 +141,7 @@ async function runDeep(reg, team) {
     for (const m of T) if (m.s !== home) { const e = PLAYER.roster.find(r => r.id === m.s.id); if (e) e.st = packRanch(m.s); }
     const got = found.length ? `The team brought home ${found.join(', ')}.` : "The team didn't find anything this time.";
     await tripHome(`Time to head back. ${got}`, "We're back at the ranch. Everyone will sleep well tonight.", found.length ? 'happy' : 'idle');
-    RS.weekAct = 'Expedition'; await endWeek(2, `The team explored deep ${reg.n}. ${got}`);
+    RS.weekAct = 'Expedition'; await endWeek(2, `The team explored ${reg.ring != null ? reg.n.replace('The Rift, ', '') + ' of the Rift' : 'deep ' + reg.n}. ${got}`);
   });
 }
 function deepPick(tc, boxes, cv, M, P, at, blocked) {
@@ -154,11 +157,12 @@ function deepPick(tc, boxes, cv, M, P, at, blocked) {
 async function deepNode(reg, n, st, g, need, T, leadOf, setLead, K, used, found, M, dayOf) {
   const s = RS, once = st.got.includes(n.id), nm = displayName(T[leadOf()].s);
   await walkTo(110, 70, 'walk'); s.pose = 'idle';
+  if (n.k === 'tear' || n.k === 'lair') return horrorNode(reg, n, g, T, leadOf, setLead, K, used, found);
   if (n.k === 'path') { await rwait(250); return; }
   if (n.k === 'camp') {
     if (n.start || used.includes(n.id)) { await rwait(300); return; } used.push(n.id);
     for (const m of T) { m.out = false; m.e = Math.min(m.max, Math.max(0, m.e) + 8); }
-    await campNight(`${reg.n}, deep · night ${dayOf()}`, "We'll camp here tonight.");
+    await campNight(`${reg.ring != null ? reg.n : reg.n + ', deep'} · night ${dayOf()}`, "We'll camp here tonight.");
     // overnight a wild Snabit can wander onto a path next to camp
     if (Math.random() < 0.5) { const k = M.near(n.id).find(k => M.N[k].c > n.c && M.N[k].k === 'path'); if (k) { M.N[k].k = 'wild'; K('Something was moving around out there last night. Keep your eyes open.'); await rwait(1200); } }
     return 'camp'; }
