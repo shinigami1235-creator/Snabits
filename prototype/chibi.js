@@ -3577,6 +3577,8 @@ x.feet.push([g.cx, 182, 10]); },
           blob(c, fx + sd * 3, 181 - lift, by(S, 8, 9, 11), 5, dk(x.body, 0.16), sd < 0 ? x.L.legL : x.L.legR, x.t, 'foot');
           this.claws(c, fx + sd * 3, 177 - lift, by(S, 0.7, 0.8, 0.95), rgb(lt(x.acc, 0.35)), sd); x.feet.push([fx + sd * 3, 182 - lift, 9]); } },
       inside(c, g, x) { const S = g.stage, hh = this.hh(g), sy = g.top + hh * 0.5;
+        if (S === 'Mega') { c.fillStyle = rgb(dk(x.body, 0.22)); for (const f of [0, 0.07, 0.14, 0.21, 0.79, 0.86, 0.93, 1]) { const k = Math.round(f * 14), px = g.left + g.bw * (0.04 + f * 0.92), py = sy + hh * 0.1 + Math.abs(f - 0.5) * 6 + (k % 2) * 3, L = 12 + (k % 3) * 4, sw = Math.sin(x.t / 650 + k) * 1.5;   // a thick mane of darker fur down each shoulder
+          c.beginPath(); c.moveTo(px - 6, py - 6); c.lineTo(px + sw + (f - 0.5) * 4, py + L); c.lineTo(px + 6, py - 6); c.closePath(); c.fill(); } }
         c.fillStyle = rgba(lt(x.body, 0.18), 0.6); c.beginPath(); c.ellipse(g.cx, sy + (g.bot - sy) * 0.55, g.bw * by(S, 0.2, 0.2, 0.19), (g.bot - sy) * 0.36, 0, 0, 7); c.fill();   // a paler chest
         c.strokeStyle = rgba(dk(x.body, 0.25), 0.55); c.lineWidth = 1.4;   // tufts of fur
         for (const [fx, fy] of [[0.18, 0.62], [0.82, 0.6], [0.24, 0.84], [0.76, 0.86]]) { const px = g.left + g.bw * fx, py = g.top + g.bh * fy; c.beginPath(); c.moveTo(px - 3, py - 3); c.lineTo(px, py + 2); c.lineTo(px + 3, py - 3); c.stroke(); } },
@@ -3587,24 +3589,27 @@ x.feet.push([g.cx, 182, 10]); },
           limb(c, [ex, ey, (ex + h2x) / 2 + sd * 2, (ey + h2y) / 2 - 2, h2x, h2y], aw, x.parts, sd < 0 ? x.L.armL : x.L.armR, x.t);
           c.fillStyle = rgb(x.parts); c.beginPath(); c.arc(ex, ey, aw * 0.62, 0, 7); c.fill();   // a round elbow where the two forearms meet
           c.fillStyle = rgb(lt(x.parts, 0.22)); c.beginPath(); c.arc(h2x, h2y, hr, 0, 7); c.fill();
+          if (S === 'Mega') { c.fillStyle = rgb(lt(x.acc, 0.25)); for (const [ax, ay, bx2, by2] of [[ex, ey, hx, hy], [ex, ey, h2x, h2y]]) for (const f of [0.35, 0.65]) { const px = ax + (bx2 - ax) * f, py = ay + (by2 - ay) * f, dx = bx2 - ax, dy = by2 - ay, L = Math.hypot(dx, dy) || 1, nx = -dy / L, ny = dx / L, up = ny > 0 ? -1 : 1;   // thorns along both forearms
+            c.beginPath(); c.moveTo(px - dx / L * 2.5, py - dy / L * 2.5); c.lineTo(px + nx * up * 6, py + ny * up * 6); c.lineTo(px + dx / L * 2.5, py + dy / L * 2.5); c.closePath(); c.fill(); } }
           this.claws(c, h2x, h2y + 2, ck, cc, sd); this.claws(c, hx, hy + 2, ck, cc, sd); } },
+      // a flytrap: two red lobes either side of a green middle, edged with spikes, that lean apart and snap shut now and then
+      trap(c, bx, by0, H, W, t, open, n, tl) { const ph = (t % 2600) / 2600, snap = ph > 0.86 ? Math.abs(Math.sin((ph - 0.86) / 0.14 * Math.PI)) : 0, o = (open ? 1.15 : 1) * (1 - snap * 0.8), sw = 0.25 + 0.75 * o;
+        for (const sd of [-1, 1]) {
+          const peak = [bx + sd * W * 0.55 * sw + sd * 1.5, by0 - H], mid = [bx + sd * 1.2, by0 - H * (0.62 - 0.3 * (1 - sw))], o1 = [bx + sd * W * (0.55 * sw + 0.85), by0 - H * 0.85], o2 = [bx + sd * W * (0.4 * sw + 0.9), by0 - H * 0.12], base = [bx + sd * 1, by0];
+          const at = u => { const v = 1 - u; return [0, 1].map(i => v * v * v * peak[i] + 3 * v * v * u * o1[i] + 3 * v * u * u * o2[i] + u * u * u * base[i]); };
+          c.fillStyle = '#d84860'; for (let k2 = 0; k2 < n; k2++) { const u = 0.04 + k2 / n * 0.8, [px, py] = at(u), [qx, qy] = at(u + 0.03), dx = qx - px, dy = qy - py, L = Math.hypot(dx, dy) || 1, nx = dy / L * sd, ny = -dx / L * sd;
+            c.beginPath(); c.moveTo(px - dx * 0.5, py - dy * 0.5); c.lineTo(px + nx * tl, py + ny * tl); c.lineTo(px + dx * 0.5, py + dy * 0.5); c.closePath(); c.fill(); }
+          c.beginPath(); c.moveTo(peak[0], peak[1]); c.lineTo(peak[0] + sd * 1.5, peak[1] - tl * 0.9); c.lineTo(peak[0] + sd * 3, peak[1] + 1); c.fill();
+          c.fillStyle = '#f0a0aa'; c.beginPath(); c.moveTo(...base); c.lineTo(...mid); c.lineTo(...peak); c.bezierCurveTo(...o1, ...o2, ...base); c.closePath(); c.fill();
+          c.fillStyle = '#c93a52'; c.beginPath(); c.moveTo(bx + sd * 1.2, by0 - 2); c.lineTo(mid[0], mid[1] + 1); c.lineTo(peak[0] - sd * 0.6, peak[1] + 3.5); c.bezierCurveTo(o1[0] - sd * 2.8, o1[1] + 1.5, o2[0] - sd * 3, o2[1] - 1, bx + sd * 1.2, by0 - 2); c.closePath(); c.fill(); }
+        c.strokeStyle = '#9cc45a'; c.lineWidth = Math.max(1.4, W * 0.1); c.lineCap = 'round'; c.beginPath(); c.moveTo(bx, by0 + 1); c.lineTo(bx, by0 - H * (0.62 - 0.3 * (1 - sw)) + 1); c.stroke(); },
       hl: g => [g.left + g.bw * 0.14, g.top + g.bh * 0.62, g.left + g.bw * 0.16, g.top + g.bh * 0.5, g.left + g.bw * 0.24, g.top + g.bh * 0.42],
       head: g => [g.cx, g.top + 2, g.bw * 0.32],
       face(c, g, x, look) { const S = g.stage, hh = FAM.Gug.hh(g), fi = faceTwo(c, g, x, look, { ey: hh * 0.5 / g.bh, ex: 0.13, my: hh * 0.78 / g.bh, noMouth: true, s: by(S, 0.72, 0.76, 0.8) });
         if (x.back) return fi;
         // its mouth is a flytrap on top of its head: two red lobes either side of a green middle, edged with long spikes. They stay open and snap shut now and then
-        const ph = (x.t % 2600) / 2600, snap = ph > 0.86 ? Math.abs(Math.sin((ph - 0.86) / 0.14 * Math.PI)) : 0, o = (x.open ? 1.15 : 1) * (1 - snap * 0.8);
-        const bx = g.cx, by0 = g.top + hh * 0.16, H = hh * by(S, 0.62, 0.72, 0.82), W = g.bw * by(S, 0.2, 0.21, 0.22), tl = by(S, 5, 6.5, 8), n = by(S, 6, 7, 8);
-        const sw = 0.25 + 0.75 * o;   // how far the two lobes lean apart
-        for (const sd of [-1, 1]) {
-          const peak = [bx + sd * W * 0.55 * sw + sd * 1.5, by0 - H], mid = [bx + sd * 1.2, by0 - H * (0.62 - 0.3 * (1 - sw))], o1 = [bx + sd * W * (0.55 * sw + 0.85), by0 - H * 0.85], o2 = [bx + sd * W * (0.4 * sw + 0.9), by0 - H * 0.12], base = [bx + sd * 1, by0];
-          const at = u => { const v = 1 - u; return [0, 1].map(i => v * v * v * peak[i] + 3 * v * v * u * o1[i] + 3 * v * u * u * o2[i] + u * u * u * base[i]); };
-          c.fillStyle = '#d84860'; for (let k2 = 0; k2 < n; k2++) { const u = 0.04 + k2 / n * 0.8, [px, py] = at(u), [qx, qy] = at(u + 0.03), dx = qx - px, dy = qy - py, L = Math.hypot(dx, dy) || 1, nx = -dy / L * -sd, ny = dx / L * -sd;   // spikes along the outer rim
-            c.beginPath(); c.moveTo(px - dx * 0.5, py - dy * 0.5); c.lineTo(px + nx * tl, py + ny * tl); c.lineTo(px + dx * 0.5, py + dy * 0.5); c.closePath(); c.fill(); }
-          c.beginPath(); c.moveTo(peak[0], peak[1]); c.lineTo(peak[0] + sd * 1.5, peak[1] - tl * 0.9); c.lineTo(peak[0] + sd * 3, peak[1] + 1); c.fill();
-          c.fillStyle = '#f0a0aa'; c.beginPath(); c.moveTo(...base); c.lineTo(...mid); c.lineTo(...peak); c.bezierCurveTo(...o1, ...o2, ...base); c.closePath(); c.fill();   // the lobe with a pale rim
-          c.fillStyle = '#c93a52'; c.beginPath(); c.moveTo(bx + sd * 1.2, by0 - 2); c.lineTo(mid[0], mid[1] + 1); c.lineTo(peak[0] - sd * 0.6, peak[1] + 3.5); c.bezierCurveTo(o1[0] - sd * 2.8, o1[1] + 1.5, o2[0] - sd * 3, o2[1] - 1, bx + sd * 1.2, by0 - 2); c.closePath(); c.fill(); }
-        c.strokeStyle = '#9cc45a'; c.lineWidth = 2.2; c.lineCap = 'round'; c.beginPath(); c.moveTo(bx, by0 + 1); c.lineTo(bx, by0 - H * (0.62 - 0.3 * (1 - sw)) + 1); c.stroke();   // the green middle
+        this.trap(c, g.cx, g.top + hh * 0.16, hh * by(S, 0.62, 0.72, 0.82), g.bw * by(S, 0.2, 0.21, 0.22), x.t, x.open, by(S, 6, 7, 8), by(S, 5, 6.5, 8));
+        if (S === 'Mega') for (const sd of [-1, 1]) this.trap(c, g.cx + sd * g.bw * 0.37, g.top + hh * 0.5, hh * 0.38, g.bw * 0.1, x.t + 900 + sd * 450, false, 5, 4.5);   // two smaller traps on its shoulders, snapping out of step
         return fi; }
     },
     /* Yog: Yog-Sothoth, a floating globe with smaller glowing globes always drifting round it, passing in front and behind, and feelers trailing under it. Three globes and three feelers; five globes with eyes in them and five feelers from Byte; seven globes that change colour, a ring of sparks and seven feelers at Mega */
