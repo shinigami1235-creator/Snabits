@@ -243,8 +243,31 @@ function atStatusPose(i,pose){
 }
 
 /* ---------- behind the body ---------- */
+/* the wind-up aura of a signature move: a flame of light behind the body in its own colour, tongues licking up its sides,
+   energy drawn in toward it and rings pulsing out from its feet, all building as the charge fills */
+function atSigCol(ch){ const b=Array.isArray(ch.body)?ch.body:null, m=ch.col||[255,214,90]; return b?b.map((v,j)=>Math.round(v*0.55+m[j]*0.45)):m; }
+function atSigAuraBack(c,ch,x,foot,H,r,te,k){ const col=atSigCol(ch), lt=col.map(v=>Math.min(255,v+90)), e=eo(k), fl=0.92+0.08*Math.sin(te/45);
+  c.save(); c.globalCompositeOperation="lighter";
+  const top=foot-H*(1.15+0.35*e)*fl, w=r*(1.15+0.35*e);
+  const shape=(sc)=>{ c.beginPath(); c.moveTo(x-w*sc,foot); c.bezierCurveTo(x-w*1.25*sc,foot-H*0.55,x-w*0.55*sc,foot-H*0.9,x+Math.sin(te/90)*w*0.12,top-(1-sc)*H*0.2); c.bezierCurveTo(x+w*0.55*sc,foot-H*0.9,x+w*1.25*sc,foot-H*0.55,x+w*sc,foot); c.closePath(); };
+  let g=c.createLinearGradient(0,foot,0,top); g.addColorStop(0,atRgba(col,0.55*e)); g.addColorStop(0.6,atRgba(col,0.35*e)); g.addColorStop(1,atRgba(col,0)); c.fillStyle=g; shape(1); c.fill();
+  g=c.createLinearGradient(0,foot,0,top); g.addColorStop(0,atRgba(lt,0.6*e)); g.addColorStop(0.7,atRgba(lt,0.15*e)); g.addColorStop(1,atRgba(lt,0)); c.fillStyle=g; shape(0.62); c.fill();
+  for(let n=0;n<3;n++){ const ph=((te-ch.t0)/420+n/3)%1; c.strokeStyle=atRgba(lt,0.7*e*(1-ph)); c.lineWidth=3*(1-ph)+1; c.beginPath(); c.ellipse(x,foot,r*(0.6+ph*1.6),r*(0.14+ph*0.34),0,0,7); c.stroke(); }
+  g=c.createRadialGradient(x,foot,0,x,foot,r*1.6); g.addColorStop(0,atRgba(lt,0.5*e)); g.addColorStop(1,atRgba(col,0)); c.fillStyle=g; c.beginPath(); c.ellipse(x,foot,r*1.6,r*0.38,0,0,7); c.fill();
+  c.restore(); }
+function atSigAuraFront(c,ch,cx,cy,foot,R,te,k,s){ const col=atSigCol(ch), lt=col.map(v=>Math.min(255,v+90)), e=eo(k);
+  c.save(); c.globalCompositeOperation="lighter";
+  for(let n=0;n<10;n++){ const sd=n%2?1:-1, ph=((te/520)+n*0.137)%1, f=0.75+0.25*Math.sin(te/38+n*2.1), bx=cx+sd*R*(0.78+0.12*Math.sin(n*1.3)), by=foot-ph*R*1.9, h=R*(0.35+0.3*f)*(1-ph*0.6)*e, w=R*0.11*(1-ph*0.5);
+    c.fillStyle=atRgba(n%3?col:lt,0.42*(1-ph)*e); c.beginPath(); c.moveTo(bx-w,by); c.quadraticCurveTo(bx-w*0.2,by-h*0.6,bx+sd*w*0.6,by-h); c.quadraticCurveTo(bx+w*0.5,by-h*0.5,bx+w,by); c.closePath(); c.fill(); }
+  for(let n=0;n<12;n++){ const ph=((te-ch.t0)/700+n/12)%1, a=n*2.399, r=R*(2.4-2.1*ph), px=cx+Math.cos(a)*r, py=cy+Math.sin(a)*r*0.7, tx=cx+Math.cos(a)*(r+R*0.22), ty=cy+Math.sin(a)*(r+R*0.22)*0.7, sz=R*0.035*(0.5+ph);
+    if(r<R*0.9) continue; c.fillStyle=atRgba(lt,0.7*ph*e); c.beginPath(); c.moveTo(tx,ty); c.lineTo(px+Math.sin(a)*sz,py-Math.cos(a)*sz); c.arc(px,py,sz,a-Math.PI/2,a+Math.PI/2,true); c.closePath(); c.fill(); }
+  for(let n=0;n<6;n++){ const ph=((te/900)+n/6)%1, px=cx+Math.sin(n*2.7+te/400)*R*0.8, py=foot-ph*R*2.4, z=R*0.06*(1-ph);
+    c.fillStyle=`rgba(255,255,255,${0.9*(1-ph)*e})`; c.beginPath(); for(let j=0;j<8;j++){ const q=j/8*Math.PI*2, rr=j%2?z*0.35:z; c[j?"lineTo":"moveTo"](px+Math.cos(q)*rr,py+Math.sin(q)*rr); } c.closePath(); c.fill(); }
+  const g=c.createRadialGradient(cx,cy,0,cx,cy,R*(0.7+0.3*e)); g.addColorStop(0,atRgba(lt,0.06*e*(0.8+0.2*Math.sin(te/70)))); g.addColorStop(1,atRgba(col,0)); c.fillStyle=g; c.beginPath(); c.arc(cx,cy,R*(0.7+0.3*e),0,7); c.fill();
+  c.restore(); }
 function atFxBack(c,i,Q,te){
   const p=AT.ar.p[i], n=p.st&&p.st.name, {x,foot,H,r}=Q;
+  { const ch=AT.side[i].charge; if(ch&&ch.sig&&te>=ch.t0) atSigAuraBack(c,ch,x,foot,H,r,te,Math.min(1,(te-ch.t0)/ch.d)); }
   if(n==="Soak"){ c.fillStyle="rgba(70,140,240,.32)"; c.beginPath(); c.ellipse(x,foot+3,r*1.15,11,0,0,7); c.fill(); c.strokeStyle="rgba(200,230,255,.5)"; c.lineWidth=2; c.beginPath(); c.ellipse(x-r*0.3,foot+1,r*0.35,3,0,0,7); c.stroke(); }
   if(n==="Freeze"){ const g=c.createRadialGradient(x,foot,4,x,foot,r*1.4); g.addColorStop(0,"rgba(230,248,255,.75)"); g.addColorStop(1,"rgba(200,236,255,0)"); c.fillStyle=g; c.beginPath(); c.ellipse(x,foot+2,r*1.4,16,0,0,7); c.fill(); }
   if(n==="Curse"||n==="Dread"){ const g=c.createRadialGradient(x,foot,4,x,foot,r*1.5), dk=n==="Dread"; g.addColorStop(0,dk?"rgba(20,8,40,.75)":"rgba(60,20,90,.6)"); g.addColorStop(1,"rgba(20,8,40,0)"); c.fillStyle=g; c.beginPath(); c.ellipse(x,foot+2,r*1.5,18,0,0,7); c.fill(); }

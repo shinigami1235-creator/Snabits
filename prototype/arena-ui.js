@@ -245,7 +245,7 @@ function atEvent(e,now){
     if(tier==="special"&&!S.anim.contact&&!m.lower) S.anim.mega=/^(beam|bolt|spear|volley|drain|gust)$/.test(kind)?"beam":kind==="lightning"?"bolt":/^(meteor|icefall|boulder|rockpath)$/.test(kind)?"fall":kind==="pillar"&&m.el==="Frost"?"glacier":/^(tornado|firespin)$/.test(kind)?(m.el==="Blaze"?"inferno":"funnel"):kind==="wave"?"tsunami":kind==="push"?"shock":kind==="lift"?"nightmare":/^(pillar|mist|mistcast)$/.test(kind)?"rise":null;
     if(S.anim.mega) AT.turn.D=Math.max(AT.turn.D,ch+(K.C+900)/rate);   // the fight waits for a special's release to finish
     if(e.pred==="dodge"||e.pred==="phase") atPlanDodge(e.i,te+ch+K.C/rate,kind,e.pred);
-    if(ch){ S.charge={t0:te,d:ch,tier,col:S.anim.col,el:m.el||null,body:sp.pal&&sp.pal.body}; if(tier==="special") AT.cine={t0:te,d:ch,i:e.i,name:m.name,col:S.anim.col}; }
+    if(ch){ S.charge={t0:te,d:ch,tier,col:S.anim.col,el:m.el||null,body:sp.pal&&sp.pal.body,sig:!!(ANIM[kind]||{}).sig}; if(tier==="special") AT.cine={t0:te,d:ch,i:e.i,name:m.name,col:S.anim.col}; }
     try{ sfx(ch?"charge":m.cast?"charge":"whoosh"); if(typeof elSfx==="function") elSfx(m.el,"cast"); if(typeof kindSfx==="function"){ kindSfx(kind,(ch||0)/1000/(S.anim.rate||1)); if(tier==="special") kindSfx("special"); } }catch(err){}
   }
   if(e.t==="step"){ S.hop={t0:te,h:16}; if(typeof atSfx==="function") atSfx("step"); }
@@ -310,6 +310,7 @@ function atJaws(c,k,s,col,dir,body){
 }
 /* the charge-up looks different for each element. Drawn in arena units around the Snabit's middle (cx, cy) and its feet */
 function atChargeFx(c,ch,cx,cy,foot,R,te,k,s,big){
+  if(ch.sig&&typeof atSigAuraFront==='function'){ atSigAuraFront(c,ch,cx,cy,foot,R,te,k,s); return; }
   const el=ch.el, col=ch.col, N=big?1.5:1; c.save();
   const glow=(x,y,r,cc,a)=>{ const g=c.createRadialGradient(x,y,0,x,y,r); g.addColorStop(0,atRgb(cc,a)); g.addColorStop(1,atRgb(cc,0)); c.fillStyle=g; c.beginPath(); c.arc(x,y,r,0,7); c.fill(); };
   if(el==="Blaze"){ c.globalCompositeOperation="lighter";
@@ -715,10 +716,10 @@ function atDraw(now,dte){
   c.save(); c.globalCompositeOperation="lighter";
   [0,1].forEach(i=>{ const S=AT.side[i], ch=S.charge, P=placed[i]; if(!ch||!P) return; const k=(te-ch.t0)/ch.d; if(k>1.15){ S.charge=null; return; }
     const cx=P.center?P.center.x:P.x, cy=P.center?P.center.y:P.y, col=ch.col, sp=ch.tier==="special", R=(sp?95:70)*scale/2.3, kk=Math.min(1,k);
-    const g=c.createRadialGradient(cx,cy,4,cx,cy,R*(1.1+0.25*Math.sin(te/60))); g.addColorStop(0,`rgba(${col},${0.5*kk})`); g.addColorStop(1,`rgba(${col},0)`);
-    c.fillStyle=g; c.beginPath(); c.arc(cx,cy,R*1.5,0,7); c.fill();
+    if(!ch.sig){ const g=c.createRadialGradient(cx,cy,4,cx,cy,R*(1.1+0.25*Math.sin(te/60))); g.addColorStop(0,`rgba(${col},${0.5*kk})`); g.addColorStop(1,`rgba(${col},0)`);
+    c.fillStyle=g; c.beginPath(); c.arc(cx,cy,R*1.5,0,7); c.fill(); }
     c.restore(); atChargeFx(c,ch,cx,cy,P.foot,R,te,kk,scale/2.3,sp); c.save(); c.globalCompositeOperation="lighter";
-    if(k>0.92&&k<1.08){ const f=1-Math.abs(k-1)/0.08; c.fillStyle=`rgba(255,255,255,${0.6*f})`; c.beginPath(); c.arc(cx,cy,R*0.9,0,7); c.fill(); } });
+    if(k>0.92&&k<1.08){ const f=1-Math.abs(k-1)/0.08; if(ch.sig){ c.strokeStyle=`rgba(255,255,255,${0.9*f})`; c.lineWidth=6*f+1; c.beginPath(); c.ellipse(cx,cy,R*(1.4-0.5*f),R*(1.1-0.4*f),0,0,7); c.stroke(); } else { c.fillStyle=`rgba(255,255,255,${0.6*f})`; c.beginPath(); c.arc(cx,cy,R*0.9,0,7); c.fill(); } } });
   c.restore();
   if(AT.hitJuice&&placed[AT.hitJuice.i]){ const J=AT.hitJuice, P=placed[J.i], T=AT_TIER[J.tier], cx=P.center?P.center.x:P.x, cy=P.center?P.center.y:P.y;
     AT.rings.push({x:cx,y:cy,t0:te,col:J.col,s:T.ring,d:J.tier==="special"?520:340}); if(J.tier==="special") AT.rings.push({x:cx,y:cy,t0:te+90,col:[255,255,255],s:T.ring*1.3,d:600});
