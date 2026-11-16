@@ -905,3 +905,33 @@ if(typeof KSND!=="undefined") Object.assign(KSND,{
   snapshot4:(d,t)=>{ [0.42,0.57,0.72,0.87].forEach(x=>{ dNoise(d,t+x-0.02,0.03,0.25,'highpass',4000,2); dNoise(d,t+x+0.03,0.04,0.2,'bandpass',1500,2); }); },
   freezeframe:(d,t)=>{ dNoise(d,t+0.4,0.03,0.3,'highpass',4000,2); dNoise(d,t+0.45,0.04,0.2,'bandpass',1500,2); sTone(d,t+0.46,'sine',2400,1200,0.5,0.04); dNoise(d,t+0.5,0.5,0.06,'highpass',6000,1); }
 });
+/* Gid (16 Nov 2026, night): Tome's Slam Shut hops onto the target, opens its own covers wide and claps shut on it;
+   Scoop's Freezer Burn presses its cold scoop onto the target and frost spreads over it instead of launching a wave */
+ANIM.bookslam={C:520,D:1240,
+  atk:t=>{ if(t<260){ const k=eio(t/260); return {f:1.0*k,arc:-95*Math.sin(k*Math.PI*0.5),pose:"jump"}; }   // leaps up over the target
+    if(t<460){ const k=eo((t-260)/200); return {f:1.0,arc:-95-6*k,sx:1+0.6*k,sy:1+0.1*k,pose:"cast"}; }   // the covers swing open wide above it
+    if(t<520){ const k=ei((t-460)/60); return {f:1.0,arc:-101+60*k,sx:1.6-1.5*k,sy:1.1,pose:"determined"}; }   // and slam shut down onto it
+    if(t<760) return {f:1.0,arc:-41,sx:0.1+0.03*Math.sin(t/12),sy:1.1,pose:"determined"};
+    if(t<900){ const k=eo((t-760)/140); return {f:1.0,arc:-41-30*Math.sin(k*Math.PI),sx:0.13+0.87*k,pose:"jump"}; }
+    const k=(t-900)/340; return {f:1.0*(1-eio(k)),arc:-50*Math.sin(Math.min(1,k)*Math.PI)*(1-k*0.3),pose:"idle"}; },
+  def:t=>{ if(t<520||t>900) return null; return {sx:t<760?0.82:1,sy:t<760?1.04:1,off:[Math.sin(t/14)*2,0],pose:"hurt"}; },
+  fx(c,t,x){ const tg=x.target, R=tg.r;
+    if(t>=280&&t<520) for(let i=0;i<6;i++){ const ph=((t/180)+i/6)%1; MV.page(c,tg.x+(i-2.5)*R*0.45,tg.y-R*(1.4+ph*0.8),R*0.16,(i-2.5)*0.5+ph,1-ph); }   // pages flutter as it opens
+    if(t>=520&&t<900){ const k=(t-520)/380; atPow(c,{x:tg.x,y:tg.y-R*0.3},Math.min(1,k*1.4),R/20); SG.dust(c,tg.x,tg.foot,R*0.9,k,8); for(let i=0;i<5;i++) MV.page(c,tg.x+(i-2)*R*0.5*(1+k),tg.y-R*0.4-R*1.2*k*(1+0.2*i),R*0.15,i+k*4,1-k); }
+    atImpact(t,520,0.6,0.12); }};
+ANIM.frostpress={C:420,D:1300,contact:true,marks:true,
+  atk:t=>({f:t<420?0.62*eio(t/420):t<860?0.62:0.62*(1-eio((t-860)/360)),pose:t<260?"walk":t<860?"push":"idle",sy:t>420&&t<860?0.95:1}),
+  def:t=>t>=420&&t<1200?{off:[Math.sin(t/12)*1.5,0],pose:"hurt",sx:0.97}:null,
+  fx(c,t,x){ const tg=x.target, R=tg.r, d=atDir(x); if(t<420) return; const k=Math.min(1,(t-420)/520), a=t<1000?1:Math.max(0,1-(t-1000)/280); if(a<=0) return;
+    const p={x:tg.x-d*R*0.55,y:tg.y-R*0.25};
+    c.save(); c.globalAlpha*=a; const g=c.createRadialGradient(p.x,p.y,0,p.x,p.y,R*(0.3+1.1*k)); g.addColorStop(0,"rgba(235,248,255,.85)"); g.addColorStop(0.7,"rgba(170,215,250,.45)"); g.addColorStop(1,"rgba(170,215,250,0)"); c.fillStyle=g; c.beginPath(); c.arc(p.x,p.y,R*(0.3+1.1*k),0,7); c.fill();   // frost spreading from where it touched
+    c.strokeStyle="rgba(255,255,255,.9)"; c.lineWidth=1.6; for(let i=0;i<9;i++){ const an=i/9*Math.PI*2+0.3, L=R*(0.25+0.85*k)*(0.7+0.3*atH(i*5)); c.beginPath(); c.moveTo(p.x,p.y); c.lineTo(p.x+Math.cos(an)*L,p.y+Math.sin(an)*L); c.stroke();
+      c.beginPath(); c.moveTo(p.x+Math.cos(an)*L*0.6,p.y+Math.sin(an)*L*0.6); c.lineTo(p.x+Math.cos(an+0.5)*L*0.8,p.y+Math.sin(an+0.5)*L*0.8); c.stroke(); }   // ice crystals branch out
+    for(let i=0;i<5;i++){ const ph=((t/500)+i/5)%1; SG.puff(c,tg.x+(i-2)*R*0.4,tg.y-R*(0.5+ph*0.9),R*(0.15+0.15*ph),0.6*(1-ph),[225,240,255]); }   // cold mist rising
+    for(let i=0;i<4;i++){ const ph=((t/700)+i/4)%1; atStar4(c,tg.x+Math.cos(i*1.6)*R*0.7,tg.y-R*0.3+Math.sin(i*1.6)*R*0.6,R*0.12*(1-ph),"rgba(255,255,255,.95)"); }
+    c.restore(); atImpact(t,420,0.25,0.05); }};
+Object.assign(AR_KIND,{"Slam Shut":"bookslam","Freezer Burn":"frostpress"});
+if(typeof KSND!=="undefined") Object.assign(KSND,{
+  bookslam:(d,t)=>{ dNoise(d,t+0.26,0.2,0.08,'bandpass',2500,0.8); dKick(d,t+0.52,0.8); dNoise(d,t+0.52,0.12,0.4,'bandpass',900,1.2); dNoise(d,t+0.54,0.3,0.12,'lowpass',500); },
+  frostpress:(d,t)=>{ dNoise(d,t+0.42,0.6,0.1,'highpass',5000,0.8); sTone(d,t+0.42,'sine',2200,1800,0.5,0.03); [0.5,0.62,0.74].forEach(x=>sTone(d,t+x,'triangle',3200,2800,0.06,0.03)); }
+});
