@@ -1033,3 +1033,28 @@ ANIM.capewrap={C:720,D:1560,contact:false,marks:true,
     if(t>=720&&t<1180) for(let i=0;i<3;i++){ const ph=((t/320)+i/3)%1; c.strokeStyle=`rgba(255,200,215,${0.5*(1-ph)})`; c.lineWidth=2; c.beginPath(); c.ellipse(tg.x,tg.y-R*0.25,R*(1.15+0.35*ph),R*(1+0.3*ph),0,0,7); c.stroke(); }
     atImpact(t,720,0.35,0.05); }};
 if(typeof KSND!=="undefined") KSND.capewrap=(d,t)=>{ dNoise(d,t+0.15,0.35,0.1,'bandpass',600,0.6); dNoise(d,t+0.55,0.18,0.16,'bandpass',500,0.8); dNoise(d,t+0.72,0.14,0.2,'lowpass',400); sTone(d,t+0.74,'sine',160,110,0.5,0.05); };
+
+/* Gid (17 Nov 2026): Wing Wrap uses Vampire's own cape. It breaks into bats, appears behind the target facing it, takes the cape off its back,
+   swings it open and wraps it round the target, there's an impact, then it turns back to bats and returns */
+ANIM.capewrap={C:780,D:1560,contact:false,marks:true,
+  atk:(t,o)=>{ const d=(o&&o.dir)||1;
+    if(t<220){ const k=eo(t/220); return {alpha:1-k,sy:1-0.3*k,pose:"cast"}; }   // breaks into bats
+    if(t<1180){ const k=t<380?eo((t-220)/160):1; return {f:1.8,sx:-1,alpha:k,pose:atPose(t<620?"cast":"push",{noCape:t>=440?1:0})}; }   // behind the target, turned to face it
+    if(t<1320){ const k=eo((t-1180)/140); return {f:1.8,sx:-1,alpha:1-k,pose:"cast"}; }
+    const k=eo((t-1320)/240); return {f:0,alpha:k,pose:"idle"}; },
+  def(t){ if(t<780||t>1250) return null; const sq=t<1150?0.12:0; return {sx:1-sq,sy:1+sq*0.3,off:[Math.sin(t/14)*2,0],pose:"hurt",flash:t<840?3:0}; },
+  fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, d=atDir(x);
+    if(t<420||(t>1150&&t<1560)){ const k=t<420?t/420:(t-1150)/410; for(let i=0;i<7;i++){ const q=((k*1.3)+i/7)%1; const fx0=t<420?s.x:s.x, px=t<420?tg.x+(fx0-tg.x)*(1-q)*0.3+(i-3)*R*0.2:s.x+(i-3)*R*0.2, py=s.y-s.r*(0.4+q*1.2)+Math.sin(t/60+i)*6;
+        c.fillStyle=`rgba(40,20,50,${0.85*(1-q)})`; c.beginPath(); c.moveTo(px,py); c.quadraticCurveTo(px-8,py-7,px-14,py-1); c.quadraticCurveTo(px-8,py-2,px,py+3); c.quadraticCurveTo(px+8,py-2,px+14,py-1); c.quadraticCurveTo(px+8,py-7,px,py); c.fill(); } }   // little bats
+    if(t<440||t>1180) return;
+    const parts=x.parts||[120,40,140], outer=parts.map(v=>Math.max(0,v*0.85*0.7)), red=[184,36,58], A={x:s.x,y:s.y-s.r*0.55}, T={x:tg.x,y:tg.y-R*0.25}, dt=Math.sign(tg.x-s.x)||-d;
+    const open=t<620?eo((t-440)/180):1, close=t<620?0:t<780?eio((t-620)/160):t<1080?1:1-eio((t-1080)/100), lerp=(a,b,k)=>a+(b-a)*k, deg=Math.PI/180;
+    const C0={x:lerp(A.x,T.x,close),y:lerp(A.y,T.y,close)}, L=Math.abs(T.x-A.x)+R, rad=lerp(L*0.5,R*1.3,close)*Math.max(0.08,open), sq=t>780&&t<1080?1-0.05*Math.abs(Math.sin((t-780)/80)):1;
+    for(const [opn,cls] of [[[-170,-100],[-178,-6]],[[100,170],[178,6]]]){ const a0=lerp(opn[0],cls[0],close)*deg, a1=lerp(opn[1],cls[1],close)*deg;
+      const ang=a=>dt>0?a:Math.PI-a, pt=(a,r)=>({x:C0.x+Math.cos(ang(a))*r,y:C0.y+Math.sin(ang(a))*r*0.92});
+      const shape=()=>{ c.beginPath(); c.moveTo(A.x,A.y); for(let i=0;i<=14;i++){ const a=a0+(a1-a0)*i/14, q=pt(a,rad*sq*(i%2?1.06:0.95)); c.lineTo(q.x,q.y); } c.closePath(); };
+      shape(); c.fillStyle=atRgba(red.map((v,j)=>v+(outer[j]-v)*close),0.98); c.fill();
+      c.save(); c.clip(); c.strokeStyle=atRgba(close>0.5?red:outer,0.95); c.lineWidth=Math.max(3,R*0.12); shape(); c.stroke(); c.restore(); }
+    if(t>=780&&t<1080){ const k=(t-780)/300; atPow(c,T,Math.min(1,k*1.5),R/20); }
+    atImpact(t,780,0.6,0.15); }};
+if(typeof KSND!=="undefined") KSND.capewrap=(d,t)=>{ for(let i=0;i<6;i++) dNoise(d,t+0.02+i*0.035,0.03,0.06,'bandpass',3000+i*200,3); dNoise(d,t+0.46,0.2,0.1,'bandpass',600,0.6); dNoise(d,t+0.64,0.14,0.14,'bandpass',500,0.8); dKick(d,t+0.78,0.8); dNoise(d,t+0.78,0.3,0.25,'lowpass',500); for(let i=0;i<5;i++) dNoise(d,t+1.16+i*0.04,0.03,0.05,'bandpass',3200,3); };

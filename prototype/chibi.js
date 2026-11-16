@@ -3352,7 +3352,8 @@ x.feet.push([g.cx, 182, 10]); },
       bottom(st) { return 181 - this.ll(st); }, height(st) { return this.dims[st][1] + this.ll(st) + 22; },
       path(c, g) { roundBox(c, g.left, g.top, g.bw, g.bh, g.bw * 0.44); },
       arms: 'stub', armW: st => by(st, 0, 6, 7), handR: st => by(st, 0, 5, 6), shoulderY: 0.62,
-      behind(c, g, x) { const cape = dk(x.parts, 0.15), sw = Math.sin(x.t / 500) * 3;
+      behind(c, g, x) { const cape = dk(x.parts, 0.15), sw = Math.sin(x.t / 500) * 3, noCape = x.P && x.P.noCape;   // noCape: the cape is off its back, out wrapping a target
+        if (!noCape) {
         if (g.stage === 'Mega') for (const sd of [-1, 1]) { c.save(); c.translate(g.cx + sd * g.bw * 0.4, g.top + g.bh * 0.3); c.scale(sd, 1); c.rotate(-0.3 + Math.sin(x.t / 300) * 0.12);
           c.fillStyle = rgb(dk(x.parts, 0.35)); c.beginPath(); c.moveTo(0, 0); c.lineTo(46, -22); c.quadraticCurveTo(40, -6, 46, 4); c.quadraticCurveTo(36, 2, 34, 12); c.quadraticCurveTo(24, 8, 20, 18); c.quadraticCurveTo(10, 10, 0, 14); c.closePath(); c.fill(); c.restore(); }
         const L = g.left - 8, R = g.left + g.bw + 8, y0 = g.top + g.bh * 0.28;
@@ -3360,6 +3361,7 @@ x.feet.push([g.cx, 182, 10]); },
         c.fillStyle = '#b8243a'; c.beginPath(); c.moveTo(L + 10, y0 + 6); c.lineTo(L + 2 - sw, 184); c.lineTo(R - 2 + sw, 184); c.lineTo(R - 10, y0 + 6); c.closePath(); c.fill();
         for (const sd of [-1, 1]) { c.fillStyle = rgb(cape); c.beginPath(); c.moveTo(g.cx + sd * g.bw * 0.2, g.top + g.bh * 0.45); c.lineTo(g.cx + sd * (g.bw * 0.62), g.top - 6); c.lineTo(g.cx + sd * g.bw * 0.5, g.top + g.bh * 0.55); c.closePath(); c.fill();
           c.fillStyle = '#b8243a'; c.beginPath(); c.moveTo(g.cx + sd * g.bw * 0.3, g.top + g.bh * 0.42); c.lineTo(g.cx + sd * g.bw * 0.56, g.top + 2); c.lineTo(g.cx + sd * g.bw * 0.48, g.top + g.bh * 0.48); c.closePath(); c.fill(); }
+        }
         for (const sd of [-1, 1]) { const fx = g.cx + sd * g.bw * 0.2; blob(c, fx, 182, by(g.stage, 7, 8, 9), 4.5, dk(x.parts, 0.2), sd < 0 ? x.L.legL : x.L.legR, x.t, 'foot'); x.feet.push([fx, 182, 7]); } },
       inside(c, g, x) { c.fillStyle = rgb(dk(x.parts, 0.25)); c.beginPath(); c.moveTo(g.left - 2, g.top - 2); c.lineTo(g.left + g.bw + 2, g.top - 2); c.lineTo(g.left + g.bw + 2, g.top + g.bh * 0.24);
         c.quadraticCurveTo(g.cx + g.bw * 0.22, g.top + g.bh * 0.12, g.cx, g.top + g.bh * 0.3); c.quadraticCurveTo(g.cx - g.bw * 0.22, g.top + g.bh * 0.12, g.left - 2, g.top + g.bh * 0.24); c.closePath(); c.fill();
