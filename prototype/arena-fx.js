@@ -701,65 +701,96 @@ function atScoopBall(c,p,s,col,squash=0){ c.save(); c.translate(p.x,p.y); c.scal
   for(const [x,y,cc] of [[-6,-2,"#ff6fa0"],[5,-4,"#7fd0ff"],[0,2,"#ffe066"],[7,2,"#9be37a"]]){ c.fillStyle=cc; c.save(); c.translate(x,y); c.rotate(x); c.fillRect(-2,-0.7,4,1.4); c.restore(); } c.restore(); }
 function atFlake(c,x,y,r,a){ c.save(); c.translate(x,y); c.rotate(a); c.strokeStyle="rgba(235,250,255,.95)"; c.lineWidth=1.6; c.lineCap="round";
   for(let i=0;i<3;i++){ c.rotate(Math.PI/3); c.beginPath(); c.moveTo(-r,0); c.lineTo(r,0); c.moveTo(r*0.55,0); c.lineTo(r*0.8,-r*0.25); c.moveTo(r*0.55,0); c.lineTo(r*0.8,r*0.25); c.stroke(); } c.restore(); }
+/* shared pieces for the batch 4 signatures: energy drawn in toward a point, and the hit that shakes the screen */
+function atGather(c,p,k,col,R,seed=0){ if(k<=0) return; c.save(); c.globalCompositeOperation="lighter";
+  for(let i=0;i<14;i++){ const ph=(k*1.6+i/14)%1, a=i*2.4+seed, r=R*(1.6-ph*1.5); c.fillStyle=atRgba(col,0.9*(ph)); c.beginPath(); c.arc(p.x+Math.cos(a+ph*2)*r,p.y+Math.sin(a+ph*2)*r*0.8,Math.max(0.5,R*0.05*(1-ph*0.5)),0,7); c.fill(); }
+  atWisp(c,p.x,p.y,R*0.12+R*0.32*k,col); c.restore(); }
+function atImpact(t,C,shake,flash){ if(typeof AT==='undefined'||!AT||t<C||t>C+70) return; AT.trauma=Math.max(AT.trauma||0,shake); if(flash&&(!AT.flash||performance.now()-AT.flash.t0>400)) AT.flash={t0:performance.now(),a:flash}; }
 Object.assign(ANIM,{
-  /* Bloop: its bell glows, four tentacles reach across, and three pulses of light run down them into the target */
-  jellyzap:{C:620,D:1300,
-    atk:t=>({f:0.08*Math.sin(Math.min(1,t/600)*Math.PI),lift:6*Math.sin(t/120),pose:t<300?"cast":t<1100?"push":"idle"}),
-    def(t){ if(t<620||t>1150) return null; const z=Math.floor((t-620)/170)%2; return {pose:"hurt",off:[Math.sin(t/18)*3,0],flash:z?3:0}; },
-    fx(c,t,x){ const s=x.self, tg=x.target, col=x.col, B=atBig(x)*1.6; if(t<320){ atJelly(c,s,t,col,t/320*1.6); return; }
-      const reach=Math.min(1,(t-300)/260), out=t>1150?1-(t-1150)/150:1; if(out<=0) return; c.save(); c.globalAlpha=out; c.lineCap="round";
-      for(let i=0;i<4;i++){ const sx=s.x+(i-1.5)*7, sy=s.y+8, ex=tg.x+(i-1.5)*9, ey=tg.y-4+(i%2)*8, mx=(sx+ex)/2, my=Math.min(sy,ey)-20+Math.sin(t/90+i)*10;
-        const qx=(a,b,cc,k)=>(1-k)*(1-k)*a+2*(1-k)*k*b+k*k*cc, path=(k0,k1)=>{ c.beginPath(); for(let j=0;j<=12;j++){ const k=k0+(k1-k0)*j/12, w=Math.sin(k*9+t/70+i)*3; const px=qx(sx,mx,ex,k), py=qx(sy,my,ey,k)+w; c[j?"lineTo":"moveTo"](px,py); } c.stroke(); };
-        c.strokeStyle=atRgba(col,0.6); c.lineWidth=6*B; path(0,reach); c.strokeStyle=atRgba(col.map(v=>Math.min(255,v+70)),0.9); c.lineWidth=3*B; path(0,reach); c.strokeStyle="rgba(255,255,255,.95)"; c.lineWidth=1.2*B; path(0,reach);
-        for(let p=0;p<3;p++){ const k=(t-620-p*170)/200; if(k<0||k>1.4) continue; if(k<=1){ const px=qx(sx,mx,ex,k), py=qx(sy,my,ey,k); atWisp(c,px,py,4*B,[255,240,140]); } } }
-      for(let p=0;p<3;p++){ const k=(t-820-p*170)/180; if(k<0||k>1) continue; c.strokeStyle=`rgba(255,240,120,${1-k})`; c.lineWidth=3.5;
-        for(let j=0;j<5;j++){ const a=j/5*Math.PI*2+p; atZig(c,{x:tg.x,y:tg.y},{x:tg.x+Math.cos(a)*(26+k*18)*B,y:tg.y+Math.sin(a)*(22+k*14)*B},5,10,j+p*9+Math.floor(t/40)); } }
+  /* Bloop: it rises with sparks pulling into its bell, lashes four tentacles across, and three surges of lightning run down them */
+  jellyzap:{C:900,D:1950,
+    atk:t=>({f:0,lift:t<560?20*eo(t/560):t<1500?20+3*Math.sin(t/60):20*(1-eio((t-1500)/400)),pose:t<560?"cast":t<1500?"push":"idle",sx:t<560?1+0.06*Math.sin(t/40):1,sy:t<560?1-0.06*Math.sin(t/40):1}),
+    def(t){ if(t<900||t>1600) return null; const z=Math.floor((t-900)/80)%2; return {pose:"hurt",off:[Math.sin(t/14)*4,0],flash:z?3:1}; },
+    fx(c,t,x){ const s=x.self, tg=x.target, col=x.col, R=tg.r, bell={x:s.x+atDir(x)*s.r*0.15,y:s.y-(t<560?20*eo(t/560):20)}, Y=[255,236,120];
+      if(t<620){ atGather(c,bell,t/560,Y,s.r*1.1,1); c.strokeStyle=`rgba(255,240,140,${0.4+0.5*t/560})`; c.lineWidth=2; for(let j=0;j<3+Math.floor(t/120);j++){ const a=atH(j+Math.floor(t/50))*7; atZig(c,bell,{x:bell.x+Math.cos(a)*s.r*0.9,y:bell.y+Math.sin(a)*s.r*0.7},4,s.r*0.2,j*5+Math.floor(t/50)); } }
+      if(t<560||t>1950) return; const reach=eo(Math.min(1,(t-560)/220)), out=t>1650?1-(t-1650)/300:1; c.save(); c.globalAlpha=Math.max(0,out); c.lineCap="round";
+      const qx=(a,b,cc,k)=>(1-k)*(1-k)*a+2*(1-k)*k*b+k*k*cc;
+      for(let i=0;i<4;i++){ const sx=s.x+(i-1.5)*s.r*0.22, sy=s.y+s.r*0.3-20, ex=tg.x+(i-1.5)*R*0.35, ey=tg.y-R*0.3+(i%2)*R*0.4, mx=(sx+ex)/2, my=Math.min(sy,ey)-R*0.6+Math.sin(t/80+i)*R*0.2;
+        const path=(k1)=>{ c.beginPath(); for(let j=0;j<=16;j++){ const k=k1*j/16, w=Math.sin(k*10+t/60+i)*R*0.06; c[j?"lineTo":"moveTo"](qx(sx,mx,ex,k),qx(sy,my,ey,k)+w); } c.stroke(); };
+        c.strokeStyle=atRgba(col,0.55); c.lineWidth=R*0.2; path(reach); c.strokeStyle=atRgba(col.map(v=>Math.min(255,v+80)),0.95); c.lineWidth=R*0.1; path(reach); c.strokeStyle="rgba(255,255,255,.95)"; c.lineWidth=R*0.035; path(reach);
+        for(let p=0;p<3;p++){ const k=(t-760-p*230)/160; if(k>=0&&k<=1) atWisp(c,qx(sx,mx,ex,k),qx(sy,my,ey,k),R*0.13,Y); } }
+      for(let p=0;p<3;p++){ const T0=920+p*230, k=(t-T0)/260; atImpact(t,T0,p?0.35:0.6,p?0:0.35); if(k<0||k>1) continue; c.strokeStyle=`rgba(255,244,150,${1-k})`; c.lineWidth=R*(0.09-p*0.02);
+        for(let j=0;j<7;j++){ const a=j/7*Math.PI*2+p; atZig(c,{x:tg.x,y:tg.y},{x:tg.x+Math.cos(a)*R*(1.1+k*0.8),y:tg.y+Math.sin(a)*R*(0.9+k*0.6)},6,R*0.3,j+p*9+Math.floor(t/40)); }
+        atWisp(c,tg.x,tg.y,R*(0.5-p*0.1)*(1-k),Y); }
       c.restore(); }},
-  /* Sox: it pulls back, then a long striped sock shoots out like a spring punch and lands with a burst and flying lint */
-  sockit:{C:440,D:1150,contact:true,marks:true,
-    atk:t=>({f:t<260?-0.08*eo(t/260):t<440?0.25*eo((t-260)/180):t<760?0.25:0.25*(1-eio((t-760)/300)),pose:t<260?"punchwind":t<820?"punch":"idle",sx:t<260?0.92:1,sy:t<260?1.06:1}),
-    def(t){ if(t<440||t>760) return null; const a=1-eo((t-440)/320); return {sx:1-0.25*a,sy:1+0.12*a,off:[atH(Math.floor(t/30))*4-2+12*a,0],pose:"hit"}; },
-    fx(c,t,x){ const s=x.self, tg=x.target, d=atDir(x), B=atBig(x)*1.3, hand={x:s.x+d*14,y:s.y-2};
-      if(t>260&&t<900){ const ext=t<440?eo((t-260)/180):t<700?1:1-eio((t-700)/200), end={x:hand.x+(tg.x-d*8-hand.x)*ext,y:hand.y+(tg.y-hand.y)*ext}; atSock(c,hand,end,x.col,B); }
-      if(t>=430){ const k=(t-430)/360; atPow(c,{x:tg.x-d*4,y:tg.y-4},k,B); for(let i=0;i<6;i++) atFluff(c,{x:tg.x,y:tg.y},Math.min(1,(t-430)/700),i,B); } }},
-  /* Cuppy: a piping bag squeezes a ribbon of frosting across the field, and a big swirl of it sets on the target with sprinkles */
-  frostingsplat:{C:640,D:2100,
-    atk:t=>({f:0,rot:t<640?-0.12*Math.sin(t/640*Math.PI):0,pose:t<300?"cast":t<900?"push":"idle"}),
-    def(t){ if(t<640||t>1900) return null; const a=1-eo((t-640)/240); return {sx:1+0.12*a,sy:1-0.14*a-0.04,pose:"hurt"}; },
-    fx(c,t,x){ const s=x.self, tg=x.target, B=atBig(x)*1.6, cream=[255,250,238], dk=[255,150,190], tip={x:s.x+atDir(x)*10,y:s.top.y-22};
-      const out=t>1850?1-(t-1850)/250:1; if(out<=0) return; c.save(); c.globalAlpha=out;
-      if(t<760){ c.save(); c.translate(tip.x,tip.y); c.rotate(atDir(x)*(0.9+0.2*Math.sin(t/60))); c.scale(B,B); const sq=t<300?0:Math.sin(t/50)*1.5; c.fillStyle="#f4f1ea"; c.beginPath(); c.moveTo(0,0); c.lineTo(-10-sq,-26); c.quadraticCurveTo(0,-32,10+sq,-26); c.closePath(); c.fill(); c.strokeStyle="rgba(120,100,90,.5)"; c.lineWidth=1.2; c.stroke(); c.fillStyle="#c7c9cf"; c.fillRect(-2.5,-1,5,5); c.restore(); }
-      const k=Math.min(1,Math.max(0,(t-280)/360)), gone=t>660?Math.min(1,(t-660)/240):0;
-      if(k>0&&gone<1){ for(let j=Math.floor(gone*36);j<=Math.floor(k*36);j++){ const p=lerpP(tip,{x:tg.x,y:tg.top.y+6},j/36,70); c.fillStyle=atRgba(j%3===0?dk:cream,1); c.strokeStyle="rgba(200,150,140,.5)"; c.lineWidth=1; c.beginPath(); c.arc(p.x,p.y,(5.5-(j%2)*1.2)*B,0,7); c.fill(); c.stroke(); } }
-      if(t>=620){ const g=Math.min(1,eo((t-620)/260)); for(let r=0;r<4;r++){ const w=(26-r*6)*B*g, y=tg.top.y+14-r*7*B*g; c.fillStyle=atRgba(r%2?dk:cream,1); c.strokeStyle="rgba(200,150,140,.6)"; c.lineWidth=1.2; c.beginPath(); c.ellipse(tg.x,y,w,6*B*g+2,0,0,7); c.fill(); c.stroke(); c.fillStyle="rgba(255,255,255,.55)"; c.beginPath(); c.ellipse(tg.x-w*0.35,y-2,w*0.25,1.8,0,0,7); c.fill(); }
-        c.fillStyle=atRgba(cream,1); c.beginPath(); c.moveTo(tg.x-3,tg.top.y-14*B*g); c.quadraticCurveTo(tg.x,tg.top.y-26*B*g,tg.x+5,tg.top.y-16*B*g); c.fill();
-        for(let i=0;i<4;i++){ const drip=Math.min(1,(t-700-i*60)/400); if(drip>0){ c.fillStyle=atRgba(cream,1); const dx=tg.x+(i-1.5)*13*B; c.fillRect(dx-2,tg.top.y+14,4,drip*16*B); c.beginPath(); c.arc(dx,tg.top.y+14+drip*16*B,2.6,0,7); c.fill(); } }
-        const r=rng(7); for(let i=0;i<14;i++){ const land=t-660-i*25; if(land<0) continue; const sx=tg.x+(r()-0.5)*44*B, sy=tg.top.y+14-r()*24*B*g, f=Math.min(1,land/120);
-          c.save(); c.translate(sx,sy-(1-f)*30); c.rotate(r()*3); c.fillStyle=["#ff3f7f","#3fa8ff","#ffc61a","#4cc94c","#9b5cff"][i%5]; c.fillRect(-4.5,-1.5,9,3); c.restore(); } }
+  /* Sox: it whirls a long sock over its head, faster and faster, then fires it like a spring punch */
+  sockit:{C:820,D:1700,contact:true,marks:true,
+    atk:t=>({f:t<560?-0.1*eo(t/560):t<820?-0.1+0.4*ei((t-560)/260):t<1250?0.3:0.3*(1-eio((t-1250)/400)),pose:t<560?"cast":t<1300?"punch":"idle",rot:t<560?0.06*Math.sin(t/50):0}),
+    def(t){ if(t<820||t>1250) return null; const a=1-eo((t-820)/430); return {sx:1-0.3*a,sy:1+0.15*a,off:[atH(Math.floor(t/30))*6-3+26*a,-6*a],rot:0.25*a,pose:"hit"}; },
+    fx(c,t,x){ const s=x.self, tg=x.target, d=atDir(x), R=tg.r, S=R/38;
+      if(t<620){ const sp=t/560, a=(t/1000)*(6+sp*30), cx=s.x+d*s.r*0.55, cy=s.y-s.r*0.1, L=s.r*1.05;
+        c.strokeStyle=`rgba(255,255,255,${0.25+0.55*sp})`; c.lineWidth=2.5; for(let j=0;j<4;j++){ c.beginPath(); c.ellipse(cx,cy,L*0.45*(1-j*0.1),L*(1-j*0.1),0,a-1-j*0.3,a-0.2-j*0.3); c.stroke(); }
+        atSock(c,{x:cx,y:cy},{x:cx+Math.cos(a)*L*0.45,y:cy+Math.sin(a)*L},x.col,S*0.9); return; }
+      const hand={x:s.x+d*s.r*0.4,y:s.y-4};
+      if(t<1450){ const ext=t<820?eo((t-620)/200):t<1250?1+0.05*Math.sin((t-820)/30)*Math.max(0,1-(t-820)/300):1-eio((t-1250)/200), end={x:hand.x+(tg.x-d*R*0.3-hand.x)*ext,y:hand.y+(tg.y-hand.y)*ext};
+        if(t<860){ c.strokeStyle="rgba(255,255,255,.7)"; c.lineWidth=2; for(let j=0;j<5;j++){ const yy=hand.y+(j-2)*R*0.18; c.beginPath(); c.moveTo(hand.x,yy); c.lineTo(end.x-d*R*0.5,yy); c.stroke(); } }
+        atSock(c,hand,end,x.col,S); }
+      atImpact(t,820,0.7,0.4);
+      if(t>=810){ const k=(t-810)/420; atPow(c,{x:tg.x-d*R*0.2,y:tg.y-R*0.1},k,S*1.6); for(let i=0;i<10;i++) atFluff(c,{x:tg.x,y:tg.y},Math.min(1,(t-810)/800),i*0.62,S*1.4); } }},
+  /* Cuppy: a big piping bag swells as it squeezes, fires a thick rope of frosting, and buries the target's head in a swirl with a cherry on top */
+  frostingsplat:{C:920,D:2300,
+    atk:t=>({f:0,rot:t<560?-0.1*Math.sin(t/90):0,pose:t<560?"cast":t<1100?"push":"idle",sx:t<560?1+0.05*t/560:1,sy:t<560?1-0.05*t/560:1}),
+    def(t){ if(t<920||t>2000) return null; const a=1-eo((t-920)/260); return {sx:1+0.16*a,sy:1-0.2*a-0.04,off:[0,4*a],pose:"hurt"}; },
+    fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, cream=[255,250,238], pink=[255,140,185], d=atDir(x), out=t>1950?1-(t-1950)/350:1; if(out<=0) return; c.save(); c.globalAlpha=out;
+      const bag={x:s.x+d*s.r*1.0,y:s.y-s.r*0.75}, swell=t<560?eo(t/560):t<920?1-0.4*eo((t-560)/360):0.6;
+      if(t<1000){ c.save(); c.translate(bag.x,bag.y); c.rotate(d*(1.1+0.15*Math.sin(t/70))); const W=s.r*(0.45+0.25*swell), H=s.r*1.1;
+        c.fillStyle="#f6f3ec"; c.beginPath(); c.moveTo(0,H*0.5); c.quadraticCurveTo(-W*1.2,-H*0.1,-W,-H*0.55); c.quadraticCurveTo(0,-H*0.75,W,-H*0.55); c.quadraticCurveTo(W*1.2,-H*0.1,0,H*0.5); c.fill(); c.strokeStyle="rgba(150,120,110,.6)"; c.lineWidth=1.5; c.stroke();
+        c.fillStyle=atRgba(pink,0.35); c.beginPath(); c.ellipse(0,-H*0.15,W*0.6,H*0.28,0,0,7); c.fill(); c.fillStyle="#c9ccd2"; c.beginPath(); c.moveTo(-W*0.2,H*0.45); c.lineTo(W*0.2,H*0.45); c.lineTo(0,H*0.68); c.fill();
+        c.restore(); if(t<560) atGather(c,{x:bag.x+d*s.r*0.6,y:bag.y+s.r*0.5},t/560,pink,s.r*0.6,3); }
+      const tip={x:bag.x+d*s.r*0.62,y:bag.y+s.r*0.55}, head={x:tg.x,y:tg.top.y+R*0.1};
+      const k=Math.min(1,Math.max(0,(t-560)/360)), gone=t>980?Math.min(1,(t-980)/250):0;
+      if(k>0&&gone<1) for(let j=Math.floor(gone*40);j<=Math.floor(k*40);j++){ const p=lerpP(tip,head,j/40,R*1.2); c.fillStyle=atRgba(j%4<2?cream:pink,1); c.strokeStyle="rgba(190,140,130,.55)"; c.lineWidth=1.2; c.beginPath(); c.arc(p.x,p.y,R*(0.15-(j%2)*0.03),0,7); c.fill(); c.stroke(); }
+      atImpact(t,920,0.45,0.25);
+      if(t>=900){ const g=eo(Math.min(1,(t-900)/240));
+        if(t<1300){ const sk=(t-900)/400; for(let i=0;i<10;i++){ const a=-Math.PI*(0.05+0.9*i/9), r=R*(0.5+sk*1.3); c.fillStyle=atRgba(i%2?cream:pink,1-sk); c.beginPath(); c.arc(head.x+Math.cos(a)*r,head.y+Math.sin(a)*r*0.7+sk*sk*R,R*0.09*(1-sk*0.5),0,7); c.fill(); } }
+        for(let r=0;r<4;r++){ const w=R*(1.15-r*0.25)*g, y=head.y-r*R*0.26*g; c.fillStyle=atRgba(r%2?pink:cream,1); c.strokeStyle="rgba(190,140,130,.6)"; c.lineWidth=1.5; c.beginPath(); c.ellipse(head.x,y,w,R*0.2*g+1,0,0,7); c.fill(); c.stroke(); c.fillStyle="rgba(255,255,255,.6)"; c.beginPath(); c.ellipse(head.x-w*0.4,y-R*0.05,w*0.22,R*0.05,0,0,7); c.fill(); }
+        for(let i=0;i<5;i++){ const drip=Math.min(1,(t-980-i*70)/500); if(drip>0){ const dx=head.x+(i-2)*R*0.42; c.fillStyle=atRgba(i%2?pink:cream,1); c.fillRect(dx-R*0.05,head.y,R*0.1,drip*R*0.55); c.beginPath(); c.arc(dx,head.y+drip*R*0.55,R*0.07,0,7); c.fill(); } }
+        const ch=Math.min(1,(t-1100)/220); if(ch>0){ const cy=head.y-R*0.95*g-(1-eo(ch))*R*1.5; c.strokeStyle="#4a7a2a"; c.lineWidth=2; c.beginPath(); c.moveTo(head.x,cy-R*0.12); c.quadraticCurveTo(head.x+R*0.1,cy-R*0.35,head.x+R*0.25,cy-R*0.4); c.stroke(); c.fillStyle="#d8203a"; c.beginPath(); c.arc(head.x,cy,R*0.16,0,7); c.fill(); c.fillStyle="rgba(255,255,255,.7)"; c.beginPath(); c.arc(head.x-R*0.05,cy-R*0.05,R*0.05,0,7); c.fill(); }
+        const rr=rng(7); for(let i=0;i<22;i++){ const land=t-950-i*22; if(land<0) continue; const f=Math.min(1,land/150), sx=head.x+(rr()-0.5)*R*2, sy=head.y-rr()*R*0.8*g;
+          c.save(); c.translate(sx,sy-(1-f)*R*1.2); c.rotate(rr()*3); c.fillStyle=["#ff3f7f","#3fa8ff","#ffc61a","#4cc94c","#9b5cff"][i%5]; c.fillRect(-R*0.09,-R*0.03,R*0.18,R*0.06); c.restore(); } }
       c.restore(); }},
-  /* Suds: three waves of soap bubbles drift over, gather into foam round the target, and each wave pops in turn */
-  foamburst:{C:520,D:2000,
-    atk:t=>({f:0,pose:t<260?"cast":t<1100?"push":"idle",sx:1+0.04*Math.sin(t/60),sy:1-0.04*Math.sin(t/60)}),
-    def(t){ if(t<520||t>1700) return null; return {pose:"hurt",off:[Math.sin(t/30)*2,0]}; },
-    fx(c,t,x){ const s=x.self, tg=x.target, B=atBig(x)*1.7, r=rng(11);
-      for(let w=0;w<3;w++){ const t0=180+w*220, arrive=t0+340, popAt=arrive+420+w*120;
-        for(let i=0;i<7;i++){ const rad=(4+r()*6)*B, ox=(r()-0.5)*40*B, oy=(r()-0.5)*34*B, wob=r()*6; const k=(t-t0-i*25)/340;
-          if(k<0) continue; if(t<popAt+i*20){ const p=k<1?lerpP({x:s.x,y:s.y-4},{x:tg.x+ox,y:tg.y+oy},eio(k),40+wob*4,(i-3)*4):{x:tg.x+ox+Math.sin(t/120+i)*2,y:tg.y+oy+Math.cos(t/140+i)*2}; atBubble(c,p.x,p.y,rad); }
-          else { const pk=(t-popAt-i*20)/220; if(pk<1) atPop(c,tg.x+ox,tg.y+oy,rad,pk); } } } }},
-  /* Scoop: it flicks a scoop high into the air, the scoop lands on the target's head, frost creeps over it and it shivers */
-  brainfreeze:{C:640,D:2100,
-    atk:t=>({f:0,rot:t<320?-0.2*eo(t/320):t<460?-0.2+0.35*eo((t-320)/140):0.15*(1-eo((t-460)/300)),pose:t<320?"cast":t<900?"push":"idle"}),
-    def(t){ if(t<640||t>1950) return null; const a=1-eo((t-640)/220); return {sx:1+0.2*a,sy:1-0.25*a,off:[Math.sin(t/14)*(t>860?2.5:0),0],pose:"hurt"}; },
-    fx(c,t,x){ const s=x.self, tg=x.target, B=atBig(x)*1.8, col=x.col.map(v=>Math.min(255,v*0.4+170)), head={x:tg.x,y:tg.top.y+20};
-      if(t>320&&t<640){ const k=(t-320)/320, p=lerpP({x:s.x,y:s.top.y-6},head,k,150); atScoopBall(c,p,B,col); return; }
-      if(t<=320) return; const out=t>1850?1-(t-1850)/250:1; if(out<=0) return; c.save(); c.globalAlpha=out;
-      const sq=1-eo(Math.min(1,(t-640)/200)); atScoopBall(c,{x:head.x,y:head.y-6+sq*4},B,col,sq);
-      const fr=Math.max(0.001,Math.min(1,(t-680)/400)), bh=(tg.foot-tg.top.y)*0.62;
-      c.fillStyle=`rgba(190,230,255,${0.42*fr})`; c.strokeStyle=`rgba(240,252,255,${0.9*fr})`; c.lineWidth=2.5; c.beginPath(); c.ellipse(tg.x,tg.foot-bh,tg.r*1.25,bh,0,0,7); c.fill(); c.stroke();
-      c.fillStyle=`rgba(255,255,255,${0.7*fr})`; c.beginPath(); c.ellipse(tg.x-tg.r*0.6,tg.foot-bh*1.5,tg.r*0.18,bh*0.3,-0.4,0,7); c.fill(); c.strokeStyle=`rgba(210,240,255,${0.8*fr})`; c.lineWidth=4; c.beginPath(); c.ellipse(tg.x,tg.y,22*B,22*B*fr,0,Math.PI,Math.PI*2); c.stroke();
-      for(let i=0;i<7;i++){ const k=Math.min(1,(t-700-i*50)/300); if(k<=0) continue; const a=Math.PI*(1.05+i*0.13); atFlake(c,tg.x+Math.cos(a)*22*B,tg.y+Math.sin(a)*18*B*fr+4,4*B*k,t/400+i); }
-      if(t>820){ const k=((t-820)%360)/360; c.strokeStyle=`rgba(120,190,255,${1-k*0.5})`; c.lineWidth=2.4; c.lineCap="round";
-        for(const sd of [-1,1]){ const bx=tg.x+sd*16*B, by=head.y-16-k*8; c.beginPath(); c.moveTo(bx,by); c.lineTo(bx+sd*5,by-5); c.lineTo(bx,by-10); c.lineTo(bx+sd*5,by-15); c.stroke(); } }
+  /* Suds: it blows one giant bubble that floats over and swallows the target, smaller bubbles burst inside it, then the big one pops */
+  foamburst:{C:820,D:2150,
+    atk:t=>({f:0,pose:t<560?"cast":t<1600?"push":"idle",sx:t<560?1+0.1*eo(t/560):1,sy:t<560?1-0.08*eo(t/560):1}),
+    def(t){ if(t<820||t>1750) return null; return {pose:"hurt",lift:t<1550?10*Math.sin(Math.min(1,(t-820)/300)*Math.PI/2):10*(1-(t-1550)/200),off:[Math.sin(t/40)*3,0]}; },
+    fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, d=atDir(x), mouth={x:s.x+d*s.r*0.9,y:s.y-s.r*0.1};
+      if(t<560){ const g=eo(t/560); atBubble(c,mouth.x+d*R*0.5*g,mouth.y-R*0.1*g,R*(0.15+0.75*g)*(1+0.04*Math.sin(t/40)),1); for(let i=0;i<4;i++){ const ph=((t/400)+i/4)%1; atBubble(c,mouth.x+d*ph*R,mouth.y-ph*R*1.2,R*0.08,1-ph); } return; }
+      const Big=R*1.35, fly=Math.min(1,(t-560)/260), pos=fly<1?lerpP({x:mouth.x+d*R*0.5,y:mouth.y-R*0.1},{x:tg.x,y:tg.y-R*0.1},eio(fly),R*0.8):{x:tg.x,y:tg.y-R*0.1-(t<1550?10*Math.sin(Math.min(1,(t-820)/300)*Math.PI/2):0)};
+      const rad=fly<1?R*0.9+(Big-R*0.9)*fly:Big*(1+0.03*Math.sin(t/50));
+      if(t<1560) atBubble(c,pos.x,pos.y,rad,0.95);
+      const r=rng(13); for(let w=0;w<3;w++){ const T0=900+w*220; for(let i=0;i<6;i++){ const a=r()*7, rr=r()*Big*0.6, bx=pos.x+Math.cos(a+t/400)*rr, by=pos.y+Math.sin(a+t/400)*rr*0.8, br=R*(0.12+r()*0.1);
+          if(t>820&&t<T0) atBubble(c,bx,by,br,0.9); else if(t>=T0&&t<T0+260) atPop(c,bx,by,br*1.4,(t-T0)/260); } atImpact(t,T0,0.3,0); }
+      atImpact(t,1560,0.6,0.35);
+      if(t>=1560&&t<2150){ const k=(t-1560)/590; atPop(c,pos.x,pos.y,Big,k); for(let i=0;i<16;i++){ const a=i/16*Math.PI*2, rr=Big*(1+k*0.9); c.fillStyle=`rgba(235,250,255,${1-k})`; c.beginPath(); c.arc(pos.x+Math.cos(a)*rr,pos.y+Math.sin(a)*rr*0.8+k*k*R*0.8,R*0.1*(1-k*0.6),0,7); c.fill(); }
+        c.fillStyle=`rgba(255,255,255,${0.7*(1-k)})`; c.beginPath(); c.ellipse(tg.x,tg.foot-2,R*1.4*(0.6+k*0.6),R*0.22,0,0,7); c.fill(); } }},
+  /* Scoop: cold mist gathers into a huge scoop over its head, it flicks the scoop across, the scoop lands on the target and freezes it solid */
+  brainfreeze:{C:950,D:2300,
+    atk:t=>({f:0,rot:t<600?-0.15*eo(t/600):t<760?-0.15+0.4*eo((t-600)/160):0.25*(1-eo((t-760)/400)),pose:t<600?"cast":t<1100?"push":"idle"}),
+    def(t){ if(t<950||t>2050) return null; const a=1-eo((t-950)/240); return {sx:1+0.22*a,sy:1-0.28*a,off:[Math.sin(t/12)*(t>1150?2.5:0),0],pose:"hurt"}; },
+    fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, col=x.col.map(v=>Math.min(255,v*0.35+180)), ICE=[200,235,255], over={x:s.x+atDir(x)*s.r*1.05,y:s.y-s.r*0.55}, head={x:tg.x,y:tg.top.y+R*0.05}, S=R/12*0.55;
+      const out=t>2000?1-(t-2000)/300:1; if(out<=0) return; c.save(); c.globalAlpha=out;
+      if(t<640){ const g=eo(t/600); atGather(c,over,t/600,ICE,s.r*1.2,5); for(let i=0;i<6;i++){ const ph=((t/700)+i/6)%1; c.fillStyle=`rgba(230,245,255,${0.5*(1-ph)})`; c.beginPath(); c.arc(over.x+(i-2.5)*s.r*0.3,over.y+s.r*0.6-ph*s.r,s.r*0.15*(1+ph),0,7); c.fill(); }
+        atScoopBall(c,over,S*Math.max(0.05,g),col); c.restore(); return; }
+      if(t<950){ const k=(t-640)/310, p=lerpP(over,{x:head.x,y:head.y-R*0.4},eio(k),R*2.4); atScoopBall(c,p,S,col); c.strokeStyle="rgba(220,240,255,.5)"; c.lineWidth=2; for(let j=1;j<5;j++){ const q=lerpP(over,{x:head.x,y:head.y-R*0.4},eio(Math.max(0,k-j*0.05)),R*2.4); atFlake(c,q.x,q.y,R*0.06,j); } c.restore(); return; }
+      atImpact(t,950,0.55,0.4);
+      const sq=1-eo(Math.min(1,(t-950)/220)); atScoopBall(c,{x:head.x,y:head.y-R*0.35+sq*R*0.15},S,col,sq);
+      const fr=Math.max(0.001,eo(Math.min(1,(t-980)/280))), bh=(tg.foot-tg.top.y)*0.6+R*0.2, cy=tg.foot-bh;
+      c.fillStyle=`rgba(190,230,255,${0.45*fr})`; c.strokeStyle=`rgba(245,252,255,${0.95*fr})`; c.lineWidth=3; c.beginPath(); c.ellipse(tg.x,cy,R*1.25,bh*fr,0,0,7); c.fill(); c.stroke();
+      c.fillStyle=`rgba(255,255,255,${0.75*fr})`; c.beginPath(); c.ellipse(tg.x-R*0.7,cy-bh*0.5,R*0.14,bh*0.28,-0.35,0,7); c.fill();
+      for(let i=0;i<7;i++){ const L=Math.min(1,(t-1050-i*40)/250); if(L<=0) continue; const ix=tg.x+(i-3)*R*0.32; c.fillStyle="rgba(225,245,255,.95)"; c.beginPath(); c.moveTo(ix-R*0.08,tg.foot-R*0.15); c.lineTo(ix+R*0.08,tg.foot-R*0.15); c.lineTo(ix,tg.foot-R*0.15+R*0.35*L*(0.6+(i%3)*0.2)); c.fill(); }
+      for(let i=0;i<8;i++){ const k=Math.min(1,(t-1000-i*45)/300); if(k>0) atFlake(c,tg.x+Math.cos(i*0.8)*R*1.05,cy+Math.sin(i*0.8)*bh*0.85,R*0.13*k,t/500+i); }
+      if(t>1150){ const k=((t-1150)%380)/380; c.strokeStyle=`rgba(110,180,255,${1-k*0.5})`; c.lineWidth=3; c.lineCap="round";
+        for(const sd of [-1,1]){ const bx=tg.x+sd*R*0.8, by=head.y-R*0.6-k*R*0.2; c.beginPath(); c.moveTo(bx,by); c.lineTo(bx+sd*R*0.15,by-R*0.15); c.lineTo(bx,by-R*0.3); c.lineTo(bx+sd*R*0.15,by-R*0.45); c.stroke(); } }
       c.restore(); }}
 });
 Object.assign(AR_KIND,{"Jelly Zap":"jellyzap","Sock It":"sockit","Frosting Splat":"frostingsplat","Foam Burst":"foamburst","Brain Freeze":"brainfreeze"});
