@@ -757,7 +757,7 @@ Object.assign(ANIM,{
         for(let i=0;i<16;i++){ const a=-Math.PI*(atH(i*3)), sp=R*(0.6+2*eo(k)); SG.puff(c,tg.x+Math.cos(a)*sp*(i%2?1:-1),tg.foot-R*0.5+Math.sin(a)*sp*0.6+k*k*R,R*(0.15+0.15*k),1-k,SN); } c.restore(); } }},
   /* Kraken: the ground darkens under the target, four huge tentacles burst up round it, wrap it and squeeze while ink splashes out */
   sg_kraken:{C:720,D:1420,sig:true,
-    atk:t=>{ const r=t<300?0.2*eo(t/300):t<720?0.2+1.1*eo((t-300)/420):t<1250?1.3+0.06*Math.sin(t/60):1.3*(1-eio((t-1250)/170)); return {f:t<720?0.32*eo(t/720):t<1250?0.32:0.32*(1-eio((t-1250)/170)),pose:atPose(t<720?"attack":"push",{lash:r,lash2:r*0.92,eyes:"fierce"}),sy:1-0.05*Math.sin(Math.min(1,t/720)*Math.PI)}; },
+    atk:(t,o)=>{ const L=typeof mvLimbHit==="function"?mvLimbHit(o)+0.15:1.3, r=t<300?-0.15*eo(t/300):t<720?-0.15+(L+0.15)*ei((t-300)/420):t<1250?L+0.06*Math.sin(t/60):L*(1-eio((t-1250)/170)); return {f:0,pose:atPose(t<720?"attack":"push",{lash:r,lash2:r*0.92,eyes:"fierce"}),sy:1-0.05*Math.sin(Math.min(1,t/720)*Math.PI)}; },
     def(t){ if(t<620||t>1420) return null; const sq=Math.abs(Math.sin((t-620)/140*Math.PI/2)); return {sx:1-0.18*sq,sy:1+0.08*sq,lift:-10*Math.min(1,(t-620)/300),pose:"hurt",flash:Math.floor(t/120)%2?2:0}; },
     fx(c,t,x){ const tg=x.target, R=tg.r, TC=x.parts||x.col||[200,90,140], h=tg.foot-tg.top.y, out=t>1260?1-(t-1260)/160:1; if(out<=0) return; c.save(); c.globalAlpha=out;
       const pool=Math.min(1,t/400); c.fillStyle=`rgba(20,20,50,${0.6*pool})`; c.beginPath(); c.ellipse(tg.x,tg.foot,R*2*pool,R*0.4*pool,0,0,7); c.fill(); SG.ring(c,tg.x,tg.foot,R*2*pool,R*0.4*pool,[120,160,255],2,0.6*pool);

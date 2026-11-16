@@ -595,6 +595,10 @@ function atMegaBeam(c,t,C,o,tg,col,s){
 }
 const AT_FAMCOL={Antik:[255,224,122],Squib:[127,211,242],Moko:[255,154,214],Booly:[159,184,255],Skit:[244,239,228],Chomp:[255,214,90],Pinch:[255,138,122],Stilt:[255,179,92],Plod:[190,196,214],Bipped:[255,170,110],Fizz:[200,140,255],Teep:[140,226,200],Lern:[255,236,150],Eagle:[250,250,240],Vampire:[200,40,60],Phoenix:[255,150,50],Kitsune:[150,200,255],Naga:[150,220,90],Yeti:[210,236,255],Puff:[255,170,210],Flit:[200,160,255],Glop:[140,220,255],Tock:[230,230,240],Mitt:[255,150,90],Brolly:[255,226,110],Spine:[150,220,110],Burr:[210,160,110],Kraken:[120,160,255],Golem:[200,190,170],Unicorn:[255,240,190],Jack:[255,170,60],Wick:[255,150,70],Lumo:[230,255,120],Snooze:[200,180,255],Inky:[150,160,200],Cobble:[200,200,190],Nimbo:[170,210,255],Dango:[255,190,210],Oaklet:[150,210,110],Roly:[190,195,205],Trundle:[170,230,230],Clank:[190,200,215],Crease:[245,245,250],Twiglet:[150,210,110],Swirl:[200,240,255],Ditty:[255,190,220],Sizzle:[255,170,90],Aero:[255,230,120],Nesta:[255,170,200],Magna:[230,90,90],Helm:[220,180,90],Bloop:[170,200,255],Sox:[255,170,200],Cuppy:[255,200,220],Suds:[190,235,255],Scoop:[255,190,170],Tome:[220,200,160],Gumball:[255,150,180],Pina:[255,220,90],Jingle:[255,215,90],Presto:[190,150,255],Vroom:[200,205,215],Shutter:[255,230,120],Yoyo:[255,170,90],Lava:[255,120,70],Pogo:[255,160,200],Tengu:[255,120,100],Tanuki:[210,160,110],Mermaid:[130,230,225],Diwata:[255,160,210],Sphinx:[255,220,110],Garuda:[255,200,80],Werewolf:[200,206,220],Minotaur:[210,150,100],Dragon:[130,210,100],Thunderbird:[255,230,90],Hydra:[170,110,230],Griffin:[255,170,80],Kirin:[120,220,220],Salamander:[255,140,60],Bakunawa:[90,150,240],Cerberus:[230,90,80],Djinn:[110,160,255],Troll:[130,200,100],Mummy:[240,236,220],Sarimanok:[255,120,100]};
 /* one side's pose and offset this frame, the way the battle's sideState works */
+/* how far it is, in the attacker's own drawing units, from its middle to the near edge of the target, so a tentacle, trunk or
+   neck can be stretched to land exactly on the target's edge */
+const atUnitOf=sp=>Math.min(0.5,96/(CHIBI.height(sp.stage,sp.marks,sp.family)+20))*2.3;
+function atGapU(S){ const O=S.foe; if(!O||!S.spec||!O.spec||S.dx==null||O.dx==null) return null; try{ return (Math.abs(O.dx-S.dx)-CHIBI.width(O.spec.stage,O.spec.family)*atUnitOf(O.spec)*0.5)/atUnitOf(S.spec); }catch(err){ return null; } }
 function atSideState(S,te){
   const out={f:0,arc:0,lift:0,rot:0,sx:1,sy:1,pose:null,flash:0,off:[0,0],alpha:1};
   const A=S.anim; if(A&&te<A.t0){ const ch=S.charge, k=ch?(te-ch.t0)/ch.d:1, sp=ch&&ch.tier==="special";
@@ -607,7 +611,7 @@ function atSideState(S,te){
       else if(W==="shadow") out.alpha=0.78+0.22*Math.sin(te/60);
       else if(W==="gears"||W==="steam") out.rot+=Math.sin(te/40)*0.05*kk;
       else if(W==="signal"){ out.off[0]+=(atH(Math.floor(te/40))-0.5)*4*kk; out.sx*=1+0.03*Math.sin(te/25); } }
-  else if(A){ const t=(te-A.t0)*A.rate, K=ANIM[A.kind]; if(t>(A.mega?Math.max(K.D,K.C+950):K.D)) S.anim=null; else Object.assign(out,K.atk(t,{foeH:60,perp:[0,-1],dir:S.dir,fam:S.spec&&S.spec.family,stage:S.spec&&S.spec.stage})); }
+  else if(A){ const t=(te-A.t0)*A.rate, K=ANIM[A.kind]; if(t>(A.mega?Math.max(K.D,K.C+950):K.D)) S.anim=null; else Object.assign(out,K.atk(t,{foeH:60,perp:[0,-1],dir:S.dir,fam:S.spec&&S.spec.family,stage:S.spec&&S.spec.stage,gapU:atGapU(S)})); }
   const O=S.foe.anim; if(O&&!S.anim){ const t=(te-O.t0)*O.rate, K=ANIM[O.kind]; if(t<=K.D&&K.def){ const d=K.def(t,{foeH:60,perp:[0,-1]}); if(d) Object.assign(out,d); } }
   if(S.pose&&te<S.pose.until&&!S.anim) out.pose=S.pose.p;
   if(S.recoil){ const k=(te-S.recoil.t0)/170; if(k>1) S.recoil=null; else out.off[0]-=S.dir*S.recoil.amt*Math.sin(k*Math.PI); }

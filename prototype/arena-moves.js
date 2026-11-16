@@ -479,7 +479,7 @@ Object.assign(ANIM,{
         if(t<end){ const j=Math.floor((t-C)/gap), p=((t-C)%gap)/gap, hit=Math.sin(p*Math.PI); return {f:0.5,pose:atPose("attack",{trunk:0.55+0.75*hit,trunkUp:(j%2?-0.4:0.9)*(1-hit)+(j%2?0.4:-0.2)*hit,eyes:"fierce"}),off:[0,0],sy:1-0.03*hit}; }
         const k=eio(Math.min(1,(t-end)/320)); return {f:0.5*(1-k),pose:k<0.6?atPose("idle",{trunk:0.55*(1-k)}):"idle"}; },
       def(t){ if(t<C||t>end+80) return null; const j=Math.floor((t-C)/gap), p=((t-C)%gap)/gap; return {off:[(1-p)*6,(j%2?2:-2)*(1-p)],rot:(j%2?-0.1:0.1)*(1-p),pose:"hit"}; },
-      fx(c,t,x){ const tg=x.target, R=tg.r, d=atDir(x); for(let q=0;q<n;q++){ const k=(t-C-q*gap-gap*0.45)/300; mvSlap(c,{x:tg.x-d*R*0.4,y:tg.y+(q%2?R*0.15:-R*0.35)},R,k); }
+      fx(c,t,x){ const tg=x.target, R=tg.r, d=atDir(x); for(let q=0;q<n;q++){ const k=(t-C-q*gap-gap*0.35)/300; mvSlap(c,{x:tg.x-d*R*0.4,y:tg.y+(q%2?R*0.15:-R*0.35)},R,k); }
         if(t>=C&&t<end){ const p=((t-C)%gap)/gap, j=Math.floor((t-C)/gap); c.strokeStyle=`rgba(255,255,255,${0.5*Math.sin(p*Math.PI)})`; c.lineWidth=3; c.beginPath(); c.arc(tg.x-d*R*0.9,tg.y-R*0.1,R*0.8,j%2?0.1:-1.2,j%2?1.2:-0.1); c.stroke(); } }}; })(),
   /* Squib stands on its back tentacles and whips the two front ones at the target in turn */
   tentaclefrenzy:(()=>{ const C=300, gap=115, n=5, end=C+n*gap;
@@ -612,3 +612,31 @@ if(typeof KSND!=="undefined") Object.assign(KSND,{
   skewerpoke:(d,t)=>{ dNoise(d,t+0.18,0.2,0.1,'bandpass',1200,1); sTone(d,t+0.4,'triangle',1800,1000,0.08,0.06); dNoise(d,t+0.4,0.05,0.2,'highpass',3000,1.5); },
   trumpet:(d,t)=>{ [0,0.004].forEach(o=>{ sTone(d,t+0.2+o,'sawtooth',233,247,0.6,0.09); sTone(d,t+0.2+o,'square',466,494,0.6,0.035); }); sTone(d,t+0.2,'sawtooth',349,370,0.6,0.05); dNoise(d,t+0.2,0.6,0.08,'bandpass',900,0.6); }
 });
+
+/* Reaching limbs land on the target's edge (Gid: the hit as soon as the edge of the tentacle touches the body). Each limb's tip sits
+   base + perL * L drawing units in front of the body's middle at reach L, by stage; L is worked out from the gap so the tip meets the edge
+   at the contact frame. The body stays put while the limb does the reaching */
+const MV_TIP={Squib:{Bit:[25,70],Byte:[37,70],Mega:[47,70]},Kraken:{Bit:[43,52],Byte:[55,40],Mega:[66,29]},Hydra:{Bit:[42,48],Byte:[49,41],Mega:[56,34]},Plod:{Bit:[0,78],Byte:[0,78],Mega:[0,78]}};
+function mvLimbHit(o){ const T=o&&MV_TIP[o.fam], tp=T&&(T[o.stage]||T.Byte); if(!tp||o.gapU==null) return 1.3; return Math.max(0.35,Math.min(2.2,(o.gapU-tp[0])/tp[1])); }
+/* k runs from about -0.3 (pulled back) through 1 (just touching the target at the contact frame) */
+mvReach=function(o,k,two){ const m=mvMode(o), L=mvLimbHit(o), r=k<0?k*0.5:L*k;
+  if(m==="tent") return atPose("attack",{lash:r,lash2:two?r:Math.min(r,0.2),eyes:"fierce"});
+  if(m==="trunk") return atPose("attack",{trunk:Math.max(0,r),trunkUp:k<0?0.8:0.7*(1-k),eyes:"fierce"});
+  if(m==="arms") return k<0.4?"punchwind":"push";
+  return k<0.4?"crouch":"tackle"; };
+const mvLimb=o=>{ const m=mvMode(o); return m==="tent"||m==="trunk"; };
+/* the reach curve every limb strike shares: pull back, shoot out to land at C, hold, draw back in */
+const mvStrikeK=(t,C,hold=220,back=300,pull=0.3)=>{ const w=C*0.55; return t<w?-pull*eo(t/w):t<C?-pull+(1+pull)*ei((t-w)/(C-w)):t<C+hold?1+0.03*Math.sin((t-C)/40):1-eio(Math.min(1,(t-C-hold)/back)); };
+{ const L0=ANIM.lash.atk; ANIM.lash.atk=(t,o)=>mvLimb(o)?{f:0,pose:mvReach(o,mvStrikeK(t,340))}:L0(t,o); }
+{ const T0=ANIM.thrust.atk; ANIM.thrust.atk=(t,o)=>mvLimb(o)?{f:0,pose:mvReach(o,mvStrikeK(t,360))}:T0(t,o); }
+{ const V0=ANIM.vicegrip.atk; ANIM.vicegrip.atk=(t,o)=>mvMode(o)==="tent"?{f:0,pose:mvReach(o,mvStrikeK(t,380,560),true),off:[t>380&&t<940?Math.sin(t/30)*2:0,0]}:V0(t,o); }
+/* the flurries: every strike is its own pull back and stab, landing on the beat */
+ANIM.tentaclefrenzy.atk=(t,o)=>{ const C=300, gap=115, n=5, end=C+n*gap;
+  if(t<C) return {f:0,pose:atPose("attack",{lash:-0.15*eo(t/C),lash2:-0.15*eo(t/C),eyes:"fierce"}),arc:-6*eo(t/C)};
+  const L=mvLimbHit(o);
+  if(t<end){ const j=Math.floor((t-C)/gap), p=((t-C)%gap)/gap, hit=p<0.35?eo(p/0.35):1-eio((p-0.35)/0.65)*0.85, a=j%2?0.1:L*hit, b=j%2?L*hit:0.1; return {f:0,arc:-6,pose:atPose("attack",{lash:a,lash2:b,eyes:"fierce"})}; }
+  const k=eio(Math.min(1,(t-end)/320)); return {f:0,arc:-6*(1-k),pose:"idle"}; };
+ANIM.trunkflurry.atk=(t,o)=>{ const C=320, gap=140, n=4, end=C+n*gap, L=mvLimbHit(o);
+  if(t<C){ const k=eo(t/C); return {f:0,pose:atPose("attack",{trunk:0,trunkUp:1.0*k,eyes:"fierce"})}; }
+  if(t<end){ const j=Math.floor((t-C)/gap), p=((t-C)%gap)/gap, hit=p<0.35?eo(p/0.35):1-eio((p-0.35)/0.65)*0.7; return {f:0,pose:atPose("attack",{trunk:L*hit,trunkUp:(j%2?-0.4:0.9)*(1-hit),eyes:"fierce"}),sy:1-0.03*hit}; }
+  const k=eio(Math.min(1,(t-end)/320)); return {f:0,pose:k<0.6?atPose("idle",{trunk:L*0.3*(1-k)}):"idle"}; };

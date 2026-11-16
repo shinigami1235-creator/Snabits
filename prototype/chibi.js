@@ -723,7 +723,7 @@ const CHIBI = (() => {
     capFace(c, g.cx, ey, ex, my, false);
     if (eyes === 'fierce') for (const side of [-1, 1]) lid(c, g.cx + side * ex, ey, s, side, look, rgb(o.lidCol || x.body));
     if (o.extraEyes) for (const side of [-1, 1]) eye(c, g.cx + side * g.bw * o.extraEyes, ey - 7 * s, s * 0.45, eyes === 'fierce' ? 'open' : eyes, side, look);
-    smallMouth(c, g.cx, my, s, x.open, x.P.ouch ? 'ouch' : VAR === 'Feral' ? 'two' : x.stage === 'Mega' || o.fang, x.P.frown);
+    if (!o.noMouth) smallMouth(c, g.cx, my, s, x.open, x.P.ouch ? 'ouch' : VAR === 'Feral' ? 'two' : x.stage === 'Mega' || o.fang, x.P.frown);   // noMouth: the muzzle stands in for it
     if (o.chelicerae) { c.fillStyle = rgb(lt(x.parts, 0.6)); for (const side of [-1, 1]) { c.beginPath(); c.moveTo(g.cx + side * 3 * s, my + 5 * s); c.lineTo(g.cx + side * 8 * s, my + 5 * s); c.lineTo(g.cx + side * 5 * s, my + 11 * s); c.closePath(); c.fill(); } }
     return { my, ey, ex, s, cx: g.cx };
   }
@@ -2558,7 +2558,7 @@ x.feet.push([g.cx, 182, 10]); },
           for (let k = 0; k < 4; k++) { const a = x.t / 700 + k * 1.6; star(c, g.cx + Math.cos(a) * g.bw * 0.9, g.top + g.bh * 0.5 + Math.sin(a) * 18, 0.4, k % 2 ? '#fff6c4' : rgb(lt(x.acc, 0.3))); } } },
       hl: g => [g.left + g.bw * 0.16, g.top + g.bh * 0.5, g.left + g.bw * 0.18, g.top + g.bh * 0.18, g.left + g.bw * 0.4, g.top + g.bh * 0.05],
       head: g => [g.cx, g.top - 2, g.bw * 0.46],
-      face: (c, g, x, look) => faceTwo(c, g, x, look, { ey: 0.4, ex: 0.2, my: 0.66, s: by(g.stage, 0.72, 0.82, 0.9) })
+      face: (c, g, x, look) => faceTwo(c, g, x, look, { ey: 0.4, ex: 0.2, my: 0.66, noMouth: true, s: by(g.stage, 0.72, 0.82, 0.9) })
     },
     /* Jack: a jack-o'-lantern. A ribbed pumpkin with a carved face that glows from inside, a curly stem and leaf, vine feet, and floating flames at Mega */
     Jack: {
@@ -3160,7 +3160,7 @@ x.feet.push([g.cx, 182, 10]); },
         for (const sd of [-1, 1]) { const ex = x + sd * r * 0.4, ey = y - r * 0.12; if (!awake) { c.strokeStyle = rgb(INK); c.lineWidth = Math.max(1.4, r * 0.1); c.lineCap = 'round'; c.beginPath(); c.arc(ex, ey - r * 0.04, r * 0.15, 0.2, Math.PI - 0.2); c.stroke(); continue; }
           c.fillStyle = '#fff'; c.beginPath(); c.ellipse(ex, ey, r * 0.2, r * 0.23, 0, 0, 7); c.fill(); c.fillStyle = rgb(INK); c.beginPath(); c.arc(ex + look[0] * r * 0.05, ey + r * 0.03, r * 0.13, 0, 7); c.fill(); c.fillStyle = '#fff'; c.beginPath(); c.arc(ex - r * 0.04, ey - r * 0.05, r * 0.05, 0, 7); c.fill(); }
         c.fillStyle = rgb(red); roundBox(c, x - r * 0.8, y + r * 0.72, r * 1.6, r * 0.32, r * 0.14); c.fill();   // its collar
-        if (stud) { c.fillStyle = rgb(stud); for (let k = -2; k <= 2; k++) { c.beginPath(); c.moveTo(x + k * r * 0.32 - r * 0.09, y + r * 0.74); c.lineTo(x + k * r * 0.32, y + r * 0.5); c.lineTo(x + k * r * 0.32 + r * 0.09, y + r * 0.74); c.fill(); } } },
+        if (stud) { c.fillStyle = rgb(stud); for (let k = -2; k <= 2; k++) { c.beginPath(); c.arc(x + k * r * 0.32, y + r * 0.88, r * 0.075, 0, 7); c.fill(); } } },   // round studs on the collar
       behind(c, g, x) { const S = g.stage, look = [Math.sin(x.t / 900), 0], red = x.parts, stud = S === 'Mega' ? lt(x.acc, 0.2) : S === 'Byte' ? lt(x.acc, 0.1) : null;
         if (S === 'Mega') { const tq = [g.cx + g.bw * 0.36, g.bot - 6, g.cx + g.bw * 0.8, g.bot - 4, g.cx + g.bw * 0.72 + Math.sin(x.t / 500) * 4, g.top + g.bh * 0.3];   // a snake for a tail
           limb(c, tq, 7, [90, 150, 80], x.L.tail, x.t); c.fillStyle = 'rgb(90,150,80)'; c.beginPath(); c.ellipse(tq[4], tq[5] - 3, 6, 7, 0, 0, 7); c.fill(); c.fillStyle = '#fff'; c.beginPath(); c.arc(tq[4] - 2, tq[5] - 5, 1.6, 0, 7); c.arc(tq[4] + 2, tq[5] - 5, 1.6, 0, 7); c.fill();
@@ -3176,7 +3176,7 @@ x.feet.push([g.cx, 182, 10]); },
         for (const sd of [-1, 1]) { const ex = g.cx + sd * g.bw * 0.32, eh = by(S, 14, 18, 22); c.fillStyle = rgb(dk(x.body, 0.25)); c.beginPath(); c.moveTo(ex - 7, g.top + 8); c.lineTo(ex + sd * 5, g.top - eh); c.lineTo(ex + 8, g.top + 10); c.closePath(); c.fill(); } },   // the middle head's ears
       inside(c, g, x) { c.fillStyle = rgb(lt(x.body, 0.3)); c.beginPath(); c.ellipse(g.cx, g.top + g.bh * 0.66, g.bw * 0.24, g.bh * 0.17, 0, 0, 7); c.fill(); },
       front(c, g, x) { const S = g.stage, red = x.parts, r = g.bw * 0.5; c.fillStyle = rgb(red); roundBox(c, g.left + 2, g.top + g.bh * 0.84, g.bw - 4, g.bh * 0.12, 4); c.fill();   // the middle collar
-        if (S !== 'Bit') { c.fillStyle = rgb(lt(x.acc, 0.15)); for (let k = -3; k <= 3; k++) { const px = g.cx + k * g.bw * 0.13; c.beginPath(); c.moveTo(px - 3, g.top + g.bh * 0.86); c.lineTo(px, g.top + g.bh * 0.86 - by(S, 0, 6, 8)); c.lineTo(px + 3, g.top + g.bh * 0.86); c.fill(); } }
+        if (S !== 'Bit') { c.fillStyle = rgb(lt(x.acc, 0.15)); for (let k = -3; k <= 3; k++) { const px = g.cx + k * g.bw * 0.13; c.beginPath(); c.arc(px, g.top + g.bh * 0.9, by(S, 0, 2.6, 3.2), 0, 7); c.fill(); } }   // round studs, not spikes, so it reads as a collar
         if (S === 'Mega') { c.strokeStyle = rgb(lt(x.acc, 0.1)); c.lineWidth = 2.5; for (let k = 0; k < 4; k++) { c.beginPath(); c.ellipse(g.cx + 4 + k * 5, g.bot + 4 + k * 3, 3.5, 2.2, 0.6, 0, 7); c.stroke(); } }   // a chain hanging from it
         c.fillStyle = '#1c1416'; c.beginPath(); c.ellipse(g.cx, g.top + g.bh * 0.6, 5, 3.6, 0, 0, 7); c.fill(); void r; },
       hl: g => [g.left + g.bw * 0.12, g.top + g.bh * 0.5, g.left + g.bw * 0.12, g.top + g.bh * 0.2, g.left + g.bw * 0.34, g.top + g.bh * 0.06],
