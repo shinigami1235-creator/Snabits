@@ -221,7 +221,10 @@ function atLoop(now){
 }
 const AT_TIER={light:{stop:45,trauma:0.14,sparks:6,flash:50,punch:0.035,ring:0.7},medium:{stop:80,trauma:0.32,sparks:10,flash:70,punch:0.07,ring:1,screen:0.18},
   heavy:{stop:120,trauma:0.6,sparks:18,flash:100,white:1,punch:0.11,ring:1.4,screen:0.35},special:{stop:190,trauma:0.95,sparks:28,flash:140,white:1,punch:0.16,ring:2,screen:0.8,slow:420}};
-const atMoveTier=(i,m)=>(m.dmg>=70&&AT.special&&AT.special[i]===m.name)||(ANIM[AR_KIND[m.name]]||{}).sig?"special":m.dmg>=40||m.cost>=24?"heavy":"light";
+/* the family a fighter counts as for its signature: a fused child keeps its first parent's */
+function atSigFam(i){ const f=AT.ar.p[i].f.family, F=typeof FAMILY!=="undefined"&&FAMILY[f]; return F&&F.of?F.of[0]:f; }
+function atIsSig(i,m){ if(typeof FAMILY_SIG==="undefined"||!AT.ar) return false; const fam=atSigFam(i), n=m.base||m.name; return FAMILY_SIG[fam]===n||(fam==="Skit"&&n==="Web"); }
+const atMoveTier=(i,m)=>(m.dmg>=70&&AT.special&&AT.special[i]===m.name)||atIsSig(i,m)||(ANIM[AR_KIND[m.name]]||{}).sig?"special":m.dmg>=40||m.cost>=24?"heavy":"light";
 const AT_CHARGE={light:0,heavy:430,special:1250};
 /* what the engine reports becomes the game's own battle animation */
 function atEvent(e,now){
@@ -238,14 +241,14 @@ function atEvent(e,now){
     else kind=typeof AR_KIND!=="undefined"&&AR_KIND[m.base||m.name]&&ANIM[AR_KIND[m.base||m.name]]?AR_KIND[m.base||m.name]:typeof animFor==="function"?animFor({name:m.name,kind:m.cast?"Cast":"Strike",el:m.el},sp):"tackle";
     if(!ANIM[kind]) kind="tackle";
     // the whole animation plays at its own pace now; a slow, heavy move gets a little longer windup on top
-    const K=ANIM[kind], rate=Math.max(0.75,Math.min(1.25,K.C/Math.max(300,m.wind*900))), tier=m.dmg?atMoveTier(e.i,m):"light", ch=AT_CHARGE[tier];
+    const K=ANIM[kind], rate=Math.max(0.75,Math.min(1.25,K.C/Math.max(300,m.wind*900))), isSig=atIsSig(e.i,m)||!!K.sig, tier=m.dmg||isSig?atMoveTier(e.i,m):"light", ch=AT_CHARGE[tier];
     AT.turn={t0:te,C:ch+K.C/rate,D:ch+Math.min(K.D/rate,K.C/rate+700)};
     const col=m.el&&typeof ELC==="function"?hexRgb(ELC(m.el)):AT_FAMCOL[AT.ar.p[e.i].f.family]||[255,214,90];
     S.anim={kind,t0:te+ch,tier,rate,el:m.el||null,name:m.name,src:typeof sourceFor==="function"?sourceFor({name:m.name,kind:m.cast?"Cast":"Strike"},sp):"mouth",col,pw:m.dmg>=70?1.35:m.dmg>=40?1.05:0.8,contact:!!K.contact||/^(tackle|bite|stomp|punch|claw|shadowstrike|shadowclaw|fly)$/.test(kind)};
     if(tier==="special"&&!S.anim.contact&&!m.lower) S.anim.mega=/^(beam|bolt|spear|volley|drain|gust)$/.test(kind)?"beam":kind==="lightning"?"bolt":/^(meteor|icefall|boulder|rockpath)$/.test(kind)?"fall":kind==="pillar"&&m.el==="Frost"?"glacier":/^(tornado|firespin)$/.test(kind)?(m.el==="Blaze"?"inferno":"funnel"):kind==="wave"?"tsunami":kind==="push"?"shock":kind==="lift"?"nightmare":/^(pillar|mist|mistcast)$/.test(kind)?"rise":null;
     if(S.anim.mega) AT.turn.D=Math.max(AT.turn.D,ch+(K.C+900)/rate);   // the fight waits for a special's release to finish
     if(e.pred==="dodge"||e.pred==="phase") atPlanDodge(e.i,te+ch+K.C/rate,kind,e.pred);
-    if(ch){ S.charge={t0:te,d:ch,tier,col:S.anim.col,el:m.el||null,body:sp.pal&&sp.pal.body,sig:!!(ANIM[kind]||{}).sig}; if(tier==="special") AT.cine={t0:te,d:ch,i:e.i,name:m.name,col:S.anim.col}; }
+    if(ch){ S.charge={t0:te,d:ch,tier,col:S.anim.col,el:m.el||null,body:sp.pal&&sp.pal.body,sig:isSig&&tier==="special"}; if(S.charge.sig){ const fam=atSigFam(e.i); S.charge.wind=AT_WIND[fam]||"flame"; S.charge.seed=[...fam].reduce((a,q)=>a+q.charCodeAt(0),0); } if(tier==="special") AT.cine={t0:te,d:ch,i:e.i,name:m.name,col:S.anim.col}; }
     try{ sfx(ch?"charge":m.cast?"charge":"whoosh"); if(typeof elSfx==="function") elSfx(m.el,"cast"); if(typeof kindSfx==="function"){ kindSfx(kind,(ch||0)/1000/(S.anim.rate||1)); if(tier==="special") kindSfx("special"); } }catch(err){}
   }
   if(e.t==="step"){ S.hop={t0:te,h:16}; if(typeof atSfx==="function") atSfx("step"); }
@@ -590,7 +593,13 @@ const AT_FAMCOL={Antik:[255,224,122],Squib:[127,211,242],Moko:[255,154,214],Bool
 function atSideState(S,te){
   const out={f:0,arc:0,lift:0,rot:0,sx:1,sy:1,pose:null,flash:0,off:[0,0],alpha:1};
   const A=S.anim; if(A&&te<A.t0){ const ch=S.charge, k=ch?(te-ch.t0)/ch.d:1, sp=ch&&ch.tier==="special";
-      out.pose=sp?(k<0.55?"determined":"cast"):"effort"; out.off[0]+=Math.sin(te/16)*(1+2.5*k); out.sy=1-0.07*k; out.sx=1+0.05*k; out.flash=k>0.82&&Math.floor(te/45)%2?3:0; }
+      out.pose=sp?(k<0.55?"determined":"cast"):"effort"; out.off[0]+=Math.sin(te/16)*(1+2.5*k); out.sy=1-0.07*k; out.sx=1+0.05*k; out.flash=k>0.82&&Math.floor(te/45)%2?3:0;
+      // a signature's wind-up moves the body to match it: floating up, digging in or flickering in the dark
+      const W=ch&&ch.wind, kk=Math.min(1,k);
+      if(W&&/^(vortex|halo|moon|sigil|melody|gold|storm)$/.test(W)){ out.arc=-16*eo(kk)-Math.sin(te/200)*2*kk; out.off[0]*=0.4; }
+      else if(W==="quake"||W==="fury"){ out.sy=1-0.13*kk; out.sx=1+0.09*kk; out.off[0]+=Math.sin(te/11)*2.5*kk; }
+      else if(W==="shadow") out.alpha=0.78+0.22*Math.sin(te/60);
+      else if(W==="gears") out.rot+=Math.sin(te/40)*0.05*kk; }
   else if(A){ const t=(te-A.t0)*A.rate, K=ANIM[A.kind]; if(t>(A.mega?Math.max(K.D,K.C+950):K.D)) S.anim=null; else Object.assign(out,K.atk(t,{foeH:60,perp:[0,-1],dir:S.dir})); }
   const O=S.foe.anim; if(O&&!S.anim){ const t=(te-O.t0)*O.rate, K=ANIM[O.kind]; if(t<=K.D&&K.def){ const d=K.def(t,{foeH:60,perp:[0,-1]}); if(d) Object.assign(out,d); } }
   if(S.pose&&te<S.pose.until&&!S.anim) out.pose=S.pose.p;

@@ -1,25 +1,27 @@
 # Snabits move rework plan, 16 Nov 2026
 
-Every family gets its own set of moves, sized to the MR2 breed it's closest to, instead of the same 8-move template. Gid picked how it works on 16 Nov 2026: core moves come by level and the rest only from training or fights, set sizes match MR2, a fused Snabit can learn a few marked moves from its other parent's family, and each element has a shared pool of moves that a Snabit can learn if its body fits. The MR2 counts come from the MR2 FAQ by KurasuSoratobu (v3.0, section D2), copied to `/tmp/mr2/mr2_techniques.json` in Claude's workspace.
+Every family gets its own set of moves, sized to the MR2 breed it's closest to, instead of the same 8-move template. Gid picked how it works on 16 Nov 2026: core moves come by level through growth, stronger ones only from specific errantries (and a chain's middle steps from fights), set sizes match MR2, a fused Snabit can learn a few marked moves from its other parent's family, and each element has a shared pool of moves that a Snabit can learn if its body fits. The MR2 counts come from the MR2 FAQ by KurasuSoratobu (v3.0, section D2), copied to `/tmp/mr2/mr2_techniques.json` in Claude's workspace.
 
 ## How a Snabit learns a move
 
 | Way | Which moves | How |
 |---|---|---|
-| Level | the Basic and Hit moves, about a third of the set | learned at set levels, the way all moves are now |
-| Drill | Heavy, Sharp and Withering moves | each drill has a chance to teach the next move that matches it: Boulder push teaches heavy Strikes, Puzzle box teaches Casts, Meditate teaches sharp moves, Brace teaches withering moves, Dodgeball teaches quick hits |
-| Fight | the stronger step of a chain | MR2 builds moves in chains (Jump Blow, then 2 Jump Blows, then 3 Jump Blows). Using a move in fights gives a chance to learn its next step |
-| Signature | the family's own big move | stays as it is, with the animation it has now |
+| Level | the Basic and Hit moves, about a third of the set | learned through growth at set levels, the way all moves are now |
+| Errantry | Heavy, Sharp and Withering moves, and the top step of each chain | the stronger moves are sought on specific errantries, the way MR2 does it (Gid, 16 Nov 2026). Each move is tied to one region in `errantry.js`, picked from what the move is: a fire breath at Cinder Peak, a heavy kick at Saffron Dojo, a sharp claw at Tanglewood. The Snabit needs the stat the move leans on and the step before it in its chain |
+| Fight | the middle step of a chain | MR2 builds moves in chains (Jump Blow, then 2 Jump Blows, then 3 Jump Blows). Using a move in fights gives a chance to learn its next step, except a chain's top step, which only an errantry teaches |
+| Signature | the family's own big move | learned by level as now. Each family's signature gets its own wind-up and a bespoke animation (see Animations) |
+
+Element pool moves and fusion marks are learned on errantries too: element moves in that element's region, and a marked move from the other parent's family in the region its move belongs to.
 
 Nothing in the game says how a move is learned. The ranch report just says it learned one.
 
 ## Fusion
 
-Each family marks 2 to 4 moves its body could pass on, the way MR2 lets a Pixie/Kato learn Phantom Claw. A fused or hybrid Snabit can learn its other parent's marked moves through drills, on top of its own set.
+Each family marks 2 to 4 moves its body could pass on, the way MR2 lets a Pixie/Kato learn Phantom Claw. A fused or hybrid Snabit can learn its other parent's marked moves on errantries, on top of its own set.
 
 ## Element moves
 
-Each of the 12 elements gets a pool of about 8 moves. Every move in a pool lists the body parts it needs (a mouth, arms, legs, tentacles, wings, a shell, or none for Casts), and every family lists the parts it has. A Snabit can learn the moves of its own element that its body fits, through drills. The first move keeping its element name, like Flame Bite, stays.
+Each of the 12 elements gets a pool of about 8 moves. Every move in a pool lists the body parts it needs (a mouth, arms, legs, tentacles, wings, a shell, or none for Casts), and every family lists the parts it has. A Snabit can learn the moves of its own element that its body fits, on errantries to its element's region. The first move keeping its element name, like Flame Bite, stays.
 
 ## The technique card
 
@@ -27,7 +29,29 @@ The Skills tab shows each move the MR2 way: its name, Strike or Cast, its catego
 
 ## Animations
 
-Regular moves use the stock animation that fits them best. Signatures keep the animations they have.
+Regular moves use the stock animation that fits them best. Every signature plays as a special: the long wind-up with the close-up, in one of 17 wind-up styles picked from what the family is (`AT_WIND` in arena-fx.js), then its own attack. The 15 batch 4 signatures already have bespoke attacks, and the other 71 get theirs in groups of about 10, at the quality of the first batch's Talon Dive and Night Bite.
+
+| Wind-up | What it shows | Families |
+|---|---|---|
+| flame | a flame of light behind the body | Phoenix, Teep, Wick, Sizzle, Lava, Dragon, Salamander |
+| storm | a storm cloud overhead drops lightning on it | Antik, Brolly, Nimbo, Magna, Thunderbird |
+| vortex | wind rings spiral up with leaves and dust | Eagle, Crease, Aero, Vroom, Tengu, Garuda |
+| quake | the ground cracks with light in the seams, rocks float up | Plod, Burr, Golem, Cobble, Roly, Troll |
+| tide | water spirals up from a pool, with drops and bubbles | Pinch, Squib, Kraken, Helm, Bloop, Suds |
+| shadow | a dark pool and smoke tendrils, embers in its colour | Booly, Vampire, Jack, Cerberus, Inky |
+| halo | rays fan out behind, a halo lights up, feathers fall | Lern, Unicorn, Lumo, Kirin, Sarimanok |
+| frost | ice spikes grow in a ring, snowflakes spiral in | Yeti, Swirl, Scoop |
+| bloom | a flower opens behind, vines climb, petals swirl | Puff, Oaklet, Twiglet, Pina, Diwata |
+| sigil | a magic circle turns underfoot, runes rise | Moko, Tome, Presto, Sphinx, Mummy, Skit |
+| fury | a spiky battle aura, speed lines, dust kicked up | Chomp, Stilt, Bipped, Mitt, Spine, Sox, Pogo, Minotaur |
+| gears | clockwork behind, a wind-up key spins, steam and sparks | Tock, Clank, Shutter, Yoyo |
+| toxic | a bubbling pool, rising bubbles that pop, drips | Fizz, Naga, Glop, Trundle, Hydra |
+| sweet | a candy swirl, orbiting sprinkles, hearts | Dango, Nesta, Cuppy, Gumball |
+| melody | sound rings under a wavy staff, notes spiral up | Flit, Ditty, Tanuki, Mermaid |
+| moon | a moon rises behind in silver mist, stars twinkle | Kitsune, Snooze, Werewolf, Bakunawa |
+| gold | gold light, orbiting coins, glints | Jingle, Djinn, Griffin |
+
+The body moves with its wind-up: it floats up for storm, vortex, halo, sigil, melody, moon and gold, digs in and shakes for quake and fury, flickers for shadow and rattles for gears.
 
 ## Families and their MR2 breeds
 
@@ -126,5 +150,5 @@ Regular moves use the stock animation that fits them best. Signatures keep the a
 
 1. One family written out in full for Gid's OK: Chomp, 17 moves.
 2. The rest in groups of about 10 families, with the balance sim after each group.
-3. The drill and fight learning, fusion marks and element pools.
+3. The errantry and fight learning, fusion marks and element pools.
 4. The technique card in the Skills tab.
