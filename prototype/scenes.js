@@ -745,12 +745,13 @@ function horrorGlyph(c, sp) {
   else if (sp === 'Nightgaunt') { bg('violet'); f('white'); disc(0, -1.5, 8.5);   // a black winged shape across a white moon
     f('black'); c.beginPath(); c.moveTo(0, -3); c.quadraticCurveTo(-5, -9, -10, -7); c.lineTo(-7, -4.5); c.lineTo(-9.5, -2.5); c.lineTo(-6, -2.5); c.lineTo(-7.5, -0.5); c.quadraticCurveTo(-3, -1.5, 0, 1);
     c.quadraticCurveTo(3, -1.5, 7.5, -0.5); c.lineTo(6, -2.5); c.lineTo(9.5, -2.5); c.lineTo(7, -4.5); c.lineTo(10, -7); c.quadraticCurveTo(5, -9, 0, -3); c.fill();
-    oval(0, 2.5, 1.8, 3.2); st('black', 1.3); c.beginPath(); c.moveTo(0, 5); c.bezierCurveTo(2.5, 8, -2.5, 9.5, 1, 12); c.stroke(); c.beginPath(); c.moveTo(1, 12); c.lineTo(2.4, 11.2); c.stroke(); }
+    oval(0, 0.5, 2.4, 2.2); }
   else if (sp === 'Ghoul') { bg('brown'); f('red'); c.fillRect(-10, -13, 20, 10);   // a silver bone in brown earth under a red sky
     st('silver', 3); c.beginPath(); c.moveTo(-5, 6); c.lineTo(5, -2); c.stroke(); f('silver'); for (const [x, y] of [[-5, 6], [5, -2]]) { disc(x - 1.3, y - 1.1, 2); disc(x + 1.3, y + 1.1, 2); }
     f('red'); disc(-4, 10.5, 1.4); disc(4, 9, 1); }
-  else if (sp === 'Gug') { bg('brown'); f('pink'); c.beginPath(); c.moveTo(-4.4, 12); c.lineTo(-4.4, -5); c.arc(0, -5, 4.4, Math.PI, 0); c.lineTo(4.4, 12); c.closePath(); c.fill();   // the Sealed Gate: a pink door in brown rock, barred with white
-    st('white', 1.6); c.beginPath(); c.moveTo(-5.2, 12); c.lineTo(-5.2, -5); c.arc(0, -5, 5.2, Math.PI, 0); c.lineTo(5.2, 12); c.stroke(); f('white'); for (const y of [-3.2, 2.2, 7.6]) c.fillRect(-5.8, y, 11.6, 2.8); for (const y of [-1.5, 3.9, 9.3]) { f('brown'); disc(-3.5, y, 0.6); disc(3.5, y, 0.6); } f('white'); disc(0, -7, 1.6); }
+  else if (sp === 'Gug') { bg('white');   // the Sealed Gate: a wall of brown bricks in white mortar, with a band of pink bricks sealing the middle
+    for (let row = 0; row < 9; row++) { const y = -13 + row * 3, off = row % 2 ? -3 : 0;
+      for (let x = -13 + off; x < 10; x += 6) { const mid = row >= 3 && row <= 5 && x > -9 && x < 6; f(mid ? 'pink' : 'brown'); c.fillRect(x + 0.45, y + 0.45, 5.1, 2.1); } } }
   else if (sp === 'Yog') { bg('violet'); for (const [x, y, r, n] of [[-3.5, -5, 4.5, 'cyan'], [3.5, -1, 4.1, 'pink'], [-2.5, 3.5, 3.9, 'pink'], [3.5, 7.5, 3.7, 'cyan'], [-5.5, 10.5, 2, 'cyan'], [6, -9, 2, 'pink']]) { f(n); disc(x, y, r); }   // globes on violet
     st('white', 0.6); c.beginPath(); c.ellipse(0, 0, 9, 3, -0.6, 0, 7); c.stroke(); }
   else if (sp === 'Shub') { bg('green'); st('brown', 3.2); c.beginPath(); c.arc(0, -1, 6, 0, 7); c.stroke();   // a ring of brown trees with black kids round it
