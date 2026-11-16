@@ -598,10 +598,11 @@ function atSideState(S,te){
       out.pose=sp?(k<0.55?"determined":"cast"):"effort"; out.off[0]+=Math.sin(te/16)*(1+2.5*k); out.sy=1-0.07*k; out.sx=1+0.05*k; out.flash=k>0.82&&Math.floor(te/45)%2?3:0;
       // a signature's wind-up moves the body to match it: floating up, digging in or flickering in the dark
       const W=ch&&ch.wind, kk=Math.min(1,k);
-      if(W&&/^(vortex|halo|moon|sigil|melody|gold|storm)$/.test(W)){ out.arc=-16*eo(kk)-Math.sin(te/200)*2*kk; out.off[0]*=0.4; }
+      if(W&&/^(vortex|halo|moon|sigil|melody|gold|storm|field)$/.test(W)){ out.arc=-16*eo(kk)-Math.sin(te/200)*2*kk; out.off[0]*=0.4; }
       else if(W==="quake"||W==="fury"){ out.sy=1-0.13*kk; out.sx=1+0.09*kk; out.off[0]+=Math.sin(te/11)*2.5*kk; }
       else if(W==="shadow") out.alpha=0.78+0.22*Math.sin(te/60);
-      else if(W==="gears") out.rot+=Math.sin(te/40)*0.05*kk; }
+      else if(W==="gears") out.rot+=Math.sin(te/40)*0.05*kk;
+      else if(W==="signal"){ out.off[0]+=(atH(Math.floor(te/40))-0.5)*4*kk; out.sx*=1+0.03*Math.sin(te/25); } }
   else if(A){ const t=(te-A.t0)*A.rate, K=ANIM[A.kind]; if(t>(A.mega?Math.max(K.D,K.C+950):K.D)) S.anim=null; else Object.assign(out,K.atk(t,{foeH:60,perp:[0,-1],dir:S.dir})); }
   const O=S.foe.anim; if(O&&!S.anim){ const t=(te-O.t0)*O.rate, K=ANIM[O.kind]; if(t<=K.D&&K.def){ const d=K.def(t,{foeH:60,perp:[0,-1]}); if(d) Object.assign(out,d); } }
   if(S.pose&&te<S.pose.until&&!S.anim) out.pose=S.pose.p;

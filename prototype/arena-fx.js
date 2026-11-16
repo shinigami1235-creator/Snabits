@@ -294,7 +294,7 @@ function atCloud(c,x,y,w,top,bot,line,a=1,sq=0){ if(a<=0||w<=1) return; c.save()
   c.fillStyle="rgba(0,0,0,.12)"; c.beginPath(); c.rect(-0.37*w,-0.06*w,0.77*w,0.06*w); c.fill(); c.restore(); }
 /* ---------- each family's signature wind-up (16 Nov 2026): seventeen ways to charge, picked from what the family is ---------- */
 const AT_WIND={Phoenix:"flame",Teep:"flame",Wick:"flame",Sizzle:"flame",Lava:"flame",Dragon:"flame",Salamander:"flame",
-  Antik:"storm",Brolly:"storm",Nimbo:"storm",Magna:"storm",Thunderbird:"storm",
+  Brolly:"storm",Nimbo:"storm",Thunderbird:"storm",Antik:"signal",Magna:"field",
   Eagle:"vortex",Crease:"vortex",Aero:"vortex",Vroom:"vortex",Tengu:"vortex",Garuda:"vortex",
   Plod:"quake",Burr:"quake",Golem:"quake",Cobble:"quake",Roly:"quake",Troll:"quake",
   Pinch:"tide",Squib:"tide",Kraken:"tide",Helm:"tide",Bloop:"tide",Suds:"tide",
@@ -350,6 +350,22 @@ const AT_WINDS={
         c.strokeStyle=atRgba(lt,0.85*e); c.lineWidth=4; atZig(c,A,B,5,R*0.28,sd+n); c.strokeStyle=atRgba([255,255,255],e); c.lineWidth=1.5; atZig(c,A,B,5,R*0.28,sd+n); }
       for(let n=0;n<10;n++){ const ph=(T/380+n/10)%1, a=n*2.4+sd*0.2, rr=R*(0.5+1.5*ph); c.fillStyle=atRgba(n%2?lt:[255,255,255],(1-ph)*e); c.beginPath(); c.arc(cx+Math.cos(a)*rr,cy+Math.sin(a)*rr*0.8,2.6*(1-ph)+0.8,0,7); c.fill(); }
       const f=sd%2; c.strokeStyle=atRgba(lt,(0.35+0.45*f)*e); c.lineWidth=3; c.beginPath(); c.ellipse(cx,foot,R*(1.15+0.12*f),R*0.26,0,0,7); c.stroke(); }},
+  /* Antik: its antennas broadcast rings of signal, static snow flickers round it and scan lines roll over it */
+  signal:{back(c,G,ch,te,T,k,e,col,lt){ const {x,foot,H,r}=G, tx=x, ty=foot-H*1.02; c.globalCompositeOperation="lighter"; atGlowA(c,x,foot-H*0.5,r*1.8,[170,220,255],0.25*e);
+      for(let n=0;n<5;n++){ const ph=(T/520+n/5)%1, rr=r*(0.3+2.2*ph); c.strokeStyle=atRgba(n%2?[170,230,255]:lt,0.8*e*(1-ph)); c.lineWidth=3.5*(1-ph)+1; c.beginPath(); c.arc(tx,ty,rr,Math.PI*1.08,Math.PI*1.92); c.stroke(); }
+      const cell=Math.max(2,r*0.07), fr=Math.floor(te/45); for(let n=0;n<60;n++){ const a=atH(n*3+fr)*Math.PI*2, rr=r*(1.05+0.7*atH(n*7+fr)), v=Math.floor(150+105*atH(n+fr*3)); c.fillStyle=`rgba(${v},${v},${v},${0.7*e})`; c.fillRect(x+Math.cos(a)*rr,foot-H*0.5+Math.sin(a)*rr*1.1,cell,cell); } },
+    front(c,G,ch,te,T,k,e,col,lt){ const {x,foot,H,r}=G, fr=Math.floor(te/50); c.globalCompositeOperation="lighter"; c.fillStyle=`rgba(200,235,255,${0.18*e})`;
+      for(let n=0;n<3;n++){ const y=foot-((T/4+n*H*0.45)%(H*1.3)); c.fillRect(x-r*1.3,y,r*2.6,Math.max(2,r*0.08)); }
+      c.strokeStyle=atRgba([190,235,255],0.85*e); c.lineWidth=2.5; c.lineCap="round"; for(let n=0;n<2;n++){ const a={x:x+(n?1:-1)*r*0.35,y:foot-H*1.0}, b={x:x+(n?1:-1)*r*(0.6+0.3*atH(fr+n)),y:foot-H*(1.25+0.15*atH(fr*3+n))}; if((fr+n)%3) atZig(c,a,b,4,r*0.2,fr+n*5); }
+      for(let n=0;n<8;n++){ const ph=(T/400+n/8)%1, a=n*0.78+fr*0.2, rr=r*(0.6+1.2*ph); c.fillStyle=atRgba(n%2?[200,240,255]:[255,255,255],(1-ph)*e); c.fillRect(x+Math.cos(a)*rr,foot-H*0.5+Math.sin(a)*rr,3,3); } }},
+  /* Magna: red and blue field lines loop out of it and pulse, and loose metal bits are dragged into orbit round it */
+  field:{back(c,G,ch,te,T,k,e,col,lt){ const {x,foot,H,r}=G, cy=foot-H*0.5; c.globalCompositeOperation="lighter"; c.lineCap="round";
+      for(let n=1;n<=4;n++){ const w=r*(0.5+n*0.42)*(0.6+0.4*e), pul=0.5+0.5*Math.sin(te/120-n); for(const sd of [-1,1]){ c.strokeStyle=sd<0?`rgba(255,90,90,${0.55*e*pul})`:`rgba(90,150,255,${0.55*e*pul})`; c.lineWidth=2.5;
+          c.setLineDash([r*0.18,r*0.12]); c.lineDashOffset=-te/15*sd; c.beginPath(); c.ellipse(x+sd*w*0.55,cy,w*0.6,H*(0.3+n*0.12),0,0,Math.PI*2); c.stroke(); } } c.setLineDash([]); atGlowA(c,x,cy,r*1.8,[200,170,255],0.2*e); },
+    front(c,G,ch,te,T,k,e,col,lt){ const {x,foot,H,r}=G, cy=foot-H*0.5;
+      for(let n=0;n<9;n++){ const a=te/(260+n*20)*(n%2?1:-1)+n*0.7, rr=r*(1.3+0.25*(n%3))*(1.4-0.4*e), px=x+Math.cos(a)*rr, py=cy+Math.sin(a)*rr*0.45;
+        c.save(); c.translate(px,py); c.rotate(a*2); c.fillStyle=n%3?"#b8bec8":"#8a909a"; c.strokeStyle="rgba(50,54,62,.7)"; c.lineWidth=1; c.beginPath(); if(n%2){ c.rect(-r*0.08,-r*0.05,r*0.16,r*0.1); } else { c.moveTo(-r*0.1,0); c.lineTo(r*0.05,-r*0.07); c.lineTo(r*0.09,r*0.05); c.closePath(); } c.fill(); c.stroke(); c.restore(); }
+      c.save(); c.globalCompositeOperation="lighter"; const fr=Math.floor(te/70); if(fr%2){ c.strokeStyle=`rgba(220,230,255,${0.8*e})`; c.lineWidth=2; atZig(c,{x:x-r*0.5,y:cy-H*0.35},{x:x+r*0.5,y:cy-H*0.35},5,r*0.25,fr); } c.restore(); }},
   /* wind rings wind up round it, lifting dust and leaves */
   vortex:{back(c,G,ch,te,T,k,e,col,lt){ const {x,foot,H,r}=G;
       c.fillStyle=`rgba(225,214,190,${0.35*e})`; c.beginPath(); c.ellipse(x,foot,r*(1+0.9*e),r*0.28,0,0,7); c.fill();

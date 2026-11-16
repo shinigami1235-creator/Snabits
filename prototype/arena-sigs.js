@@ -41,6 +41,8 @@ SG.splat=(c,x,y,r,seed,col,a=1,flat=1)=>{ if(a<=0||r<=0.5) return; c.save(); c.g
   const N=18; for(let j=0;j<=N;j++){ const q=j/N*Math.PI*2, sp=atH(seed*31+j)>0.8?1.55:1, rr=r*(0.7+0.35*atH(seed*17+j))*sp; c[j?"lineTo":"moveTo"](Math.cos(q)*rr,Math.sin(q)*rr); } c.closePath(); c.fill();
   for(let j=0;j<5;j++){ const q=atH(seed*7+j)*Math.PI*2, d2=r*(1.3+0.6*atH(seed+j*3)); c.beginPath(); c.arc(Math.cos(q)*d2,Math.sin(q)*d2,r*(0.08+0.1*atH(seed*5+j)),0,7); c.fill(); }
   c.fillStyle="rgba(180,160,230,.35)"; c.beginPath(); c.ellipse(-r*0.25,-r*0.3,r*0.3,r*0.14,-0.5,0,7); c.fill(); c.restore(); };
+/* a soft see-through blob of fog or genie smoke, brightest in the middle and fading to nothing at the edge */
+SG.fog=(c,x,y,r,col,a)=>{ if(a<=0||r<=0.5) return; const g=c.createRadialGradient(x,y,0,x,y,r); g.addColorStop(0,atRgba(col,a)); g.addColorStop(0.55,atRgba(col,a*0.55)); g.addColorStop(1,atRgba(col,0)); c.fillStyle=g; c.beginPath(); c.arc(x,y,r,0,7); c.fill(); };
 Object.assign(ANIM,{
   /* Chomp: it springs at the target and a pair of jaws ten times its size closes over it, grinds twice and lets go */
   sg_crunch:{C:780,D:1460,contact:true,marks:true,sig:true,
@@ -77,7 +79,7 @@ Object.assign(ANIM,{
         for(let i=0;i<16;i++){ const a=atH(i*9)*Math.PI*2, sp=R*(0.8+1.4*eo(k))*(0.6+0.6*atH(i)); c.fillStyle=atRgba(INK,(1-k)*0.9); c.beginPath(); c.arc(tg.x+Math.cos(a)*sp,tg.y+Math.sin(a)*sp*0.8+k*k*R,R*(0.03+0.05*atH(i*2)),0,7); c.fill(); } } }},
   /* Antik: its screen floods with static, it beams the picture onto the target, the target is trapped in a TV of static and colour bars, then the set switches off */
   sg_static:{C:760,D:1460,sig:true,
-    atk:t=>({pose:t<760?"cast":t<1300?"push":"idle",off:[t<760?(atH(Math.floor(t/40))-0.5)*5:0,0],flash:t<760&&Math.floor(t/60)%3===0?2:0,sx:1+0.04*Math.sin(t/25)}),
+    atk:t=>({pose:t<760?"cast":t<1300?"push":"idle",off:[t<760?(atH(Math.floor(t/40))-0.5)*5:0,0],flash:0,sx:1+0.04*Math.sin(t/25)}),
     def(t){ if(t<760||t>1400) return null; return {off:[(atH(Math.floor(t/35))-0.5)*8,0],pose:"hurt",flash:Math.floor(t/70)%2?3:0}; },
     fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, W=R*1.5, H=R*1.25, fr=Math.floor(t/45), cy=tg.y-R*0.05;
       if(t<760){ const k=eo(t/760); c.save(); c.globalCompositeOperation="lighter"; c.fillStyle=`rgba(200,230,255,${0.18*k})`; c.beginPath(); c.moveTo(s.x,s.y-s.r*0.5); c.lineTo(s.x,s.y+s.r*0.3);
@@ -1034,21 +1036,25 @@ Object.assign(ANIM,{
         c.lineWidth=L*0.12; c.strokeStyle="#c8961e"; c.beginPath(); c.arc(-L*1.02,0,L*0.33,Math.PI*0.45,Math.PI*1.55); c.stroke();
         c.fillStyle="#d8263c"; c.beginPath(); c.arc(0,0,L*0.12,0,7); c.fill(); c.fillStyle="rgba(255,255,255,.7)"; c.beginPath(); c.ellipse(-L*0.35,-L*0.22,L*0.3,L*0.1,-0.3,0,7); c.fill(); c.restore();
         if(t<500) for(let i=0;i<3;i++){ const tw=Math.max(0,Math.sin(t/70+i*2.1)); c.save(); c.globalCompositeOperation="lighter"; atStar4(c,lamp.x+(atH(i)-0.5)*L*2,lamp.y-L*0.3+(atH(i*3)-0.5)*L*0.6,L*0.35*tw,"rgba(255,255,220,.95)"); c.restore(); } }
-      /* the smoke column: it pours up out of the spout, climbs above the target and becomes the arm */
-      const top={x:tg.x-d*R*0.2,y:tg.top.y-R*2.3}, rise=Math.min(1,Math.max(0,(t-380)/420)), slam=t<760?0:Math.min(1,(t-760)/140), fist={x:top.x,y:top.y+(tg.top.y-R*0.2-top.y)*ei(slam)};
-      if(t>=380&&t<1250){ const fade=t>1050?1-(t-1050)/200:1, N=30;
-        for(let j=0;j<N;j++){ const q=j/N; if(q>rise) continue; const p=lerpP(spout,{x:fist.x,y:fist.y+R*0.6},q,R*1.6*(1-slam*0.6)), sw=Math.sin(q*12-t/60)*R*0.2*(1-q), r=R*(0.22+0.35*q)*(0.85+0.3*atH(j+Math.floor(t/70)));
-          SG.puff(c,p.x+sw,p.y,r,0.85*fade,SM.map((v,i2)=>Math.min(255,v+((j%3)*18)))); if(j%5===0){ c.save(); c.globalCompositeOperation="lighter"; atStar4(c,p.x+sw+(atH(j)-0.5)*r,p.y,r*0.35*Math.abs(Math.sin(t/80+j)),atRgba(GD,0.95)); c.restore(); } }
-        if(rise>=1){ const F=R*(0.9+0.25*Math.sin(Math.min(1,(t-800)/300)*Math.PI)); c.save(); c.globalAlpha=fade; c.translate(fist.x,fist.y); c.rotate(Math.PI/2*slam*0.15);
-          c.fillStyle=atRgba(SM,0.97); c.strokeStyle="rgba(70,30,110,.85)"; c.lineWidth=3; c.beginPath(); c.ellipse(0,0,F,F*0.85,0,0,7); c.fill(); c.stroke();
-          for(let k2=0;k2<4;k2++){ c.beginPath(); c.ellipse(-F*0.6+k2*F*0.4,F*0.6,F*0.22,F*0.3,0,0,7); c.fill(); c.stroke(); }
-          c.fillStyle="rgba(255,255,255,.25)"; c.beginPath(); c.ellipse(-F*0.3,-F*0.35,F*0.4,F*0.18,-0.4,0,7); c.fill();
-          c.fillStyle="#ffd84a"; c.strokeStyle="#9a6408"; c.lineWidth=2; c.beginPath(); c.ellipse(0,-F*0.75,F*0.9,F*0.18,0,0,7); c.fill(); c.stroke(); c.restore();
-          if(t<900){ c.save(); c.globalCompositeOperation="lighter"; for(const sd of [-1,1]) atWisp(c,top.x+sd*R*0.35,top.y-R*1.05,R*0.12,[255,240,150]); c.restore(); } } }
+      /* genie smoke: thin where it leaves the spout, swelling and swirling as it climbs over the target, with curling wisps, until the end of it becomes a fist */
+      const top={x:tg.x-d*R*0.2,y:tg.top.y-R*2.3}, rise=Math.min(1,Math.max(0,(t-380)/420)), slam=t<760?0:Math.min(1,(t-760)/140), fist={x:top.x,y:top.y+(tg.top.y-R*0.2-top.y)*ei(slam)}, PAL=[[170,110,235],[230,130,220],[120,150,250]];
+      if(t>=380&&t<1300){ const fade=t>1050?Math.max(0,1-(t-1050)/250):1, N=46, end={x:fist.x,y:fist.y+R*0.5};
+        for(let j=0;j<N;j++){ const q=j/N; if(q>rise) continue; const p=lerpP(spout,end,q,R*1.6*(1-slam*0.6)), sw=Math.sin(q*10-t/90)*R*0.32*q, r=R*(0.3+0.95*q)*(0.85+0.3*atH(j*7+Math.floor(t/90)));
+          SG.fog(c,p.x+sw,p.y,r*1.5,PAL[j%3],0.6*fade); SG.fog(c,p.x+sw+Math.cos(t/150+j)*r*0.5,p.y+Math.sin(t/170+j)*r*0.4,r*1.1,PAL[(j+1)%3],0.45*fade); }
+        c.save(); c.globalCompositeOperation="lighter"; for(let j=0;j<N;j+=3){ const q=j/N; if(q>rise) continue; const p=lerpP(spout,end,q,R*1.6*(1-slam*0.6)), sw=Math.sin(q*10-t/90)*R*0.32*q; SG.fog(c,p.x+sw,p.y,R*(0.2+0.5*q),[255,220,255],0.45*fade); } c.restore();
+        c.lineCap="round"; for(let w=0;w<6;w++){ c.strokeStyle=atRgba(PAL[w%3].map(v=>Math.min(255,v+50)),0.6*fade); c.lineWidth=2.5+2*(w%2); c.beginPath();
+          for(let j=0;j<=24;j++){ const q=j/24*rise, p=lerpP(spout,end,q,R*1.6*(1-slam*0.6)), curl=Math.sin(q*14+w*1.7-t/70)*R*(0.15+0.6*q); c[j?"lineTo":"moveTo"](p.x+curl,p.y+Math.cos(q*9+w-t/80)*R*0.2*q); } c.stroke(); }
+        for(let j=0;j<8;j++){ const q=Math.min(rise,atH(j*5)), p=lerpP(spout,end,q,R*1.6*(1-slam*0.6)); c.save(); c.globalCompositeOperation="lighter"; atStar4(c,p.x+(atH(j*3)-0.5)*R*0.8*q,p.y+(atH(j)-0.5)*R*0.5,R*0.2*Math.abs(Math.sin(t/90+j)),atRgba(GD,0.95*fade)); c.restore(); }
+        if(rise>=1){ const F=R*(0.95+0.2*Math.sin(Math.min(1,(t-800)/300)*Math.PI)); c.save(); c.translate(fist.x,fist.y);
+          for(const [ox,oy,rr] of [[0,0,1],[-0.6,0.55,0.38],[-0.2,0.62,0.38],[0.2,0.62,0.38],[0.6,0.55,0.36],[0.85,-0.1,0.4]]) { SG.fog(c,ox*F,oy*F,rr*F*1.5,PAL[Math.abs(Math.round(ox*3))%3],0.95*fade); SG.fog(c,ox*F,oy*F,rr*F*0.9,[110,60,170],0.6*fade); }
+          c.globalCompositeOperation="lighter"; SG.fog(c,0,0,F*0.9,[255,220,255],0.35*fade); c.globalCompositeOperation="source-over";
+          c.strokeStyle=`rgba(255,235,255,${0.35*fade})`; c.lineWidth=2; for(let k2=0;k2<4;k2++){ c.beginPath(); c.arc(-F*0.6+k2*F*0.4,F*0.6,F*0.26,Math.PI,Math.PI*2); c.stroke(); }
+          c.fillStyle=`rgba(255,216,74,${fade})`; c.strokeStyle=`rgba(154,100,8,${fade})`; c.lineWidth=2; c.beginPath(); c.ellipse(0,-F*0.85,F*0.85,F*0.16,0,0,7); c.fill(); c.stroke(); c.restore();
+          if(t<900){ c.save(); c.globalCompositeOperation="lighter"; for(const sd of [-1,1]) atWisp(c,top.x+sd*R*0.35,top.y-R*1.0,R*0.12,[255,240,150]); c.restore(); } } }
       if(t>=900){ atImpact(t,900,1,0.6); const k=(t-900)/700;
         c.save(); c.globalCompositeOperation="lighter"; atGlowA(c,tg.x,tg.y-R*0.2,R*(1.6+3*eo(k)),[200,120,255],0.95*(1-k)); atGlowA(c,tg.x,tg.y-R*0.2,R*(0.8+1.6*eo(k)),GD,0.9*(1-k));
         for(let i=0;i<14;i++){ const a=i/14*Math.PI*2, L2=R*(1.2+2.8*eo(k)); c.strokeStyle=atRgba(i%2?GD:[220,170,255],0.9*(1-k)); c.lineWidth=4*(1-k)+1; c.beginPath(); c.moveTo(tg.x+Math.cos(a)*R*0.6,tg.y-R*0.2+Math.sin(a)*R*0.6); c.lineTo(tg.x+Math.cos(a)*L2,tg.y-R*0.2+Math.sin(a)*L2*0.8); c.stroke(); } c.restore();
-        for(let i=0;i<16;i++){ const a=i/16*Math.PI*2, sp=R*(0.9+2.4*eo(k)); SG.puff(c,tg.x+Math.cos(a)*sp,tg.foot-R*0.3+Math.sin(a)*sp*0.35,R*(0.35+0.3*k),(1-k)*0.85,SM); }
+        for(let i=0;i<18;i++){ const a=i/18*Math.PI*2, sp=R*(0.9+2.6*eo(k)); SG.fog(c,tg.x+Math.cos(a)*sp,tg.foot-R*0.3+Math.sin(a)*sp*0.4-k*R*0.6,R*(0.6+0.7*k),[[170,110,235],[230,130,220],[120,150,250]][i%3],0.6*(1-k)); }
         for(let w=0;w<2;w++){ const kk=Math.min(1,Math.max(0,k*1.3-w*0.15)); SG.ring(c,tg.x,tg.foot,R*(0.6+3.4*eo(kk)),R*(0.18+0.8*eo(kk)),w?GD:[220,170,255],6*(1-kk),1-kk); }
         SG.cracks(c,tg.x,tg.foot,R*2.4,10,2.2,1-k*k);
         for(let i=0;i<10;i++){ const a=-Math.PI*(atH(i*3)), sp=R*(0.6+2*eo(k)); c.save(); c.globalCompositeOperation="lighter"; atStar4(c,tg.x+Math.cos(a)*sp*(i%2?1:-1),tg.y+Math.sin(a)*sp+k*k*R,R*0.22*(1-k),"rgba(255,230,140,.95)"); c.restore(); } } }},
