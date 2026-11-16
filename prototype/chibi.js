@@ -2052,7 +2052,7 @@ const CHIBI = (() => {
       behind(c, g, x) { const st = g.stage, n = by(st, 3, 5, 9), len = by(st, 16, 48, 78), gl = 0.6 + 0.4 * Math.sin(x.t / 400);
         const L = x.P && x.P.lash || 0;
         if (L) {   // its own tentacles reach forward and swing (P.lash = reach, P.swat = -1 raised high to +1 swept low)
-          const th = Math.PI - 0.95 * (x.P.swat || 0), arms = st === 'Bit' ? n : n + 2;
+          const th = Math.PI - 0.95 * (x.P.swat || 0), arms = n;   // the thin tentacles only, so no odd-coloured arm crosses them
           for (let i = 0; i < arms; i++) { const oral = i >= n, bx = oral ? g.cx + (i - n ? 6 : -6) : g.left + g.bw * (0.15 + 0.7 * i / (n - 1)), a = th + (i - (arms - 1) / 2) * 0.05, R = len + L * 100 * (0.9 + 0.1 * (i % 3)),
               tip = [bx + Math.cos(a) * R, g.bot + Math.sin(a) * R], ctl = [bx + Math.cos(a) * R * 0.5 - Math.sin(a) * R * 0.18 * (x.P.swat > 0 ? -1 : 1), g.bot + Math.sin(a) * R * 0.5 + Math.cos(a) * R * 0.18 * (x.P.swat > 0 ? -1 : 1)];
             c.strokeStyle = oral ? rgba(lt(x.acc, 0.3), 0.85) : st === 'Mega' ? `rgba(${i % 2 ? '200,170,255' : '150,220,255'},${0.6 + 0.3 * gl})` : rgba(lt(x.body, 0.2), 0.9); c.lineCap = 'round';
