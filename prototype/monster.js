@@ -93,6 +93,17 @@ const FAMILY = {
   Troll:  {special:1, body:[4,[4,6,7,7,7,7,7,7,6]], legs:"stubby", base:[72,68,65,25,45,35], ability:["Hard Hide","Crits can't land on it"]},
   Mummy:  {special:1, body:[3,[3,5,6,6,6,6,6,6,5]], legs:"stubby", base:[58,52,58,58,60,34], ability:["Undying","The first time it would faint in a fight, it gets up with 10% of its HP"]},
   Sarimanok:{special:1, body:[3,[2,4,6,7,7,7,7,6,4]], legs:"twolegs", base:[50,55,45,55,55,65], ability:["Good Omen","Its crit chance is 10% higher"]},
+  // the horror series: special, but no colour calls them until their stone is on the ranch, and only between 9pm and 3am (HORROR_EGG)
+  Cthulhu:{special:1, horror:1, body:[3,[3,5,6,7,7,7,7,6,5]], legs:"stubby", base:[66,64,58,62,50,34], ability:["Dreamer","Its hits have a 15% chance to Dread, and its Dread lasts twice as long"]},
+  Hastur: {special:1, horror:1, body:[3,[2,3,4,5,6,6,7,7,7]], legs:"tentacles", base:[52,40,48,74,72,48], ability:["Yellow Sign","Its foe starts every fight Cursed"]},
+  Shoggoth:{special:1, horror:1, body:[2,[3,5,6,7,7,7,7,7]], legs:"tentacles", base:[78,56,64,50,52,34], ability:["Mimic","It takes its foe's ability for the rest of the fight"]},
+  Dagon:  {special:1, horror:1, body:[3,[3,5,6,6,6,6,6,5,4]], legs:"stubby", base:[60,62,52,54,48,58], ability:["Deep Song","Tide hits 20% harder, and a Soak heals it instead of landing"]},
+  Migo:   {special:1, horror:1, body:[3,[3,5,6,6,6,5,4,4,3]], legs:"stubby", base:[50,44,46,72,58,64], ability:["Brain Jar","Each Cast that hits it raises its Mind 1 step, up to three times a fight"]},
+  Nightgaunt:{special:1, horror:1, body:[3,[3,4,5,5,4,3,3,3,3]], legs:"twolegs", base:[50,58,44,52,54,76], ability:["Tickle","Its hits have a 20% chance to Daze"]},
+  Ghoul:  {special:1, horror:1, body:[3,[4,5,5,5,4,3,3,3,3]], legs:"twolegs", base:[62,70,54,40,50,58], ability:["Gnaw","Its Close Strikes heal it for 10% of the damage they do"]},
+  Gug:    {special:1, horror:1, body:[2,[3,5,6,7,7,7,7,7]], legs:"stubby", base:[84,76,70,30,48,26], ability:["Mountain","Knockback can't move it"]},
+  Yog:    {special:1, horror:1, body:[3,[3,5,6,7,7,7,6,5,3]], legs:"tentacles", base:[56,40,52,78,66,42], ability:["All Doors","Its swaps cost nothing and it can't be Rooted"]},
+  Shub:   {special:1, horror:1, body:[3,[3,5,6,7,7,7,7,6,5]], legs:"stubby", base:[72,62,62,46,54,40], ability:["Thousand Young","The first time it would faint, a kid takes its place with 25% of its HP"]},
 };
 /* Stamina: energy each turn and less fatigue. Power: Strike damage and crits. Constitution: HP and cutting all damage.
    Mind: Cast damage and landing statuses. Insight: hit rate and shrugging off statuses. Speed: going first, dodging and follow-up attacks. */

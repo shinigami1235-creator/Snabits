@@ -7,7 +7,7 @@ const arBand=gap=>gap<10?"Close":gap<25?"Near":gap<45?"Mid":"Far";
 /* hitting from further away is harder to set up, so it pays a little more */
 const AR_BAND_DMG={Close:0.8,Near:0.95,Mid:1.2,Far:1.5,Any:1};
 /* a family's damage, tuned so every family wins about half its fights in the balance sim */
-const AR_FAM_DMG={Chomp:0.88,Pinch:1.03,Stilt:0.97,Skit:1.18,Antik:0.89,Squib:0.99,Moko:1.27,Booly:1.16,Plod:0.9,Bipped:1.02,Fizz:1.19,Teep:0.93,Lern:1.48,Eagle:0.96,Vampire:1.03,Phoenix:0.83,Kitsune:1.03,Naga:0.78,Yeti:0.72,Puff:1.2,Flit:1.22,Glop:0.81,Tock:1.24,Mitt:0.8,Brolly:0.98,Spine:0.83,Burr:0.99,Kraken:0.95,Golem:0.84,Unicorn:1.03,Jack:1.1,Wick:1,Lumo:1.17,Snooze:1.06,Inky:1.42,Cobble:0.97,Nimbo:1.35,Dango:1,Oaklet:1.14,Roly:0.98,Trundle:1.2,Clank:0.92,Crease:1.04,Twiglet:1,Swirl:1,Ditty:1.14,Sizzle:1,Aero:1.2,Nesta:1.16,Magna:1,Helm:0.9,Bloop:1.12,Sox:1.05,Cuppy:1,Suds:1.28,Scoop:0.98,Tome:1.06,Gumball:1.13,Pina:0.97,Jingle:1.18,Presto:1.13,Vroom:0.97,Shutter:1.05,Yoyo:0.96,Lava:0.93,Pogo:1.16,Tengu:1.16,Tanuki:0.86,Mermaid:1.14,Diwata:0.87,Sphinx:1,Garuda:1.22,Werewolf:0.88,Minotaur:0.82,Dragon:0.94,Thunderbird:1.2,Hydra:0.92,Griffin:1,Kirin:1.32,Salamander:1.2,Bakunawa:1,Cerberus:0.87,Djinn:1.05,Troll:0.86,Mummy:1,Sarimanok:1.12};   // retuned 15 Nov 2026 after melee lost Leap Back
+const AR_FAM_DMG={Chomp:0.88,Pinch:1.03,Stilt:0.97,Skit:1.18,Antik:0.89,Squib:0.99,Moko:1.27,Booly:1.16,Plod:0.9,Bipped:1.02,Fizz:1.19,Teep:0.93,Lern:1.48,Eagle:0.96,Vampire:1.03,Phoenix:0.83,Kitsune:1.03,Naga:0.78,Yeti:0.72,Puff:1.2,Flit:1.22,Glop:0.81,Tock:1.24,Mitt:0.8,Brolly:0.98,Spine:0.83,Burr:0.99,Kraken:0.95,Golem:0.84,Unicorn:1.03,Jack:1.1,Wick:1,Lumo:1.17,Snooze:1.06,Inky:1.42,Cobble:0.97,Nimbo:1.35,Dango:1,Oaklet:1.14,Roly:0.98,Trundle:1.2,Clank:0.92,Crease:1.04,Twiglet:1,Swirl:1,Ditty:1.14,Sizzle:1,Aero:1.2,Nesta:1.16,Magna:1,Helm:0.9,Bloop:1.12,Sox:1.05,Cuppy:1,Suds:1.28,Scoop:0.98,Tome:1.06,Gumball:1.13,Pina:0.97,Jingle:1.18,Presto:1.13,Vroom:0.97,Shutter:1.05,Yoyo:0.96,Lava:0.93,Pogo:1.16,Tengu:1.16,Tanuki:0.86,Mermaid:1.14,Diwata:0.87,Sphinx:1,Garuda:1.22,Werewolf:0.88,Minotaur:0.82,Dragon:0.94,Thunderbird:1.2,Hydra:0.92,Griffin:1,Kirin:1.32,Salamander:1.2,Bakunawa:1,Cerberus:0.87,Djinn:1.05,Troll:0.86,Mummy:1,Sarimanok:1.12,Cthulhu:1,Hastur:1,Shoggoth:1,Dagon:1,Migo:1,Nightgaunt:1,Ghoul:1,Gug:1,Yog:1,Shub:1};   // retuned 15 Nov 2026 after melee lost Leap Back
 
 /* [name, learned at, range, damage, accuracy, sharpness, wither, push, cost, windup, extras] */
 const FAM_MOVES={
@@ -196,7 +196,7 @@ const FAM_MOVES={
 const SHARED_MOVES=[["Rush",1,"Any",14,85,5,0,0,10,0.25,{dash:"in",melee:1}],["Leap Back",1,"Any",0,100,0,0,0,10,0.2,{step:-20,ranged:1}],["Brace",1,"Any",0,100,0,0,0,10,0.1,{buff:"brace"}]];
 const arMelee=fam=>{ const d=(FAM_MOVES[fam]||[]).map(arMove).filter(m=>m.dmg); return d.filter(m=>!m.cast&&(m.range==="Close"||m.range==="Near"||m.dash)).length>=d.length/2; };
 /* how fast each family gets around: Booly floats and Squib jets, while Chomp and Pinch plod */
-const FAM_WALK={Chomp:0.8,Pinch:0.85,Stilt:1.05,Skit:1.15,Antik:1,Squib:1.15,Moko:1.05,Booly:1.25,Plod:0.75,Bipped:1.05,Fizz:1,Teep:0.85,Lern:1.15,Eagle:1.2,Vampire:1,Phoenix:1.05,Kitsune:1.15,Naga:0.95,Yeti:0.8,Puff:0.9,Flit:1.3,Glop:0.85,Tock:1.05,Mitt:0.95,Brolly:1,Spine:0.7,Burr:0.95,Kraken:0.9,Golem:0.7,Unicorn:1.15,Jack:0.9,Wick:1.05,Lumo:1.1,Snooze:0.85,Inky:1,Cobble:0.8,Nimbo:1.1,Dango:1.05,Oaklet:0.9,Roly:1.2,Trundle:0.55,Clank:0.9,Crease:1.25,Twiglet:0.75,Swirl:0.95,Ditty:1,Sizzle:1.05,Aero:1.35,Nesta:0.85,Magna:0.9,Helm:0.8,Bloop:1.05,Sox:1,Cuppy:0.95,Suds:0.95,Scoop:1,Tome:0.9,Gumball:0.9,Pina:0.95,Jingle:0.95,Presto:1.05,Vroom:1.25,Shutter:1,Yoyo:1.25,Lava:0.85,Pogo:1.2,Tengu:1.05,Tanuki:0.85,Mermaid:0.95,Diwata:1.2,Sphinx:1,Garuda:1.2,Werewolf:1.1,Minotaur:0.85,Dragon:0.9,Thunderbird:1.15,Hydra:0.9,Griffin:1.2,Kirin:1.15,Salamander:1.15,Bakunawa:0.95,Cerberus:1.1,Djinn:1.05,Troll:0.8,Mummy:0.85,Sarimanok:1.15};
+const FAM_WALK={Chomp:0.8,Pinch:0.85,Stilt:1.05,Skit:1.15,Antik:1,Squib:1.15,Moko:1.05,Booly:1.25,Plod:0.75,Bipped:1.05,Fizz:1,Teep:0.85,Lern:1.15,Eagle:1.2,Vampire:1,Phoenix:1.05,Kitsune:1.15,Naga:0.95,Yeti:0.8,Puff:0.9,Flit:1.3,Glop:0.85,Tock:1.05,Mitt:0.95,Brolly:1,Spine:0.7,Burr:0.95,Kraken:0.9,Golem:0.7,Unicorn:1.15,Jack:0.9,Wick:1.05,Lumo:1.1,Snooze:0.85,Inky:1,Cobble:0.8,Nimbo:1.1,Dango:1.05,Oaklet:0.9,Roly:1.2,Trundle:0.55,Clank:0.9,Crease:1.25,Twiglet:0.75,Swirl:0.95,Ditty:1,Sizzle:1.05,Aero:1.35,Nesta:0.85,Magna:0.9,Helm:0.8,Bloop:1.05,Sox:1,Cuppy:0.95,Suds:0.95,Scoop:1,Tome:0.9,Gumball:0.9,Pina:0.95,Jingle:0.95,Presto:1.05,Vroom:1.25,Shutter:1,Yoyo:1.25,Lava:0.85,Pogo:1.2,Tengu:1.05,Tanuki:0.85,Mermaid:0.95,Diwata:1.2,Sphinx:1,Garuda:1.2,Werewolf:1.1,Minotaur:0.85,Dragon:0.9,Thunderbird:1.15,Hydra:0.9,Griffin:1.2,Kirin:1.15,Salamander:1.15,Bakunawa:0.95,Cerberus:1.1,Djinn:1.05,Troll:0.8,Mummy:0.85,Sarimanok:1.15,Cthulhu:0.85,Hastur:0.9,Shoggoth:0.8,Dagon:1,Migo:1,Nightgaunt:1.15,Ghoul:1.05,Gug:0.7,Yog:0.9,Shub:0.9};
 /* a family's first move takes its element, the way Skit's Web already does: a Blaze Chomp bites with Flame Bite */
 const EL_PREFIX={Blaze:"Flame",Frost:"Frost",Tide:"Aqua",Spark:"Volt",Wild:"Leaf",Venom:"Toxic",Charm:"Heart",Stone:"Rock",Light:"Shine",Steel:"Iron",Shade:"Shadow",Void:"Void"};
 const arMove=r=>({name:r[0],lv:r[1],range:r[2],dmg:r[3],acc:r[4],sharp:r[5]/100,wither:r[6],push:r[7],cost:r[8],wind:r[9],...(r[10]||{})});
@@ -261,7 +261,7 @@ class Arena{
   has(p,name){ return !!(p.st&&p.st.name===name); }
   // a stat right now: its base, its raised or lowered stages, and any status that weakens it
   eff(p,k){ let v=p.f.base[k]; if(k==="spd"&&p.f.ability==="Rain Dancer") v*=1.15; if(k==="mnd"&&p.f.ability==="Night-born") v*=1.1; const n=p.stg&&p.stg[k]; if(n) v*=arStageMul(n); const S=p.st&&AR_STATUS[p.st.name]; if(S&&S.stat&&S.stat[k]) v*=S.stat[k]; return v; }
-  cost(p,m){ return this.has(p,"Curse")?Math.round(m.cost*1.25):m.cost; }
+  cost(p,m){ if(m.swap&&p.f.ability==="All Doors") return 0; return this.has(p,"Curse")?Math.round(m.cost*1.25):m.cost; }   // Yog's swaps are free
   // asleep, frozen or locked up by a shock or a wall slam: it can't act or walk
   canAct(p){ return !(p.stun>0||p.sleep>0||this.has(p,"Freeze")); }
   dirTo(p){ const o=this.p[1-p.i]; return o.x>p.x?1:-1; }
@@ -340,6 +340,7 @@ class Arena{
       if(q.f.ability==="Last Stand"&&!q.lastStand&&q.hp<q.maxhp/4){ q.lastStand=1; this.ab(q,"Last Stand"); this.heal(q,q.maxhp*0.2,"stand"); } }   // Brawl's Last Stand
     for(const q of this.p){ const o=this.p[1-q.i]; if(q.hp<=0&&q.f.ability==="Haunt"&&!q.haunted&&o.hp>0){ q.haunted=1; this.ab(q,"Haunt"); const d=Math.round(o.maxhp/4); o.hp=Math.max(0,o.hp-d); q.dealt+=d; this.ev.push({t:"recoil",i:o.i,dmg:d}); } }   // Shade's Haunt
     for(const q of this.p) if(q.hp<=0&&q.f.ability==="Rebirth"&&!q.reborn){ q.reborn=1; q.hp=Math.round(q.maxhp*0.25); q.st=null; this.ev.push({t:"ability",i:q.i,name:"Rebirth"}); this.ev.push({t:"heal",i:q.i,amt:q.hp,src:"rebirth"}); }   // Phoenix
+    for(const q of this.p) if(q.hp<=0&&q.f.ability==="Thousand Young"&&!q.young){ q.young=1; q.hp=Math.max(1,Math.round(q.maxhp*0.25)); q.st=null; this.ev.push({t:"ability",i:q.i,name:"Thousand Young"}); this.ev.push({t:"heal",i:q.i,amt:q.hp,src:"young"}); }   // Shub
     for(const q of this.p) if(q.hp<=0&&q.f.ability==="Undying"&&!q.undying){ q.undying=1; q.hp=Math.max(1,Math.round(q.maxhp*0.1)); q.st=null; this.ev.push({t:"ability",i:q.i,name:"Undying"}); this.ev.push({t:"heal",i:q.i,amt:q.hp,src:"undying"}); }   // Mummy
     const [a,b]=this.p; if(a.hp<=0||b.hp<=0){ this.over=true; this.winner=a.hp<=0&&b.hp<=0?null:a.hp<=0?1:0; } }
   heal(f,amt,src,from){ const n=Math.max(0,Math.min(Math.round(amt),f.maxhp-f.hp)); if(f.hp<=0) return 0; f.hp+=n; this.ev.push({t:"heal",i:f.i,amt:n,src,from}); return n; }
@@ -350,13 +351,15 @@ class Arena{
     if(name==="Freeze"&&from&&from.f.ability==="Permafrost") pct*=2;
     if(name==="Root"&&f.f.ability==="Slow and Sure"){ this.ab(f,"Slow and Sure"); return false; }   // Trundle
     if((name==="Poison"||name==="Curse"||name==="Burn")&&f.f.ability==="Pure Step"){ this.ev.push({t:"ability",i:f.i,name:"Pure Step"}); return false; }   // Kirin
+    if(name==="Root"&&f.f.ability==="All Doors"){ this.ev.push({t:"ability",i:f.i,name:"All Doors"}); return false; }   // Yog
+    if(name==="Soak"&&f.f.ability==="Deep Song"){ this.ab(f,"Deep Song"); this.heal(f,f.maxhp*0.05,"deepsong"); return false; }   // Dagon: a Soak heals it instead
     if(name==="Root"&&f.f.ability==="Sky King"){ this.ev.push({t:"ability",i:f.i,name:"Sky King"}); return false; }   // Garuda
     if(name==="Blind"&&f.f.ability==="Bright"){ this.ev.push({t:"ability",i:f.i,name:"Bright"}); return false; }   // Lern's Bright
     if(this.rand()*100>=pct) return false;
     if(f.f.ability==="Sanctuary"&&f.hp>=f.maxhp){ this.ab(f,"Sanctuary"); return false; }   // Light's Sanctuary: nothing lands while its HP is full
     if(name==="Crack"&&f.f.ability==="Unbreakable"){ this.ab(f,"Unbreakable"); return false; }
     if(from&&from!==f){ if(name==="Burn"&&from.f.ability==="Wildfire") this.ab(from,"Wildfire",true); if(from.f.ability==="Volatile") this.ab(from,"Volatile",true); }
-    f.st={name,wild:name==="Burn"&&!!from&&from.f.ability==="Wildfire",t:AR_STATUS[name].d*(from&&from.f.ability==="Volatile"?1.3:1),from:from?from.i:null,tick:0}; this.ev.push({t:"status",i:f.i,name}); return true; }   // Volatile: Fizz's statuses last 30% longer
+    f.st={name,wild:name==="Burn"&&!!from&&from.f.ability==="Wildfire",t:AR_STATUS[name].d*(from&&from.f.ability==="Volatile"?1.3:1)*(name==="Dread"&&from&&from.f.ability==="Dreamer"?2:1),from:from?from.i:null,tick:0}; this.ev.push({t:"status",i:f.i,name}); return true; }   // Volatile: Fizz's statuses last 30% longer
   // raise (sign 1) or lower (sign -1) stats for a while; Bulwark keeps its stats from being lowered
   // src: whoever caused it, so Defiant only answers the opponent's drops
   stage(f,what,sign,src){ if(typeof what==="number") what={pow:what};
@@ -370,6 +373,9 @@ class Arena{
   step(){
     if(this.over||this.turn) return;
     for(const p of this.p) p.px=p.x;   // where it stood last step, so the screen can glide between steps
+    if(!this.opened){ for(const q of this.p) if(q.f.ability==="Mimic"){ const o=this.p[1-q.i]; if(o.f.ability&&o.f.ability!=="Mimic"){ q.f={...q.f,ability:o.f.ability,abilityText:null}; q.mimic=1; this.ev.push({t:"ability",i:q.i,name:"Mimic"}); } }   // Shoggoth copies its foe's ability before anything else opens
+      for(const q of this.p) if(q.f.ability==="Yellow Sign"){ const o=this.p[1-q.i]; this.ab(q,"Yellow Sign"); if(this.inflict(o,"Curse",100,q)) o.st.t=6; }   // Hastur
+    }
     if(!this.opened){ this.opened=true; for(const q of this.p) if(q.f.ability==="Beguile"){ this.ab(q,"Beguile"); this.stage(this.p[1-q.i],{pow:1},-1,q); }
       for(const q of this.p) if(q.f.ability==="Fright"){ this.ab(q,"Fright"); this.stage(this.p[1-q.i],{spd:1},-1,q); } }   // Jack's Fright   // Charm's Beguile
     for(const p of this.p){ if(!p.buff.brace) p.focus=Math.min(99,p.focus+this.regen(p)*AR.DT*(p.f.ability==="Steeping"&&(p.walkT==null||this.t-p.walkT>0.5)?1.1:1)*(p.f.ability==="Wind Up"?1.15:1)*(this.p[1-p.i].f.ability==="Lullaby"?0.9:1));   // Ditty's Lullaby   // Tock's Wind Up   // Teep's Steeping
@@ -475,6 +481,7 @@ class Arena{
       if(p.f.ability==="Headlong"&&m.dash){ dmg*=1.2; if(h===0) this.ab(p,"Headlong",true); }   // Minotaur
       if(tg.f.ability==="Dragon Scale"&&(m.el==="Blaze"||m.el==="Frost")){ dmg*=0.8; if(h===0) this.ab(tg,"Dragon Scale",true); }   // Dragon
       if(bite) dmg*=0.6;
+      if(p.f.ability==="Deep Song"&&m.el==="Tide"){ dmg*=1.2; if(h===0) this.ab(p,"Deep Song",true); }   // Dagon
       if(p.f.ability==="Long Sight"&&(m.range==="Far"||m.range==="Mid")){ dmg*=1.15; if(h===0) this.ab(p,"Long Sight",true); }   // Griffin
       if(tg.f.ability==="Moon Eater"&&m.el==="Light"){ dmg*=0.7; if(h===0) this.ab(tg,"Moon Eater",true); }   // Bakunawa
       if(tg.f.ability==="Three Wishes"&&m.cast){ if(h===0){ tg.wishNow=(tg.wishes||0)<3; if(tg.wishNow){ tg.wishes=(tg.wishes||0)+1; this.ab(tg,"Three Wishes"); } } if(tg.wishNow) dmg*=0.5; }   // Djinn
@@ -528,6 +535,10 @@ class Arena{
       if(o.f.ability==="Hothead"&&!p.st&&R()<0.1&&this.inflict(p,"Burn",100,o)) this.ab(o,"Hothead");
       if(o.f.ability==="Static Skin"&&!p.st&&R()<0.2&&this.inflict(p,"Shock",100,o)) this.ab(o,"Static Skin");
       if(p.f.ability==="Toxic Touch"&&!o.st&&R()<0.1&&this.inflict(o,"Poison",100,p)) this.ab(p,"Toxic Touch"); }
+    if(tg===o&&total&&p.f.ability==="Gnaw"&&!m.cast&&m.range==="Close"&&p.hp>0){ this.ab(p,"Gnaw",true); this.heal(p,total*0.1,"gnaw"); }   // Ghoul
+    if(tg===o&&total&&o.hp>0&&p.f.ability==="Tickle"&&this.rand()<0.2&&this.inflict(o,"Daze",100,p)) this.ab(p,"Tickle");   // Nightgaunt
+    if(tg===o&&total&&o.hp>0&&p.f.ability==="Dreamer"&&this.rand()<0.15&&this.inflict(o,"Dread",100,p)) this.ab(p,"Dreamer");   // Cthulhu
+    if(tg===o&&total&&o.hp>0&&o.f.ability==="Brain Jar"&&m.cast&&(o.jars||0)<3){ o.jars=(o.jars||0)+1; this.ab(o,"Brain Jar"); this.stage(o,{mnd:1},1); }   // Migo
     if(tg===o&&total&&o.hp>0&&o.f.ability==="Heat Up"&&m.el==="Blaze"){ this.ab(o,"Heat Up"); this.stage(o,{pow:1},1); }   // Salamander
     if(tg===o&&total&&o.hp>0&&p.f.ability==="Stormborn"&&!o.st&&R()<0.15&&this.inflict(o,"Shock",100,p)) this.ab(p,"Stormborn");   // Thunderbird
     if(tg===o&&m.cast&&total&&o.hp>0&&p.f.ability==="Siren"&&!o.st&&R()<0.2&&this.inflict(o,"Daze",100,p)) this.ab(p,"Siren");   // Mermaid
@@ -542,8 +553,10 @@ class Arena{
     if(m.push&&tg===o&&!o.buff.brace&&!o.buff.bunker){
       const k=(1+edge(this.eff(p,m.cast?"mnd":"pow"),this.eff(o,"grd"),0.5,-0.4,0.4))*(p.f.ability==="Heavy Hands"&&!m.cast&&m.push>0?1.5:1)*(p.f.ability==="Gust"&&m.cast&&m.push>0?1.3:1), s=m.push*k*(this.has(o,"Root")?0.5:1)*(o.f.ability==="Steady"&&m.push>0?0.5:1)*(o.f.ability==="Deep Roots"&&m.push>0?0:1)*(p.f.ability==="Pull"&&!m.cast&&m.push>0?-1:1);   // Plod's Steady, Twiglet's Deep Roots, Magna's Pull turns a shove into a pull
       if(o.f.ability==="Steady"&&m.push>0) this.ab(o,"Steady",true);
+      if(o.f.ability==="Mountain"&&m.push>0) this.ab(o,"Mountain",true);   // Gug
       if(p.f.ability==="Gust"&&m.cast&&m.push>0) this.ab(p,"Gust",true);   // Tengu
-      if(s>0){ const want=o.x+d*s, wall=d>0?AR.LEN:0, past=Math.abs(want-wall)*(d>0?want>wall:want<wall); o.x=Math.max(0,Math.min(AR.LEN,want));
+      const s2=o.f.ability==="Mountain"&&s>0?0:s;
+      if(s2>0){ const want=o.x+d*s2, wall=d>0?AR.LEN:0, past=Math.abs(want-wall)*(d>0?want>wall:want<wall); o.x=Math.max(0,Math.min(AR.LEN,want));
         if(past>5){ const slam=Math.round(o.maxhp*0.03); o.hp=Math.max(0,o.hp-slam); p.dealt+=slam; o.stun=0.5; this.ev.push({t:"slam",i:o.i,dmg:slam}); } }
       else o.x=p.x+d*Math.max(AR.BODY,Math.abs(o.x-p.x)+s);   // a pull drags it in, but never through the puller
     }

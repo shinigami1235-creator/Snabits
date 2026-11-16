@@ -60,6 +60,16 @@ function atSfx(kind,el){
     else if(kind==="ab:Three Wishes"){ sTone(d,t,"triangle",900,1800,0.3,0.05); dNoise(d,t,0.2,0.08,"highpass",4000); }
     else if(kind==="ab:Hard Hide"){ dKick(d,t,0.4); sTone(d,t,"triangle",300,200,0.12,0.06); }
     else if(kind==="ab:Undying"){ sTone(d,t,"sawtooth",150,90,0.6,0.05); dNoise(d,t+0.2,0.4,0.1,"lowpass",900); }
+    else if(kind==="ab:Dreamer"){ sTone(d,t,"sine",220,180,0.6,0.05); sTone(d,t+0.1,"sine",330,260,0.5,0.03); }
+    else if(kind==="ab:Yellow Sign"){ sTone(d,t,"triangle",440,415,0.5,0.05); sTone(d,t,"triangle",466,440,0.5,0.04); }
+    else if(kind==="ab:Mimic"){ sTone(d,t,"sine",300,600,0.2,0.05); sTone(d,t+0.2,"sine",600,300,0.2,0.05); }
+    else if(kind==="ab:Deep Song"){ sTone(d,t,"sine",392,392,0.4,0.05); sTone(d,t+0.2,"sine",523,523,0.4,0.04); }
+    else if(kind==="ab:Brain Jar"){ sTone(d,t,"square",800,1400,0.15,0.03); }
+    else if(kind==="ab:Tickle"){ for(let k=0;k<4;k++) sTone(d,t+k*0.05,"sine",1200+k*200,1500+k*200,0.05,0.03); }
+    else if(kind==="ab:Gnaw"){ dKick(d,t,0.2); dKick(d,t+0.08,0.2); }
+    else if(kind==="ab:Mountain"){ dKick(d,t,0.5); dNoise(d,t,0.3,0.1,"lowpass",400); }
+    else if(kind==="ab:All Doors"){ sTone(d,t,"sine",600,1200,0.3,0.04); sTone(d,t+0.15,"sine",900,1800,0.3,0.03); }
+    else if(kind==="ab:Thousand Young"){ sTone(d,t,"triangle",500,700,0.2,0.05); sTone(d,t+0.2,"triangle",700,900,0.2,0.05); }
     else if(kind==="ab:Good Omen"){ sTone(d,t,"square",1000,1500,0.12,0.03); sTone(d,t+0.1,"square",1500,2000,0.12,0.03); }
     else if(kind==="ab:Stormborn"){ dNoise(d,t,0.2,0.2,"highpass",2000,1); sTone(d,t,"square",1800,600,0.15,0.04); }
     else if(kind==="ab:Slippery"){ sTone(d,t,"sine",500,1400,0.22,0.07); }   // a slide whistle
@@ -1058,7 +1068,9 @@ const AT_ABIL={ "Sky High":{c:[255,236,170],k:"feather"}, Bloodsuck:{c:[230,50,7
   Gust:{c:[170,230,160],k:"feather"}, "Trick Leaf":{c:[110,190,80],k:"ring"}, Siren:{c:[240,140,190],k:"shine"}, Blessing:{c:[255,190,220],k:"shine"}, Riddle:{c:[240,200,80],k:"ring"},
   "Sky King":{c:[255,214,90],k:"feather"}, "Full Moon":{c:[250,246,220],k:"shine"}, Headlong:{c:[200,150,100],k:"ring"}, "Dragon Scale":{c:[110,190,90],k:"ring"}, Stormborn:{c:[255,224,60],k:"ring"},
   Regrowth:{c:[120,200,90],k:"shine"}, "Long Sight":{c:[255,180,90],k:"feather"}, "Pure Step":{c:[150,230,230],k:"shine"}, "Heat Up":{c:[255,140,50],k:"ring"}, "Moon Eater":{c:[230,236,255],k:"ring"},
-  "Three Bites":{c:[220,70,60],k:"ring"}, "Three Wishes":{c:[255,214,90],k:"shine"}, "Hard Hide":{c:[120,170,90],k:"ring"}, Undying:{c:[240,232,210],k:"shine"}, "Good Omen":{c:[255,120,90],k:"feather"} };
+  "Three Bites":{c:[220,70,60],k:"ring"}, "Three Wishes":{c:[255,214,90],k:"shine"}, "Hard Hide":{c:[120,170,90],k:"ring"}, Undying:{c:[240,232,210],k:"shine"}, "Good Omen":{c:[255,120,90],k:"feather"},
+  Dreamer:{c:[120,200,140],k:"ring"}, "Yellow Sign":{c:[240,210,70],k:"ring"}, Mimic:{c:[150,150,170],k:"shine"}, "Deep Song":{c:[90,200,210],k:"ring"}, "Brain Jar":{c:[240,150,190],k:"shine"},
+  Tickle:{c:[170,120,230],k:"feather"}, Gnaw:{c:[200,190,170],k:"ring"}, Mountain:{c:[200,140,170],k:"ring"}, "All Doors":{c:[170,110,240],k:"shine"}, "Thousand Young":{c:[120,160,90],k:"shine"} };
 function atAbility(e,now){ const A=AT_ABIL[e.name]||{c:[255,214,90],k:"ring"}, P=atP(e.i);
   AT.fx.push({i:e.i,t0:now,txt:e.name,col:atRgba(A.c,1),size:15,lift:44});
   if(P){ atPart({k:"ring",x:P.cx,y:P.foot,life:520,s:P.r*2.4,c:A.c}); atPart({k:"ring",x:P.cx,y:P.foot,life:700,s:P.r*3.2,c:A.c,t0:AT.te+90});

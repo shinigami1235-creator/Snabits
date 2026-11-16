@@ -67,7 +67,7 @@ function exMap(reg) {
 function exState(reg) { const X = PLAYER.explore = PLAYER.explore || {}; return X[reg.n] = X[reg.n] || { seen: ['0:1'], got: [], season: -1 }; }
 const exSeason = () => { const { yr, mo } = weekParts(PLAYER.week); return yr * 4 + Math.floor(mo / 3); };
 /* the special Snabits: a scan only finds one once its Pattern Stone has been found. A save from before keeps any it raised. */
-function stoneList() { if (!PLAYER) return null; if (!PLAYER.stones) { PLAYER.stones = []; for (const e of PLAYER.roster || []) if (e.m && FAMILY[e.m.family] && FAMILY[e.m.family].special && !PLAYER.stones.includes(e.m.family)) PLAYER.stones.push(e.m.family); } return PLAYER.stones; }
+function stoneList() { if (!PLAYER) return null; if (!PLAYER.stones) { PLAYER.stones = []; for (const e of PLAYER.roster || []) if (e.m && FAMILY[e.m.family] && FAMILY[e.m.family].special && !FAMILY[e.m.family].horror && !PLAYER.stones.includes(e.m.family)) PLAYER.stones.push(e.m.family); } return PLAYER.stones; }
 function stoneOpen(sp) { const L = stoneList(); return !L || L.includes(sp); }
 
 /* ---------- the permit desk ---------- */

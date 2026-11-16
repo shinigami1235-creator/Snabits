@@ -65,13 +65,15 @@ class Fight{
     if(f.statusBlock){ this.say(`${f.name} stays calm and shrugs it off.`); return false; }
     if(f.ability==="Sanctuary"&&f.hp===f.maxhp){ this.pop(i,"Sanctuary"); return false; }
     if(f.ability==="Bright"&&name==="Blind"){ this.pop(i,"Bright"); return false; }
+    if(f.ability==="All Doors"&&name==="Root"){ this.pop(i,"All Doors"); return false; }   // Yog
+    if(f.ability==="Deep Song"&&name==="Soak"){ this.pop(i,"Deep Song"); f.hp=Math.min(f.maxhp,f.hp+Math.round(f.maxhp*0.05)); return false; }   // Dagon: a Soak heals it instead
     if(f.ability==="Pure Step"&&(name==="Poison"||name==="Curse"||name==="Burn")){ this.pop(i,"Pure Step"); return false; }   // Kirin
     if(f.ability==="Sky King"&&name==="Root"){ this.pop(i,"Sky King"); return false; }   // Garuda
     if(name==="Crack"&&f.ability==="Unbreakable"){ this.pop(i,"Unbreakable"); return false; }
     if(name==="Freeze"&&(f.thawed||f.ability==="Thick Fur")) return false;
     if(name==="Poison"&&(f.el1==="Steel"||f.el2==="Steel")&&!(fromIdx!=null&&this.p[fromIdx].ability==="Corrosion")){ this.say(`${f.name} is made of metal and can't be poisoned.`); return false; }
     const wild=fromIdx!=null&&this.p[fromIdx].ability==="Wildfire";
-    f.status={name,turns:name==="Freeze"?1:3,from:fromIdx,wild};
+    f.status={name,turns:name==="Freeze"?1:name==="Dread"&&fromIdx!=null&&this.p[fromIdx].ability==="Dreamer"?6:3,from:fromIdx,wild};   // Cthulhu's Dread lasts twice as long
     this.say(`${f.name} is hit with ${name}.`); this.events.push({t:"status",who:i,name}); return true;
   }
   aiPick(me,foe){
@@ -151,6 +153,8 @@ class Fight{
     if(this.rand()<edge(this.eff(me,"spd"),this.eff(foe,"spd"),0.5,0,0.25)){ me.followed=this.turn; this.say(`${me.name} is quick enough to follow up.`); this.events.push({t:"followup",who:i}); this.hit(i,{...basicFor(me),name:"Follow-up",label:"Follow-up"}); }
   }
   start(){
+    this.p.forEach((f,i)=>{ const o=this.p[1-i]; if(f.ability==="Mimic"&&o.ability&&o.ability!=="Mimic"){ f.ability=o.ability; this.pop(i,"Mimic"); this.say(`${f.name} copies ${o.name}'s ${o.ability}.`); } });   // Shoggoth
+    this.p.forEach((f,i)=>{ if(f.ability==="Yellow Sign"){ this.pop(i,"Yellow Sign"); this.inflict(this.p[1-i],"Curse",i); } });   // Hastur
     this.p.forEach((f,i)=>{ if(this.eff(f,"sta")>this.eff(this.p[1-i],"sta")*1.2){ f.energy++; } });   // a lot more Stamina starts with an extra energy
     this.p.forEach((f,i)=>{ if(f.ability==="Beguile"){ this.pop(i,"Beguile"); this.say(`${f.name}'s Beguile charms ${this.p[1-i].name}.`); this.stageChange(this.p[1-i],{pow:-1},true); } });
   }
@@ -231,6 +235,7 @@ class Fight{
       if(s.ifStatus&&def.status) pw*=2;
       if(s.hpScale) pw=Math.max(20,pw-10*Math.floor((1-me.hp/me.maxhp)*10));
       if(s.kind==="Strike"&&pw<=50&&me.ability==="Big Bite") pw*=1.2;
+      if(el==="Tide"&&me.ability==="Deep Song"){ pw*=1.2; if(h===0) this.pop(i,"Deep Song"); }   // Dagon
       if(el==="Wild"&&me.ability==="Bloom"&&me.hp<me.maxhp/3) pw*=1.5;
       const atk=s.atkStat?this.eff(me,s.atkStat):s.kind==="Cast"?this.eff(me,"mnd"):this.eff(me,"pow");
       const con=this.eff(def,"grd",{pierce:s.pierce}), dfs=s.kind==="Cast"?(con+3*(def.level+5))/4:(con+def.level+5)/2;   // Constitution cuts all damage: half weight against Strikes since it also sets HP, a quarter against Casts
@@ -289,6 +294,10 @@ class Fight{
     if(s.basic&&me.ability==="Web"&&tgt!==i&&R()<0.3){ this.pop(i,"Web"); this.stageChange(def,{spd:-1},true); }
     if(s.status&&tgt!==i){ let ch=s.status[1]*this.statusOdds(me,def)*(me.ability==="Volatile"?1.3:1); if(s.status[0]==="Freeze"&&((this.field&&this.field.name==="Snow")||me.ability==="Permafrost")) ch*=2; if(R()*100<ch) this.inflict(def,s.status[0],i); }
     if(s.lower&&s.lowerChance&&tgt!==i&&R()*100<s.lowerChance) this.stageChange(def,s.lower,true);
+    if(me.ability==="Gnaw"&&s.kind==="Strike"&&total&&tgt!==i&&me.hp>0){ const h=Math.round(total*0.1); me.hp=Math.min(me.maxhp,me.hp+h); this.pop(i,"Gnaw"); this.events.push({t:"heal",who:i,amt:h}); }   // Ghoul
+    if(def.ability==="Brain Jar"&&s.kind==="Cast"&&total&&tgt!==i&&def.hp>0&&(def.jars||0)<3){ def.jars=(def.jars||0)+1; this.pop(tgt,"Brain Jar"); this.stageChange(def,{mnd:1},false); }   // Migo
+    if(me.ability==="Tickle"&&total&&tgt!==i&&def.hp>0&&!def.status&&R()<0.2){ this.pop(i,"Tickle"); this.inflict(def,"Daze",i); }   // Nightgaunt
+    if(me.ability==="Dreamer"&&total&&tgt!==i&&def.hp>0&&!def.status&&R()<0.15){ this.pop(i,"Dreamer"); this.inflict(def,"Dread",i); }   // Cthulhu
     if(def.ability==="Heat Up"&&el==="Blaze"&&total&&tgt!==i&&def.hp>0){ this.pop(tgt,"Heat Up"); this.stageChange(def,{pow:1},false); }   // Salamander
     if(me.ability==="Stormborn"&&total&&tgt!==i&&def.hp>0&&!def.status&&R()<0.15){ this.pop(i,"Stormborn"); this.inflict(def,"Shock",i); }   // Thunderbird
     if(me.ability==="Siren"&&s.kind==="Cast"&&total&&tgt!==i&&def.hp>0&&!def.status&&R()<0.2){ this.pop(i,"Siren"); this.inflict(def,"Daze",i); }   // Mermaid
@@ -300,6 +309,7 @@ class Fight{
   ko(i,by){
     const f=this.p[i];
     if(f.ability==="Rebirth"&&!f.reborn){ f.reborn=true; f.hp=Math.round(f.maxhp/4); f.status=null; this.pop(i,"Rebirth"); this.say(`${f.name} rises from the flames.`); this.events.push({t:"heal",who:i,amt:f.hp}); return; }   // Phoenix
+    if(f.ability==="Thousand Young"&&!f.young){ f.young=true; f.hp=Math.max(1,Math.round(f.maxhp/4)); f.status=null; this.pop(i,"Thousand Young"); this.say(`A little one takes ${f.name}'s place.`); this.events.push({t:"heal",who:i,amt:f.hp}); return; }   // Shub
     if(f.ability==="Undying"&&!f.undying){ f.undying=true; f.hp=Math.max(1,Math.round(f.maxhp/10)); f.status=null; this.pop(i,"Undying"); this.say(`${f.name} gets back up.`); this.events.push({t:"heal",who:i,amt:f.hp}); return; }   // Mummy
     if(f.ability==="Haunt"&&by!=null&&by!==i&&this.p[by].hp>0){ const d=Math.round(this.p[by].maxhp/4); this.p[by].hp=Math.max(0,this.p[by].hp-d); this.pop(i,"Haunt"); this.say(`${f.name}'s Haunt drains ${this.p[by].name}.`); this.events.push({t:"hit",who:by,dmg:d,eff:1,dot:true}); }
     this.over=true; this.winner=1-i;

@@ -1,7 +1,7 @@
 /* Puts the chibi drawings (chibi.js) into the ranch and battle screens while the pixel art stays the default.
    It's on by default. #art=pixel in the address, or localStorage "snabits-art" set to "pixel", brings back the pixel art.
    Only families listed in CHIBI_FAMS are drawn smooth; the rest keep their pixels. */
-const CHIBI_FAMS = ['Chomp', 'Squib', 'Antik', 'Moko', 'Pinch', 'Stilt', 'Skit', 'Booly', 'Plod', 'Bipped', 'Fizz', 'Teep', 'Lern', 'Puff', 'Flit', 'Glop', 'Tock', 'Mitt', 'Brolly', 'Spine', 'Burr', 'Wick', 'Lumo', 'Snooze', 'Inky', 'Cobble', 'Nimbo', 'Dango', 'Oaklet', 'Roly', 'Trundle', 'Clank', 'Crease', 'Twiglet', 'Swirl', 'Ditty', 'Sizzle', 'Aero', 'Nesta', 'Magna', 'Helm', 'Bloop', 'Sox', 'Cuppy', 'Suds', 'Scoop', 'Tome', 'Gumball', 'Pina', 'Jingle', 'Presto', 'Vroom', 'Shutter', 'Yoyo', 'Lava', 'Pogo', 'Eagle', 'Vampire', 'Phoenix', 'Kitsune', 'Naga', 'Yeti', 'Kraken', 'Golem', 'Unicorn', 'Jack', 'Tengu', 'Tanuki', 'Mermaid', 'Diwata', 'Sphinx', 'Garuda', 'Werewolf', 'Minotaur', 'Dragon', 'Thunderbird', 'Hydra', 'Griffin', 'Kirin', 'Salamander', 'Bakunawa', 'Cerberus', 'Djinn', 'Troll', 'Mummy', 'Sarimanok'];
+const CHIBI_FAMS = ['Chomp', 'Squib', 'Antik', 'Moko', 'Pinch', 'Stilt', 'Skit', 'Booly', 'Plod', 'Bipped', 'Fizz', 'Teep', 'Lern', 'Puff', 'Flit', 'Glop', 'Tock', 'Mitt', 'Brolly', 'Spine', 'Burr', 'Wick', 'Lumo', 'Snooze', 'Inky', 'Cobble', 'Nimbo', 'Dango', 'Oaklet', 'Roly', 'Trundle', 'Clank', 'Crease', 'Twiglet', 'Swirl', 'Ditty', 'Sizzle', 'Aero', 'Nesta', 'Magna', 'Helm', 'Bloop', 'Sox', 'Cuppy', 'Suds', 'Scoop', 'Tome', 'Gumball', 'Pina', 'Jingle', 'Presto', 'Vroom', 'Shutter', 'Yoyo', 'Lava', 'Pogo', 'Eagle', 'Vampire', 'Phoenix', 'Kitsune', 'Naga', 'Yeti', 'Kraken', 'Golem', 'Unicorn', 'Jack', 'Tengu', 'Tanuki', 'Mermaid', 'Diwata', 'Sphinx', 'Garuda', 'Werewolf', 'Minotaur', 'Dragon', 'Thunderbird', 'Hydra', 'Griffin', 'Kirin', 'Salamander', 'Bakunawa', 'Cerberus', 'Djinn', 'Troll', 'Mummy', 'Sarimanok', 'Cthulhu', 'Hastur', 'Shoggoth', 'Dagon', 'Migo', 'Nightgaunt', 'Ghoul', 'Gug', 'Yog', 'Shub'];
 const CHIBI_ART = !/(^#|&)art=pixel(&|$)/.test(location.hash) && (() => { try { return localStorage.getItem('snabits-art') !== 'pixel'; } catch (e) { return true; } })();
 
 /* m is a hatched monster or a fight snapshot; s is the ranch state when there is one */
@@ -30,7 +30,8 @@ const SIZE_CM = { Chomp: [50, 100, 170], Squib: [40, 85, 150], Antik: [60, 120, 
   Jingle: [20, 45, 120], Presto: [25, 55, 150], Vroom: [25, 45, 110], Shutter: [20, 45, 130], Yoyo: [15, 35, 110], Lava: [25, 55, 150], Pogo: [30, 60, 160],
   Tengu: [50, 105, 185], Tanuki: [40, 85, 150], Mermaid: [50, 100, 175], Diwata: [30, 60, 110], Sphinx: [55, 115, 200],
   Garuda: [50, 110, 195], Werewolf: [50, 105, 185], Minotaur: [60, 125, 220], Dragon: [55, 120, 230], Thunderbird: [55, 115, 210],
-  Hydra: [55, 120, 230], Griffin: [50, 110, 200], Kirin: [50, 105, 190], Salamander: [25, 55, 110], Bakunawa: [60, 140, 280], Cerberus: [50, 110, 200], Djinn: [40, 90, 170], Troll: [60, 130, 240], Mummy: [45, 100, 180], Sarimanok: [35, 70, 130] };
+  Hydra: [55, 120, 230], Griffin: [50, 110, 200], Kirin: [50, 105, 190], Salamander: [25, 55, 110], Bakunawa: [60, 140, 280], Cerberus: [50, 110, 200], Djinn: [40, 90, 170], Troll: [60, 130, 240], Mummy: [45, 100, 180], Sarimanok: [35, 70, 130],
+  Cthulhu: [70, 180, 480], Hastur: [60, 150, 300], Shoggoth: [60, 160, 450], Dagon: [55, 130, 240], Migo: [40, 90, 160], Nightgaunt: [50, 120, 220], Ghoul: [50, 120, 190], Gug: [80, 200, 600], Yog: [60, 160, 400], Shub: [60, 150, 320] };
 function sizeK(m) {
   if (!m) return 1; if (m.sizeK) return m.sizeK;
   const t = JSON.stringify([m.pal, m.stats, m.lifespan, m.family]); let h = 2166136261;
@@ -423,6 +424,16 @@ function cry(fam, stage) {
       case 'Djinn': voice(t, 'sine', [[0, 600], [0.3, 1100], [0.7, 800]], 0.07, 6); dNoise(d, t, 0.6, 0.06, 'highpass', 3000); break;   // a rising whoosh of smoke
       case 'Troll': voice(t, 'sawtooth', [[0, 110], [0.25, 140], [0.6, 90]], 0.08, 2); break;   // a low grunt
       case 'Mummy': voice(t, 'sawtooth', [[0, 160], [0.5, 200], [0.9, 130]], 0.05, 4); dNoise(d, t + 0.3, 0.5, 0.05, 'lowpass', 900); break;   // a long groan and some dust
+      case 'Cthulhu': voice(t, 'sawtooth', [[0, 90], [0.5, 120], [1.1, 70]], 0.07, 3); dNoise(d, t, 1.0, 0.06, 'lowpass', 500); break;   // a deep gurgle from under the sea
+      case 'Hastur': voice(t, 'triangle', [[0, 440], [0.6, 415], [1.0, 392]], 0.06, 2); voice(t, 'triangle', [[0, 466], [0.6, 440], [1.0, 415]], 0.04, 2); break;   // two notes rubbing, falling
+      case 'Shoggoth': for (let k = 0; k < 4; k++) voice(t + k * 0.09, 'sine', [[0, 300 + k * 90], [0.08, 500 + k * 60]], 0.06); dNoise(d, t, 0.5, 0.05, 'lowpass', 800); break;   // bubbling pops
+      case 'Dagon': voice(t, 'sawtooth', [[0, 160], [0.2, 210], [0.6, 140]], 0.06, 6); dNoise(d, t + 0.1, 0.4, 0.05, 'bandpass', 1200); break;   // a croak with a splash
+      case 'Migo': voice(t, 'square', [[0, 900], [0.05, 1300], [0.1, 900], [0.15, 1300], [0.25, 1000]], 0.04); break;   // a buzzing chirp
+      case 'Nightgaunt': voice(t, 'sine', [[0, 1800], [0.3, 2400], [0.5, 1600]], 0.04, 20); break;   // a thin, high whistle, since it has no mouth
+      case 'Ghoul': voice(t, 'sawtooth', [[0, 300], [0.1, 420], [0.3, 260]], 0.06, 8); voice(t + 0.3, 'sawtooth', [[0, 320], [0.15, 240]], 0.05, 8); break;   // a yip and a growl
+      case 'Gug': voice(t, 'sawtooth', [[0, 70], [0.4, 95], [0.9, 60]], 0.09, 2); break;   // a huge, slow rumble
+      case 'Yog': for (let k = 0; k < 3; k++) voice(t + k * 0.15, 'sine', [[0, 700 + k * 220], [0.4, 900 + k * 220]], 0.04); break;   // three chimes, one per globe
+      case 'Shub': voice(t, 'sawtooth', [[0, 380], [0.1, 520], [0.25, 360], [0.4, 480], [0.6, 340]], 0.05, 14); break;   // a goat's bleat
       case 'Sarimanok': voice(t, 'sawtooth', [[0, 700], [0.1, 1300], [0.3, 1500], [0.55, 900]], 0.05, 10); break;   // a rooster crow
       default: voice(t, 'triangle', [[0, 800], [0.12, 1200], [0.22, 1000]], 0.13);
     } } catch (err) {}

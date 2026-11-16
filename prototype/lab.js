@@ -99,6 +99,8 @@ function fuseChild(e1,e2,cat,R){
   const m1=e1.m, m2=e2.m, s1=entryState(e1), s2=entryState(e2);
   let fam, hybrid=false;
   const r=R();
+  const hor=[m1,m2].find(m=>FAMILY[m.family]&&FAMILY[m.family].horror);   // a horror parent never makes a hybrid: the child is the horror or the other family
+  if(hor&&m1.family!==m2.family) fam=r<0.6?hor.family:(hor===m1?m2:m1).family; else
   if(m1.family===m2.family||r<0.55) fam=m1.family; else if(r<0.85) fam=m2.family; else {
     hybrid=true; fam=registerHybrid(m1.family,m2.family);
   }
