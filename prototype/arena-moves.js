@@ -349,7 +349,7 @@ if(typeof KSND!=="undefined") Object.assign(KSND,{
 });
 if(typeof SWING!=="undefined") ["goospin","spincrash","wingstorm","snapshut"].forEach(k=>SWING.add(k));
 /* family move kinds from the drafts: start */
-Object.assign(AR_KIND,{"Absorb":"biggulp","Acid Beam":"beam","Acid Dart":"spear","Ambush Strike":"tackle","Ankle Kick":"kick","Antenna Spike":"spear","Arm Hammer":"hammer","Arm Knock":"punch","Bat Song":"chatter","Bell Toss":"boulder","Big Boo":"wave","Big Pinch":"vicegrip","Bitter Sap":"drool","Blinding Flash":"sunflare","Boulder Shove":"push","Bright Ray":"beam","Bubble Burst":"volley","Bubble Stream":"steam","Cable Whip":"lash","Candle Flame":"foxfire","Cap Smash":"hammer","Chime":"chatter","Claw Slice":"claw","Claw Swing":"lash","Coil Hop":"tackle","Cold Goo":"wave","Cold Swipe":"claw","Cork Shot":"toothshot","Corkscrew":"spear","Crane Kick":"highkick","Cross":"punch","Dirt Kick":"kick","Dissolve":"venomcoil","Dive Press":"talondive","Double Jab":"onetwo","Double Nip":"gnash","Double Pinch":"pinch","Double Prick":"onetwo","Double Scratch":"claw","Double Stomp":"stomp","Dread Cry":"wave","Drip Flick":"volley","Drizzle":"volley","Echo Burst":"chatter","Fang Pierce":"bite","Fang Stab":"bite","Flask Bump":"tackle","Flask Roll":"chargeram","Flying Kick":"highkick","Frost Spin":"sweep","Frost Tusk":"spear","Ghost Image":"foxfire","Glass Shard":"volley","Glow":"beam","Goo Barrage":"volley","Goo Block":"bellyflop","Goo Press":"bodyslam","Goo Shot":"drool","Goo Spike":"spear","Gunk Cannon":"boulder","Gust Cut":"lash","Hail Volley":"meteor","Handle Bash":"hammer","Head Bump":"tackle","Heel Drop":"stomp","Hook":"punch","Hop Kick":"highkick","Hot Pour":"potion","Hour Hand":"sweep","Ice Needle":"spear","Ice Pinch":"vicegrip","Ink Cannon":"volley","Ink Splat":"drool","Jab Barrage":"punchflurry5","Karate Chop":"claw","Kick Combo":"kickflurry","Lantern Fire":"foxfire","Laser Line":"beam","Leap Snip":"talondive","Leg Hop":"kick","Leg Rush":"stampede","Leg Slam":"stomp","Leg Spike":"spear","Lid Slam":"hammer","Light Ray":"beam","Lightning Rod":"pillar","Liver Shot":"punch","Long Jab":"punch","Mind Push":"push","Minute Hand":"spear","Mud Spit":"drool","Needle Burst":"volley","Night Cut":"nightbite","Overhead Smash":"hammer","Overheat":"sunflare","Pillar Press":"hammer","Pin Beam":"spear","Pincer Snip":"pinch","Pixel Shot":"volley","Poison Bite":"venomcoil","Pot Drop":"jawdrop","Rain Gust":"wave","Razor Thread":"lash","Rocket Arms":"punchflurry","Root Jab":"spear","Root Spike":"pillar","Root Whack":"tackle","Rope Drop":"jawdrop","Round Kick":"kick","Shell Butt":"tackle","Shell Roll":"rollbite","Shriek":"chatter","Silk Cannon":"web","Silk Spit":"drool","Sleep Mist":"steam","Snout Bump":"tackle","Soft Light":"potion","Spark Needle":"lightning","Spider Leap":"bodyslam","Spoke Stab":"spear","Spore Needle":"spear","Spore Shot":"toothshot","Spout Stab":"spear","Spring Punch":"punch","Squeeze":"vicegrip","Stomp Down":"stomp","Stone Fling":"boulder","Sucker Grip":"biggulp","Tea Party":"volley","Tentacle Frenzy":"punchflurry5","Tentacle Poke":"spear","Tentacle Slam":"hammer","Tentacle Whip":"lash","Thorn Smash":"hammer","Tide Slam":"hammer","Tiny Kick":"kick","Tip Dive":"talondive","Tip Flurry":"punchflurry","Tip Over":"bodyslam","Trash Talk":"chatter","Trunk Flurry":"punchflurry","Tunnel Slash":"claw","Tusk Thrust":"spear","Twin Wisps":"foxfire","Twirl":"sweep","Twister":"tornado","Venom Frenzy":"chompcombo","Water Blade":"claw","Water Dart":"spear","Water Jet":"beam","Water Spray":"wave","Wing Cut":"claw","Wing Whack":"lash"});
+Object.assign(AR_KIND,{"Absorb":"biggulp","Acid Beam":"beam","Acid Dart":"spear","Acid Drip":"drool","Ambush Strike":"tackle","Ankle Kick":"kick","Antenna Spike":"spear","Arm Hammer":"hammer","Arm Knock":"punch","Bad Dream":"wave","Ball Drop":"bellyflop","Bat Song":"chatter","Beak Dive":"talondive","Beak Peck":"nibble","Beak Spear":"spear","Bell Toss":"boulder","Big Boo":"wave","Big Pinch":"vicegrip","Big Roll":"rollbite","Big Stomp":"stomp","Bitter Sap":"drool","Blinding Flash":"sunflare","Blizzard":"wave","Boulder Barrage":"volley","Boulder Shove":"push","Boulder Toss":"boulder","Bright Ray":"beam","Bubble Burst":"volley","Bubble Stream":"steam","Cable Whip":"lash","Candle Flame":"foxfire","Cap Smash":"hammer","Chime":"chatter","Clank Combo":"onetwo","Claw Slice":"claw","Claw Swing":"lash","Coil Hop":"tackle","Cold Goo":"wave","Cold Swipe":"claw","Colour Beam":"rainbow","Cork Shot":"toothshot","Corkscrew":"spear","Crane Kick":"highkick","Crawl Over":"bodyslam","Cross":"punch","Crystal Dart":"spear","Dirt Kick":"kick","Dissolve":"venomcoil","Dive Press":"talondive","Double Bop":"nibble","Double Jab":"onetwo","Double Nip":"gnash","Double Pinch":"pinch","Double Poke":"skewerpoke","Double Prick":"onetwo","Double Scratch":"claw","Double Smash":"onetwo","Double Stomp":"stomp","Dread Cry":"wave","Dream Drain":"biggulp","Dream Puff":"volley","Drip Flick":"volley","Drizzle":"volley","Dust Kick":"kick","Echo Burst":"chatter","Edge Chop":"hammer","Fang Pierce":"bite","Fang Stab":"bite","Feeler Tickle":"nibble","Flap Dance":"wave","Flask Bump":"tackle","Flask Roll":"chargeram","Flop Down":"bellyflop","Fluff Storm":"avalanche","Flying Kick":"highkick","Fog Roll":"tackle","Frost Spin":"sweep","Frost Tusk":"spear","Gear Throw":"boulder","Ghost Image":"foxfire","Glass Shard":"volley","Glow":"beam","Goo Barrage":"volley","Goo Block":"bellyflop","Goo Press":"bodyslam","Goo Shot":"drool","Goo Spike":"spear","Gravel Storm":"avalanche","Grill Flame":"foxfire","Ground Shake":"avalanche","Gunk Cannon":"boulder","Gust Cut":"lash","Hail Storm":"avalanche","Hail Volley":"meteor","Handle Bash":"hammer","Head Bump":"tackle","Heavy Shower":"pillar","Heel Drop":"stomp","Hook":"punch","Hop Kick":"highkick","Hop Press":"stomp","Hot Gravel":"steam","Hot Pour":"potion","Hot Syrup":"drool","Hour Hand":"sweep","Ice Needle":"spear","Ice Pinch":"vicegrip","Icicle Drop":"spear","Ink Cannon":"volley","Ink Splat":"drool","Jab Barrage":"punchflurry5","Karate Chop":"claw","Kick Combo":"kickflurry","Lantern Fire":"foxfire","Laser Line":"beam","Leap Snip":"talondive","Leg Hop":"kick","Leg Rush":"stampede","Leg Slam":"stomp","Leg Spike":"spear","Lid Slam":"hammer","Light Ray":"beam","Light Shower":"volley","Lightning Bolt":"lightning","Lightning Rod":"pillar","Liver Shot":"punch","Long Jab":"punch","Long Roll":"stampede","Mind Push":"push","Minute Hand":"spear","Mist":"steam","Mouth Nip":"bite","Mud Spit":"drool","Needle Burst":"volley","Night Cut":"nightbite","Overhead Smash":"hammer","Overheat":"sunflare","Paper Bomb":"meteor","Paper Hop":"tackle","Pile Drop":"bellyflop","Pillar Press":"hammer","Pin Beam":"spear","Pincer Snip":"pinch","Piston Punch":"punch","Pixel Shot":"volley","Plate Slice":"sweep","Poison Bite":"venomcoil","Pot Drop":"jawdrop","Rain Gust":"wave","Rapid Poke":"punchflurry","Razor Thread":"lash","Rocket Arms":"punchflurry","Roly Combo":"chompcombo","Root Jab":"spear","Root Quake":"rockpath","Root Spike":"pillar","Root Whack":"tackle","Rope Drop":"jawdrop","Round Kick":"kick","Rumble Charge":"chargeram","Rumble Roll":"avalanche","Saw Roll":"tackle","Shell Butt":"tackle","Shell Roll":"rollbite","Shell Smoke":"steam","Shock Slam":"lightning","Shriek":"chatter","Silk Cannon":"web","Silk Spit":"drool","Skewer Toss":"spear","Sleep Mist":"steam","Slime Ball":"drool","Slime Wave":"wave","Smoke Ring":"steam","Snout Bump":"tackle","Soft Light":"potion","Spark Needle":"lightning","Spark Shot":"bolt","Spider Leap":"bodyslam","Spin Dive":"talondive","Spoke Stab":"spear","Spore Needle":"spear","Spore Shot":"toothshot","Spout Stab":"spear","Spring Punch":"punch","Spring Stab":"spear","Squeeze":"vicegrip","Squish":"tackle","Stack Drop":"bellyflop","Stalk Lash":"lash","Star Throw":"volley","Static Zap":"bolt","Steam Puff":"steam","Stomp Down":"stomp","Stone Fling":"boulder","Stone Punch":"punch","Stone Slap":"punch","Storm Slam":"bodyslam","Sucker Grip":"biggulp","Syrup Dab":"drool","Tea Party":"volley","Tentacle Frenzy":"punchflurry5","Tentacle Poke":"spear","Tentacle Slam":"hammer","Tentacle Whip":"lash","Thin Cut":"lash","Thorn Smash":"hammer","Thousand Legs":"legflurry","Tide Slam":"hammer","Tin Snip":"pinch","Tiny Kick":"kick","Tip Dive":"talondive","Tip Flurry":"punchflurry","Tip Over":"bodyslam","Tongue Rasp":"lash","Trash Talk":"chatter","Trunk Flurry":"punchflurry","Tunnel Slash":"claw","Tusk Thrust":"spear","Twin Wisps":"foxfire","Twirl":"sweep","Twister":"tornado","Venom Frenzy":"chompcombo","Water Blade":"claw","Water Dart":"spear","Water Jet":"beam","Water Splat":"drool","Water Spray":"wave","Wet Fog":"steam","Wind Cut":"sweep","Wing Barrage":"kickflurry","Wing Cut":"claw","Wing Whack":"lash","Wrench Poke":"spear","Wrench Smash":"hammer","Wrench Toss":"spear"});
 /* family move kinds from the drafts: end */
 
 /* Gid's notes on groups 1 and 2 (16 Nov 2026): Sand Spray and Iced Tea read too small, Blinding Flash comes from the eye,
@@ -651,3 +651,126 @@ ANIM.trunkflurry.atk=(t,o)=>{ const C=320, gap=140, n=4, end=C+n*gap, L=mvLimbHi
     if(t<380){ const k=ei((t-160)/220); return {f:-0.05+0.62*k,pose:atPose("run",{headRot:0.25-1.3*k,eyes:"fierce",open:0.3}),arc:-Math.abs(Math.sin(k*Math.PI*2))*5}; }   // gallops in with the horn coming down level
     if(t<560) return {f:0.57,pose:atPose("tackle",{headRot:-1.05+0.06*Math.sin(t/25),eyes:"fierce"}),off:[Math.sin(t/12)*1.5,0]};
     const k=(t-560)/400; return {f:0.57*(1-eio(k)),pose:atPose("idle",{headRot:-1.05*(1-eo(k))})}; }; }
+
+/* group 3 (16 Nov 2026): Snooze, Inky, Cobble, Nimbo, Dango, Oaklet, Roly, Trundle, Clank, Crease */
+/* a thrown thing that curves out over the gap, hits at C and curves back home under it, for Saw Throw and Paper Boomerang */
+function mvBoomer(draw){ const C=520;
+  return {C,D:1180,
+    atk:t=>({pose:t<200?"determined":t<1000?"push":"idle",sy:t<200?1-0.08*eo(t/200):1,off:[t>200&&t<280?-5:0,0]}),
+    def:t=>SG.knock(t,C,1,24,440),
+    fx(c,t,x){ const s=x.self, tg=x.target, d=atDir(x), a={x:s.x+d*s.r*0.6,y:s.y-s.r*0.2}, b={x:tg.x-d*tg.r*0.2,y:tg.y-tg.r*0.3}, L=Math.abs(b.x-a.x);
+      let p=null, spin=t/30;
+      if(t>=200&&t<C){ const k=ei((t-200)/(C-200)); p={x:a.x+(b.x-a.x)*k,y:a.y-L*0.35*Math.sin(k*Math.PI)}; }
+      else if(t>=C&&t<1060){ const k=eio((t-C)/(1060-C)); p={x:b.x+(a.x-b.x)*k,y:b.y+L*0.25*Math.sin(k*Math.PI)}; }
+      if(p){ for(let i=1;i<5;i++){ c.globalAlpha=0.25*(1-i/5); draw(c,p.x-d*i*6*(t<C?1:-1),p.y+i*2,s.r,spin-i*0.4,x); } c.globalAlpha=1; draw(c,p.x,p.y,s.r,spin,x); }
+      if(t>=C&&t<C+360){ const k=(t-C)/360; atStar4(c,b.x,b.y,tg.r*0.6*(1-k),"rgba(255,255,240,.95)"); for(let i=0;i<8;i++){ const an=i/8*Math.PI*2; c.strokeStyle=`rgba(255,${200+i*6},120,${1-k})`; c.lineWidth=2; c.beginPath(); c.moveTo(b.x+Math.cos(an)*tg.r*0.3,b.y+Math.sin(an)*tg.r*0.3); c.lineTo(b.x+Math.cos(an)*tg.r*(0.4+0.8*k),b.y+Math.sin(an)*tg.r*(0.4+0.8*k)); c.stroke(); } }
+      atImpact(t,C,0.35,0); }}; }
+MV.saw=(c,x,y,R,rot)=>{ const z=R*0.32; c.save(); c.translate(x,y); c.rotate(rot); c.fillStyle="#c9ced6"; c.strokeStyle="#6b7280"; c.lineWidth=1.5; c.beginPath();
+  for(let i=0;i<24;i++){ const a=i/24*Math.PI*2, rr=i%2?z:z*1.22; c.lineTo(Math.cos(a)*rr,Math.sin(a)*rr); } c.closePath(); c.fill(); c.stroke();
+  c.fillStyle="#8b929c"; c.beginPath(); c.arc(0,0,z*0.3,0,7); c.fill(); c.fillStyle="rgba(255,255,255,.7)"; c.beginPath(); c.ellipse(-z*0.35,-z*0.4,z*0.3,z*0.12,-0.6,0,7); c.fill(); c.restore(); };
+MV.boomer=(c,x,y,R,rot,X)=>{ const z=R*0.36, col=X.body||[230,230,240]; c.save(); c.translate(x,y); c.rotate(rot); c.fillStyle=atRgba(col.map(v=>Math.min(255,v+40)),1); c.strokeStyle=atRgba(col.map(v=>v*0.55),1); c.lineWidth=1.4;
+  c.beginPath(); c.moveTo(-z,-z*0.5); c.lineTo(0,z*0.35); c.lineTo(z,-z*0.5); c.lineTo(z*0.7,-z*0.62); c.lineTo(0,-z*0.05); c.lineTo(-z*0.7,-z*0.62); c.closePath(); c.fill(); c.stroke();
+  c.strokeStyle=atRgba(col.map(v=>v*0.7),0.8); c.beginPath(); c.moveTo(0,z*0.35); c.lineTo(0,-z*0.05); c.stroke(); c.restore(); };
+/* a ball rolling in along the floor: tuck, roll, bump (Roll Bump, Big Roll, Rumble Roll), and the long fast roll with sparks (Edge Roll) */
+function mvRollIn(C,F,turns,sparks,big){ return {C,D:C+640,contact:true,marks:true,
+  atk:(t,o)=>{ const d=(o&&o.dir)||1; if(t<140){ const k=eo(t/140); return {sx:1+0.1*k,sy:1-0.18*k,pose:"crouch"}; }
+    if(t<C){ const k=(t-140)/(C-140), th=d*Math.PI*2*turns*ei(k); return {f:F*ei(k),...MV.roll(th),sx:0.94,sy:0.88,pose:"crouch"}; }
+    if(t<C+120){ const k=(t-C)/120; return {f:F-0.08*Math.sin(k*Math.PI),arc:-(big?22:10)*Math.sin(k*Math.PI),sx:1+0.12*(1-k),sy:1-0.12*(1-k),pose:"tackle"}; }
+    const k=(t-C-120)/520; return {f:(F-0.04)*(1-eio(k)),arc:-12*Math.sin(Math.min(1,k)*Math.PI),pose:"idle"}; },
+  def:t=>SG.knock(t,C,1,big?40:24,big?560:420),
+  fx(c,t,x){ const s=x.self, tg=x.target, d=atDir(x); if(t>140&&t<C){ SG.dust(c,s.x-d*s.r*0.6,s.foot,s.r*0.5,((t-140)%220)/220,4); MV.lines(c,s.x,s.y-s.r*0.4,s.r,d,4,1);
+      if(sparks) for(let i=0;i<9;i++){ const ph=((t/120)+i/9)%1; c.fillStyle=`rgba(255,${210+i*4},90,${1-ph})`; c.beginPath(); c.arc(s.x-d*s.r*(0.5+ph*1.6),s.foot-2-ph*s.r*0.8*atH(i),2.4*(1-ph)+0.6,0,7); c.fill(); } }
+    if(t>=C&&t<C+400){ const k=(t-C)/400; atPow(c,{x:tg.x-d*tg.r*0.4,y:tg.y-tg.r*0.2},k,tg.r/(big?20:26)); if(big) SG.cracks&&SG.cracks(c,tg.x,tg.foot,tg.r*1.1,6,4,1-k); }
+    atImpact(t,C,big?0.6:0.35,big?0.1:0); }}; }
+Object.assign(ANIM,{
+  sawthrow:mvBoomer(MV.saw),
+  paperboomer:mvBoomer(MV.boomer),
+  rollbump:mvRollIn(440,0.74,1,false,false),
+  edgeroll:mvRollIn(520,0.8,2,true,false),
+  bigroll:mvRollIn(560,0.8,1.5,false,true),
+  /* Cobble's Moss Smear: it walks up, presses a hand on the target and green moss spreads over it */
+  mosssmear:{C:460,D:1250,contact:true,marks:true,
+    atk:t=>({f:t<460?0.62*eio(t/460):t<880?0.62:0.62*(1-eio((t-880)/340)),pose:t<300?"walk":t<880?"push":"idle",off:[t>460&&t<880?Math.sin(t/30)*1.5:0,0]}),
+    def:t=>t>=460&&t<1150?{off:[Math.sin(t/20)*1.5,0],pose:"hurt"}:null,
+    fx(c,t,x){ const tg=x.target, R=tg.r; if(t<460) return; const k=Math.min(1,(t-460)/500), a=t<1000?1:Math.max(0,1-(t-1000)/250); if(a<=0) return;
+      for(let i=0;i<11;i++){ const an=atH(i*5)*Math.PI*2, rr=R*0.75*Math.sqrt(atH(i*11)), g=Math.max(0,Math.min(1,k*1.6-i*0.06)), px=tg.x+Math.cos(an)*rr, py=tg.y-R*0.25+Math.sin(an)*rr*0.85;
+        c.fillStyle=`rgba(${70+i*3},${140+i*4},70,${0.85*a})`; c.beginPath(); c.arc(px,py,R*0.18*g,0,7); c.fill(); c.fillStyle=`rgba(160,215,110,${0.7*a})`; c.beginPath(); c.arc(px-R*0.05,py-R*0.05,R*0.07*g,0,7); c.fill(); }
+      for(let i=0;i<4;i++){ const ph=((t/400)+i/4)%1; SG.feather(c,tg.x+(i-1.5)*R*0.4,tg.y-R*(0.6+ph*0.7),R*0.12,ph*3+i,`rgba(120,190,90,${(1-ph)*a})`); } }},
+  /* Dango's Spin Skewer: it tips its point forward and spins like a drill into the target */
+  spinskewer:{C:440,D:1260,contact:true,marks:true,
+    atk:(t,o)=>{ const d=(o&&o.dir)||1, h=26; if(t<160){ const k=eo(t/160); return {...MV.roll(-d*0.15*k,h),f:-0.04*k,pose:"crouch"}; }
+      const spin=Math.cos(t/22); if(t<440){ const k=ei((t-160)/280); return {...MV.roll(d*1.35*k,h),f:-0.04+0.66*k,sy:0.85+0.15*Math.abs(spin),pose:"attack"}; }
+      if(t<820) return {...MV.roll(d*1.35,h),f:0.62+0.02*Math.sin(t/18),sy:0.85+0.15*Math.abs(spin),pose:"attack"};
+      const k=(t-820)/440; return {...MV.roll(d*1.35*(1-eo(k)),h),f:0.62*(1-eio(k)),pose:"idle"}; },
+    def:t=>t>=440&&t<820?{off:[Math.sin(t/10)*3,0],pose:"hit"}:SG.knock(t,820,1,24,420),
+    fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, d=atDir(x); if(t>160&&t<820) for(let i=0;i<3;i++){ const a=t/30+i*2.1; c.strokeStyle="rgba(255,255,255,.6)"; c.lineWidth=2; c.beginPath(); c.ellipse(s.x+d*s.r*0.4,s.y-s.r*0.3,s.r*0.35,s.r*0.85,0,a,a+1.8); c.stroke(); }
+      if(t>=440&&t<820){ const p={x:tg.x-d*R*0.4,y:tg.y-R*0.25}; for(let i=0;i<7;i++){ const ph=((t/90)+i/7)%1, an=(d>0?Math.PI:0)+(atH(i*3)-0.5)*1.6; c.fillStyle=`rgba(255,${220+i*4},140,${1-ph})`; c.beginPath(); c.arc(p.x+Math.cos(an)*R*ph,p.y+Math.sin(an)*R*ph,2.2*(1-ph)+0.5,0,7); c.fill(); }
+        atStar4(c,p.x,p.y,R*(0.25+0.1*Math.sin(t/20)),"rgba(255,255,235,.9)"); }
+      atImpact(t,440,0.3,0); atImpact(t,820,0.4,0); }},
+  /* Dango's Poke Flurry: five quick jabs with the point of its skewer */
+  pokeflurry:{C:360,D:1220,contact:true,marks:true,
+    atk:(t,o)=>{ const d=(o&&o.dir)||1, h=26; if(t<160){ const k=eo(t/160); return {...MV.roll(-d*0.12*k,h),f:-0.04*k,pose:"crouch"}; }
+      if(t<360){ const k=eio((t-160)/200); return {...MV.roll(d*1.25*k,h),f:-0.04+0.6*k,pose:"attack"}; }
+      if(t<360+5*110){ const p=((t-360)%110)/110; return {...MV.roll(d*1.25,h),f:0.56-0.14*Math.sin(p*Math.PI),pose:"attack"}; }
+      const k=(t-910)/310; return {...MV.roll(d*1.25*(1-eo(k)),h),f:0.56*(1-eio(Math.min(1,k))),pose:"idle"}; },
+    def(t){ if(t<360||t>960) return null; const p=((t-360)%110)/110; return {off:[(1-p)*6,0],pose:"hit"}; },
+    fx(c,t,x){ const tg=x.target, R=tg.r, d=atDir(x); for(let j=0;j<5;j++){ const k=(t-360-j*110)/220; if(k<0||k>=1) continue; const y=tg.y-R*(0.5-0.22*((j*3)%5)/2); atStar4(c,tg.x-d*R*0.35,y,R*0.4*(1-k),"rgba(255,255,235,.95)"); }
+      for(let j=0;j<5;j++) atImpact(t,360+j*110,0.18,0); }},
+  /* Dango's Petal Swirl: pink petals blow out of it, ring the target and close in, cutting */
+  petalswirl:{C:640,D:1300,
+    atk:t=>({pose:t<1000?"cast":"idle",rot:Math.sin(t/120)*0.06,arc:t<1000?-4:0}),
+    def:t=>t>=640&&t<1200?{off:[Math.sin(t/15)*2.5,0],pose:"hurt",flash:Math.floor(t/90)%2?2:0}:null,
+    fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r; if(t>1200) return;
+      for(let i=0;i<14;i++){ const k=Math.max(0,Math.min(1,(t-60-i*18)/520)); if(k<=0) continue; const an=i/14*Math.PI*2+t/170, ring=t<640?R*1.4:R*(1.4-0.9*Math.min(1,(t-640)/300)),
+        px=s.x+(tg.x+Math.cos(an)*ring-s.x)*eo(k), py=(s.y-s.r*0.3)+(tg.y-R*0.3+Math.sin(an)*ring*0.5-(s.y-s.r*0.3))*eo(k), a=t<1000?1:1-(t-1000)/200;
+        SG.feather(c,px,py,R*0.13,an*2+t/90,`rgba(255,${150+(i%3)*25},${190+(i%2)*30},${0.95*a})`); }
+      for(let j=0;j<3;j++){ const k=(t-640-j*120)/220; if(k<0||k>=1) continue; c.strokeStyle=`rgba(255,235,245,${1-k})`; c.lineWidth=3*(1-k)+1; const sd=j%2?1:-1; c.beginPath(); c.moveTo(tg.x-R*0.8*sd,tg.y-R*(0.8-j*0.2)); c.quadraticCurveTo(tg.x,tg.y-R*0.3,tg.x+R*0.8*sd,tg.y+R*(0.1-j*0.1)); c.stroke(); }
+      atImpact(t,640,0.25,0); }},
+  /* Snooze's Lullaby: sleepy notes drift out of it to the target, which sways and droops */
+  lullaby:{C:700,D:1360,
+    atk:t=>({pose:atPose(t<1100?"cast":"idle",{eyes:"shut"}),rot:Math.sin(t/180)*0.08,arc:-3*Math.sin(t/180)}),
+    def(t){ if(t<700||t>1300) return null; const k=(t-700)/600; return {rot:Math.sin(t/160)*0.14*(1-k*0.5),sy:1-0.08*Math.sin(Math.min(1,k*2)*Math.PI/2),pose:atPose("hurt",{eyes:"shut"})}; },
+    fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r; if(t>1300) return;
+      for(let i=0;i<6;i++){ const k=(t-80-i*90)/620; if(k<0||k>1.05) continue; const q=Math.min(1,k), px=s.x+(tg.x-s.x)*q, py=s.y-s.r*0.8+(tg.y-R*0.6-(s.y-s.r*0.8))*q+Math.sin(q*Math.PI*3+i)*12, a=k>0.9?Math.max(0,1-(k-0.9)/0.15):1;
+        c.save(); c.globalAlpha*=a; c.translate(px,py); c.rotate(Math.sin(t/150+i)*0.25); c.fillStyle=i%2?"#c9b8ff":"#ffe08a"; c.strokeStyle=c.fillStyle; c.lineWidth=2.2; const z=R*0.16;
+        c.beginPath(); c.ellipse(0,0,z*0.75,z*0.55,-0.4,0,7); c.fill(); c.beginPath(); c.moveTo(z*0.65,-z*0.1); c.lineTo(z*0.65,-z*2); if(i%3===0){ c.lineTo(z*1.6,-z*1.6); } c.stroke(); c.restore(); }
+      if(t>=700){ const k=(t-700)/600; for(let i=0;i<3;i++){ const ph=((t/500)+i/3)%1; c.fillStyle=`rgba(230,225,255,${(1-ph)*(1-k*0.5)})`; c.font=`bold ${Math.round(R*(0.35+ph*0.3))}px sans-serif`; c.fillText("z",tg.x+R*(0.4+ph*0.5),tg.y-R*(0.9+ph*0.8)); } } }},
+  /* Snooze's Bop Barrage: it hops onto the target and bounces on it again and again, with fluff flying out */
+  bopbarrage:{C:420,D:1420,contact:true,marks:true,
+    atk:t=>{ if(t<160){ const k=eo(t/160); return {sy:1-0.15*k,sx:1+0.1*k,pose:"crouch"}; } if(t<420){ const k=(t-160)/260; return {f:0.72*eo(k),arc:-46*Math.sin(k*Math.PI*0.5),pose:"jump"}; }
+      if(t<420+5*130){ const p=((t-420)%130)/130; return {f:0.72,arc:-46+(Math.abs(Math.cos(p*Math.PI))*30)-0,sy:p<0.15?0.82:1.04,sx:p<0.15?1.16:0.97,pose:p<0.2?"hit":"jump"}; }
+      const k=(t-1070)/350; return {f:0.72*(1-eio(Math.min(1,k))),arc:-46*(1-eo(Math.min(1,k))),pose:"idle"}; },
+    def(t){ if(t<420||t>1100) return null; const p=((t-420)%130)/130; return {sy:p<0.25?0.86:1,sx:p<0.25?1.1:1,off:[Math.sin(t/14)*1.5,0],pose:"hurt"}; },
+    fx(c,t,x){ const tg=x.target, R=tg.r; for(let j=0;j<5;j++){ const k=(t-420-j*130)/360; if(k<0||k>=1) continue; for(let i=0;i<5;i++){ const an=-Math.PI*(0.1+0.8*atH(i+j*5)), sp=R*(0.5+1.2*eo(k)); SG.feather(c,tg.x+Math.cos(an)*sp,tg.y-R*0.9+Math.sin(an)*sp+k*k*R,R*0.12,i+k*4,`rgba(255,255,255,${0.95*(1-k)})`); } }
+      for(let j=0;j<5;j++) atImpact(t,420+j*130,0.2,0); }},
+  /* Trundle's Slime Slide: it leans back, then shoots forward on a shiny slime trail and rams the target */
+  slimeslide:{C:440,D:1180,contact:true,marks:true,
+    atk:t=>{ if(t<180){ const k=eo(t/180); return {f:-0.05*k,sx:1-0.06*k,sy:1+0.04*k,pose:"crouch"}; } if(t<440){ const k=ei((t-180)/260); return {f:-0.05+0.78*k,sx:1.12,sy:0.9,pose:"tackle"}; }
+      if(t<600) return {f:0.73-0.05*Math.sin((t-440)/160*Math.PI),sx:1-0.08*Math.sin((t-440)/160*Math.PI),pose:"tackle"}; const k=(t-600)/580; return {f:0.7*(1-eio(k)),pose:"idle"}; },
+    def:t=>SG.knock(t,440,1,36,520),
+    fx(c,t,x){ const s=x.self, tg=x.target, d=atDir(x), a=t<900?1:Math.max(0,1-(t-900)/280); if(t>180&&a>0){ const x0=s.x-d*s.r*0.2-d*(t<440?(t-180)/260:1)*Math.abs(tg.x-s.x)*0.75;
+        c.fillStyle=`rgba(190,230,255,${0.45*a})`; c.beginPath(); c.ellipse((x0+s.x)/2,s.foot+1,Math.abs(s.x-x0)/2+s.r*0.4,s.r*0.12,0,0,7); c.fill(); c.fillStyle=`rgba(255,255,255,${0.6*a})`; c.beginPath(); c.ellipse((x0+s.x)/2,s.foot,Math.abs(s.x-x0)/2*0.7,s.r*0.035,0,0,7); c.fill(); }
+      if(t>180&&t<440) MV.lines(c,s.x,s.y-s.r*0.3,s.r,d,4,1);
+      if(t>=440&&t<800){ const k=(t-440)/360; atPow(c,{x:tg.x-d*tg.r*0.4,y:tg.y-tg.r*0.2},k,tg.r/22); for(let i=0;i<6;i++){ const an=-Math.PI*(0.2+0.6*atH(i*7)), sp=tg.r*(0.3+1.1*eo(k)); c.fillStyle=`rgba(180,225,255,${0.9*(1-k)})`; c.beginPath(); c.arc(tg.x-d*tg.r*0.4+Math.cos(an)*sp*-d,tg.y+Math.sin(an)*sp+k*k*tg.r,tg.r*0.07,0,7); c.fill(); } }
+      atImpact(t,440,0.45,0.05); }}
+});
+Object.assign(AR_KIND,{"Saw Throw":"sawthrow","Paper Boomerang":"paperboomer","Roll Bump":"rollbump","Edge Roll":"edgeroll","Big Roll":"bigroll","Rumble Roll":"bigroll",
+  "Moss Smear":"mosssmear","Spin Skewer":"spinskewer","Poke Flurry":"pokeflurry","Petal Swirl":"petalswirl","Lullaby":"lullaby","Bop Barrage":"bopbarrage","Slime Slide":"slimeslide",
+  "Skip Stone":"boulder","Double Bop":"tackle","Fluff Storm":"volley","Wind Cut":"gust","Gravel Storm":"volley","Icicle Drop":"icefall","Feeler Tickle":"push","Wing Barrage":"wingstorm"});
+if(typeof KSND!=="undefined") Object.assign(KSND,{
+  sawthrow:(d,t)=>{ dNoise(d,t+0.2,0.85,0.08,'bandpass',3200,3); sTone(d,t+0.2,'sawtooth',900,1300,0.3,0.03); dNoise(d,t+0.52,0.08,0.25,'highpass',4000,2); sTone(d,t+0.52,'square',2400,1600,0.06,0.05); },
+  paperboomer:(d,t)=>{ dNoise(d,t+0.2,0.85,0.07,'bandpass',1800,1.5); dNoise(d,t+0.52,0.06,0.2,'highpass',3000,1.5); },
+  rollbump:(d,t)=>{ dNoise(d,t+0.14,0.3,0.1,'lowpass',500); dKick(d,t+0.44,0.4); },
+  edgeroll:(d,t)=>{ dNoise(d,t+0.14,0.38,0.1,'lowpass',500); dNoise(d,t+0.2,0.3,0.06,'highpass',4500,2); dKick(d,t+0.52,0.4); },
+  bigroll:(d,t)=>{ dNoise(d,t+0.14,0.42,0.14,'lowpass',380); dKick(d,t+0.56,0.7); dNoise(d,t+0.56,0.4,0.18,'lowpass',300); },
+  mosssmear:(d,t)=>{ dNoise(d,t+0.46,0.5,0.12,'lowpass',700); sTone(d,t+0.5,'sine',220,160,0.4,0.05); },
+  spinskewer:(d,t)=>{ dNoise(d,t+0.16,0.66,0.08,'bandpass',2400,2); sTone(d,t+0.44,'sawtooth',300,500,0.38,0.035); dKick(d,t+0.82,0.3); },
+  pokeflurry:(d,t)=>{ for(let j=0;j<5;j++){ dNoise(d,t+0.36+j*0.11,0.04,0.2,'highpass',3000,1.5); sTone(d,t+0.36+j*0.11,'triangle',1800-j*100,1100,0.05,0.04); } },
+  petalswirl:(d,t)=>{ dNoise(d,t+0.06,0.9,0.08,'bandpass',2600,0.6); [0.64,0.76,0.88].forEach(x=>dNoise(d,t+x,0.06,0.16,'highpass',4000,2)); },
+  lullaby:(d,t)=>{ [523,659,784,659,523,392].forEach((f,i)=>sTone(d,t+0.1+i*0.16,'sine',f,f,0.22,0.06)); },
+  bopbarrage:(d,t)=>{ for(let j=0;j<5;j++) { dKick(d,t+0.42+j*0.13,0.18); dNoise(d,t+0.42+j*0.13,0.08,0.1,'lowpass',900); } },
+  slimeslide:(d,t)=>{ dNoise(d,t+0.18,0.26,0.1,'bandpass',600,0.8); sTone(d,t+0.18,'sine',400,200,0.26,0.04); dKick(d,t+0.44,0.5); }
+});
+if(typeof SWING!=="undefined") ["pokeflurry","spinskewer","bopbarrage"].forEach(k=>SWING.add(k));
+/* Trundle's smoke comes out of the top of its shell (the chimney on the Mega), so the steam starts there instead of its mouth */
+{ const S0=ANIM.steam.fx; ANIM.steam.fx=(c,t,x)=>{ if(x.fam==="Trundle"&&/Smoke/.test(x.name||"")){ const s=x.self, d=atDir(x); x={...x,from:[{x:s.x+d*s.r*(x.stage==="Mega"?0.3:0.55),y:s.y-s.r*(x.stage==="Mega"?1.35:0.95)}]}; } S0(c,t,x); }; }
