@@ -94,7 +94,11 @@ const SECRET_PAL = { Eagle: [[46, 84, 170], [150, 40, 48], [255, 214, 90]], Vamp
   Hydra: [[140, 80, 200], [90, 170, 80], [246, 206, 70]], Griffin: [[240, 140, 50], [246, 246, 246], [246, 206, 70]], Kirin: [[80, 200, 210], [240, 140, 50], [246, 246, 246]],
   Salamander: [[40, 36, 42], [240, 140, 50], [246, 206, 70]], Bakunawa: [[54, 110, 214], [90, 210, 220], [246, 246, 246]], Cerberus: [[40, 36, 42], [214, 64, 52], [190, 194, 200]],
   Djinn: [[54, 110, 214], [246, 206, 70], [246, 246, 246]], Troll: [[80, 170, 76], [150, 100, 56], [246, 246, 246]], Mummy: [[246, 242, 232], [190, 194, 200], [246, 206, 70]],
-  Sarimanok: [[246, 246, 246], [214, 64, 52], [246, 206, 70]] };
+  Sarimanok: [[246, 246, 246], [214, 64, 52], [246, 206, 70]],
+  Cthulhu: [[80, 160, 90], [132, 96, 60], [242, 200, 50]], Hastur: [[242, 206, 64], [40, 36, 42], [240, 140, 50]], Shoggoth: [[40, 36, 42], [246, 246, 246], [214, 64, 52]],
+  Dagon: [[90, 200, 200], [80, 160, 90], [246, 246, 246]], Migo: [[240, 130, 180], [190, 194, 200], [132, 96, 60]], Nightgaunt: [[40, 36, 42], [140, 80, 200], [246, 246, 246]],
+  Ghoul: [[190, 194, 200], [132, 96, 60], [214, 64, 52]], Gug: [[240, 130, 180], [132, 96, 60], [246, 246, 246]], Yog: [[140, 80, 200], [90, 200, 200], [240, 130, 180]],
+  Shub: [[40, 36, 42], [132, 96, 60], [80, 160, 90]] };
 function dexSecretTab() { const S = (PLAYER && PLAYER.dexSecret) || {}, k = DEX_SECRETS.filter(([n]) => S[n]).length;
   return `<button class="small ${DEX_FAM === 'Secrets' ? 'on' : ''}" data-f="Secrets">Secrets<i>${k}/${DEX_SECRETS.length}</i></button>`; }
 function openSecrets(n) {
@@ -104,7 +108,8 @@ function openSecrets(n) {
     <div class="full dex-tabs">${DEX_FAMS.map(f => { const k = DEX_ELS.filter(e => D[f + '|' + e]).length; return `<button class="small" data-f="${f}">${f}<i>${k}/12</i></button>`; }).join('')}${dexSecretTab()}</div>
     <div class="full dex-grid">${DEX_SECRETS.map(([k, hint]) => { const b = S[k] || 0, nm = k.startsWith('c:') ? k.slice(2) + ' costume' : k;
       const shut = k.startsWith('c:') ? typeof cosOpen === 'function' && !cosOpen(k.slice(2)) : typeof stoneOpen === 'function' && !stoneOpen(k);   // a costume not opened yet keeps its hint hidden too
-      return `<div class="dex-t ${b ? '' : 'unk'}"><canvas data-k="${k}"></canvas><b>${b ? nm : '???'}</b><small>${b ? (b & 14 ? 'Raised' : 'Seen') : shut ? '???' : hint}</small></div>`; }).join('')}</div>`);
+      return `<div class="dex-t ${b ? '' : 'unk'}"><canvas data-k="${k}"></canvas><b>${b ? nm : '???'}</b><small>${b ? (b & 14 ? 'Raised' : 'Seen') : shut ? '???' : hint}</small></div>`; }).join('')}</div>` +
+    (typeof horrorSecretsHtml === 'function' && rankIdx() >= 4 ? horrorSecretsHtml(S) : ''));   // the horrors from grade A (horror.js)
   el('dx-back').onclick = () => menu('Out');
   el('r-panel').querySelectorAll('[data-f]').forEach(b => b.onclick = () => openDex(b.dataset.f));
   el('r-panel').querySelectorAll('canvas[data-k]').forEach(cv => { const k = cv.dataset.k, b = S[k] || 0, d = devicePixelRatio || 1, Z = (cv.clientWidth || 64) * d; cv.width = Z; cv.height = Z;

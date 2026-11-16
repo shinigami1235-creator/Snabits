@@ -164,3 +164,50 @@ function mythsHtml() {
     const txt = (head + '\u0001' + body).replace(/Hastur/g, w => ++n >= 3 ? '_____' : w).split('\u0001');
     return `<div class="full lab-info"><b>${txt[0]}</b><br>${txt[1]}</div>`; }).join('');
 }
+
+/* ---------- leaving ---------- */
+// how each one leaves at the end of its lifespan, on the ranch and outside the Freezer
+const HORROR_GO = { Cthulhu: 'spread its wings for the first time and flew off over the sea', Hastur: 'walked out of the gate in its yellow cloak and never looked back',
+  Shoggoth: 'poured itself down the well and never came back up', Dagon: 'walked down to the river and swam away', Migo: 'flew up towards a pink light over the hills',
+  Nightgaunt: 'flew off into the night without a sound', Ghoul: 'dug down under the barn and filled the hole in behind it',
+  Gug: 'went down into the ground in the night, and the barn shook once', Yog: 'opened a door in the air and stepped through it',
+  Shub: 'walked into the trees, and a ring of mushrooms came up where it last stood' };
+// true when the ranch Snabit is a horror that's reached the end of its lifespan this week (called from endWeek)
+const horrorDue = (s, weeks) => !!(FAMILY[s.m.family] && FAMILY[s.m.family].horror) && s.used - s.m.lifespan * 4 >= 0 && s.used - s.m.lifespan * 4 < weeks;
+async function horrorLeave(s) {
+  const f = s.m.family, nm = displayName(s);
+  say(`Last night ${nm} ${HORROR_GO[f]}.`); spark(s.x, GROUND - 30, 'sparkle', 10); s.hidden = true; drawUI(); await rwait(3200);
+  PLAYER.roster = PLAYER.roster.filter(r => r.id !== s.id);
+  if (PLAYER.active === s.id) { PLAYER.active = PLAYER.roster.length ? PLAYER.roster[0].id : null; RS = null; }
+  const L = stoneList(); if (L && !L.includes(f)) L.push(f);
+  saveGame(); panel('');
+  if (PLAYER.roster.length) openRanch(); else { closeRanch(); openScope(); }
+  if (RS) say(`${nm} left its painted stone by the barn door.`);
+}
+// a retired horror's statue is gone after 4 weeks, and its stone sits on the empty plinth (called from endWeek)
+function horrorHallWeek() {
+  const out = [];
+  for (const h of (PLAYER.hall || [])) if (!h.gone && FAMILY[h.m.family] && FAMILY[h.m.family].horror && PLAYER.week - h.week >= 4) {
+    h.gone = 1; const L = stoneList(); if (L && !L.includes(h.m.family)) L.push(h.m.family);
+    out.push(`${h.name.split(',')[0]}'s statue is gone from its plinth, and there's a painted stone where it stood.`); }
+  return out;
+}
+
+/* ---------- the Secrets tab's Horrors row ---------- */
+// [where its lair is, once the myth's started; the clue to its stone, once the stone is on the ranch]. Every line is waiting on Gid's OK
+const HORROR_SECRET = {
+  Cthulhu: ['Its city lies at the heart of the Rift.', 'Sea green, mud and a yellow moon, after the lamps go out.'],
+  Hastur: ["Its stage is in the Rift's Middle Ring.", 'A yellow sign on black over an orange stage, once the last show is over.'],
+  Shoggoth: ["Its workshop is in the Rift's Middle Ring.", 'Eyes in the dark round a red mouth, when the whole house is asleep.'],
+  Dagon: ["Its steps go down in the Rift's Outer Ring.", 'Foam on teal water over weed, long after the fishers are in bed.'],
+  Migo: ["Its mine is in the Rift's Outer Ring.", 'A silver jar under pink lights on brown rock, late, when the hills are dark.'],
+  Nightgaunt: ["Its cliffs are in the Rift's Outer Ring.", 'Black wings across a white moon on violet, in the witching hour.'],
+  Ghoul: ["Its burrows are in the Rift's Outer Ring.", 'A grey bone in brown earth under a red sky, near midnight.'],
+  Gug: ["Its gate is in the Rift's Middle Ring.", 'A tall white mouth in brown rock, in the dead of night.'],
+  Yog: ['Its gate stands at the heart of the Rift.', 'Teal and pink globes on violet, between the last bell and the first.'],
+  Shub: ["Its grove is in the Rift's Outer Ring.", 'Black kids round a brown ring on green, when the forest is asleep.'] };
+function horrorSecretsHtml(S) {
+  return `<div class="full lab-head" style="margin-top:6px"><b>Horrors</b></div><div class="full dex-grid">${Object.keys(HORROR_SECRET).map(f => {
+    const b = S[f] || 0, stone = (PLAYER.stones || []).includes(f), hint = stone ? HORROR_SECRET[f][1] : myth(f)[0] ? HORROR_SECRET[f][0] : '???';
+    return `<div class="dex-t ${b ? '' : 'unk'}"><canvas data-k="${f}"></canvas><b>${b ? horrorName(f) : '???'}</b><small>${stone ? hint : b ? (b & 14 ? 'Raised' : 'Seen') : hint}</small></div>`; }).join('')}</div>`;
+}

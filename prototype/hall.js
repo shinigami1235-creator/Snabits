@@ -14,6 +14,7 @@ function hallStatues(c, t) {
   const L = (PLAYER && PLAYER.hall || []).slice(-3); if (!L.length || typeof CUPSHOW === 'undefined') return;
   L.forEach((h, i) => { const x = 122 + i * 28, base = GROUND - 22, sp = hallSpec(h); if (!sp) return;
     SC.depth(c, () => { c.beginPath(); c.roundRect(x - 9, base, 18, 7, 2); }, '#b9b4a8', 1, 0.3);
+    if (h.gone) { c.save(); c.translate(x, base - 7); c.scale(0.5, 0.5); stoneGlyph(c, h.m.family); c.restore(); return; }   // a horror's statue goes after 4 weeks and leaves its stone (horror.js)
     c.save(); c.filter = 'grayscale(1) brightness(1.08) contrast(.85)'; CUPSHOW.mon(c, sp, x, base, 20, 'idle', 0, false); c.restore(); });
 }
 
