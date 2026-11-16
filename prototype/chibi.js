@@ -3578,87 +3578,71 @@ x.feet.push([g.cx, 182, 10]); },
         if (S === 'Mega') { c.fillStyle = '#d06070'; c.beginPath(); c.ellipse(g.cx, my0 + mh * 0.72, mw * 0.32, mh * 0.16, 0, 0, 7); c.fill(); }   // a fat tongue
         return fi; }
     },
-    /* Yithian: a gaunt, pale thinker with a huge bald head, pointed ears, a thin body and long fingers, one hand raised. A big head on a tiny body; long arms with long fingers, a glowing mark on its brow and a collar from Byte; a still bigger head with ridges, three glowing marks and small stones floating round it at Mega */
-    Yithian: {
-      special: true, dims: { Bit: [60, 70], Byte: [66, 92], Mega: [74, 110] }, ll: st => by(st, 10, 16, 20),
-      bottom(st) { return 182 - this.ll(st); }, height(st) { return this.dims[st][1] + this.ll(st) + by(st, 12, 18, 30); },
-      hh: g => g.bh * by(g.stage, 0.6, 0.54, 0.5),
-      path(c, g) { const hh = this.hh(g), tw = g.bw * by(g.stage, 0.5, 0.44, 0.42); c.beginPath(); c.ellipse(g.cx, g.top + hh / 2, g.bw / 2, hh / 2, 0, 0, 7);   // a huge bald head on a thin body
-        c.moveTo(g.cx + tw / 2, g.top + hh * 0.9); c.roundRect(g.cx - tw / 2, g.top + hh * 0.9, tw, g.bot - g.top - hh * 0.9, [tw * 0.3, tw * 0.3, tw * 0.4, tw * 0.4]); },
-      arms: 'stub', armW: st => by(st, 4, 5, 5), handR: st => by(st, 3.5, 4, 4.5), armK: 1.5,
-      shoulder(g) { return { y: g.top + this.hh(g) + 6, dx: g.bw * by(g.stage, 0.22, 0.2, 0.19) }; },
-      hand(g, x, side) { const sh = this.shoulder(g), a = x.P.arm[side < 0 ? 0 : 1], k = this.armK; return [g.cx + side * sh.dx + side * a[2] * k, sh.y + a[3] * k]; },
-      behind(c, g, x) { const S = g.stage, hh = this.hh(g);
-        for (const sd of [-1, 1]) { c.save(); c.translate(g.cx + sd * g.bw * 0.46, g.top + hh * 0.48); c.scale(sd, 1); c.rotate(-0.2); c.fillStyle = rgb(dk(x.body, 0.08)); c.beginPath(); c.moveTo(-2, -6); c.lineTo(by(S, 10, 13, 16), -10); c.lineTo(-2, 8); c.closePath(); c.fill(); c.restore(); }   // pointed ears
-        for (const sd of [-1, 1]) { const fx = g.cx + sd * g.bw * 0.1, lift = Math.max(0, sd * x.walk) * 4;   // thin legs
-          limb(c, [fx, g.bot - 6, fx + sd * 3, g.bot + this.ll(S) * 0.5, fx + sd * 2, 180 - lift], by(S, 6, 6, 7), dk(x.body, 0.1), sd < 0 ? x.L.legL : x.L.legR, x.t);
-          blob(c, fx + sd * 4, 182 - lift, by(S, 6, 7, 8), 3.5, dk(x.body, 0.14), sd < 0 ? x.L.legL : x.L.legR, x.t, 'foot'); x.feet.push([fx + sd * 4, 182 - lift, 6]); }
-        if (S === 'Mega') for (let k = 0; k < 3; k++) { const a = x.t / 1200 + k * 2.1, px = g.cx + Math.cos(a) * g.bw * 0.78, py = g.top + g.bh * 0.5 + Math.sin(a) * g.bh * 0.3;   // small stones floating round it
-          c.save(); c.shadowColor = rgba(lt(x.acc, 0.3), 0.9); c.shadowBlur = 8; c.fillStyle = rgb(lt(x.acc, 0.1)); c.beginPath(); c.moveTo(px, py - 6); c.lineTo(px + 5, py); c.lineTo(px, py + 6); c.lineTo(px - 5, py); c.closePath(); c.fill(); c.restore(); } },
-      inside(c, g, x) { const S = g.stage, hh = this.hh(g);
-        if (S === 'Mega') { c.strokeStyle = rgba(dk(x.body, 0.2), 0.5); c.lineWidth = 1.8; for (const f of [-0.2, 0, 0.2]) { c.beginPath(); c.moveTo(g.cx + f * g.bw, g.top + 2); c.quadraticCurveTo(g.cx + f * g.bw * 1.3, g.top + hh * 0.12, g.cx + f * g.bw * 1.1, g.top + hh * 0.24); c.stroke(); } }   // ridges on its head
-        if (S !== 'Bit') { const gl = 0.6 + Math.sin(x.t / 400) * 0.3; c.save(); c.shadowColor = rgba(lt(x.acc, 0.3), 1); c.shadowBlur = 8; c.fillStyle = rgba(lt(x.acc, 0.2), gl);   // glowing marks on its brow
-          for (const dx of S === 'Mega' ? [-10, 0, 10] : [0]) { c.beginPath(); c.ellipse(g.cx + dx, g.top + hh * 0.22 + Math.abs(dx) * 0.3, 3, 4.5, 0, 0, 7); c.fill(); } c.restore();
-          c.fillStyle = rgb(x.parts); c.beginPath(); c.moveTo(g.cx - g.bw * 0.3, g.top + hh * 0.9); c.lineTo(g.cx + g.bw * 0.3, g.top + hh * 0.9); c.lineTo(g.cx + g.bw * 0.18, g.top + hh * 0.9 + 10); c.lineTo(g.cx - g.bw * 0.18, g.top + hh * 0.9 + 10); c.closePath(); c.fill(); } },   // a collar
-      front(c, g, x) { if (g.stage === 'Bit' || x.back) return; for (const sd of [-1, 1]) { const [hx, hy] = this.hand(g, x, sd);   // long fingers
-          c.strokeStyle = rgb(dk(x.body, 0.05)); c.lineWidth = 2; c.lineCap = 'round'; for (const j of [-1, 0, 1]) { c.beginPath(); c.moveTo(hx, hy); c.lineTo(hx + j * 4 + sd * 2, hy + 9 - Math.abs(j) * 2); c.stroke(); } } },
-      hl: g => [g.left + g.bw * 0.12, g.top + g.bh * 0.32, g.left + g.bw * 0.16, g.top + g.bh * 0.12, g.left + g.bw * 0.36, g.top + g.bh * 0.03],
-      head: g => [g.cx, g.top, g.bw * 0.46],
-      face(c, g, x, look) { const hh = FAM.Yithian.hh(g); return faceTwo(c, g, x, look, { ey: hh * 0.52 / g.bh, ex: 0.17, my: hh * 0.78 / g.bh, s: by(g.stage, 0.74, 0.78, 0.82) }); }
-    },
-    /* Yog: Yog-Sothoth, a floating cluster of glowing globes with feelers spiralling out all round it. Three globes and four feelers; five globes, eight feelers and eyes in the small globes from Byte; eight globes in shifting colours, twelve feelers and a slow spin at Mega */
+    /* Yog: Yog-Sothoth, a floating globe with a crown of smaller glowing globes set round its top like a halo, and feelers trailing under it. Three halo globes and three feelers; five globes with eyes in them and five feelers from Byte; seven globes that change colour, a ring of sparks and seven feelers at Mega */
     Yog: {
-      special: true, float: true, dims: { Bit: [62, 56], Byte: [78, 70], Mega: [94, 86] }, slots: { feet: false },
-      bottom(st) { return by(st, 166, 160, 154); }, height(st) { return this.dims[st][1] + by(st, 20, 34, 48) + (182 - this.bottom(st)); },
-      globes(g, t) { const S = g.stage, spin = S === 'Mega' ? t / 3000 : 0, L = [[0, 0, 0.42], [-0.62, -0.42, 0.2], [0.6, -0.48, 0.22], [-0.66, 0.42, 0.18], [0.64, 0.4, 0.2], [0, -0.82, 0.16], [0, 0.82, 0.15], [-0.86, 0, 0.14], [0.88, -0.02, 0.13]];   // [x, y, r] around the middle
-        return L.slice(0, by(S, 3, 5, 9)).map(([fx, fy, fr], k) => { const a = Math.atan2(fy, fx) + (k ? spin : 0), d = Math.hypot(fx, fy); return [g.cx + Math.cos(a) * d * g.bw / 2, g.top + g.bh / 2 + Math.sin(a) * d * g.bh / 2, fr * g.bw, k]; }); },
-      path(c, g, x) { const t = x ? x.t : 0; c.beginPath(); for (const [px, py, r, k] of this.globes(g, t)) { const w = 1 + 0.04 * Math.sin(t / 400 + k); c.moveTo(px + r * w, py); c.ellipse(px, py, r * w, r * (2 - w), 0, 0, 7); } },
-      behind(c, g, x) { const S = g.stage, n = by(S, 4, 8, 12);
-        for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2 + (S === 'Mega' ? x.t / 3000 : 0) + 0.3, r0 = g.bw * 0.34, len = by(S, 16, 22, 28), sw = Math.sin(x.t / 380 + i * 1.7) * 0.4;   // feelers spiralling out all round it
-          const bx = g.cx + Math.cos(a) * r0, byy = g.top + g.bh / 2 + Math.sin(a) * r0 * (g.bh / g.bw), ex = bx + Math.cos(a + 0.4 + sw) * len, ey = byy + Math.sin(a + 0.4 + sw) * len;
-          const q = [bx, byy, (bx + ex) / 2 + Math.cos(a) * 6, (byy + ey) / 2 + Math.sin(a) * 6, ex, ey]; limb(c, q, by(S, 6, 7, 8), dk(x.parts, 0.05), i % 2 ? x.L.armR : x.L.armL, x.t);
-          c.strokeStyle = rgb(dk(x.parts, 0.05)); c.lineWidth = by(S, 4, 4.5, 5); c.lineCap = 'round'; c.beginPath(); c.arc(ex + Math.cos(a + 1.6) * 4, ey + Math.sin(a + 1.6) * 4, 4, a - 1.6, a + 3.4); c.stroke();
-          if (S !== 'Bit') { c.fillStyle = rgb(lt(x.parts, 0.4)); for (const f of [0.35, 0.65]) { const p = qpt(q, f); c.beginPath(); c.arc(p[0], p[1], 1.4, 0, 7); c.fill(); } } } },
-      inside(c, g, x) { const S = g.stage, hues = [x.body, x.acc, x.parts, lt(x.acc, 0.3), lt(x.parts, 0.3)];
-        for (const [px, py, r, k] of this.globes(g, x.t)) { if (!k) continue; const col = S === 'Mega' ? hues[(k + Math.floor(x.t / 900)) % hues.length] : hues[k % hues.length];   // each small globe its own colour, a sheen on each
-          const gr = c.createRadialGradient(px - r * 0.3, py - r * 0.3, 1, px, py, r); gr.addColorStop(0, rgba(lt(col, 0.5), 0.95)); gr.addColorStop(1, rgba(col, 0.9)); c.fillStyle = gr; c.beginPath(); c.arc(px, py, r, 0, 7); c.fill();
-          if (S !== 'Bit' && !x.back) { const er = r * 0.45, shut = (x.t + k * 700) % 3000 < 150; c.fillStyle = '#fff'; c.beginPath(); c.ellipse(px, py, er, shut ? 0.8 : er, 0, 0, 7); c.fill();
-            if (!shut) { c.fillStyle = '#2b2430'; c.beginPath(); c.arc(px + Math.sin(x.t / 800 + k) * er * 0.3, py, er * 0.5, 0, 7); c.fill(); } } }
-        const [mx, my, mr] = this.globes(g, x.t)[0]; c.fillStyle = rgba(lt(x.body, 0.4), 0.25); c.beginPath(); c.arc(mx - mr * 0.3, my - mr * 0.3, mr * 0.5, 0, 7); c.fill(); },
-      hl: g => [g.cx - g.bw * 0.3, g.top + g.bh * 0.5, g.cx - g.bw * 0.3, g.top + g.bh * 0.34, g.cx - g.bw * 0.18, g.top + g.bh * 0.18],
-      head: g => [g.cx, g.top + g.bh * 0.12, g.bw * 0.36],
-      face: (c, g, x, look) => faceTwo(c, g, x, look, { ey: 0.46, ex: 0.12, my: 0.62, s: by(g.stage, 0.68, 0.72, 0.78) })
+      special: true, float: true, dims: { Bit: [58, 58], Byte: [70, 70], Mega: [82, 82] }, slots: { feet: false },
+      bottom(st) { return by(st, 158, 150, 142); }, height(st) { return this.dims[st][1] + by(st, 22, 30, 40) + (182 - this.bottom(st)); },
+      globes(g) { const n = by(g.stage, 3, 5, 7), R = g.bw * 0.5, cy = g.top + g.bh / 2, r = g.bw * by(g.stage, 0.2, 0.18, 0.16), out = [];   // the halo: small globes set evenly over the top half, half sunk into the big one
+        for (let k = 0; k < n; k++) { const a = Math.PI * (1.1 + k / (n - 1) * 0.8); out.push([g.cx + Math.cos(a) * R * 0.98, cy + Math.sin(a) * R * 0.98, r, k]); } return out; },
+      path(c, g) { c.beginPath(); c.ellipse(g.cx, g.top + g.bh / 2, g.bw / 2, g.bh / 2, 0, 0, 7); for (const [px, py, r] of this.globes(g)) { c.moveTo(px + r, py); c.ellipse(px, py, r, r, 0, 0, 7); } },
+      behind(c, g, x) { const S = g.stage, n = by(S, 3, 5, 7), col = x.parts;
+        if (S === 'Mega') { c.save(); c.globalCompositeOperation = 'lighter'; for (let k = 0; k < 12; k++) { const a = k / 12 * Math.PI * 2 + x.t / 2400, r = g.bw * 0.86, px = g.cx + Math.cos(a) * r, py = g.top + g.bh / 2 + Math.sin(a) * r * 0.9;   // a ring of sparks turning round it
+          c.fillStyle = rgba(lt(x.acc, 0.4), 0.35 + 0.25 * Math.sin(x.t / 300 + k)); c.beginPath(); c.arc(px, py, 2.5, 0, 7); c.fill(); } c.restore(); }
+        for (let i = 0; i < n; i++) { const f = n > 1 ? i / (n - 1) - 0.5 : 0, bx = g.cx + f * g.bw * 0.7, by0 = g.top + g.bh * (0.86 - Math.abs(f) * 0.3), len = by(S, 22, 30, 38) * (1 - Math.abs(f) * 0.4), sw = Math.sin(x.t / 380 + i * 1.6) * 6, d = f < 0 ? -1 : f > 0 ? 1 : (i % 2 ? 1 : -1);   // feelers trailing under it
+          const q = [bx, by0, bx + f * 12 + sw, by0 + len * 0.55, bx + f * 18 + sw * 0.5, by0 + len]; limb(c, q, by(S, 6, 7, 8) - Math.abs(f) * 2, dk(col, 0.05), i % 2 ? x.L.armR : x.L.armL, x.t);
+          c.strokeStyle = rgb(dk(col, 0.05)); c.lineWidth = by(S, 4, 4.5, 5); c.lineCap = 'round'; c.beginPath(); c.arc(q[4] + d * 3.5, q[5], 3.5, d > 0 ? Math.PI : 0, d > 0 ? Math.PI * 2.3 : -Math.PI * 1.3, d < 0); c.stroke();
+          if (S !== 'Bit') { c.fillStyle = rgb(lt(col, 0.4)); for (const k of [0.4, 0.7]) { const p = qpt(q, k); c.beginPath(); c.arc(p[0], p[1], 1.4, 0, 7); c.fill(); } } } },
+      inside(c, g, x) { const S = g.stage, hues = [x.acc, x.parts, lt(x.acc, 0.3), lt(x.parts, 0.3)];
+        c.strokeStyle = rgba(lt(x.body, 0.3), 0.35); c.lineWidth = 2; c.beginPath(); c.ellipse(g.cx, g.top + g.bh * 0.56, g.bw * 0.4, g.bh * 0.34, 0, 0.3, Math.PI - 0.3); c.stroke();   // a soft band round the big globe
+        for (const [px, py, r, k] of this.globes(g)) { const col = S === 'Mega' ? hues[(k + Math.floor(x.t / 900)) % hues.length] : hues[k % hues.length];   // each halo globe glows its own colour
+          const gr = c.createRadialGradient(px - r * 0.3, py - r * 0.3, 1, px, py, r); gr.addColorStop(0, rgba(lt(col, 0.55), 1)); gr.addColorStop(1, rgba(col, 0.95)); c.fillStyle = gr; c.beginPath(); c.arc(px, py, r, 0, 7); c.fill();
+          c.strokeStyle = rgba(dk(col, 0.3), 0.6); c.lineWidth = 1.5; c.beginPath(); c.arc(px, py, r, 0, 7); c.stroke();
+          if (S !== 'Bit' && !x.back) { const er = r * 0.42, shut = (x.t + k * 700) % 3000 < 150; c.fillStyle = '#fff'; c.beginPath(); c.ellipse(px, py, er, shut ? 0.8 : er, 0, 0, 7); c.fill();
+            if (!shut) { c.fillStyle = '#2b2430'; c.beginPath(); c.arc(px + Math.sin(x.t / 800 + k) * er * 0.3, py, er * 0.5, 0, 7); c.fill(); } } } },
+      hl: g => [g.left + g.bw * 0.14, g.top + g.bh * 0.62, g.left + g.bw * 0.16, g.top + g.bh * 0.4, g.left + g.bw * 0.3, g.top + g.bh * 0.24],
+      head: g => [g.cx, g.top + 2, g.bw * 0.44],
+      face: (c, g, x, look) => faceTwo(c, g, x, look, { ey: 0.5, ex: 0.18, my: 0.7, s: by(g.stage, 0.74, 0.8, 0.86) })
     },
-    /* Shub: Shub-Niggurath, the black goat of the woods. A shaggy round mass of ropy feelers with curled ram's horns, goat ears and hoofed goat legs under it. Two legs, small horns and five feelers; four legs, bigger horns, nine feelers and a drooling mouth from Byte; six legs, huge curled horns, thirteen feelers and two drooling mouths at Mega */
+    /* Shub: Shub-Niggurath, the black goat of the woods. A shaggy black goat with curled ram's horns, long ears, a long muzzle, a goat beard and four hoofed legs, with ropy feelers sprouting off its back. Small horns, two legs and three feelers; four legs, bigger horns and five feelers from Byte; huge curled horns, seven feelers, a drooling mouth on each side and glowing goat eyes at Mega */
     Shub: {
-      special: true, dims: { Bit: [66, 56], Byte: [84, 72], Mega: [102, 88] }, ll: st => by(st, 12, 16, 20),
-      bottom(st) { return 182 - this.ll(st); }, height(st) { return this.dims[st][1] + this.ll(st) + by(st, 22, 30, 42); },
-      path(c, g, x) { const t = x ? x.t : 0, n = 30; c.beginPath();   // a shaggy round mass
-        for (let i = 0; i <= n; i++) { const a = i / n * Math.PI * 2, w = 1 + 0.06 * Math.sin(a * 9 + t / 500); const px = g.cx + Math.cos(a) * g.bw / 2 * w, py = g.top + g.bh / 2 + Math.sin(a) * g.bh / 2 * w; i ? c.lineTo(px, py) : c.moveTo(px, py); } c.closePath(); },
+      special: true, dims: { Bit: [66, 56], Byte: [86, 68], Mega: [104, 80] }, ll: st => by(st, 14, 18, 22),
+      bottom(st) { return 182 - this.ll(st); }, height(st) { return this.dims[st][1] + this.ll(st) + by(st, 22, 32, 46); },
+      path(c, g, x) { const t = x ? x.t : 0, R = g.left + g.bw, n = 9; c.beginPath(); c.moveTo(g.cx, g.top); c.bezierCurveTo(g.cx + g.bw * 0.44, g.top, R, g.top + g.bh * 0.24, R, g.top + g.bh * 0.56);   // a round goat body with a shaggy fringe hanging off the bottom
+        c.lineTo(R - 2, g.bot - 6); for (let i = 1; i <= n * 2; i++) { const f = i / (n * 2), w = Math.sin(t / 400 + i) * 1.2; c.lineTo(R - 2 - f * (g.bw - 4), i % 2 ? g.bot + 4 + w : g.bot - 4); }
+        c.lineTo(g.left, g.top + g.bh * 0.56); c.bezierCurveTo(g.left, g.top + g.bh * 0.24, g.cx - g.bw * 0.44, g.top, g.cx, g.top); c.closePath(); },
       leg(c, g, x, lx, i, back) { const S = g.stage, ll = this.ll(S), lift = Math.max(0, Math.sin(x.t / 150 + i * Math.PI / 2)) * 4 * Math.abs(x.walk), fy = (back ? 178 : 182) - lift, col = dk(x.body, back ? 0.25 : 0.1), lw = by(S, 6, 7, 8), top = g.bot - 8, hock = top + ll * 0.6;
-        limb(c, [lx, top, lx + 4, (top + hock) / 2, lx - 2, hock], lw * 1.2, col, i % 2 ? x.L.legR : x.L.legL, x.t); limb(c, [lx - 2, hock, lx - 1, (hock + fy) / 2, lx, fy - 4], lw * 0.8, col, i % 2 ? x.L.legR : x.L.legL, x.t);   // a goat leg with the hock bent back
+        limb(c, [lx, top, lx + 4, (top + hock) / 2, lx - 2, hock], lw * 1.25, col, i % 2 ? x.L.legR : x.L.legL, x.t); limb(c, [lx - 2, hock, lx - 1, (hock + fy) / 2, lx, fy - 4], lw * 0.8, col, i % 2 ? x.L.legR : x.L.legL, x.t);   // a goat leg with the hock bent back
         c.fillStyle = '#2b2430'; c.beginPath(); c.moveTo(lx - lw * 0.7, fy - 5); c.lineTo(lx + lw * 0.7, fy - 5); c.lineTo(lx + lw * 0.8, fy + 1); c.lineTo(lx - lw * 0.8, fy + 1); c.closePath(); c.fill(); c.strokeStyle = '#4a4050'; c.lineWidth = 1; c.beginPath(); c.moveTo(lx, fy - 4); c.lineTo(lx, fy + 1); c.stroke(); x.feet.push([lx, fy, lw * 0.7]); },   // a cloven hoof
-      behind(c, g, x) { const S = g.stage, n = by(S, 5, 9, 13), col = dk(x.body, 0.06);
-        for (let i = 0; i < n; i++) { const a = Math.PI * (0.95 + i / (n - 1) * 1.1), bx = g.cx + Math.cos(a) * g.bw * 0.4, byy = g.top + g.bh / 2 + Math.sin(a) * g.bh * 0.42, len = by(S, 18, 26, 34) * (0.8 + (i % 3) * 0.15), sw = Math.sin(x.t / 360 + i * 1.9) * 0.35;   // ropy feelers all round it
+      behind(c, g, x) { const S = g.stage, n = by(S, 3, 5, 7), col = dk(x.body, 0.06);
+        for (let i = 0; i < n; i++) { const f = n > 1 ? i / (n - 1) - 0.5 : 0, a = -Math.PI / 2 + f * 2.4, bx = g.cx + Math.cos(a) * g.bw * 0.36, byy = g.top + g.bh * 0.5 + Math.sin(a) * g.bh * 0.4, len = by(S, 20, 28, 36) * (1 - Math.abs(f) * 0.3), sw = Math.sin(x.t / 360 + i * 1.9) * 0.3;   // ropy feelers sprouting off its back
           const ex = bx + Math.cos(a + sw) * len, ey = byy + Math.sin(a + sw) * len, q = [bx, byy, (bx + ex) / 2 + Math.cos(a + 1.5) * 6, (byy + ey) / 2 + Math.sin(a + 1.5) * 6, ex, ey]; limb(c, q, by(S, 6, 7, 8), col, i % 2 ? x.L.armR : x.L.armL, x.t);
           c.strokeStyle = rgb(col); c.lineWidth = by(S, 4, 4.5, 5); c.lineCap = 'round'; c.beginPath(); c.arc(ex + Math.cos(a - 1.6) * 3.5, ey + Math.sin(a - 1.6) * 3.5, 3.5, a + 1.6, a - 1.2); c.stroke(); }
-        for (const sd of [-1, 1]) { const hx = g.cx + sd * g.bw * 0.26, hy = g.top + g.bh * 0.14, hr = by(S, 8, 12, 17);   // curled ram's horns
-          c.strokeStyle = rgb(dk(x.parts, 0.15)); c.lineWidth = by(S, 6, 8, 10); c.lineCap = 'round'; c.beginPath(); c.arc(hx + sd * hr * 0.8, hy - hr * 0.2, hr, sd > 0 ? Math.PI * 1.05 : -Math.PI * 0.05, sd > 0 ? Math.PI * 2.6 : -Math.PI * 1.6, sd < 0); c.stroke();
-          c.strokeStyle = rgba(lt(x.parts, 0.25), 0.7); c.lineWidth = 1.4; for (let k = 0; k < 4; k++) { const a = (sd > 0 ? Math.PI * 1.15 : -Math.PI * 0.15) + sd * k * 0.35, rx = hx + sd * hr * 0.8 + Math.cos(a) * hr, ry = hy - hr * 0.2 + Math.sin(a) * hr; c.beginPath(); c.moveTo(rx - 2, ry - 2); c.lineTo(rx + 2, ry + 2); c.stroke(); } }   // ridges on the horns
-        for (const sd of [-1, 1]) { c.save(); c.translate(g.cx + sd * g.bw * 0.46, g.top + g.bh * 0.32); c.scale(sd, 1); c.rotate(0.35 + Math.sin(x.t / 700 + sd) * 0.08); c.fillStyle = rgb(dk(x.body, 0.1)); c.beginPath(); c.ellipse(9, 0, 11, 5, 0, 0, 7); c.fill(); c.fillStyle = rgb(lt(x.acc, 0.2)); c.beginPath(); c.ellipse(10, 0, 7, 2.6, 0, 0, 7); c.fill(); c.restore(); }   // drooping goat ears
-        if (S !== 'Bit') this.leg(c, g, x, g.cx - g.bw * 0.08, 1, true); if (S === 'Mega') { this.leg(c, g, x, g.cx + g.bw * 0.12, 3, true); this.leg(c, g, x, g.cx - g.bw * 0.34, 5, true); this.leg(c, g, x, g.cx + g.bw * 0.34, 7, true); } else if (S === 'Byte') this.leg(c, g, x, g.cx + g.bw * 0.1, 3, true); },
-      inside(c, g, x) { const S = g.stage; c.strokeStyle = rgba(dk(x.body, 0.3), 0.6); c.lineWidth = 2.2; c.lineCap = 'round';   // ropes of goo twisting through it
-        for (let k = 0; k < 7; k++) { const fx = 0.08 + k * 0.14, w = Math.sin(x.t / 700 + k) * 4; c.beginPath(); c.moveTo(g.left + g.bw * fx, g.bot); c.bezierCurveTo(g.left + g.bw * (fx + 0.12) + w, g.top + g.bh * 0.66, g.left + g.bw * (fx - 0.12) - w, g.top + g.bh * 0.34, g.left + g.bw * fx, g.top); c.stroke(); }
-        if (x.back) return; for (const [fx, fy, w] of [[0.2, 0.74, 14], [0.8, 0.7, 12]].slice(0, by(S, 0, 1, 2))) { const px = g.left + g.bw * fx, py = g.top + g.bh * fy, o = 0.6 + 0.4 * Math.sin(x.t / 450 + fx * 9), h = w * 0.36 * o;   // drooling mouths
-          c.fillStyle = '#5a1f2e'; c.beginPath(); c.ellipse(px, py, w / 2, h, 0, 0, 7); c.fill(); c.fillStyle = '#f2ece0';
-          for (let i = 0; i < 4; i++) { const tx = px - w * 0.3 + i * w * 0.2; c.beginPath(); c.moveTo(tx - 2, py - h); c.lineTo(tx, py - h + 4); c.lineTo(tx + 2, py - h); c.closePath(); c.fill(); }
-          c.strokeStyle = 'rgba(150,210,110,.85)'; c.lineWidth = 2; c.beginPath(); c.moveTo(px + w * 0.2, py + h); c.lineTo(px + w * 0.22, py + h + 6 + 4 * o); c.stroke(); } },
-      front(c, g, x) { this.leg(c, g, x, g.cx - g.bw * 0.22, 0, false); this.leg(c, g, x, g.cx + g.bw * 0.22, 2, false); },
-      hl: g => [g.left + g.bw * 0.14, g.top + g.bh * 0.6, g.left + g.bw * 0.16, g.top + g.bh * 0.3, g.left + g.bw * 0.34, g.top + g.bh * 0.1],
+        c.fillStyle = rgb(dk(x.body, 0.1)); c.beginPath(); c.ellipse(g.cx + g.bw * 0.46, g.top + g.bh * 0.66, 5, 8, 0.6 + Math.sin(x.t / 300) * 0.2, 0, 7); c.fill();   // a short goat tail
+        for (const sd of [-1, 1]) { c.save(); c.translate(g.cx + sd * g.bw * 0.38, g.top + g.bh * 0.26); c.scale(sd, 1); c.rotate(0.15 + Math.sin(x.t / 700 + sd) * 0.06);   // long goat ears sticking out sideways
+          c.fillStyle = rgb(dk(x.body, 0.1)); c.beginPath(); c.ellipse(12, 0, by(S, 12, 15, 18), 5.5, 0, 0, 7); c.fill(); c.fillStyle = rgb(lt(x.acc, 0.2)); c.beginPath(); c.ellipse(13, 0, by(S, 8, 10, 12), 2.8, 0, 0, 7); c.fill(); c.restore(); }
+        if (S !== 'Bit') { this.leg(c, g, x, g.cx - g.bw * 0.1, 1, true); this.leg(c, g, x, g.cx + g.bw * 0.1, 3, true); }
+        for (const sd of [-1, 1]) { const hx = g.cx + sd * g.bw * 0.2, hy = g.top + g.bh * 0.08, hr = by(S, 9, 13, 18);   // curled ram's horns sweeping back and down
+          c.strokeStyle = rgb(dk(x.parts, 0.25)); c.lineWidth = by(S, 7, 9, 12); c.lineCap = 'round'; c.beginPath(); c.moveTo(hx, hy + 4); c.quadraticCurveTo(hx + sd * hr * 0.4, hy - hr * 1.1, hx + sd * hr * 1.3, hy - hr * 0.5);
+          c.arc(hx + sd * hr * 1.3, hy + hr * 0.15, hr * 0.65, -Math.PI / 2, sd > 0 ? Math.PI * 0.75 : Math.PI * 0.25, sd < 0); c.stroke();
+          c.strokeStyle = rgb(x.parts); c.lineWidth = by(S, 4, 5.5, 7); c.beginPath(); c.moveTo(hx, hy + 4); c.quadraticCurveTo(hx + sd * hr * 0.4, hy - hr * 1.1, hx + sd * hr * 1.3, hy - hr * 0.5); c.arc(hx + sd * hr * 1.3, hy + hr * 0.15, hr * 0.65, -Math.PI / 2, sd > 0 ? Math.PI * 0.75 : Math.PI * 0.25, sd < 0); c.stroke();
+          c.strokeStyle = rgba(dk(x.parts, 0.35), 0.8); c.lineWidth = 1.4; for (let k = 1; k <= 4; k++) { const p = qpt([hx, hy + 4, hx + sd * hr * 0.4, hy - hr * 1.1, hx + sd * hr * 1.3, hy - hr * 0.5], k / 5); c.beginPath(); c.moveTo(p[0] - 3, p[1] - 1); c.lineTo(p[0] + 3, p[1] + 1); c.stroke(); } } },   // ridges on the horns
+      inside(c, g, x) { const S = g.stage; c.strokeStyle = rgba(dk(x.body, 0.3), 0.55); c.lineWidth = 2; c.lineCap = 'round';   // shaggy locks of fur
+        for (let r = 0; r < 3; r++) for (let k = 0; k < 6; k++) { const px = g.left + g.bw * (0.12 + k * 0.15 + (r % 2) * 0.07), py = g.top + g.bh * (0.5 + r * 0.14); c.beginPath(); c.moveTo(px, py); c.quadraticCurveTo(px + 3, py + 5, px - 1, py + 9); c.stroke(); }
+        if (x.back || S !== 'Mega') return; for (const sd of [-1, 1]) { const px = g.cx + sd * g.bw * 0.34, py = g.top + g.bh * 0.72, w = 12, o = 0.6 + 0.4 * Math.sin(x.t / 450 + sd), h = w * 0.36 * o;   // a drooling mouth on each side
+          c.fillStyle = '#5a1f2e'; c.beginPath(); c.ellipse(px, py, w / 2, h, 0, 0, 7); c.fill(); c.fillStyle = '#f2ece0'; for (let i = 0; i < 3; i++) { const tx = px - w * 0.25 + i * w * 0.25; c.beginPath(); c.moveTo(tx - 2, py - h); c.lineTo(tx, py - h + 4); c.lineTo(tx + 2, py - h); c.closePath(); c.fill(); }
+          c.strokeStyle = 'rgba(150,210,110,.85)'; c.lineWidth = 2; c.beginPath(); c.moveTo(px + 2, py + h); c.lineTo(px + 3, py + h + 6 + 4 * o); c.stroke(); } },
+      front(c, g, x) { this.leg(c, g, x, g.cx - g.bw * 0.26, 0, false); this.leg(c, g, x, g.cx + g.bw * 0.26, 2, false); },
+      hl: g => [g.left + g.bw * 0.14, g.top + g.bh * 0.56, g.left + g.bw * 0.16, g.top + g.bh * 0.28, g.left + g.bw * 0.34, g.top + g.bh * 0.08],
       head: g => [g.cx, g.top + 4, g.bw * 0.4],
-      face(c, g, x, look) { const S = g.stage, fi = faceTwo(c, g, x, look, { ey: 0.38, ex: 0.16, my: 0.6, s: by(S, 0.72, 0.78, 0.84) }), s = fi.s;
-        if (x.back) return fi; c.fillStyle = rgb(lt(x.body, 0.14)); c.beginPath(); c.ellipse(g.cx, fi.ey + 13 * s, 9 * s, 7 * s, 0, 0, 7); c.fill();   // a goat's muzzle
-        c.fillStyle = '#2b2430'; for (const sd of [-1, 1]) { c.beginPath(); c.ellipse(g.cx + sd * 3 * s, fi.ey + 11 * s, 1.4 * s, 2 * s, 0, 0, 7); c.fill(); }
+      face(c, g, x, look) { const S = g.stage, fi = faceTwo(c, g, x, look, { ey: 0.3, ex: 0.18, my: 0.62, s: by(S, 0.7, 0.76, 0.82) }), s = fi.s;
+        if (x.back) return fi; const my = fi.ey + 9 * s, ml = by(S, 16, 18, 22) * s;   // a long goat muzzle running down its face
+        c.fillStyle = rgb(lt(x.body, 0.1)); c.beginPath(); c.moveTo(g.cx - 8 * s, my); c.quadraticCurveTo(g.cx - 11 * s, my + ml, g.cx, my + ml + 3 * s); c.quadraticCurveTo(g.cx + 11 * s, my + ml, g.cx + 8 * s, my); c.closePath(); c.fill();
+        c.fillStyle = rgb(lt(x.body, 0.24)); c.beginPath(); c.ellipse(g.cx, my + ml * 0.8, 9 * s, 6 * s, 0, 0, 7); c.fill();
+        c.fillStyle = '#2b2430'; for (const sd of [-1, 1]) { c.beginPath(); c.ellipse(g.cx + sd * 3.2 * s, my + ml * 0.7, 1.4 * s, 2.2 * s, sd * 0.3, 0, 7); c.fill(); }   // nostrils
+        c.strokeStyle = '#2b2430'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(g.cx - 4 * s, my + ml + 1); c.quadraticCurveTo(g.cx, my + ml + 3 * s, g.cx + 4 * s, my + ml + 1); c.stroke();
+        c.fillStyle = rgb(lt(x.body, 0.32)); c.beginPath(); c.moveTo(g.cx - 5 * s, my + ml + 2 * s); c.quadraticCurveTo(g.cx, my + ml + by(S, 10, 13, 16) * s, g.cx + 1 * s, my + ml + by(S, 13, 17, 22) * s); c.quadraticCurveTo(g.cx + 2 * s, my + ml + 6 * s, g.cx + 5 * s, my + ml + 2 * s); c.closePath(); c.fill();   // a goat beard
+        for (const sd of [-1, 1]) { const ex = g.cx + sd * fi.ex; c.fillStyle = S === 'Mega' ? rgb(lt(x.acc, 0.3)) : '#f6e7a8'; c.beginPath(); c.ellipse(ex, fi.ey, 5.5 * s, 3.2 * s, 0, 0, 7); c.fill();   // goat eyes with a bar for a pupil
+          c.fillStyle = '#2b2430'; c.fillRect(ex - 4 * s, fi.ey - 1.1 * s, 8 * s, 2.2 * s); }
         return fi; }
     },
     /* ---------- special Snabits: found only through a colour easter egg, and only fusion changes their element ---------- */
@@ -3834,7 +3818,7 @@ x.feet.push([g.cx, 182, 10]); },
   const EVO_KEEP = { Jack: 'both', Kraken: 'both', Naga: 'both', Hydra: 'both', Bakunawa: 'both', Yeti: 'both', Golem: 'bit', Tanuki: 'mega', Diwata: 'mega', Unicorn: 'mega', Kirin: 'mega',
     Sphinx: 'mega', Griffin: 'mega', Cerberus: 'mega', Troll: 'mega', Salamander: 'mega', Mermaid: 'mega',
     Cthulhu: 'both', Hastur: 'both', Shoggoth: 'both', Dagon: 'both', Migo: 'both',
-    Nightgaunt: 'both', Ghoul: 'both', Gug: 'both', Yithian: 'both', Yog: 'both', Shub: 'both' };
+    Nightgaunt: 'both', Ghoul: 'both', Gug: 'both', Yog: 'both', Shub: 'both' };
   const EVO_LOW = { Salamander: 1 };   // a lizard stays low to the ground at every stage
   for (const [n, F] of Object.entries(FAM)) { if (!F.special || F.hybridOf) continue;
     const D = F.dims; F.dims = {}; for (const st in D) F.dims[st] = [Math.round(D[st][0] * EVO_K[st][0] * (EVO_LOW[n] && st !== 'Bit' ? 1.06 : 1)), Math.round(D[st][1] * (EVO_LOW[n] ? (st === 'Bit' ? 0.94 : 0.96) : EVO_K[st][1]))];
