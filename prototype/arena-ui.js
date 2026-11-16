@@ -724,7 +724,7 @@ function atDraw(now,dte){
       else if(A.mega==="funnel") atFunnel(c,t,C,{...tgt,foot:T0.foot},A.col,s2,A.el,te);
       else atMegaRise(c,t,C,{...tgt,foot:T0.foot},A.col,s2,A.kind,te);
       return; }
-    try{ ANIM[A.kind].fx(c,(te-A.t0)*A.rate,{self:placed[i],target:tgt,targetLift:tgt.lift||0,col:A.col,el:A.el,name:A.name,from:originOf(placed[i],A.src,tgt),pw:A.pw,W:WW,H:HH}); }catch(err){ AT.side[i].anim=null; } });
+    try{ ANIM[A.kind].fx(c,(te-A.t0)*A.rate,{self:placed[i],target:tgt,targetLift:tgt.lift||0,col:A.col,el:A.el,name:A.name,from:originOf(placed[i],A.src,tgt),pw:A.pw,W:WW,H:HH,body:AT.side[i].spec&&AT.side[i].spec.pal&&typeof atRGBof==="function"?atRGBof(AT.side[i].spec.pal.body):null}); }catch(err){ AT.side[i].anim=null; } });
   if(AT.spark&&placed[AT.spark.i]){ const p=placed[AT.spark.i], src=placed[1-AT.spark.i], c0=p.center||p;
     spawnSparks(c0,Math.atan2(c0.y-src.y,c0.x-src.x),AT.spark.n,AT.spark.col); AT.burst={i:AT.spark.i,t0:te,col:AT.spark.col}; AT.spark=null; }
   if(AT.burst&&placed[AT.burst.i]&&te-AT.burst.t0<260){ const p=placed[AT.burst.i]; burst(c,p.center||p,(te-AT.burst.t0)/260,AT.burst.col); }

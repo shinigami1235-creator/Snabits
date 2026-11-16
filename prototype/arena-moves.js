@@ -351,3 +351,117 @@ if(typeof SWING!=="undefined") ["goospin","spincrash","wingstorm","snapshut"].fo
 /* family move kinds from the drafts: start */
 Object.assign(AR_KIND,{"Absorb":"biggulp","Acid Beam":"beam","Acid Dart":"spear","Ambush Strike":"tackle","Ankle Kick":"kick","Antenna Spike":"spear","Arm Hammer":"hammer","Arm Knock":"punch","Bat Song":"chatter","Bell Toss":"boulder","Big Boo":"wave","Big Pinch":"vicegrip","Bitter Sap":"drool","Blinding Flash":"sunflare","Boulder Shove":"push","Bright Ray":"beam","Bubble Burst":"volley","Bubble Stream":"steam","Cable Whip":"lash","Candle Flame":"foxfire","Cap Smash":"hammer","Chime":"chatter","Claw Slice":"claw","Claw Swing":"lash","Coil Hop":"tackle","Cold Goo":"wave","Cold Swipe":"claw","Cork Shot":"toothshot","Corkscrew":"spear","Crane Kick":"highkick","Cross":"punch","Dirt Kick":"kick","Dissolve":"venomcoil","Dive Press":"talondive","Double Jab":"onetwo","Double Nip":"gnash","Double Pinch":"pinch","Double Prick":"onetwo","Double Scratch":"claw","Double Stomp":"stomp","Dread Cry":"wave","Drip Flick":"volley","Drizzle":"volley","Echo Burst":"chatter","Fang Pierce":"bite","Fang Stab":"bite","Flask Bump":"tackle","Flask Roll":"chargeram","Flying Kick":"highkick","Frost Spin":"sweep","Frost Tusk":"spear","Ghost Image":"foxfire","Glass Shard":"volley","Glow":"beam","Goo Barrage":"volley","Goo Block":"bellyflop","Goo Press":"bodyslam","Goo Shot":"drool","Goo Spike":"spear","Gunk Cannon":"boulder","Gust Cut":"lash","Hail Volley":"meteor","Handle Bash":"hammer","Head Bump":"tackle","Heel Drop":"stomp","Hook":"punch","Hop Kick":"highkick","Hot Pour":"potion","Hour Hand":"sweep","Ice Needle":"spear","Ice Pinch":"vicegrip","Ink Cannon":"volley","Ink Splat":"drool","Jab Barrage":"punchflurry5","Karate Chop":"claw","Kick Combo":"kickflurry","Lantern Fire":"foxfire","Laser Line":"beam","Leap Snip":"talondive","Leg Hop":"kick","Leg Rush":"stampede","Leg Slam":"stomp","Leg Spike":"spear","Lid Slam":"hammer","Light Ray":"beam","Lightning Rod":"pillar","Liver Shot":"punch","Long Jab":"punch","Mind Push":"push","Minute Hand":"spear","Mud Spit":"drool","Needle Burst":"volley","Night Cut":"nightbite","Overhead Smash":"hammer","Overheat":"sunflare","Pillar Press":"hammer","Pin Beam":"spear","Pincer Snip":"pinch","Pixel Shot":"volley","Poison Bite":"venomcoil","Pot Drop":"jawdrop","Rain Gust":"wave","Razor Thread":"lash","Rocket Arms":"punchflurry","Root Jab":"spear","Root Spike":"pillar","Root Whack":"tackle","Rope Drop":"jawdrop","Round Kick":"kick","Shell Butt":"tackle","Shell Roll":"rollbite","Shriek":"chatter","Silk Cannon":"web","Silk Spit":"drool","Sleep Mist":"steam","Snout Bump":"tackle","Soft Light":"potion","Spark Needle":"lightning","Spider Leap":"bodyslam","Spoke Stab":"spear","Spore Needle":"spear","Spore Shot":"toothshot","Spout Stab":"spear","Spring Punch":"punch","Squeeze":"vicegrip","Stomp Down":"stomp","Stone Fling":"boulder","Sucker Grip":"biggulp","Tea Party":"volley","Tentacle Frenzy":"punchflurry5","Tentacle Poke":"spear","Tentacle Slam":"hammer","Tentacle Whip":"lash","Thorn Smash":"hammer","Tide Slam":"hammer","Tiny Kick":"kick","Tip Dive":"talondive","Tip Flurry":"punchflurry","Tip Over":"bodyslam","Trash Talk":"chatter","Trunk Flurry":"punchflurry","Tunnel Slash":"claw","Tusk Thrust":"spear","Twin Wisps":"foxfire","Twirl":"sweep","Twister":"tornado","Venom Frenzy":"chompcombo","Water Blade":"claw","Water Dart":"spear","Water Jet":"beam","Water Spray":"wave","Wing Cut":"claw","Wing Whack":"lash"});
 /* family move kinds from the drafts: end */
+
+/* Gid's notes on groups 1 and 2 (16 Nov 2026): Sand Spray and Iced Tea read too small, Blinding Flash comes from the eye,
+   Trunk Flurry, Tentacle Frenzy, Overhead Smash and Shriek needed their own clear effect, and Bell Toss threw a rock */
+/* a tapered limb (trunk or tentacle) reaching from a to b; k is how far out it is (0 to 1), bend curls it */
+MV.limb=(c,a,b,k,col,w,bend,suck)=>{ if(k<=0) return; const N=14, pts=[]; for(let j=0;j<=N;j++){ const q=j/N*k, x=a.x+(b.x-a.x)*q, y=a.y+(b.y-a.y)*q-Math.sin(q*Math.PI)*bend; pts.push([x,y]); }
+  for(let pass=0;pass<2;pass++){ for(let j=0;j<N;j++){ const ww=w*(1-0.65*j/N)+(pass?0:3); c.strokeStyle=pass?atRgba(col,1):atRgba(col.map(v=>v*0.55),1); c.lineWidth=ww; c.lineCap="round"; c.beginPath(); c.moveTo(pts[j][0],pts[j][1]); c.lineTo(pts[j+1][0],pts[j+1][1]); c.stroke(); } }
+  c.strokeStyle="rgba(255,255,255,.35)"; c.lineWidth=w*0.18; c.beginPath(); pts.forEach((p,j)=>c[j?"lineTo":"moveTo"](p[0],p[1]-w*0.25)); c.stroke();
+  if(suck){ c.fillStyle=atRgba(col.map(v=>Math.min(255,v+70)),1); for(let j=2;j<N;j+=2){ c.beginPath(); c.ellipse(pts[j][0],pts[j][1]+w*0.2,w*0.16*(1-0.5*j/N),w*0.12*(1-0.5*j/N),0,0,7); c.fill(); } } };
+MV.bell=(c,x,y,z,rot,a=1)=>{ c.save(); c.globalAlpha*=a; c.translate(x,y); c.rotate(rot); const g=c.createLinearGradient(-z,0,z,0); g.addColorStop(0,"#c98a1c"); g.addColorStop(0.45,"#ffe08a"); g.addColorStop(1,"#b0731a"); c.fillStyle=g; c.strokeStyle="#7a4c10"; c.lineWidth=2;
+  c.beginPath(); c.moveTo(-z*0.35,-z*0.9); c.quadraticCurveTo(-z*0.45,-z*0.2,-z,z*0.55); c.lineTo(z,z*0.55); c.quadraticCurveTo(z*0.45,-z*0.2,z*0.35,-z*0.9); c.quadraticCurveTo(0,-z*1.1,-z*0.35,-z*0.9); c.closePath(); c.fill(); c.stroke();
+  c.fillStyle="#7a4c10"; c.beginPath(); c.ellipse(0,z*0.55,z,z*0.18,0,0,7); c.fill(); c.fillStyle="#5a3a0e"; c.beginPath(); c.arc(0,z*0.72,z*0.18,0,7); c.fill(); c.fillStyle="rgba(255,255,255,.6)"; c.fillRect(-z*0.5,-z*0.5,z*0.14,z*0.7);
+  c.strokeStyle="#7a4c10"; c.lineWidth=2.5; c.beginPath(); c.arc(0,-z*1.05,z*0.2,Math.PI,0); c.stroke(); c.restore(); };
+/* a limb flurry: n whips out from the body, each landing in turn with a slap mark */
+function mvLimbFlurry(n,suck,gap=125){ const C=300, end=C+n*gap;
+  return {C,D:end+340,contact:true,marks:true,
+    atk:t=>({f:t<C?0.4*eo(t/C):t<end?0.4+0.03*Math.sin((t-C)/gap*Math.PI*2):0.4*(1-eio(Math.min(1,(t-end)/320))),pose:t<C?"determined":t<end?"attack":"idle",off:[t>C&&t<end?Math.sin(t/20)*2:0,0],sy:t>C&&t<end?1+0.04*Math.sin((t-C)/gap*Math.PI*2):1}),
+    def(t){ if(t<C||t>end+80) return null; const p=((t-C)%gap)/gap; return {off:[(1-p)*7,0],pose:"hit",sx:1-0.06*(1-p)}; },
+    fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, d=atDir(x), col=(x.body||x.col||[200,120,150]);
+      for(let j=0;j<n;j++){ const t0=C-170+j*gap, k=(t-t0)/300; if(k<0||k>1) continue; const ext=k<0.55?eo(k/0.55):1-eio((k-0.55)/0.45), yy=(j%3-1)*R*0.35, a={x:s.x+d*s.r*0.55,y:s.y+(j%2?-s.r*0.15:s.r*0.2)}, b={x:tg.x-d*R*0.1,y:tg.y-R*0.2+yy};
+        MV.limb(c,a,b,ext,col,s.r*0.3,(j%2?1:-1)*R*0.6,suck);
+        const hk=(k-0.5)/0.4; if(hk>=0&&hk<1){ c.strokeStyle=`rgba(255,255,255,${0.95*(1-hk)})`; c.lineWidth=3; for(let i=0;i<6;i++){ const an=i/6*Math.PI*2+j; c.beginPath(); c.moveTo(b.x+Math.cos(an)*R*0.2,b.y+Math.sin(an)*R*0.2); c.lineTo(b.x+Math.cos(an)*R*(0.35+0.4*hk),b.y+Math.sin(an)*R*(0.35+0.4*hk)); c.stroke(); } atGlowA(c,b.x,b.y,R*0.5*(1-hk),[255,250,220],0.7); } } }}; }
+Object.assign(ANIM,{
+  trunkflurry:mvLimbFlurry(4,false,135),
+  tentaclefrenzy:mvLimbFlurry(5,true,110),
+  /* Sand Spray, bigger: it scoops twice, then a thick fan of sand blasts across and a cloud of grit hangs over the target */
+  sandspray:{C:500,D:1180,
+    atk:t=>t<300?{sy:1-0.14*eo(t/300),sx:1+0.08*eo(t/300),pose:"crouch",f:-0.04*eo(t/300),off:[Math.sin(t/25)*2,0]}:t<460?{pose:"push",sy:1.06,arc:-6}:{pose:t<950?"push":"idle"},
+    def:t=>t>=500&&t<1160?{off:[Math.sin(t/14)*3.5,0],pose:"hurt",sy:1-0.05*Math.sin(t/30)}:null,
+    fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, d=atDir(x), SAND=[226,196,132], o={x:s.x+d*s.r*0.5,y:s.foot-s.r*0.35};
+      if(t<320) for(let i=0;i<6;i++){ const ph=((t/110)+i/6)%1; SG.puff(c,s.x+d*s.r*(0.2+0.5*ph)+(i%2?6:-6),s.foot-ph*s.r*0.5,s.r*(0.12+0.12*ph),0.8*(1-ph),SAND); }
+      if(t>=280&&t<820){ const k=Math.min(1,(t-280)/260); c.fillStyle=atRgba(SAND,0.45*(t<700?1:1-(t-700)/120)); c.beginPath(); c.moveTo(o.x,o.y); c.lineTo(tg.x+d*R*0.4,tg.y-R*(1.1)*k); c.lineTo(tg.x+d*R*0.4,tg.y+R*0.6*k); c.closePath(); c.fill(); }
+      if(t>=280&&t<950) for(let i=0;i<110;i++){ const st=280+atH(i)*200, k=(t-st)/(380+atH(i*3)*200); if(k<0||k>1) continue;
+        const ex=tg.x+(atH(i*5)-0.3)*R*1.8*d, ey=tg.y-R*0.3+(atH(i*7)-0.5)*R*1.8, p=lerpP(o,{x:ex,y:ey},eo(k),R*(0.2+atH(i)*0.8)), z=3.5+atH(i*11)*4.5;
+        c.fillStyle=atRgba(SAND.map(v=>v-(i%4)*22),1-k*0.3); c.beginPath(); c.arc(p.x,p.y,z,0,7); c.fill(); }
+      if(t>=480&&t<1180){ const k=(t-480)/700, a=k<0.6?1:1-(k-0.6)/0.4; for(let i=0;i<7;i++){ const an=i/7*Math.PI*2+k*2; SG.puff(c,tg.x+Math.cos(an)*R*(0.3+0.6*k),tg.y-R*0.4+Math.sin(an)*R*0.45,R*(0.42+0.25*k),0.9*a,SAND); }
+        for(let i=0;i<3;i++){ const ph=((t/260)+i/3)%1; atStar4(c,tg.x+(i-1)*R*0.45,tg.y-R*(0.9+0.4*ph),R*0.14*(1-ph),"rgba(255,250,220,.9)"); } }
+      atImpact(t,500,0.2,0); }},
+  /* Blinding Flash: the eye glows brighter and brighter, then lets off a flash that whites out the target */
+  blindingflash:{C:600,D:1240,
+    atk:t=>({pose:t<600?"determined":t<1000?"cast":"idle",sy:t<600?1+0.05*eo(t/600):1,flash:t>=540&&t<620?3:0}),
+    def:t=>t>=600&&t<1220?{off:[Math.sin(t/16)*2.5,0],pose:"hurt",flash:t<760?3:Math.floor(t/90)%2?2:0}:null,
+    fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, d=atDir(x), e={x:s.x+d*s.r*0.1,y:s.y-s.r*0.15};
+      c.save(); c.globalCompositeOperation="lighter";
+      if(t<640){ const k=t/600; atGlowA(c,e.x,e.y,s.r*(0.35+0.9*ei(k)),[255,250,200],0.5+0.5*k); atGlowA(c,e.x,e.y,s.r*0.3,[255,255,255],0.4+0.6*k);
+        for(let i=0;i<10;i++){ const an=i/10*Math.PI*2+t/300, L=s.r*(0.5+1.4*ei(k)); c.strokeStyle=`rgba(255,250,210,${0.6*k})`; c.lineWidth=2; c.beginPath(); c.moveTo(e.x+Math.cos(an)*s.r*0.3,e.y+Math.sin(an)*s.r*0.3); c.lineTo(e.x+Math.cos(an)*L,e.y+Math.sin(an)*L); c.stroke(); }
+        for(let i=0;i<8;i++){ const ph=((t/260)+i/8)%1, an=i*0.8; const px=e.x+Math.cos(an)*s.r*1.5*(1-ph), py=e.y+Math.sin(an)*s.r*1.5*(1-ph); c.fillStyle=`rgba(255,250,220,${ph})`; c.beginPath(); c.arc(px,py,2.5,0,7); c.fill(); } }
+      if(t>=580&&t<900){ const k=(t-580)/320, a=1-k; c.fillStyle=`rgba(255,252,230,${0.75*a})`; c.beginPath(); c.moveTo(e.x,e.y-s.r*0.15); c.lineTo(tg.x+d*R*0.4,tg.y-R*(1.2+k)); c.lineTo(tg.x+d*R*0.4,tg.y+R*(0.6+k)); c.lineTo(e.x,e.y+s.r*0.15); c.closePath(); c.fill();
+        atGlowA(c,e.x,e.y,s.r*(1.2+2*k),[255,255,240],a); atGlowA(c,tg.x,tg.y-R*0.3,R*(1+1.5*k),[255,255,230],0.9*a); }
+      c.restore(); atImpact(t,600,0.35,0.9);
+      if(t>=700&&t<1240){ const k=(t-700)/540; for(let i=0;i<4;i++){ const an=t/200+i*Math.PI/2; atStar4(c,tg.x+Math.cos(an)*R*0.6,tg.y-R*1.0+Math.sin(an)*R*0.2,R*0.16*(1-k*0.5),"#fff6b0"); } } }},
+  /* Overhead Smash: a running leap with both arms up, then it brings them down on the target and the ground splits */
+  overheadsmash:{C:600,D:1260,contact:true,marks:true,
+    atk:t=>{ if(t<200) return {f:0.25*eo(t/200),pose:"crouch",sy:1-0.12*eo(t/200)}; if(t<600){ const k=(t-200)/400; return {f:0.25+0.45*eo(k),arc:-60*Math.sin(k*Math.PI*0.85),pose:k<0.6?"slamup":"punch",sy:1+0.1*Math.sin(k*Math.PI),sx:1-0.06*Math.sin(k*Math.PI)}; }
+      if(t<760) return {f:0.7,pose:"punch",sy:0.86,sx:1.12}; const k=(t-760)/500; return {f:0.7*(1-eio(k)),pose:"idle"}; },
+    def:t=>SG.squash(t,600,0.5,560),
+    fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r;
+      if(t>=300&&t<600){ const k=(t-300)/300; c.strokeStyle=`rgba(255,255,255,${0.7*k})`; c.lineWidth=3; for(let i=0;i<4;i++){ const xx=tg.x+(i-1.5)*R*0.4; c.beginPath(); c.moveTo(xx,tg.top.y-R*(1.6-0.6*k)); c.lineTo(xx,tg.top.y-R*(0.9-0.6*k)); c.stroke(); } }
+      atImpact(t,600,0.7,0.2);
+      if(t>=600){ const k=(t-600)/660; SG.ring(c,tg.x,tg.foot,R*(0.6+2.2*eo(k)),R*(0.18+0.5*eo(k)),[255,240,200],6*(1-k),1-k); SG.cracks(c,tg.x,tg.foot,R*1.8,8,5,1-k*0.8); SG.dust(c,tg.x,tg.foot,R*1.3,k,12);
+        for(let i=0;i<10;i++){ const a=-Math.PI*(0.1+0.8*atH(i*3)), sp=R*(0.5+1.8*eo(k)); SG.shard(c,tg.x+Math.cos(a)*sp,tg.foot+Math.sin(a)*sp*0.7+k*k*R*1.6,R*0.08,t/70+i,"#b8a080"); }
+        atPow(c,{x:tg.x,y:tg.y-R*1.0},Math.min(1,k*1.5),R/20); } }},
+  /* Shriek: its mouth stretches wide and jagged rings of sound tear across to the target, which rattles */
+  shriek:{C:420,D:1100,
+    atk:t=>({pose:t<900?"bitewide":"idle",sx:t<900?1+0.06*Math.sin(t/18):1,sy:t<900?1+0.1*Math.min(1,t/200):1,off:[t<900?Math.sin(t/9)*1.5:0,0]}),
+    def:t=>t>=420&&t<1080?{off:[Math.sin(t/7)*4,0],pose:"hurt",sx:1+0.05*Math.sin(t/11),sy:1-0.05*Math.sin(t/11)}:null,
+    fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, d=atDir(x), m={x:s.x+d*s.r*0.6,y:s.y}, L=Math.abs(tg.x-m.x);
+      for(let i=0;i<7;i++){ const k=(t-40-i*100)/460; if(k<0||k>1) continue; const px=m.x+d*L*eo(k), rr=s.r*(0.4+1.1*k);
+        c.strokeStyle=`rgba(230,215,255,${0.95*(1-k)})`; c.lineWidth=4*(1-k)+1.5; c.beginPath();
+        for(let j=0;j<=16;j++){ const q=-1+j/8, w=j%2?0.8:1.05; c.lineTo(px+d*Math.cos(q)*rr*0.45*w,s.y+Math.sin(q)*rr*w); } c.stroke(); }
+      if(t<900) for(let i=0;i<3;i++){ const ph=((t/120)+i/3)%1; c.strokeStyle=`rgba(255,255,255,${0.8*(1-ph)})`; c.lineWidth=2; c.beginPath(); c.moveTo(m.x+d*s.r*0.2,m.y-s.r*(0.5+ph*0.4)); c.lineTo(m.x+d*s.r*(0.5+ph*0.4),m.y-s.r*(0.8+ph*0.5)); c.stroke(); }
+      if(t>=420&&t<1100){ const k=(t-420)/680; for(let i=0;i<6;i++){ const an=i/6*Math.PI*2; c.strokeStyle=`rgba(200,170,255,${0.8*(1-k)})`; c.lineWidth=2.5; c.beginPath(); c.moveTo(tg.x+Math.cos(an)*R*0.7,tg.y-R*0.3+Math.sin(an)*R*0.7); for(let j=1;j<=3;j++) c.lineTo(tg.x+Math.cos(an+(j%2?0.12:-0.12))*R*(0.7+0.2*j+0.4*k),tg.y-R*0.3+Math.sin(an+(j%2?0.12:-0.12))*R*(0.7+0.2*j+0.4*k)); c.stroke(); } }
+      atImpact(t,420,0.3,0); }},
+  /* Bell Toss: it swings a big brass bell overhead and throws it; the bell lands with a clang and rings */
+  belltoss:{C:600,D:1280,
+    atk:t=>({pose:t<260?"slamup":t<420?"push":t<1000?"push":"idle",sy:t<260?1-0.06*eo(t/260):1,arc:t>260&&t<420?-6:0}),
+    def:t=>{ const a=SG.squash(t,600,0.35,420); if(a) a.off=[Math.sin(t/10)*3,0]; return a; },
+    fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, a={x:s.x,y:s.top?s.top.y-R*0.2:s.y-s.r*1.2}, b={x:tg.x,y:tg.top.y-R*0.3};
+      if(t<300) MV.bell(c,s.x+Math.sin(t/60)*s.r*0.3,a.y,R*0.72,Math.sin(t/60)*0.5);
+      else if(t<600){ const k=(t-300)/300, p=lerpP(a,b,eo(k),R*0.9); MV.bell(c,p.x,p.y,R*0.72,t/90); }
+      else if(t<1240){ const k=(t-600)/640; MV.bell(c,b.x,b.y-R*0.6*Math.sin(Math.min(1,k*2)*Math.PI)*(k<0.5?1:0)+(k>0.5?R*0.4*eo((k-0.5)/0.5):0),R*0.72,Math.sin(t/30)*0.4*(1-k),1-Math.max(0,k-0.8)/0.2);
+        for(let i=0;i<3;i++){ const q=(k*1.6-i*0.22); if(q<0||q>1) continue; SG.ring(c,b.x,b.y,R*(0.7+2*q),R*(0.4+1.1*q),[255,226,140],5*(1-q),1-q); }
+        for(let i=0;i<2;i++){ const ph=((t/400)+i/2)%1; SG.note(c,b.x+(i?1:-1)*R*(0.6+ph*0.4),b.y-R*(0.3+ph*0.8),R*0.3,[255,226,140],1-ph); } }
+      atImpact(t,600,0.35,0); }},
+  /* Iced Tea, bigger: a thick stream of tea arcs over, frosting as it falls; ice spikes shoot up round the target and lock it in a block */
+  icedtea:{C:600,D:1280,
+    atk:(t,o)=>({pose:t<1040?"push":"idle",rot:Math.max(0,t<1040?Math.min(1,t/260):1-(t-1040)/220)*0.45*((o&&o.dir)||1),f:0}),
+    def:t=>t>=600&&t<1240?{off:[Math.sin(t/12)*1.5,0],pose:"hurt",sx:1.02,sy:0.98,flash:t<700?2:0}:null,
+    fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, d=atDir(x), T=[196,132,70], I=[190,235,255], a={x:s.x+d*s.r*0.95,y:s.y-s.r*0.35}, b={x:tg.x,y:tg.y-R*0.5};
+      if(t>=160&&t<820){ const k=Math.min(1,(t-160)/320), end=t>660?(t-660)/160:0;
+        for(let pass=0;pass<2;pass++){ c.strokeStyle=pass?"rgba(255,235,200,.5)":atRgba(T,0.95); c.lineWidth=pass?R*0.07:R*0.26; c.lineCap="round"; c.beginPath();
+          for(let i=0;i<=20;i++){ const q=end+(k-end)*i/20, p=lerpP(a,b,q,R*1.4); c[i?"lineTo":"moveTo"](p.x,p.y+Math.sin(i*0.9+t/35)*2-(pass?R*0.06:0)); } c.stroke(); }
+        for(let i=0;i<14;i++){ const q=(i/14)*k, p=lerpP(a,b,q,R*1.4); if(q<0.35) SG.puff(c,p.x,p.y-R*0.25-Math.sin(t/100+i)*4,R*0.14,0.3,[255,255,255]); else { const fz=(q-0.35)/0.65; c.fillStyle=atRgba(I,0.9*fz); c.beginPath(); c.arc(p.x+(atH(i)-0.5)*R*0.4,p.y+(atH(i*3)-0.5)*R*0.4,2+fz*2,0,7); c.fill(); if(i%3===0) atStar4(c,p.x,p.y-R*0.2,R*0.1*fz,"rgba(230,248,255,.95)"); } } }
+      if(t>=520&&t<1280){ const k=Math.min(1,(t-520)/160), a2=t<1120?1:1-(t-1120)/160;
+        c.save(); c.globalAlpha*=a2; SG.fog(c,tg.x,tg.foot-R*0.2,R*2.2,[200,236,255],0.35);
+        for(let i=0;i<7;i++){ const xx=tg.x+(i-3)*R*0.38, h=R*(0.5+0.9*atH(i*5))*eo(Math.min(1,(t-520-i*20)/150)); if(h<=0) continue; c.fillStyle=atRgba(I,0.85); c.strokeStyle="rgba(255,255,255,.9)"; c.lineWidth=1.5;
+          c.beginPath(); c.moveTo(xx-R*0.16,tg.foot+2); c.lineTo(xx+(atH(i)-0.5)*R*0.2,tg.foot-h); c.lineTo(xx+R*0.16,tg.foot+2); c.closePath(); c.fill(); c.stroke(); }
+        const w=R*1.15, h=R*1.25*k; c.fillStyle=atRgba(I,0.45); c.strokeStyle="rgba(255,255,255,.95)"; c.lineWidth=2.5; c.beginPath(); c.moveTo(tg.x-w,tg.foot); c.lineTo(tg.x-w*0.95,tg.foot-h*0.85); c.lineTo(tg.x-w*0.3,tg.foot-h*1.1); c.lineTo(tg.x+w*0.5,tg.foot-h*0.95); c.lineTo(tg.x+w,tg.foot-h*0.7); c.lineTo(tg.x+w,tg.foot); c.closePath(); c.fill(); c.stroke();
+        c.fillStyle="rgba(255,255,255,.7)"; c.fillRect(tg.x-w*0.7,tg.foot-h*0.85,w*0.14,h*0.6); c.fillRect(tg.x-w*0.45,tg.foot-h*0.75,w*0.06,h*0.35);
+        for(let i=0;i<4;i++){ const an=t/300+i*1.6; atStar4(c,tg.x+Math.cos(an)*w*0.7,tg.foot-h*0.5+Math.sin(an)*h*0.4,R*0.14,"rgba(255,255,255,.95)"); } c.restore(); }
+      if(t>=1120&&t<1280) for(let i=0;i<10;i++) SG.shard(c,tg.x+(atH(i)-0.5)*R*2.2*(1+(t-1120)/160),tg.foot-R*0.8*atH(i*3)-(t-1120)/160*R*0.8,R*0.1,t/50+i,"rgba(220,245,255,.9)");
+      atImpact(t,600,0.3,0.15); }}
+});
+Object.assign(AR_KIND,{"Trunk Flurry":"trunkflurry","Tentacle Frenzy":"tentaclefrenzy","Blinding Flash":"blindingflash","Overhead Smash":"overheadsmash","Shriek":"shriek","Bell Toss":"belltoss"});
+if(typeof KSND!=="undefined") Object.assign(KSND,{
+  trunkflurry:(d,t)=>{ for(let i=0;i<4;i++){ dNoise(d,t+0.13+i*0.135,0.08,0.12,'bandpass',600,1); dNoise(d,t+0.3+i*0.135,0.06,0.25,'bandpass',1400,1.2); dKick(d,t+0.3+i*0.135,0.2); } },
+  tentaclefrenzy:(d,t)=>{ for(let i=0;i<5;i++){ dNoise(d,t+0.13+i*0.11,0.06,0.1,'bandpass',800,1); dNoise(d,t+0.3+i*0.11,0.06,0.25,'lowpass',1200); sTone(d,t+0.3+i*0.11,'sine',300,150,0.05,0.05); } },
+  sandspray:(d,t)=>{ dNoise(d,t+0.02,0.3,0.15,'lowpass',700); dNoise(d,t+0.28,0.7,0.26,'highpass',2200,0.5); dNoise(d,t+0.5,0.5,0.1,'bandpass',4000,0.6); },
+  blindingflash:(d,t)=>{ sTone(d,t,'sine',300,1800,0.6,0.05); sTone(d,t+0.1,'triangle',600,2400,0.5,0.03); dNoise(d,t+0.6,0.4,0.3,'highpass',3000,0.5); sTone(d,t+0.6,'sine',2600,2000,0.4,0.06); },
+  overheadsmash:(d,t)=>{ sTone(d,t+0.2,'sine',250,700,0.35,0.05); dKick(d,t+0.6,1); dNoise(d,t+0.6,0.5,0.3,'lowpass',400); dNoise(d,t+0.62,0.3,0.15,'bandpass',1200,0.8); },
+  shriek:(d,t)=>{ sTone(d,t+0.02,'sawtooth',900,1600,0.8,0.05); sTone(d,t+0.04,'square',1300,2100,0.75,0.025); dNoise(d,t+0.02,0.8,0.08,'highpass',5000,0.5); },
+  belltoss:(d,t)=>{ dNoise(d,t+0.26,0.25,0.1,'bandpass',800,1); [0,0.02].forEach(o=>{ sTone(d,t+0.6+o,'triangle',880,880,1.0,0.12); sTone(d,t+0.6+o,'sine',1320,1310,1.0,0.06); sTone(d,t+0.6+o,'sine',2210,2200,0.6,0.03); }); dKick(d,t+0.6,0.3); },
+  icedtea:(d,t)=>{ dNoise(d,t+0.16,0.55,0.16,'bandpass',800,0.9); sTone(d,t+0.5,'triangle',1800,2600,0.25,0.06); dNoise(d,t+0.52,0.35,0.16,'highpass',4500,0.8); for(let i=0;i<6;i++) sTone(d,t+0.52+i*0.03,'triangle',2400+i*200,2600+i*200,0.08,0.03); dNoise(d,t+1.12,0.16,0.2,'highpass',3500,1); }
+});
+if(typeof SWING!=="undefined") ["trunkflurry","tentaclefrenzy","overheadsmash"].forEach(k=>SWING.add(k));
