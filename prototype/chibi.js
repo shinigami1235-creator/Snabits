@@ -3599,17 +3599,30 @@ x.feet.push([g.cx, 182, 10]); },
       front(c, g, x) { const S = g.stage; if (x.back) return; const ck = by(S, 0.75, 0.85, 1.05), cc = rgb(lt(x.acc, 0.35));
         for (const sd of [-1, 1]) { const q = this.armQ(g, x, sd); this.claws(c, q[4], q[5] + 2, ck, cc, sd);
           if (S === 'Mega') this.thorns(c, [...qpt(q, 0.5), q[2] + (q[4] - q[2]) * 0.5, q[3] + (q[5] - q[3]) * 0.5, q[4], q[5]], rgb(lt(x.acc, 0.25))); } },   // thorns along the forearm at Mega
-      // a flytrap: two red lobes either side of a green middle, edged with spikes, that lean apart and snap shut now and then
-      trap(c, bx, by0, H, W, t, open, n, tl) { const ph = (t % 2600) / 2600, snap = ph > 0.86 ? Math.abs(Math.sin((ph - 0.86) / 0.14 * Math.PI)) : 0, o = (open ? 1.15 : 1) * (1 - snap * 0.8), sw = 0.25 + 0.75 * o;
+      // a flytrap: two lobes either side of a green middle, red inside fading paler towards the rim, fine curved hairs along the
+      // rim, faint veins and three trigger hairs on each lobe, all on a green stalk with two small leaves. The lobes lean apart and snap shut now and then
+      trap(c, bx, by0, H, W, t, open, n, tl) { const ph = (t % 2600) / 2600, snap = ph > 0.86 ? Math.abs(Math.sin((ph - 0.86) / 0.14 * Math.PI)) : 0, o = (open ? 1.15 : 1) * (1 - snap * 0.85), sw = 0.2 + 0.8 * o, u0 = W / 22;
+        // the stalk and its two leaves, growing out of the head
+        c.fillStyle = '#7fae4a'; for (const sd of [-1, 1]) { c.save(); c.translate(bx + sd * 2 * u0, by0 + 3 * u0); c.rotate(sd * (1.15 + Math.sin(t / 700 + sd) * 0.06)); c.beginPath(); c.ellipse(0, -7 * u0, 3 * u0, 7.5 * u0, 0, 0, 7); c.fill(); c.strokeStyle = '#5d8a34'; c.lineWidth = 0.8 * u0; c.beginPath(); c.moveTo(0, 0); c.lineTo(0, -12 * u0); c.stroke(); c.restore(); }
+        c.fillStyle = '#93c255'; c.beginPath(); c.moveTo(bx - 3.5 * u0, by0 + 5 * u0); c.quadraticCurveTo(bx - 1.5 * u0, by0 - 2 * u0, bx - 1.2 * u0, by0 - 4 * u0); c.lineTo(bx + 1.2 * u0, by0 - 4 * u0); c.quadraticCurveTo(bx + 1.5 * u0, by0 - 2 * u0, bx + 3.5 * u0, by0 + 5 * u0); c.closePath(); c.fill();
+        const b0 = by0 - 3 * u0, mh = H * (0.62 - 0.3 * (1 - sw));
         for (const sd of [-1, 1]) {
-          const peak = [bx + sd * W * 0.55 * sw + sd * 1.5, by0 - H], mid = [bx + sd * 1.2, by0 - H * (0.62 - 0.3 * (1 - sw))], o1 = [bx + sd * W * (0.55 * sw + 0.85), by0 - H * 0.85], o2 = [bx + sd * W * (0.4 * sw + 0.9), by0 - H * 0.12], base = [bx + sd * 1, by0];
-          const at = u => { const v = 1 - u; return [0, 1].map(i => v * v * v * peak[i] + 3 * v * v * u * o1[i] + 3 * v * u * u * o2[i] + u * u * u * base[i]); };
-          c.fillStyle = '#d84860'; for (let k2 = 0; k2 < n; k2++) { const u = 0.04 + k2 / n * 0.8, [px, py] = at(u), [qx, qy] = at(u + 0.03), dx = qx - px, dy = qy - py, L = Math.hypot(dx, dy) || 1, nx = dy / L * sd, ny = -dx / L * sd;
-            c.beginPath(); c.moveTo(px - dx * 0.5, py - dy * 0.5); c.lineTo(px + nx * tl, py + ny * tl); c.lineTo(px + dx * 0.5, py + dy * 0.5); c.closePath(); c.fill(); }
-          c.beginPath(); c.moveTo(peak[0], peak[1]); c.lineTo(peak[0] + sd * 1.5, peak[1] - tl * 0.9); c.lineTo(peak[0] + sd * 3, peak[1] + 1); c.fill();
-          c.fillStyle = '#f0a0aa'; c.beginPath(); c.moveTo(...base); c.lineTo(...mid); c.lineTo(...peak); c.bezierCurveTo(...o1, ...o2, ...base); c.closePath(); c.fill();
-          c.fillStyle = '#c93a52'; c.beginPath(); c.moveTo(bx + sd * 1.2, by0 - 2); c.lineTo(mid[0], mid[1] + 1); c.lineTo(peak[0] - sd * 0.6, peak[1] + 3.5); c.bezierCurveTo(o1[0] - sd * 2.8, o1[1] + 1.5, o2[0] - sd * 3, o2[1] - 1, bx + sd * 1.2, by0 - 2); c.closePath(); c.fill(); }
-        c.strokeStyle = '#9cc45a'; c.lineWidth = Math.max(1.4, W * 0.1); c.lineCap = 'round'; c.beginPath(); c.moveTo(bx, by0 + 1); c.lineTo(bx, by0 - H * (0.62 - 0.3 * (1 - sw)) + 1); c.stroke(); },
+          const peak = [bx + sd * W * 0.55 * sw + sd * 1.5 * u0, b0 - H], mid = [bx + sd * 1.2 * u0, b0 - mh], o1 = [bx + sd * W * (0.55 * sw + 0.85), b0 - H * 0.85], o2 = [bx + sd * W * (0.4 * sw + 0.9), b0 - H * 0.12], base = [bx + sd * u0, b0];
+          const at = u => { const v = 1 - u; return [0, 1].map(i => v * v * v * peak[i] + 3 * v * v * u * o1[i] + 3 * v * u * u * o2[i] + u * u * u * base[i]); }, lobe = (ins) => { c.beginPath(); c.moveTo(base[0], base[1] - ins); c.lineTo(mid[0] + sd * ins * 0.2, mid[1]); c.lineTo(peak[0] - sd * ins * 0.5, peak[1] + ins * 1.2); c.bezierCurveTo(o1[0] - sd * ins, o1[1] + ins * 0.4, o2[0] - sd * ins, o2[1] - ins * 0.3, base[0], base[1] - ins); c.closePath(); };
+          // the hairs along the rim: thin and curving up, red at the root and pale at the tip
+          const nh = Math.round(n * 1.8); c.lineCap = 'round';
+          for (let k2 = 0; k2 < nh; k2++) { const u = 0.03 + k2 / nh * 0.84, [px, py] = at(u), [qx, qy] = at(u + 0.02), dx = qx - px, dy = qy - py, L = Math.hypot(dx, dy) || 1, nx = dy / L * sd, ny = -dx / L * sd, len = tl * (1.15 + 0.25 * Math.sin(k2 * 2.1)) * (1 - u * 0.35);
+            const ex = px + nx * len + 0.35 * len * (dx / L) * -1, ey = py + ny * len - len * 0.25, cxh = px + nx * len * 0.55, cyh = py + ny * len * 0.55;
+            c.strokeStyle = '#c8344e'; c.lineWidth = 1.3 * u0; c.beginPath(); c.moveTo(px, py); c.quadraticCurveTo(cxh, cyh, ex, ey); c.stroke();
+            c.strokeStyle = '#f6c8c4'; c.lineWidth = 0.9 * u0; c.beginPath(); c.moveTo(cxh + (ex - cxh) * 0.55, cyh + (ey - cyh) * 0.55); c.lineTo(ex, ey); c.stroke(); }
+          c.fillStyle = '#ee8f98'; lobe(0); c.fill();   // the paler pink rim
+          c.fillStyle = '#b9cf72'; c.save(); lobe(0); c.clip(); c.beginPath(); c.ellipse(o2[0], o2[1] + 2 * u0, W * 0.5, H * 0.18, 0, 0, 7); c.fill(); c.restore();   // a little green where the lobe meets the stalk
+          const gx = (mid[0] + o1[0]) / 2, gy = (mid[1] + o2[1]) / 2, gr = c.createRadialGradient(gx - sd * W * 0.15, gy, 1, gx, gy, W * 0.9);
+          gr.addColorStop(0, '#9e1c34'); gr.addColorStop(0.55, '#c7344d'); gr.addColorStop(1, '#e8707c'); c.fillStyle = gr; lobe(1.6 * u0); c.fill();   // the red inside
+          c.save(); lobe(1.6 * u0); c.clip(); c.strokeStyle = 'rgba(120,15,35,.35)'; c.lineWidth = 0.7 * u0;   // faint veins fanning out from the middle, the way a leaf's do
+          for (let k2 = 0; k2 < 6; k2++) { const f = (k2 + 0.5) / 6, sx2 = bx + sd * u0, sy2 = b0 - mh * (0.95 - f * 0.8), [tx2, ty2] = at(0.08 + f * 0.75); c.beginPath(); c.moveTo(sx2, sy2); c.quadraticCurveTo((sx2 + tx2) / 2, (sy2 + ty2) / 2 - 2 * u0, tx2, ty2); c.stroke(); }
+          c.restore(); c.fillStyle = 'rgba(255,215,215,.5)'; for (const [fx, fy] of [[0.4, 0.32], [0.62, 0.5], [0.36, 0.66]]) { const px = mid[0] + (o1[0] - mid[0]) * fx, py = peak[1] + (base[1] - peak[1]) * fy; c.beginPath(); c.arc(px, py, 0.9 * u0, 0, 7); c.fill(); } }   // trigger hairs, three pale dots
+        c.strokeStyle = '#cfd56a'; c.lineWidth = Math.max(1.4, 1.8 * u0); c.lineCap = 'round'; c.beginPath(); c.moveTo(bx, b0 + 1); c.lineTo(bx, b0 - mh + 1); c.stroke(); },   // the green middle
       hl: g => [g.left + g.bw * 0.14, g.top + g.bh * 0.62, g.left + g.bw * 0.16, g.top + g.bh * 0.5, g.left + g.bw * 0.24, g.top + g.bh * 0.42],
       head: g => [g.cx, g.top + 2, g.bw * 0.32],
       face(c, g, x, look) { const S = g.stage, hh = FAM.Gug.hh(g), fi = faceTwo(c, g, x, look, { ey: hh * 0.5 / g.bh, ex: 0.13, my: hh * 0.78 / g.bh, noMouth: true, s: by(S, 0.72, 0.76, 0.8) });
