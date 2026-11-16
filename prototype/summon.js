@@ -206,6 +206,46 @@ const SUMMON = (() => {
         over(c, x, y, h) { if (strike) { c.save(); c.shadowColor = '#fff6a0'; c.shadowBlur = 20; c.strokeStyle = '#fff8c0'; c.lineWidth = h * 0.05; c.lineJoin = 'miter'; c.beginPath(); c.moveTo(x + h * 0.1, y - h * 2.2);
             for (let i = 1; i <= 6; i++) c.lineTo(x + (i % 2 ? -1 : 1) * h * 0.12, y - h * 2.2 + i * h * 0.36); c.stroke(); c.restore(); }
           if (tt > 480 && tt < 720) { c.fillStyle = `rgba(255,255,230,${0.6 * (1 - seg(tt, 480, 720))})`; c.fillRect(x - h * 2, y - h * 2.4, h * 4, h * 2.6); } } }; },
+    Hydra(tt, H) { const k = out3(seg(tt, 100, 1000));   // it rises out of a swamp pool, heads first
+      return { dy: H * 0.34 * (1 - k), pose: tt < 1000 ? 'idle' : tt < 1150 ? 'determined' : 'happy',
+        under(c, x, y, h) { const a = 1 - seg(tt, 1000, 1600); if (a <= 0) return; c.fillStyle = `rgba(70,110,60,${0.75 * a})`; c.beginPath(); c.ellipse(x, y + 2, h * 0.8, h * 0.11, 0, 0, 7); c.fill();
+          for (let i = 0; i < 5; i++) { const p = ((tt / 600) + i / 5) % 1; c.strokeStyle = `rgba(150,200,110,${a * (1 - p)})`; c.lineWidth = 2; c.beginPath(); c.arc(x + (i - 2) * h * 0.25, y - p * h * 0.5, h * 0.04, 0, 7); c.stroke(); } } }; },
+    Griffin(tt, H, W) { const k = out3(seg(tt, 0, 850));   // it swoops in from the side and lands with its wings up
+      return { dy: -H * 0.4 * (1 - k), dx: -W * 0.45 * (1 - k), pose: tt < 850 ? 'hover' : tt < 1050 ? 'land' : 'happy',
+        under(c, x, y, h) { const p = seg(tt, 800, 1400); if (p <= 0 || p >= 1) return; for (let i = 0; i < 6; i++) { c.fillStyle = `rgba(220,200,170,${0.7 * (1 - p)})`; c.beginPath(); c.arc(x + (i - 2.5) * h * (0.2 + p * 0.2), y - h * 0.04 - p * h * 0.1, h * 0.05 * (1 - p * 0.5), 0, 7); c.fill(); } } }; },
+    Kirin(tt, H, W) { const k = out3(seg(tt, 0, 900));   // it walks down out of the air on small clouds
+      return { dy: -H * 0.3 * (1 - k), dx: W * 0.3 * (1 - k), pose: tt < 900 ? 'walk' : 'happy',
+        under(c, x, y, h) { const a = 1 - seg(tt, 900, 1500); if (a <= 0) return; for (let i = 0; i < 4; i++) { const cx = x + h * (0.6 - i * 0.35) * (1 - k * 0.5), cy = y - h * 0.3 * (1 - k) * (1 - i * 0.25);
+          c.fillStyle = `rgba(250,250,255,${0.8 * a})`; c.beginPath(); c.ellipse(cx, cy, h * 0.16, h * 0.06, 0, 0, 7); c.fill(); } } }; },
+    Salamander(tt, H) { const on = tt > 650;   // a fire flares up and it crawls out of the flames
+      return { alpha: on ? 1 : 0, pose: tt < 1000 ? 'crouch' : 'happy', sx: on ? 1 + spring(tt - 650, 0.12) : 1, sy: on ? 1 - spring(tt - 650, 0.12) : 1,
+        under(c, x, y, h) { const a = Math.min(1, tt / 400) * (1 - seg(tt, 900, 1600)); if (a <= 0) return;
+          for (let i = 0; i < 7; i++) { const f = Math.sin(tt / 70 + i * 2) * 0.15; c.fillStyle = i % 2 ? `rgba(255,200,60,${a})` : `rgba(240,110,40,${a})`; c.beginPath(); c.ellipse(x + (i - 3) * h * 0.13, y - h * (0.18 + f), h * 0.07, h * (0.2 + f), 0, 0, 7); c.fill(); } } }; },
+    Bakunawa(tt, H) { const k = out3(seg(tt, 200, 1100));   // a moon comes up, and it rises out of the sea in front of it
+      return { dy: H * 0.36 * (1 - k), pose: tt < 1100 ? 'idle' : 'happy',
+        under(c, x, y, h) { const a = Math.min(1, tt / 500) * (1 - seg(tt, 1300, 1900)); if (a <= 0) return; glow(c, x + h * 0.3, y - h * 1.05, h * 0.5, [240, 244, 255], 0.5 * a);
+          c.fillStyle = `rgba(240,244,255,${a})`; c.beginPath(); c.arc(x + h * 0.3, y - h * 1.05, h * 0.2, 0, 7); c.fill();
+          c.fillStyle = `rgba(60,110,200,${0.7 * a})`; c.beginPath(); c.ellipse(x, y + 2, h * 0.85, h * 0.12, 0, 0, 7); c.fill(); } }; },
+    Cerberus(tt, H) { const k = out3(seg(tt, 0, 700));   // it bounds out of a cloud of dark smoke
+      return { dx: 0, alpha: Math.min(1, tt / 400), pose: tt < 700 ? 'run' : tt < 1100 ? 'determined' : 'happy', sx: tt > 700 ? 1 + spring(tt - 700, 0.1) : 1, sy: tt > 700 ? 1 - spring(tt - 700, 0.1) : 1,
+        under(c, x, y, h) { const a = 1 - seg(tt, 300, 1400); if (a <= 0) return; for (let i = 0; i < 8; i++) { const ang = i / 8 * Math.PI * 2, r = h * (0.3 + k * 0.5);
+          c.fillStyle = `rgba(40,30,40,${0.6 * a})`; c.beginPath(); c.arc(x + Math.cos(ang) * r, y - h * 0.4 + Math.sin(ang) * r * 0.5, h * 0.18, 0, 7); c.fill(); } } }; },
+    Djinn(tt, H) { const k = out3(seg(tt, 400, 1200));   // smoke pours out of a lamp and takes its shape
+      return { alpha: k, dy: H * 0.1 * (1 - k), pose: tt < 1200 ? 'hover' : 'happy',
+        under(c, x, y, h) { const a = 1 - seg(tt, 1200, 1700); if (a <= 0) return; c.fillStyle = `rgba(240,200,70,${a})`; c.beginPath(); c.ellipse(x + h * 0.35, y - h * 0.06, h * 0.16, h * 0.07, 0, 0, 7); c.fill();
+          for (let i = 0; i < 8; i++) { const p = ((tt / 500) + i / 8) % 1; c.fillStyle = `rgba(220,230,255,${0.6 * a * (1 - p)})`; c.beginPath(); c.arc(x + h * 0.35 - p * h * 0.35, y - h * 0.1 - p * h * 0.7, h * (0.05 + p * 0.1), 0, 7); c.fill(); } } }; },
+    Troll(tt, H, W) { const k = seg(tt, 0, 900), step = Math.abs(Math.sin(k * Math.PI * 3));   // it stomps in from the side, the ground jumping with each step
+      return { dx: -W * 0.5 * (1 - k), dy: -step * H * 0.03, pose: tt < 900 ? 'walk' : tt < 1150 ? 'determined' : 'happy',
+        under(c, x, y, h) { if (tt > 1300) return; const a = 1 - seg(tt, 900, 1300); for (let i = 0; i < 3; i++) { const p = seg(tt, i * 300, i * 300 + 500); if (p <= 0 || p >= 1) continue;
+          c.fillStyle = `rgba(150,130,100,${0.6 * (1 - p) * a})`; c.beginPath(); c.ellipse(x - h * 0.2, y, h * (0.3 + p * 0.4), h * 0.06, 0, 0, 7); c.fill(); } } }; },
+    Mummy(tt, H) { const k = out3(seg(tt, 100, 1100));   // it rises out of the sand and shakes the dust off
+      return { dy: H * 0.32 * (1 - k), pose: tt < 1100 ? 'idle' : tt < 1300 ? 'determined' : 'happy',
+        under(c, x, y, h) { const a = 1 - seg(tt, 1100, 1700); if (a <= 0) return; c.fillStyle = `rgba(214,190,140,${0.8 * a})`; c.beginPath(); c.ellipse(x, y + 2, h * 0.7, h * 0.1, 0, 0, 7); c.fill();
+          for (let i = 0; i < 8; i++) { const p = ((tt / 800) + i / 8) % 1; c.fillStyle = `rgba(200,190,170,${a * (1 - p)})`; c.beginPath(); c.arc(x + (i - 3.5) * h * 0.15, y - p * h * 0.5, h * 0.03, 0, 7); c.fill(); } } }; },
+    Sarimanok(tt, H) { const k = out3(seg(tt, 0, 800));   // it flutters down and fans its tail in a burst of colour
+      return { dy: -H * 0.45 * (1 - k), pose: tt < 800 ? 'hover' : tt < 1000 ? 'land' : 'happy',
+        under(c, x, y, h) { if (tt < 800) return; const p = seg(tt, 800, 1600); if (p >= 1) return; const cols = [[226, 72, 63], [240, 138, 36], [242, 207, 43], [77, 168, 60], [47, 111, 216], [138, 79, 224]];
+          cols.forEach((col, i) => { const ang = Math.PI * (1.1 + i * 0.16); c.strokeStyle = `rgba(${col},${0.8 * (1 - p)})`; c.lineWidth = h * 0.06; c.lineCap = 'round'; c.beginPath(); c.moveTo(x, y - h * 0.4); c.lineTo(x + Math.cos(ang) * h * (0.5 + p * 0.5), y - h * 0.4 + Math.sin(ang) * h * (0.5 + p * 0.5)); c.stroke(); }); } }; },
     pop(tt) { const k = back(seg(tt, 0, 420)); return { sx: k, sy: k, pose: 'idle' }; }
   };
 

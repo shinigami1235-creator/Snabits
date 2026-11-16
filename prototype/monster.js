@@ -45,6 +45,16 @@ const FAMILY = {
   Minotaur:{special:1, body:[4,[4,6,7,7,7,7,7,6]], legs:"stubby", base:[65,70,60,25,40,35], ability:["Headlong","Its Dash moves hit 20% harder"]},
   Dragon: {special:1, body:[3,[3,5,6,7,7,7,7,6,5]], legs:"stubby", base:[62,58,58,58,45,40], ability:["Dragon Scale","Blaze and Frost hit it 20% softer"]},
   Thunderbird:{special:1, body:[3,[3,5,6,7,7,7,6,5]], legs:"twolegs", base:[50,45,45,70,55,60], ability:["Stormborn","Its hits have a 15% chance to Shock"]},
+  Hydra:  {special:1, body:[3,[3,5,6,7,7,7,7,6,5]], legs:"stubby", base:[65,58,55,52,50,40], ability:["Regrowth","Once a fight, dropping under half its HP heals it 25%"]},
+  Griffin:{special:1, body:[3,[3,5,6,7,7,7,7,6,5]], legs:"stubby", base:[52,62,48,40,50,68], ability:["Long Sight","Its Mid and Far moves hit 15% harder"]},
+  Kirin:  {special:1, body:[4,[4,6,7,7,7,7,6]], legs:"stubby", base:[55,45,50,68,62,45], ability:["Pure Step","It can't be Poisoned, Burned or Cursed"]},
+  Salamander:{special:1, body:[2,[2,4,6,7,7,7,6,4]], legs:"stubby", base:[52,58,50,55,45,60], ability:["Heat Up","Each Blaze hit on it raises its Power 1 step"]},
+  Bakunawa:{special:1, body:[2,[1,2,3,4,5,5,6,6,6]], legs:"tentacles", base:[60,55,50,62,50,43], ability:["Moon Eater","Light hits it 30% softer"]},
+  Cerberus:{special:1, body:[4,[4,6,7,7,7,7,7,6]], legs:"stubby", base:[60,66,55,35,45,59], ability:["Three Bites","Its single Close Strikes bite twice for 60% each"]},
+  Djinn:  {special:1, body:[3,[3,5,6,6,6,6,5,4,3]], legs:"tentacles", base:[50,35,45,75,65,50], ability:["Three Wishes","The first three Casts that hit it do half damage"]},
+  Troll:  {special:1, body:[4,[4,6,7,7,7,7,7,7,6]], legs:"stubby", base:[72,68,65,25,45,35], ability:["Hard Hide","Crits can't land on it"]},
+  Mummy:  {special:1, body:[3,[3,5,6,6,6,6,6,6,5]], legs:"stubby", base:[58,52,58,58,60,34], ability:["Undying","The first time it would faint in a fight, it gets up with 10% of its HP"]},
+  Sarimanok:{special:1, body:[3,[2,4,6,7,7,7,7,6,4]], legs:"twolegs", base:[50,55,45,55,55,65], ability:["Good Omen","Its crit chance is 10% higher"]},
 };
 /* Stamina: energy each turn and less fatigue. Power: Strike damage and crits. Constitution: HP and cutting all damage.
    Mind: Cast damage and landing statuses. Insight: hit rate and shrugging off statuses. Speed: going first, dodging and follow-up attacks. */
@@ -223,7 +233,7 @@ function speciesName(family,el1,el2){
    A photo with the right mix of colours, in the right places, finds a special Snabit or puts a costume on the one it makes.
    res.raw gives each colour's share of the picture in percent, and res.g12 gives where each colour sits on a 12 by 12 grid
    (the share of each cell that colour fills). Specials are checked first since their mixes are the stricter ones. */
-const EGG_SPECIAL=["Eagle","Vampire","Phoenix","Kitsune","Naga","Yeti","Kraken","Golem","Unicorn","Jack","Tengu","Tanuki","Mermaid","Diwata","Sphinx","Garuda","Werewolf","Minotaur","Dragon","Thunderbird"];
+const EGG_SPECIAL=["Eagle","Vampire","Phoenix","Kitsune","Naga","Yeti","Kraken","Golem","Unicorn","Jack","Tengu","Tanuki","Mermaid","Diwata","Sphinx","Garuda","Werewolf","Minotaur","Dragon","Thunderbird","Hydra","Griffin","Kirin","Salamander","Bakunawa","Cerberus","Djinn","Troll","Mummy","Sarimanok"];
 const COSTUMES=["Panda","Bee","Ladybug","Watermelon","Candy cane","Tiger","Zebra","Cow","Penguin","Strawberry","Rubber duck","Clownfish"];
 function eggStats(res,g){ const G=res.g12&&res.g12[g]; if(!G) return null; let t=0,cx=0,cy=0;
   for(let i=0;i<144;i++){ const v=G[i]; t+=v; cx+=v*((i%12)+0.5)/12; cy+=v*(Math.floor(i/12)+0.5)/12; }
@@ -261,6 +271,17 @@ function eggOf(res){
   if(R("brown")>=55&&R("white")>=8&&R("white")<=30&&R("black")<6){ const w=S("white"); if(w&&Math.abs(w.cx-0.5)<0.08&&w.cy<0.55&&eggCross(w.rows)>=3) return {special:"Minotaur"}; }   // pale horns and a pale ring, two bands down the middle of brown
   if(R("green")>=55&&R("orange")>=4&&R("orange")<=25&&R("yellow")<6&&R("red")<6){ const o=S("orange"); if(o&&o.cy<0.4&&o.spread<0.2) return {special:"Dragon"}; }   // one orange flame near the top of green
   if(R("blue")>=50&&R("yellow")>=10&&R("yellow")<=35&&R("violet")<5&&R("red")<5&&R("white")<10){ const y=S("yellow"); if(y&&Math.max(...y.rows)>0.5&&Math.max(...y.cols)<0.45&&Math.abs(y.cx-0.5)<0.1&&y.cy<0.6) return {special:"Thunderbird"}; }   // a yellow bolt right across blue
+  // the specials of 17 Nov 2026
+  if(R("violet")>=45&&R("green")>=15&&R("green")<=45&&R("yellow")<5&&R("black")<8){ const g=S("green"); if(g&&eggCross(g.cols)>=5) return {special:"Hydra"}; }   // three green necks up a violet field
+  if(R("orange")>=55&&R("white")>=10&&R("white")<=35&&R("yellow")>=1&&R("black")<5){ const w=S("white"), o=S("orange"); if(w&&o&&w.cy<0.3&&Math.max(...w.rows)>0.85&&o.cy>0.5) return {special:"Griffin"}; }   // a white band right across the top of orange
+  if(R("cyan")>=55&&R("orange")>=10&&R("orange")<=35&&R("pink")<3&&R("black")<5){ const o=S("orange"); if(o&&o.cy>0.7&&eggCross(o.cols)>=5) return {special:"Kirin"}; }   // a row of orange flames under teal
+  if(R("black")>=60&&R("orange")>=6&&R("orange")<=25&&R("white")<4&&R("red")<6){ const o=S("orange"); if(o&&o.spread>0.28&&eggCross(o.rows)>=3&&eggCross(o.cols)>=3) return {special:"Salamander"}; }   // orange spots all over black
+  if(R("blue")>=60&&R("cyan")>=5&&R("cyan")<=25&&R("white")>=3&&R("white")<=18&&R("yellow")<3&&R("violet")<6){ const w=S("white"), c=S("cyan"); if(w&&c&&w.cy<0.4&&w.spread<0.18&&c.cy>w.cy+0.2) return {special:"Bakunawa"}; }   // a small moon above a teal serpent
+  if(R("black")>=45&&R("red")>=15&&R("red")<=40&&R("white")>=3&&R("white")<=15&&R("yellow")<3){ const r=S("red"), w=S("white"); if(r&&w&&Math.max(...r.rows)>0.8&&Math.max(...r.cols)<0.4&&eggCross(w.cols)>=5) return {special:"Cerberus"}; }   // a red collar across black with three white spikes
+  if(R("blue")>=65&&R("yellow")>=4&&R("yellow")<=20&&R("white")>=2&&R("white")<=15&&R("cyan")<5&&R("violet")<6){ const y=S("yellow"), w=S("white"); if(y&&w&&y.cy>0.7&&w.cy<y.cy-0.2) return {special:"Djinn"}; }   // a gold lamp at the bottom of blue with pale smoke above
+  if(R("green")>=55&&R("brown")>=10&&R("brown")<=35&&R("orange")<4&&R("yellow")<5&&R("white")>=1&&R("white")<8){ const b=S("brown"), w=S("white"); if(b&&w&&b.spread>0.22&&Math.max(...b.rows)<0.45&&Math.max(...b.cols)<0.45&&w.cy>0.6) return {special:"Troll"}; }   // a brown club across green, white tusks low down
+  if(R("white")>=30&&R("silver")>=20&&sum("white","silver")>=88&&R("yellow")>=1&&R("yellow")<6){ const w=S("white"), g=S("silver"); if(w&&g&&eggCross(w.rows)>=4&&eggCross(g.rows)>=4) return {special:"Mummy"}; }   // grey and white wraps with one gold eye
+  if(R("white")>=35&&["red","orange","yellow","green","blue","violet"].filter(g=>R(g)>=3).length>=5){ const y=S("yellow"), g=S("green"), b=S("blue"); if(y&&g&&b&&(y.cx-g.cx)*(g.cx-b.cx)>0&&Math.abs(y.cx-b.cx)>0.25) return {special:"Sarimanok"}; }   // a rainbow fan on white, in rainbow order
   // costumes. The second set goes first where it could be read as one of the first five: Penguin and Zebra before Panda,
   // Clownfish and Tiger before Bee, Rubber duck before Bee
   if(R("black")>=28&&R("white")>=12&&R("orange")>=2&&R("orange")<=14&&sum("black","white","orange")>=82) return {costume:"Penguin"};

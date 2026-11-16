@@ -34,12 +34,14 @@ function towerFloor() {
   el('tw-m').onclick = () => atPresetCard(s, towerFloor);
   el('tw-l').onclick = () => towerEnd(false);
 }
+const TOWER_STONE = { 25: 'Cerberus', 50: 'Djinn' };
 function towerAfter(r) {
   const s = RS, T = TOWER;
   s.fatigue = Math.min(100, s.fatigue + 4); clampAll();
   if (r.winner !== 0) return towerEnd(true);
   const pay = 60 + T.n * 25; PLAYER.bits += pay; T.bits += pay;
   if (TOWER_PRIZE[T.n]) { addItem(TOWER_PRIZE[T.n]); T.won.push(TOWER_PRIZE[T.n]); }
+  { const sp = TOWER_STONE[T.n], L = sp && stoneList(); if (L && !L.includes(sp)) { L.push(sp); T.won.push('Pattern Stone'); } }
   T.n++; T.foe = null; drawUI(); saveGame(); towerFloor();
 }
 function towerEnd(lost) {

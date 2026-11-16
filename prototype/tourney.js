@@ -245,6 +245,7 @@ function finishCup(){
   else if(c.format==="team5"){ const n=CUP.bouts.filter(b=>b.res==="w").length; lines.push(`The Hill League ${place===1?"won":"lost"} the exhibition ${Math.max(n,5-n)} bouts to ${Math.min(n,5-n)}, and ${displayName(s)} ${own?"won":"lost"} its own bout.`); }
   else lines.push(`${place===1?"It won":"It finished "+["","first","second","third","fourth","fifth","sixth"][Math.min(place,6)]+" in"} the ${c.name}.`);
   if(prize){ PLAYER.bits+=prize; lines.push(`It brings home ${prize} bits.`); }
+  if(place===1&&c.name==="Northreach Invitational"&&typeof stoneList==="function"){ const L=stoneList(); if(L&&!L.includes("Troll")){ L.push("Troll"); lines.push("The Northreach team left one of their painted stones with the trophy."); } }
   if(place===1&&c.prize){ addItem(c.prize); lines.push(`The prize table also had ${/^[AEIOU]/.test(c.prize)?"an":"a"} ${c.prize}.`); }
   if(place===1&&c.licence&&!famOpen(c.licence)){ openFam(c.licence); lines.push(`The Snabit League lets the ranch register ${c.licence} now, so a scan can find one.`); }
   if(place===1&&c.visit){ const shut=VISIT_FAMS.filter(f=>!famOpen(f)); if(shut.length){ const f=shut[Math.floor(CUP.R()*shut.length)]; openFam(f); lines.push(`The Northreach breeders signed a League form for the ranch, so it can register ${f} now and a scan can find one.`); } }

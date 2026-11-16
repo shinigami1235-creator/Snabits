@@ -37,10 +37,11 @@ async function retireNow(e, skill) {
   PLAYER.legacy = { from: e.m.name, skill, tp: (s.tp || []).map(v => Math.round(v * 0.1)) };
   PLAYER.roster = PLAYER.roster.filter(r => r.id !== e.id);
   if (PLAYER.active === e.id) { PLAYER.active = PLAYER.roster.length ? PLAYER.roster[0].id : null; RS = null; }
+  const L = stoneList(), mum = L && !L.includes('Mummy'); if (mum) L.push('Mummy');
   saveGame(); panel('');
   if (typeof CUPSHOW !== 'undefined' && hallSpec(h) && hallSpec(h).family) await CUPSHOW.run([hallBeat(h)]);
   if (PLAYER.roster.length) openRanch(); else { closeRanch(); openScope(); }
-  if (RS) say(`${h.name.split(',')[0]}'s statue is up behind the fence.${RS.say && RS.say !== 'Welcome back.' && !/^This is the ranch/.test(RS.say) ? ' ' + RS.say : ''}`);
+  if (RS) say(`${h.name.split(',')[0]}'s statue is up behind the fence.${mum ? ' Someone left a painted stone at the foot of it.' : ''}${RS.say && RS.say !== 'Welcome back.' && !/^This is the ranch/.test(RS.say) ? ' ' + RS.say : ''}`);
 }
 /* the ceremony: dusk, the Snabit on a plinth turns to stone from the feet up, and the plaque comes in */
 function hallBeat(h) {

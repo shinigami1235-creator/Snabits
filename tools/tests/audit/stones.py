@@ -42,6 +42,14 @@ async def main():
                 if g: hits[g] = hits.get(g, 0) + 1
         rate = sum(hits.values()) / n
         C.ok(rate < 0.05, f'eggs fire on under 5% of cluttered pictures ({100 * rate:.1f}%, {json.dumps(hits)})')
+        # every special has a place its stone turns up
+        where = await pg.evaluate("""()=>{ const out={}, rift=exMap({n:'The Rift',el:'Void',rift:true}).N;
+          for(const sp of EGG_SPECIAL){ const reg=Object.keys(EX_STONE).find(k=>EX_STONE[k]===sp), deep=Object.keys(EX_DEEP_STONE).find(k=>EX_DEEP_STONE[k]===sp),
+            tower=Object.keys(TOWER_STONE).find(k=>TOWER_STONE[k]===sp);
+            out[sp]=reg?'map '+reg:deep?'deep '+deep:tower?'tower '+tower:sp==='Bakunawa'&&rift['5:0'].k==='stone'&&rift['6:1'].k==='page'?'rift':
+              sp==='Troll'&&/"Troll"/.test(finishCup.toString())?'cup':sp==='Mummy'&&/'Mummy'/.test(retireNow.toString())?'hall':sp==='Sarimanok'&&/"Sarimanok"/.test(endWeek.toString())?'fair':null; }
+          return out; }""")
+        for sp, w in where.items(): C.ok(bool(w), f'the {sp} stone has a place to turn up ({w})')
         await b.close()
     sys.exit(C.done(errs))
 asyncio.run(main())

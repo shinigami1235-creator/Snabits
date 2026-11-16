@@ -16,6 +16,10 @@ const DEX_SECRETS = [['Eagle', 'Hides in stars and stripes.'], ['Vampire', 'Most
   ['Diwata', 'Pink with green wings either side.'], ['Sphinx', 'Gold with blue stripes over the top.'],
   ['Garuda', 'Gold with red rising in a V.'], ['Werewolf', 'Grey with a pale moon and three dark marks.'], ['Minotaur', 'Brown with a pale ring under two pale horns.'],
   ['Dragon', 'Green with an orange flame at the top.'], ['Thunderbird', 'Blue with a yellow zigzag across it.'],
+  ['Hydra', 'Violet with three green necks rising from one root.'], ['Griffin', 'Orange with a white band over the top and a gold beak.'], ['Kirin', 'Teal scales with orange flames along the bottom.'],
+  ['Salamander', 'Black with orange spots and one yellow flame.'], ['Bakunawa', 'Blue with a pale moon and a teal serpent under it.'], ['Cerberus', 'Black with a red collar and three white spikes.'],
+  ['Djinn', 'Blue with smoke curling out of a gold lamp.'], ['Troll', 'Green with a brown club and two white tusks.'], ['Mummy', 'Grey and white bands with one gold eye.'],
+  ['Sarimanok', 'White with a fan of rainbow feathers.'],
   ['c:Panda', 'Half black, half white.'], ['c:Bee', 'Yellow and black in stripes.'], ['c:Ladybug', 'Red with black spots.'],
   ['c:Watermelon', 'Green outside, red inside, a few black seeds.'], ['c:Candy cane', 'Red and white in stripes.'],
   ['c:Tiger', 'Orange with black stripes.'], ['c:Zebra', 'Black and white in stripes.'], ['c:Cow', 'White with black patches.'], ['c:Penguin', 'Black and white with a little orange.'],
@@ -86,7 +90,11 @@ const SECRET_PAL = { Eagle: [[46, 84, 170], [150, 40, 48], [255, 214, 90]], Vamp
   Tengu: [[226, 74, 62], [244, 236, 220], [90, 170, 80]], Tanuki: [[150, 100, 56], [44, 36, 34], [96, 170, 70]], Mermaid: [[100, 214, 210], [240, 122, 176], [246, 240, 230]],
   Diwata: [[240, 122, 180], [80, 160, 70], [246, 206, 70]], Sphinx: [[242, 206, 64], [48, 104, 210], [214, 64, 52]],
   Garuda: [[242, 206, 64], [214, 64, 52], [60, 110, 210]], Werewolf: [[170, 174, 182], [40, 36, 42], [246, 242, 232]], Minotaur: [[150, 100, 56], [190, 194, 200], [246, 240, 226]],
-  Dragon: [[80, 170, 76], [240, 140, 50], [246, 206, 70]], Thunderbird: [[54, 110, 214], [246, 210, 60], [246, 246, 246]] };
+  Dragon: [[80, 170, 76], [240, 140, 50], [246, 206, 70]], Thunderbird: [[54, 110, 214], [246, 210, 60], [246, 246, 246]],
+  Hydra: [[140, 80, 200], [90, 170, 80], [246, 206, 70]], Griffin: [[240, 140, 50], [246, 246, 246], [246, 206, 70]], Kirin: [[80, 200, 210], [240, 140, 50], [246, 246, 246]],
+  Salamander: [[40, 36, 42], [240, 140, 50], [246, 206, 70]], Bakunawa: [[54, 110, 214], [90, 210, 220], [246, 246, 246]], Cerberus: [[40, 36, 42], [214, 64, 52], [190, 194, 200]],
+  Djinn: [[54, 110, 214], [246, 206, 70], [246, 246, 246]], Troll: [[80, 170, 76], [150, 100, 56], [246, 246, 246]], Mummy: [[246, 242, 232], [190, 194, 200], [246, 206, 70]],
+  Sarimanok: [[246, 246, 246], [214, 64, 52], [246, 206, 70]] };
 function dexSecretTab() { const S = (PLAYER && PLAYER.dexSecret) || {}, k = DEX_SECRETS.filter(([n]) => S[n]).length;
   return `<button class="small ${DEX_FAM === 'Secrets' ? 'on' : ''}" data-f="Secrets">Secrets<i>${k}/${DEX_SECRETS.length}</i></button>`; }
 function openSecrets(n) {

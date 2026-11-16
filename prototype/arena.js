@@ -7,7 +7,7 @@ const arBand=gap=>gap<10?"Close":gap<25?"Near":gap<45?"Mid":"Far";
 /* hitting from further away is harder to set up, so it pays a little more */
 const AR_BAND_DMG={Close:0.8,Near:0.95,Mid:1.2,Far:1.5,Any:1};
 /* a family's damage, tuned so every family wins about half its fights in the balance sim */
-const AR_FAM_DMG={Chomp:0.88,Pinch:1.03,Stilt:0.97,Skit:1.18,Antik:0.89,Squib:1.02,Moko:1.27,Booly:1.16,Plod:0.9,Bipped:1.02,Fizz:1.19,Teep:0.93,Lern:1.48,Eagle:0.96,Vampire:1.03,Phoenix:0.83,Kitsune:1.03,Naga:0.78,Yeti:0.72,Puff:1.2,Flit:1.22,Glop:0.81,Tock:1.24,Mitt:0.8,Brolly:0.98,Spine:0.83,Burr:0.99,Kraken:0.95,Golem:0.84,Unicorn:1.03,Jack:1.1,Tengu:1.16,Tanuki:0.86,Mermaid:1.14,Diwata:0.87,Sphinx:1,Garuda:1.3,Werewolf:0.88,Minotaur:0.82,Dragon:0.94,Thunderbird:1.2};   // retuned 15 Nov 2026 after melee lost Leap Back
+const AR_FAM_DMG={Chomp:0.88,Pinch:1.03,Stilt:0.97,Skit:1.18,Antik:0.89,Squib:0.99,Moko:1.27,Booly:1.16,Plod:0.9,Bipped:1.02,Fizz:1.19,Teep:0.93,Lern:1.48,Eagle:0.96,Vampire:1.03,Phoenix:0.83,Kitsune:1.03,Naga:0.78,Yeti:0.72,Puff:1.2,Flit:1.22,Glop:0.81,Tock:1.24,Mitt:0.8,Brolly:0.98,Spine:0.83,Burr:0.99,Kraken:0.95,Golem:0.84,Unicorn:1.03,Jack:1.1,Tengu:1.16,Tanuki:0.86,Mermaid:1.14,Diwata:0.87,Sphinx:1,Garuda:1.3,Werewolf:0.88,Minotaur:0.82,Dragon:0.94,Thunderbird:1.2,Hydra:0.92,Griffin:1,Kirin:1.32,Salamander:1.2,Bakunawa:1,Cerberus:0.87,Djinn:1.05,Troll:0.86,Mummy:1,Sarimanok:1.12};   // retuned 15 Nov 2026 after melee lost Leap Back
 
 /* [name, learned at, range, damage, accuracy, sharpness, wither, push, cost, windup, extras] */
 const FAM_MOVES={
@@ -96,14 +96,34 @@ const FAM_MOVES={
   Dragon:[["Claw Rake",1,"Close",26,88,10,0,4,10,0.3],["Ember Breath",3,"Mid",26,88,5,0,0,14,0.4,{cast:1,status:["Burn",20]}],["Wyrm Breath",5,"Mid",54,85,8,0,10,28,0.7,{cast:1}],["Scale Swap",8,"Close",14,85,0,0,0,12,0.3,{swap:1}],
     ["Scale Guard",14,"Any",0,100,0,0,0,18,0.2,{buff:"bunker"}],["Tail Smash",20,"Near",46,80,8,0,20,24,0.6],["Wing Buffet",30,"Mid",40,82,5,0,30,30,0.7,{cast:1}],["Dragon Fury",40,"Far",94,68,12,0,20,44,1.2,{cast:1,status:["Burn",30]}]],
   Thunderbird:[["Storm Peck",1,"Close",24,90,10,0,4,9,0.25],["Static Feather",3,"Mid",24,88,5,0,0,14,0.4,{cast:1,status:["Shock",20]}],["Thunder Wing",5,"Far",54,85,8,0,10,28,0.7,{cast:1}],["Gale Swap",8,"Close",14,85,0,0,0,12,0.3,{swap:1}],
-    ["Rain Cloud",14,"Any",0,100,0,0,0,22,0.4,{support:1,regen:4}],["Wing Clap",20,"Near",42,82,5,0,25,24,0.6,{cast:1}],["Chain Bolt",30,"Far",18,82,8,0,0,30,0.7,{cast:1,hits:3,status:["Shock",15]}],["Storm Bringer",40,"Far",94,68,12,0,20,44,1.2,{cast:1}]]
+    ["Rain Cloud",14,"Any",0,100,0,0,0,22,0.4,{support:1,regen:4}],["Wing Clap",20,"Near",42,82,5,0,25,24,0.6,{cast:1}],["Chain Bolt",30,"Far",18,82,8,0,0,30,0.7,{cast:1,hits:3,status:["Shock",15]}],["Storm Bringer",40,"Far",94,68,12,0,20,44,1.2,{cast:1}]],
+  Hydra:[["Twin Fang",1,"Close",14,90,8,0,4,10,0.3,{hits:2}],["Bog Spit",3,"Mid",24,88,5,0,0,14,0.4,{cast:1,status:["Poison",30]}],["Many Heads",5,"Near",20,85,8,0,6,28,0.7,{hits:3}],["Coil Swap",8,"Close",14,85,0,0,0,12,0.3,{swap:1}],
+    ["Marsh Mend",14,"Any",0,100,0,0,0,22,0.4,{support:1,heal:0.18}],["Neck Lash",20,"Mid",46,82,8,0,20,24,0.6],["Swamp Gas",30,"Mid",40,80,5,0,0,30,0.7,{cast:1,status:["Poison",40]}],["Hydra Rage",40,"Close",24,75,10,0,10,42,1.1,{hits:4}]],
+  Griffin:[["Beak Jab",1,"Close",24,90,10,0,4,9,0.25],["Swoop Down",3,"Mid",30,85,8,0,10,14,0.4,{dash:"in"}],["Sky Talon",5,"Far",56,85,10,0,15,28,0.8,{dash:"in"}],["Talon Swap",8,"Close",14,85,0,0,0,12,0.3,{swap:1}],
+    ["Hawk Sight",14,"Any",0,100,0,0,0,18,0.2,{buff:"unblink"}],["Wing Gale",20,"Far",40,82,5,0,30,26,0.6,{cast:1}],["Lion Pounce",30,"Mid",62,78,10,0,20,32,0.8,{dash:"in"}],["Royal Dive",40,"Far",92,70,12,0,25,42,1.2,{dash:"in"}]],
+  Kirin:[["Hoof Kick",1,"Close",24,90,8,0,8,10,0.3],["Ember Step",3,"Mid",24,88,5,0,0,14,0.4,{cast:1,status:["Burn",20]}],["Holy Flame",5,"Mid",54,85,8,0,10,28,0.7,{cast:1}],["Cloud Swap",8,"Close",14,85,0,0,0,12,0.3,{swap:1}],
+    ["Calm Aura",14,"Any",0,100,0,0,0,22,0.4,{support:1,cleanse:1,heal:0.12}],["Horn Thrust",20,"Near",46,82,10,0,15,24,0.6],["Frost Mane",30,"Far",56,80,8,0,0,30,0.8,{cast:1,status:["Freeze",15]}],["Heaven Gallop",40,"Far",90,70,12,0,25,42,1.2,{dash:"in"}]],
+  Salamander:[["Tongue Flick",1,"Close",22,92,8,0,4,9,0.25],["Cinder Spit",3,"Mid",24,88,5,0,0,14,0.4,{cast:1,status:["Burn",25]}],["Flame Tail",5,"Near",50,85,10,0,12,26,0.7],["Ash Swap",8,"Close",14,85,0,0,0,12,0.3,{swap:1}],
+    ["Warm Up",14,"Any",0,100,0,0,0,18,0.3,{support:1,raise:{pow:1}}],["Ember Roll",20,"Mid",48,80,8,0,20,24,0.6,{dash:"in"}],["Lava Splash",30,"Mid",60,78,8,0,10,32,0.8,{cast:1,status:["Burn",30]}],["Inferno Tail",40,"Close",94,68,15,0,25,44,1.2]],
+  Bakunawa:[["Moon Bite",1,"Close",26,88,10,0,4,10,0.3],["Tide Splash",3,"Mid",26,88,5,0,10,14,0.4,{cast:1,status:["Soak",30]}],["Swallow the Moon",5,"Close",56,82,10,0,0,28,0.7,{hold:1.2}],["Sea Swap",8,"Close",14,85,0,0,0,12,0.3,{swap:1}],
+    ["Moon Veil",14,"Any",0,100,0,0,0,18,0.2,{buff:"bunker"}],["Whisker Lash",20,"Mid",44,82,8,0,-20,24,0.6],["Eclipse Wave",30,"Far",58,80,8,0,0,30,0.8,{cast:1,status:["Blind",25]}],["Serpent Tide",40,"Mid",92,68,12,0,30,44,1.2,{cast:1}]],
+  Cerberus:[["Guard Bite",1,"Close",26,88,10,0,4,10,0.3],["Triple Bark",3,"Mid",14,90,0,12,0,14,0.4,{cast:1,status:["Dread",25]}],["Gate Fang",5,"Close",62,80,12,0,10,28,0.7],["Gate Swap",8,"Close",14,85,0,0,0,12,0.3,{swap:1}],
+    ["Watchdog",14,"Any",0,100,0,0,0,18,0.2,{buff:"unblink"}],["Chain Lash",20,"Mid",44,82,8,0,-20,24,0.6],["Ember Howl",30,"Mid",50,80,5,0,10,30,0.7,{cast:1,status:["Burn",30]}],["Triple Maul",40,"Close",32,72,12,0,10,42,1.1,{hits:3}]],
+  Djinn:[["Smoke Puff",1,"Mid",24,90,5,0,0,10,0.3,{cast:1}],["Wish Spark",3,"Mid",26,88,5,0,0,14,0.4,{cast:1,status:["Daze",20]}],["Lamp Blast",5,"Far",54,85,8,0,10,28,0.7,{cast:1}],["Lamp Swap",8,"Close",14,85,0,0,0,12,0.3,{swap:1}],
+    ["Granted Wish",14,"Any",0,100,0,0,0,22,0.4,{support:1,heal:0.2}],["Sand Whirl",20,"Near",18,85,5,0,0,24,0.6,{cast:1,hits:3}],["Genie Grip",30,"Mid",50,78,8,0,-25,30,0.8,{cast:1,slow:3}],["Third Wish",40,"Far",96,66,12,0,20,44,1.2,{cast:1}]],
+  Troll:[["Club Bonk",1,"Close",28,86,8,0,12,10,0.3],["Rock Toss",3,"Mid",30,82,5,0,10,14,0.4],["Bridge Smash",5,"Near",58,80,10,0,20,28,0.8],["Bridge Swap",8,"Close",14,85,0,0,0,12,0.3,{swap:1}],
+    ["Moss Wrap",14,"Any",0,100,0,0,0,22,0.4,{support:1,regen:4}],["Troll Stomp",20,"Near",48,80,8,0,15,26,0.6],["Boulder Hurl",30,"Far",64,72,10,0,20,34,0.9],["Mountain Club",40,"Close",98,64,15,0,30,46,1.2]],
+  Mummy:[["Wrap Slap",1,"Close",24,90,8,0,6,10,0.3],["Bandage Lash",3,"Mid",26,85,5,0,-20,14,0.4],["Mummy Wrap",5,"Mid",44,82,8,0,0,26,0.7,{hold:1.2}],["Tomb Swap",8,"Close",14,85,0,0,0,12,0.3,{swap:1}],
+    ["Rewrap",14,"Any",0,100,0,0,0,22,0.4,{support:1,cleanse:1,heal:0.15}],["Tomb Dust",20,"Mid",20,85,0,0,0,20,0.5,{cast:1,status:["Blind",35]}],["Tomb Curse",30,"Mid",36,80,5,0,0,30,0.7,{cast:1,status:["Curse",40]}],["Sand Tomb",40,"Near",90,68,12,0,15,44,1.2,{cast:1}]],
+  Sarimanok:[["Comb Peck",1,"Close",24,90,10,0,4,9,0.25],["Fish Toss",3,"Mid",28,86,8,0,10,14,0.4],["Rainbow Fan",5,"Mid",52,85,10,0,15,28,0.7,{cast:1}],["Plume Swap",8,"Close",14,85,0,0,0,12,0.3,{swap:1}],
+    ["Dawn Crow",14,"Any",0,100,0,0,0,18,0.2,{buff:"unblink"}],["Spur Kick",20,"Close",50,82,15,0,10,24,0.6],["Lucky Feathers",30,"Far",18,85,10,0,0,30,0.7,{cast:1,hits:3}],["Sunrise Strike",40,"Mid",92,70,15,0,25,42,1.2,{dash:"in"}]]
 };
 /* every Snabit has Brace. Melee families get Rush, which closes the gap and hits; the casters get Leap Back to keep their distance
    (Gid, 15 Nov 2026: fewer moves that only move, and melee fighters closing in rather than backing off) */
 const SHARED_MOVES=[["Rush",1,"Any",14,85,5,0,0,10,0.25,{dash:"in",melee:1}],["Leap Back",1,"Any",0,100,0,0,0,10,0.2,{step:-20,ranged:1}],["Brace",1,"Any",0,100,0,0,0,10,0.1,{buff:"brace"}]];
 const arMelee=fam=>{ const d=(FAM_MOVES[fam]||[]).map(arMove).filter(m=>m.dmg); return d.filter(m=>!m.cast&&(m.range==="Close"||m.range==="Near"||m.dash)).length>=d.length/2; };
 /* how fast each family gets around: Booly floats and Squib jets, while Chomp and Pinch plod */
-const FAM_WALK={Chomp:0.8,Pinch:0.85,Stilt:1.05,Skit:1.15,Antik:1,Squib:1.15,Moko:1.05,Booly:1.25,Plod:0.75,Bipped:1.05,Fizz:1,Teep:0.85,Lern:1.15,Eagle:1.2,Vampire:1,Phoenix:1.05,Kitsune:1.15,Naga:0.95,Yeti:0.8,Puff:0.9,Flit:1.3,Glop:0.85,Tock:1.05,Mitt:0.95,Brolly:1,Spine:0.7,Burr:0.95,Kraken:0.9,Golem:0.7,Unicorn:1.15,Jack:0.9,Tengu:1.05,Tanuki:0.85,Mermaid:0.95,Diwata:1.2,Sphinx:1,Garuda:1.2,Werewolf:1.1,Minotaur:0.85,Dragon:0.9,Thunderbird:1.15};
+const FAM_WALK={Chomp:0.8,Pinch:0.85,Stilt:1.05,Skit:1.15,Antik:1,Squib:1.15,Moko:1.05,Booly:1.25,Plod:0.75,Bipped:1.05,Fizz:1,Teep:0.85,Lern:1.15,Eagle:1.2,Vampire:1,Phoenix:1.05,Kitsune:1.15,Naga:0.95,Yeti:0.8,Puff:0.9,Flit:1.3,Glop:0.85,Tock:1.05,Mitt:0.95,Brolly:1,Spine:0.7,Burr:0.95,Kraken:0.9,Golem:0.7,Unicorn:1.15,Jack:0.9,Tengu:1.05,Tanuki:0.85,Mermaid:0.95,Diwata:1.2,Sphinx:1,Garuda:1.2,Werewolf:1.1,Minotaur:0.85,Dragon:0.9,Thunderbird:1.15,Hydra:0.9,Griffin:1.2,Kirin:1.15,Salamander:1.15,Bakunawa:0.95,Cerberus:1.1,Djinn:1.05,Troll:0.8,Mummy:0.85,Sarimanok:1.15};
 /* a family's first move takes its element, the way Skit's Web already does: a Blaze Chomp bites with Flame Bite */
 const EL_PREFIX={Blaze:"Flame",Frost:"Frost",Tide:"Aqua",Spark:"Volt",Wild:"Leaf",Venom:"Toxic",Charm:"Heart",Stone:"Rock",Light:"Shine",Steel:"Iron",Shade:"Shadow",Void:"Void"};
 const arMove=r=>({name:r[0],lv:r[1],range:r[2],dmg:r[3],acc:r[4],sharp:r[5]/100,wither:r[6],push:r[7],cost:r[8],wind:r[9],...(r[10]||{})});
@@ -238,9 +258,11 @@ class Arena{
       if(q.f.lifeSeed&&!q.seed&&q.hp<q.maxhp/2){ q.seed=1; this.ab(q,"Life seed"); this.heal(q,q.maxhp*0.25*this.hm(q),"seed"); }   // the held Life seed
       if(q.f.ability==="Healing Horn"&&!q.horn&&q.hp>0&&q.hp<q.maxhp*0.4){ q.horn=1; this.ab(q,"Healing Horn"); this.heal(q,q.maxhp*0.3,"heal"); }   // Unicorn
       if(q.f.ability==="Full Moon"&&!q.moon&&q.hp<q.maxhp*0.4){ q.moon=1; this.ab(q,"Full Moon"); this.stage(q,{pow:2},1); }   // Werewolf
+      if(q.f.ability==="Regrowth"&&!q.regrown&&q.hp<q.maxhp/2){ q.regrown=1; this.ab(q,"Regrowth"); this.heal(q,q.maxhp*0.25,"regrowth"); }   // Hydra
       if(q.f.ability==="Last Stand"&&!q.lastStand&&q.hp<q.maxhp/4){ q.lastStand=1; this.ab(q,"Last Stand"); this.heal(q,q.maxhp*0.2,"stand"); } }   // Brawl's Last Stand
     for(const q of this.p){ const o=this.p[1-q.i]; if(q.hp<=0&&q.f.ability==="Haunt"&&!q.haunted&&o.hp>0){ q.haunted=1; this.ab(q,"Haunt"); const d=Math.round(o.maxhp/4); o.hp=Math.max(0,o.hp-d); q.dealt+=d; this.ev.push({t:"recoil",i:o.i,dmg:d}); } }   // Shade's Haunt
     for(const q of this.p) if(q.hp<=0&&q.f.ability==="Rebirth"&&!q.reborn){ q.reborn=1; q.hp=Math.round(q.maxhp*0.25); q.st=null; this.ev.push({t:"ability",i:q.i,name:"Rebirth"}); this.ev.push({t:"heal",i:q.i,amt:q.hp,src:"rebirth"}); }   // Phoenix
+    for(const q of this.p) if(q.hp<=0&&q.f.ability==="Undying"&&!q.undying){ q.undying=1; q.hp=Math.max(1,Math.round(q.maxhp*0.1)); q.st=null; this.ev.push({t:"ability",i:q.i,name:"Undying"}); this.ev.push({t:"heal",i:q.i,amt:q.hp,src:"undying"}); }   // Mummy
     const [a,b]=this.p; if(a.hp<=0||b.hp<=0){ this.over=true; this.winner=a.hp<=0&&b.hp<=0?null:a.hp<=0?1:0; } }
   heal(f,amt,src,from){ const n=Math.max(0,Math.min(Math.round(amt),f.maxhp-f.hp)); if(f.hp<=0) return 0; f.hp+=n; this.ev.push({t:"heal",i:f.i,amt:n,src,from}); return n; }
   inflict(f,name,pct,from){
@@ -248,6 +270,7 @@ class Arena{
     if(name==="Freeze"&&(f.thawT>0||f.f.ability==="Thick Fur")) return false;
     if(name==="Poison"&&(f.f.el1==="Steel"||f.f.el2==="Steel")&&!(from&&from.f.ability==="Corrosion")) return false;   // Venom's Corrosion can Poison metal
     if(name==="Freeze"&&from&&from.f.ability==="Permafrost") pct*=2;
+    if((name==="Poison"||name==="Curse"||name==="Burn")&&f.f.ability==="Pure Step"){ this.ev.push({t:"ability",i:f.i,name:"Pure Step"}); return false; }   // Kirin
     if(name==="Root"&&f.f.ability==="Sky King"){ this.ev.push({t:"ability",i:f.i,name:"Sky King"}); return false; }   // Garuda
     if(name==="Blind"&&f.f.ability==="Bright"){ this.ev.push({t:"ability",i:f.i,name:"Bright"}); return false; }   // Lern's Bright
     if(this.rand()*100>=pct) return false;
@@ -345,7 +368,8 @@ class Arena{
     let tg=o; if(o.buff.mirror&&m.cast&&m.dmg){ delete o.buff.mirror; this.ev.push({t:"mirror",i:o.i,m}); tg=p; }
     const hitBy=tg===p?o:p;   // whose hit it counts as on screen
     if(m.swap){ const x=p.x; p.x=o.x; o.x=x; this.ev.push({t:"swap",i:p.i,m}); }
-    const nh=m.hitsRange?m.hitsRange[0]+Math.floor(R()*(m.hitsRange[1]-m.hitsRange[0]+1)):(m.hits||1);
+    const bite=p.f.ability==="Three Bites"&&!m.cast&&m.range==="Close"&&m.dmg&&!m.hitsRange&&(m.hits||1)===1&&tg===o; if(bite) this.ab(p,"Three Bites",true);   // Cerberus
+    const nh=bite?2:m.hitsRange?m.hitsRange[0]+Math.floor(R()*(m.hitsRange[1]-m.hitsRange[0]+1)):(m.hits||1);
     let total=0, sure=p.buff.foresight&&m.cast, lastMul=1; if(sure) delete p.buff.foresight;
     for(let h=0;h<nh&&tg.hp>0;h++) if(m.dmg){
       const atk=this.eff(p,m.atkStat||(m.cast?"mnd":"pow")), con=m.pierce&&tg.stg.grd>0?tg.f.base.grd:this.eff(tg,"grd"), dfs=m.cast?(con+3*(tg.f.level+5))/4:(con+tg.f.level+5)/2;
@@ -359,6 +383,10 @@ class Arena{
       if(tg.f.ability==="Parasol"&&m.cast){ dmg*=0.8; if(h===0) this.ab(tg,"Parasol",true); }   // Brolly
       if(p.f.ability==="Headlong"&&m.dash){ dmg*=1.2; if(h===0) this.ab(p,"Headlong",true); }   // Minotaur
       if(tg.f.ability==="Dragon Scale"&&(m.el==="Blaze"||m.el==="Frost")){ dmg*=0.8; if(h===0) this.ab(tg,"Dragon Scale",true); }   // Dragon
+      if(bite) dmg*=0.6;
+      if(p.f.ability==="Long Sight"&&(m.range==="Far"||m.range==="Mid")){ dmg*=1.15; if(h===0) this.ab(p,"Long Sight",true); }   // Griffin
+      if(tg.f.ability==="Moon Eater"&&m.el==="Light"){ dmg*=0.7; if(h===0) this.ab(tg,"Moon Eater",true); }   // Bakunawa
+      if(tg.f.ability==="Three Wishes"&&m.cast){ if(h===0){ tg.wishNow=(tg.wishes||0)<3; if(tg.wishNow){ tg.wishes=(tg.wishes||0)+1; this.ab(tg,"Three Wishes"); } } if(tg.wishNow) dmg*=0.5; }   // Djinn
       if(tg.f.ability==="Riddle"&&m.cast){ dmg*=0.8; if(h===0) this.ab(tg,"Riddle",true); }   // Sphinx
       if(tg.f.ability==="Stone Skin"){ dmg*=0.9; if(h===0) this.ab(tg,"Stone Skin",true); }   // Golem
       if(tg.f.ability==="Wobble"&&!tg.wob){ tg.wob=1; dmg*=0.7; this.ab(tg,"Wobble"); }   // Squib's Wobble
@@ -368,8 +396,8 @@ class Arena{
       if(m.el==="Spark"&&this.has(tg,"Soak")) dmg*=1.25;
       let shatter=false; if(this.has(tg,"Freeze")){ dmg*=1.25*(p.f.ability==="Permafrost"?1.2:1); shatter=true; if(p.f.ability==="Permafrost") this.ab(p,"Permafrost",true); }
       const sky=p.f.ability==="Sky High"&&!p.sky&&tg===o; if(sky){ p.sky=1; this.ev.push({t:"ability",i:p.i,name:"Sky High"}); }   // Eagle's Sky High
-      const rolled=!tg.buff.bulwark&&R()<m.sharp+edge(this.eff(p,"pow"),con,0.2,0,0.12)+(p.f.critBonus||0), shell=(tg.f.ability==="Shell"||tg.f.ability==="Stone Skin")&&rolled&&!sky&&!sure;
-      const crit=sky||sure||rolled&&!shell; if(crit) dmg*=1.5; if(shell) this.ab(tg,"Shell",true);   // Pinch's Shell stops crits; Lucky bit and Sunglasses add to them
+      const rolled=!tg.buff.bulwark&&R()<m.sharp+edge(this.eff(p,"pow"),con,0.2,0,0.12)+(p.f.critBonus||0)+(p.f.ability==="Good Omen"?0.1:0), shell=(tg.f.ability==="Shell"||tg.f.ability==="Stone Skin"||tg.f.ability==="Hard Hide")&&rolled&&!sky&&!sure;
+      const crit=sky||sure||rolled&&!shell; if(crit) dmg*=1.5; if(shell) this.ab(tg,tg.f.ability==="Hard Hide"?"Hard Hide":"Shell",true); if(crit&&rolled&&p.f.ability==="Good Omen") this.ab(p,"Good Omen",true);   // Pinch's Shell stops crits; Lucky bit and Sunglasses add to them
       if(p.cpunch&&!m.cast&&tg===o) dmg*=1.2;
       if(tg.buff.brace) dmg*=0.6; if(tg.buff.bunker) dmg*=0.8; if(tg.buff.castWard&&m.cast) dmg*=0.5;
       dmg=Math.max(1,Math.round(dmg*(0.9+R()*0.1)));
@@ -395,6 +423,7 @@ class Arena{
       if(o.f.ability==="Hothead"&&!p.st&&R()<0.1&&this.inflict(p,"Burn",100,o)) this.ab(o,"Hothead");
       if(o.f.ability==="Static Skin"&&!p.st&&R()<0.2&&this.inflict(p,"Shock",100,o)) this.ab(o,"Static Skin");
       if(p.f.ability==="Toxic Touch"&&!o.st&&R()<0.1&&this.inflict(o,"Poison",100,p)) this.ab(p,"Toxic Touch"); }
+    if(tg===o&&total&&o.hp>0&&o.f.ability==="Heat Up"&&m.el==="Blaze"){ this.ab(o,"Heat Up"); this.stage(o,{pow:1},1); }   // Salamander
     if(tg===o&&total&&o.hp>0&&p.f.ability==="Stormborn"&&!o.st&&R()<0.15&&this.inflict(o,"Shock",100,p)) this.ab(p,"Stormborn");   // Thunderbird
     if(tg===o&&m.cast&&total&&o.hp>0&&p.f.ability==="Siren"&&!o.st&&R()<0.2&&this.inflict(o,"Daze",100,p)) this.ab(p,"Siren");   // Mermaid
     if(m.basic&&tg===o&&total&&o.hp>0&&p.f.ability==="Web"&&R()<0.3){ this.ab(p,"Web"); this.stage(o,{spd:1},-1,p); }   // Skit's Web

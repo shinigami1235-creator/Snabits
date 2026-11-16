@@ -9,7 +9,7 @@
 // the Pattern Stone in each region, and the special Snabit its pattern belongs to
 const EX_STONE = { 'Cinder Peak': 'Phoenix', 'Static Plains': 'Eagle', 'Nightshade Marsh': 'Naga', 'Glacier Rim': 'Yeti', 'Saffron Dojo': 'Tengu', 'Tanglewood': 'Tanuki', 'Coral Shallows': 'Mermaid', 'Dream Garden': 'Diwata', 'Granite Steps': 'Sphinx', 'Dawn Temple': 'Garuda', 'Hollow Moor': 'Werewolf', 'Iron Foundry': 'Minotaur' };
 // the stones only a team reaches, on the deep maps (Gid, 15 Nov 2026: stones from grade C)
-const EX_DEEP_STONE = { 'Dream Garden': 'Kitsune', 'Hollow Moor': 'Vampire', 'Tanglewood': 'Jack', 'Coral Shallows': 'Kraken', 'Granite Steps': 'Golem', 'Dawn Temple': 'Unicorn', 'Cinder Peak': 'Dragon', 'Static Plains': 'Thunderbird' };
+const EX_DEEP_STONE = { 'Dream Garden': 'Kitsune', 'Hollow Moor': 'Vampire', 'Tanglewood': 'Jack', 'Coral Shallows': 'Kraken', 'Granite Steps': 'Golem', 'Dawn Temple': 'Unicorn', 'Cinder Peak': 'Dragon', 'Static Plains': 'Thunderbird', 'Nightshade Marsh': 'Hydra', 'Glacier Rim': 'Griffin', 'Saffron Dojo': 'Kirin', 'Iron Foundry': 'Salamander' };
 // Helena's journal, one page a region, in the order she went
 const EX_PAGES = {
   'Cinder Peak': "Found a carved stone under the ash on the north slope, painted in bands of red and orange that are still bright under the soot. Victor wants it for the Grand Ranch hall. I left it where it stood.",
@@ -54,7 +54,7 @@ function exMap(reg) {
   N[id(5, Math.floor(R() * 3))].k = 'page';
   for (const c of [2, 4]) { const st = [1, 2, 3, 4, 5].sort(() => R() - 0.5); for (let r = 0; r < 3; r++) N[id(c, r)] = { c, r, k: 'block', stat: st[r], mul: c === 2 ? 0.88 + R() * 0.1 : 1 + R() * 0.15 }; }
   N[id(6, 1)] = { c: 6, r: 1, k: EX_STONE[reg.n] ? 'stone' : reg.rift ? 'page' : 'chest', big: true };
-  if (reg.rift) N[id(5, 0)].k = N[id(5, 0)].k === 'page' ? 'path' : N[id(5, 0)].k;
+  if (reg.rift) N[id(5, 0)].k = 'stone';   // Bakunawa's stone waits on the last ring before the edge
   for (let c = 0; c < 6; c++) {
     const here = Object.values(N).filter(n => n.c === c), next = Object.values(N).filter(n => n.c === c + 1);
     for (const a of here) for (const b of next) if (Math.abs(a.r - b.r) <= 1 && (here.length === 1 || next.length === 1 || R() < 0.7)) E.push([id(a.c, a.r), id(b.c, b.r)]);
@@ -213,7 +213,7 @@ async function exNode(reg, n, st, need, nm, K, used, found) {
     const p = prop({ k: 'page', x: 140, y: GROUND - 26 }); await walkTo(126, 60, 'walk'); s.pose = 'happy'; spark(140, GROUND - 30, 'sparkle', 4); unprop(p);
     PLAYER.journal = PLAYER.journal || {}; PLAYER.journal[reg.n] = 1; st.got.push(n.id); found.push('a journal page');
     banner('A journal page', '#ffe9a8'); say(EX_PAGES[reg.n]); await rwait(Math.min(7000, 2000 + EX_PAGES[reg.n].length * 38)); banner(''); return; }
-  if (n.k === 'stone') { const sp = EX_STONE[reg.n];
+  if (n.k === 'stone') { const sp = EX_STONE[reg.n] || (reg.rift ? 'Bakunawa' : null);
     const p = prop({ k: 'pstone', x: 150, y: GROUND, glow: true, sp }); await walkTo(122, 60, 'walk'); s.pose = 'happy';
     const L0 = stoneList(), have = L0 ? L0.includes(sp) : once;   // a save that opened this circle when it held a chest still finds the stone
     if (!have) { if (!once) st.got.push(n.id); const L = stoneList(); if (L && !L.includes(sp)) L.push(sp); found.push('a Pattern Stone'); spark(150, GROUND - 40, 'sparkle', 8); banner('A Pattern Stone', '#ffe9a8');

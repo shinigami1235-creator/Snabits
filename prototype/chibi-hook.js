@@ -1,7 +1,7 @@
 /* Puts the chibi drawings (chibi.js) into the ranch and battle screens while the pixel art stays the default.
    It's on by default. #art=pixel in the address, or localStorage "snabits-art" set to "pixel", brings back the pixel art.
    Only families listed in CHIBI_FAMS are drawn smooth; the rest keep their pixels. */
-const CHIBI_FAMS = ['Chomp', 'Squib', 'Antik', 'Moko', 'Pinch', 'Stilt', 'Skit', 'Booly', 'Plod', 'Bipped', 'Fizz', 'Teep', 'Lern', 'Puff', 'Flit', 'Glop', 'Tock', 'Mitt', 'Brolly', 'Spine', 'Burr', 'Eagle', 'Vampire', 'Phoenix', 'Kitsune', 'Naga', 'Yeti', 'Kraken', 'Golem', 'Unicorn', 'Jack', 'Tengu', 'Tanuki', 'Mermaid', 'Diwata', 'Sphinx', 'Garuda', 'Werewolf', 'Minotaur', 'Dragon', 'Thunderbird'];
+const CHIBI_FAMS = ['Chomp', 'Squib', 'Antik', 'Moko', 'Pinch', 'Stilt', 'Skit', 'Booly', 'Plod', 'Bipped', 'Fizz', 'Teep', 'Lern', 'Puff', 'Flit', 'Glop', 'Tock', 'Mitt', 'Brolly', 'Spine', 'Burr', 'Eagle', 'Vampire', 'Phoenix', 'Kitsune', 'Naga', 'Yeti', 'Kraken', 'Golem', 'Unicorn', 'Jack', 'Tengu', 'Tanuki', 'Mermaid', 'Diwata', 'Sphinx', 'Garuda', 'Werewolf', 'Minotaur', 'Dragon', 'Thunderbird', 'Hydra', 'Griffin', 'Kirin', 'Salamander', 'Bakunawa', 'Cerberus', 'Djinn', 'Troll', 'Mummy', 'Sarimanok'];
 const CHIBI_ART = !/(^#|&)art=pixel(&|$)/.test(location.hash) && (() => { try { return localStorage.getItem('snabits-art') !== 'pixel'; } catch (e) { return true; } })();
 
 /* m is a hatched monster or a fight snapshot; s is the ranch state when there is one */
@@ -23,7 +23,8 @@ const SIZE_CM = { Chomp: [50, 100, 170], Squib: [40, 85, 150], Antik: [60, 120, 
   Puff: [40, 85, 145], Flit: [35, 70, 115], Glop: [35, 70, 120], Tock: [40, 80, 140], Mitt: [45, 95, 160], Brolly: [55, 110, 185], Spine: [50, 105, 190], Burr: [40, 80, 135],
   Kraken: [60, 125, 220], Golem: [70, 140, 250], Unicorn: [55, 110, 190], Jack: [45, 95, 165],
   Tengu: [50, 105, 185], Tanuki: [40, 85, 150], Mermaid: [50, 100, 175], Diwata: [30, 60, 110], Sphinx: [55, 115, 200],
-  Garuda: [50, 110, 195], Werewolf: [50, 105, 185], Minotaur: [60, 125, 220], Dragon: [55, 120, 230], Thunderbird: [55, 115, 210] };
+  Garuda: [50, 110, 195], Werewolf: [50, 105, 185], Minotaur: [60, 125, 220], Dragon: [55, 120, 230], Thunderbird: [55, 115, 210],
+  Hydra: [55, 120, 230], Griffin: [50, 110, 200], Kirin: [50, 105, 190], Salamander: [25, 55, 110], Bakunawa: [60, 140, 280], Cerberus: [50, 110, 200], Djinn: [40, 90, 170], Troll: [60, 130, 240], Mummy: [45, 100, 180], Sarimanok: [35, 70, 130] };
 function sizeK(m) {
   if (!m) return 1; if (m.sizeK) return m.sizeK;
   const t = JSON.stringify([m.pal, m.stats, m.lifespan, m.family]); let h = 2166136261;
@@ -372,6 +373,16 @@ function cry(fam, stage) {
       case 'Minotaur': voice(t, 'sawtooth', [[0, 120], [0.3, 160], [0.55, 100]], 0.07, 3); dNoise(d, t + 0.4, 0.25, 0.12, 'lowpass', 800); break;   // a low bellow and a snort
       case 'Dragon': voice(t, 'sawtooth', [[0, 220], [0.2, 340], [0.5, 180]], 0.06, 6); dNoise(d, t + 0.1, 0.5, 0.1, 'lowpass', 1200); break;   // a roar with a rush of flame
       case 'Thunderbird': voice(t, 'sawtooth', [[0, 1600], [0.1, 2200], [0.4, 1400]], 0.04, 20); dKick(d, t + 0.35, 0.6); dNoise(d, t + 0.35, 0.6, 0.12, 'lowpass', 400); break;   // a screech, then thunder
+      case 'Hydra': for (let k = 0; k < 3; k++) voice(t + k * 0.12, 'sawtooth', [[0, 300 + k * 120], [0.15, 420 + k * 120], [0.3, 260 + k * 120]], 0.04, 8); break;   // three hisses, one per head
+      case 'Griffin': voice(t, 'sawtooth', [[0, 1500], [0.12, 2100], [0.3, 1600]], 0.045, 18); voice(t + 0.3, 'sawtooth', [[0, 200], [0.3, 160]], 0.05, 4); break;   // an eagle's cry, then a low growl
+      case 'Kirin': voice(t, 'sine', [[0, 900], [0.2, 1300], [0.5, 1100]], 0.08); voice(t + 0.05, 'sine', [[0, 1350], [0.45, 1650]], 0.04); break;   // a soft bell-like call
+      case 'Salamander': dNoise(d, t, 0.3, 0.12, 'bandpass', 2500); voice(t + 0.1, 'triangle', [[0, 1200], [0.12, 1500]], 0.07); break;   // a crackle and a chirp
+      case 'Bakunawa': voice(t, 'sine', [[0, 180], [0.4, 260], [0.9, 150]], 0.1, 3); dNoise(d, t + 0.2, 0.7, 0.08, 'lowpass', 600); break;   // a deep call over waves
+      case 'Cerberus': for (let k = 0; k < 3; k++) voice(t + k * 0.14, 'sawtooth', [[0, 260 - k * 40], [0.08, 320 - k * 40], [0.14, 220 - k * 40]], 0.06, 5); break;   // three barks, high to low
+      case 'Djinn': voice(t, 'sine', [[0, 600], [0.3, 1100], [0.7, 800]], 0.07, 6); dNoise(d, t, 0.6, 0.06, 'highpass', 3000); break;   // a rising whoosh of smoke
+      case 'Troll': voice(t, 'sawtooth', [[0, 110], [0.25, 140], [0.6, 90]], 0.08, 2); break;   // a low grunt
+      case 'Mummy': voice(t, 'sawtooth', [[0, 160], [0.5, 200], [0.9, 130]], 0.05, 4); dNoise(d, t + 0.3, 0.5, 0.05, 'lowpass', 900); break;   // a long groan and some dust
+      case 'Sarimanok': voice(t, 'sawtooth', [[0, 700], [0.1, 1300], [0.3, 1500], [0.55, 900]], 0.05, 10); break;   // a rooster crow
       default: voice(t, 'triangle', [[0, 800], [0.12, 1200], [0.22, 1000]], 0.13);
     } } catch (err) {}
 }

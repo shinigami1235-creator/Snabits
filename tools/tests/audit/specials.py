@@ -8,9 +8,10 @@ from playwright.async_api import async_playwright
 from common import launch, reinject, settle, Checks, HERE
 import images
 ONLY = sys.argv[1:]
-NEW16 = ['Tengu', 'Tanuki', 'Mermaid', 'Diwata', 'Sphinx', 'Garuda', 'Werewolf', 'Minotaur', 'Dragon', 'Thunderbird']   # checked by name (specials.py Tengu ...), so the full run keeps its count of eleven
+NEW16 = ['Tengu', 'Tanuki', 'Mermaid', 'Diwata', 'Sphinx', 'Garuda', 'Werewolf', 'Minotaur', 'Dragon', 'Thunderbird', 'Hydra', 'Griffin', 'Kirin', 'Salamander', 'Bakunawa', 'Cerberus', 'Djinn', 'Troll', 'Mummy', 'Sarimanok']   # checked by name (specials.py Tengu ...), so the full run keeps its count of eleven
 ABILITY = {'Eagle': 'Sky High', 'Vampire': 'Bloodsuck', 'Phoenix': 'Rebirth', 'Kitsune': 'Illusion', 'Naga': 'Coil', 'Yeti': 'Thick Fur'}
-ABILITY.update({'Tengu': 'Gust', 'Tanuki': 'Trick Leaf', 'Mermaid': 'Siren', 'Diwata': 'Blessing', 'Sphinx': 'Riddle', 'Garuda': 'Sky King', 'Werewolf': 'Full Moon', 'Minotaur': 'Headlong', 'Dragon': 'Dragon Scale', 'Thunderbird': 'Stormborn'})   # the specials of 16 Nov 2026
+ABILITY.update({'Tengu': 'Gust', 'Tanuki': 'Trick Leaf', 'Mermaid': 'Siren', 'Diwata': 'Blessing', 'Sphinx': 'Riddle', 'Garuda': 'Sky King', 'Werewolf': 'Full Moon', 'Minotaur': 'Headlong', 'Dragon': 'Dragon Scale', 'Thunderbird': 'Stormborn'})
+ABILITY.update({'Hydra': 'Regrowth', 'Griffin': 'Long Sight', 'Kirin': 'Pure Step', 'Salamander': 'Heat Up', 'Bakunawa': 'Moon Eater', 'Cerberus': 'Three Bites', 'Djinn': 'Three Wishes', 'Troll': 'Hard Hide', 'Mummy': 'Undying', 'Sarimanok': 'Good Omen'})   # the specials of 16 Nov 2026
 
 async def click(pg, sel, wait=150):
     ok = await pg.evaluate("s=>{ const e=document.querySelector(s); if(__vis(e)){ e.click(); return true; } return false; }", sel)
@@ -74,6 +75,7 @@ async def quick_fight(pg, C, label):
 async def one(pg, C, kind, path, errs):
     special = kind in ABILITY; label = kind
     if special: await pg.evaluate("k=>{ if(typeof PLAYER!=='undefined'&&PLAYER){ const L=stoneList(); if(L&&!L.includes(k)) L.push(k); } }", kind)   # its Pattern Stone found, so the scan can call it
+    else: await pg.evaluate("k=>{ if(typeof PLAYER!=='undefined'&&PLAYER){ const L=cosOpenList(); if(L&&!L.includes(k)) L.push(k); } }", kind)   # its pattern card found, so the scan can put the costume on
     info = await scan(pg, path)
     if special:
         C.ok(info['family'] == kind and info['special'] and info['ability'] == ABILITY[kind], f'{label}: its picture finds the special with {ABILITY[kind]} ({info["family"]}, {info["ability"]})')
@@ -101,7 +103,7 @@ async def one(pg, C, kind, path, errs):
     C.ok(sim['old']['ended'] == sim['old']['n'] and not sim['old']['bad'], f'{label}: 40 simulated old battles all end with real numbers ({sim["old"]})')
     if special:
         C.ok(sim['arena']['abil'] > 0, f'{label}: {ABILITY[kind]} goes off in the arena ({sim["arena"]["abil"]} of 40 fights)')
-        C.ok(sim['old']['abil'] > 0 or kind in ('Yeti', 'Tengu', 'Minotaur', 'Garuda'), f'{label}: {ABILITY[kind]} goes off in the old battle ({sim["old"]["abil"]} of 40 fights)')
+        C.ok(sim['old']['abil'] > 0 or kind in ('Yeti', 'Tengu', 'Minotaur', 'Garuda', 'Griffin', 'Cerberus'), f'{label}: {ABILITY[kind]} goes off in the old battle ({sim["old"]["abil"]} of 40 fights)')
     print(f'  {label}: arena {sim["arena"]}, old {sim["old"]}', flush=True)
     # evolve twice: enough training for Byte, then for Mega
     for stage in ['Byte', 'Mega']:
@@ -134,17 +136,18 @@ async def main():
         if not ONLY:
             # reload: every special and costume is still what it was
             before = await pg.evaluate("()=>JSON.stringify(PLAYER.roster.map(e=>[e.m.family,e.m.costume,e.m.ability[0],e.st&&e.st.stage]))")
+            NR = len(json.loads(before))   # every special and costume the run raised
             await pg.reload(); await pg.wait_for_timeout(900); await reinject(pg); await pg.evaluate("()=>{ const o=document.getElementById('ob'); if(o){ o.style.display='none'; o.innerHTML=''; } loadGame(); openRanch(); RS.noScenes=true; }"); await settle(pg, label='reload')
             after = await pg.evaluate("()=>JSON.stringify(PLAYER.roster.map(e=>[e.m.family,e.m.costume,e.m.ability[0],e.st&&e.st.stage]))")
-            C.ok(before == after and len(json.loads(after)) == 11, 'after a reload all 11 are still on the roster as they were')
-            C.ok(await pg.evaluate("()=>Object.keys(PLAYER.dexSecret||{}).length") == 11, 'the Secrets tab has all 11')
+            C.ok(before == after and len(json.loads(after)) == NR, f'after a reload all {NR} are still on the roster as they were')
+            C.ok(await pg.evaluate("()=>Object.keys(PLAYER.dexSecret||{}).length") == NR, f'the Secrets tab has all {NR}')
             # the freezer draws every one of them
-            await pg.evaluate("()=>{ menu('Out'); openFreezer(); }"); await pg.wait_for_timeout(1800); bt = await pg.evaluate("()=>__badText()"); C.ok(not bt, f'the freezer with 11 Snabits has no broken values ({bt})')
+            await pg.evaluate("()=>{ menu('Out'); openFreezer(); }"); await pg.wait_for_timeout(1800); bt = await pg.evaluate("()=>__badText()"); C.ok(not bt, f'the freezer with {NR} Snabits has no broken values ({bt})')
             await pg.evaluate("()=>{ const f=document.getElementById('f-back'); if(f) f.click(); }"); await pg.wait_for_timeout(1500)   # back from the freezer walks into the lab
             await pg.evaluate("()=>menu('Out')"); await pg.wait_for_timeout(1500); await settle(pg, label='leave-lab')
             # team battle: the six specials, all Mega
             await pg.evaluate("()=>{ menu('Out'); openTeam(); }"); await pg.wait_for_timeout(300)
-            n = await pg.evaluate("()=>document.querySelectorAll('#r-panel .tm-pick').length"); C.ok(n == 11, f'team battle lists all 11 Megas ({n}) ' + await pg.evaluate("()=>document.getElementById('r-panel').innerText.slice(0,200)"))
+            n = await pg.evaluate("()=>document.querySelectorAll('#r-panel .tm-pick').length"); C.ok(n == NR, f'team battle lists all {NR} Megas ({n}) ' + await pg.evaluate("()=>document.getElementById('r-panel').innerText.slice(0,200)"))
             await pg.evaluate("()=>{ const sp=['Eagle','Vampire','Phoenix','Kitsune','Naga','Yeti']; for(const f of sp){ const s=TM.ready.find(s=>s.m.family===f); document.querySelector(`#r-panel .tm-pick[data-id=\"${s.id}\"]`).click(); } }"); await pg.wait_for_timeout(200)
             await click(pg, '#tm-find', 300); await click(pg, '#tm-go', 400); await pg.evaluate("()=>{ window.BATTLE_PACE=0.02; }"); done = False
             for k in range(1500):
@@ -182,7 +185,7 @@ async def main():
             await pg.evaluate("ids=>{ PLAYER.bits+=1000; LAB.a=ids[0]; LAB.b=ids[1]; menu('Out'); openLab(); }", ids); await pg.wait_for_timeout(1500); await settle(pg, label='lab')
             C.ok(await click(pg, '#l-fuse', 500), 'the lab offers the fusion'); ok = await settle(pg, max_s=60, label='fusion')
             ch = await pg.evaluate("()=>({n:PLAYER.roster.length,fam:RS.m.family,ability:RS.m.ability,name:RS.m.name,stats:RS.m.stats,skills:RS.equip,open:RS.open,special:!!(FAMILY[RS.m.family].special)})")
-            C.ok(ok and ch['n'] == 10 and ch['open'] and all(isinstance(v, (int, float)) for v in ch['stats']), f'the fusion makes a child on the ranch ({ch})')
+            C.ok(ok and ch['n'] == NR - 1 and ch['open'] and all(isinstance(v, (int, float)) for v in ch['stats']), f'the fusion makes a child on the ranch ({ch})')
             if ch['special']: C.ok(ch['ability'][0] == ABILITY[ch['fam']], f'a fused {ch["fam"]} keeps the family ability ({ch["ability"][0]})')
             await pg.evaluate("()=>{ RS.noScenes=true; }"); await click(pg, '#r-menu [data-m="Train"]'); await click(pg, '#r-panel [data-d="0"]'); C.ok(await settle(pg, label='child-drill'), 'the fused child drills')
             await arena_live(pg, C, 'fused child', 'Pinch', 'auto')

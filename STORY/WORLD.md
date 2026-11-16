@@ -52,7 +52,7 @@ Voice samples:
 
 - Snabits hide in the colour of whatever they're in, and a Snaboscope reads that colour to find the one hiding there. The photo's colours decide its element, family and stats (`monster.js`).
 - Every Snabit gives off the same faint signal, and it comes from the Rift (`story.js`, the grade B scene).
-- **Pattern Stones.** An ancient people kept Snabits as colour patterns carved and painted on stone, so a Snabit could be carried and called back. The people are gone and the stones are scattered through the regions. Their patterns were copied into banners, lanterns and cloth by people who didn't know what they were. Each stone is abstract and nobody in the game says which real pattern it matches, so the player connects it themselves (Gid, 15 Nov 2026). A picture that looks like a stone calls its special. The stones, drawn by `stoneGlyph` in `scenes.js` and shown in `docs/art/pattern-stones.png`, `docs/art/specials-group1.png` and `docs/art/specials-group2.png`:
+- **Pattern Stones.** An ancient people kept Snabits as colour patterns carved and painted on stone, so a Snabit could be carried and called back. The people are gone and the stones are scattered through the regions. Their patterns were copied into banners, lanterns and cloth by people who didn't know what they were. Each stone is abstract and nobody in the game says which real pattern it matches, so the player connects it themselves (Gid, 15 Nov 2026). A picture that looks like a stone calls its special. The stones, drawn by `stoneGlyph` in `scenes.js` and shown in `docs/art/pattern-stones.png`, `docs/art/specials-group1.png` to `docs/art/specials-group4.png`:
   - Phoenix (Cinder Peak): zigzag flame bands, red at the bottom up to yellow.
   - Eagle (Static Plains): a blue sky band over red and white chevrons spreading like wings.
   - Vampire (Hollow Moor, deep map): a pale crescent and a red drop on black.
@@ -73,6 +73,16 @@ Voice samples:
   - Minotaur (Iron Foundry): a silver ring on brown under two pale horns.
   - Dragon (Cinder Peak, deep map): dark scales on green under an orange flame.
   - Thunderbird (Static Plains, deep map): a yellow zigzag spreading both ways across blue.
+  - Hydra (Nightshade Marsh, deep map): three green necks rising from one root on violet.
+  - Griffin (Glacier Rim, deep map): a white band over the top of orange, with a gold beak pointing down from it.
+  - Kirin (Saffron Dojo, deep map): rows of teal scales over a row of orange flames.
+  - Salamander (Iron Foundry, deep map): orange spots on black, with one yellow flame in the corner.
+  - Bakunawa (the Rift's edge): a pale moon over a teal serpent on deep blue.
+  - Cerberus (the Tower, floor 25): a red collar across black under three white spikes.
+  - Djinn (the Tower, floor 50): pale smoke curling up out of a gold lamp on blue.
+  - Troll (the Northreach Invitational): a brown club across green, with two white tusks under it.
+  - Mummy (the Hall of Fame): grey and white wraps across the stone, with one gold eye.
+  - Sarimanok (the Harvest Fair): a fan of rainbow feathers on white.
 - **Specials need their stone (Gid's rule).** Scanning a special's pattern calls the special only after its Pattern Stone has been found on an expedition. Before that, the same scan gives a regular Snabit, and the special's Secrets hint shows ??? (`stoneOpen` in `explore.js`, the gate in `hatch`). A save that already raised a special keeps it open.
 - **Helena's lens (Proposed).** Helena fitted her Snaboscope with a lens that reads Pattern Stones. Josie gives it to the player, and it's what lets the player's scans call specials. Every special called through it pulls on the Rift, and Dr. Ines measures the signal getting stronger each time.
 
@@ -96,7 +106,7 @@ Voice samples:
    - A good trip week: Tiger (Saffron Dojo), Clownfish (Coral Shallows), Ladybug (Tanglewood).
    - The bestiary: Panda (30 kinds seen), Cow (10 kinds raised).
    - Nora's shop: Rubber duck, as a Duck pattern card for 5,000 bits.
-4. **Specials:** unlocked by finding their Pattern Stone on an expedition, deeper into the story. The twenty in the game (Eagle, Vampire, Phoenix, Kitsune, Naga, Yeti, Kraken, Golem, Unicorn, Jack, and from 16 Nov 2026 Tengu, Tanuki, Mermaid, Diwata, Sphinx, Garuda, Werewolf, Minotaur, Dragon, Thunderbird) and the ten more in `docs/BATCH-PLAN.md`. Jack is the Jack-o'-lantern from the plan.
+4. **Specials:** unlocked by finding their Pattern Stone on an expedition, deeper into the story. All thirty are in the game: Eagle, Vampire, Phoenix, Kitsune, Naga, Yeti, Kraken, Golem, Unicorn, Jack, then from 16 Nov 2026 Tengu, Tanuki, Mermaid, Diwata, Sphinx, Garuda, Werewolf, Minotaur, Dragon, Thunderbird, and from 17 Nov 2026 Hydra, Griffin, Kirin, Salamander, Bakunawa, Cerberus, Djinn, Troll, Mummy, Sarimanok. Jack is the Jack-o'-lantern from the plan.
 
 ## Story spine (Proposed)
 
@@ -131,7 +141,13 @@ Deep expeditions for a team of three trained Snabits, approved by Gid from `docs
 - **Days and camps:** a deep expedition takes two weeks, split into days. Camp circles end the day, give everyone energy back and bring back anyone who's out. A wild Snabit can wander next to camp overnight.
 - **Fights:** a tag team (Gid). The leader fights first, and if it loses, the next one steps in against the same Snabit with whatever HP it has left. A Snabit that loses is out until the next camp and nothing worse (Gid). If all three are out, the team goes home with everything it found.
 - **Finds:** rarer items, bigger League bounties, the region's teacher as a guardian at the far end, and Pattern Stones.
-- **Stones:** the Kitsune, Vampire, Jack, Kraken, Golem and Unicorn stones sit behind the guardians of deep Dream Garden, Hollow Moor, Tanglewood, Coral Shallows, Granite Steps and Dawn Temple, so team expeditions have stones to find from grade C, as Gid asked. The Phoenix, Eagle, Yeti and Naga stones stay on the regular maps. The Tengu, Tanuki, Mermaid, Diwata, Sphinx, Garuda, Werewolf and Minotaur stones sit at the far end of the regular Saffron Dojo, Tanglewood, Coral Shallows, Dream Garden, Granite Steps, Dawn Temple, Hollow Moor and Iron Foundry maps (16 Nov 2026), where a big chest used to be. The Dragon and Thunderbird stones sit behind the guardians of deep Cinder Peak and deep Static Plains. A save that already opened that chest still finds the stone there.
+- **Stones:** the Kitsune, Vampire, Jack, Kraken, Golem and Unicorn stones sit behind the guardians of deep Dream Garden, Hollow Moor, Tanglewood, Coral Shallows, Granite Steps and Dawn Temple, so team expeditions have stones to find from grade C, as Gid asked. The Phoenix, Eagle, Yeti and Naga stones stay on the regular maps. The Tengu, Tanuki, Mermaid, Diwata, Sphinx, Garuda, Werewolf and Minotaur stones sit at the far end of the regular Saffron Dojo, Tanglewood, Coral Shallows, Dream Garden, Granite Steps, Dawn Temple, Hollow Moor and Iron Foundry maps (16 Nov 2026), where a big chest used to be. The Dragon and Thunderbird stones sit behind the guardians of deep Cinder Peak and deep Static Plains. A save that already opened that chest still finds the stone there. The Hydra, Griffin, Kirin and Salamander stones sit behind the guardians of deep Nightshade Marsh, Glacier Rim, Saffron Dojo and Iron Foundry (17 Nov 2026).
+- **Stones away from the maps (Gid, 16 Nov 2026).** Six stones turn up outside the region maps, and no line says what earns them:
+  - Bakunawa's stone lies on the last ring of circles before the Rift's edge, in front of the circle with the last journal page.
+  - Cerberus's stone waits on floor 25 of the Tower and Djinn's on floor 50. Winning that floor brings the stone home with the climb's other prizes.
+  - The Northreach team leaves one of their painted stones with the trophy when the ranch wins the Northreach Invitational.
+  - Someone leaves a painted stone at the foot of the first statue the ranch puts up in the Hall of Fame. A save that retired a Snabit before this finds it at the next statue.
+  - A farmer at the Harvest Fair gives the ranch a painted stone from her stall once its best Snabit has reached grade B.
 - **The cost:** fatigue and stress on all three, so the player plans for it like a Major.
 
 ## Built on 15 Nov 2026 from Gid's MR2 and Pokemon list
