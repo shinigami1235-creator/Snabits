@@ -68,7 +68,91 @@ def clownfish():
     im=Image.new('RGB',(W,H),ORANGE); d=ImageDraw.Draw(im)
     for f in (0.2,0.5,0.8): d.rectangle([W*(f-0.06),0,W*(f+0.06),H],fill=WHITE); d.rectangle([W*(f-0.075),0,W*(f-0.06),H],fill=BLACK); d.rectangle([W*(f+0.06),0,W*(f+0.075),H],fill=BLACK)
     return im
-EGGS={'Eagle':eagle,'Vampire':vampire,'Phoenix':phoenix,'Kitsune':kitsune,'Naga':naga,'Yeti':yeti,'Panda':panda,'Bee':bee,'Ladybug':ladybug,'Watermelon':watermelon,'Candy cane':candy,'Tiger':tiger,'Zebra':zebra,'Cow':cow,'Penguin':penguin,'Strawberry':strawberry,'Rubber duck':duck,'Clownfish':clownfish}
+# the specials of 16 Nov 2026, drawn like their Pattern Stones
+BROWN=(132,88,48); TEAL=(80,196,196)
+def tengu():
+    im=Image.new('RGB',(W,H),RED); d=ImageDraw.Draw(im); d.polygon([(W*0.1,H*0.27),(W*0.95,H*0.42),(W*0.1,H*0.57)],fill=WHITE)
+    for a in (-0.5,0,0.5): cx,cy=W*0.25,H*0.92; d.polygon([(cx,cy),(cx+math.sin(a)*W*0.14-38,cy-math.cos(a)*H*0.24),(cx+math.sin(a)*W*0.14+38,cy-math.cos(a)*H*0.24)],fill=GREEN)
+    return im
+def tanuki():
+    im=Image.new('RGB',(W,H),BROWN); d=ImageDraw.Draw(im); d.rectangle([0,H*0.4,W,H*0.62],fill=BLACK)
+    for f in (0.28,0.72): d.ellipse([W*f-38,H*0.52-38,W*f+38,H*0.52+38],fill=BROWN)
+    d.ellipse([W*0.42,H*0.05,W*0.66,H*0.27],fill=GREEN); return im
+def mermaid():
+    im=Image.new('RGB',(W,H),TEAL); d=ImageDraw.Draw(im); d.polygon([(W*0.5,H*0.42),(W*0.05,H*0.04),(W*0.5,H*0.2),(W*0.95,H*0.04)],fill=PINK)
+    for r in range(4):
+        for k in range(-3,4): x=W*(0.5+k*0.2+(r%2)*0.1); y=H*(0.55+r*0.12); d.arc([x-38,y-38,x+38,y+38],10,170,fill=(200,240,236),width=5)
+    return im
+def diwata():
+    im=Image.new('RGB',(W,H),PINK); d=ImageDraw.Draw(im)
+    for sx in (-1,1): d.ellipse([W*(0.5+sx*0.23)-62,H*0.36-100,W*(0.5+sx*0.23)+62,H*0.36+100],fill=GREEN); d.ellipse([W*(0.5+sx*0.18)-46,H*0.67-62,W*(0.5+sx*0.18)+46,H*0.67+62],fill=GREEN)
+    d.ellipse([W*0.5-34,H*0.5-34,W*0.5+34,H*0.5+34],fill=YELLOW); return im
+def sphinx():
+    im=Image.new('RGB',(W,H),(236,196,60)); d=ImageDraw.Draw(im)
+    for k in range(6):
+        y=H*(0.07+k*0.11); d.rectangle([0,y,W,y+H*0.055],fill=NAVY)
+    d.rectangle([W*0.3,H*0.3,W*0.7,H*0.68],fill=(236,196,60)); d.ellipse([W*0.5-30,H*0.8-30,W*0.5+30,H*0.8+30],fill=RED); return im
+def garuda():
+    im=Image.new('RGB',(W,H),YELLOW); d=ImageDraw.Draw(im)
+    for sx in (-1,1): d.polygon([(W*0.5,H*0.58),(W*(0.5+sx*0.5),0),(W*(0.5+sx*0.5),H*0.24),(W*(0.5+sx*0.1),H*0.72)],fill=RED)
+    d.polygon([(W*0.5,H*0.58),(W*0.6,H*0.68),(W*0.5,H*0.8),(W*0.4,H*0.68)],fill=NAVY); return im
+def werewolf():
+    im=Image.new('RGB',(W,H),(150,154,160)); d=ImageDraw.Draw(im); d.ellipse([W*0.45,H*0.1,W*0.9,H*0.1+W*0.45],fill=WHITE)
+    for k in (-1,0,1): d.line([(W*(0.2+k*0.17),H*0.55),(W*(0.45+k*0.17),H*0.9)],fill=BLACK,width=26)
+    return im
+def minotaur():
+    im=Image.new('RGB',(W,H),BROWN); d=ImageDraw.Draw(im)
+    for sx in (-1,1): d.polygon([(W*(0.5+sx*0.1),H*0.27),(W*(0.5+sx*0.42),H*0.24),(W*(0.5+sx*0.38),H*0.05),(W*(0.5+sx*0.28),H*0.2),(W*(0.5+sx*0.1),H*0.2)],fill=WHITE)
+    d.ellipse([W*0.28,H*0.48,W*0.72,H*0.48+W*0.44],outline=(186,190,196),width=34); return im
+def dragon():
+    im=Image.new('RGB',(W,H),GREEN); d=ImageDraw.Draw(im); d.polygon([(W*0.5,H*0.03),(W*0.72,H*0.24),(W*0.64,H*0.38),(W*0.36,H*0.38),(W*0.28,H*0.24)],fill=ORANGE)
+    for r in range(4):
+        for k in range(-3,4): x=W*(0.5+k*0.2+(r%2)*0.1); y=H*(0.55+r*0.12); d.arc([x-38,y-38,x+38,y+38],10,170,fill=(36,100,40),width=5)
+    return im
+def thunderbird():
+    im=Image.new('RGB',(W,H),(44,98,200)); d=ImageDraw.Draw(im); pts=[(W*k/10,H*(0.36 if k%2 else 0.44)) for k in range(11)]
+    d.line(pts,fill=YELLOW,width=34); d.polygon([(W*0.44,H*0.52),(W*0.56,H*0.52),(W*0.5,H*0.8)],fill=YELLOW); return im
+def hydra():
+    im=Image.new('RGB',(W,H),(130,70,200)); d=ImageDraw.Draw(im)
+    d.ellipse([W*0.3,H*0.85,W*0.7,H*0.97],fill=GREEN)
+    for k in (-1,0,1): d.line([(W*0.5,H*0.9),(W*(0.5+k*0.3),H*0.7),(W*(0.5+k*0.3),H*0.2)],fill=GREEN,width=40,joint='curve'); d.ellipse([W*(0.5+k*0.3)-40,H*0.2-34,W*(0.5+k*0.3)+40,H*0.2+34],fill=GREEN)
+    return im
+def griffin():
+    im=Image.new('RGB',(W,H),ORANGE); d=ImageDraw.Draw(im); d.rectangle([0,0,W,H*0.24],fill=WHITE); d.polygon([(W*0.38,H*0.24),(W*0.62,H*0.24),(W*0.5,H*0.4)],fill=YELLOW); return im
+def kirin():
+    im=Image.new('RGB',(W,H),ICE); d=ImageDraw.Draw(im)
+    for r in range(5):
+        for k in range(-3,4): x=W*(0.5+k*0.2+(r%2)*0.1); y=H*(0.08+r*0.12); d.arc([x-38,y-38,x+38,y+38],10,170,fill=(40,140,150),width=6)
+    for k in range(4): x=W*(0.125+k*0.25); d.polygon([(x-W*0.12,H),(x,H*0.7),(x+W*0.12,H)],fill=ORANGE)
+    return im
+def salamander():
+    im=Image.new('RGB',(W,H),BLACK); d=ImageDraw.Draw(im)
+    for x,y in [(0.25,0.15),(0.6,0.25),(0.3,0.45),(0.75,0.5),(0.2,0.75),(0.55,0.7),(0.8,0.85),(0.45,0.9)]: d.ellipse([W*x-30,H*y-30,W*x+30,H*y+30],fill=ORANGE)
+    d.polygon([(W*0.85,H*0.08),(W*0.92,H*0.2),(W*0.78,H*0.2)],fill=YELLOW); return im
+def bakunawa():
+    im=Image.new('RGB',(W,H),NAVY); d=ImageDraw.Draw(im); d.ellipse([W*0.15,H*0.1,W*0.55,H*0.1+W*0.4],fill=WHITE)
+    d.line([(W*0.1,H*0.9),(W*0.35,H*0.72),(W*0.6,H*0.85),(W*0.85,H*0.62),(W*0.7,H*0.5)],fill=ICE,width=40,joint='curve'); return im
+def cerberus():
+    im=Image.new('RGB',(W,H),BLACK); d=ImageDraw.Draw(im); d.rectangle([0,H*0.5,W,H*0.66],fill=RED)
+    for k in (-1,0,1): x=W*(0.5+k*0.3); d.polygon([(x-W*0.08,H*0.5),(x+W*0.08,H*0.5),(x,H*0.36)],fill=WHITE)
+    return im
+def djinn():
+    im=Image.new('RGB',(W,H),(44,98,200)); d=ImageDraw.Draw(im); d.ellipse([W*0.25,H*0.8,W*0.75,H*0.92],fill=YELLOW); d.polygon([(W*0.7,H*0.84),(W*0.92,H*0.8),(W*0.75,H*0.88)],fill=YELLOW)
+    d.line([(W*0.45,H*0.8),(W*0.55,H*0.6),(W*0.75,H*0.45),(W*0.7,H*0.25)],fill=WHITE,width=24,joint='curve'); return im
+def troll():
+    im=Image.new('RGB',(W,H),GREEN); d=ImageDraw.Draw(im); d.line([(W*0.2,H*0.75),(W*0.8,H*0.2)],fill=(120,80,40),width=60)
+    for x in (0.38,0.62): d.polygon([(W*x-W*0.08,H*0.94),(W*x+W*0.08,H*0.94),(W*x,H*0.78)],fill=WHITE)
+    return im
+def mummy():
+    im=Image.new('RGB',(W,H),WHITE); d=ImageDraw.Draw(im)
+    for k in range(9): y=H*(0.04+k*0.11); d.polygon([(0,y),(W,y+H*0.03),(W,y+H*0.08),(0,y+H*0.05)],fill=(128,132,138))
+    d.ellipse([W*0.62-34,H*0.4-34,W*0.62+34,H*0.4+34],fill=YELLOW); return im
+def sarimanok():
+    im=Image.new('RGB',(W,H),WHITE); d=ImageDraw.Draw(im)
+    for i,col in enumerate([RED,ORANGE,YELLOW,GREEN,(47,111,216),(138,79,224)]):
+        a=math.pi*(1.05+i*0.18); d.line([(W*0.5,H*0.85),(W*0.5+math.cos(a)*W*0.55,H*0.85+math.sin(a)*H*0.6)],fill=col,width=80)
+    return im
+EGGS={'Hydra':hydra,'Griffin':griffin,'Kirin':kirin,'Salamander':salamander,'Bakunawa':bakunawa,'Cerberus':cerberus,'Djinn':djinn,'Troll':troll,'Mummy':mummy,'Sarimanok':sarimanok,'Garuda':garuda,'Werewolf':werewolf,'Minotaur':minotaur,'Dragon':dragon,'Thunderbird':thunderbird,'Tengu':tengu,'Tanuki':tanuki,'Mermaid':mermaid,'Diwata':diwata,'Sphinx':sphinx,'Eagle':eagle,'Vampire':vampire,'Phoenix':phoenix,'Kitsune':kitsune,'Naga':naga,'Yeti':yeti,'Panda':panda,'Bee':bee,'Ladybug':ladybug,'Watermelon':watermelon,'Candy cane':candy,'Tiger':tiger,'Zebra':zebra,'Cow':cow,'Penguin':penguin,'Strawberry':strawberry,'Rubber duck':duck,'Clownfish':clownfish}
 
 def plain(seed):
     """an ordinary snapshot: a soft two-tone background with one object in it"""

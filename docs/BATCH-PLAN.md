@@ -92,6 +92,8 @@ None of the 40 names repeats a family already in the game. Commons and uncommons
 
 When both branches pass their tests, Chat A merges `batch-specials` into `batch-regular`, sorts out the conflicts in the shared lists (both chats add lines to the same tables), reruns `sim2.py` with all 86 families (71 plus batch 4), then merges into main and pushes.
 
+Done 16 Nov 2026. The conflicts were all both chats adding to the same tables, so every table keeps both sides' entries, and both chats' abilities sit side by side in the fight code. Two move names clashed with Chat B's, so Twiglet's Petal Storm became Blossom Flurry and Presto's Hat Swap became Vanishing Swap. `sim2.py` with all 86 families put three just outside 44% to 55%, so Presto went up and Aero and Garuda down in `AR_FAM_DMG`, and all three now land between 48% and 51%.
+
 ## To fix later
 
 - Guard. Roly's ability was meant to make Guard hold 30% longer, but the fight code has no Guard timer to hook into. It's Roll Up (Close Strikes hit it 25% softer under half HP) until Guard gets one (Gid, 16 Nov 2026).

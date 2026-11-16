@@ -664,6 +664,58 @@ function stoneGlyph(c, sp) {
   else if (sp === 'Jack') { c.fillStyle = a(238, 130, 40, 0.97); c.fillRect(-10, -13, 20, 26); c.fillStyle = a(80, 140, 60, 0.95); c.fillRect(-1.2, -13, 2.4, 3.5);   // an orange round with three cuts and a stem
     c.fillStyle = a(16, 12, 10, 0.98); for (const d of [-1, 1]) { c.beginPath(); c.moveTo(d * 5, -6); c.lineTo(d * 2, -1); c.lineTo(d * 8, -1); c.closePath(); c.fill(); }
     c.beginPath(); c.moveTo(-6, 4); c.lineTo(6, 4); c.lineTo(0, 9); c.closePath(); c.fill(); }
+  else if (sp === 'Tengu') { c.fillStyle = a(200, 56, 48, 0.97); c.fillRect(-10, -13, 20, 26);   // a cream wedge pointing out across red, and a green fan of three blades below
+    c.fillStyle = a(240, 232, 214, 0.97); c.beginPath(); c.moveTo(-8, -6); c.lineTo(9, -2); c.lineTo(-8, 2); c.closePath(); c.fill();
+    c.fillStyle = a(70, 150, 70, 0.97); for (const r of [-0.5, 0, 0.5]) { c.save(); c.translate(-5, 11); c.rotate(r); c.beginPath(); c.ellipse(0, -4.5, 1.8, 4.5, 0, 0, 7); c.fill(); c.restore(); } }
+  else if (sp === 'Tanuki') { c.fillStyle = a(132, 88, 48, 0.97); c.fillRect(-10, -13, 20, 26); c.fillStyle = a(30, 24, 22, 0.97); c.fillRect(-10, -3, 20, 7);   // a dark band with two brown rings across brown, and a green leaf above
+    c.fillStyle = a(132, 88, 48, 0.97); for (const d of [-1, 1]) { c.beginPath(); c.arc(d * 4.5, 0.5, 2, 0, 7); c.fill(); }
+    c.fillStyle = a(70, 150, 70, 0.97); c.beginPath(); c.ellipse(1, -8.5, 2.2, 3.6, 0.5, 0, 7); c.fill(); }
+  else if (sp === 'Mermaid') { c.fillStyle = a(80, 196, 196, 0.97); c.fillRect(-10, -13, 20, 26); c.save(); c.beginPath(); c.rect(-10, -13, 20, 26); c.clip(); c.strokeStyle = a(200, 240, 236, 0.9); c.lineWidth = 1;   // rows of pale scales on teal under a pink fan
+    for (let r = 0; r < 4; r++) for (let k = -2; k <= 2; k++) { c.beginPath(); c.arc(k * 4 + (r % 2) * 2, 0 + r * 3.4, 2, 0.1, Math.PI - 0.1); c.stroke(); } c.restore();
+    c.fillStyle = a(236, 120, 170, 0.97); c.beginPath(); c.moveTo(0, -2); c.quadraticCurveTo(-4, -7, -9, -12); c.quadraticCurveTo(-2, -12, 0, -8); c.quadraticCurveTo(2, -12, 9, -12); c.quadraticCurveTo(4, -7, 0, -2); c.fill(); }
+  else if (sp === 'Diwata') { c.fillStyle = a(236, 120, 176, 0.97); c.fillRect(-10, -13, 20, 26);   // two pairs of green wings either side of a yellow centre, on pink
+    c.fillStyle = a(70, 150, 70, 0.97); for (const d of [-1, 1]) { c.beginPath(); c.ellipse(d * 4.5, -3.5, 3.2, 5, d * 0.6, 0, 7); c.fill(); c.beginPath(); c.ellipse(d * 3.6, 4.5, 2.4, 3.4, -d * 0.5, 0, 7); c.fill(); }
+    c.fillStyle = a(240, 206, 60, 0.97); c.beginPath(); c.arc(0, 0, 1.8, 0, 7); c.fill(); }
+  else if (sp === 'Sphinx') { c.fillStyle = a(236, 196, 60, 0.97); c.fillRect(-10, -13, 20, 26); c.save(); c.beginPath(); c.moveTo(-10, 4); c.lineTo(-8, -11); c.lineTo(8, -11); c.lineTo(10, 4); c.lineTo(5, 4); c.lineTo(4, -5); c.lineTo(-4, -5); c.lineTo(-5, 4); c.closePath(); c.clip();   // blue stripes in the shape of a head cloth on gold, with a red dot under it
+    c.fillStyle = a(44, 98, 200, 0.97); for (let y = -11; y < 4; y += 3) c.fillRect(-10, y, 20, 1.5); c.restore();
+    c.fillStyle = a(200, 56, 48, 0.97); c.beginPath(); c.arc(0, 8, 1.8, 0, 7); c.fill(); }
+  else if (sp === 'Garuda') { c.fillStyle = a(240, 200, 50, 0.97); c.fillRect(-10, -13, 20, 26); c.fillStyle = a(200, 50, 44, 0.97);   // two red wings rising in a V over gold, with a blue gem where they meet
+    for (const d of [-1, 1]) { c.beginPath(); c.moveTo(0, 2); c.lineTo(d * 10, -13); c.lineTo(d * 10, -6); c.lineTo(d * 2, 6); c.closePath(); c.fill(); }
+    c.fillStyle = a(50, 100, 200, 0.97); c.beginPath(); c.moveTo(0, 2); c.lineTo(2.2, 5); c.lineTo(0, 8); c.lineTo(-2.2, 5); c.closePath(); c.fill(); }
+  else if (sp === 'Werewolf') { c.fillStyle = a(160, 164, 170, 0.97); c.fillRect(-10, -13, 20, 26); c.fillStyle = a(244, 242, 232, 0.97); c.beginPath(); c.arc(4, -6, 4.5, 0, 7); c.fill();   // a full moon over grey, and three dark slashes below it
+    c.strokeStyle = a(30, 28, 32, 0.97); c.lineWidth = 1.6; c.lineCap = 'butt'; for (const k of [-1, 0, 1]) { c.beginPath(); c.moveTo(-6 + k * 3.5, 2); c.lineTo(-1 + k * 3.5, 11); c.stroke(); } }
+  else if (sp === 'Minotaur') { c.fillStyle = a(132, 88, 48, 0.97); c.fillRect(-10, -13, 20, 26);   // a silver ring on brown under two pale horns
+    c.fillStyle = a(244, 238, 222, 0.97); for (const d of [-1, 1]) { c.beginPath(); c.moveTo(d * 2, -6); c.quadraticCurveTo(d * 9, -6, d * 8, -12); c.quadraticCurveTo(d * 6, -8, d * 2, -9); c.closePath(); c.fill(); }
+    c.strokeStyle = a(176, 180, 186, 0.97); c.lineWidth = 2; c.beginPath(); c.arc(0, 3, 4, 0, 7); c.stroke(); }
+  else if (sp === 'Dragon') { c.fillStyle = a(70, 150, 70, 0.97); c.fillRect(-10, -13, 20, 26); c.save(); c.beginPath(); c.rect(-10, -13, 20, 26); c.clip(); c.strokeStyle = a(40, 100, 44, 0.9); c.lineWidth = 1;   // dark scales on green under an orange flame
+    for (let r = 0; r < 4; r++) for (let k = -2; k <= 2; k++) { c.beginPath(); c.arc(k * 4 + (r % 2) * 2, 1 + r * 3.4, 2, 0.1, Math.PI - 0.1); c.stroke(); } c.restore();
+    c.fillStyle = a(238, 128, 40, 0.97); c.beginPath(); c.moveTo(0, -12); c.quadraticCurveTo(5, -6, 3, -2); c.quadraticCurveTo(0, 0, -3, -2); c.quadraticCurveTo(-5, -6, 0, -12); c.fill(); }
+  else if (sp === 'Thunderbird') { c.fillStyle = a(44, 98, 200, 0.97); c.fillRect(-10, -13, 20, 26); c.strokeStyle = a(242, 206, 50, 0.97); c.lineWidth = 2; c.lineJoin = 'miter';   // a zigzag bolt spreading out both ways from the middle of blue
+    for (const d of [-1, 1]) { c.beginPath(); c.moveTo(0, -1); c.lineTo(d * 3, -5); c.lineTo(d * 5, 0); c.lineTo(d * 8, -5); c.lineTo(d * 10, -1); c.stroke(); }
+    c.fillStyle = a(242, 206, 50, 0.97); c.beginPath(); c.moveTo(-1.5, 1); c.lineTo(1.5, 1); c.lineTo(0, 8); c.closePath(); c.fill(); }
+  else if (sp === 'Hydra') { c.fillStyle = a(130, 80, 200, 0.97); c.fillRect(-10, -13, 20, 26); c.strokeStyle = a(70, 150, 70, 0.97); c.lineWidth = 2.6; c.lineCap = 'round';   // three green necks rising from one point on violet
+    for (const d of [-1, 0, 1]) { c.beginPath(); c.moveTo(0, 11); c.quadraticCurveTo(d * 9, 2, d * 6, -8); c.stroke(); c.fillStyle = a(70, 150, 70, 0.97); c.beginPath(); c.arc(d * 6, -9, 2.4, 0, 7); c.fill(); } }
+  else if (sp === 'Griffin') { c.fillStyle = a(236, 136, 40, 0.97); c.fillRect(-10, -13, 20, 26); c.fillStyle = a(244, 242, 236, 0.97); c.beginPath(); c.moveTo(-10, -13); c.lineTo(10, -13);   // a white band across the top of orange, and a small yellow beak below it
+    c.lineTo(10, -6); c.lineTo(-10, -6); c.closePath(); c.fill(); c.fillStyle = a(244, 200, 50, 0.97); c.beginPath(); c.moveTo(-2.5, -6); c.lineTo(2.5, -6); c.lineTo(0, -1); c.closePath(); c.fill(); }
+  else if (sp === 'Kirin') { c.fillStyle = a(80, 196, 196, 0.97); c.fillRect(-10, -13, 20, 26); c.save(); c.beginPath(); c.rect(-10, -13, 20, 26); c.clip(); c.strokeStyle = a(40, 130, 140, 0.9); c.lineWidth = 1;   // dark scales on teal over three orange flames
+    for (let r = 0; r < 4; r++) for (let k = -2; k <= 2; k++) { c.beginPath(); c.arc(k * 4 + (r % 2) * 2, -10 + r * 3.4, 2, 0.1, Math.PI - 0.1); c.stroke(); } c.restore();
+    c.fillStyle = a(238, 128, 40, 0.97); for (const d of [-1, 0, 1]) { c.beginPath(); c.moveTo(d * 6 - 3, 13); c.quadraticCurveTo(d * 6 - 3, 6, d * 6, 3); c.quadraticCurveTo(d * 6 + 3, 6, d * 6 + 3, 13); c.closePath(); c.fill(); } }
+  else if (sp === 'Salamander') { c.fillStyle = a(28, 26, 30, 0.97); c.fillRect(-10, -13, 20, 26); c.fillStyle = a(238, 128, 40, 0.97);   // bright spots scattered on black, and a small flame
+    for (const [px, py, r] of [[-6, -8, 2], [5, -5, 1.8], [-3, 0, 1.6], [6, 4, 2], [-7, 7, 1.8], [2, 9, 1.6], [-1, -10, 1.4]]) { c.beginPath(); c.arc(px, py, r, 0, 7); c.fill(); }
+    c.fillStyle = a(244, 200, 50, 0.97); c.beginPath(); c.moveTo(6, -12); c.quadraticCurveTo(9, -8, 7, -6); c.quadraticCurveTo(5, -5, 4, -7); c.quadraticCurveTo(4, -9, 6, -12); c.fill(); }
+  else if (sp === 'Bakunawa') { c.fillStyle = a(30, 50, 140, 0.97); c.fillRect(-10, -13, 20, 26); c.fillStyle = a(244, 242, 228, 0.97); c.beginPath(); c.arc(-3, -6, 4, 0, 7); c.fill();   // a pale moon over dark blue, and a teal serpent curving under it
+    c.strokeStyle = a(90, 200, 200, 0.97); c.lineWidth = 2.6; c.lineCap = 'round'; c.beginPath(); c.moveTo(-9, 10); c.bezierCurveTo(-4, 2, 4, 12, 8, 3); c.quadraticCurveTo(9, -2, 4, -3); c.stroke(); }
+  else if (sp === 'Cerberus') { c.fillStyle = a(28, 26, 30, 0.97); c.fillRect(-10, -13, 20, 26); c.fillStyle = a(200, 50, 44, 0.97); c.fillRect(-10, -1, 20, 6);   // a red band across black with three pale spikes on it
+    c.fillStyle = a(196, 200, 206, 0.97); for (const d of [-1, 0, 1]) { c.beginPath(); c.moveTo(d * 6 - 2, -1); c.lineTo(d * 6, -6); c.lineTo(d * 6 + 2, -1); c.closePath(); c.fill(); } }
+  else if (sp === 'Djinn') { c.fillStyle = a(44, 98, 200, 0.97); c.fillRect(-10, -13, 20, 26); c.fillStyle = a(242, 200, 50, 0.97); c.beginPath(); c.ellipse(-1, 9, 6, 2.6, 0, 0, 7); c.fill();   // a gold lamp at the bottom of blue, with a pale curl of smoke rising from its spout
+    c.beginPath(); c.moveTo(4, 8); c.lineTo(9, 5); c.lineTo(8, 8); c.closePath(); c.fill(); c.strokeStyle = a(240, 240, 240, 0.95); c.lineWidth = 2; c.lineCap = 'round'; c.beginPath(); c.moveTo(8.5, 4.5); c.bezierCurveTo(10, -2, 0, -2, 2, -7); c.quadraticCurveTo(3, -11, -2, -10); c.stroke(); }
+  else if (sp === 'Troll') { c.fillStyle = a(70, 150, 70, 0.97); c.fillRect(-10, -13, 20, 26); c.strokeStyle = a(132, 88, 48, 0.97); c.lineWidth = 3.5; c.lineCap = 'round'; c.beginPath(); c.moveTo(-6, 10); c.lineTo(5, -8); c.stroke();   // a brown club across green, and two pale tusks
+    c.fillStyle = a(244, 238, 222, 0.97); for (const d of [-1, 1]) { c.beginPath(); c.moveTo(d * 4 - 1.5, 9); c.lineTo(d * 4, 4); c.lineTo(d * 4 + 1.5, 9); c.closePath(); c.fill(); } }
+  else if (sp === 'Mummy') { c.fillStyle = a(244, 240, 230, 0.97); c.fillRect(-10, -13, 20, 26); c.strokeStyle = a(160, 162, 166, 0.97); c.lineWidth = 1.6;   // grey wraps slanting across pale cloth, and one yellow eye
+    for (let k = 0; k < 7; k++) { const y = -11 + k * 3.8; c.beginPath(); c.moveTo(-10, y - (k % 2 ? 1 : -1)); c.lineTo(10, y + (k % 2 ? 1 : -1)); c.stroke(); }
+    c.fillStyle = a(242, 200, 50, 0.97); c.beginPath(); c.arc(3.5, -3, 1.8, 0, 7); c.fill(); }
+  else if (sp === 'Sarimanok') { c.fillStyle = a(244, 242, 236, 0.97); c.fillRect(-10, -13, 20, 26); c.save(); c.beginPath(); c.rect(-10, -13, 20, 26); c.clip(); const cols = [[228, 64, 52], [244, 150, 40], [244, 206, 60], [80, 170, 80], [60, 120, 210], [140, 90, 200]];   // a fan of rainbow feathers rising from the bottom on white
+    cols.forEach((col, k) => { const an = -2.6 + k * 0.38; c.save(); c.translate(0, 11); c.rotate(an + Math.PI / 2); c.fillStyle = a(...col, 0.97); c.beginPath(); c.ellipse(0, -10, 1.8, 9, 0, 0, 7); c.fill(); c.restore(); }); c.restore(); }
 }
 function awayProps(c, p, t, front) {
   const x = p.x, y = p.y;

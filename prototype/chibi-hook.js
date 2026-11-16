@@ -1,7 +1,7 @@
 /* Puts the chibi drawings (chibi.js) into the ranch and battle screens while the pixel art stays the default.
    It's on by default. #art=pixel in the address, or localStorage "snabits-art" set to "pixel", brings back the pixel art.
    Only families listed in CHIBI_FAMS are drawn smooth; the rest keep their pixels. */
-const CHIBI_FAMS = ['Chomp', 'Squib', 'Antik', 'Moko', 'Pinch', 'Stilt', 'Skit', 'Booly', 'Plod', 'Bipped', 'Fizz', 'Teep', 'Lern', 'Puff', 'Flit', 'Glop', 'Tock', 'Mitt', 'Brolly', 'Spine', 'Burr', 'Wick', 'Lumo', 'Snooze', 'Inky', 'Cobble', 'Nimbo', 'Dango', 'Oaklet', 'Roly', 'Trundle', 'Clank', 'Crease', 'Twiglet', 'Swirl', 'Ditty', 'Sizzle', 'Aero', 'Nesta', 'Magna', 'Helm', 'Bloop', 'Sox', 'Cuppy', 'Suds', 'Scoop', 'Tome', 'Gumball', 'Pina', 'Jingle', 'Presto', 'Vroom', 'Shutter', 'Yoyo', 'Lava', 'Pogo', 'Eagle', 'Vampire', 'Phoenix', 'Kitsune', 'Naga', 'Yeti', 'Kraken', 'Golem', 'Unicorn', 'Jack'];
+const CHIBI_FAMS = ['Chomp', 'Squib', 'Antik', 'Moko', 'Pinch', 'Stilt', 'Skit', 'Booly', 'Plod', 'Bipped', 'Fizz', 'Teep', 'Lern', 'Puff', 'Flit', 'Glop', 'Tock', 'Mitt', 'Brolly', 'Spine', 'Burr', 'Wick', 'Lumo', 'Snooze', 'Inky', 'Cobble', 'Nimbo', 'Dango', 'Oaklet', 'Roly', 'Trundle', 'Clank', 'Crease', 'Twiglet', 'Swirl', 'Ditty', 'Sizzle', 'Aero', 'Nesta', 'Magna', 'Helm', 'Bloop', 'Sox', 'Cuppy', 'Suds', 'Scoop', 'Tome', 'Gumball', 'Pina', 'Jingle', 'Presto', 'Vroom', 'Shutter', 'Yoyo', 'Lava', 'Pogo', 'Eagle', 'Vampire', 'Phoenix', 'Kitsune', 'Naga', 'Yeti', 'Kraken', 'Golem', 'Unicorn', 'Jack', 'Tengu', 'Tanuki', 'Mermaid', 'Diwata', 'Sphinx', 'Garuda', 'Werewolf', 'Minotaur', 'Dragon', 'Thunderbird', 'Hydra', 'Griffin', 'Kirin', 'Salamander', 'Bakunawa', 'Cerberus', 'Djinn', 'Troll', 'Mummy', 'Sarimanok'];
 const CHIBI_ART = !/(^#|&)art=pixel(&|$)/.test(location.hash) && (() => { try { return localStorage.getItem('snabits-art') !== 'pixel'; } catch (e) { return true; } })();
 
 /* m is a hatched monster or a fight snapshot; s is the ranch state when there is one */
@@ -27,7 +27,10 @@ const SIZE_CM = { Chomp: [50, 100, 170], Squib: [40, 85, 150], Antik: [60, 120, 
   Clank: [35, 70, 180], Crease: [20, 45, 110], Twiglet: [25, 55, 120], Swirl: [30, 60, 120], Ditty: [25, 50, 130],
   Sizzle: [20, 40, 120], Aero: [40, 90, 320], Nesta: [15, 35, 90], Magna: [20, 45, 160], Helm: [35, 70, 300],
   Bloop: [20, 45, 140], Sox: [30, 60, 130], Cuppy: [15, 35, 110], Suds: [20, 45, 120], Scoop: [20, 45, 120], Tome: [25, 50, 120], Gumball: [25, 55, 140], Pina: [25, 55, 130],
-  Jingle: [20, 45, 120], Presto: [25, 55, 150], Vroom: [25, 45, 110], Shutter: [20, 45, 130], Yoyo: [15, 35, 110], Lava: [25, 55, 150], Pogo: [30, 60, 160] };
+  Jingle: [20, 45, 120], Presto: [25, 55, 150], Vroom: [25, 45, 110], Shutter: [20, 45, 130], Yoyo: [15, 35, 110], Lava: [25, 55, 150], Pogo: [30, 60, 160],
+  Tengu: [50, 105, 185], Tanuki: [40, 85, 150], Mermaid: [50, 100, 175], Diwata: [30, 60, 110], Sphinx: [55, 115, 200],
+  Garuda: [50, 110, 195], Werewolf: [50, 105, 185], Minotaur: [60, 125, 220], Dragon: [55, 120, 230], Thunderbird: [55, 115, 210],
+  Hydra: [55, 120, 230], Griffin: [50, 110, 200], Kirin: [50, 105, 190], Salamander: [25, 55, 110], Bakunawa: [60, 140, 280], Cerberus: [50, 110, 200], Djinn: [40, 90, 170], Troll: [60, 130, 240], Mummy: [45, 100, 180], Sarimanok: [35, 70, 130] };
 function sizeK(m) {
   if (!m) return 1; if (m.sizeK) return m.sizeK;
   const t = JSON.stringify([m.pal, m.stats, m.lifespan, m.family]); let h = 2166136261;
@@ -401,6 +404,26 @@ function cry(fam, stage) {
       case 'Yoyo': voice(t, 'sine', [[0, 500], [0.2, 1200]], 0.08); voice(t + 0.22, 'sine', [[0, 1200], [0.2, 500]], 0.08); dNoise(d, t, 0.42, 0.03, 'bandpass', 1800); break;   // a whirr down the string and back up
       case 'Lava': voice(t, 'sine', [[0, 120], [0.3, 90]], 0.12, 3); for (let i = 0; i < 3; i++) voice(t + 0.15 + i * 0.1, 'sine', [[0, 250 + i * 60], [0.06, 450 + i * 60]], 0.06); dNoise(d, t + 0.2, 0.3, 0.05, 'highpass', 4000); break;   // a low rumble, bubbling and a hiss
       case 'Pogo': [0, 0.16, 0.3].forEach((dt, i) => voice(t + dt, 'sine', [[0, 300 + i * 100], [0.05, 900 + i * 150], [0.12, 500 + i * 100]], 0.08)); break;   // boing, boing, boing
+      case 'Tengu': voice(t, 'sawtooth', [[0, 520], [0.1, 760], [0.3, 640]], 0.05, 6); dNoise(d, t + 0.15, 0.3, 0.1, 'bandpass', 1400, 0.8); break;   // a gruff "ha" and a gust from the fan
+      case 'Tanuki': voice(t, 'triangle', [[0, 500], [0.08, 700]], 0.1); dKick(d, t + 0.14, 0.4); dKick(d, t + 0.3, 0.4); break;   // a chirp, then two pats on its belly
+      case 'Mermaid': [784, 988, 1175, 988].forEach((f, i) => voice(t + i * 0.11, 'sine', [[0, f], [0.1, f]], 0.07, 6)); dNoise(d, t + 0.4, 0.2, 0.05, 'lowpass', 900); break;   // a short song and a splash
+      case 'Diwata': [1568, 1760, 2093, 2349].forEach((f, i) => voice(t + i * 0.06, 'triangle', [[0, f], [0.18, f]], 0.05)); break;   // a twinkle
+      case 'Sphinx': voice(t, 'sawtooth', [[0, 160], [0.2, 240], [0.5, 150]], 0.06, 5); voice(t + 0.05, 'triangle', [[0, 320], [0.4, 300]], 0.04); break;   // a low purring roar
+      case 'Garuda': voice(t, 'sawtooth', [[0, 1400], [0.1, 2200], [0.35, 1700]], 0.045, 24); voice(t + 0.25, 'triangle', [[0, 700], [0.2, 900]], 0.06); break;   // a high cry and a deep call under it
+      case 'Werewolf': voice(t, 'sawtooth', [[0, 400], [0.25, 700], [0.7, 520], [0.9, 380]], 0.05, 12); break;   // a howl
+      case 'Minotaur': voice(t, 'sawtooth', [[0, 120], [0.3, 160], [0.55, 100]], 0.07, 3); dNoise(d, t + 0.4, 0.25, 0.12, 'lowpass', 800); break;   // a low bellow and a snort
+      case 'Dragon': voice(t, 'sawtooth', [[0, 220], [0.2, 340], [0.5, 180]], 0.06, 6); dNoise(d, t + 0.1, 0.5, 0.1, 'lowpass', 1200); break;   // a roar with a rush of flame
+      case 'Thunderbird': voice(t, 'sawtooth', [[0, 1600], [0.1, 2200], [0.4, 1400]], 0.04, 20); dKick(d, t + 0.35, 0.6); dNoise(d, t + 0.35, 0.6, 0.12, 'lowpass', 400); break;   // a screech, then thunder
+      case 'Hydra': for (let k = 0; k < 3; k++) voice(t + k * 0.12, 'sawtooth', [[0, 300 + k * 120], [0.15, 420 + k * 120], [0.3, 260 + k * 120]], 0.04, 8); break;   // three hisses, one per head
+      case 'Griffin': voice(t, 'sawtooth', [[0, 1500], [0.12, 2100], [0.3, 1600]], 0.045, 18); voice(t + 0.3, 'sawtooth', [[0, 200], [0.3, 160]], 0.05, 4); break;   // an eagle's cry, then a low growl
+      case 'Kirin': voice(t, 'sine', [[0, 900], [0.2, 1300], [0.5, 1100]], 0.08); voice(t + 0.05, 'sine', [[0, 1350], [0.45, 1650]], 0.04); break;   // a soft bell-like call
+      case 'Salamander': dNoise(d, t, 0.3, 0.12, 'bandpass', 2500); voice(t + 0.1, 'triangle', [[0, 1200], [0.12, 1500]], 0.07); break;   // a crackle and a chirp
+      case 'Bakunawa': voice(t, 'sine', [[0, 180], [0.4, 260], [0.9, 150]], 0.1, 3); dNoise(d, t + 0.2, 0.7, 0.08, 'lowpass', 600); break;   // a deep call over waves
+      case 'Cerberus': for (let k = 0; k < 3; k++) voice(t + k * 0.14, 'sawtooth', [[0, 260 - k * 40], [0.08, 320 - k * 40], [0.14, 220 - k * 40]], 0.06, 5); break;   // three barks, high to low
+      case 'Djinn': voice(t, 'sine', [[0, 600], [0.3, 1100], [0.7, 800]], 0.07, 6); dNoise(d, t, 0.6, 0.06, 'highpass', 3000); break;   // a rising whoosh of smoke
+      case 'Troll': voice(t, 'sawtooth', [[0, 110], [0.25, 140], [0.6, 90]], 0.08, 2); break;   // a low grunt
+      case 'Mummy': voice(t, 'sawtooth', [[0, 160], [0.5, 200], [0.9, 130]], 0.05, 4); dNoise(d, t + 0.3, 0.5, 0.05, 'lowpass', 900); break;   // a long groan and some dust
+      case 'Sarimanok': voice(t, 'sawtooth', [[0, 700], [0.1, 1300], [0.3, 1500], [0.55, 900]], 0.05, 10); break;   // a rooster crow
       default: voice(t, 'triangle', [[0, 800], [0.12, 1200], [0.22, 1000]], 0.13);
     } } catch (err) {}
 }
