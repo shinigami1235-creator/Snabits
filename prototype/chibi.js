@@ -3575,23 +3575,30 @@ x.feet.push([g.cx, 182, 10]); },
         for (const sd of [-1, 1]) { const fx = g.cx + sd * g.bw * 0.2, lift = Math.max(0, sd * x.walk) * 4, kx = fx + sd * by(S, 6, 11, 14);   // crouching legs bent out at the knee, with clawed feet
           limb(c, [fx, g.bot - 8, kx, g.bot + this.ll(S) * 0.4, fx + sd * 3, 179 - lift], by(S, 10, 11, 13), dk(x.body, 0.12), sd < 0 ? x.L.legL : x.L.legR, x.t);
           blob(c, fx + sd * 3, 181 - lift, by(S, 8, 9, 11), 5, dk(x.body, 0.16), sd < 0 ? x.L.legL : x.L.legR, x.t, 'foot');
-          this.claws(c, fx + sd * 3, 177 - lift, by(S, 0.7, 0.8, 0.95), rgb(lt(x.acc, 0.35)), sd); x.feet.push([fx + sd * 3, 182 - lift, 9]); } },
+          this.claws(c, fx + sd * 3, 177 - lift, by(S, 0.7, 0.8, 0.95), rgb(lt(x.acc, 0.35)), sd); x.feet.push([fx + sd * 3, 182 - lift, 9]);  }
+        if (x.back) return;
+        for (const sd of [-1, 1]) { const F2 = this.fork(g, x, sd), aw = this.armW(S), hr = this.handR(S), mat = sd < 0 ? x.L.armL : x.L.armR;   // the second forearm on each arm
+          limb(c, F2.q, aw, x.parts, mat, x.t); blob(c, F2.h2x, F2.h2y, hr, hr, lt(x.parts, 0.22), mat, x.t, 'hand');
+          this.claws(c, F2.h2x, F2.h2y + 2, by(S, 0.75, 0.85, 1.05), rgb(lt(x.acc, 0.35)), sd);
+          if (S === 'Mega') this.thorns(c, F2.q, rgb(lt(x.acc, 0.25))); } },
       inside(c, g, x) { const S = g.stage, hh = this.hh(g), sy = g.top + hh * 0.5;
         if (S === 'Mega') { c.fillStyle = rgb(dk(x.body, 0.22)); for (const f of [0, 0.07, 0.14, 0.21, 0.79, 0.86, 0.93, 1]) { const k = Math.round(f * 14), px = g.left + g.bw * (0.04 + f * 0.92), py = sy + hh * 0.1 + Math.abs(f - 0.5) * 6 + (k % 2) * 3, L = 12 + (k % 3) * 4, sw = Math.sin(x.t / 650 + k) * 1.5;   // a thick mane of darker fur down each shoulder
           c.beginPath(); c.moveTo(px - 6, py - 6); c.lineTo(px + sw + (f - 0.5) * 4, py + L); c.lineTo(px + 6, py - 6); c.closePath(); c.fill(); } }
         c.fillStyle = rgba(lt(x.body, 0.18), 0.6); c.beginPath(); c.ellipse(g.cx, sy + (g.bot - sy) * 0.55, g.bw * by(S, 0.2, 0.2, 0.19), (g.bot - sy) * 0.36, 0, 0, 7); c.fill();   // a paler chest
         c.strokeStyle = rgba(dk(x.body, 0.25), 0.55); c.lineWidth = 1.4;   // tufts of fur
         for (const [fx, fy] of [[0.18, 0.62], [0.82, 0.6], [0.24, 0.84], [0.76, 0.86]]) { const px = g.left + g.bw * fx, py = g.top + g.bh * fy; c.beginPath(); c.moveTo(px - 3, py - 3); c.lineTo(px, py + 2); c.lineTo(px + 3, py - 3); c.stroke(); } },
-      front(c, g, x) { const S = g.stage; if (x.back) return; const ck = by(S, 0.75, 0.85, 1.05), cc = rgb(lt(x.acc, 0.35)), aw = this.armW(S), hr = this.handR(S), k = this.armK;
-        for (const sd of [-1, 1]) { const a = x.P.arm[sd < 0 ? 0 : 1], sh = this.shoulder(g), sx = g.cx + sd * sh.dx, q = [sx, sh.y, sx + sd * a[0] * k, sh.y + a[1] * k, sx + sd * a[2] * k, sh.y + a[3] * k];
-          // each arm splits at the elbow, halfway along the arm as it's drawn, into a second forearm that reaches out with its own clawed hand
-          const [ex, ey] = qpt(q, 0.5), hx = q[4], hy = q[5], sp = by(S, 12, 15, 17), h2x = hx + sd * sp, h2y = hy - sp * 0.75;
-          limb(c, [ex, ey, (ex + h2x) / 2 + sd * 2, (ey + h2y) / 2 - 2, h2x, h2y], aw, x.parts, sd < 0 ? x.L.armL : x.L.armR, x.t);
-          c.fillStyle = rgb(x.parts); c.beginPath(); c.arc(ex, ey, aw * 0.62, 0, 7); c.fill();   // a round elbow where the two forearms meet
-          c.fillStyle = rgb(lt(x.parts, 0.22)); c.beginPath(); c.arc(h2x, h2y, hr, 0, 7); c.fill();
-          if (S === 'Mega') { c.fillStyle = rgb(lt(x.acc, 0.25)); for (const [ax, ay, bx2, by2] of [[ex, ey, hx, hy], [ex, ey, h2x, h2y]]) for (const f of [0.35, 0.65]) { const px = ax + (bx2 - ax) * f, py = ay + (by2 - ay) * f, dx = bx2 - ax, dy = by2 - ay, L = Math.hypot(dx, dy) || 1, nx = -dy / L, ny = dx / L, up = ny > 0 ? -1 : 1;   // thorns along both forearms
-            c.beginPath(); c.moveTo(px - dx / L * 2.5, py - dy / L * 2.5); c.lineTo(px + nx * up * 6, py + ny * up * 6); c.lineTo(px + dx / L * 2.5, py + dy / L * 2.5); c.closePath(); c.fill(); } }
-          this.claws(c, h2x, h2y + 2, ck, cc, sd); this.claws(c, hx, hy + 2, ck, cc, sd); } },
+      // where each arm runs, the same curve the arm itself is drawn on: shoulder, bend and hand
+      armQ(g, x, sd) { const a = x.P.arm[sd < 0 ? 0 : 1], sh = this.shoulder(g), sx = g.cx + sd * sh.dx, k = this.armK; return [sx, sh.y, sx + sd * a[0] * k, sh.y + a[1] * k, sx + sd * a[2] * k, sh.y + a[3] * k]; },
+      // the second forearm leaves the arm at its elbow along the arm's own direction and bends out to a second hand.
+      // It's drawn before the arms, so the main arm covers the joint
+      fork(g, x, sd) { const S = g.stage, q = this.armQ(g, x, sd), [ex, ey] = qpt(q, 0.5), tx = q[4] - q[0], ty = q[5] - q[1], tL = Math.hypot(tx, ty) || 1, sp = by(S, 12, 15, 17);
+        const h2x = q[4] + sd * sp, h2y = q[5] - sp * 0.75, len = Math.hypot(h2x - ex, h2y - ey), cx2 = ex + tx / tL * len * 0.45, cy2 = ey + ty / tL * len * 0.45;
+        return { ex, ey, h2x, h2y, q: [ex, ey, cx2, cy2, h2x, h2y] }; },
+      thorns(c, q, col) { c.fillStyle = col; for (const f of [0.4, 0.7]) { const [px, py] = qpt(q, f), [nx2, ny2] = qpt(q, f + 0.04), dx = nx2 - px, dy = ny2 - py, L = Math.hypot(dx, dy) || 1, ux = -dy / L, uy = dx / L, up = uy > 0 ? -1 : 1;
+        c.beginPath(); c.moveTo(px - dx / L * 2.5, py - dy / L * 2.5); c.lineTo(px + ux * up * 6, py + uy * up * 6); c.lineTo(px + dx / L * 2.5, py + dy / L * 2.5); c.closePath(); c.fill(); } },
+      front(c, g, x) { const S = g.stage; if (x.back) return; const ck = by(S, 0.75, 0.85, 1.05), cc = rgb(lt(x.acc, 0.35));
+        for (const sd of [-1, 1]) { const q = this.armQ(g, x, sd); this.claws(c, q[4], q[5] + 2, ck, cc, sd);
+          if (S === 'Mega') this.thorns(c, [...qpt(q, 0.5), q[2] + (q[4] - q[2]) * 0.5, q[3] + (q[5] - q[3]) * 0.5, q[4], q[5]], rgb(lt(x.acc, 0.25))); } },   // thorns along the forearm at Mega
       // a flytrap: two red lobes either side of a green middle, edged with spikes, that lean apart and snap shut now and then
       trap(c, bx, by0, H, W, t, open, n, tl) { const ph = (t % 2600) / 2600, snap = ph > 0.86 ? Math.abs(Math.sin((ph - 0.86) / 0.14 * Math.PI)) : 0, o = (open ? 1.15 : 1) * (1 - snap * 0.8), sw = 0.25 + 0.75 * o;
         for (const sd of [-1, 1]) {
