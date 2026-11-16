@@ -643,6 +643,7 @@ function drillArt(c, s, bg, t, off) {
 function stoneGlyph(c, sp) {
   const a = (r, g, b, o = 0.8) => `rgba(${r},${g},${b},${o})`, wave = (y, h, col) => { c.fillStyle = col; c.beginPath(); c.moveTo(-10, y); for (let i = 0; i <= 10; i++) c.lineTo(-10 + i * 2, y + Math.sin(i * 1.3) * 1.4); c.lineTo(10, y + h); c.lineTo(-10, y + h); c.closePath(); c.fill(); };
   c.fillStyle = a(236, 230, 214); c.fillRect(-10, -13, 20, 26);
+  if (typeof HORROR_EGG !== 'undefined' && HORROR_EGG[sp]) { horrorGlyph(c, sp); return; }
   if (sp === 'Eagle') { c.fillStyle = a(70, 96, 160); c.fillRect(-10, -13, 20, 7);   // sky, then wings spreading down in red and white chevrons
     for (let i = 0; i < 4; i++) { c.fillStyle = i % 2 ? a(236, 230, 214) : a(196, 52, 52); c.beginPath(); c.moveTo(-10, -6 + i * 5); c.lineTo(0, -1 + i * 5); c.lineTo(10, -6 + i * 5); c.lineTo(10, -2 + i * 5); c.lineTo(0, 3 + i * 5); c.lineTo(-10, -2 + i * 5); c.fill(); } }
   else if (sp === 'Vampire') { c.fillStyle = a(22, 20, 26, 0.95); c.fillRect(-10, -13, 20, 26); c.fillStyle = a(236, 232, 222, 0.95); c.beginPath(); c.arc(-1.5, -4, 7, 0, 7); c.fill(); c.fillStyle = a(22, 20, 26, 0.98); c.beginPath(); c.arc(2, -6, 6.5, 0, 7); c.fill();   // a crescent and a drop on black
@@ -716,6 +717,46 @@ function stoneGlyph(c, sp) {
     c.fillStyle = a(242, 200, 50, 0.97); c.beginPath(); c.arc(3.5, -3, 1.8, 0, 7); c.fill(); }
   else if (sp === 'Sarimanok') { c.fillStyle = a(244, 242, 236, 0.97); c.fillRect(-10, -13, 20, 26); c.save(); c.beginPath(); c.rect(-10, -13, 20, 26); c.clip(); const cols = [[228, 64, 52], [244, 150, 40], [244, 206, 60], [80, 170, 80], [60, 120, 210], [140, 90, 200]];   // a fan of rainbow feathers rising from the bottom on white
     cols.forEach((col, k) => { const an = -2.6 + k * 0.38; c.save(); c.translate(0, 11); c.rotate(an + Math.PI / 2); c.fillStyle = a(...col, 0.97); c.beginPath(); c.ellipse(0, -10, 1.8, 9, 0, 0, 7); c.fill(); c.restore(); }); c.restore(); }
+}
+/* a horror's stone: its three colours (HORROR_EGG) in a shape that hints at it, all three running through the middle of the
+   face so a photo of the stone held up to the camera reads them there */
+function horrorGlyph(c, sp) {
+  const K = { green: [70, 150, 70], brown: [132, 88, 48], yellow: [242, 200, 50], black: [22, 20, 26], orange: [232, 128, 44], white: [240, 238, 232],
+    red: [196, 46, 50], cyan: [100, 210, 205], silver: [160, 162, 166], pink: [238, 112, 170], violet: [130, 76, 214] };
+  const f = n => { c.fillStyle = `rgba(${K[n]},0.97)`; }, st = (n, w) => { c.strokeStyle = `rgba(${K[n]},0.97)`; c.lineWidth = w; c.lineCap = 'round'; c.lineJoin = 'round'; };
+  const bg = n => { f(n); c.fillRect(-10, -13, 20, 26); }, disc = (x, y, r) => { c.beginPath(); c.arc(x, y, r, 0, 7); c.fill(); };
+  const oval = (x, y, rx, ry) => { c.beginPath(); c.ellipse(x, y, rx, ry, 0, 0, 7); c.fill(); };
+  c.save(); c.beginPath(); c.rect(-10, -13, 20, 26); c.clip();
+  if (sp === 'Cthulhu') { bg('green'); f('yellow'); disc(0, -2.5, 5.6);   // a yellow moon over green water, brown feelers curling up out of it
+    st('brown', 2.4); for (const x of [-5.5, 0, 5.5]) { c.beginPath(); c.moveTo(x, 12); c.bezierCurveTo(x - 3, 7, x + 3, 4, x + 0.5, 1.5); c.arc(x - 1, 1.5, 1.5, 0, -Math.PI, true); c.stroke(); } }
+  else if (sp === 'Hastur') { bg('black'); f('orange'); c.fillRect(-10, 1.5, 20, 11.5);   // the yellow sign, a ring with three hooks, over an orange stage
+    st('yellow', 2.2); c.beginPath(); c.arc(0, -1.5, 3.8, 0, 7); c.stroke(); st('yellow', 1.9);
+    for (let k = 0; k < 3; k++) { const an = -Math.PI / 2 + k * 2.094, ca = Math.cos(an), sa = Math.sin(an), px = -sa, py = ca;
+      c.beginPath(); c.moveTo(ca * 3.8, -1.5 + sa * 3.8); c.lineTo(ca * 7.2, -1.5 + sa * 7.2); c.quadraticCurveTo(ca * 8.6 + px * 2.6, -1.5 + sa * 8.6 + py * 2.6, ca * 6.6 + px * 3, -1.5 + sa * 6.6 + py * 3); c.stroke(); } }
+  else if (sp === 'Shoggoth') { bg('black'); f('red'); oval(0, 5, 8, 4.2);   // eyes scattered over black around a red mouth
+    for (const [x, y, r] of [[-4.5, -6, 2.8], [2.5, -7.5, 2.2], [5.5, -2.5, 2.4], [-1.5, -1.8, 2.5], [-6.5, 0.5, 1.8], [6, 9.5, 1.6], [-5.5, 10, 1.7]]) { f('white'); disc(x, y, r); f('black'); disc(x + 0.3, y + 0.3, r * 0.4); }
+    f('white'); for (let k = -3; k <= 3; k++) { c.beginPath(); c.moveTo(k * 2 - 0.8, 3); c.lineTo(k * 2, 4.6); c.lineTo(k * 2 + 0.8, 3); c.fill(); } }
+  else if (sp === 'Dagon') { bg('cyan'); f('green'); c.beginPath(); c.moveTo(-10, 13); c.lineTo(-10, 5);   // white wave crests on teal water over green weed
+    for (let i = 0; i <= 10; i++) c.lineTo(-10 + i * 2, 5 + Math.sin(i * 1.7) * 1.4); c.lineTo(10, 13); c.fill();
+    st('white', 1.9); for (const y of [-8, -3.5, 0.5]) { c.beginPath(); c.moveTo(-9, y); for (let i = 1; i <= 9; i++) c.lineTo(-9 + i * 2, y + (i % 2 ? -1.4 : 0.6)); c.stroke(); }
+    st('green', 1.2); for (const x of [-6, -1, 4]) { c.beginPath(); c.moveTo(x, 6); c.quadraticCurveTo(x + 2, -1, x - 0.5, -5); c.stroke(); } }
+  else if (sp === 'Migo') { bg('pink'); f('brown'); c.fillRect(-10, 2.5, 20, 10.5);   // a silver jar on brown rock under pink lights
+    f('silver'); c.beginPath(); c.roundRect(-4.2, -8, 8.4, 12.5, 2.5); c.fill(); c.fillRect(-3, -10.5, 6, 3); f('pink'); oval(0, -2, 2.6, 3.2); }
+  else if (sp === 'Nightgaunt') { bg('violet'); f('white'); disc(0, -1.5, 8.5);   // a black winged shape across a white moon
+    f('black'); c.beginPath(); c.moveTo(0, -3); c.quadraticCurveTo(-5, -9, -10, -7); c.lineTo(-7, -4.5); c.lineTo(-9.5, -2.5); c.lineTo(-6, -2.5); c.lineTo(-7.5, -0.5); c.quadraticCurveTo(-3, -1.5, 0, 1);
+    c.quadraticCurveTo(3, -1.5, 7.5, -0.5); c.lineTo(6, -2.5); c.lineTo(9.5, -2.5); c.lineTo(7, -4.5); c.lineTo(10, -7); c.quadraticCurveTo(5, -9, 0, -3); c.fill();
+    oval(0, 2.5, 1.8, 3.2); st('black', 1.3); c.beginPath(); c.moveTo(0, 5); c.bezierCurveTo(2.5, 8, -2.5, 9.5, 1, 12); c.stroke(); c.beginPath(); c.moveTo(1, 12); c.lineTo(2.4, 11.2); c.stroke(); }
+  else if (sp === 'Ghoul') { bg('brown'); f('red'); c.fillRect(-10, -13, 20, 10);   // a silver bone in brown earth under a red sky
+    st('silver', 3); c.beginPath(); c.moveTo(-5, 6); c.lineTo(5, -2); c.stroke(); f('silver'); for (const [x, y] of [[-5, 6], [5, -2]]) { disc(x - 1.3, y - 1.1, 2); disc(x + 1.3, y + 1.1, 2); }
+    f('red'); disc(-4, 10.5, 1.4); disc(4, 9, 1); }
+  else if (sp === 'Gug') { bg('brown'); f('white'); oval(0, 0, 6.2, 11); f('pink'); oval(0, 0, 3.9, 9);   // one tall mouth, white teeth round a pink throat
+    f('white'); for (let k = -3; k <= 3; k++) { c.beginPath(); c.moveTo(-3.4, k * 2.3 - 0.8); c.lineTo(-1.9, k * 2.3); c.lineTo(-3.4, k * 2.3 + 0.8); c.fill(); c.beginPath(); c.moveTo(3.4, k * 2.3 - 0.8); c.lineTo(1.9, k * 2.3); c.lineTo(3.4, k * 2.3 + 0.8); c.fill(); } }
+  else if (sp === 'Yog') { bg('violet'); for (const [x, y, r, n] of [[-3.5, -5, 4.5, 'cyan'], [3.5, -1, 4.1, 'pink'], [-2.5, 3.5, 3.9, 'pink'], [3.5, 7.5, 3.7, 'cyan'], [-5.5, 10.5, 2, 'cyan'], [6, -9, 2, 'pink']]) { f(n); disc(x, y, r); }   // globes on violet
+    st('white', 0.6); c.beginPath(); c.ellipse(0, 0, 9, 3, -0.6, 0, 7); c.stroke(); }
+  else if (sp === 'Shub') { bg('green'); st('brown', 3.2); c.beginPath(); c.arc(0, -1, 6, 0, 7); c.stroke();   // a ring of brown trees with black kids round it
+    f('black'); for (const [x, y] of [[0, -1.5], [-2.5, 3], [2.5, 3], [-3.5, 8], [3.5, 8], [0, 11]]) oval(x, y, 2.6, 2); c.fillRect(-10, 9.5, 20, 3.5);
+    f('brown'); for (const a of [0.6, 2.2, 3.8, 5.4]) disc(Math.cos(a) * 6, -1 + Math.sin(a) * 6, 1.8); }
+  c.restore();
 }
 function awayProps(c, p, t, front) {
   const x = p.x, y = p.y;

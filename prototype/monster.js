@@ -361,9 +361,36 @@ function eggOf(res){
   return null;
 }
 
+/* ---------- the horrors' stones ----------
+   A horror that leaves the ranch leaves its Pattern Stone, drawn in its three colours. A scan with those three colours filling
+   the middle of the shot calls it back at Bit, but only between 9pm and 3am on the phone's own clock, with its stone on the
+   ranch and no other horror there or in the Freezer (Gid, 16 Nov 2026). Any other time the same scan makes a regular Snabit. */
+const HORROR_EGG={Cthulhu:["green","brown","yellow"],Hastur:["yellow","black","orange"],Shoggoth:["black","white","red"],Dagon:["cyan","green","white"],
+  Migo:["pink","silver","brown"],Nightgaunt:["black","violet","white"],Ghoul:["silver","brown","red"],Gug:["pink","brown","white"],Yog:["violet","cyan","pink"],Shub:["black","brown","green"]};
+// the horror whose three colours lead the middle of the shot (the middle half each way), with 80% of it between them and the
+// least of the three at least a third of the most. The colour round the edges is the table or wall the stone sits on when it
+// isn't one of the three, so it's left out of the count
+function horrorEgg(res){
+  if(!res||!res.g12) return null;
+  const mid={}, rim={};
+  for(const g in res.g12) for(let i=0;i<144;i++){ const x=i%12, y=Math.floor(i/12), v=res.g12[g][i]||0;
+    if(x>=3&&x<9&&y>=3&&y<9) mid[g]=(mid[g]||0)+v/36; else if(x<2||x>9||y<2||y>9) rim[g]=(rim[g]||0)+v; }
+  const bg=Object.keys(rim).sort((a,b)=>rim[b]-rim[a])[0];
+  return Object.keys(HORROR_EGG).find(f=>{ const K=HORROR_EGG[f], v=K.map(g=>mid[g]||0), lo=Math.min(...v), out=K.includes(bg)?0:(mid[bg]||0);
+    return lo>=0.08&&lo>=0.3*Math.max(...v)&&v[0]+v[1]+v[2]>=0.8*(1-out)&&Object.keys(mid).every(g=>K.includes(g)||g===bg&&!K.includes(bg)||mid[g]<lo); })||null;
+}
+const horrorHour=now=>{ const h=now.getHours(); return h>=21||h<3; };
+const horrorOwned=()=>typeof PLAYER!=="undefined"&&!!PLAYER&&(PLAYER.roster||[]).some(e=>e.m&&FAMILY[e.m.family]&&FAMILY[e.m.family].horror);
+// the horror this scan calls, or null: its stone on the ranch, the witching hour, and no horror already on the ranch
+function horrorCall(res,now=new Date()){
+  const f=horrorEgg(res); if(!f||!horrorHour(now)||horrorOwned()) return null;
+  return typeof PLAYER!=="undefined"&&PLAYER&&(PLAYER.stones||[]).includes(f)?f:null;
+}
+
 function hatch(res,now=new Date(),ov={}){
   const el1=EL[res.main.g], el2=res.second?EL[res.second.g]:null;
-  let egg0=ov.family?null:eggOf(res); if(egg0&&egg0.costume&&!ov.costume&&typeof cosOpen==="function"&&!cosOpen(egg0.costume)) egg0=null;
+  const hc=ov.family?null:horrorCall(res,now);
+  let egg0=ov.family?null:hc?{special:hc}:eggOf(res); if(egg0&&egg0.costume&&!ov.costume&&typeof cosOpen==="function"&&!cosOpen(egg0.costume)) egg0=null;
   if(egg0&&egg0.special&&typeof stoneOpen==="function"&&!stoneOpen(egg0.special)) egg0=null;   // a special needs its Pattern Stone found on an expedition first   // a costume still waiting to be opened makes a plain Snabit
   const pf=pickFamily(res.cells,res), egg=egg0, family=ov.family||(egg&&egg.special)||pf.family, band=pf.band, shape=pf.shape;
   const F=FAMILY[family];
