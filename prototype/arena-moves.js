@@ -847,3 +847,23 @@ if(typeof KSND!=="undefined") Object.assign(KSND,{
   dolltoss:(d,t)=>{ sTone(d,t+0.05,'triangle',500,900,0.12,0.05); [0.3,0.42].forEach(x=>sTone(d,t+x,'sine',700,500,0.08,0.04)); dNoise(d,t+0.56,0.05,0.2,'bandpass',1500,1.5); dKick(d,t+0.56,0.2); },
   dollparade:(d,t)=>{ sTone(d,t+0.05,'triangle',500,900,0.12,0.05); for(let j=0;j<4;j++){ sTone(d,t+0.2+j*0.11,'sine',900-j*80,600,0.07,0.04); dNoise(d,t+0.56+j*0.11,0.05,0.18,'bandpass',1500,1.5); dKick(d,t+0.56+j*0.11,0.15); } }
 });
+
+/* Bloop's Big Swat: it rears up, then its tentacles sweep sideways across the target in one big slap that knocks it spinning */
+ANIM.bigswat={C:440,D:1120,contact:true,marks:true,
+  atk:(t,o)=>{ const d=(o&&o.dir)||1; if(t<220){ const k=eo(t/220); return {f:0.2*k,rot:-d*0.35*k,arc:-12*k,sy:1+0.06*k,pose:"crouch"}; }
+    if(t<440){ const k=ei((t-220)/220); return {f:0.2+0.38*k,rot:-d*0.35+d*0.85*k,arc:-12+6*k,pose:"attack"}; }
+    if(t<620) return {f:0.58,rot:d*0.5,arc:-6,pose:"attack"};
+    const k=(t-620)/500; return {f:0.58*(1-eio(k)),rot:d*0.5*(1-eo(k)),arc:-6*(1-k),pose:"idle"}; },
+  def:t=>{ if(t<440||t>1000) return null; const k=(t-440)/560; return {off:[34*(1-eo(k)),-10*Math.sin(Math.min(1,k*2)*Math.PI)],rot:0.5*Math.sin(Math.min(1,k*1.5)*Math.PI),pose:"hit"}; },
+  fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, d=atDir(x), col=x.parts||x.body||[200,170,230];
+    if(t>=140&&t<760){ const k=t<440?eio((t-140)/300):1, fade=t<580?1:1-(t-580)/180, base={x:s.x+d*s.r*0.2,y:s.y+s.r*0.15}, tc=col.map(v=>Math.min(255,v+30));
+      c.save(); c.globalAlpha*=fade; c.lineCap="round";
+      for(let i=0;i<4;i++){ const sw=-1.3+2.1*k+i*0.12, L=Math.abs(tg.x-base.x)+R*(0.4-i*0.08), tip={x:base.x+d*Math.cos(sw)*L,y:base.y+Math.sin(sw)*L*0.75}, mid={x:base.x+d*L*0.45,y:base.y-R*0.6*(1-k)+(i-1.5)*R*0.12};   // each tentacle swings from high over the target down across it
+        for(let j=0;j<12;j++){ const u0=j/12, u1=(j+1)/12, P=u=>({x:(1-u)*(1-u)*base.x+2*(1-u)*u*mid.x+u*u*tip.x,y:(1-u)*(1-u)*base.y+2*(1-u)*u*mid.y+u*u*tip.y+Math.sin(u*6+t/50+i)*R*0.05}), a=P(u0), b=P(u1);
+          c.strokeStyle=atRgba(j%3?tc:tc.map(v=>v*0.85),0.95); c.lineWidth=R*0.17*(1-u0*0.75); c.beginPath(); c.moveTo(a.x,a.y); c.lineTo(b.x,b.y); c.stroke(); } }
+      if(t>300&&t<560) for(let i=0;i<3;i++){ const sw=-1.3+2.1*k-0.25-i*0.12, L=Math.abs(tg.x-base.x)+R*0.5; c.strokeStyle=`rgba(255,255,255,${0.55-i*0.15})`; c.lineWidth=3; c.beginPath(); c.arc(base.x,base.y,L,d>0?sw-0.2:Math.PI-sw,d>0?sw:Math.PI-sw+0.2); c.stroke(); }
+      c.restore(); }
+    if(t>=440&&t<800){ const k=(t-440)/360; atStar4(c,tg.x-d*R*0.2,tg.y-R*0.3,R*0.9*(1-k),"rgba(255,255,240,.95)"); for(let i=0;i<8;i++){ const an=(d>0?0:Math.PI)+(atH(i*3)-0.5)*1.4, sp=R*(0.4+1.4*eo(k)); c.fillStyle=`rgba(190,230,255,${0.9*(1-k)})`; c.beginPath(); c.arc(tg.x+Math.cos(an)*sp,tg.y-R*0.3+Math.sin(an)*sp*0.6,R*0.08,0,7); c.fill(); } }
+    atImpact(t,440,0.55,0.08); }};
+Object.assign(AR_KIND,{"Big Swat":"bigswat"});
+if(typeof KSND!=="undefined") KSND.bigswat=(d,t)=>{ dNoise(d,t+0.22,0.22,0.12,'bandpass',900,0.7); dNoise(d,t+0.44,0.12,0.35,'highpass',1800,0.8); dKick(d,t+0.44,0.5); dNoise(d,t+0.46,0.3,0.1,'lowpass',600); };
