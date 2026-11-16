@@ -3293,10 +3293,10 @@ x.feet.push([g.cx, 182, 10]); },
     /* ---------- the horror series: cosmic horrors from the Rift, drawn cute ---------- */
     /* Cthulhu: an octopus head with a beard of feelers on a crouching body, big bat wings and clawed hands and feet. Small wings and four feelers; long clawed arms, suckers and wings over its head from Byte; huge ribbed wings, eight feelers and a ridge of spines at Mega */
     Cthulhu: {
-      special: true, dims: { Bit: [62, 64], Byte: [74, 86], Mega: [86, 104] }, ll: st => by(st, 6, 9, 11),
+      special: true, dims: { Bit: [62, 64], Byte: [78, 80], Mega: [94, 96] }, ll: st => by(st, 6, 9, 11),
       bottom(st) { return 182 - this.ll(st); }, height(st) { return this.dims[st][1] + this.ll(st) + by(st, 18, 36, 56); },
-      hh: g => g.bh * by(g.stage, 0.62, 0.56, 0.52),
-      path(c, g) { const hh = this.hh(g), tw = g.bw * by(g.stage, 0.74, 0.8, 0.84); c.beginPath(); c.ellipse(g.cx, g.top + hh / 2, g.bw / 2, hh / 2, 0, 0, 7);
+      hh: g => g.bh * 0.62,
+      path(c, g) { const hh = this.hh(g), tw = g.bw * 0.74; c.beginPath(); c.ellipse(g.cx, g.top + hh / 2, g.bw / 2, hh / 2, 0, 0, 7);
         c.moveTo(g.cx + tw / 2, g.top + hh * 0.8); c.roundRect(g.cx - tw / 2, g.top + hh * 0.8, tw, g.bot - g.top - hh * 0.8, [tw * 0.3, tw * 0.3, tw * 0.46, tw * 0.46]); },
       arms: 'stub', armW: st => by(st, 7, 8, 9), handR: st => by(st, 5, 6, 7), shoulderY: 0.7, shoulderIn: 0.1, armK: 1.35,
       hand(g, x, side) { const a = x.P.arm[side < 0 ? 0 : 1], k = this.armK, sx = g.cx + side * (g.bw / 2 - 4 - g.bw * this.shoulderIn), sy = g.top + g.bh * this.shoulderY; return [sx + side * a[2] * k, sy + a[3] * k]; },
@@ -3316,9 +3316,9 @@ x.feet.push([g.cx, 182, 10]); },
       inside(c, g, x) { const S = g.stage, hh = this.hh(g); c.fillStyle = rgba(dk(x.body, 0.18), 0.55);   // spots on the head
         for (const [fx, fy, r] of [[0.3, 0.14, 5], [0.62, 0.1, 4], [0.8, 0.26, 3], [0.18, 0.32, 3]].slice(0, by(S, 2, 3, 4))) { c.beginPath(); c.arc(g.left + g.bw * fx, g.top + hh * fy, r * by(S, 1, 1.15, 1.3), 0, 7); c.fill(); }
         c.fillStyle = rgb(lt(x.body, 0.2)); c.beginPath(); c.ellipse(g.cx, g.bot - (g.bot - g.top - hh) * 0.42, g.bw * 0.24, (g.bot - g.top - hh) * 0.36, 0, 0, 7); c.fill(); },   // a round belly
-      front(c, g, x) { const S = g.stage, hh = this.hh(g), n = by(S, 4, 6, 8), y0 = g.top + hh * 0.72, len = by(S, 18, 32, 46), span = g.bw * by(S, 0.34, 0.42, 0.46), col = dk(x.body, 0.18);
+      front(c, g, x) { const S = g.stage, hh = this.hh(g), n = by(S, 3, 4, 5), y0 = g.top + hh * 0.72, len = by(S, 18, 26, 34), span = g.bw * by(S, 0.42, 0.52, 0.56), col = dk(x.body, 0.18);
         if (!x.back) for (let i = 0; i < n; i++) { const f = i / (n - 1) - 0.5, tx = g.cx + f * span, sw = Math.sin(x.t / 300 + i * 1.7) * 4, cu = f < 0 ? -1 : 1, l = len * (1 - Math.abs(f) * 0.45);   // the beard of feelers
-          const q = [tx, y0, tx + f * 6 + sw * 0.5, y0 + l * 0.6, tx + f * 10 + sw + cu * 4, y0 + l]; limb(c, q, by(S, 7, 8, 9) - Math.abs(f) * 2, col, x.L.armL, x.t);
+          const q = [tx, y0, tx + f * 12 + sw * 0.5, y0 + l * 0.6, tx + f * 22 + sw + cu * 4, y0 + l]; limb(c, q, by(S, 7, 9, 10) - Math.abs(f) * 2, col, x.L.armL, x.t);
           c.strokeStyle = rgb(col); c.lineWidth = by(S, 4, 4.5, 5); c.lineCap = 'round'; c.beginPath(); c.arc(q[4] + cu * 3, q[5], 3.5, cu > 0 ? Math.PI : 0, cu > 0 ? Math.PI * 2.2 : -Math.PI * 1.2, cu < 0); c.stroke();
           if (S !== 'Bit') { c.fillStyle = rgb(lt(x.body, 0.35)); for (const k of [0.35, 0.65]) { const p = qpt(q, k); c.beginPath(); c.arc(p[0], p[1], 1.5, 0, 7); c.fill(); } } }   // suckers
         if (!x.back) for (const sd of [-1, 1]) { const [hx, hy] = this.hand(g, x, sd); c.fillStyle = rgb(lt(x.acc, 0.3)); for (const k of [-1, 0, 1]) { c.beginPath(); c.moveTo(hx + k * 4 - 2, hy + 3); c.lineTo(hx + k * 5, hy + 9); c.lineTo(hx + k * 4 + 2, hy + 3); c.closePath(); c.fill(); } }   // claws
@@ -3327,40 +3327,57 @@ x.feet.push([g.cx, 182, 10]); },
       head: g => [g.cx, g.top, g.bw * 0.46],
       face(c, g, x, look) { const hh = FAM.Cthulhu.hh(g); return faceTwo(c, g, x, look, { ey: hh * 0.44 / g.bh, ex: 0.18, my: hh * 0.66 / g.bh, s: by(g.stage, 0.74, 0.8, 0.86) }); }
     },
-    /* Hastur: the King in Yellow. A tall hood with a pale mask deep inside it, a long tattered robe to the ground and a crown on the hood. A small crown; wide torn sleeves, pale hands and a staff from Byte; a tall crown with jewels, a staff with a curling head and a sign on the robe at Mega */
+    /* Hastur: the King in Yellow. A tall hood with a pale mask deep inside it, a long tattered robe to the ground, a torn mantle over its shoulders and a crown on the hood. A small crown; torn sleeves, a staff, a taller crown and rags drifting round it from Byte; a huge crown, a dark halo behind it, glowing eyes, a staff with its sign and a flared, ragged robe at Mega */
     Hastur: {
-      special: true, dims: { Bit: [54, 66], Byte: [64, 88], Mega: [76, 108] }, slots: { feet: false },
-      bottom() { return 182; }, height(st) { return this.dims[st][1] + by(st, 22, 34, 50); },
+      special: true, dims: { Bit: [56, 68], Byte: [70, 92], Mega: [86, 116] }, slots: { feet: false },
+      bottom() { return 182; }, height(st) { return this.dims[st][1] + by(st, 26, 40, 62); },
       mask: [238, 230, 210],
-      path(c, g, x) { const S = g.stage, R = g.left + g.bw, fl = g.bw * by(S, 0.06, 0.1, 0.14), n = by(S, 4, 6, 8), j = by(S, 5, 8, 11), t = x ? x.t : 0, tip = by(S, 8, 14, 18);
-        c.beginPath(); c.moveTo(g.cx + 3, g.top - tip); c.bezierCurveTo(g.cx + g.bw * 0.3, g.top + g.bh * 0.02, R, g.top + g.bh * 0.2, R, g.top + g.bh * 0.46); c.lineTo(R + fl, g.bot);
-        for (let i = 1; i <= n * 2; i++) { const f = i / (n * 2), px = R + fl - f * (g.bw + fl * 2), w = Math.sin(t / 260 + i) * 1.5; c.lineTo(px, i % 2 ? g.bot - j + w : g.bot); }   // the tattered hem
-        c.lineTo(g.left - fl, g.bot); c.lineTo(g.left, g.top + g.bh * 0.46); c.bezierCurveTo(g.left, g.top + g.bh * 0.2, g.cx - g.bw * 0.3, g.top + g.bh * 0.02, g.cx + 3, g.top - tip); c.closePath(); },
-      arms: 'stub', armW: st => by(st, 0, 8, 9), handR: st => by(st, 0, 5, 6), shoulderY: 0.5,
+      path(c, g, x) { const S = g.stage, R = g.left + g.bw, fl = g.bw * by(S, 0.08, 0.16, 0.24), n = by(S, 4, 7, 9), j = by(S, 6, 10, 14), t = x ? x.t : 0, tip = by(S, 10, 16, 22);
+        c.beginPath(); c.moveTo(g.cx + 4, g.top - tip); c.bezierCurveTo(g.cx + g.bw * 0.28, g.top + g.bh * 0.02, g.cx + g.bw * 0.4, g.top + g.bh * 0.14, g.cx + g.bw * 0.4, g.top + g.bh * 0.32);
+        c.quadraticCurveTo(R, g.top + g.bh * 0.4, R + fl, g.bot);   // the robe flaring out wide to the ground
+        for (let i = 1; i <= n * 2; i++) { const f = i / (n * 2), px = R + fl - f * (g.bw + fl * 2), w = Math.sin(t / 260 + i) * 2; c.lineTo(px, i % 2 ? g.bot - j - (i % 4 === 1 ? 4 : 0) + w : g.bot); }   // the tattered hem
+        c.lineTo(g.left - fl, g.bot); c.quadraticCurveTo(g.left, g.top + g.bh * 0.4, g.cx - g.bw * 0.4, g.top + g.bh * 0.32);
+        c.bezierCurveTo(g.cx - g.bw * 0.4, g.top + g.bh * 0.14, g.cx - g.bw * 0.28, g.top + g.bh * 0.02, g.cx + 4, g.top - tip); c.closePath(); },
+      arms: 'stub', armW: st => by(st, 0, 8, 10), handR: st => by(st, 0, 5, 6.5), shoulderY: 0.46,
       hand(g, x, side) { const a = x.P.arm[side < 0 ? 0 : 1], sx = g.cx + side * (g.bw / 2 - 4), sy = g.top + g.bh * this.shoulderY; return [sx + side * a[2], sy + a[3]]; },
       sign(c, cx, cy, r, col) { c.strokeStyle = col; c.lineWidth = 2; c.lineCap = 'round'; c.beginPath(); c.arc(cx, cy, r * 0.28, 0, 7); c.stroke();   // its own sign: three hooks round a ring
         for (let k = 0; k < 3; k++) { const a = k * Math.PI * 2 / 3 - Math.PI / 2; c.beginPath(); c.moveTo(cx + Math.cos(a) * r * 0.36, cy + Math.sin(a) * r * 0.36);
           c.quadraticCurveTo(cx + Math.cos(a + 0.5) * r, cy + Math.sin(a + 0.5) * r, cx + Math.cos(a + 1.1) * r * 0.8, cy + Math.sin(a + 1.1) * r * 0.8); c.stroke(); } },
-      behind(c, g, x) { const S = g.stage; if (S === 'Bit') return; const [hx, hy] = this.hand(g, x, 1), top = hy - by(S, 0, 40, 58), gold = x.acc;   // the staff, held in its right hand
-        c.strokeStyle = rgb(dk(x.parts, 0.25)); c.lineWidth = by(S, 0, 3.5, 4.5); c.lineCap = 'round'; c.beginPath(); c.moveTo(hx + 2, 182); c.lineTo(hx, top); c.stroke();
-        c.strokeStyle = rgb(gold); c.lineWidth = 3; c.beginPath(); if (S === 'Mega') { c.arc(hx, top - 8, 8, Math.PI * 0.5, Math.PI * 2.2); } else { c.arc(hx, top - 4, 4, 0, 7); } c.stroke();
-        if (S === 'Mega') { c.fillStyle = rgb(lt(gold, 0.3)); c.beginPath(); c.arc(hx, top - 8, 3, 0, 7); c.fill(); } },
-      inside(c, g, x) { const S = g.stage, mx = g.cx, my = g.top + g.bh * by(S, 0.38, 0.32, 0.29), rx = g.bw * 0.32, ry = g.bh * by(S, 0.24, 0.18, 0.16);
-        c.fillStyle = rgb(dk(x.body, 0.7)); c.beginPath(); c.ellipse(mx, my + 1, rx * 1.25, ry * 1.3, 0, 0, 7); c.fill();   // the deep, dark hood
-        c.fillStyle = rgb(dk(this.mask, 0.12)); c.beginPath(); c.ellipse(mx, my + 3, rx * 0.86, ry * 0.86, 0, 0, 7); c.fill(); c.fillStyle = rgb(this.mask); c.beginPath(); c.ellipse(mx, my + 1, rx * 0.86, ry * 0.86, 0, 0, 7); c.fill();   // the pale mask
-        c.strokeStyle = rgba(dk(x.body, 0.25), 0.6); c.lineWidth = 1.8; for (const f of [-0.26, 0.04, 0.28]) { c.beginPath(); c.moveTo(g.cx + g.bw * f, g.top + g.bh * 0.62); c.quadraticCurveTo(g.cx + g.bw * (f + 0.05), g.top + g.bh * 0.82, g.cx + g.bw * (f - 0.03), g.bot); c.stroke(); }   // folds
-        if (S === 'Mega' && !x.back) this.sign(c, g.cx, g.top + g.bh * 0.74, 11, rgb(dk(x.parts, 0.1))); },
-      front(c, g, x) { const S = g.stage, col = x.acc;
-        if (S !== 'Bit') for (const sd of [-1, 1]) { const [hx, hy] = this.hand(g, x, sd), sx = g.cx + sd * (g.bw / 2 - 4), sy = g.top + g.bh * this.shoulderY;   // wide torn sleeves
-          c.fillStyle = rgb(dk(x.body, 0.08)); c.beginPath(); c.moveTo(sx - sd * 4, sy - 4); c.lineTo(hx + sd * 3, hy - 8); for (let k = 0; k <= 4; k++) c.lineTo(hx + sd * (7 - k * 4), hy + 2 + (k % 2 ? 7 : 0)); c.lineTo(sx - sd * 6, sy + 10); c.closePath(); c.fill(); }
-        const cy = g.top + by(S, 2, 0, -2), cw = by(S, 11, 14, 16), ch = by(S, 9, 13, 22), pts = by(S, 3, 5, 5);   // a crown on the hood
-        c.fillStyle = rgb(dk(col, 0.25)); c.fillRect(g.cx + 3 - cw, cy - 1, cw * 2, 6); c.fillStyle = rgb(col); c.beginPath(); c.moveTo(g.cx + 3 - cw, cy + 2);
-        for (let i = 0; i < pts; i++) { const f = i / (pts - 1), px = g.cx + 3 - cw + f * cw * 2, mid = i === (pts - 1) / 2; c.lineTo(px - (i ? 3 : 0), cy - 2); c.lineTo(px, cy - ch * (mid ? 1.2 : 0.8)); c.lineTo(px + (i < pts - 1 ? 3 : 0), cy - 2); }
-        c.lineTo(g.cx + 3 + cw, cy + 2); c.closePath(); c.fill();
-        if (S !== 'Bit') { c.fillStyle = rgb(lt(x.parts, 0.1)); for (let i = 0; i < pts; i++) { c.beginPath(); c.arc(g.cx + 3 - cw + i / (pts - 1) * cw * 2, cy + 1.5, S === 'Mega' ? 2.4 : 1.8, 0, 7); c.fill(); } } },   // jewels on the band
-      hl: g => [g.left + g.bw * 0.12, g.top + g.bh * 0.62, g.left + g.bw * 0.14, g.top + g.bh * 0.3, g.left + g.bw * 0.34, g.top + g.bh * 0.06],
-      head: g => [g.cx, g.top + 4, g.bw * 0.4],
-      face: (c, g, x, look) => faceTwo(c, g, x, look, { ey: by(g.stage, 0.36, 0.3, 0.27), ex: 0.12, my: by(g.stage, 0.47, 0.39, 0.35), lidCol: FAM.Hastur.mask, s: by(g.stage, 0.56, 0.62, 0.66) })
+      rag(c, x0, y0, len, a, col, t, k) { c.save(); c.translate(x0, y0); c.rotate(a); c.fillStyle = rgb(col); c.beginPath(); c.moveTo(0, -4);   // a strip of torn cloth
+        for (let i = 0; i <= 6; i++) c.lineTo(i * len / 6, -4 * (1 - i / 7) + Math.sin(t / 240 + k + i) * 2.5); c.lineTo(len + 4, Math.sin(t / 240 + k + 7) * 2.5);
+        for (let i = 6; i >= 0; i--) c.lineTo(i * len / 6, 4 * (1 - i / 7) + Math.sin(t / 240 + k + i) * 2.5); c.closePath(); c.fill(); c.restore(); },
+      behind(c, g, x) { const S = g.stage, hy = g.top + g.bh * 0.22;
+        if (S === 'Mega') { const pulse = 0.8 + 0.2 * Math.sin(x.t / 500); c.save(); c.globalAlpha = 0.85;   // a dark halo with rays behind its head
+          c.fillStyle = rgba(dk(x.parts, 0.2), 0.8 * pulse); c.beginPath(); for (let k = 0; k < 24; k++) { const a = k / 24 * Math.PI * 2 + x.t / 4000, r = k % 2 ? g.bw * 0.5 : g.bw * (0.78 + 0.08 * Math.sin(k + x.t / 300)); c.lineTo(g.cx + Math.cos(a) * r, hy + Math.sin(a) * r); } c.closePath(); c.fill();
+          c.strokeStyle = rgba(lt(x.body, 0.25), 0.9 * pulse); c.lineWidth = 3; c.beginPath(); c.arc(g.cx, hy, g.bw * 0.52, 0, 7); c.stroke(); c.restore(); }
+        if (S !== 'Bit') for (let k = 0; k < by(S, 0, 2, 5); k++) { const a = x.t / 1500 + k * Math.PI * 2 / by(S, 1, 2, 5), rx = g.bw * 0.78, px = g.cx + Math.cos(a) * rx, py = g.top + g.bh * 0.55 + Math.sin(a) * g.bh * 0.32;   // rags drifting round it
+          this.rag(c, px, py, by(S, 0, 18, 24), a + 2, dk(x.body, 0.12), x.t, k); }
+        if (S === 'Bit') return; const [hx, hy2] = this.hand(g, x, 1), top = g.top - by(S, 0, 6, 18), gold = x.acc;   // the staff, held in its right hand
+        c.strokeStyle = rgb(dk(x.parts, 0.25)); c.lineWidth = by(S, 0, 4, 5); c.lineCap = 'round'; c.beginPath(); c.moveTo(hx + 3, 182); c.lineTo(hx, top); c.stroke();
+        if (S === 'Mega') { c.save(); c.shadowColor = rgba(lt(gold, 0.3), 1); c.shadowBlur = 10; this.sign(c, hx, top - 12, 13, rgb(gold)); c.restore(); }
+        else { c.strokeStyle = rgb(gold); c.lineWidth = 3; c.beginPath(); c.arc(hx, top - 6, 6, Math.PI * 0.5, Math.PI * 2.2); c.stroke(); } },
+      inside(c, g, x) { const S = g.stage, mx = g.cx, my = g.top + g.bh * by(S, 0.36, 0.28, 0.25), rx = g.bw * by(S, 0.3, 0.26, 0.23), ry = g.bh * by(S, 0.22, 0.17, 0.15);
+        c.fillStyle = rgb(dk(x.body, 0.78)); c.beginPath(); c.ellipse(mx, my + 1, rx * 1.3, ry * 1.35, 0, 0, 7); c.fill();   // the deep, dark hood
+        c.fillStyle = rgb(dk(this.mask, 0.14)); c.beginPath(); c.ellipse(mx, my + 3, rx * 0.84, ry * 0.86, 0, 0, 7); c.fill(); c.fillStyle = rgb(this.mask); c.beginPath(); c.ellipse(mx, my + 1, rx * 0.84, ry * 0.86, 0, 0, 7); c.fill();   // the pale mask
+        c.strokeStyle = rgba(dk(x.body, 0.3), 0.6); c.lineWidth = 2; for (const f of [-0.3, -0.1, 0.1, 0.3]) { c.beginPath(); c.moveTo(g.cx + g.bw * f * 0.7, g.top + g.bh * 0.5); c.quadraticCurveTo(g.cx + g.bw * (f + 0.05), g.top + g.bh * 0.8, g.cx + g.bw * f * 1.4, g.bot); c.stroke(); }   // deep folds
+        if (S === 'Mega' && !x.back) this.sign(c, g.cx, g.top + g.bh * 0.72, 12, rgb(dk(x.parts, 0.1))); },
+      front(c, g, x) { const S = g.stage, col = x.acc, sy = g.top + g.bh * by(S, 0.6, 0.47, 0.42), mw = g.bw * by(S, 0.5, 0.58, 0.64), ml = g.bh * by(S, 0.18, 0.22, 0.24);
+        c.fillStyle = rgb(dk(x.body, 0.14)); c.beginPath(); c.moveTo(g.cx - g.bw * 0.3, sy - 4); c.lineTo(g.cx + g.bw * 0.3, sy - 4);   // a torn mantle over its shoulders, cut into long points
+        const n = by(S, 5, 7, 9); c.lineTo(g.cx + mw, sy + 4); for (let i = 1; i <= n * 2; i++) { const f = i / (n * 2), px = g.cx + mw - f * mw * 2, d = Math.sin(f * Math.PI) * 0.4 + 0.6, w = Math.sin(x.t / 300 + i) * 1.5; c.lineTo(px, sy + (i % 2 ? ml * d : ml * d * 0.45) + w); }
+        c.lineTo(g.cx - mw, sy + 4); c.closePath(); c.fill();
+        if (S !== 'Bit') for (const sd of [-1, 1]) { const [hx, hy] = this.hand(g, x, sd), sx = g.cx + sd * (g.bw / 2 - 4), sy2 = g.top + g.bh * this.shoulderY;   // torn sleeves
+          c.fillStyle = rgb(dk(x.body, 0.08)); c.beginPath(); c.moveTo(sx - sd * 4, sy2 - 4); c.lineTo(hx + sd * 3, hy - 8); for (let k = 0; k <= 4; k++) c.lineTo(hx + sd * (7 - k * 4), hy + 2 + (k % 2 ? 8 : 0)); c.lineTo(sx - sd * 6, sy2 + 10); c.closePath(); c.fill(); }
+        const cy = g.top + by(S, 2, 0, -2), cw = by(S, 12, 16, 20), ch = by(S, 10, 16, 28), pts = by(S, 3, 5, 7);   // a crown on the hood
+        if (S === 'Mega') { c.save(); c.shadowColor = rgba(lt(col, 0.3), 1); c.shadowBlur = 12; }
+        c.fillStyle = rgb(dk(col, 0.25)); c.fillRect(g.cx + 4 - cw, cy - 1, cw * 2, 7); c.fillStyle = rgb(col); c.beginPath(); c.moveTo(g.cx + 4 - cw, cy + 2);
+        for (let i = 0; i < pts; i++) { const f = i / (pts - 1), px = g.cx + 4 - cw + f * cw * 2, mid = Math.abs(f - 0.5); c.lineTo(px - (i ? 2.5 : 0), cy - 2); c.lineTo(px, cy - ch * (1.2 - mid * 1.1)); c.lineTo(px + (i < pts - 1 ? 2.5 : 0), cy - 2); }
+        c.lineTo(g.cx + 4 + cw, cy + 2); c.closePath(); c.fill(); if (S === 'Mega') c.restore();
+        if (S !== 'Bit') { c.fillStyle = rgb(lt(x.parts, 0.1)); for (let i = 0; i < pts; i++) { c.beginPath(); c.arc(g.cx + 4 - cw + i / (pts - 1) * cw * 2, cy + 2, S === 'Mega' ? 2.4 : 1.8, 0, 7); c.fill(); } } },   // jewels on the band
+      hl: g => [g.left + g.bw * 0.16, g.top + g.bh * 0.6, g.left + g.bw * 0.2, g.top + g.bh * 0.3, g.left + g.bw * 0.36, g.top + g.bh * 0.08],
+      head: g => [g.cx, g.top + 4, g.bw * 0.36],
+      face(c, g, x, look) { const S = g.stage, fi = faceTwo(c, g, x, look, { ey: by(S, 0.34, 0.27, 0.24), ex: by(S, 0.12, 0.1, 0.09), my: by(S, 0.45, 0.36, 0.32), lidCol: FAM.Hastur.mask, s: by(S, 0.56, 0.6, 0.62) });
+        if (S !== 'Mega' || x.back) return fi; c.save(); c.globalCompositeOperation = 'lighter'; const gl = 0.35 + Math.sin(x.t / 250) * 0.12;   // its eyes glow at Mega
+        for (const sd of [-1, 1]) { c.fillStyle = rgba(lt(x.acc, 0.3), gl); c.beginPath(); c.arc(g.cx + sd * fi.ex, fi.ey, 9 * fi.s, 0, 7); c.fill(); } c.restore(); return fi; }
     },
     /* Shoggoth: a wide mound of dark goo with eyes of every size all over it, feelers curling up off its top and a wide toothy mouth. Three spare eyes and three feelers; eight eyes, six feelers and teeth from Byte; fourteen eyes that glow, nine feelers and a second mouth on its side at Mega */
     Shoggoth: {
@@ -3370,7 +3387,8 @@ x.feet.push([g.cx, 182, 10]); },
         for (let i = 0; i <= n; i++) { const a = Math.PI + i / n * Math.PI, w = 1 + 0.05 * Math.sin(a * 6 + t / 400) + 0.03 * Math.sin(a * 3 - t / 300); const px = g.cx + Math.cos(a) * rx * w, py = base + Math.sin(a) * ry * w;
           i ? c.lineTo(px, py) : c.moveTo(px, py); }
         c.quadraticCurveTo(g.cx + rx * 1.1, g.bot, g.cx + rx * 0.7, g.bot); c.lineTo(g.cx - rx * 0.7, g.bot); c.quadraticCurveTo(g.cx - rx * 1.1, g.bot, g.cx - rx, base); c.closePath(); },
-      eyeAt(c, px, py, r, t, k, lidCol, glow) { const shut = (t + k * 913) % 3400 < 140; c.fillStyle = rgb(lidCol); c.beginPath(); c.arc(px, py, r + 1.5, 0, 7); c.fill();
+      eyeAt(c, px, py, r0, t, k, lidCol, glow, wave) { const o = wave == null ? 1 : Math.max(0, Math.min(1, (Math.sin(t / 1300 + wave) + 0.25) * 1.6)), shut = o < 0.2 || (t + k * 913) % 3400 < 140, r = r0 * (0.55 + 0.45 * o);   // o: how far open, so whole patches of eyes sink shut while others open
+        c.fillStyle = rgb(lidCol); c.beginPath(); c.arc(px, py, r + 1.5, 0, 7); c.fill();
         if (shut) { c.strokeStyle = '#2b2430'; c.lineWidth = 1.4; c.beginPath(); c.moveTo(px - r, py); c.quadraticCurveTo(px, py + r * 0.5, px + r, py); c.stroke(); return; }
         if (glow) { c.save(); c.shadowColor = rgba(glow, 0.9); c.shadowBlur = 6; } c.fillStyle = glow ? rgb(lt(glow, 0.55)) : '#fff'; c.beginPath(); c.arc(px, py, r, 0, 7); c.fill(); if (glow) c.restore();
         const ox = Math.sin(t / 900 + k) * r * 0.3, oy = Math.cos(t / 700 + k * 2) * r * 0.2;
@@ -3387,7 +3405,7 @@ x.feet.push([g.cx, 182, 10]); },
         for (const [f, col, a] of [[0.22, x.parts, 0.3], [0.62, x.acc, 0.2], [0.84, x.parts, 0.22]]) { c.strokeStyle = rgba(col, a); c.lineWidth = 5; c.beginPath(); c.moveTo(g.left + g.bw * (f - 0.1), g.bot - 4);   // an oily sheen
           c.bezierCurveTo(g.left + g.bw * (f + 0.12), g.top + g.bh * 0.7, g.left + g.bw * (f - 0.12), g.top + g.bh * 0.4, g.left + g.bw * (f + 0.06), g.top + g.bh * 0.1); c.stroke(); }
         if (x.back) return; const E = [[0.13, 0.62, 4], [0.87, 0.58, 3.5], [0.24, 0.24, 5], [0.78, 0.26, 6], [0.5, 0.08, 3.5], [0.1, 0.84, 3.5], [0.9, 0.84, 4], [0.36, 0.1, 3], [0.66, 0.1, 4], [0.06, 0.44, 3], [0.94, 0.42, 3.5], [0.3, 0.9, 3], [0.7, 0.9, 3], [0.18, 0.44, 2.5]];
-        E.slice(0, by(S, 3, 8, 14)).forEach(([fx, fy, r], k) => this.eyeAt(c, g.left + g.bw * fx, g.top + g.bh * fy, r * by(S, 0.9, 1.05, 1.2), x.t, k, x.body, S === 'Mega' ? x.parts : null));
+        E.slice(0, by(S, 4, 10, 14)).forEach(([fx, fy, r], k) => this.eyeAt(c, g.left + g.bw * fx, g.top + g.bh * fy, r * by(S, 0.9, 1.05, 1.2), x.t, k, x.body, S === 'Mega' ? x.parts : null, fx * 6 + fy * 3));
         if (S === 'Mega') this.mouth(c, g.left + g.bw * 0.8, g.top + g.bh * 0.74, 16, 5, 4, '#d06070'); },
       hl: g => [g.left + g.bw * 0.14, g.top + g.bh * 0.62, g.left + g.bw * 0.2, g.top + g.bh * 0.26, g.left + g.bw * 0.38, g.top + g.bh * 0.06],
       head: g => [g.cx, g.top + 4, g.bw * 0.42],
