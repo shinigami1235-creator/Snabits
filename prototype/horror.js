@@ -205,7 +205,7 @@ const HORROR_SECRET = {
   Ghoul: ["Its burrows are in the Rift's Outer Ring.", 'A grey bone in brown earth under a red sky, near midnight.'],
   Gug: ["Its gate is in the Rift's Middle Ring.", 'A band of pink bricks in a brown wall, in the dead of night.'],
   Yog: ['Its gate stands at the heart of the Rift.', 'Teal and pink globes on violet, between the last bell and the first.'],
-  Shub: ["Its grove is in the Rift's Outer Ring.", 'Black kids round a brown ring on green, when the forest is asleep.'] };
+  Shub: ["Its grove is in the Rift's Outer Ring.", 'A black goat with brown horns on green, when the forest is asleep.'] };
 function horrorSecretsHtml(S) {
   return `<div class="full lab-head" style="margin-top:6px"><b>Horrors</b></div><div class="full dex-grid">${Object.keys(HORROR_SECRET).map(f => {
     const b = S[f] || 0, stone = (PLAYER.stones || []).includes(f), hint = stone ? HORROR_SECRET[f][1] : myth(f)[0] ? HORROR_SECRET[f][0] : '???';

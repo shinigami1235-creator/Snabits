@@ -754,9 +754,13 @@ function horrorGlyph(c, sp) {
       for (let x = -13 + off; x < 10; x += 6) { const mid = row >= 3 && row <= 5 && x > -9 && x < 6; f(mid ? 'pink' : 'brown'); c.fillRect(x + 0.45, y + 0.45, 5.1, 2.1); } } }
   else if (sp === 'Yog') { bg('violet'); for (const [x, y, r, n] of [[-3.5, -5, 4.5, 'cyan'], [3.5, -1, 4.1, 'pink'], [-2.5, 3.5, 3.9, 'pink'], [3.5, 7.5, 3.7, 'cyan'], [-5.5, 10.5, 2, 'cyan'], [6, -9, 2, 'pink']]) { f(n); disc(x, y, r); }   // globes on violet
     st('white', 0.6); c.beginPath(); c.ellipse(0, 0, 9, 3, -0.6, 0, 7); c.stroke(); }
-  else if (sp === 'Shub') { bg('green'); st('brown', 3.2); c.beginPath(); c.arc(0, -1, 6, 0, 7); c.stroke();   // a ring of brown trees with black kids round it
-    f('black'); for (const [x, y] of [[0, -1.5], [-2.5, 3], [2.5, 3], [-3.5, 8], [3.5, 8], [0, 11]]) oval(x, y, 2.6, 2); c.fillRect(-10, 9.5, 20, 3.5);
-    f('brown'); for (const a of [0.6, 2.2, 3.8, 5.4]) disc(Math.cos(a) * 6, -1 + Math.sin(a) * 6, 1.8); }
+  else if (sp === 'Shub') { bg('green'); f('brown'); c.beginPath(); c.moveTo(-10, 13); c.lineTo(-10, 5); c.quadraticCurveTo(0, 2, 10, 5); c.lineTo(10, 13); c.fill();   // a black goat's head with curled brown horns, over a brown hill on green
+    st('brown', 3.8); for (const d of [-1, 1]) { c.beginPath(); c.moveTo(d * 2.5, -5.5); c.bezierCurveTo(d * 6, -12, d * 11, -6, d * 8.5, -1.5); c.bezierCurveTo(d * 7, 1.5, d * 4, 0, d * 5.5, -2.5); c.stroke(); }
+    f('black'); for (const d of [-1, 1]) { c.save(); c.translate(d * 6.2, -2); c.rotate(d * 0.5); oval(0, 0, 2.6, 1.2); c.restore(); }   // ears
+    c.beginPath(); c.moveTo(-4.6, -4); c.quadraticCurveTo(0, -7.5, 4.6, -4); c.quadraticCurveTo(5, 3, 2.2, 8.5); c.quadraticCurveTo(0, 10, -2.2, 8.5); c.quadraticCurveTo(-5, 3, -4.6, -4); c.fill();
+    st('black', 1.6); c.beginPath(); c.moveTo(-1.2, 9); c.lineTo(0, 12); c.lineTo(1.2, 9); c.stroke();   // beard
+    f('green'); for (const d of [-1, 1]) c.fillRect(d * 2.3 - 1.1, -1.4, 2.2, 0.9);   // goat eyes, a bar each
+    f('brown'); oval(-1, 6, 0.55, 0.45); oval(1, 6, 0.55, 0.45); }
   c.restore();
 }
 function awayProps(c, p, t, front) {
