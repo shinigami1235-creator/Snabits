@@ -48,13 +48,14 @@ Object.assign(ANIM,{
   sg_crunch:{C:780,D:1460,contact:true,marks:true,sig:true,
     atk:(t,o)=>{ const d=(o&&o.dir)||1;
       if(t<300){ const k=eo(t/300); return {f:-0.08*k,sx:1+0.16*k,sy:1-0.22*k,pose:"crouch"}; }
-      if(t<780){ const k=(t-300)/480; return {f:-0.08+0.7*eio(k),arc:-50*Math.sin(k*Math.PI),sx:1-0.1*Math.sin(k*Math.PI),sy:1+0.14*Math.sin(k*Math.PI),rot:d*0.25*k,pose:"tackle"}; }
-      const k=(t-780)/680; return {f:0.62*(1-eio(k)),sx:1+0.14*Math.sin(k*9)*(1-k),sy:1-0.14*Math.sin(k*9)*(1-k),rot:d*0.25*(1-eio(k)),pose:k<0.5?"punch":"happy"}; },
+      if(t<780){ const k=(t-300)/480, g=eo(k); return {f:-0.08+0.66*eio(k),arc:-50*Math.sin(k*Math.PI),sx:1+0.55*g,sy:1+0.6*g,rot:d*0.15*k,pose:"bitewide"}; }
+      if(t<1120){ const k=(t-780)/340, gr=Math.sin(k*Math.PI*3); return {f:0.58,sx:1.5+0.08*gr,sy:1.42-0.1*gr,off:[Math.sin(t/14)*3,0],pose:"chomp"}; }
+      const k=(t-1120)/340; return {f:0.58*(1-eio(k)),sx:1.5-0.5*eo(k),sy:1.42-0.42*eo(k),arc:-26*Math.sin(Math.min(1,k)*Math.PI),pose:k<0.4?"bitewide":"happy"}; },
     def(t){ if(t<780||t>1350) return null; const g=t<1080?1:1-(t-1080)/270, gr=Math.floor((t-780)/120)%2; return {sx:1+0.12*g,sy:1-0.24*g-(gr?0.05:0),off:[Math.sin(t/12)*3*g,0],pose:"hurt"}; },
     fx(c,t,x){ const tg=x.target, R=tg.r, cy=tg.y-R*0.05, col=(x.col||[240,200,90]).map(v=>Math.min(255,v*0.55+110));
-      if(t>260&&t<1400){ const open=t<780?eo((t-260)/420):t<1100?Math.abs(Math.sin((t-780)/120*Math.PI/2))*0.12:0.12+eo((t-1100)/200)*0.8, fade=t<1200?1:1-(t-1200)/200;
-        SG.jaws(c,tg.x,cy,R*1.4,open,col,Math.max(0,Math.min(1,(t-260)/150))*fade); }
+      if(t>500&&t<780){ const k=(t-500)/280; c.strokeStyle=`rgba(255,255,255,${0.6*k})`; c.lineWidth=3; for(let i=0;i<5;i++){ const yy=cy+(i-2)*R*0.3; c.beginPath(); c.moveTo(tg.x-R*(1.8-0.4*k),yy); c.lineTo(tg.x-R*(2.6-0.4*k),yy); c.stroke(); } }
       atImpact(t,780,0.8,0.35); atImpact(t,900,0.35,0); atImpact(t,1020,0.35,0);
+      for(const T0 of [780,900,1020]){ const k=(t-T0)/260; if(k>=0&&k<1) chompMarks(c,{x:tg.x+(T0-900)/120*R*0.25,y:cy+(T0===900?-R*0.2:R*0.1)},k); }
       if(t>=780&&t<1400){ const k=(t-780)/620;
         for(let i=0;i<12;i++){ const a=-Math.PI*(0.1+0.8*atH(i*5)), sp=R*(0.6+1.6*k)*(0.7+0.5*atH(i)); SG.shard(c,tg.x+Math.cos(a)*sp*(i%2?1:-1),cy+Math.sin(a)*sp+k*k*R*1.6,R*0.09*(1-k*0.4),t/80+i,i%3?"#fff6e0":atRgba(col,1)); }
         atPow(c,{x:tg.x,y:cy-R*0.9},Math.min(1,(t-780)/420),R/24); } }},
@@ -173,9 +174,10 @@ Object.assign(ANIM,{
   /* Plod: it rears up on its back legs with its trunk high, then slams down on the target with a shockwave that throws up rocks */
   sg_trunkslam:{C:880,D:1560,contact:true,marks:true,sig:true,
     atk:(t,o)=>{ const d=(o&&o.dir)||1;
-      if(t<520){ const k=eo(t/520); return {f:0.25*k,rot:-d*0.42*k,arc:-16*k,sy:1+0.08*k,pose:"effort"}; }
-      if(t<880){ const k=ei((t-520)/360); return {f:0.25+0.37*k,rot:-d*0.42+d*0.9*k,arc:-16*(1-k),sy:1.08-0.2*k,sx:1+0.1*k,pose:"punch"}; }
-      const k=(t-880)/680; return {f:0.62*(1-eio(k)),rot:d*0.48*(1-eo(k)),sy:0.88+0.12*eo(k),sx:1.1-0.1*eo(k),pose:k<0.5?"land":"idle"}; },
+      // Plod's own trunk goes up high, then comes down on the target like a hammer
+      if(t<520){ const k=eo(t/520); return {f:0.3*k,rot:-d*0.15*k,arc:-10*k,sy:1+0.06*k,pose:atPose("effort",{trunk:0.25*k,trunkUp:1.6*k})}; }
+      if(t<880){ const k=ei((t-520)/360); return {f:0.3+0.25*k,rot:-d*0.15+d*0.3*k,arc:-10*(1-k),sy:1.06-0.16*k,sx:1+0.08*k,pose:atPose("attack",{trunk:0.25+1.15*k,trunkUp:1.6-2.3*k,eyes:"fierce"})}; }
+      const k=(t-880)/680; return {f:0.55*(1-eio(k)),rot:d*0.15*(1-eo(k)),sy:0.9+0.1*eo(k),sx:1.08-0.08*eo(k),pose:k<0.5?atPose("land",{trunk:1.4*(1-k*1.6),trunkUp:-0.7*(1-k*1.6)}):"idle"}; },
     def:t=>SG.squash(t,880,0.4,620),
     fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, d=atDir(x);
       if(t>520&&t<900){ const k=(t-520)/360; c.save(); c.strokeStyle=`rgba(255,255,255,${0.6*(1-k*0.5)})`; c.lineWidth=R*0.18; c.lineCap="round"; c.beginPath(); c.arc(s.x+d*s.r*0.3,s.y,s.r*1.5,-Math.PI/2-d*0.6,-Math.PI/2-d*0.6+d*2.2*k,d<0); c.stroke(); c.restore(); }
@@ -194,7 +196,7 @@ Object.assign(ANIM,{
     def(t){ if(t<400||t>1060) return null; if(t<640){ const a=1-eo((t-400)/240); return {off:[10*a*Math.sign(1),0],rot:0.08*a,pose:"hit"}; } const a=1-eo((t-640)/420); return {off:[30*a,-6*a],rot:0.22*a,pose:"hurt",sx:1-0.1*a,sy:1+0.06*a}; },
     fx(c,t,x){ const tg=x.target, R=tg.r, d=atDir(x), gc=[226,48,58]; atImpact(t,400,0.35,0); atImpact(t,640,0.8,0.3);
       for(const [T0,big,yo] of [[400,0.7,-0.25],[640,1.1,0]]){ const k=(t-T0)/360; if(k<0||k>1) continue; const p={x:tg.x-d*R*0.55,y:tg.y+R*yo};
-        SG.glove(c,p.x-d*R*0.2*(1-k),p.y,R*0.42*big,d,gc,1-ei(k)); c.save(); c.strokeStyle=`rgba(255,255,255,${1-k})`; c.lineWidth=3; for(let i=0;i<7;i++){ const a=i/7*Math.PI*2, r0=R*0.5*big*(1+k), r1=r0+R*0.35*big*(1-k); c.beginPath(); c.moveTo(p.x+Math.cos(a)*r0,p.y+Math.sin(a)*r0); c.lineTo(p.x+Math.cos(a)*r1,p.y+Math.sin(a)*r1); c.stroke(); } c.restore();
+        c.save(); c.strokeStyle=`rgba(255,255,255,${1-k})`; c.lineWidth=3; for(let i=0;i<7;i++){ const a=i/7*Math.PI*2, r0=R*0.5*big*(1+k), r1=r0+R*0.35*big*(1-k); c.beginPath(); c.moveTo(p.x+Math.cos(a)*r0,p.y+Math.sin(a)*r0); c.lineTo(p.x+Math.cos(a)*r1,p.y+Math.sin(a)*r1); c.stroke(); } c.restore();
         if(big>1) atPow(c,{x:p.x+d*R*0.4,y:p.y-R*0.6},k,R/26); }
       if(t>180&&t<660){ c.strokeStyle="rgba(255,255,255,.55)"; c.lineWidth=2; for(let i=0;i<6;i++){ const yy=tg.y+(i-2.5)*R*0.25, len=R*(1.2+atH(i)*0.8); c.beginPath(); c.moveTo(tg.x-d*R*(1.4+len/R*0.5),yy); c.lineTo(tg.x-d*R*0.9,yy); c.stroke(); } } }},
   /* Fizz: it pops its cork, lobs a spinning bottle that shatters on the target, and a cloud of bubbling poison rises off it */
@@ -406,9 +408,9 @@ Object.assign(ANIM,{
     def(t){ if(t<880||t>1580) return null; const k=(t-880)/700, up=Math.sin(Math.min(1,k*1.25)*Math.PI); return {lift:-70*up,off:[24*eo(k),0],rot:0.6*Math.sin(Math.min(1,k*1.2)*Math.PI),pose:"hurt"}; },
     fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, d=atDir(x), gc=x.col||[220,60,60];
       if(t>380&&t<900){ const k=(t-380)/500; c.save(); c.globalCompositeOperation="lighter"; atCrescent(c,s.x,s.y,s.r*1.5,-d*0.5+d*(Math.PI*2+0.7)*eio(k)-Math.PI/2,Math.min(0.95,k),[255,220,170]); c.restore();
-        const gp={x:s.x+Math.cos(-Math.PI/2+d*(Math.PI*2+0.7)*eio(k))*s.r*1.2,y:s.y+Math.sin(-Math.PI/2+d*(Math.PI*2+0.7)*eio(k))*s.r*1.2}; SG.glove(c,gp.x,gp.y,s.r*(0.3+0.35*k),d,gc,0.9); }
+        }
       atImpact(t,880,1,0.45);
-      if(t>=880){ const k=(t-880)/700; SG.glove(c,tg.x-d*R*0.3,tg.y-R*(0.1+0.8*eo(Math.min(1,k*3))),R*0.7*(1-k*0.5),d,gc,1-ei(Math.min(1,k*1.4)));
+      if(t>=880){ const k=(t-880)/700; 
         c.save(); c.strokeStyle=`rgba(255,255,255,${0.9*(1-k)})`; c.lineWidth=3; for(let i=0;i<10;i++){ const a=-Math.PI/2+(i-4.5)*0.22; c.beginPath(); c.moveTo(tg.x+Math.cos(a)*R*0.8,tg.y+Math.sin(a)*R*0.8); c.lineTo(tg.x+Math.cos(a)*R*(1.6+k*1.5),tg.y+Math.sin(a)*R*(1.6+k*1.5)); c.stroke(); } c.restore();
         atPow(c,{x:tg.x,y:tg.y-R*0.6},Math.min(1,k*1.3),R/20); SG.ring(c,tg.x,tg.foot,R*(0.5+2*eo(k)),R*(0.15+0.5*eo(k)),[255,230,200],5*(1-k),1-k); } }},
   /* Brolly: it spins open, a raincloud swells over the target and pours down a hard rain, then two big drops burst on it */
@@ -599,7 +601,7 @@ Object.assign(ANIM,{
       if(t<700){ const k=Math.min(1,t/360), kx=s.x-d*s.r*0.95, ky=s.y-s.r*0.2, sp=t/40; c.save(); c.translate(kx,ky); c.scale(Math.cos(sp),1); c.fillStyle="#d8b85a"; c.strokeStyle="#7a5a20"; c.lineWidth=2;
         for(const sd of [-1,1]){ c.beginPath(); c.ellipse(sd*s.r*0.25,0,s.r*0.22,s.r*0.16,0,0,7); c.fill(); c.stroke(); } c.fillRect(-s.r*0.05,-s.r*0.05,s.r*0.1,s.r*0.1); c.restore(); }
       for(let i=0;i<5;i++){ const T0=488+i*128, k=(t-T0)/260; if(k<0||k>1) continue; atImpact(t,T0,0.22+i*0.04,0); const p={x:tg.x-d*R*(0.5+0.1*(i%2)),y:tg.y+(i%2?-1:1)*R*0.25};
-        SG.glove(c,p.x,p.y,R*(0.35+0.05*i),d,MT,1-ei(k)); c.save(); c.globalCompositeOperation="lighter"; for(let j=0;j<6;j++){ const a=atH(i*9+j)*Math.PI*2, L=R*(0.3+0.6*k); c.strokeStyle=`rgba(255,220,120,${1-k})`; c.lineWidth=2; c.beginPath(); c.moveTo(p.x+Math.cos(a)*R*0.2,p.y+Math.sin(a)*R*0.2); c.lineTo(p.x+Math.cos(a)*L,p.y+Math.sin(a)*L); c.stroke(); } c.restore(); }
+        c.save(); c.globalCompositeOperation="lighter"; for(let j=0;j<6;j++){ const a=atH(i*9+j)*Math.PI*2, L=R*(0.3+0.6*k); c.strokeStyle=`rgba(255,220,120,${1-k})`; c.lineWidth=2; c.beginPath(); c.moveTo(p.x+Math.cos(a)*R*0.2,p.y+Math.sin(a)*R*0.2); c.lineTo(p.x+Math.cos(a)*L,p.y+Math.sin(a)*L); c.stroke(); } c.restore(); }
       if(t>1000&&t<1260){ const k=(t-1000)/260; c.strokeStyle=`rgba(150,160,170,${1-k})`; c.lineWidth=2; c.beginPath(); for(let j=0;j<=24;j++){ const q=j/24; c.lineTo(tg.x+R*0.6+Math.cos(q*Math.PI*8)*R*0.12,tg.top.y-k*R*0.8-q*R*0.6); } c.stroke(); } }},
   /* Crease: it unfolds into a flock of paper cranes that swirl up and dive on the target in four waves, leaving paper scraps fluttering */
   sg_cranes:{C:640,D:1340,sig:true,
@@ -755,13 +757,13 @@ Object.assign(ANIM,{
         for(let i=0;i<16;i++){ const a=-Math.PI*(atH(i*3)), sp=R*(0.6+2*eo(k)); SG.puff(c,tg.x+Math.cos(a)*sp*(i%2?1:-1),tg.foot-R*0.5+Math.sin(a)*sp*0.6+k*k*R,R*(0.15+0.15*k),1-k,SN); } c.restore(); } }},
   /* Kraken: the ground darkens under the target, four huge tentacles burst up round it, wrap it and squeeze while ink splashes out */
   sg_kraken:{C:720,D:1420,sig:true,
-    atk:(t,o)=>({pose:t<720?"cast":t<1250?"push":"idle",sy:1-0.08*Math.sin(Math.min(1,t/720)*Math.PI),rot:Math.sin(t/120)*0.05,sx:1+0.04*Math.sin(t/70)}),
+    atk:t=>{ const r=t<300?0.2*eo(t/300):t<720?0.2+1.1*eo((t-300)/420):t<1250?1.3+0.06*Math.sin(t/60):1.3*(1-eio((t-1250)/170)); return {f:t<720?0.32*eo(t/720):t<1250?0.32:0.32*(1-eio((t-1250)/170)),pose:atPose(t<720?"attack":"push",{lash:r,lash2:r*0.92,eyes:"fierce"}),sy:1-0.05*Math.sin(Math.min(1,t/720)*Math.PI)}; },
     def(t){ if(t<620||t>1420) return null; const sq=Math.abs(Math.sin((t-620)/140*Math.PI/2)); return {sx:1-0.18*sq,sy:1+0.08*sq,lift:-10*Math.min(1,(t-620)/300),pose:"hurt",flash:Math.floor(t/120)%2?2:0}; },
-    fx(c,t,x){ const tg=x.target, R=tg.r, TC=x.col?x.col.map((v,j)=>Math.round(v*0.4+[200,90,140][j]*0.6)):[200,90,140], h=tg.foot-tg.top.y, out=t>1260?1-(t-1260)/160:1; if(out<=0) return; c.save(); c.globalAlpha=out;
+    fx(c,t,x){ const tg=x.target, R=tg.r, TC=x.parts||x.col||[200,90,140], h=tg.foot-tg.top.y, out=t>1260?1-(t-1260)/160:1; if(out<=0) return; c.save(); c.globalAlpha=out;
       const pool=Math.min(1,t/400); c.fillStyle=`rgba(20,20,50,${0.6*pool})`; c.beginPath(); c.ellipse(tg.x,tg.foot,R*2*pool,R*0.4*pool,0,0,7); c.fill(); SG.ring(c,tg.x,tg.foot,R*2*pool,R*0.4*pool,[120,160,255],2,0.6*pool);
       const g=Math.min(1,Math.max(0,(t-300)/400));
-      for(let i=0;i<4;i++){ const sd=i%2?1:-1, bx=tg.x+sd*R*(1.2+0.45*(i>>1)), wrap=t>620?Math.min(1,(t-620)/200):0;
-        if(wrap<1) SG.tentacle(c,bx,tg.foot,h*(1.1+0.3*(i>>1)),-sd*R*0.6,R*0.36,TC,g,t,i*2);
+      for(let i=0;i<2;i++){ const sd=i%2?1:-1, bx=tg.x+sd*R*(1.2+0.45*(i>>1)), wrap=t>620?Math.min(1,(t-620)/200):0;
+        
         if(wrap>0){ const yy=tg.top.y+h*(0.3+i*0.17), sq=1-0.1*Math.abs(Math.sin((t-620)/140*Math.PI/2)); c.lineCap="round"; c.strokeStyle=atRgba(TC.map(v=>v-40),1); c.lineWidth=R*0.32; c.beginPath(); c.ellipse(tg.x,yy,R*1.1*sq,R*0.26,0.1*sd,-Math.PI*0.9,-Math.PI*0.9+Math.PI*1.8*wrap); c.stroke();
           c.strokeStyle=atRgba(TC,1); c.lineWidth=R*0.24; c.stroke(); c.fillStyle="#ffe0e8"; for(let j=0;j<5;j++){ const a=-Math.PI*0.9+Math.PI*1.8*wrap*j/5; if(Math.sin(a)<0) continue; c.beginPath(); c.arc(tg.x+Math.cos(a)*R*1.1*sq,yy+Math.sin(a)*R*0.26,R*0.06,0,7); c.fill(); } } }
       if(t>=720){ atImpact(t,720,0.6,0.2); const k=(t-720)/700; for(let i=0;i<10;i++){ const a=-Math.PI*(atH(i*5)), sp=R*(0.4+1.3*eo(k)); c.fillStyle=`rgba(30,24,60,${1-k})`; c.beginPath(); c.arc(tg.x+Math.cos(a)*sp*(i%2?1:-1),tg.y+Math.sin(a)*sp+k*k*R,R*0.09,0,7); c.fill(); } }
@@ -954,12 +956,13 @@ Object.assign(ANIM,{
       for(let i=0;i<8;i++){ const a=i/8*Math.PI*2+fr*0.3, rr=R*(1+0.5*atH(i+fr)); c.strokeStyle=atRgba(YL,0.8*(1-k)); c.lineWidth=2; atZig(c,{x:tg.x,y:tg.y},{x:tg.x+Math.cos(a)*rr,y:tg.y+Math.sin(a)*rr*0.8},4,R*0.25,fr*3+i); } c.restore(); }},
   /* Hydra: its three heads stretch out on long necks and strike one after another from high, low and straight on, leaving venom dripping */
   sg_manyheads:{C:560,D:1260,sig:true,
-    atk:(t,o)=>{ const d=(o&&o.dir)||1; for(let i=0;i<3;i++){ const T0=400+i*120; if(t>=T0&&t<T0+120) return {rot:d*0.1*(i-1),sx:1.06,pose:"push"}; } return {pose:t<400?"cast":t<1100?"push":"idle",rot:t<400?-d*0.12*eo(t/400):0}; },
+    atk:(t,o)=>{ const d=(o&&o.dir)||1, st=T0=>t<T0-300?0:t<T0?eio((t-T0+300)/300):t<1050?1:1-eio(Math.min(1,(t-1050)/200)), a=st(560), b=st(680), m=st(800);
+      return {f:0.25+0.3*m,rot:t<400?-d*0.12*eo(t/400):d*0.08*m,pose:atPose(m>0.5?"bitewide":"attack",{lash:0.1+1.2*a,lash2:0.1+1.2*b,eyes:"fierce"}),sx:1+0.06*m}; },
     def(t){ for(let i=0;i<3;i++){ const T0=560+i*120; if(t>=T0&&t<T0+110) return {off:[8,(i-1)*3],pose:"hit",flash:2}; } return t>=920&&t<1260?{pose:"hurt",flash:Math.floor(t/120)%2?2:0}:null; },
     fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, d=atDir(x), col=[90,160,110], ys=[-0.5,0.15,-0.15];
       for(let i=0;i<3;i++){ const T0=260+i*120, T1=560+i*120; if(t<T0) continue; const back=t>1050?1-(t-1050)/200:1; if(back<=0) continue;
         const k=Math.min(1,(t-T0)/(T1-T0))*back, a={x:s.x+d*s.r*0.3,y:s.y-s.r*(0.2+0.25*i)}, b={x:tg.x-d*R*0.3,y:tg.y+ys[i]*R};
-        SG.neck(c,a,b,s.r*0.22,col.map((v,j)=>v+(i-1)*15*(j===1?1:-0.5)),eio(k),t,i);
+        
         if(t>=T1&&t<T1+300){ const kk=(t-T1)/300; atImpact(t,T1,0.3+i*0.1,0); atPow(c,b,kk,R/34); for(let j=0;j<4;j++){ c.fillStyle=`rgba(150,90,210,${1-kk})`; c.beginPath(); c.ellipse(b.x+(j-1.5)*R*0.12,b.y+R*0.2+kk*R*0.6,R*0.04,R*0.07,0,0,7); c.fill(); } } } }},
   /* Griffin: it climbs into a full loop high in the sky, then shoots across in a golden spear of wind and rakes the target as it passes */
   sg_skytalon:{C:900,D:1580,contact:true,marks:true,sig:true,
@@ -1011,13 +1014,13 @@ Object.assign(ANIM,{
         c.restore(); if(shut>0) atImpact(t,800,0.85,0.2); } }},
   /* Cerberus: a dark gate opens behind the target and its three heads lunge through in turn, high, low and middle, each bite trailing purple fire */
   sg_gatefang:{C:760,D:1460,contact:true,marks:true,sig:true,
-    atk:(t,o)=>{ const d=(o&&o.dir)||1; if(t<360){ const k=eo(t/360); return {f:-0.05*k,sy:1-0.12*k,pose:"crouch"}; } if(t<760){ const k=eio((t-360)/400); return {f:-0.05+0.68*k,rot:d*0.15*k,pose:"tackle"}; } if(t<1100) return {f:0.63,rot:d*(Math.floor((t-760)/110)%2?0.2:-0.05),pose:"punch"}; const k=(t-1100)/360; return {f:0.63*(1-eio(k)),pose:"idle"}; },
+    atk:(t,o)=>{ const d=(o&&o.dir)||1; if(t<360){ const k=eo(t/360); return {f:-0.05*k,sy:1-0.12*k,pose:"crouch"}; } if(t<760){ const k=eio((t-360)/400); return {f:-0.05+0.68*k,rot:d*0.15*k,pose:"bitewide"}; } if(t<1100){ const j=Math.floor((t-760)/110), p=((t-760)%110)/110; return {f:0.6+0.08*Math.sin(p*Math.PI),rot:d*(j%2?0.12:-0.06),pose:p<0.4?"bitewide":"chomp",sx:1+0.12*Math.sin(p*Math.PI),sy:1+0.06*Math.sin(p*Math.PI)}; } const k=(t-1100)/360; return {f:0.63*(1-eio(k)),pose:"idle"}; },
     def(t){ for(let i=0;i<3;i++){ const T0=760+i*110; if(t>=T0&&t<T0+100) return {off:[8,(i-1)*4],pose:"hit",flash:3}; } return t>=1090&&t<1460?{pose:"hurt",off:[Math.sin(t/16)*2,0]}:null; },
     fx(c,t,x){ const tg=x.target, R=tg.r, d=atDir(x), PU=[170,80,255], g=Math.min(1,t/400)*(t>1300?1-(t-1300)/160:1); if(g<=0) return;
       c.save(); const gx=tg.x+d*R*1.1, gy=tg.y-R*0.3; c.fillStyle=`rgba(20,8,30,${0.85*g})`; c.beginPath(); c.ellipse(gx,gy,R*0.9*g,R*1.6*g,0,0,7); c.fill(); c.strokeStyle=`rgba(190,110,255,${0.9*g})`; c.lineWidth=4; c.stroke();
       c.save(); c.globalCompositeOperation="lighter"; for(let i=0;i<10;i++){ const a=i/10*Math.PI*2+t/400; SG.flame(c,gx+Math.cos(a)*R*0.9*g,gy+Math.sin(a)*R*1.6*g+R*0.2,R*0.4*g,R*0.1,t,i,0.6); } c.restore(); c.restore();
       for(let i=0;i<3;i++){ const T0=760+i*110, k=(t-T0+180)/480; if(k<0||k>1) continue; const yy=tg.y+[-0.55,0.35,-0.1][i]*R, open=k<0.37?1-k/0.37:0.05, fade=k>0.6?1-(k-0.6)/0.4:1;
-        SG.jaws(c,tg.x+d*R*0.2,yy,R*0.65,open*0.8,[60,40,70],fade); c.save(); c.globalCompositeOperation="lighter"; atGlowA(c,tg.x+d*R*0.2,yy,R*0.6,PU,0.5*fade); c.restore(); if(k>=0.37) atImpact(t,T0,0.4,0.1); } }},
+        chompMarks(c,{x:tg.x-d*R*0.1,y:yy},Math.min(1,k*1.4)); c.save(); c.globalCompositeOperation="lighter"; atGlowA(c,tg.x+d*R*0.2,yy,R*0.6,PU,0.5*fade); c.restore(); if(k>=0.37) atImpact(t,T0,0.4,0.1); } }},
   /* Djinn: it rubs up a giant golden lamp that shakes and glows, smoke roars out of the spout into a towering genie arm, and the fist slams down on the target in a purple and gold explosion */
   sg_lampblast:{C:900,D:1600,sig:true,
     atk:(t,o)=>{ const d=(o&&o.dir)||1; if(t<380) return {arc:-10-Math.sin(t/60)*3,rot:Math.sin(t/45)*0.1,pose:"cast",sx:1+0.04*Math.sin(t/30)};

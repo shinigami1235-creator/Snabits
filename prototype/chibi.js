@@ -2484,7 +2484,8 @@ x.feet.push([g.cx, 182, 10]); },
       behind(c, g, x) { const tl = this.tl(g.stage), lw = by(g.stage, 9, 11, 13);
         if (g.stage === 'Mega') for (const sd of [-1, 1]) { const sw = Math.sin(x.t / 470 + sd * 2) * 6, q = [g.cx + sd * g.bw * 0.2, g.bot - 10, g.cx + sd * g.bw * 1.05, g.top + g.bh * 0.8 + sw, g.cx + sd * g.bw * 1.0, g.top + g.bh * 0.3 + sw];   // a second, lower pair of arms
           limb(c, q, lw * 0.8, dk(x.parts, 0.15), sd < 0 ? x.L.armL : x.L.armR, x.t); c.fillStyle = rgb(dk(x.parts, 0.15)); c.beginPath(); c.arc(q[4] - sd * 4, q[5], lw * 0.55, 0, 7); c.fill(); }
-        for (const sd of [-1, 1]) { const sw = Math.sin(x.t / 520 + sd) * 8, q = [g.cx + sd * g.bw * 0.3, g.bot - 6, g.cx + sd * g.bw * 0.95, g.top + g.bh * 0.5 + sw, g.cx + sd * g.bw * 0.7, g.top - g.bh * by(g.stage, 0.05, 0.15, 0.25) + sw];
+        for (const sd of [-1, 1]) { const L = sd < 0 ? x.P.lash || 0 : x.P.lash2 || 0, sw = Math.sin(x.t / 520 + sd) * 8 * (1 - Math.min(1, L)), my = g.top + g.bh * 0.55;   // lash and lash2 reach the two long arms forward to grab or slap
+          const q = [g.cx + sd * g.bw * 0.3, g.bot - 6, g.cx + sd * g.bw * 0.95 - L * 50, g.top + g.bh * 0.5 + sw + L * 10, g.cx + sd * g.bw * 0.7 - L * (95 + sd * g.bw * 0.7), g.top - g.bh * by(g.stage, 0.05, 0.15, 0.25) + sw + L * (my - g.top + g.bh * 0.2)];
           limb(c, q, lw, x.parts, sd < 0 ? x.L.armL : x.L.armR, x.t); c.fillStyle = rgb(x.parts); c.beginPath(); c.arc(q[4] - sd * 6, q[5], lw * 0.7, 0, 7); c.fill();
           if (g.stage !== 'Bit') { c.fillStyle = rgb(lt(x.parts, 0.4)); for (let k = 1; k <= 3; k++) { const p = qpt(q, k / 4); c.beginPath(); c.arc(p[0] - sd * 2, p[1], 2, 0, 7); c.fill(); } } }
         if (g.stage !== 'Bit') for (const sd of [-1, 1]) { c.fillStyle = rgb(dk(x.body, 0.15)); c.beginPath(); c.moveTo(g.cx + sd * g.bw * 0.22, g.top + g.bh * 0.1); c.quadraticCurveTo(g.cx + sd * g.bw * 0.62, g.top + g.bh * 0.02, g.cx + sd * g.bw * 0.48, g.top + g.bh * 0.36); c.closePath(); c.fill(); }
@@ -3003,7 +3004,7 @@ x.feet.push([g.cx, 182, 10]); },
       behind(c, g, x) { const S = g.stage, cl = this.cl(S), belly = lt(x.parts, 0.2), look = [Math.sin(x.t / 900), 0];
         const nk = by(S, 0, 32, 44), hr = by(S, 9, 15, 19), sw = Math.sin(x.t / 600) * 4, fr = S === 'Mega' ? x.acc : S === 'Byte' ? lt(x.parts, 0.1) : null;
         for (const sd of [-1, 1]) { if (S === 'Bit') { this.mini(c, g.cx + sd * g.bw * 0.5, g.top + g.bh * 0.62, hr, x.body, null, look, x.t); continue; }   // the side heads
-          const hx = g.cx + sd * (g.bw * 0.7 + sw * sd * 0.5), hy = g.top - nk * 0.15 + Math.sin(x.t / 500 + sd) * 3, q = [g.cx + sd * g.bw * 0.2, g.bot + 4, g.cx + sd * g.bw * 0.75, g.bot - 10, hx, hy + hr * 0.6];
+          const L = sd < 0 ? x.P.lash || 0 : x.P.lash2 || 0, hy0 = g.top - nk * 0.15 + Math.sin(x.t / 500 + sd) * 3, hx = g.cx + sd * (g.bw * 0.7 + sw * sd * 0.5) - L * (90 + sd * g.bw * 0.7), hy = hy0 + L * (g.top + g.bh * 0.45 - hy0), q = [g.cx + sd * g.bw * 0.2, g.bot + 4, g.cx + sd * g.bw * 0.75 - L * 40, g.bot - 10 - L * 6, hx, hy + hr * 0.6];   // lash and lash2 strike with the side heads
           limb(c, q, by(S, 0, 13, 16), dk(x.body, 0.1), sd < 0 ? x.L.armL : x.L.armR, x.t); c.strokeStyle = rgba(belly, 0.8); c.lineWidth = by(S, 0, 5, 6); c.beginPath(); c.moveTo(q[0], q[1]); c.quadraticCurveTo(q[2] - sd * 3, q[3], q[4] - sd * 3, q[5]); c.stroke();
           this.mini(c, hx, hy, hr, x.body, fr, look, x.t); }
         if (S === 'Mega') for (const sd of [-1, 1]) { const hx = g.cx + sd * g.bw * 0.34, hy = g.top - 18 + Math.sin(x.t / 450 + sd * 2) * 2;   // two small heads growing back

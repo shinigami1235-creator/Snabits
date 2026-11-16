@@ -885,7 +885,7 @@ Object.assign(ANIM,{
   sweep:{C:300,D:880,contact:true,marks:true,
     atk:t=>({f:atReach(t,300,0.56,240,340),pose:t<120?"crouch":t<540?AT_P.sweep:"idle",rot:t>=180&&t<540?-0.08:0}),
     def(t){ if(t<300||t>700) return null; const k=(t-300)/400; return {rot:-0.35*Math.sin(k*Math.PI),arc:-30*Math.sin(k*Math.PI),pose:"hit"}; },
-    fx(c,t,x){ if(t>=240&&t<600) atSweepMark(c,x.target,(t-240)/360,x.col,atBig(x),atDir(x)); }},
+    fx(c,t,x){ if(t>=240&&t<600) atSweepMark(c,x.target,(t-240)/360,x.col,atDir(x),atBig(x)); }},
   pinch:{C:380,D:920,contact:true,marks:true,
     atk:t=>({f:atReach(t,380,0.66,220,320),pose:t<380?AT_P.clawOpen:t<600?AT_P.clawSnap:"idle"}),
     fx(c,t,x){ if(t>=230&&t<700) atPincer(c,x.target,(t-230)/470,x.col,atDir(x),atBig(x)); }},

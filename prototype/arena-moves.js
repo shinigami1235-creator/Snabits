@@ -9,7 +9,7 @@ MV.tooth=(c,x,y,z,rot,a=1)=>{ c.save(); c.globalAlpha*=a; c.translate(x,y); c.ro
 /* speed lines trailing behind a body moving in direction d */
 MV.lines=(c,x,y,R,d,n,a)=>{ if(a<=0) return; c.strokeStyle=`rgba(255,255,255,${0.55*a})`; c.lineWidth=2; c.lineCap="round"; for(let i=0;i<n;i++){ const yy=y+(i-(n-1)/2)*R*0.32, L=R*(0.8+0.6*atH(i*7)); c.beginPath(); c.moveTo(x-d*R*0.9,yy); c.lineTo(x-d*(R*0.9+L),yy); c.stroke(); } };
 /* a little bite mark that snaps shut on a point */
-MV.nip=(c,x,y,z,k,col)=>{ if(k<0||k>1) return; const open=k<0.35?1-k/0.35:0, a=k<0.7?1:1-(k-0.7)/0.3; SG.jaws(c,x,y,z,open*0.6+0.05,col,a); };
+MV.nip=(c,x,y,z,k,col)=>{ if(k<0.3||k>1) return; chompMarks(c,{x,y},(k-0.3)/0.7); };   // the bite comes from its own mouth; this only marks where it lands
 /* the rotation for a body rolling along the floor on its rim instead of its feet (rotation pivots at the feet) */
 MV.roll=(th,h=26)=>({rot:th,arc:-h*(1-Math.cos(th)),off:[-h*Math.sin(th),0]});
 const mvCol=x=>(x.col||[240,200,90]).map(v=>Math.min(255,Math.round(v*0.55+110)));
@@ -92,14 +92,14 @@ Object.assign(ANIM,{
   jawdrop:{C:720,D:1380,contact:true,marks:true,
     atk:(t,o)=>{ if(t<160) return {sx:1+0.12*eo(t/160),sy:1-0.2*eo(t/160),pose:"crouch"};
       if(t<460){ const k=(t-160)/300; return {f:0.35*k,arc:-260*eo(k),sy:1+0.15*k,sx:1-0.08*k,pose:"jump"}; }
-      if(t<720){ const k=(t-460)/260; return {f:0.35+0.4*eo(k),arc:-260*(1-ei(k)),rot:((o&&o.dir)||1)*0.3,sy:1.12,sx:0.92,pose:"bitewide"}; }
-      if(t<880) return {f:0.75,pose:"chomp",sx:1.15,sy:0.88};
+      if(t<720){ const k=(t-460)/260; return {f:0.35+0.4*eo(k),arc:-260*(1-ei(k)),rot:((o&&o.dir)||1)*0.3,sy:1.12+0.3*k,sx:0.92+0.4*k,pose:"bitewide"}; }
+      if(t<880) return {f:0.75,pose:"chomp",sx:1.3,sy:1.05};
       const k=(t-880)/500; return {f:0.75*(1-eio(k)),arc:-22*Math.sin(Math.min(1,k)*Math.PI),pose:"idle"}; },
     def:t=>SG.squash(t,720,0.4,520),
     fx(c,t,x){ const tg=x.target, R=tg.r, col=mvCol(x);
       if(t>460&&t<720){ const k=(t-460)/260; c.fillStyle=`rgba(0,0,0,${0.25*k})`; c.beginPath(); c.ellipse(tg.x,tg.foot+2,R*(0.5+0.6*k),R*0.18,0,0,7); c.fill();
         c.strokeStyle=`rgba(255,255,255,${0.5*k})`; c.lineWidth=2; for(let i=0;i<4;i++){ const xx=tg.x+(i-1.5)*R*0.3; c.beginPath(); c.moveTo(xx,tg.top.y-R*(2.2-1.2*k)); c.lineTo(xx,tg.top.y-R*(1.4-1.0*k)); c.stroke(); } }
-      if(t>650&&t<1100){ const op=t<720?1-(t-650)/70:0.12+0.6*eo((t-880)/220)*(t>880?1:0), a=t<1000?1:1-(t-1000)/100; SG.jaws(c,tg.x,tg.y-R*0.1,R*1.15,Math.max(0.05,op),col,a); }
+      if(t>=720&&t<1000) chompMarks(c,{x:tg.x,y:tg.y-R*0.1},(t-720)/280);
       atImpact(t,720,0.6,0.15); if(t>=720) atPow(c,{x:tg.x,y:tg.y-R*1.0},Math.min(1,(t-720)/420),R/24); }},
   /* Charge: it digs in, kicking up dust, then barrels across the arena head first */
   chargeram:{C:560,D:1220,contact:true,marks:true,
@@ -114,13 +114,13 @@ Object.assign(ANIM,{
   /* Chomp Combo: three snapping bites as it closes in, then a leap into one huge bite */
   chompcombo:{C:760,D:1440,contact:true,marks:true,
     atk:t=>{ if(t<480){ const j=Math.floor(t/160), p=(t%160)/160; return {f:0.25+j*0.17+0.08*Math.sin(p*Math.PI),arc:-8*Math.sin(p*Math.PI),pose:p<0.5?"bitewide":"chomp"}; }
-      if(t<760){ const k=(t-480)/280; return {f:0.6+0.15*eo(k),arc:-48*Math.sin(k*Math.PI),sx:1-0.08*Math.sin(k*Math.PI),sy:1+0.12*Math.sin(k*Math.PI),pose:"bitewide"}; }
-      if(t<940) return {f:0.75,pose:"chomp",sx:1.15,sy:0.9,off:[Math.sin(t/14)*2,0]};
+      if(t<760){ const k=(t-480)/280; return {f:0.6+0.15*eo(k),arc:-48*Math.sin(k*Math.PI),sx:1+0.35*eo(k),sy:1+0.4*eo(k),pose:"bitewide"}; }
+      if(t<940) return {f:0.75,pose:"chomp",sx:1.35,sy:1.25,off:[Math.sin(t/14)*2,0]};
       const k=(t-940)/500; return {f:0.75*(1-eio(k)),arc:-20*Math.sin(Math.min(1,k)*Math.PI),pose:"happy"}; },
     def(t){ if(t>=120&&t<480){ const p=(t%160)/160; return {off:[(1-p)*5,0],pose:"hit"}; } return SG.squash(t,760,0.35,560); },
     fx(c,t,x){ const tg=x.target, R=tg.r, col=mvCol(x);
       for(let j=0;j<3;j++) MV.nip(c,tg.x+(j-1)*R*0.35,tg.y+(j%2?-1:1)*R*0.2,R*0.5,(t-80-j*160)/240,col);
-      if(t>560&&t<1300){ const open=t<760?eo((t-560)/200):t<940?0.06:0.06+eo((t-940)/200)*0.7, a=t<620?(t-560)/60:t>1200?1-(t-1200)/100:1; SG.jaws(c,tg.x,tg.y-R*0.05,R*1.3,open,col,a); }
+      if(t>=760&&t<1040) chompMarks(c,{x:tg.x,y:tg.y-R*0.05},(t-760)/280);
       atImpact(t,760,0.7,0.2); if(t>=760){ const k=(t-760)/620; atPow(c,{x:tg.x,y:tg.y-R*1.0},Math.min(1,k*1.4),R/24); for(let i=0;i<8;i++){ const a=-Math.PI*(0.1+0.8*atH(i*5)), sp=R*(0.6+1.4*k); SG.shard(c,tg.x+Math.cos(a)*sp*(i%2?1:-1),tg.y+Math.sin(a)*sp+k*k*R,R*0.08,t/80+i,"#fff6e0"); } } }}
 });
 Object.assign(AR_KIND,{Nibble:"nibble","Rolling Bite":"rollbite","Tooth Shot":"toothshot",Chatter:"chatter","Body Slam":"bodyslam","Big Gulp":"biggulp",Drool:"drool",
@@ -141,7 +141,7 @@ if(typeof KSND!=="undefined") Object.assign(KSND,{
 if(typeof SWING!=="undefined") ["rollbite","bodyslam","bellyflop","jawdrop","chargeram","chompcombo"].forEach(k=>SWING.add(k));
 
 /* group 1 (16 Nov 2026): the moves the drafts asked a new look for */
-MV.fist=(c,x,y,z,d)=>{ c.save(); c.translate(x,y); c.scale(d,1); c.fillStyle="#9aa3ad"; c.strokeStyle="#4a5058"; c.lineWidth=2; c.beginPath(); c.roundRect(-z*0.7,-z*0.6,z*1.4,z*1.2,z*0.3); c.fill(); c.stroke();
+MV.fist=(c,x,y,z,d,col=[154,163,173])=>{ c.save(); c.translate(x,y); c.scale(d,1); c.fillStyle=atRgba(col,1); c.strokeStyle=atRgba(col.map(v=>v*0.5),1); c.lineWidth=2; c.beginPath(); c.roundRect(-z*0.7,-z*0.6,z*1.4,z*1.2,z*0.3); c.fill(); c.stroke();
   c.strokeStyle="#5d646c"; c.lineWidth=1.4; for(let i=-1;i<=1;i++){ c.beginPath(); c.moveTo(z*0.2,i*z*0.32); c.lineTo(z*0.6,i*z*0.32); c.stroke(); } c.fillStyle="rgba(255,255,255,.5)"; c.fillRect(-z*0.5,-z*0.45,z*0.5,z*0.18); c.restore(); };
 MV.crescent=(c,x,y,R,d,a,col=[235,248,255])=>{ if(a<=0) return; c.save(); c.translate(x,y); c.scale(d,1); c.fillStyle=atRgba(col,0.85*a); c.beginPath(); c.arc(0,0,R,-1.2,1.2); c.arc(-R*0.35,0,R*0.85,1.1,-1.1,true); c.closePath(); c.fill();
   c.strokeStyle=`rgba(255,255,255,${a})`; c.lineWidth=2; c.beginPath(); c.arc(0,0,R,-1.2,1.2); c.stroke(); c.restore(); };
@@ -155,7 +155,7 @@ Object.assign(ANIM,{
       if(k<=0) return; const px=a.x+(b.x-a.x)*k, py=a.y+(b.y-a.y)*k; c.strokeStyle="#3f444b"; c.lineWidth=3; c.beginPath(); c.moveTo(a.x,a.y);
       for(let i=1;i<=10;i++){ const q=i/10; c.lineTo(a.x+(px-a.x)*q,a.y+(py-a.y)*q+Math.sin(q*12+t/30)*3*(1-k*0.5)); } c.stroke();
       if(t<380&&t>160){ for(let i=0;i<4;i++) SG.puff(c,px-d*s.r*(0.2+i*0.18),py+(atH(i)-0.5)*6,s.r*0.08*(4-i)/4,0.6); }
-      MV.fist(c,px,py,s.r*0.32,d); atImpact(t,380,0.25,0); if(t>=380&&t<700) atPow(c,{x:b.x,y:b.y-tg.r*0.5},(t-380)/320,tg.r/30); }},
+      MV.fist(c,px,py,s.r*0.32,d,x.parts||undefined); atImpact(t,380,0.25,0); if(t>=380&&t<700) atPow(c,{x:b.x,y:b.y-tg.r*0.5},(t-380)/320,tg.r/30); }},
   /* Bipped's Knee Strike: it steps in and drives a knee up into the target, folding it over */
   kneestrike:{C:420,D:1060,contact:true,marks:true,
     atk:(t,o)=>{ const d=(o&&o.dir)||1; if(t<180) return {f:0.3*eo(t/180),pose:AT_P.kickWind}; if(t<420){ const k=(t-180)/240; return {f:0.3+0.4*eo(k),arc:-22*Math.sin(k*Math.PI*0.6),rot:-d*0.12*k,pose:AT_P.kickMid}; }
@@ -251,8 +251,8 @@ Object.assign(ANIM,{
     def:t=>SG.knock(t,480,1,34,500),
     fx(c,t,x){ const s=x.self, tg=x.target, d=atDir(x), a={x:s.x+d*s.r*0.6,y:s.y-4}, b={x:tg.x-d*tg.r*0.4,y:tg.y-4};
       if(t>=180&&t<480){ const k=ei((t-180)/300), px=a.x+(b.x-a.x)*k; for(let i=0;i<8;i++){ const q=Math.max(0,k-i*0.04), qx=a.x+(b.x-a.x)*q; SG.puff(c,qx,a.y+Math.sin(i*1.7)*4,s.r*(0.1+0.04*i),0.55*(1-i/8),[230,226,220]); }
-        atGlowA(c,px-d*s.r*0.35,a.y,s.r*0.3,[255,170,60],0.8); MV.glove(c,px,a.y,s.r*0.34,d,x.col||[220,60,60]); }
-      if(t>=480&&t<1000){ const k=(t-480)/520; MV.glove(c,b.x-d*tg.r*0.8*eo(k),b.y-tg.r*1.2*Math.sin(k*Math.PI),s.r*0.34,d,x.col||[220,60,60]); atPow(c,{x:b.x,y:b.y-tg.r*0.4},Math.min(1,k*1.4),tg.r/24); }
+        atGlowA(c,px-d*s.r*0.35,a.y,s.r*0.3,[255,170,60],0.8); MV.glove(c,px,a.y,s.r*0.34,d,x.parts||x.body||[220,60,60]); }
+      if(t>=480&&t<1000){ const k=(t-480)/520; MV.glove(c,b.x-d*tg.r*0.8*eo(k),b.y-tg.r*1.2*Math.sin(k*Math.PI),s.r*0.34,d,x.parts||x.body||[220,60,60]); atPow(c,{x:b.x,y:b.y-tg.r*0.4},Math.min(1,k*1.4),tg.r/24); }
       atImpact(t,480,0.5,0.1); }},
   /* Brolly's Snap Shut: it leans over the target and its canopy snaps shut round it like a clam */
   snapshut:{C:440,D:1180,contact:true,
@@ -492,3 +492,71 @@ Object.assign(ANIM,{
           if(k>=0&&k<0.6) for(let i=0;i<3;i++){ c.fillStyle=`rgba(160,210,255,${0.8*(1-k/0.6)})`; c.beginPath(); c.arc(tg.x-d*R*(0.3+k)+i*6,tg.y-R*0.2+(i-1)*R*0.25-k*R*0.3,2.5,0,7); c.fill(); } } }}; })()
 });
 if(typeof KSND!=="undefined") KSND.trunkflurry=(d,t)=>{ for(let i=0;i<4;i++){ dNoise(d,t+0.33+i*0.14,0.09,0.14,'bandpass',500,0.8); dNoise(d,t+0.39+i*0.14,0.07,0.28,'lowpass',900); dKick(d,t+0.39+i*0.14,0.25); } sTone(d,t+0.1,'sawtooth',180,240,0.2,0.04); };
+
+/* ===== Own-body pass (Gid, 16 Nov 2026): a contact move uses the Snabit's own body. Arms swing and push, Squib, Kraken and Hydra
+   reach with their own tentacles, arms or heads (lash, lash2), Plod with its own trunk, and anything else leads with its body.
+   Projectiles come out of the part that makes them, like water from Plod's trunk. Drawn stand-in limbs are gone. ===== */
+const MV_REACH={Squib:"tent",Kraken:"tent",Hydra:"tent",Plod:"trunk"};
+const mvMode=o=>{ const f=o&&o.fam; if(f&&MV_REACH[f]) return MV_REACH[f]; return f&&typeof hasArms==="function"&&hasArms(f,o.stage)?"arms":"body"; };
+/* the pose for reaching a part out by k (0 to 1); two:1 reaches both tentacles */
+function mvReach(o,k,two){ const m=mvMode(o);
+  if(m==="tent") return atPose("attack",{lash:0.2+1.2*k,lash2:two?0.2+1.2*k:0.2+0.2*k,eyes:"fierce"});
+  if(m==="trunk") return atPose("attack",{trunk:0.25+1.1*k,trunkUp:0.7*(1-k),eyes:"fierce"});
+  if(m==="arms") return k<0.4?"punchwind":"push";
+  return k<0.4?"crouch":"tackle"; }
+Object.assign(ANIM,{
+  /* a whip or swat with whatever the body has: tentacles, trunk, an arm, or a spin that swings its tail or body round */
+  lash:{C:340,D:900,contact:true,marks:true,
+    atk:(t,o)=>{ const m=mvMode(o), d=(o&&o.dir)||1, f=atReach(t,340,0.5,220,320);
+      if(m==="tent"||m==="trunk"){ const k=t<200?0.3*eo(t/200):t<340?0.3+0.7*eo((t-200)/140):t<560?1:1-eio(Math.min(1,(t-560)/300)); return {f,pose:mvReach(o,k)}; }
+      if(m==="arms") return {f,pose:t<200?"swipeup":t<560?"swipedown":"idle",rot:t<200?-d*0.1*eo(t/200):t<560?d*0.12:0};
+      const sp=t>160&&t<480?Math.cos((t-160)/320*Math.PI*2):1; return {f,pose:t<160?"crouch":t<480?"tackle":"idle",sx:t>160&&t<480?Math.max(0.2,Math.abs(sp))*(sp<0?-1:1):1}; },
+    fx(c,t,x){ if(t>=240&&t<640) atLash(c,x.target,(t-240)/400,x.col,atDir(x),atBig(x)); }},
+  /* a stab with its own point: a reached tentacle or trunk, a pushed arm, or the whole body leading with a horn, nose or spout */
+  thrust:{C:360,D:900,contact:true,marks:true,
+    atk:(t,o)=>{ const m=mvMode(o), d=(o&&o.dir)||1, f=atReach(t,360,m==="body"?0.66:0.55,200,320), k=t<360?eo(t/360):t<560?1:1-eio(Math.min(1,(t-560)/300));
+      return m==="body"?{f,pose:t<160?"crouch":t<560?"tackle":"idle",rot:d*0.3*Math.sin(Math.min(1,t/560)*Math.PI),sx:t<360?1-0.06*k:1}:{f,pose:mvReach(o,k)}; },
+    def:t=>SG.knock(t,360,1,14,320),
+    fx(c,t,x){ const tg=x.target, R=tg.r, d=atDir(x);
+      if(t>=200&&t<380){ const k=(t-200)/180; c.strokeStyle=`rgba(255,255,255,${0.7*k})`; c.lineWidth=2.5; for(let i=0;i<3;i++){ const yy=tg.y-R*0.2+(i-1)*R*0.18; c.beginPath(); c.moveTo(tg.x-d*R*(0.8+0.6*(1-k)),yy); c.lineTo(tg.x-d*R*(1.6+0.6*(1-k)),yy); c.stroke(); } }
+      if(t>=360&&t<700){ const k=(t-360)/340; atStar4(c,tg.x-d*R*0.3,tg.y-R*0.2,R*(0.6-0.4*k),`rgba(255,255,240,${1-k})`); c.strokeStyle=`rgba(255,255,255,${1-k})`; c.lineWidth=2;
+        for(let i=0;i<6;i++){ const a=(i/6-0.5)*1.4+(d>0?0:Math.PI); c.beginPath(); c.moveTo(tg.x+Math.cos(a)*R*0.3,tg.y-R*0.2+Math.sin(a)*R*0.3); c.lineTo(tg.x+Math.cos(a)*R*(0.5+0.6*k),tg.y-R*0.2+Math.sin(a)*R*(0.5+0.6*k)); c.stroke(); } } }},
+  /* pincer moves keep the arm poses that open and snap its own claws; the effect is only the snap */
+  pinch:{C:380,D:920,contact:true,marks:true,
+    atk:t=>({f:atReach(t,380,0.66,220,320),pose:t<380?AT_P.clawOpen:t<600?AT_P.clawSnap:"idle"}),
+    fx(c,t,x){ const tg=x.target, R=tg.r; for(const T0 of [380]){ const k=(t-T0)/300; if(k<0||k>1) continue; atStar4(c,tg.x,tg.y-R*0.2,R*0.5*(1-k),`rgba(255,255,255,${1-k})`); SG.ring(c,tg.x,tg.y-R*0.2,R*(0.3+0.6*k),R*(0.3+0.6*k),[255,255,255],3*(1-k),1-k); } }},
+  vicegrip:{C:380,D:1250,contact:true,marks:true,
+    atk:(t,o)=>{ const m=mvMode(o), f=atReach(t,380,0.7,560,300); if(m==="tent"){ const k=t<380?eo(t/380):t<940?1:1-eio(Math.min(1,(t-940)/300)); return {f,pose:mvReach(o,k,true),off:[t>380&&t<940?Math.sin(t/30)*2:0,0]}; }
+      return {f,pose:t<380?AT_P.clawOpen:t<940?AT_P.clawSnap:"idle",off:[t>380&&t<940?Math.sin(t/30)*2:0,0]}; },
+    def(t){ if(t<380||t>940) return null; return {sx:0.9+0.03*Math.sin(t/40),sy:1.06,pose:"hurt",off:[Math.sin(t/25)*2,0]}; },
+    fx(c,t,x){ const tg=x.target, R=tg.r; if(t>=380&&t<940){ const ph=Math.floor((t-380)/140); for(let i=0;i<3;i++){ c.strokeStyle=`rgba(255,255,255,${0.5+0.3*Math.sin(t/40+i)})`; c.lineWidth=2; c.beginPath(); c.arc(tg.x,tg.y-R*0.2,R*(0.8+0.1*i),-0.6+i*0.4+ph*0.2,0.2+i*0.4+ph*0.2); c.stroke(); } }
+      const k=(t-380)/300; if(k>=0&&k<1) atStar4(c,tg.x,tg.y-R*0.2,R*0.5*(1-k),`rgba(255,255,255,${1-k})`); }},
+  /* Plod's Water Spray: it lifts its own trunk and sprays a jet of water out of the end */
+  trunkspray:{C:480,D:1120,
+    atk:t=>{ const k=t<260?eo(t/260):t<900?1:1-eio(Math.min(1,(t-900)/220)); return {pose:atPose("push",{trunk:0.55*k,trunkUp:1.1*k,eyes:"fierce"}),sy:1-0.04*k}; },
+    def:t=>t>=480&&t<1100?{off:[Math.sin(t/14)*2.5,0],pose:"hurt"}:null,
+    fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, d=atDir(x), W=[110,180,255], tip={x:s.x+d*s.r*1.05,y:s.y-s.r*0.15};
+      if(t>=260&&t<900){ const k=Math.min(1,(t-260)/220), end=t>780?(t-780)/120:0;
+        for(let i=0;i<34;i++){ const ph=((t/260)+i/34)%1; if(ph>k||ph<end) continue; const p=lerpP(tip,{x:tg.x-d*R*0.2,y:tg.y-R*0.3},ph,R*0.5,(atH(i)-0.5)*R*0.3*ph); c.fillStyle=atRgba(i%3?W:[230,245,255],0.85); c.beginPath(); c.arc(p.x,p.y,2.5+3*ph,0,7); c.fill(); }
+        atGlowA(c,tip.x,tip.y,s.r*0.25,[200,230,255],0.6); }
+      if(t>=480&&t<1100){ const k=(t-480)/620; atSplash(c,{x:tg.x-d*R*0.3,y:tg.y-R*0.2},(k*2)%1,W,1.1); for(let i=0;i<4;i++){ const ph=((t/300)+i/4)%1; c.fillStyle=`rgba(150,200,255,${0.8*(1-ph)})`; c.beginPath(); c.arc(tg.x+(i-1.5)*R*0.4,tg.y+ph*R,3,0,7); c.fill(); } } }},
+  /* Plod's Stone Fling: it curls its own trunk round a stone and flings it */
+  trunktoss:{C:560,D:1160,
+    atk:t=>{ const k=t<300?eo(t/300):t<420?1-eo((t-300)/120)*0.4:t<800?0.6:0.6*(1-eio(Math.min(1,(t-800)/300))); return {pose:atPose("attack",{trunk:t<300?0.2:0.9*k,trunkUp:t<300?1.2*k:-0.3,eyes:"fierce"}),rot:t<300?0:0}; },
+    def:t=>SG.knock(t,560,1,18,380),
+    fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, d=atDir(x), tip={x:s.x+d*s.r*0.85,y:s.y-s.r*(t<300?0.55*eo(t/300):0.2)}, b={x:tg.x-d*R*0.2,y:tg.y-R*0.2};
+      const rock=(px,py,rot)=>{ c.save(); c.translate(px,py); c.rotate(rot); c.fillStyle="#9c8a74"; c.strokeStyle="#5e5244"; c.lineWidth=2; c.beginPath(); for(let i=0;i<7;i++){ const a=i/7*Math.PI*2, rr=R*0.26*(0.8+0.3*atH(i)); c.lineTo(Math.cos(a)*rr,Math.sin(a)*rr); } c.closePath(); c.fill(); c.stroke(); c.restore(); };
+      if(t<360) rock(tip.x,tip.y,0); else if(t<560){ const p=lerpP(tip,b,eo((t-360)/200),R*0.7); rock(p.x,p.y,t/60); }
+      atImpact(t,560,0.3,0); if(t>=560&&t<1000){ const k=(t-560)/440; for(let i=0;i<8;i++){ const a=-Math.PI*(0.1+0.8*atH(i*3)); SG.shard(c,b.x+Math.cos(a)*R*(0.3+1.2*k),b.y+Math.sin(a)*R*(0.3+1.2*k)+k*k*R*1.4,R*0.09,t/60+i,"#a8957d"); } SG.dust(c,b.x,b.y+R*0.3,R*0.8,k,6); } }}
+});
+Object.assign(AR_KIND,{"Water Spray":"trunkspray","Stone Fling":"trunktoss"});
+["Leg Spike","Antenna Spike","Tentacle Poke","Tusk Thrust","Frost Tusk","Spout Stab","Root Jab","Goo Spike","Minute Hand","Corkscrew","Poke","Spoke Stab","Pen Stab","Skewer Poke","Skewer Thrust","Twig Poke","Cone Jab","Horn Jab","Nose Poke","Horn Thrust"].forEach(n=>AR_KIND[n]="thrust");
+if(typeof KSND!=="undefined") Object.assign(KSND,{
+  thrust:(d,t)=>{ dNoise(d,t+0.18,0.18,0.1,'bandpass',1400,1); sTone(d,t+0.34,'triangle',1600,900,0.08,0.06); dNoise(d,t+0.36,0.06,0.2,'highpass',3000,1.5); },
+  trunkspray:(d,t)=>{ sTone(d,t+0.1,'sawtooth',220,300,0.18,0.03); dNoise(d,t+0.26,0.65,0.22,'bandpass',1600,0.5); dNoise(d,t+0.48,0.4,0.15,'lowpass',900); },
+  trunktoss:(d,t)=>{ dNoise(d,t+0.3,0.26,0.12,'bandpass',800,0.8); dKick(d,t+0.56,0.5); dNoise(d,t+0.56,0.25,0.2,'lowpass',600); }
+});
+
+/* Plod trumpets through its own raised trunk, and Kraken's Eight Arms whips its own two long arms in turn */
+{ const ch=ANIM.chatter, base=ch.atk; ch.atk=(t,o)=>{ const r=base(t,o); if(o&&o.fam==="Plod"&&t<800){ r.pose=atPose("push",{trunk:0.3,trunkUp:1.4,eyes:"fierce"}); } return r; }; }
+AR_KIND["Eight Arms"]="tentaclefrenzy";
