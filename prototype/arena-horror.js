@@ -149,7 +149,7 @@ const sgTidalGrasp={C:940,D:1750,sig:true,
 
 /* ---- Dagon's Fisher's Song: it sings, the notes drift out over the arena, water spreads across the floor, and a great curling wave full of fish
    rises between them, rolls forward, pitches over and crashes down on the target, leaving whitewater and foam as it drains away. */
-function hrWave(c,o){ const {back,front,ground,H,pitch,dir,t,R}=o; if(H<2) return; const crestX=front-dir*R*(0.55-0.25*pitch), crestY=ground-H, lipX=front+dir*R*(0.35+1.15*pitch), lipY=ground-H*(1-pitch*0.82)+R*0.15;
+function hrWave(c,o){ const {back,front,ground,H,dir,t,R}=o, pitch=Math.min(1.25,o.pitch); if(H<2) return; const crestX=front-dir*R*(0.55-0.25*Math.min(1,pitch)), crestY=ground-H, lipX=front+dir*R*(0.35+1.15*pitch), lipY=Math.min(ground,ground-H*(1-pitch*0.82)+R*0.15);
   const path=()=>{ c.beginPath(); c.moveTo(back,ground); for(let j=0;j<=16;j++){ const f=j/16; c.lineTo(back+(crestX-back)*f,ground-H*(0.1+0.9*Math.pow(f,1.7))+Math.sin(f*11+t/90)*R*0.05*f); }
     c.quadraticCurveTo(crestX+dir*R*0.9,crestY-R*0.4,lipX,lipY); c.quadraticCurveTo(front+dir*R*0.35,lipY-R*0.25,front-dir*R*0.1,ground-H*0.5); c.quadraticCurveTo(front-dir*R*0.2,ground-H*0.15,front+dir*R*0.3,ground); c.closePath(); };
   c.save(); path(); const g=c.createLinearGradient(0,ground-H,0,ground); g.addColorStop(0,"#9be6f4"); g.addColorStop(0.25,"#46a8de"); g.addColorStop(0.65,"#1d64b4"); g.addColorStop(1,"#0f3a7c"); c.fillStyle=g; c.fill(); c.clip();
@@ -165,7 +165,7 @@ function hrWave(c,o){ const {back,front,ground,H,pitch,dir,t,R}=o; if(H<2) retur
   c.fillStyle="#ffffff"; for(let i=0;i<14;i++){ const u=i/13, bx=crestX+(lipX-crestX)*u+dir*Math.sin(u*Math.PI)*R*0.45, by=crestY+(lipY-crestY)*u-Math.sin(u*Math.PI)*R*0.3; c.beginPath(); c.arc(bx+Math.sin(t/70+i)*R*0.04,by,R*(0.09+0.06*atH(i)),0,7); c.fill(); }
   for(let i=0;i<18;i++){ const q=((t/500)+i*0.13)%1, sx=crestX+(lipX-crestX)*atH(i)-dir*q*R*1.6, sy=crestY-R*0.2-q*R*0.9+q*q*R*1.4; c.fillStyle=`rgba(240,252,255,${0.85*(1-q)})`; c.beginPath(); c.arc(sx,sy,R*(0.04+0.04*atH(i*2))*(1-q*0.4),0,7); c.fill(); }   // spray blown off the crest
   for(let i=0;i<22;i++){ const u=atH(i*5+2), xx=back+(front+dir*R*0.4-back)*u, z=R*(0.08+0.12*atH(i*3)); c.fillStyle=`rgba(250,255,255,${0.55+0.4*atH(i*9)})`; c.beginPath(); c.ellipse(xx+Math.sin(t/110+i)*R*0.05,ground-z*0.5,z*1.6,z*0.7,0,0,7); c.fill(); } c.restore(); }
-const sgFishersSong={C:1000,D:1900,sig:true,
+const sgFishersSong={C:1000,D:1900,tail:900,sig:true,
   atk:t=>({pose:atPose(t<1300?"cast":"idle",{open:t<850?0.6+0.25*Math.sin(t/60):0,eyes:t<850?"shut":undefined}),arc:t<850?-5*Math.sin(t/200):0}),
   def:t=>{ if(t<1000||t>1700) return null; const k=(t-1000)/700; return {off:[30*Math.sin(Math.min(1,k*1.6)*Math.PI/2)*(1-k),0],arc:-34*Math.sin(Math.min(1,k*1.5)*Math.PI),rot:0.9*Math.sin(Math.min(1,k*1.5)*Math.PI),pose:"hurt"}; },
   fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, d=atDir(x), ground=Math.max(s.foot,tg.foot);
@@ -173,11 +173,14 @@ const sgFishersSong={C:1000,D:1900,sig:true,
       c.beginPath(); c.ellipse(px,py,5.5,4,-0.4,0,7); c.fill(); c.stroke(); c.fillRect(px+4,py-15,2,15); if(i%2){ c.beginPath(); c.moveTo(px+6,py-15); c.quadraticCurveTo(px+12,py-11,px+10,py-5); c.lineWidth=2; c.strokeStyle=`rgba(210,240,255,${a})`; c.stroke(); } }
     const sheet=t<350?0:t<1500?Math.min(1,(t-350)/300):Math.max(0,1-(t-1500)/350); if(sheet>0){ const L=Math.min(s.x,tg.x)-R*1.6, Rr=Math.max(s.x,tg.x)+R*1.6; c.save(); c.globalAlpha*=sheet*0.7; const g=c.createLinearGradient(0,ground-R*0.3,0,ground+R*0.3); g.addColorStop(0,"#7fd0f2"); g.addColorStop(1,"#2a6ab0");
       c.fillStyle=g; c.beginPath(); c.ellipse((L+Rr)/2,ground+2,(Rr-L)/2,R*0.32,0,0,7); c.fill(); c.strokeStyle="rgba(240,252,255,.7)"; c.lineWidth=1.5; for(let i=0;i<5;i++){ const xx=L+(Rr-L)*(0.1+0.2*i)+Math.sin(t/200+i)*R*0.3; c.beginPath(); c.moveTo(xx-R*0.3,ground+R*0.05*(i%3)); c.lineTo(xx+R*0.3,ground+R*0.05*(i%3)); c.stroke(); } c.restore(); }
-    if(t>=450&&t<1060){ const k=Math.min(1,(t-450)/550), H=R*4.2*eo(Math.min(1,(t-450)/350)), pitch=t<780?0:eio(Math.min(1,(t-780)/220)), front=s.x+d*R*1.3+(tg.x-d*R*1.1-(s.x+d*R*1.3))*eio(k), back=front-d*Math.min(R*3.2,Math.abs(front-(s.x+d*R*0.3)));
-      hrWave(c,{back,front,ground,H:H*(t<1000?1:1-(t-1000)/60),pitch,dir:d,t,R}); if(typeof AT!=="undefined"&&AT) AT.trauma=Math.max(AT.trauma||0,0.12*k); }
-    if(t>=1000&&t<1500){ const k=(t-1000)/500; c.save(); for(let i=0;i<16;i++){ const a=atH(i*3)*Math.PI*2, rr=R*(0.4+1.2*atH(i*7))*(0.6+0.6*eo(k)), px=tg.x+d*R*0.3*k+Math.cos(a)*rr, py=tg.y-R*0.2+Math.sin(a)*rr*0.7+k*k*R*1.2;
-        c.fillStyle=`rgba(${i%3?"235,248,255":"150,215,248"},${0.95*(1-k)})`; c.beginPath(); c.arc(px,py,R*(0.35+0.25*atH(i))*(1-k*0.5),0,7); c.fill(); } c.restore(); HR.splash(c,tg.x,ground,R*1.3,k,20,[110,195,245]); }
-    if(t>=1300&&t<1850){ const k=(t-1300)/550; c.strokeStyle=`rgba(255,255,255,${0.8*(1-k)})`; c.lineWidth=2; for(let i=0;i<4;i++){ c.beginPath(); c.ellipse(tg.x+d*R*(0.5+i*0.4)*k,ground+2,R*(1+i*0.5),R*(0.12+i*0.05),0,Math.PI*0.05,Math.PI*0.95); c.stroke(); }
+    if(t>=450&&t<1300){ const k=Math.min(1,(t-450)/550), cr=t<1000?0:eio(Math.min(1,(t-1000)/280)), H=R*4.2*eo(Math.min(1,(t-450)/350))*(1-0.88*cr), pitch=(t<780?0:eio(Math.min(1,(t-780)/220)))+0.25*cr,
+        front=s.x+d*R*1.3+(tg.x-d*R*1.1-(s.x+d*R*1.3))*eio(k)+d*R*1.6*cr, back=front-d*Math.min(R*3.2,Math.abs(front-(s.x+d*R*0.3)));
+      c.save(); c.globalAlpha*=t<1180?1:Math.max(0,1-(t-1180)/120); hrWave(c,{back,front,ground,H,pitch,dir:d,t,R}); c.restore(); if(typeof AT!=="undefined"&&AT) AT.trauma=Math.max(AT.trauma||0,0.12*k); }
+    if(t>=960&&t<1700){ const k=(t-960)/740, lx=tg.x+d*R*(0.2+1.4*eo(k));   // whitewater rolls on from where the lip came down
+      for(let i=0;i<9;i++){ const u=i/8, px=lx-d*R*2.2*u+Math.sin(t/160+i)*R*0.08, r=R*(0.55+0.45*Math.sin(u*Math.PI))*(0.6+0.6*eo(Math.min(1,k*2))), a=(1-k)*(0.9-0.3*u)*Math.min(1,(t-960)/80);
+        SG.puff(c,px,ground-r*0.55,r,a,i%3?[244,251,255]:[180,226,250]); }
+      HR.splash(c,tg.x+d*R*0.4,ground,R*1.4,Math.min(1,k*1.25),22,[110,195,245]); }
+    if(t>=1250&&t<1900){ const k=(t-1250)/650; c.strokeStyle=`rgba(255,255,255,${0.75*(1-k)})`; c.lineWidth=2; for(let i=0;i<4;i++){ c.beginPath(); c.ellipse(tg.x+d*R*(0.8+i*0.5)*eo(k),ground+2,R*(1.2+i*0.5),R*(0.12+i*0.05),0,Math.PI*0.05,Math.PI*0.95); c.stroke(); }
       for(let i=0;i<6;i++){ const q=(k*1.4+i/6)%1; HR.drop(c,tg.x+(i-2.5)*R*0.28,tg.y-R*0.6+q*R*1.1,R*0.05,[150,210,245],0.8*(1-q)*(1-k)); } }
     atImpact(t,1000,0.7,0.12); }};
 
@@ -320,24 +323,32 @@ const sgCurtainCall={C:820,D:1700,sig:true,
 
 /* ---- Hastur's Tattered Cloak: long torn strips of its cloak stream out from under it, rippling, with frayed ends and holes, wrap round the target
    in bands, and the yellow sign burns on it. */
-HR.rag=(c,pts,w0,w1,col,t,seed)=>{ const n=pts.length; if(n<2) return; const L=[], Rt=[];
-  for(let i=0;i<n;i++){ const p=pts[i], q=pts[Math.min(n-1,i+1)], o=pts[Math.max(0,i-1)], dx=q[0]-o[0], dy=q[1]-o[1], m=Math.hypot(dx,dy)||1, nx=-dy/m, ny=dx/m, u=i/(n-1), w=(w0+(w1-w0)*u)*(1+0.12*Math.sin(u*14+seed))/2;
-    L.push([p[0]+nx*w,p[1]+ny*w]); Rt.push([p[0]-nx*w,p[1]-ny*w]); }
-  c.fillStyle=atRgba(col,0.97); c.beginPath(); c.moveTo(L[0][0],L[0][1]); for(const p of L) c.lineTo(p[0],p[1]);
-  const e=pts[n-1], pr=pts[n-2], dx=e[0]-pr[0], dy=e[1]-pr[1], m=Math.hypot(dx,dy)||1;   // a frayed end in three torn points
-  for(let j=0;j<3;j++){ const u=(j+0.5)/3, bx=L[n-1][0]+(Rt[n-1][0]-L[n-1][0])*u, by=L[n-1][1]+(Rt[n-1][1]-L[n-1][1])*u, len=w1*(0.9+0.8*atH(seed+j)); c.lineTo(bx+dx/m*len,by+dy/m*len); c.lineTo(L[n-1][0]+(Rt[n-1][0]-L[n-1][0])*(j+1)/3,L[n-1][1]+(Rt[n-1][1]-L[n-1][1])*(j+1)/3); }
+HR.rag=(c,pts0,w0,w1,col,t,seed)=>{ const pts=HR.smooth(pts0), n=pts.length; if(n<3) return; const L=[], Rt=[], N=[], W=[];
+  for(let i=0;i<n;i++){ const p=pts[i], q=pts[Math.min(n-1,i+1)], o=pts[Math.max(0,i-1)], dx=q[0]-o[0], dy=q[1]-o[1], m=Math.hypot(dx,dy)||1, nx=-dy/m, ny=dx/m, u=i/(n-1), w=(w0+(w1-w0)*u)*(1+0.06*Math.sin(u*9+seed))/2;
+    N.push([nx,ny]); W.push(w); L.push([p[0]+nx*w,p[1]+ny*w]); Rt.push([p[0]-nx*w,p[1]-ny*w]); }
+  const e=pts[n-1], pr=pts[n-3], dx=e[0]-pr[0], dy=e[1]-pr[1], m=Math.hypot(dx,dy)||1, ux=dx/m, uy=dy/m, tips=[];
+  c.fillStyle=atRgba(col,0.98); c.beginPath(); c.moveTo(L[0][0],L[0][1]); for(const p of L) c.lineTo(p[0],p[1]);
+  for(let j=0;j<4;j++){ const u=(j+0.5)/4, bx=L[n-1][0]+(Rt[n-1][0]-L[n-1][0])*u, by=L[n-1][1]+(Rt[n-1][1]-L[n-1][1])*u, len=w1*(0.8+1.1*atH(seed+j)), wob=Math.sin(t/90+j+seed)*w1*0.25, tx=bx+ux*len-uy*wob, ty=by+uy*len+ux*wob; tips.push([tx,ty]);
+    c.quadraticCurveTo(bx+ux*len*0.4,by+uy*len*0.4,tx,ty); c.quadraticCurveTo(bx+ux*len*0.2,by+uy*len*0.2,L[n-1][0]+(Rt[n-1][0]-L[n-1][0])*(j+1)/4,L[n-1][1]+(Rt[n-1][1]-L[n-1][1])*(j+1)/4); }
   for(let i=n-1;i>=0;i--) c.lineTo(Rt[i][0],Rt[i][1]); c.closePath(); c.fill();
-  c.strokeStyle=atRgba(HRC(col,0.45),0.9); c.lineWidth=1.3; c.stroke();
-  c.strokeStyle=atRgba(HRL(col,0.4),0.7); c.lineWidth=1.4; c.beginPath(); c.moveTo(L[0][0],L[0][1]); for(const p of L) c.lineTo(p[0],p[1]); c.stroke();
-  c.fillStyle=atRgba(HRC(col,0.3),0.85); for(const u of [0.35,0.7]){ const i=Math.floor(u*(n-1)), p=pts[i]; c.beginPath(); c.ellipse(p[0]+Math.sin(seed)*w0*0.1,p[1],w0*0.12,w0*0.07,seed,0,7); c.fill(); } };   // moth holes
+  const along=(off,a0,a1,str,lw)=>{ c.strokeStyle=str; c.lineWidth=lw; c.beginPath(); for(let i=Math.floor(a0*(n-1));i<=Math.floor(a1*(n-1));i++){ const x=pts[i][0]+N[i][0]*W[i]*off, y=pts[i][1]+N[i][1]*W[i]*off; i===Math.floor(a0*(n-1))?c.moveTo(x,y):c.lineTo(x,y); } c.stroke(); };
+  c.lineCap="round"; c.lineJoin="round";
+  along(-0.55,0,0.97,atRgba(HRC(col,0.55),0.45),Math.max(2,w0*0.28));   // the shaded underside
+  along(0.5,0,0.95,atRgba(HRL(col,0.45),0.5),Math.max(1.5,w0*0.18));    // sheen along the top edge
+  along(0.05,0.08,0.8,atRgba(HRC(col,0.45),0.45),1);                     // creases running down the cloth
+  along(-0.25,0.2,0.65,atRgba(HRC(col,0.45),0.35),1);
+  c.strokeStyle=atRgba(HRC(col,0.4),0.95); c.lineWidth=1.2; c.beginPath(); c.moveTo(L[0][0],L[0][1]); for(const p of L) c.lineTo(p[0],p[1]); c.stroke(); c.beginPath(); c.moveTo(Rt[0][0],Rt[0][1]); for(const p of Rt) c.lineTo(p[0],p[1]); c.stroke();
+  c.fillStyle=atRgba(HRC(col,0.35),0.9); for(const [u,sd] of [[0.32,1],[0.58,-1],[0.78,1]]){ const i=Math.floor(u*(n-1)), E=sd>0?L[i]:Rt[i], p=pts[i]; c.beginPath(); c.moveTo(E[0]-N[i][1]*W[i]*0.5,E[1]+N[i][0]*W[i]*0.5); c.lineTo(E[0]+(p[0]-E[0])*0.45,E[1]+(p[1]-E[1])*0.45); c.lineTo(E[0]+N[i][1]*W[i]*0.5,E[1]-N[i][0]*W[i]*0.5); c.closePath(); c.fill(); }   // small tears in the edges
+  c.fillStyle=atRgba(HRC(col,0.3),0.85); for(const u of [0.42,0.68]){ const i=Math.floor(u*(n-1)), p=pts[i]; c.beginPath(); c.ellipse(p[0]+N[i][0]*W[i]*0.15,p[1]+N[i][1]*W[i]*0.15,W[i]*0.22,W[i]*0.13,Math.atan2(N[i][1],N[i][0]),0,7); c.fill(); }   // moth holes
+  c.strokeStyle=atRgba(HRC(col,0.8),0.8); c.lineWidth=0.9; for(const [tx,ty] of tips) for(let k=0;k<2;k++){ const a=Math.sin(t/70+k*2+tx)*0.6; c.beginPath(); c.moveTo(tx,ty); c.quadraticCurveTo(tx+ux*w1*0.5,ty+uy*w1*0.5,tx+ux*w1*(0.9+0.3*k)-uy*w1*a,ty+uy*w1*(0.9+0.3*k)+ux*w1*a); c.stroke(); } };   // loose threads at the torn end
 const sgTatteredCloak={C:900,D:1750,sig:true,
   atk:t=>({pose:t<1300?"cast":"idle",sx:1+0.06*Math.sin(Math.min(1,t/600)*Math.PI)}),
   def:t=>t>=900&&t<1500?{off:[Math.sin(t/18)*1.5,0],pose:"hurt",sy:0.96}:null,
   fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, d=atDir(x), col=x.body||[200,170,60]; if(t<200||t>1700) return; const reach=t<900?eio((t-200)/700):t<1350?1:1-eio((t-1350)/300);
     const RG=[[-0.5,0.55,1.5,0.0],[0.4,0.25,-0.6,0.9],[-0.1,0.0,2.3,1.9],[0.55,-0.25,0.4,2.8],[-0.35,-0.5,1.1,3.7]];
     RG.forEach(([ox0,band,arch,ph],i)=>{ const delay=i*60, rr=t<900?eio(Math.max(0,Math.min(1,(t-200-delay)/(700-delay)))):reach, ox=s.x+ox0*s.r*0.9, oy=s.foot-s.r*(0.12+0.06*(i%2)), ex=tg.x-d*R*0.95, ey=tg.y-R*band, N=16, pts=[];
-      for(let j=0;j<=N;j++){ const u=j/N*rr, bx=ox+(ex-ox)*u, sw=Math.sin(u*Math.PI); pts.push([bx+Math.sin(u*6-t/90+ph)*R*0.1*sw,oy+(ey-oy)*u-sw*R*arch+Math.sin(u*7-t/60+ph)*R*0.22*sw]); }
-      if(rr>0.02) HR.rag(c,pts,R*0.44,R*0.24,HRC(col,[0.72,0.86,0.8,0.92,0.76][i]),t,i*1.7+ph); });
+      for(let j=0;j<=N;j++){ const u=j/N*rr, bx=ox+(ex-ox)*u, sw=Math.sin(u*Math.PI); pts.push([bx+Math.sin(u*3.5-t/150+ph)*R*0.1*sw,oy+(ey-oy)*u-sw*R*arch+Math.sin(u*4-t/110+ph)*R*0.2*sw]); }
+      if(rr>0.02) HR.rag(c,pts,R*0.4,R*0.22,HRC(col,[0.72,0.86,0.8,0.92,0.76][i]),t,i*1.7+ph); });
     if(reach>0.85){ const k=Math.min(1,(reach-0.85)/0.15); [[0.55,-0.25],[0.15,0.2],[-0.3,-0.15]].forEach(([yy0,tilt],i)=>{ const yy=tg.y-R*yy0, pts=[]; for(let j=0;j<=14;j++){ const an=Math.PI+j/14*Math.PI*k*1.1; pts.push([tg.x+Math.cos(an)*R*1.05*-d,yy+Math.sin(an)*-R*0.24+Math.cos(an)*R*tilt]); }
       HR.rag(c,pts,R*0.34,R*0.22,HRC(col,0.88-i*0.05),t,i*2.3+5); }); }
     if(t>=900&&t<1500){ const k=(t-900)/600, a=k<0.8?1:1-(k-0.8)*5; c.save(); c.translate(tg.x,tg.y-R*0.3); c.globalAlpha*=a; c.strokeStyle="#ffd84a"; c.lineWidth=3.5; c.shadowColor="#ffd84a"; c.shadowBlur=14; c.lineCap="round";
@@ -348,8 +359,9 @@ const sgTatteredCloak={C:900,D:1750,sig:true,
 /* ---- Yog-Sothoth's Gate Open: a stone gate carved with runes rises behind the target, its double doors swing open on a spiralling sky of stars
    and eyed globes, light floods out over the floor, the target is stretched and pulled through, the doors slam, then open once more to throw it
    back out, and the gate breaks apart into globes that fly back to Yog. */
-const YG={ open:t=>t<450?0:t<720?eo((t-450)/270):t<930?1:t<1060?1-eio((t-930)/130):t<1150?0:t<1300?eo((t-1150)/150):t<1420?1:1-eio(Math.min(1,(t-1420)/180)),
-  rise:t=>t<150?0:t<450?eo((t-150)/300):t<1550?1:Math.max(0,1-(t-1550)/180),
+const YG={ open:t=>t<450?0:t<720?eo((t-450)/270):t<930?1:t<1060?1-eio((t-930)/130):t<1650?0:t<1800?eo((t-1650)/150):t<1920?1:1-eio(Math.min(1,(t-1920)/180)),
+  rise:t=>t<150?0:t<450?eo((t-150)/300):t<2050?1:Math.max(0,1-(t-2050)/180),
+  thump:t=>{ for(const b of [1250,1450,1580]) if(t>=b&&t<b+140) return Math.sin((t-b)/140*Math.PI)*(b===1580?1.3:1); return 0; },
   geo(x){ const tg=x.target, R=tg.r, d=atDir(x); return {gx:tg.x+d*R*0.55,gy:tg.foot-R*0.1,h:R*3.1,w:R*1.6,R,d}; },
   draw(c,t,x){ const {gx,gy,h,w,R}=YG.geo(x), rise=YG.rise(t), op=YG.open(t); if(rise<=0) return; const top=gy-h*rise, fw=R*0.32; c.save(); c.beginPath(); c.rect(gx-w*2,gy-h*1.4,w*4,h*1.4); c.clip();
     c.fillStyle="#0a0614"; c.fillRect(gx-w/2,top,w,gy-top);
@@ -365,19 +377,20 @@ const YG={ open:t=>t<450?0:t<720?eo((t-450)/270):t<930?1:t<1060?1-eio((t-930)/13
     c.fillStyle="#5a4870"; c.fillRect(gx-w/2-fw*1.2,top-R*0.45,w+fw*2.4,R*0.32); c.fillStyle="#e2b94f"; c.fillRect(gx-w/2-fw*1.2,top-R*0.16,w+fw*2.4,R*0.05);
     HR.globe(c,gx,top-R*0.3,R*0.22,[200,160,255],true,Math.sin(t/300)); c.restore(); } };
 const R0=24;   // how far up the pulled target drifts toward the middle of the gate, in arena units
-const sgGateOpen={C:1060,D:1900,sig:true,behind:false,
-  atk:t=>({pose:t<1450?"cast":"idle",arc:t<1450?-8*Math.sin(Math.min(1,t/300)*Math.PI/2):0}),
-  def(t){ if(t<620||t>1550) return null; if(t<880){ const k=ei((t-620)/260); return {sx:1-0.55*k,sy:1+0.25*k,alpha:1-0.95*k,off:[14*k,-R0*k],rot:0.4*k,pose:"hurt"}; } if(t<1180) return {alpha:0,pose:"hurt"};
-    const k=(t-1180)/370; return {alpha:Math.min(1,k*4),sx:0.7+0.3*eo(k),off:[20*(1-eo(k)),0],arc:-40*Math.sin(Math.min(1,k)*Math.PI),rot:-1.2*(1-eo(k)),pose:"hurt"}; },
-  back(c,t,x){ if(t<150||t>1750) return; YG.draw(c,t,x); const {gx,gy,w,R}=YG.geo(x), op=YG.open(t); if(op>0){ c.save(); c.globalCompositeOperation="lighter"; const g=c.createLinearGradient(gx,gy,gx-x.target.r*3*atDir(x),gy); g.addColorStop(0,`rgba(230,200,255,${0.45*op})`); g.addColorStop(1,"rgba(230,200,255,0)"); c.fillStyle=g;
+const sgGateOpen={C:1060,D:2400,tail:1300,sig:true,
+  atk:t=>({pose:t<1950?"cast":"idle",arc:t<1950?-8*Math.sin(Math.min(1,t/300)*Math.PI/2):0}),
+  def(t){ if(t<620||t>2050) return null; if(t<880){ const k=ei((t-620)/260); return {sx:1-0.55*k,sy:1+0.25*k,alpha:1-0.95*k,off:[14*k,-R0*k],rot:0.4*k,pose:"hurt"}; } if(t<1680) return {alpha:0,pose:"hurt"};
+    const k=(t-1680)/370; return {alpha:Math.min(1,k*4),sx:0.7+0.3*eo(k),off:[20*(1-eo(k)),0],arc:-40*Math.sin(Math.min(1,k)*Math.PI),rot:-1.2*(1-eo(k)),pose:"hurt"}; },
+  back(c,t,x){ if(t<150||t>2250) return; const th=YG.thump(t); if(th){ c.save(); c.translate(Math.sin(t/12)*th*3,0); YG.draw(c,t,x); c.restore(); } else YG.draw(c,t,x); const {gx,gy,w,R}=YG.geo(x), op=YG.open(t); if(op>0){ c.save(); c.globalCompositeOperation="lighter"; const g=c.createLinearGradient(gx,gy,gx-x.target.r*3*atDir(x),gy); g.addColorStop(0,`rgba(230,200,255,${0.45*op})`); g.addColorStop(1,"rgba(230,200,255,0)"); c.fillStyle=g;
       c.beginPath(); c.moveTo(gx-w/2,gy); c.lineTo(gx+w/2,gy); c.lineTo(gx+w*1.6,gy+R*0.45); c.lineTo(gx-w*1.6,gy+R*0.45); c.closePath(); c.fill(); c.restore(); } },
   fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, {gx,gy,h,w}=YG.geo(x), op=YG.open(t);
-    if(t<1300){ for(let i=0;i<5;i++){ const an=t/350+i*1.26, k=Math.min(1,t/300); HR.globe(c,s.x+Math.cos(an)*s.r*1.4,s.y-s.r*0.5+Math.sin(an)*s.r*0.5,s.r*0.18,[[255,140,200],[150,240,230],[255,230,140],[190,150,255],[255,170,140]][i],true,Math.cos(an),k); } }
+    if(t<1800){ for(let i=0;i<5;i++){ const an=t/350+i*1.26, k=Math.min(1,t/300); HR.globe(c,s.x+Math.cos(an)*s.r*1.4,s.y-s.r*0.5+Math.sin(an)*s.r*0.5,s.r*0.18,[[255,140,200],[150,240,230],[255,230,140],[190,150,255],[255,170,140]][i],true,Math.cos(an),k); } }
     if(op>0.3&&t>500&&t<930){ c.save(); c.globalCompositeOperation="lighter"; for(let i=0;i<16;i++){ const q=((t/420)+i/16)%1, sx=tg.x+(atH(i*3)-0.5)*R*2.4, sy=tg.y-R*0.3+(atH(i*7)-0.5)*R*2, px=sx+(gx-sx)*q, py=sy+(gy-h*0.5-sy)*q; atGlowA(c,px,py,R*0.08,[220,190,255],0.9*(1-q)); } c.restore(); }
+    for(const b of [1250,1450,1580]) if(t>=b&&t<b+260){ const k=(t-b)/260; SG.ring(c,gx,gy-h*0.5,w*(0.55+0.5*k),h*(0.5+0.3*k),[255,220,140],3,0.7*(1-k)); for(let i=0;i<3;i++) atStar4(c,gx+(i-1)*w*0.4,gy-h*(0.3+0.2*i)-k*R*0.5,R*0.13*(1-k),"rgba(255,235,170,.9)"); }   // it bangs about inside and the doors shake
     if(t>=1060&&t<1450){ const k=(t-1060)/390; SG.ring(c,gx,gy-h*0.5,R*(0.6+2.4*k),R*(0.8+2*k),[220,190,255],4,0.8*(1-k)); SG.dust(c,gx,gy,R*1.2,k,8); }
-    if(t>=1180&&t<1550){ const k=(t-1180)/370; for(let i=0;i<10;i++){ const a=atH(i*5)*Math.PI*2, v=R*(0.4+1.4*eo(k)); atStar4(c,tg.x+Math.cos(a)*v,tg.y-R*0.3+Math.sin(a)*v,R*0.14*(1-k),"rgba(255,240,200,.95)"); } }
-    if(t>=1550&&t<1900){ const k=(t-1550)/350; for(let i=0;i<4;i++){ const sx0=gx+(i-1.5)*w*0.4, sy0=gy-h*(0.3+0.15*i), px=sx0+(s.x-sx0)*eio(k), py=sy0+(s.y-s.r*0.5-sy0)*eio(k)-Math.sin(k*Math.PI)*R; HR.globe(c,px,py,R*0.17,[[255,140,200],[150,240,230],[255,230,140],[190,150,255]][i],true,0,1-k*0.3); } }
-    atImpact(t,880,0.3,0.15); atImpact(t,1060,0.55,0.1); atImpact(t,1180,0.35,0.05); }};
+    if(t>=1680&&t<2050){ const k=(t-1680)/370; for(let i=0;i<10;i++){ const a=atH(i*5)*Math.PI*2, v=R*(0.4+1.4*eo(k)); atStar4(c,tg.x+Math.cos(a)*v,tg.y-R*0.3+Math.sin(a)*v,R*0.14*(1-k),"rgba(255,240,200,.95)"); } }
+    if(t>=2050&&t<2400){ const k=(t-2050)/350; for(let i=0;i<4;i++){ const sx0=gx+(i-1.5)*w*0.4, sy0=gy-h*(0.3+0.15*i), px=sx0+(s.x-sx0)*eio(k), py=sy0+(s.y-s.r*0.5-sy0)*eio(k)-Math.sin(k*Math.PI)*R; HR.globe(c,px,py,R*0.17,[[255,140,200],[150,240,230],[255,230,140],[190,150,255]][i],true,0,1-k*0.3); } }
+    atImpact(t,880,0.3,0.15); atImpact(t,1060,0.55,0.1); atImpact(t,1250,0.15,0); atImpact(t,1450,0.15,0); atImpact(t,1580,0.25,0); atImpact(t,1680,0.35,0.05); }};
 
 /* ---- Yog-Sothoth's Globe Storm: its globes swing out into a wide orbit, each one with an eye that turns to the target, then fly in one after another
    on curving paths, trailing light, and burst on the target in rings and sparks of their own colour. */
@@ -423,28 +436,53 @@ const sgDreamCall={C:1000,D:1900,sig:true,
     if(t>=1000&&t<1500){ const k=(t-1000)/500; c.save(); c.globalCompositeOperation="lighter"; atGlowA(c,tg.x,tg.y-R*0.3,R*(1+1.5*k),[220,40,80],0.6*(1-k)); c.restore(); for(let i=0;i<10;i++){ const a=i/10*Math.PI*2, v=R*(0.6+1.6*eo(k)); c.strokeStyle=`rgba(40,10,60,${0.9*(1-k)})`; c.lineWidth=3; c.beginPath(); c.moveTo(tg.x+Math.cos(a)*v*0.6,tg.y-R*0.3+Math.sin(a)*v*0.6); c.lineTo(tg.x+Math.cos(a)*v,tg.y-R*0.3+Math.sin(a)*v); c.stroke(); } }
     atImpact(t,1000,0.5,0.12); }};
 
-/* ---- Cthulhu's Sunken Rise: seawater floods the floor between them with drowned ruins showing under it, Cthulhu sinks into it and rises high
-   with water pouring off it, then comes down claws first on the target in a tall crown of spray, and the waves roll out across the flood. */
-const sgSunkenRise={C:1050,D:1900,sig:true,
-  atk:t=>{ if(t<350){ const k=eo(t/350); return {sy:1-0.12*k,sx:1+0.06*k,arc:14*k,pose:"crouch",alpha:1-0.45*k}; } if(t<800){ const k=eo((t-350)/450); return {f:0.4*k,arc:14-164*k,pose:"slamup",alpha:0.55+0.45*k}; }
-    if(t<1050){ const k=ei((t-800)/250); return {f:0.4+0.38*k,arc:-150+150*k,pose:"slam"}; } if(t<1250) return {f:0.78,pose:"slam",sy:0.9}; const k=(t-1250)/550; return {f:0.78*(1-eio(k)),arc:-30*Math.sin(Math.min(1,k)*Math.PI),pose:"idle"}; },
-  def:t=>SG.knock(t,1050,1,50,600),
-  back(c,t,x){ const s=x.self, tg=x.target, R=tg.r; if(t>1750) return; const a=t<200?t/200:t<1400?1:Math.max(0,1-(t-1400)/350), cx=(s.x+tg.x)/2, ground=tg.foot+2, rx=Math.abs(tg.x-s.x)*0.9+R*1.8, ry=R*0.45;
-    c.save(); c.globalAlpha*=a; c.beginPath(); c.ellipse(cx,ground,rx,ry,0,0,7); c.clip(); const g=c.createLinearGradient(0,ground-ry,0,ground+ry); g.addColorStop(0,"#5aa6dc"); g.addColorStop(1,"#163e7e"); c.fillStyle=g; c.fillRect(cx-rx,ground-ry,rx*2,ry*2);
-    c.fillStyle="rgba(10,30,60,.45)"; for(let i=0;i<6;i++){ const px=cx+(i-2.5)*rx*0.32, w=R*0.18, h=R*(0.2+0.15*(i%3)); c.fillRect(px-w/2,ground-h*0.2,w,h); c.fillRect(px-w*0.8,ground-h*0.2-R*0.06,w*1.6,R*0.06); }   // drowned ruins under the water
-    c.strokeStyle="rgba(235,250,255,.6)"; c.lineWidth=1.5; for(let i=0;i<6;i++){ const xx=cx+(i-2.5)*rx*0.3+Math.sin(t/250+i)*R*0.4, yy=ground+(i%3-1)*ry*0.4; c.beginPath(); c.moveTo(xx-R*0.4,yy); c.lineTo(xx+R*0.4,yy); c.stroke(); } c.restore();
-    for(let i=0;i<4;i++){ const ph=((t/700)+i/4)%1; SG.ring(c,cx,ground,rx*0.25+rx*0.75*ph,ry*0.3+ry*0.7*ph,[210,240,255],1.5,0.6*(1-ph)*a); } },
-  fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, ground=tg.foot+2;
-    if(t>=330&&t<900){ const k=(t-330)/570, top=s.foot+(s.y-s.foot)*0.2, h=Math.max(0,s.foot+2-top)*Math.sin(Math.min(1,k*1.3)*Math.PI*0.5)*(1-Math.max(0,(k-0.75)/0.25)), w=s.r*(0.55+0.15*Math.sin(t/60)); if(h>2){ const g=c.createLinearGradient(0,s.foot-h,0,s.foot); g.addColorStop(0,"rgba(220,245,255,.9)"); g.addColorStop(1,"rgba(60,140,215,.85)");
-      c.fillStyle=g; c.beginPath(); c.moveTo(s.x-w,s.foot+2); c.quadraticCurveTo(s.x-w*0.55,s.foot-h*0.5,s.x-w*0.7,s.foot-h); c.lineTo(s.x+w*0.7,s.foot-h); c.quadraticCurveTo(s.x+w*0.55,s.foot-h*0.5,s.x+w,s.foot+2); c.closePath(); c.fill();
-      c.fillStyle="#fff"; for(let i=0;i<7;i++){ c.beginPath(); c.arc(s.x+(i-3)*w*0.24,s.foot-h+Math.sin(t/50+i)*3,w*0.16,0,7); c.fill(); } } }   // the water spout it rises on
-    if(t>=350&&t<1000){ const k=(t-350)/650; for(let i=0;i<9;i++){ const ph=(k*2+i/9)%1, sx=s.x+(i-4)*s.r*0.22; c.strokeStyle=`rgba(170,220,255,${0.8*(1-ph)})`; c.lineWidth=2.4; c.beginPath(); c.moveTo(sx,s.y-s.r*0.4+ph*s.r*0.8); c.lineTo(sx,s.y-s.r*0.4+ph*s.r*0.8+s.r*0.5); c.stroke();
-      HR.drop(c,sx+Math.sin(i)*s.r*0.1,s.foot-ph*s.r*0.2+ph*ph*s.r*1.8,s.r*0.06,[170,220,255],0.9*(1-ph)); } }
-    if(t>=1050&&t<1700){ const k=(t-1050)/650; for(let i=0;i<9;i++){ const u=(i-4)/4, hgt=R*(1.6+1.6*(1-Math.abs(u)))*Math.sin(Math.min(1,k*1.5)*Math.PI*0.5)*(1-k), px=tg.x+u*R*1.4*(0.7+0.5*k); c.fillStyle=`rgba(${i%2?"200,236,255":"120,195,245"},${0.9*(1-k)})`;
-        c.beginPath(); c.moveTo(px-R*0.12,ground); c.quadraticCurveTo(px,ground-hgt*1.1,px+R*0.12,ground); c.fill(); HR.drop(c,px+u*R*0.3*k,ground-hgt-R*0.1,R*0.08,[230,248,255],0.9*(1-k)); }
-      HR.splash(c,tg.x,ground,R*1.4,k,22,[110,195,245]); SG.ring(c,tg.x,ground,R*(1+3*k),R*(0.25+0.6*k),[255,255,255],3,0.9*(1-k));
-      for(const sd of [-1,1]){ c.save(); c.globalCompositeOperation="lighter"; c.strokeStyle=`rgba(140,255,220,${1-k})`; c.lineWidth=4; c.lineCap="round"; for(let j=0;j<3;j++){ c.beginPath(); c.moveTo(tg.x+sd*R*(0.15+j*0.24),tg.y-R*1.0); c.quadraticCurveTo(tg.x+sd*R*(0.05+j*0.24),tg.y-R*0.4,tg.x+sd*R*(0.0+j*0.22),tg.y+R*0.2); c.stroke(); } c.restore(); } }
-    atImpact(t,1050,0.85,0.15); }};
+/* ---- Cthulhu's Sunken Rise: seawater floods the floor between them with drowned ruins under it. Cthulhu hops up and dives in, its shadow
+   swims under the surface to the target, the water swells, and it bursts up out of a tall column of water right under the target, claws first,
+   throwing it into the air. Then it drops back into the sea and comes up again at its own spot as the flood drains. */
+const SR={ home:null,
+  atk(t,x){ const g=(x&&x.gap)||220, d=(x&&x.dir)||1, at=k=>[d*g*k,0];
+    if(t<250){ const k=eo(t/250); return {sy:1-0.12*k,sx:1+0.08*k,pose:"crouch"}; }
+    if(t<420){ const k=(t-250)/170; return {arc:-70*Math.sin(k*Math.PI*0.5),sy:1.06,pose:"slamup"}; }
+    if(t<580){ const k=ei((t-420)/160), ac=-70+170*k; return {arc:ac,alpha:ac<-10?1:Math.max(0,1-(ac+10)/35),sy:1.1,sx:0.9,rot:0.25*d*k,pose:"slam"}; }
+    if(t<820) return {alpha:0,off:at(eio((t-580)/240)),arc:100,pose:"slam"};
+    if(t<950){ const k=eo((t-820)/130), ac=100-150*k; return {off:at(1),arc:ac,alpha:ac>40?0:ac>0?1-ac/40:1,sy:1.12,sx:0.92,pose:"slamup"}; }
+    if(t<1120){ const k=eo((t-950)/170); return {off:at(1),arc:-50-25*k,sy:1.08,pose:"slamup"}; }
+    if(t<1380){ const k=ei((t-1120)/260), ac=-75+175*k; return {off:at(1),arc:ac,alpha:ac<-10?1:Math.max(0,1-(ac+10)/35),rot:-0.2*d*k,pose:"slam"}; }
+    if(t<1620) return {alpha:0,off:at(1-eio((t-1380)/240)),arc:100,pose:"idle"};
+    if(t<1850){ const k=eo((t-1620)/230), ac=100*(1-k); return {arc:ac,alpha:ac>40?0:1-ac/40,sy:1+0.1*(1-k),pose:"idle"}; }
+    return {pose:"idle"}; },
+  def(t,x){ const d=-((x&&x.dir)||1); if(t<700||t>1600) return null;
+    if(t<950) return {off:[Math.sin(t/18)*1.5,0],sy:1-0.04*Math.sin((t-700)/250*Math.PI),pose:"hurt"};
+    if(t<1420){ const k=(t-950)/470; return {arc:-190*Math.sin(k*Math.PI),rot:d*Math.PI*2*eo(k),off:[d*20*k,0],pose:"hurt"}; }
+    const k=(t-1420)/180; return {sy:0.75+0.25*eo(k),sx:1.15-0.15*eo(k),off:[d*20,0],pose:"hurt"}; },
+  flood(t){ return t<120?0:t<420?eo((t-120)/300):t<1800?1:Math.max(0,1-(t-1800)/250); } };
+const sgSunkenRise={C:950,D:2050,tail:1100,sig:true,
+  atk:(t,x)=>SR.atk(t,x), def:(t,x)=>SR.def(t,x),
+  back(c,t,x){ const s=x.self, tg=x.target, R=tg.r, f=SR.flood(t); if(t<250) SR.home=s.x; if(f<=0) return; const hx=SR.home==null?s.x:SR.home, ground=tg.foot+2, cx=(hx+tg.x)/2, rx=(Math.abs(tg.x-hx)*0.5+R*2.2)*f, ry=R*0.5*f;
+    c.save(); c.beginPath(); c.ellipse(cx,ground,rx,ry,0,0,7); c.clip(); const g=c.createLinearGradient(0,ground-ry,0,ground+ry); g.addColorStop(0,"#6cb8e6"); g.addColorStop(0.5,"#2f78c0"); g.addColorStop(1,"#123a78"); c.fillStyle=g; c.fillRect(cx-rx,ground-ry,rx*2,ry*2);
+    c.fillStyle="rgba(8,26,58,.5)"; for(let i=0;i<7;i++){ const px=cx+(i-3)*rx*0.27, w=R*0.16, h=R*(0.25+0.12*(i%3)); c.fillRect(px-w/2,ground-h*0.25,w,h); c.fillRect(px-w*0.85,ground-h*0.25-R*0.05,w*1.7,R*0.05); if(i%2){ c.beginPath(); c.arc(px,ground-h*0.25-R*0.05,w*0.85,Math.PI,0); c.fill(); } }   // drowned ruins
+    c.strokeStyle="rgba(150,230,255,.35)"; c.lineWidth=1.2; for(let i=0;i<10;i++){ const xx=cx-rx+rx*2*atH(i*3), yy=ground+(atH(i*7)-0.5)*ry*1.2; c.beginPath(); c.moveTo(xx,yy); c.quadraticCurveTo(xx+R*0.2,yy-R*0.06+Math.sin(t/200+i)*R*0.04,xx+R*0.45,yy); c.stroke(); }   // light rippling on the water
+    c.strokeStyle="rgba(240,252,255,.7)"; c.lineWidth=1.6; for(let i=0;i<6;i++){ const xx=cx+(i-2.5)*rx*0.3+Math.sin(t/250+i)*R*0.4, yy=ground+(i%3-1)*ry*0.45; c.beginPath(); c.moveTo(xx-R*0.35,yy); c.lineTo(xx+R*0.35,yy); c.stroke(); }
+    c.restore(); c.strokeStyle=`rgba(230,248,255,${0.8*f})`; c.lineWidth=2; c.beginPath(); c.ellipse(cx,ground,rx,ry,0,Math.PI*1.02,Math.PI*1.98); c.stroke();
+    for(let i=0;i<3;i++){ const ph=((t/800)+i/3)%1; SG.ring(c,cx,ground,rx*(0.3+0.7*ph),ry*(0.3+0.7*ph),[210,240,255],1.5,0.5*(1-ph)*f); }
+    if(t>=580&&t<840){ const k=(t-580)/260, sx=hx+(tg.x-hx)*eio(Math.min(1,k*1.08)), d=tg.x>hx?1:-1; c.save(); c.globalAlpha*=Math.sin(k*Math.PI)*0.85+0.15;   // its shadow swimming under the surface
+      c.fillStyle="rgba(4,10,30,.82)"; c.beginPath(); c.ellipse(sx,ground+ry*0.1,R*0.95,R*0.26,0,0,7); c.fill(); for(const sd of [-1,1]){ c.beginPath(); c.moveTo(sx,ground); c.quadraticCurveTo(sx-d*R*0.3,ground+sd*R*0.4,sx-d*R*0.9,ground+sd*R*0.28); c.lineTo(sx-d*R*0.3,ground); c.fill(); }
+      c.strokeStyle="rgba(245,253,255,.95)"; c.lineWidth=2.4; for(const sd of [-1,1]){ c.beginPath(); c.moveTo(sx+d*R*0.8,ground); c.lineTo(sx-d*R*2.0,ground+sd*R*0.36); c.stroke(); } for(let i=0;i<5;i++){ const q=((t/250)+i/5)%1; c.strokeStyle=`rgba(240,252,255,${0.8*(1-q)})`; c.lineWidth=1.3; c.beginPath(); c.arc(sx-d*R*q*1.5,ground-q*R*0.5,R*0.06,0,7); c.stroke(); } c.restore(); } },
+  fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, ground=tg.foot+2, hx=SR.home==null?s.x:SR.home;
+    HR.splash(c,hx,ground,R,(t-540)/450,14,[120,200,245]);   // the dive
+    if(t>=760&&t<960){ const k=(t-760)/200, h=R*0.9*eo(k); const g=c.createRadialGradient(tg.x,ground-h*0.5,2,tg.x,ground,R*1.6); g.addColorStop(0,"rgba(200,240,255,.9)"); g.addColorStop(1,"rgba(60,140,215,.85)"); c.fillStyle=g; c.beginPath(); c.ellipse(tg.x,ground,R*1.5,Math.max(1,h),0,Math.PI,0); c.fill();
+      for(let i=0;i<8;i++){ const q=(k*2+i/8)%1; c.strokeStyle=`rgba(240,252,255,${0.8*(1-q)})`; c.lineWidth=1.3; c.beginPath(); c.arc(tg.x+(i-3.5)*R*0.3,ground-q*h*1.4,R*0.05,0,7); c.stroke(); } }   // the water swells under the target
+    if(t>=880&&t<1450){ const k=(t-880)/570, ca=SR.atk(t,{}).arc||0, H=Math.max(0,(-ca+R*0.5)*Math.min(1,k*4))*(t<1250?1:1-ei((t-1250)/200)), w=R*(0.85+0.3*k); c.save(); c.globalAlpha*=0.85;   // the column it bursts out of
+      if(H>2){ const g=c.createLinearGradient(0,ground-H,0,ground); g.addColorStop(0,"rgba(235,250,255,.95)"); g.addColorStop(0.4,"rgba(120,200,245,.9)"); g.addColorStop(1,"rgba(30,100,190,.92)"); c.fillStyle=g;
+        c.beginPath(); c.moveTo(tg.x-w*1.4,ground); c.quadraticCurveTo(tg.x-w*0.7,ground-H*0.35,tg.x-w*0.85,ground-H); for(let i=0;i<=8;i++){ const u=i/8; c.lineTo(tg.x-w*0.85+w*1.7*u,ground-H-Math.abs(Math.sin(u*Math.PI*4+t/40))*R*0.35); } c.quadraticCurveTo(tg.x+w*0.7,ground-H*0.35,tg.x+w*1.4,ground); c.closePath(); c.fill();
+        c.strokeStyle="rgba(255,255,255,.6)"; c.lineWidth=2; for(let i=0;i<4;i++){ const xx=tg.x+(i-1.5)*w*0.4; c.beginPath(); c.moveTo(xx,ground-R*0.2); c.quadraticCurveTo(xx+Math.sin(t/60+i)*R*0.15,ground-H*0.5,xx,ground-H*0.9); c.stroke(); }
+        c.fillStyle="#fff"; for(let i=0;i<10;i++){ c.beginPath(); c.arc(tg.x-w*0.8+w*1.6*i/9,ground-H-Math.abs(Math.sin(i*1.7+t/50))*R*0.3,R*(0.12+0.08*atH(i)),0,7); c.fill(); } }
+      c.restore(); HR.splash(c,tg.x,ground,R*1.6,Math.min(1,Math.max(0,(t-950)/500)*1.2),26,[110,195,245]); SG.ring(c,tg.x,ground,R*(1+3*k),R*(0.25+0.6*k),[255,255,255],3,0.9*(1-k)); }
+    if(t>=950&&t<1180){ const k=(t-950)/230; c.save(); c.globalCompositeOperation="lighter"; c.strokeStyle=`rgba(140,255,220,${1-k})`; c.lineWidth=4.5; c.lineCap="round";   // claw marks raking upward
+      for(let j=0;j<3;j++){ const xx=tg.x+(j-1)*R*0.32; c.beginPath(); c.moveTo(xx-R*0.1,tg.y+R*0.5); c.quadraticCurveTo(xx+R*0.15,tg.y-R*0.3,xx+R*0.05,tg.y-R*(0.9+0.6*k)); c.stroke(); } c.restore(); }
+    HR.splash(c,tg.x,ground,R*0.9,(t-1340)/400,12,[130,205,248]); SG.ring(c,hx,ground,R*(0.6+1.4*Math.max(0,(t-1620)/400)),R*(0.15+0.3*Math.max(0,(t-1620)/400)),[230,248,255],2,t>=1620&&t<2020?0.8*(1-(t-1620)/400):0);
+    if(t>=1620&&t<1850){ const k=(t-1620)/230; for(let i=0;i<6;i++){ const ph=(k+i/6)%1; HR.drop(c,hx+(i-2.5)*s.r*0.25,s.y-s.r*0.3+ph*s.r*1.2,s.r*0.06,[170,220,255],0.85*(1-ph)); } }
+    atImpact(t,950,0.85,0.15); atImpact(t,1340,0.3,0); }};
 
 Object.assign(ANIM,{sg_tidalgrasp:sgTidalGrasp,sg_fishersong:sgFishersSong,sg_kidstampede:sgKidStampede,sg_blackgrove:sgBlackGrove,sg_swallowwhole:sgSwallowWhole,
   sg_curtaincall:sgCurtainCall,sg_tatteredcloak:sgTatteredCloak,sg_gateopen:sgGateOpen,sg_globestorm:sgGlobeStorm,sg_dreamcall:sgDreamCall,sg_sunkenrise:sgSunkenRise});
@@ -473,10 +511,10 @@ if(typeof KSND!=="undefined") Object.assign(KSND,{
   sg_swallowwhole:(d,t)=>{ dNoise(d,t+0.05,0.5,0.14,'lowpass',500); sTone(d,t+0.4,'sawtooth',90,60,0.35,0.04); dKick(d,t+0.76,0.8); sTone(d,t+0.78,'sine',300,90,0.4,0.06); for(let i=0;i<6;i++) sTone(d,t+1.0+i*0.11,'sine',260+i*40,420+i*40,0.07,0.03); sTone(d,t+1.55,'sine',120,300,0.14,0.05); dNoise(d,t+1.69,0.25,0.25,'bandpass',700,0.8); dKick(d,t+2.05,0.4); },
   sg_curtaincall:(d,t)=>{ dNoise(d,t+0.4,0.4,0.1,'bandpass',800,0.5); dKick(d,t+0.82,0.3); [0.9,1.1,1.3].forEach((x,i)=>sTone(d,t+x,'sine',600-i*100,500-i*100,0.25,0.04)); },
   sg_tatteredcloak:(d,t)=>{ dNoise(d,t+0.2,0.7,0.1,'bandpass',600,0.5); sTone(d,t+0.9,'sawtooth',110,104,0.6,0.04); sTone(d,t+0.9,'triangle',880,860,0.5,0.03); },
-  sg_gateopen:(d,t)=>{ dNoise(d,t+0.15,0.3,0.1,'lowpass',300); sTone(d,t+0.45,'sine',200,800,0.4,0.05); sTone(d,t+0.62,'sine',300,1200,0.3,0.03); dKick(d,t+1.06,0.7); dNoise(d,t+1.06,0.2,0.3,'lowpass',500); sTone(d,t+1.18,'sine',900,300,0.3,0.05); for(let i=0;i<4;i++) sTone(d,t+1.55+i*0.06,'triangle',1200+i*200,1600,0.08,0.03); },
+  sg_gateopen:(d,t)=>{ dNoise(d,t+0.15,0.3,0.1,'lowpass',300); sTone(d,t+0.45,'sine',200,800,0.4,0.05); sTone(d,t+0.62,'sine',300,1200,0.3,0.03); dKick(d,t+1.06,0.7); dNoise(d,t+1.06,0.2,0.3,'lowpass',500); [1.25,1.45,1.58].forEach((x,i)=>{ dKick(d,t+x,0.3+i*0.1); dNoise(d,t+x,0.1,0.12,'lowpass',400); }); sTone(d,t+1.68,'sine',900,300,0.3,0.05); for(let i=0;i<4;i++) sTone(d,t+2.05+i*0.06,'triangle',1200+i*200,1600,0.08,0.03); },
   sg_globestorm:(d,t)=>{ for(let i=0;i<6;i++){ sTone(d,t+0.2+i*0.125,'sine',800+i*120,500,0.15,0.04); dKick(d,t+0.5+i*0.125,0.2); } },
   sg_dreamcall:(d,t)=>{ sTone(d,t+0.15,'sine',55,50,1.4,0.1); sTone(d,t+0.15,'sine',82,78,1.4,0.06); dNoise(d,t+0.3,1.0,0.06,'lowpass',200); sTone(d,t+1.0,'sawtooth',110,90,0.5,0.05); },
-  sg_sunkenrise:(d,t)=>{ dNoise(d,t+0.05,0.4,0.12,'lowpass',500); sTone(d,t+0.35,'sine',100,300,0.45,0.05); dKick(d,t+1.05,1.1); dNoise(d,t+1.05,0.8,0.3,'lowpass',900); }
+  sg_sunkenrise:(d,t)=>{ dNoise(d,t+0.05,0.5,0.12,'lowpass',500); dNoise(d,t+0.54,0.35,0.22,'lowpass',800); sTone(d,t+0.6,'sine',70,55,0.3,0.06); dNoise(d,t+0.76,0.2,0.12,'lowpass',400); dKick(d,t+0.95,1.1); dNoise(d,t+0.95,0.8,0.3,'lowpass',900); sTone(d,t+0.95,'sawtooth',90,180,0.3,0.04); dNoise(d,t+1.34,0.4,0.2,'lowpass',800); dNoise(d,t+1.62,0.3,0.12,'lowpass',700); }
 });
 
 /* the horrors' other moves use the closest animations made so far */

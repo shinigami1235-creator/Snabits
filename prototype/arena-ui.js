@@ -611,7 +611,7 @@ function atSideState(S,te){
       else if(W==="shadow") out.alpha=0.78+0.22*Math.sin(te/60);
       else if(W==="gears"||W==="steam") out.rot+=Math.sin(te/40)*0.05*kk;
       else if(W==="signal"){ out.off[0]+=(atH(Math.floor(te/40))-0.5)*4*kk; out.sx*=1+0.03*Math.sin(te/25); } }
-  else if(A){ const t=(te-A.t0)*A.rate, K=ANIM[A.kind]; if(t>(A.mega?Math.max(K.D,K.C+950):K.D)) S.anim=null; else Object.assign(out,K.atk(t,{foeH:60,perp:[0,-1],dir:S.dir,fam:S.spec&&S.spec.family,stage:S.spec&&S.spec.stage,gapU:atGapU(S)})); }
+  else if(A){ const t=(te-A.t0)*A.rate, K=ANIM[A.kind]; if(t>(A.mega?Math.max(K.D,K.C+950):K.D)) S.anim=null; else Object.assign(out,K.atk(t,{foeH:60,perp:[0,-1],dir:S.dir,fam:S.spec&&S.spec.family,stage:S.spec&&S.spec.stage,gapU:atGapU(S),gap:S.foe&&S.foe.dx!=null&&S.dx!=null?Math.abs(S.foe.dx-S.dx):null})); }
   const O=S.foe.anim; if(O&&!S.anim){ const t=(te-O.t0)*O.rate, K=ANIM[O.kind]; if(t<=K.D&&K.def){ const d=K.def(t,{foeH:60,perp:[0,-1],dir:S.dir,gap:S.foe&&S.foe.dx!=null&&S.dx!=null?Math.abs(S.foe.dx-S.dx):null}); if(d) Object.assign(out,d); } }
   if(S.pose&&te<S.pose.until&&!S.anim) out.pose=S.pose.p;
   if(S.recoil){ const k=(te-S.recoil.t0)/170; if(k>1) S.recoil=null; else out.off[0]-=S.dir*S.recoil.amt*Math.sin(k*Math.PI); }
