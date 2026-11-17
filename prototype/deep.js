@@ -12,8 +12,8 @@ function deepState(reg) { const X = PLAYER.deep = PLAYER.deep || {}; return X[re
 
 /* eleven columns: the start camp, finds, an obstacle, finds, a camp, finds, an obstacle for two, finds, a camp, a harder
    obstacle, and the guardian. The same every time for a region */
-function deepMap(reg) {
-  const R = rng(hashStr('deep|' + reg.n)), N = {}, E = [], id = (c, r) => c + ':' + r, finds = ['path', 'chest', 'spring', 'wild', 'chest', 'wild', 'path'];
+function deepMap(reg, season = typeof exSeason === 'function' ? exSeason() : 0) {   // a new layout every season (deep-more.js)
+  const R = rng(hashStr('deep|' + reg.n + '|' + season)), N = {}, E = [], id = (c, r) => c + ':' + r, finds = ['path', 'chest', 'spring', 'wild', 'chest', 'wild', 'path'];
   for (let c = 0; c <= 10; c++) for (let r = 0; r < 3; r++) {
     const one = c === 0 || c === 10, mid = r === 1;
     if (one && !mid) continue;
@@ -26,6 +26,7 @@ function deepMap(reg) {
     else n = { k: finds[Math.floor(R() * finds.length)] };
     N[id(c, r)] = { ...n, c, r, id: id(c, r) };
   }
+  if (typeof deepExtras === 'function') deepExtras(reg, N, R);   // a waystone, a sealed way and sometimes Rook's team (deep-more.js)
   if (reg.ring != null && typeof riftLairs === 'function') riftLairs(reg, N);   // a Deep Rift ring's lairs (horror.js)
   for (let c = 0; c < 10; c++) {
     const here = Object.values(N).filter(n => n.c === c), next = Object.values(N).filter(n => n.c === c + 1);
@@ -105,6 +106,7 @@ async function runDeep(reg, team) {
   const where = reg.ring != null ? reg.n : `${reg.n}, deep`;   // a Deep Rift ring has its own name
   const T = team.map(s => { const max = deepEnergyMax(s); return { s, e: max, max, out: false }; });
   let lead = 0, at = '0:1', blocked = [], used = [], day = 1, stop = null;
+  if (st.season !== exSeason()) { st.seen = ['0:1']; st.got = st.got.filter(id => id === '10:1'); }   // a new season, a new layout: the fog and the chests start over, while a beaten guardian stays beaten
   st.season = exSeason(); saveGame();
   await scene(async () => {
     deepLead(T[0].s);
@@ -158,6 +160,7 @@ async function deepNode(reg, n, st, g, need, T, leadOf, setLead, K, used, found,
   const s = RS, once = st.got.includes(n.id), nm = displayName(T[leadOf()].s);
   await walkTo(110, 70, 'walk'); s.pose = 'idle';
   if (n.k === 'tear' || n.k === 'lair') return horrorNode(reg, n, g, T, leadOf, setLead, K, used, found);
+  if (n.k === 'shrine' || n.k === 'seal' || n.k === 'rival') return deepMore(reg, n, st, g, T, leadOf, setLead, K, used, found, M);
   if (n.k === 'path') { await rwait(250); return; }
   if (n.k === 'camp') {
     if (n.start || used.includes(n.id)) { await rwait(300); return; } used.push(n.id);
@@ -170,8 +173,10 @@ async function deepNode(reg, n, st, g, need, T, leadOf, setLead, K, used, found,
     for (const m of T) if (!m.out) m.e = Math.min(m.max, m.e + 3); K("There's fresh water here. Drink up, all of you."); await rwait(1300); unprop(sp); return; }
   if (n.k === 'chest') { if (once) { K('The chest here is empty now.'); await rwait(900); return; }
     const c = prop({ k: 'chest', x: 150, y: GROUND }); await walkTo(126, 60, 'walk'); await rwait(300); c.open = true; rsfx('creak'); s.pose = 'happy'; spark(150, GROUND - 22, 'sparkle', 6);
-    const R = rng(hashStr('deep' + reg.n + n.id)), item = R() < 0.5 ? EX_RARE[Math.floor(R() * EX_RARE.length)] : EX_FINDS[Math.floor(R() * EX_FINDS.length)], a = /^[AEIOU]/.test(item) ? 'an' : 'a';
-    addItem(item); found.push(`${a} ${item}`); st.got.push(n.id); K(`${nm} found ${a} ${item} in an old chest.`); await rwait(1400); unprop(c); return; }
+    const R = rng(hashStr('deep' + reg.n + n.id + '|' + exSeason())), item = R() < 0.5 ? EX_RARE[Math.floor(R() * EX_RARE.length)] : EX_FINDS[Math.floor(R() * EX_FINDS.length)], a = /^[AEIOU]/.test(item) ? 'an' : 'a';
+    addItem(item); found.push(`${a} ${item}`); st.got.push(n.id); K(`${nm} found ${a} ${item} in an old chest.`);
+    if (T.lucky) { T.lucky = false; const x2 = EX_RARE[Math.floor(R() * EX_RARE.length)], a2 = /^[AEIOU]/.test(x2) ? 'an' : 'a'; addItem(x2); found.push(`${a2} ${x2}`); await rwait(1300); K(`And there's ${a2} ${x2} under it. That waystone was right.`); }   // luck from a waystone (deep-more.js)
+    await rwait(1400); unprop(c); return; }
   if (n.k === 'wild') { if (used.includes(n.id)) { await rwait(200); return; } used.push(n.id);
     const G = GRADE_INFO[g], foe = gradedOpponent(g, Math.round(G.lv[0] + (G.lv[1] - G.lv[0]) * 0.5), Math.random, reg.el), prize = Math.round(G.purse * 0.5);
     const fp = prop({ k: 'foe', x: 186, y: GROUND, fm: foe.fm }); banner('A wild Snabit', '#ffd23f'); K(`A wild ${foe.m.name} is in the way.`); await rwait(1300); banner(''); unprop(fp);
