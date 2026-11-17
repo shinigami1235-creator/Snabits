@@ -824,6 +824,7 @@ function atHud(){
 
 }
 function atStage(c,W,H,FY,wild){
+  if(AT&&AT.opts&&AT.opts.deep&&typeof atStageDeep==="function") return atStageDeep(c,W,H,FY,AT.opts.deep);   // a fight on a deep expedition (deep-art.js)
   if(wild){ const g=c.createLinearGradient(0,0,0,FY); g.addColorStop(0,"#7ec8f0"); g.addColorStop(1,"#cdeefa"); c.fillStyle=g; c.fillRect(0,0,W,H);
     c.fillStyle="#fff"; for(let k=0;k<6;k++){ const x=(k*W/5.3+40)%W, y=FY-560+((k*97)%140); for(const [dx,dy,r] of [[0,0,34],[30,-12,28],[58,2,30],[28,10,26]]){ c.beginPath(); c.arc(x+dx,y+dy,r,0,7); c.fill(); } }
     c.fillStyle="#8fcf7a"; c.beginPath(); c.moveTo(0,FY-200); for(let x=0;x<=W;x+=40) c.lineTo(x,FY-200-60*Math.sin(x/170)-30*Math.sin(x/61)); c.lineTo(W,FY-120); c.lineTo(0,FY-120); c.fill();
@@ -869,10 +870,10 @@ function atResult(){
 }
 const displayNameOf=p=>p.f.name||"It";
 /* the game's fights on the new arena. Takes the same options the old fight screen took and hands back the same result */
-function arenaGame({s,foe,mode="control",title="",noDraw=false,record=false,learn=false,foeHabits=null,rand=Math.random,foeHp=null,onEnd}){
+function arenaGame({s,foe,mode="control",title="",noDraw=false,record=false,learn=false,foeHabits=null,rand=Math.random,foeHp=null,deep=null,onEnd}){
   if(record) s.fightNo=(s.fightNo||0)+1;
   if(foe&&foe.m&&typeof dexSee==="function") dexSee(foe.m);
-  const wild=/^Wild/.test(title), opts={s,mode,title,noDraw,learn,rand,onEnd,wild,foeHp,mus:foe.boss?"boss":wild?"wild":"cup"};
+  const wild=/^Wild/.test(title), opts={s,mode,title,noDraw,learn,rand,onEnd,wild,foeHp,deep,mus:foe.boss?"boss":wild?"wild":"cup"};
   // a ghost is a friend's Snabit: it fights with its own moves, preset and habits, the way the player's does
   const go=()=>{ const A={f:arPlayer(s),spec:chibiSpec(fightMon(s),s),level:s.level}, B=foeHabits&&foeHabits.m?{f:arPlayer(foeHabits),spec:chibiSpec(fightMon(foeHabits),foeHabits),level:foeHabits.level}:{f:arFoe(foe),spec:chibiSpec(foe.fm),level:foe.level};
     if(foeHabits&&typeof displayName==="function") B.f.name=displayName(foeHabits)+"'s ghost";

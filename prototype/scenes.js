@@ -869,7 +869,7 @@ function awayProps(c, p, t, front) {
       for (const py of [y - 26, y - 16]) SC.depth(c, () => { c.beginPath(); c.roundRect(x - 6, py, 12, 4, 2); }, '#d9b56b', 0.8, 0.25); return;
     case 'item': if (!front) return; { const gl = c.createRadialGradient(x, y, 0.5, x, y, 7); gl.addColorStop(0, 'rgba(255,230,120,.7)'); gl.addColorStop(1, 'rgba(255,230,120,0)'); c.fillStyle = gl; c.fillRect(x - 7, y - 7, 14, 14);
       c.fillStyle = '#ffd23f'; c.beginPath(); c.roundRect(x - 3.5, y - 3.5, 7, 7, 2); c.fill(); c.fillStyle = '#ffffff'; c.beginPath(); c.arc(x - 1.2, y - 1.2, 1, 0, 7); c.fill(); } return;
-    case 'foe': if (!front) return; { const sp = p.fm && typeof chibiSpec === 'function' ? chibiSpec(p.fm) : null; if (!sp) return;
+    case 'foe': if (!front) return; { const sp = p.spec || (p.fm && typeof chibiSpec === 'function' ? chibiSpec(p.fm) : null); if (!sp) return;
       const ppu = sp.cm / 100 * RANCH_PX_M / CHIBI.height(sp.stage, [], sp.family); c.save(); c.globalAlpha = p.fade == null ? 1 : p.fade;
       c.translate(x, GROUND + (p.jy || 0)); c.scale(p.right ? ppu : -ppu, ppu); c.translate(-100, -188); CHIBI.draw(c, sp, p.pose || 'idle', t); c.restore(); } return;   // right: a teammate walking the same way
   }

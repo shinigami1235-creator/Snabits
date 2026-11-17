@@ -78,8 +78,8 @@ function openExpeditions() {
     <div class="full lab-info">Walt has the League's permits. An expedition takes the week, and each region can be explored once a season.</div>` +
     regs.map((r, i) => { const st = exState(r), done = st.season === season, M = exMap(r), seen = Object.keys(M.N).filter(k => st.seen.includes(k)).length;
       return `<button class="rb" data-x="${i}" ${done ? 'disabled' : ''}>${r.n}<small>${done ? 'Explored this season' : `${r.el}. ${seen} of ${Object.keys(M.N).length} places seen`}</small></button>`; }).join('') +
-    (typeof riftRings === 'function' ? riftRings().map((r, i) => { const done = deepState(r).season === season; return `<button class="rb" data-r="${i}" ${done ? 'disabled' : ''}>${r.n}<small>${done ? 'Explored this season' : 'A team of three, two weeks'}</small></button>`; }).join('') : '') +
-    (typeof deepRegions === 'function' ? deepRegions().map((r, i) => { const done = deepState(r).season === season; return `<button class="rb" data-d="${i}" ${done ? 'disabled' : ''}>${r.n}, deep<small>${done ? 'Explored this season' : 'A team of three, two weeks'}</small></button>`; }).join('') : '') +
+    (typeof riftRings === 'function' ? riftRings().map((r, i) => { const done = deepState(r).season === season; return `<button class="rb" data-r="${i}" ${done ? 'disabled' : ''}>${r.n}<small>${done ? 'Explored this season' : 'One to three Snabits, two weeks'}</small></button>`; }).join('') : '') +
+    (typeof deepRegions === 'function' ? deepRegions().map((r, i) => { const done = deepState(r).season === season; return `<button class="rb" data-d="${i}" ${done ? 'disabled' : ''}>${r.n}, deep<small>${done ? 'Explored this season' : 'One to three Snabits, two weeks'}</small></button>`; }).join('') : '') +
     `<button class="rb" id="ex-journal">Journal<small>${Object.keys(PLAYER.journal || {}).length} pages</small></button>`);
   el('ex-back').onclick = () => menu('Out');
   el('ex-journal').onclick = openJournal;

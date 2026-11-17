@@ -99,7 +99,7 @@ async def main():
         e = await pg.evaluate("()=>{ const s=RS, sta=playerFighter(s).base.sta; return [deepEnergyMax(s, sta*2), deepEnergyMax(s, sta), deepEnergyMax(s, sta/2), deepRegen(s, sta*2), deepRegen(s, sta), deepRegen(s, sta/2)]; }")
         C.ok(e == [13, 16, 22, 72, 36, 18], f"Stamina sets a Snabit's energy, 13 to 22, and how fast it comes back behind the leader, every 72 to 18 steps ({e})")
         j = await pg.evaluate("()=>{ const s=RS, f=playerFighter(s).base; return { hp:[deepHpMax(s, f.grd*2), deepHpMax(s, f.grd/2)], slots:[deepSlots([s,s,s], f.pow*3), deepSlots([s,s,s], f.pow/2)], life:[deepLife('C'), deepLife('B'), deepLife('S'), deepLife('S', true)] }; }")
-        C.ok(j['hp'] == [28, 50] and j['slots'] == [3, 7] and j['life'] == [4, 8, 12, 16], f"Constitution sets HP, Power how much the pack holds, and a Snabit that can't go on loses more of its prime in harder places ({j})")
+        C.ok(j['hp'] == [28, 50] and j['slots'] == [2, 7] and j['life'] == [4, 8, 12, 16], f"Constitution sets HP, Power how much the pack holds, and a Snabit that can't go on loses more of its prime in harder places ({j})")
         none = await pg.evaluate("()=>{ const k=story().seen.intro; delete story().seen.intro; let n=0; for (let s=0;s<30;s++) n+=deepFeats(deepMap(REGIONS[0], s)).some(x=>x.k==='rival'); story().seen.intro=k; return n; }")
         C.ok(none == 0, "Rook's team stays off the deep maps until the player has met Rook")
         ring = await pg.evaluate("()=>{ const reg={ n:'The Rift, Outer Ring', el:'Void', rift:true, ring:0 }, M=deepMap(reg, 3); return { kinds:M.floors.map(F=>F.kind), lairs:deepFeats(M).filter(n=>n.k==='lair').map(n=>n.fam+'@'+n.f), guard:deepFeats(M).some(n=>n.k==='guard') }; }")
@@ -162,6 +162,35 @@ async def main():
         C.ok('everyone down' in ws and all(wr['hurt']), 'when all three can\'t go on, the team runs home and all three are hurt')
         C.ok(all(u - v >= 4 for u, v in zip(wr['used'], w0)), f"each one loses months of its prime for it ({w0} -> {wr['used']})")
         await pg.screenshot(path='/tmp/deep-lost.png')
+        C.ok('the League is paying' not in ws, 'a team that had to run gets nothing from the League')
+        # what a team left behind comes back two or three weeks later, about half of it
+        k = await pg.evaluate("""()=>{ PLAYER.deepLost = []; const reg = REGIONS[1], b0 = PLAYER.bits, n0 = PLAYER.bag['Ancient coin'] || 0;
+          deepLeftBehind(reg, ['Ancient coin', 'Berry', 'Ancient coin'], 1000); const early = deepWeek().length; PLAYER.week += 3; const said = deepWeek();
+          return { early, said, bits: PLAYER.bits - b0, coins: (PLAYER.bag['Ancient coin'] || 0) - n0, left: PLAYER.deepLost.length }; }""")
+        print(k['said'])
+        C.ok(k['early'] == 0 and k['bits'] == 500 and k['coins'] == 2 and k['left'] == 0 and 'Walt came by' in k['said'][0], f'a League team brings back half of what was left behind a few weeks later ({k})')
+        # the treasures
+        t = await pg.evaluate("""()=>{ const s = RS; s.used = 8; s.amber = 0; s.injured = true; s.fatigue = 60; const tp = s.tp.slice();
+          for (const k of TREASURES) addItem(k); useItem('Timeworn amber'); const used = s.used; useItem('Star shard'); useItem("Mender's moss"); useItem("Pathfinder's compass");
+          return { used, tp: s.tp.map((v, i) => v - tp[i]), hurt: s.injured, fat: s.fatigue, compass: PLAYER.bag["Pathfinder's compass"] || 0 }; }""")
+        C.ok(t['used'] == 4 and all(v == 15 for v in t['tp']) and not t['hurt'] and t['fat'] == 0 and t['compass'] >= 1, f'amber gives back a month, a star shard raises every stat, moss heals, and the compass stays for packing ({t})')
+        # one Snabit on its own, with rations for camp
+        await settle(pg, max_s=60, label='before-solo')
+        sl = await pg.evaluate("""([reg, ids])=>{ const s = rosterStates().find(x=>x.id===ids[0]); s.injured=false; s.fatigue=0; s.stress=0; s.m.stats = s.m.stats.map(v=>200); PLAYER.week += 4;
+          addItem('Ration', 4); deepState(REGIONS.find(r=>r.n===reg)).season = -1; window.__done=new Set(); runDeep(REGIONS.find(r=>r.n===reg), [s], { Ration: 4 }); return PLAYER.bag.Ration||0; }""", [reg, ids])
+        camped = None
+        for k in range(3000):
+            await pg.evaluate("o=>__pump(o)", {'control': True})
+            if await pg.evaluate("()=>!!DEEP_LIVE.pick"):
+                if camped is None:
+                    camped = await pg.evaluate("""()=>{ const P=DEEP_LIVE.pick; P.T[0].e = 1; const i=P.opts.findIndex(o=>o.t==='camp'&&!o.off); if(i<0) return -1; P.take(i); return 0; }""")
+                elif camped == 0:
+                    camped = await pg.evaluate("()=>{ const P=DEEP_LIVE.pick; return P.T[0].e === P.T[0].max ? 1 : -2; }")
+                    await pg.evaluate("()=>DEEP_LIVE.pick.home()")
+            if camped is not None and camped != 0 and not await pg.evaluate("()=>!!DEEP_LIVE.pick||RS.busy"): break
+            await pg.wait_for_timeout(40)
+        await settle(pg, max_s=60, label='solo-home')
+        C.ok(camped == 1, f'one Snabit can go on its own, and a ration at camp gives back all its energy ({camped})')
         await b.close()
     sys.exit(C.done(errs))
 asyncio.run(main())

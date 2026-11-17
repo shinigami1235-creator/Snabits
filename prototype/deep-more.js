@@ -72,32 +72,32 @@ const deepPlates = n => n.f >= 2 ? 3 : 2;
 async function deepEvent(reg, n, g, T, leadOf, setLead, K, found, M, need) {
   const s = RS, G = GRADE_INFO[g], live = T.map((m, i) => ({ m, i })).filter(o => !o.m.down), st = (o, k) => playerFighter(o.m.s).base[k], nm = o => displayName(o.m.s);
   const best = k => live.slice().sort((a, b) => st(b, k) - st(a, k))[0], sum = k => live.reduce((a, o) => a + st(o, k), 0);
-  const pr = prop({ k: DEEP_EV[n.ev].prop, x: 150, y: GROUND, n: deepPlates(n) });
+  const pr = deepUse({ k: DEEP_EV[n.ev].prop, x: 150, y: GROUND, n: deepPlates(n) }, n), X = pr.x;
   const lead = async o => { if (o.i !== leadOf()) setLead(o.i); };
-  const gift = async (line, rare) => { const R = rng(hashStr('ev|' + reg.n + '|' + n.id + '|' + exSeason())), item = rare || R() < 0.4 ? EX_RARE[Math.floor(R() * EX_RARE.length)] : EX_FINDS[Math.floor(R() * EX_FINDS.length)], a = /^[AEIOU]/.test(item) ? 'an' : 'a', bits = Math.round(G.purse * 0.4);
-    addItem(item); PLAYER.bits += bits; drawUI(); found.push(`${a} ${item}`, `${bits.toLocaleString()} bits`); s.pose = 'happy'; deepCrew(T, leadOf(), [], 'happy'); spark(150, GROUND - 30, 'sparkle', 8);
-    K(line.replace('{x}', `${a} ${item}`) + ` And ${bits.toLocaleString()} bits.`); await rwait(1900); };
+  const gift = async (line, rare) => { const R = rng(hashStr('ev|' + reg.n + '|' + n.id + '|' + exSeason())), item = rare && R() < 0.25 ? deepTreasure(R) : rare || R() < 0.4 ? EX_RARE[Math.floor(R() * EX_RARE.length)] : EX_FINDS[Math.floor(R() * EX_FINDS.length)], a = /^[AEIOU]/.test(item) ? 'an' : 'a', bits = Math.round(G.purse * 0.4);
+    addItem(item); deepPay(T, 'find', bits); found.push(`${a} ${item}`); s.pose = 'happy'; deepCrew(T, leadOf(), [], 'happy'); spark(X, GROUND - 30, 'sparkle', 8);
+    K(line.replace('{x}', `${a} ${item}`)); await rwait(1900); };
   if (n.ev === 'plates') {   // a plate for every Snabit; one short, the strongest shoves a stone onto the last plate
-    const N = deepPlates(n), xs = [...Array(N)].map((_, k) => 150 + (k - (N - 1) / 2) * 34), on = Math.min(N, live.length);
+    const N = deepPlates(n), xs = [...Array(N)].map((_, k) => X + (k - (N - 1) / 2) * 34), on = Math.min(N, live.length);
     deepCrew(T, leadOf(), xs.slice(1)); await walkTo(xs[0], 60, 'walk'); await rwait(400); pr.on = on; rsfx('thud');
     if (on < N) { const o = best('pow'); if (st(o, 'pow') < need * 1.15) { K(`There are ${N} plates and only ${on} of us. Nothing happens.`); await rwait(1800); unprop(pr); return 'retry'; }
       K(`${nm(o)} shoves a loose stone onto the last plate.`); await rwait(1200); pr.on = N; }
     rsfx('creak'); RS.shake = 3; await rwait(600); await gift('Something clicked in the wall, and a hidden shelf slid out with {x} on it.'); unprop(pr); return; }
   if (n.ev === 'lid') {   // everyone lifts together
-    deepCrew(T, leadOf(), [176, 124]); await walkTo(150 - 24, 60, 'walk'); await rwait(300); deepCrew(T, leadOf(), [176, 124], 'happy');
+    deepCrew(T, leadOf(), [X + 26, X + 6]); await walkTo(X - 26, 60, 'walk'); await rwait(300); s.pose = 'effort'; deepCrew(T, leadOf(), [X + 26, X + 6], 'effort'); rsfx('rumble'); await rwait(900);
     if (sum('pow') < need * 1.9) { for (const o of live) o.m.e = Math.max(0, o.m.e - 2); K(live.length > 1 ? "It won't budge. Not even with all of us lifting." : `${nm(live[0])} can't lift it alone.`); await rwait(1800); unprop(pr); return 'fail'; }
-    pr.open = true; rsfx('creak'); await rwait(500); await gift(live.length > 1 ? 'Everyone lifted together, and the lid came off. There was {x} inside.' : `${nm(live[0])} heaved the lid off by itself. There was {x} inside.`, true); unprop(pr); return; }
+    pr.open = true; rsfx('creak'); s.pose = 'happy'; await rwait(500); await gift(live.length > 1 ? 'Everyone lifted together, and the lid came off. There was {x} inside.' : `${nm(live[0])} heaved the lid off by itself. There was {x} inside.`, true); unprop(pr); return; }
   if (n.ev === 'stuck') {   // a little wild Snabit under fallen rocks
-    deepCrew(T, leadOf(), [178, 126]); await walkTo(126, 60, 'walk'); K("There's a little wild Snabit stuck under those rocks."); await rwait(1500);
+    deepCrew(T, leadOf(), [X + 30, X + 50]); await walkTo(X - 28, 60, 'walk'); K("There's a little wild Snabit stuck under those rocks."); await rwait(1300); s.pose = 'effort'; deepCrew(T, leadOf(), [X + 28, X + 42], 'effort'); rsfx('rumble'); await rwait(900);
     if (sum('pow') < need * 1.6) { for (const o of live) o.m.e = Math.max(0, o.m.e - 2); K(live.length > 1 ? "We pulled and pulled, and the rocks won't move." : `${nm(live[0])} can't move the rocks on its own.`); await rwait(1800); unprop(pr); return 'fail'; }
-    pr.free = true; RS.shake = 2; rsfx('thud'); await rwait(700); await gift('Everyone pulled the rocks away, and it ran off. It left {x} behind for us.'); unprop(pr); return; }
+    pr.free = true; rsfx('thud'); s.pose = 'happy'; deepCrew(T, leadOf(), [X + 28, X + 42], 'happy'); await rwait(700); await gift('Everyone pulled the rocks away, and it ran off. It left {x} behind for us.'); unprop(pr); return; }
   if (n.ev === 'mural') {   // the best Mind reads it: a map of the floor
-    const o = best('mnd'); await lead(o); deepCrew(T, leadOf(), [120, 182]); await walkTo(150, 60, 'walk'); await rwait(600);
+    const o = best('mnd'); await lead(o); deepCrew(T, leadOf(), [X - 34, X + 34], 'lean'); await walkTo(X, 60, 'walk'); s.pose = 'lean'; await rwait(900); s.pose = 'idle';
     if (st(o, 'mnd') < need * 1.05) { K('None of us can make sense of it.'); await rwait(1600); unprop(pr); return 'fail'; }
     pr.read = true; rsfx('sparkle'); M.reveal(); const F = M.floors[n.f], hid = F.E.filter(e => e.hidden); hid.forEach(e => e.hidden = false);
     K(`${nm(o)} worked it out. It's a map of this floor` + (hid.length ? ", with a room nobody's been in." : '.')); await rwait(2000); unprop(pr); return; }
   // a crack: the fastest jumps it
-  const o = best('spd'); await lead(o); deepCrew(T, leadOf(), [90, 70]); await walkTo(126, 60, 'walk'); await rwait(400);
+  const o = best('spd'); await lead(o); deepCrew(T, leadOf(), [X - 50, X - 72]); await walkTo(X - 24, 60, 'walk'); await rwait(400);
   if (st(o, 'spd') < need * 1.05) { K("It's too far for any of us to jump."); await rwait(1600); unprop(pr); return 'fail'; }
   const x0 = s.x; for (let k = 0; k <= 20; k++) { s.x = x0 + k * 2.6; s.jy = -Math.sin(k / 20 * Math.PI) * 26; await rwait(16); } pr.got = true;
   await gift(`${nm(o)} jumped the crack and came back with {x}.`); for (let k = 0; k <= 20; k++) { s.x = x0 + 52 - k * 2.6; s.jy = -Math.sin(k / 20 * Math.PI) * 26; await rwait(16); }
@@ -109,10 +109,10 @@ async function deepMore(reg, n, st, g, T, leadOf, setLead, K, used, found, M) {
   const s = RS, G = GRADE_INFO[g];
   if (used.includes(n.id)) { await rwait(200); return; }
   if (n.k === 'shrine') {
-    const p = prop({ k: 'shrine', x: 160, y: GROUND }); await walkTo(130, 60, 'walk'); s.pose = 'idle';
+    const p = deepUse({ k: 'shrine', x: 160, y: GROUND }, n); deepCrew(T, leadOf(), [p.x + 30, p.x + 52]); await walkTo(p.x - 30, 60, 'walk'); s.pose = 'idle';
     K("This is an old League waystone. Put a paw on it and pick what we need most."); await rwait(600);
     const c = await deepChoice([['A rest', 'For tired legs'], ['The map', 'Every path out here'], ['Luck', 'For the next chest']]);
-    used.push(n.id); spark(160, GROUND - 40, 'sparkle', 10); rsfx('sparkle'); s.pose = 'happy';
+    used.push(n.id); spark(p.x, GROUND - 40, 'sparkle', 10); rsfx('sparkle'); s.pose = 'happy'; deepCrew(T, leadOf(), [p.x + 30, p.x + 52], 'happy');
     if (c === 0) { for (const m of T) if (!m.down) { m.e = Math.min(m.max, m.e + 4); m.hp = Math.min(m.hpMax, m.hp + Math.round(m.hpMax * 0.3)); } K('That feels better. Let\'s keep going.'); }
     if (c === 1) { M.reveal(); K('There. Now we can see the whole way.'); }
     if (c === 2) { T.lucky = true; K('Let\'s find a chest while our luck lasts.'); }
@@ -126,10 +126,10 @@ async function deepMore(reg, n, st, g, T, leadOf, setLead, K, used, found, M) {
     await walkTo(140, 60, 'walk'); RS.pose = 'happy'; p.open = true; spark(170, GROUND - 30, 'sparkle', 10); rsfx('creak');
     K(how(displayName(who.m.s))); await rwait(1500); unprop(p); return 'open'; }
   if (n.k === 'cache') {   // what the sealed way kept safe
-    used.push(n.id); const c = prop({ k: 'chest', x: 150, y: GROUND, big: true }); await walkTo(126, 60, 'walk'); await rwait(300); c.open = true; rsfx('creak'); s.pose = 'happy'; spark(150, GROUND - 22, 'sparkle', 8);
+    used.push(n.id); const c = deepUse({ k: 'chest', x: 150, y: GROUND, big: true }, n); deepCrew(T, leadOf(), [c.x + 26, c.x - 50]); await walkTo(c.x - 24, 60, 'walk'); await rwait(300); c.open = true; rsfx('creak'); s.pose = 'happy'; deepCrew(T, leadOf(), [c.x + 26, c.x - 50], 'happy'); spark(c.x, GROUND - 22, 'sparkle', 8);
     const R = rng(hashStr('seal|' + reg.n + '|' + n.id + '|' + exSeason())), item = EX_RARE[Math.floor(R() * EX_RARE.length)], bits = Math.round(G.purse), a = /^[AEIOU]/.test(item) ? 'an' : 'a';
-    addItem(item); PLAYER.bits += bits; drawUI(); found.push(`${a} ${item}`, `${bits.toLocaleString()} bits`);
-    K(`There's an old League cache back here: ${a} ${item} and ${bits.toLocaleString()} bits.`); await rwait(1700); unprop(c); return; }
+    addItem(item); deepPay(T, 'find', bits); found.push(`${a} ${item}`);
+    K(`There's an old League cache back here, with ${a} ${item} in it.`); await rwait(1700); unprop(c); return; }
   if (n.k === 'rival') {
     used.push(n.id); const R = Math.random, lv = Math.round(G.lv[0] + (G.lv[1] - G.lv[0]) * 0.75);
     say("Well, look who made it out here. My team's been waiting for someone to beat.", 'rival'); await rwait(2200);
@@ -137,11 +137,11 @@ async function deepMore(reg, n, st, g, T, leadOf, setLead, K, used, found, M) {
       const foe = k === 2 && typeof rookMon === 'function' ? rookMon(g, 0.85) : gradedOpponent(g, lv, R); foe.boss = null;   // Rook's own partner goes last
       const fp = prop({ k: 'foe', x: 186, y: GROUND, fm: foe.fm }); banner(`Rook's team, ${k + 1} of 3`, '#ffb04a'); await rwait(1100); banner(''); unprop(fp);
       const won = await deepFight(T, leadOf(), foe, `Rook's ${foe.m.name}`, K);
-      if (!won) { say('Better luck next time. My team never loses out here.', 'rival'); await rwait(1800); K("Rook's team beat all three of you."); await rwait(1400); used.splice(used.indexOf(n.id), 1); return 'lost'; }
+      if (!won) { say('Better luck next time. My team never loses out here.', 'rival'); await rwait(1800); K(`Rook's team beat ${deepAll(T)}.`); await rwait(1400); used.splice(used.indexOf(n.id), 1); return 'lost'; }
       const alive = T.findIndex(m => !m.down); if (alive >= 0 && T[leadOf()].down) setLead(alive);
     }
     const bits = Math.round(G.purse * 2.5), R2 = rng(hashStr('rival|' + reg.n + '|' + exSeason())), item = EX_RARE[Math.floor(R2() * EX_RARE.length)], a = /^[AEIOU]/.test(item) ? 'an' : 'a';
-    PLAYER.bits += bits; addItem(item); drawUI(); found.push(`${bits.toLocaleString()} bits`, `${a} ${item}`); RS.pose = 'happy';
+    deepPay(T, "Rook's team", bits); addItem(item); found.push(`${a} ${item}`); RS.pose = 'happy';
     say(`Fine. You beat all three. Take this before I change my mind.`, 'rival'); await rwait(1800);
-    K(`The League pays ${bits.toLocaleString()} bits for beating a whole team, and Rook left ${a} ${item}.`); await rwait(1700); return; }
+    K(`Rook left ${a} ${item} behind.`); await rwait(1500); return; }
 }

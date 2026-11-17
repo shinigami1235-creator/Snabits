@@ -124,9 +124,9 @@ async function horrorNode(reg, n, g, T, leadOf, setLead, K, used, found) {
   const R = rng(hashStr('lair|' + f + '|' + season)), foe = horrorFoe(f, 'Mega', g, R);
   const fp = prop({ k: 'foe', x: 186, y: GROUND, fm: foe.fm }); banner(nm, '#d9c8ff'); K(`That's the ${nm}. Nobody's coming to help us in there.`); await rwait(2000); banner(''); unprop(fp);
   const won = await deepFight(T, leadOf(), foe, nm, K);
-  if (!won) { for (const m of T) m.s.stress = Math.min(100, m.s.stress + 15); K(`The ${nm} threw all three of you out. We're going home.`); await rwait(1800); return 'end'; }
+  if (!won) { for (const m of T) m.s.stress = Math.min(100, m.s.stress + 15); K(`The ${nm} threw ${typeof deepAll === 'function' ? deepAll(T) : 'all three of you'} out. We're going home.`); await rwait(1800); return 'end'; }
   const alive = T.findIndex(m => !m.down); if (alive >= 0 && T[leadOf()].down) setLead(alive);
-  const G = GRADE_INFO[g], bounty = Math.round(G.purse * 2); PLAYER.bits += bounty; found.push(`${bounty.toLocaleString()} bits`); drawUI();
+  const G = GRADE_INFO[g], bounty = Math.round(G.purse * 2); if (typeof deepPay === 'function') deepPay(T, 'the ' + nm, bounty); else { PLAYER.bits += bounty; found.push(`${bounty.toLocaleString()} bits`); drawUI(); }
   s.pose = 'happy'; K(`The ${nm} went back into the Rift.`); await rwait(1500);
   if (!L.won && !horrorOwned()) {
     const m = randomOpponent(rng(hashStr('little|' + f + '|' + PLAYER.week)), f), e = addToRoster(m);

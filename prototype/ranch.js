@@ -988,6 +988,7 @@ async function endWeek(weeks,line){
     if(!famOpen("Pogo")&&typeof hearts==="function"&&hearts()>=5){ openFam("Pogo"); notes.push(`${displayName(s)} was so happy it bounced round the yard all week, and a Pogo bounced along with it. Walt filed a League form for it. The ranch can register Pogo now, so a scan can find one.`); }
     if(!famOpen("Ditty")&&PLAYER.traded){ openFam("Ditty"); notes.push("The friend from the trade sent a music box as thanks, with a League form for Ditty under the dancer. The ranch can register Ditty now, so a scan can find one."); }
     if(typeof mythWeek==="function") notes.push(...mythWeek(s,fest),...horrorHallWeek());   // the horrors' myths, and a retired horror's statue going (horror.js)
+    if(typeof deepWeek==="function") notes.push(...deepWeek());   // what a League team brings back from a deep trip that went wrong (deep-pack.js)
     if(fest&&fest[0]==="Harvest Fair"&&GRADES.indexOf(bestGrade())>=3){ const L=stoneList(); if(L&&!L.includes("Sarimanok")){ L.push("Sarimanok"); notes.push("A farmer at the Harvest Fair gave the ranch a painted stone from her stall."); } }
     if(fest){ const fk={"Blossom Festival":"Strawberry","Harvest Fair":"Watermelon","Snow Fair":"Candy cane"}[fest[0]], fl=fk&&openCos(fk,`A League stand at the ${fest[0]} was giving out pattern cards.`); if(fl) notes.push(fl);
       addItem(fest[1]); s.stress-=10; notes.push(`The ${fest[0]} is on in town this week. Nora gave every ranch ${/^[AEIOU]/.test(fest[1])?"an":"a"} ${fest[1]}, and the music took 10 stress off.`); } }
