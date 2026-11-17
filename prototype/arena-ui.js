@@ -239,8 +239,9 @@ function atEvent(e,now){
     let kind;
     const sk=typeof AR_KIND!=="undefined"&&AR_KIND[m.base||m.name];
     if(sk&&ANIM[sk]&&ANIM[sk].sig) kind=sk;   // a signature always plays its own animation, buffs included
+    else if(m.buff&&sk&&/^(consume|selfrestore)$/.test(sk)) kind=sk;   // a heal that names a drink or a reset shows it (17 Nov 2026 audit)
     else if(m.buff) kind={bunker:"bunker",phase:"phase",brace:"shield",riposte:"shield",bubble:"shield",feedback:"shield",unblink:"buff"}[m.buff]||"buff";
-    else if(m.support){ kind=typeof supportKind==="function"?supportKind(m.name):"buff"; if(kind==="mistcast") kind="mist"; if(m.protect) S.protName=m.name; }
+    else if(m.support){ kind=sk&&/^(consume|selfrestore|drainstream)$/.test(sk)?sk:typeof supportKind==="function"?supportKind(m.name):"buff"; if(kind==="mistcast") kind="mist"; if(m.protect) S.protName=m.name; }
     else if(m.lower&&!m.dmg) kind="glare";
     else if(m.shove) kind="tackle";
     else kind=typeof AR_KIND!=="undefined"&&AR_KIND[m.base||m.name]&&ANIM[AR_KIND[m.base||m.name]]?AR_KIND[m.base||m.name]:typeof animFor==="function"?animFor({name:m.name,kind:m.cast?"Cast":"Strike",el:m.el},sp):"tackle";
@@ -250,7 +251,7 @@ function atEvent(e,now){
     AT.turn={t0:te,C:ch+K.C/rate,D:ch+Math.min(K.D/rate,(K.C+(K.tail||700))/rate)};   // tail: a move whose story goes on after the hit, like a swallow and a spit, holds the turn longer
     const col=m.el&&typeof ELC==="function"?hexRgb(ELC(m.el)):AT_FAMCOL[AT.ar.p[e.i].f.family]||[255,214,90];
     S.anim={kind,t0:te+ch,tier,rate,el:m.el||null,name:m.name,src:typeof sourceFor==="function"?sourceFor({name:m.name,kind:m.cast?"Cast":"Strike"},sp):"mouth",col,pw:m.dmg>=70?1.35:m.dmg>=40?1.05:0.8,contact:!!K.contact||/^(tackle|bite|stomp|punch|claw|shadowstrike|shadowclaw|fly)$/.test(kind)};
-    if(tier==="special"&&!S.anim.contact&&!m.lower) S.anim.mega=/^(beam|bolt|spear|volley|drain|gust)$/.test(kind)?"beam":kind==="lightning"?"bolt":/^(meteor|icefall|boulder|rockpath)$/.test(kind)?"fall":kind==="pillar"&&m.el==="Frost"?"glacier":/^(tornado|firespin)$/.test(kind)?(m.el==="Blaze"?"inferno":"funnel"):kind==="wave"?"tsunami":kind==="push"?"shock":kind==="lift"?"nightmare":/^(pillar|mist|mistcast)$/.test(kind)?"rise":null;
+    if(tier==="special"&&!S.anim.contact&&!m.lower) S.anim.mega=/^(beam|bolt|drain)$/.test(kind)?"beam":kind==="lightning"?"bolt":/^(meteor|icefall|boulder|rockpath)$/.test(kind)?"fall":kind==="pillar"&&m.el==="Frost"?"glacier":/^(tornado|firespin)$/.test(kind)?(m.el==="Blaze"?"inferno":"funnel"):kind==="wave"?"tsunami":kind==="push"?"shock":kind==="lift"?"nightmare":/^(pillar|mist|mistcast)$/.test(kind)?"rise":null;
     if(S.anim.mega) AT.turn.D=Math.max(AT.turn.D,ch+(K.C+900)/rate);   // the fight waits for a special's release to finish
     if(e.pred==="dodge"||e.pred==="phase") atPlanDodge(e.i,te+ch+K.C/rate,kind,e.pred);
     if(ch){ S.charge={t0:te,d:ch,tier,col:S.anim.col,el:m.el||null,body:sp.pal&&sp.pal.body,sig:isSig&&tier==="special"}; const soft=tier==="special"&&!S.charge.sig&&!m.skill; if(S.charge.sig||soft){ const fam=atSigFam(e.i); S.charge.wind=AT_WIND[fam]||"flame"; S.charge.soft=soft; S.charge.seed=[...fam].reduce((a,q)=>a+q.charCodeAt(0),0); } if(S.charge.sig) AT.cine={t0:te,d:ch,i:e.i,name:m.name,col:S.anim.col}; }
@@ -526,9 +527,14 @@ function atMegaBolt(c,t,C,tg,col,s,te){
 }
 /* meteors, ice falls and boulders. A meteor is a molten rock on fire with a long flame trail and a fireball on impact;
    an ice fall is a frozen chunk with a frost trail; a boulder is a plain rock */
-function atMegaFall(c,t,C,tg,col,s,kind,dir,te){
+function atMegaFall(c,t,C,tg,col,s,kind,dir,te,name){
   const foot=tg.foot||tg.y+40*s; if(t>C+620) return;
-  const fire=kind==="meteor", ice=kind==="icefall", R=(fire?70:82)*s;
+  const fk=name&&typeof fallKind==="function"&&/^(meteor|icefall)$/.test(kind)?fallKind(name):null, prop=fk&&fk!=="Frost"&&fk!=="Stone";
+  const fire=kind==="meteor"&&!fk||fk==="Stone", ice=kind==="icefall"&&!fk||fk==="Frost", R=(fire?70:82)*s;
+  if(prop&&t<C){ const k=t/C, e=Math.pow(k,1.6), x=tg.x-dir*240*s*(1-e), y=foot-R*0.7-640*s*(1-e);   // a named prop drops as itself, with speed lines and no fire (17 Nov 2026 audit)
+    const sh=c.createRadialGradient(tg.x,foot,0,tg.x,foot,R*1.8); sh.addColorStop(0,`rgba(0,0,0,${0.35*k})`); sh.addColorStop(1,"rgba(0,0,0,0)"); c.fillStyle=sh; c.beginPath(); c.ellipse(tg.x,foot,R*1.8*(0.5+k*0.5),R*0.4,0,0,7); c.fill();
+    c.save(); c.strokeStyle="rgba(255,255,255,.7)"; c.lineWidth=3*s; for(let j=-2;j<=2;j++){ c.beginPath(); c.moveTo(x+j*R*0.3+dir*30*s,y-R*1.2); c.lineTo(x+j*R*0.3+dir*90*s,y-R*2.6); c.stroke(); } c.restore();
+    c.save(); c.translate(x,y); c.rotate(Math.sin(te/120)*0.25); c.scale(R/22,R/22); fallProp(c,fk,te,{body:col}); c.restore(); return; }
   if(t<C){ const k=t/C, e=Math.pow(k,1.6), sx=-dir*240*s, sy=-640*s, x=tg.x+sx*(1-e), y=foot-R*0.7+sy*(1-e), back=Math.atan2(sy,sx);
     const sh=c.createRadialGradient(tg.x,foot,0,tg.x,foot,R*1.8); sh.addColorStop(0,`rgba(0,0,0,${0.35*k})`); sh.addColorStop(1,"rgba(0,0,0,0)"); c.fillStyle=sh; c.beginPath(); c.ellipse(tg.x,foot,R*1.8*(0.5+k*0.5),R*0.4,0,0,7); c.fill();
     if(fire){ c.save();
@@ -727,7 +733,7 @@ function atDraw(now,dte){
     if(A.mega){ const t=(te-A.t0)*A.rate, C=ANIM[A.kind].C, s2=scale/2.3;
       if(A.mega==="beam") atMegaBeam(c,t,C,originOf(placed[i],A.src,tgt)[0],tgt,A.col,s2);
       else if(A.mega==="bolt") atMegaBolt(c,t,C,{...tgt,foot:T0.foot},A.col,s2,te);
-      else if(A.mega==="fall") atMegaFall(c,t,C,{...tgt,foot:T0.foot},A.col,s2,A.kind,AT.side[i].dir,te);
+      else if(A.mega==="fall") atMegaFall(c,t,C,{...tgt,foot:T0.foot},A.col,s2,A.kind,AT.side[i].dir,te,A.name);
       else if(A.mega==="glacier") atGlacier(c,t,C,{...tgt,foot:T0.foot},s2,te);
       else if(A.mega==="inferno") atInferno(c,t,C,{x:placed[i].x,foot:placed[i].foot},{...tgt,foot:T0.foot},s2,te);
       else if(A.mega==="tsunami") atTsunami(c,t,C,{x:placed[i].x,foot:placed[i].foot},{...tgt,foot:T0.foot},s2,te);

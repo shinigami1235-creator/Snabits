@@ -262,22 +262,54 @@ ANIM.fly = { C: 640, D: 1180,
       for (let i = -2; i <= 2; i++) { c.lineWidth = 2; c.beginPath(); c.moveTo(b.x + i * 12, b.y - 200 + k * 140); c.lineTo(b.x + i * 12, b.y - 260 + k * 140); c.stroke(); } c.restore(); }
     if (t > 640 && t < 900) { dust(x.c || c, x.target, (t - 640) / 260); blast(c, x.target, (t - 640) / 260, x); } } };
 
-/* ---------- falling blocks: an ice chunk or a meteor drops from above ---------- */
-function chunk(c, p, s, el, t) {
-  c.save(); c.translate(p.x, p.y); c.rotate(t / 300); c.scale(s, s);
-  if (el === 'Frost') { c.shadowColor = 'rgba(150,215,255,.9)'; c.shadowBlur = 14; c.fillStyle = '#9fd6f5'; c.beginPath(); c.moveTo(0, -26); c.lineTo(22, -8); c.lineTo(16, 20); c.lineTo(-14, 22); c.lineTo(-24, -4); c.closePath(); c.fill(); c.shadowBlur = 0;
-    c.fillStyle = '#e4f6ff'; c.beginPath(); c.moveTo(0, -26); c.lineTo(22, -8); c.lineTo(2, 0); c.lineTo(-24, -4); c.closePath(); c.fill(); }
-  else { const g = c.createRadialGradient(-6, -6, 2, 0, 0, 30); g.addColorStop(0, '#ffd27a'); g.addColorStop(1, 'rgba(255,120,40,0)'); c.fillStyle = g; c.beginPath(); c.arc(0, 0, 32, 0, 7); c.fill(); boulderFx(c, { x: 0, y: 0 }, t, 1.1); }
+/* ---------- falling blocks: an ice chunk, a meteor, or the thing the move's name drops (17 Nov 2026 audit: every drop used to be a flaming rock) ---------- */
+const FALL_PROPS = [[/Bell/, 'bell'], [/Lantern/, 'lantern'], [/Light Bomb|Star Bomb/, 'orb'], [/Acorn/, 'acorn'], [/Paper Bomb/, 'paperball'], [/Breakfast/, 'plate'], [/Depth Charge/, 'barrel'],
+  [/Cherry/, 'cherry'], [/Jackpot|Coin|Treasure/, 'coins'], [/Wish|Star/, 'star'], [/Pumpkin/, 'pumpkin'], [/Pot Drop|Cake Drop/, 'pot']];
+const fallKind = n => { if (/Ice|Icicle|Hail|Glacier|Frost|Snow/.test(n)) return 'Frost'; for (const [re, k] of FALL_PROPS) if (re.test(n)) return k; return 'Stone'; };
+function fallProp(c, k, t, x) {
+  const body = x.body || [220, 200, 160], B = rgbS(body), D = rgbS(body.map(v => v * 0.55)), ol = (col, w = 2) => { c.strokeStyle = col; c.lineWidth = w; c.stroke(); };
+  switch (k) {
+    case 'bell': c.fillStyle = '#f2c23a'; c.beginPath(); c.moveTo(-6, -24); c.quadraticCurveTo(-20, -20, -20, 4); c.lineTo(-26, 14); c.lineTo(26, 14); c.lineTo(20, 4); c.quadraticCurveTo(20, -20, 6, -24); c.closePath(); c.fill(); ol('#a87810', 2.5);
+      c.fillStyle = '#ffe48a'; c.fillRect(-14, -12, 5, 18); c.fillStyle = '#a87810'; c.beginPath(); c.arc(0, 17, 6, 0, 7); c.fill(); c.beginPath(); c.arc(0, -26, 5, 0, 7); ol('#a87810', 3); break;
+    case 'lantern': { const g = c.createRadialGradient(0, 0, 4, 0, 0, 30); g.addColorStop(0, 'rgba(255,240,170,.9)'); g.addColorStop(1, 'rgba(255,200,90,0)'); c.fillStyle = g; c.beginPath(); c.arc(0, 0, 32, 0, 7); c.fill();
+      c.fillStyle = '#ff9a4a'; c.beginPath(); c.ellipse(0, 0, 18, 22, 0, 0, 7); c.fill(); ol('#c4602a', 2); c.strokeStyle = 'rgba(160,70,30,.5)'; c.lineWidth = 1.2; for (const sx of [-9, 0, 9]) { c.beginPath(); c.ellipse(0, 0, Math.abs(sx) + 2, 22, 0, 0, 7); c.stroke(); }
+      c.fillStyle = '#4a2a1a'; c.fillRect(-10, -25, 20, 5); c.fillRect(-10, 20, 20, 5); break; }
+    case 'orb': { const g = c.createRadialGradient(-5, -6, 2, 0, 0, 26); g.addColorStop(0, '#ffffff'); g.addColorStop(0.4, '#fff3a0'); g.addColorStop(1, 'rgba(255,220,90,0)'); c.fillStyle = g; c.beginPath(); c.arc(0, 0, 28, 0, 7); c.fill(); break; }
+    case 'acorn': c.fillStyle = '#b07a40'; c.beginPath(); c.ellipse(0, 6, 17, 19, 0, 0, 7); c.fill(); ol('#6a4520'); c.fillStyle = '#7a5530'; c.beginPath(); c.ellipse(0, -8, 20, 10, 0, 0, 7); c.fill(); ol('#4a3018');
+      c.strokeStyle = 'rgba(0,0,0,.25)'; c.lineWidth = 1; for (let j = -2; j <= 2; j++) { c.beginPath(); c.moveTo(j * 7, -16); c.lineTo(j * 7 + 3, -1); c.stroke(); } c.strokeStyle = '#4a3018'; c.lineWidth = 3; c.beginPath(); c.moveTo(0, -17); c.lineTo(3, -25); c.stroke();
+      c.fillStyle = 'rgba(255,255,255,.35)'; c.beginPath(); c.ellipse(-7, 6, 4, 8, 0.2, 0, 7); c.fill(); break;
+    case 'paperball': c.fillStyle = rgbS(body.map(v => v + (255 - v) * 0.5)); c.beginPath(); for (let j = 0; j < 10; j++) { const a = j / 10 * Math.PI * 2, r = j % 2 ? 17 : 23; c.lineTo(Math.cos(a) * r, Math.sin(a) * r); } c.closePath(); c.fill(); ol(D, 1.5);
+      c.strokeStyle = D; c.lineWidth = 1; for (let j = 0; j < 5; j++) { const a = j / 5 * Math.PI * 2; c.beginPath(); c.moveTo(0, 0); c.lineTo(Math.cos(a) * 20, Math.sin(a) * 20); c.stroke(); } c.strokeStyle = '#4a3a2a'; c.lineWidth = 2; c.beginPath(); c.moveTo(0, -22); c.quadraticCurveTo(6, -30, 3, -34); c.stroke(); break;
+    case 'plate': c.fillStyle = '#ffffff'; c.beginPath(); c.ellipse(0, 6, 28, 10, 0, 0, 7); c.fill(); ol('#b0a8a0', 1.5); c.fillStyle = '#d99a52'; c.fillRect(-20, -10, 18, 16); ol('#8a5a22', 1.5); c.strokeRect(-20, -10, 18, 16);
+      c.fillStyle = '#fffaf0'; c.beginPath(); c.ellipse(10, -1, 12, 8, 0, 0, 7); c.fill(); c.fillStyle = '#ffc020'; c.beginPath(); c.arc(10, -2, 4.5, 0, 7); c.fill(); break;
+    case 'barrel': c.fillStyle = '#4a5a6a'; c.beginPath(); c.ellipse(0, 0, 18, 24, 0, 0, 7); c.fill(); ol('#2a323a'); c.strokeStyle = '#8a9aaa'; c.lineWidth = 2.5; for (const y of [-12, 0, 12]) { c.beginPath(); c.moveTo(-17, y); c.lineTo(17, y); c.stroke(); }
+      c.fillStyle = '#ffd23f'; c.fillRect(-4, -28, 8, 6); break;
+    case 'cherry': c.strokeStyle = '#4a7a2a'; c.lineWidth = 3; c.beginPath(); c.moveTo(0, -14); c.quadraticCurveTo(6, -28, 16, -30); c.stroke(); c.fillStyle = '#d8283e'; c.beginPath(); c.arc(0, 4, 19, 0, 7); c.fill(); ol('#8a1020');
+      c.fillStyle = 'rgba(255,255,255,.6)'; c.beginPath(); c.ellipse(-7, -3, 5, 3, -0.6, 0, 7); c.fill(); if (Math.floor(t / 60) % 2) { c.fillStyle = '#ffe14a'; c.beginPath(); c.arc(16, -30, 4, 0, 7); c.fill(); } break;
+    case 'coins': for (let j = 0; j < 5; j++) { c.save(); c.translate((j - 2) * 9, (j % 2) * 8 - 4); c.fillStyle = '#f2c23a'; c.beginPath(); c.ellipse(0, 0, 11, 7, 0, 0, 7); c.fill(); ol('#a87810', 1.5); c.restore(); } break;
+    case 'star': c.fillStyle = '#ffe36a'; c.beginPath(); for (let j = 0; j < 10; j++) { const a = j * Math.PI / 5 - Math.PI / 2, r = j % 2 ? 11 : 26; c.lineTo(Math.cos(a) * r, Math.sin(a) * r); } c.closePath(); c.fill(); ol('#c99a1a', 2.5); break;
+    case 'pumpkin': c.fillStyle = '#ff8a2a'; for (const ox of [-10, 10, 0]) { c.beginPath(); c.ellipse(ox, 4, 13, 18, 0, 0, 7); c.fill(); ol('#b0520e', 1.5); } c.fillStyle = '#3a2a10'; c.beginPath(); c.moveTo(-8, -2); c.lineTo(-3, 3); c.lineTo(-11, 4); c.fill(); c.beginPath(); c.moveTo(8, -2); c.lineTo(3, 3); c.lineTo(11, 4); c.fill();
+      c.strokeStyle = '#4a7a2a'; c.lineWidth = 4; c.beginPath(); c.moveTo(0, -14); c.lineTo(3, -22); c.stroke(); break;
+    case 'pot': c.fillStyle = B; c.beginPath(); c.moveTo(-20, -10); c.lineTo(20, -10); c.lineTo(16, 18); c.lineTo(-16, 18); c.closePath(); c.fill(); ol(D); c.fillStyle = D; c.fillRect(-24, -14, 48, 6); break;
+  }
+}
+function chunk(c, p, s, el, t, x) {
+  c.save(); c.translate(p.x, p.y); c.scale(s, s);
+  if (el === 'Frost') { c.rotate(t / 300); c.shadowColor = 'rgba(150,215,255,.9)'; c.shadowBlur = 14; c.fillStyle = '#9fd6f5'; c.beginPath(); c.moveTo(0, -26); c.lineTo(22, -8); c.lineTo(16, 20); c.lineTo(-14, 22); c.lineTo(-24, -4); c.closePath(); c.fill(); c.shadowBlur = 0;
+    c.fillStyle = '#e4f6ff'; c.beginPath(); c.moveTo(0, -26); c.lineTo(22, -8); c.lineTo(2, 0); c.lineTo(-24, -4); c.closePath(); c.fill(); c.strokeStyle = 'rgba(90,160,210,.8)'; c.lineWidth = 1.5; c.stroke(); }
+  else if (el === 'Stone') { c.rotate(t / 300); const g = c.createRadialGradient(-6, -6, 2, 0, 0, 30); g.addColorStop(0, '#ffd27a'); g.addColorStop(1, 'rgba(255,120,40,0)'); c.fillStyle = g; c.beginPath(); c.arc(0, 0, 32, 0, 7); c.fill(); boulderFx(c, { x: 0, y: 0 }, t, 1.1); }
+  else { c.rotate(Math.sin(t / 120) * 0.25); fallProp(c, el, t, x || {}); }
   c.restore();
 }
 ANIM.icefall = { C: 560, D: 1000,
   atk: t => ({ f: 0, pose: t < 300 ? 'slamup' : t < 700 ? 'slam' : 'idle' }),
   def: t => t > 560 && t < 720 ? { sx: 1.3, sy: 0.75, pose: 'hit' } : null,
-  fx(c, t, x) { const b = x.target, pw = x.pw || 1, el = x.name === 'Glacier Fall' ? 'Frost' : 'Stone';
+  fx(c, t, x) { const b = x.target, pw = x.pw || 1, el = fallKind(x.name || '');
     if (t > 200 && t < 560) { const k = ei((t - 200) / 360), y = b.y - 170 + (170 - 10) * k; c.save(); c.globalAlpha = 0.25 + 0.4 * k; c.fillStyle = '#000'; c.beginPath(); c.ellipse(b.x, b.foot, 20 + 20 * k, 5 + 4 * k, 0, 0, 7); c.fill(); c.restore();
-      if (el === 'Stone') for (let j = 1; j < 6; j++) { c.globalAlpha = 0.5 - j * 0.08; ePart(c, 'Blaze', b.x - j * 5, y - j * 16, 2, t, j); } c.globalAlpha = 1;
-      chunk(c, { x: b.x - (1 - k) * 40, y }, 0.9 * pw, el, t); }
-    if (t >= 560 && t < 960) { const k = (t - 560) / 400; blast(c, b, k, { ...x, el, col: el === 'Frost' ? [150, 215, 255] : [255, 150, 70] }); dust(c, b, k); } } };
+      if (el === 'Stone') for (let j = 1; j < 6; j++) { c.globalAlpha = 0.5 - j * 0.08; ePart(c, 'Blaze', b.x - j * 5, y - j * 16, 2, t, j); }
+      else { c.save(); c.strokeStyle = 'rgba(255,255,255,.6)'; c.lineWidth = 2; for (let j = -1; j <= 1; j++) { c.beginPath(); c.moveTo(b.x - (1 - k) * 40 + j * 10, y - 30); c.lineTo(b.x - (1 - k) * 40 + j * 10, y - 70); c.stroke(); } c.restore(); }   // speed lines instead of fire
+      c.globalAlpha = 1; chunk(c, { x: b.x - (1 - k) * 40, y }, (el === 'Stone' || el === 'Frost' ? 0.9 : 1.3) * pw, el, t, x); }
+    if (t >= 560 && t < 960) { const k = (t - 560) / 400; blast(c, b, k, { ...x, el: el === 'Frost' ? 'Frost' : el === 'Stone' ? 'Stone' : x.el, col: el === 'Frost' ? [150, 215, 255] : el === 'Stone' ? [255, 150, 70] : (x.body || [255, 230, 150]) }); dust(c, b, k); } } };
 ANIM.meteor = ANIM.icefall;
 
 /* ---------- wave: a wall of water rolls across ---------- */
