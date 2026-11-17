@@ -234,7 +234,7 @@ function atEvent(e,now){
   const S=AT.side[e.i], m=e.m, te=AT.te, sp=S.spec;
   if(typeof atFx==="function") atFx(e,now);
   if(e.t==="start"){
-    if(m.swap){ S.pose={p:"crouch",until:te+220}; AT.turn={t0:te,C:220,D:560}; if(e.pred==="dodge"||e.pred==="phase") atPlanDodge(e.i,te+220,"tackle",e.pred); return; }
+    if(m.swap){ S.pose={p:"crouch",until:te+220}; AT.turn={t0:te,C:220,D:560}; if(e.pred==="dodge"||e.pred==="phase"||e.pred==="parry") atPlanDodge(e.i,te+220,"tackle",e.pred); return; }
     if((m.step||m.dash)&&!m.dmg){ S.pose={p:"crouch",until:te+140}; AT.turn={t0:te,C:140,D:420}; return; }
     let kind;
     const sk=typeof AR_KIND!=="undefined"&&AR_KIND[m.base||m.name];
@@ -253,7 +253,7 @@ function atEvent(e,now){
     S.anim={kind,t0:te+ch,tier,rate,el:m.el||null,name:m.name,src:typeof sourceFor==="function"?sourceFor({name:m.name,kind:m.cast?"Cast":"Strike"},sp):"mouth",col,pw:m.dmg>=70?1.35:m.dmg>=40?1.05:0.8,contact:!!K.contact||/^(tackle|bite|stomp|punch|claw|shadowstrike|shadowclaw|fly)$/.test(kind)};
     if(tier==="special"&&!S.anim.contact&&!m.lower) S.anim.mega=/^(beam|bolt|drain)$/.test(kind)?"beam":kind==="lightning"?"bolt":/^(meteor|icefall|boulder|rockpath)$/.test(kind)?"fall":kind==="pillar"&&m.el==="Frost"?"glacier":/^(tornado|firespin)$/.test(kind)?(m.el==="Blaze"?"inferno":"funnel"):kind==="wave"?"tsunami":kind==="push"?"shock":kind==="lift"?"nightmare":/^(pillar|mist|mistcast)$/.test(kind)?"rise":null;
     if(S.anim.mega) AT.turn.D=Math.max(AT.turn.D,ch+(K.C+900)/rate);   // the fight waits for a special's release to finish
-    if(e.pred==="dodge"||e.pred==="phase") atPlanDodge(e.i,te+ch+K.C/rate,kind,e.pred);
+    if(e.pred==="dodge"||e.pred==="phase"||e.pred==="parry") atPlanDodge(e.i,te+ch+K.C/rate,kind,e.pred);
     if(ch){ S.charge={t0:te,d:ch,tier,col:S.anim.col,el:m.el||null,body:sp.pal&&sp.pal.body,sig:isSig&&tier==="special"}; const soft=tier==="special"&&!S.charge.sig&&!m.skill; if(S.charge.sig||soft){ const fam=atSigFam(e.i); S.charge.wind=AT_WIND[fam]||"flame"; S.charge.soft=soft; S.charge.seed=[...fam].reduce((a,q)=>a+q.charCodeAt(0),0); } if(S.charge.sig) AT.cine={t0:te,d:ch,i:e.i,name:m.name,col:S.anim.col}; }
     try{ sfx(ch&&tier!=="light"?"charge":m.cast?"charge":"whoosh"); if(typeof elSfx==="function") elSfx(m.el,"cast"); if(typeof kindSfx==="function"){ kindSfx(kind,(ch||0)/1000/(S.anim.rate||1)); if(S.charge&&S.charge.sig) kindSfx("special"); } }catch(err){}
   }
@@ -273,8 +273,8 @@ function atEvent(e,now){
       try{ sfx(tier==="heavy"?"heavy":tier==="medium"?"hit":"tap"); if(S.anim) elSfx(S.anim.el,"hit"); }catch(err){} }
     AT.fx.push({i:1-e.i,t0:now+e.h*90,txt:String(e.dmg),crit:e.crit,size:{light:16,medium:19,heavy:24,special:32}[tier]}); if(e.crit&&e.h===0) AT.fx.push({i:1-e.i,t0:now,txt:"Critical!",crit:true,size:13,lift:30}); }
   if(e.t==="miss"){ const o=AT.side[1-e.i];
-    if((e.why==="dodge"||e.why==="phase")&&!o.dodgeAt&&!(o.react&&o.react.kind==="dodge")) atPlanDodge(e.i,te+150,S.anim?S.anim.kind:"bolt",e.why);
-    AT.fx.push({i:1-e.i,t0:now,txt:{out:"Out of reach",block:"Blocked",dodge:"Dodged",phase:"Phased",resist:"Resisted"}[e.why]||"Miss",col:e.why==="resist"?"#c9cbd6":null}); }
+    if((e.why==="dodge"||e.why==="phase"||e.why==="parry")&&!o.dodgeAt&&!(o.react&&o.react.kind==="dodge")) atPlanDodge(e.i,te+150,S.anim?S.anim.kind:"bolt",e.why);
+    AT.fx.push({i:1-e.i,t0:now,txt:{out:"Out of reach",block:"Blocked",parry:"Parried",dodge:"Dodged",phase:"Phased",resist:"Resisted"}[e.why]||"Miss",col:e.why==="resist"?"#c9cbd6":null}); }
   if(e.t==="slam"){ S.react={kind:"hit",t0:te,tier:"heavy"}; AT.trauma=Math.min(1,AT.trauma+0.5); AT.fx.push({i:e.i,t0:now,txt:`Wall ${e.dmg}`,crit:true});
     try{ sfx("heavy"); }catch(err){} }
   if(e.t==="buff") AT.fx.push({i:e.i,t0:now,txt:m.name,buff:true});
@@ -624,7 +624,7 @@ function atSideState(S,te){
   if(S.recoil){ const k=(te-S.recoil.t0)/170; if(k>1) S.recoil=null; else out.off[0]-=S.dir*S.recoil.amt*Math.sin(k*Math.PI); }
   const dg=atDodge(S,te), R=S.react;
   if(dg){ out.off[0]+=S.dir*dg.dx; out.off[1]+=dg.dy; out.rot+=S.dir*dg.rot; out.sx*=dg.sx; out.sy*=dg.sy; out.pose=dg.pose; if(dg.alpha!=null) out.alpha*=dg.alpha; out.doff=[S.dir*dg.dx,dg.dy]; }
-  else if(R){ const dur=R.kind==="hit"?(R.tier==="heavy"?560:420):380, k=(te-R.t0)/dur;
+  else if(R&&te>=R.t0){ const dur=R.kind==="hit"?(R.tier==="heavy"?560:420):380, k=(te-R.t0)/dur;
     if(k>1) S.react=null;
     else if(R.kind==="hit"){ const T=AT_TIER[R.tier], dt=te-R.t0; out.pose="hit"; out.flash=T.white&&!R.own?(dt<18?2:dt<T.flash?1:0):dt<(R.own?40:T.flash)?3:0;
       out.off[0]-=S.dir*({light:14,medium:20,heavy:30,special:46}[R.tier]||14)*(k<0.25?eo(k/0.25):1-eo((k-0.25)/0.75)); out.rot-=S.dir*0.12*(R.tier==="heavy"?1.6:1)*Math.sin(Math.min(1,k*1.5)*Math.PI);
@@ -716,8 +716,11 @@ function atDraw(now,dte){
     S.lastX=x; S.lastY=y;
     for(const g of S.trail){ c.save(); c.globalAlpha=0.32*(1-(te-g.t)/120);
       c.translate(g.x,g.y); c.rotate(g.rot); c.scale(mir*u*g.sx,u*g.sy); c.translate(-100,-188); atGhost(c,sp,g.P,te,[0.6*S.dir*mir,0]); c.restore(); }
+    // a move's extra bodies, like Ghost Image's after-images, drawn with this Snabit's own sprite (17 Nov 2026)
+    { const MA=S.anim, MK=MA&&ANIM[MA.kind]; if(MK&&MK.copies&&te>=MA.t0){ let cl=[]; try{ cl=MK.copies((te-MA.t0)*MA.rate,{dir:S.dir,gap:Math.abs(O.dx-S.dx)}); }catch(err){}
+      for(const q of cl){ if(!(q.a>0)) continue; const fm=q.flip?-mir:mir; c.save(); c.globalAlpha=q.a; c.translate(S.dx+q.dx,floor+(q.dy||0)); c.scale(fm*u,u); c.translate(-100,-188); try{ CHIBI.draw(c,sp,q.P||P,te,[0.6*S.dir*fm,0]); }catch(err){} c.restore(); } } }
     // phased out: two faint copies of it drift either side
-    if(fp.buff.phase) for(const o of [-1,1]){ c.save(); c.globalAlpha=0.2; c.translate(x+o*16*Math.sin(te/170+o),y); c.rotate(st.rot); c.scale(mir*u*st.sx,u*st.sy); c.translate(-100,-188); CHIBI.draw(c,sp,P,te,[0.6*S.dir*mir,0]); c.restore(); }
+    if(fp.buff.phase&&!(S.anim&&S.anim.kind==="burrow"&&te-S.anim.t0<1000)) for(const o of [-1,1]){ c.save(); c.globalAlpha=0.2; c.translate(x+o*16*Math.sin(te/170+o),y); c.rotate(st.rot); c.scale(mir*u*st.sx,u*st.sy); c.translate(-100,-188); CHIBI.draw(c,sp,P,te,[0.6*S.dir*mir,0]); c.restore(); }
     c.save(); c.globalAlpha=st.alpha;
     c.translate(x,y); c.rotate(st.rot); c.scale(mir*u*st.sx,u*st.sy); c.translate(-100,-188);
     atBody(c,i,{...sp,capture:(S.cap={})},P,dte2,[0.6*S.dir*mir,0],st.flash); c.restore();
