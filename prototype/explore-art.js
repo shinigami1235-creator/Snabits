@@ -218,5 +218,5 @@ function exProp(c, p, t, front) {
     case 'page': if (front) XA.page(c, x, y, t); return true;
     case 'pstone': if (!front) XA.stone(c, x, y, p.sp, p.glow, t); return true;
   }
-  return false;
+  return typeof exProp2 === 'function' && exProp2(c, p, t, front);
 }
