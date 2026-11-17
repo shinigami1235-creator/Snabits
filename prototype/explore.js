@@ -208,6 +208,7 @@ async function runExpedition(reg) {
         saveGame();
       }
     } finally { el('ranch').classList.remove('exploring'); el('r-panel').innerHTML = ''; delete s.exWx; if (typeof exAmbStop === 'function') exAmbStop(); }
+    if (typeof exSecret === 'function') await exSecret(reg, nm, K, found);   // a wild Snabit that followed them, fought on its own
     const got = found.length ? `${nm} brought home ${found.join(', ')}.` : `${nm} didn't find anything this time.`;
     await tripHome(`Time to head back. ${got}`, `We're back at the ranch. ${nm} will sleep well tonight.`, found.length ? 'happy' : 'idle');
     s.fatigue += Math.round(12 * tireMul(s)); s.stress += 4; clampAll();
@@ -221,9 +222,10 @@ async function exNode(reg, n, st, need, nm, K, used, found) {
   if (n.k === 'camp' || n.k === 'path') { await rwait(250); return; }
   if (n.k === 'spring') { if (used.includes(n.id)) { await rwait(200); return; } used.push(n.id); const sp = prop({ k: 'spring', x: 150, y: GROUND }); await walkTo(124, 60, 'walk'); s.pose = 'happy'; spark(150, GROUND - 10, 'drip', 8); rsfx('splash'); spark(s.x, headY() - 6, 'sparkle', 3); K(`There's fresh water here. Drink up, ${nm}.`); await rwait(1300); unprop(sp); return 'spring'; }
   if (n.k === 'chest') { if (used.includes(n.id)) { K('The chest here is empty now.'); await rwait(900); return; } used.push(n.id);
-    const c = prop({ k: 'chest', x: 144, y: GROUND }); await walkTo(120, 60, 'walk'); s.pose = 'idle'; await rwait(300); c.open = true; rsfx('creak'); s.pose = 'happy'; spark(144, GROUND - 22, 'sparkle', 6);
     const R = rng(hashStr(reg.n + n.id + exSeason())), item = n.big ? EX_RARE[Math.floor(R() * EX_RARE.length)] : EX_FINDS[Math.floor(R() * EX_FINDS.length)];
-    addItem(item); found.push(`${/^[AEIOU]/.test(item) ? 'an' : 'a'} ${item}`); if (!once) st.got.push(n.id); K(`${nm} found ${/^[AEIOU]/.test(item) ? 'an' : 'a'} ${item} in an old chest.`); await rwait(1400); unprop(c); return; }
+    if (typeof exChest === 'function') await exChest(item, n.big);
+    else { const c = prop({ k: 'chest', x: 144, y: GROUND }); await walkTo(120, 60, 'walk'); s.pose = 'idle'; await rwait(300); c.open = true; rsfx('creak'); s.pose = 'happy'; spark(144, GROUND - 22, 'sparkle', 6); await rwait(600); unprop(c); }
+    addItem(item); found.push(`${/^[AEIOU]/.test(item) ? 'an' : 'a'} ${item}`); if (!once) st.got.push(n.id); K(`${nm} found ${/^[AEIOU]/.test(item) ? 'an' : 'a'} ${item} in an old chest.`); await rwait(1400); return; }
   if (n.k === 'page') { if (once) { await rwait(300); return; }
     const p = prop({ k: 'page', x: 140, y: GROUND - 26 }); await walkTo(126, 60, 'walk'); s.pose = 'happy'; spark(140, GROUND - 30, 'sparkle', 4); unprop(p);
     PLAYER.journal = PLAYER.journal || {}; PLAYER.journal[reg.n] = 1; st.got.push(n.id); found.push('a journal page');

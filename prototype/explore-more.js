@@ -140,15 +140,27 @@ const EX_EL_SFX = { Brawl: 'thud', Stone: 'crumble', Blaze: 'roar', Steel: 'slas
    with a lunge or a shot, time stops on the hit, the screen flashes and shakes, and the obstacle comes apart */
 async function exHit(mv, tx, ty) {
   const s = RS, el = mv.el;
-  exFocus((s.x + tx) / 2, 1.6); exDim(0.5); await rwait(450);
+  exFocus((s.x + tx) / 2, 1.6); exDim(0.5); await rwait(400);
   banner(mv.name, '#ffd23f'); s.pose = 'effort'; exSfx('charge'); if (typeof elSfx === 'function') elSfx(el, 'cast');
-  const ch = prop({ k: 'excharge', el, x: s.x, y: GROUND - 14, t0: exNow() }); await rwait(800); unprop(ch);
+  const ch = prop({ k: 'excharge', el, x: s.x, y: GROUND - 14, t0: exNow() }); await rwait(850); unprop(ch);
   s.pose = 'attack'; banner('');
-  if (mv.kind === 'Strike') { const x0 = s.x; s.ghosts = true; exSfx('whoosh'); await exTween(170, u => { s.x = x0 + (tx - 30 - x0) * u; }, exIn); }
-  else { exSfx('whoosh'); const b = prop({ k: 'exbeam', el, x: s.x + 14, y: headY() + 8, x2: tx, y2: ty, t0: exNow() }); await rwait(230); unprop(b); }
-  prop({ k: 'exlines', x: tx, y: ty, t0: exNow() }); prop({ k: 'exburst', el, x: tx, y: ty, t0: exNow(), k2: 1.7 });
-  exSfx('impact'); exSfx(EX_EL_SFX[el]); if (typeof elSfx === 'function') elSfx(el, 'hit');
-  exFlash(EX_EL_COL[el] ? EX_EL_COL[el][1] : '#fff', 0.8, 300); exShake(9, 520); await exFreeze(140);
+  const big = () => { exSfx('impact'); exSfx(EX_EL_SFX[el]); if (typeof elSfx === 'function') elSfx(el, 'hit'); exFlash(EX_EL_COL[el] ? EX_EL_COL[el][1] : '#fff', 0.75, 300); exShake(9, 520); };
+  if (el === 'Steel') {   // it leaps and rakes three claws through the target
+    const x0 = s.x; s.ghosts = true; exSfx('whoosh'); await exTween(160, u => { s.x = x0 + (tx - 34 - x0) * u; s.jy = -Math.sin(u * Math.PI) * 18; }, exIn); s.jy = 0;
+    prop({ k: 'exclaw', x: tx, y: ty, t0: exNow() }); exSfx('slash'); await rwait(90); big(); await exFreeze(150);
+  } else if (el === 'Stone') {   // it stamps and stone spikes burst up under the target
+    s.jy = -14; await rwait(160); s.jy = 0; exSfx('thud'); exShake(4, 200); prop({ k: 'excrack', x: s.x, y: GROUND, g: 1 });
+    const sp = prop({ k: 'exspikes', x: tx + 10, y: GROUND, h: 0 }); s.props.splice(s.props.indexOf(sp), 1); s.props.unshift(sp); EXD.spikes = sp;   // behind the boulder, so it rides up on them await rwait(140); await exTween(160, u => { sp.h = u; }, exOut); big(); await exFreeze(140);
+  } else if (mv.kind === 'Strike') {
+    const x0 = s.x; s.ghosts = true; exSfx('whoosh'); await exTween(170, u => { s.x = x0 + (tx - 30 - x0) * u; }, exIn);
+    prop({ k: 'exlines', x: tx, y: ty, t0: exNow() }); prop({ k: 'exburst', el, x: tx, y: ty, t0: exNow(), k2: 1.7 }); big(); await exFreeze(140);
+  } else {
+    const sx = s.x + 14, sy = headY() + 8, ms = el === 'Spark' ? 120 : el === 'Light' ? 160 : el === 'Tide' ? 260 : 300;
+    exSfx(el === 'Spark' ? 'zap' : 'whoosh'); const b = prop({ k: 'exshot', el, x: sx, y: sy, x2: tx, y2: ty, t0: exNow(), ms }); await rwait(ms);
+    if (el !== 'Light' && el !== 'Tide' && el !== 'Spark') unprop(b);
+    prop({ k: 'exlines', x: tx, y: ty, t0: exNow() }); prop({ k: 'exburst', el, x: tx, y: ty, t0: exNow(), k2: 1.6 }); big(); await exFreeze(140);
+    if (b) { await rwait(el === 'Tide' ? 350 : 200); unprop(b); }
+  }
   s.ghosts = false;
   if (mv.kind === 'Strike') { const x1 = s.x; await exTween(260, u => { s.x = x1 - 26 * u; s.jy = -Math.sin(u * Math.PI) * 8; }, exOut); s.jy = 0; }
   s.pose = 'idle';
@@ -156,17 +168,19 @@ async function exHit(mv, tx, ty) {
 async function exMoveOpen(stat, mv, seed) {
   const s = RS, el = mv.el, line = EX_MOVE_WIN[stat](el);
   try {
-    if (stat === 1) { const b = prop({ k: 'xrockb', x: 172, y: GROUND, s: 1.7, broke: 0 }); await walkTo(104, 60, 'walk'); await exHit(mv, 162, GROUND - 26);
-      exSfx('crumble'); spark(172, GROUND - 4, 'dust', 16); exShake(5, 700); await exTween(1300, u => { b.broke = u; }); unprop(b); }
+    if (stat === 1) { const b = prop({ k: 'xrockb', x: 172, y: GROUND, s: 1.7, broke: 0 }); await walkTo(104, 60, 'walk');
+      if (el === 'Stone') { const hit = exHit(mv, 162, GROUND - 26); while (!EXD.spikes) await rwait(16); const sp = EXD.spikes; await exTween(300, () => { b.y = GROUND - sp.h * 22; }); await hit; EXD.spikes = null;
+        exSfx('crumble'); spark(172, GROUND - 4, 'dust', 16); exShake(5, 700); await exTween(1300, u => { b.broke = u; sp.h = 1 - u * 0.4; if (u > 0.5) b.y = GROUND - 22 + (u - 0.5) * 44; }); unprop(sp); unprop(b); }
+      else { await exHit(mv, 162, GROUND - 26); exSfx('crumble'); spark(172, GROUND - 4, 'dust', 16); exShake(5, 700); await exTween(1300, u => { b.broke = u; }); unprop(b); } }
     else if (stat === 2) { const th = prop({ k: 'thorns2', x: 168, y: GROUND, s: 1.35, gone: 0, how: el === 'Blaze' ? 'burn' : 'cut' }); await walkTo(110, 60, 'walk'); await exHit(mv, 160, GROUND - 24);
-      if (el === 'Blaze') exSfx('crackle'); await exTween(el === 'Blaze' ? 1700 : 1100, u => { th.gone = u; }); unprop(th); }
+      if (el === 'Blaze') exSfx('crackle'); else { th.how = 'shred'; exSfx('snap'); } await exTween(el === 'Blaze' ? 1700 : 1200, u => { th.gone = u; }); unprop(th); }
     else if (stat === 3) { const d = prop({ k: 'sealdoor', x: 184, y: GROUND, lit: 0, drop: 0 }), lt = prop({ k: 'litter', x: 154, y: GROUND, s: 1.3 }); await walkTo(118, 60, 'walk'); await exHit(mv, 184, GROUND - 40);
       const RU = [[176, GROUND - 35], [192, GROUND - 35], [184, GROUND - 19]];
-      for (let i = 1; i <= 3; i++) { d.lit = i; const [rx, ry] = RU[i - 1]; prop({ k: 'exburst', el, x: rx, y: ry, t0: exNow(), k2: 0.6 }); exSfx(el === 'Spark' ? 'zap' : 'chime'); exShake(2, 200); await rwait(260); }
+      for (let i = 1; i <= 3; i++) { d.lit = i; const [rx, ry] = RU[i - 1]; if (el === 'Spark') { const b = prop({ k: 'exbeam', el, x: rx + 12 - i * 8, y: GROUND - 110, x2: rx, y2: ry, t0: exNow() }); setTimeout(() => unprop(b), 160); } else prop({ k: 'exburst', el, x: rx, y: ry, t0: exNow(), k2: 0.6 }); exSfx(el === 'Spark' ? 'zap' : 'chime'); exShake(2, 200); await rwait(260); }
       await exDoorOpen(d, el); unprop(lt); }
     else if (stat === 4) { const real = seed % 3, m = prop({ k: 'mirage', x: 170, y: GROUND, real, reveal: 0, s: 1.2 }); await walkTo(98, 60, 'walk'); await exHit(mv, 170, GROUND - 30);
       await exMirageBreak(m, real, el); exCalm(); await walkTo(170 - 55 + 110 * (0.2 + real * 0.3), 60, 'walk'); await walkTo(224, 60, 'walk'); unprop(m); }
-    else { const tr = prop({ k: 'darttrap', x: 206, y: GROUND, live: true, s: 1.5 }), coat = prop({ k: 'excoat', el, x: 206, y: GROUND, s: 1.5, a: 0 }); await walkTo(120, 60, 'walk'); await exHit(mv, 200, GROUND - 40);
+    else { const tr = prop({ k: 'darttrap', x: 206, y: GROUND, live: true, s: 1.5 }), coat = prop({ k: 'excoat', el, x: 206, y: GROUND, s: 1.5, a: 0 }); await walkTo(120, 60, 'walk'); tr.live = false; await exHit(mv, 200, GROUND - 40);
       tr.live = false; spark(206, GROUND - 40, el === 'Frost' ? 'sparkle' : 'drip', 12); await exTween(700, u => { coat.a = u; });
       const mist = prop({ k: 'exmist', el, x: 206, y: GROUND, t0: exNow() }); exSfx(el === 'Frost' ? 'freeze' : 'surge'); await rwait(700); exCalm(); await walkTo(236, 120, 'run'); unprop(tr); unprop(coat); unprop(mist); }
   } finally { exCalm(); }
@@ -196,7 +210,7 @@ async function exObstacle2(stat, ok, seed) {
   if (stat === 1) {   // Power: it digs in, the ground cracks, it charges and slams the boulder off down the trail
     const b = prop({ k: 'xrock', x: 176, y: GROUND, s: 1.7, rot: 0 }); await walkTo(104, 60, 'walk');
     exFocus(140, 1.6); exDim(0.35); await rwait(400);
-    s.pose = 'effort'; exSfx('rumble'); const ck = prop({ k: 'excrack', x: s.x, y: GROUND, g: 0 }), ch = prop({ k: 'excharge', el: 'Brawl', x: s.x, y: GROUND - 14, t0: exNow() });
+    s.pose = 'effort'; exSfx('rumble'); const ck = prop({ k: 'excrack', x: s.x, y: GROUND, g: 0 }), ch = prop({ k: 'excharge', el: 'Stone', x: s.x, y: GROUND - 14, t0: exNow() });
     await exTween(900, u => { ck.g = u; s.bx = Math.sin(u * 60) * u * 1.2; }); unprop(ch); s.bx = 0; exSfx('charge');
     s.pose = 'attack'; s.ghosts = true; exSfx('whoosh'); const x0 = s.x; await exTween(200, u => { s.x = x0 + (176 - 44 - x0) * u; }, exIn);
     prop({ k: 'exlines', x: 150, y: GROUND - 26, t0: exNow() }); exSfx('thud'); exShake(ok ? 10 : 6, 500); exFlash('#fff', 0.7, 240); await exFreeze(130); s.ghosts = false;
@@ -274,8 +288,8 @@ function exProp2(c, p, t, front) {
     case 'xrockb': if (front) return true; exRockBreak(c, x, y, p.s || 1, p.broke || 0); return true;
     case 'thorns2': if (front) return true; exThornsGone(c, x, y, p.s || 1, p.gone || 0, p.how, t); return true;
     case 'excoat': if (front) return true; exCoat(c, x, y, p.s || 1, p.el, p.a || 0, t); return true;
-    case 'exburst': if (!front) return true; { const u = Math.min(1, (exNow() - p.t0) / 1000); if (u < 1) { c.save(); const k2 = p.k2 || 1; c.translate(x, y); c.scale(k2, k2); c.translate(-x, -y); exBurst(c, x, y, p.el, u, p.t0); c.restore(); } } return true;
-    case 'exbeam': if (!front) return true; { const C = EX_EL_COL[p.el] || EX_EL_COL.Brawl, u = Math.min(1, (exNow() - p.t0) / 230); c.save(); c.lineCap = 'round';
+    case 'exburst': if (!front) return true; { const u = Math.min(1, (exNow() - p.t0) / 1000); if (u < 1) { c.save(); const k2 = p.k2 || 1; c.translate(x, y); c.scale(k2, k2); c.translate(-x, -y); exBurst(c, x, y, p.el, u, p.t0, k2); c.restore(); } } return true;
+    case 'exbeam': if (!front) return true; if (p.el === 'Spark') { exBolt(c, p.x, p.y, p.x2, p.y2, Math.floor(t / 40), 1); return true; } { const C = EX_EL_COL[p.el] || EX_EL_COL.Brawl, u = Math.min(1, (exNow() - p.t0) / 230); c.save(); c.lineCap = 'round';
       const hx = p.x + (p.x2 - p.x) * u, hy = p.y + (p.y2 - p.y) * u, tx = p.x + (p.x2 - p.x) * Math.max(0, u - 0.45), ty = p.y + (p.y2 - p.y) * Math.max(0, u - 0.45);
       c.shadowColor = C[0]; c.shadowBlur = 14; c.strokeStyle = C[0]; c.lineWidth = 12; c.globalAlpha = 0.6; c.beginPath(); c.moveTo(tx, ty); c.lineTo(hx, hy); c.stroke(); c.strokeStyle = C[1]; c.lineWidth = 5; c.globalAlpha = 1; c.stroke();
       if (p.el === 'Blaze') { const a = Math.atan2(p.y2 - p.y, p.x2 - p.x); c.save(); c.translate(hx, hy); c.rotate(a - Math.PI / 2); exFlame(c, 0, 0, 9, 30, Math.sin(t / 40) * 3); c.restore(); }
@@ -303,6 +317,11 @@ function exProp2(c, p, t, front) {
       c.restore(); } return true;
     case 'expillar': if (!front) return true; exPillar(c, x, y, (exNow() - p.t0) / 1600, t); return true;
     case 'exglyph': if (!front) return true; exGlyphs(c, x, y, p.u || 0, p.lock || 0, p.bad, t); return true;
+    case 'exshot': if (!front) return true; exShot(c, p, Math.min(1, (exNow() - p.t0) / p.ms), t); return true;
+    case 'exclaw': if (!front) return true; { const u = (exNow() - p.t0) / 700; if (u < 1) exClaw(c, x, y, u, t); } return true;
+    case 'exspikes': if (front) return true; exSpikes(c, x, y, p.h || 0); return true;
+    case 'chest2': if (front) return true; exChestDraw(c, p, t); return true;
+    case 'exitem': if (!front) return true; exItemDraw(c, p, t); return true;
     case 'excrack': if (front) return true; { const g = p.g || 0; if (g <= 0) return true; c.save(); c.strokeStyle = 'rgba(40,28,18,.75)'; c.lineWidth = 1.6; c.lineCap = 'round';
       for (let i = 0; i < 7; i++) { const dir = i % 2 ? 1 : -1, L = (14 + i * 6) * g; c.beginPath(); c.moveTo(x, y); let px = x, py = y; for (let k = 1; k <= 4; k++) { px += dir * L / 4; py += (k % 2 ? 1.2 : -0.8) + i * 0.15; c.lineTo(px, py); } c.stroke(); }
       c.fillStyle = 'rgba(40,28,18,.25)'; c.beginPath(); c.ellipse(x, y + 1, 20 * g, 3 * g, 0, 0, 7); c.fill(); c.restore(); } return true;
@@ -346,6 +365,11 @@ function exThornsGone(c, x, y, s, u, how, t) {
       exFlame(c, fx, y - 4 - (1 - sink) * 6 * s, (5 + (i % 2) * 2) * s * k, (24 + 10 * Math.sin(t / 90 + i * 1.7) + (i % 3) * 6) * s * k, Math.sin(t / 120 + i) * 3 * s); }
     for (let i = 0; i < 6; i++) { const k = (u * 1.2 + i / 6) % 1, sx = x + (i - 2.5) * 8 * s + Math.sin(t / 400 + i) * 4, sy = y - 40 * s - k * 50 * s; c.globalAlpha = (1 - k) * 0.45 * Math.min(1, u * 3); c.fillStyle = '#6b6461'; c.beginPath(); c.arc(sx, sy, (4 + k * 8) * s, 0, 7); c.fill(); }
     for (let i = 0; i < 14; i++) { const k = (i * 0.37 + u * 1.6) % 1, ex = x - 26 * s + (i * 13 % 52) * s + Math.sin(t / 200 + i) * 3, ey = y - 6 - k * 70 * s; c.globalAlpha = (1 - k) * flame; c.fillStyle = i % 3 ? '#ff9a3c' : '#ffe08a'; c.beginPath(); c.arc(ex, ey, 1.5 * s, 0, 7); c.fill(); }
+  } else if (how === 'shred') {   // cut into three slices along the claw marks, which slide apart and drop
+    const e = Math.max(0, (u - 0.1) / 0.9), fall = e * e, fade = 1 - Math.max(0, u - 0.7) / 0.3, ang = 0.75, ca = Math.cos(ang), sa = Math.sin(ang);
+    for (let i = 0; i < 4; i++) { c.save(); c.globalAlpha = Math.max(0, fade); c.translate(x, y - 24 * s); c.rotate(ang);
+      const b0 = -60 + i * 30 * s, dir = i % 2 ? 1 : -1; c.translate(dir * fall * 10 * s, fall * 6 * s); c.beginPath(); c.rect(-90, b0 - (i ? 0 : 60), 180, i === 3 ? 120 : 30 * s + (i ? 0 : 60)); c.rotate(-ang); c.translate(-x, -(y - 24 * s));
+      c.translate(0, fall * (10 + i * 14) * s); c.clip(); XA.bramble(c, x, y, s); c.restore(); }
   } else if (how === 'blast') {
     const e = 1 - Math.pow(1 - u, 2), fade = 1 - Math.max(0, u - 0.6) / 0.4;
     for (const side of [-1, 1]) { c.save(); c.globalAlpha = Math.max(0, fade); const px = x + side * 30 * s; c.translate(px + side * e * 50 * s, y - Math.sin(u * Math.PI) * 24 * s); c.rotate(side * e * 0.9); c.translate(-px, -y);
@@ -378,7 +402,7 @@ function exCoat(c, x, y, s, el, a, t) {
   c.restore();
 }
 /* the burst where a move lands, drawn for each element */
-function exBurst(c, x, y, el, u, seed) {
+function exBurst(c, x, y, el, u, seed, p2k) {
   const C = EX_EL_COL[el] || EX_EL_COL.Brawl, R = 30, out = 1 - Math.pow(1 - u, 3), fade = 1 - Math.max(0, u - 0.55) / 0.45; c.save(); c.lineCap = 'round'; c.lineJoin = 'round';
   const glow = (r, a) => { const g = c.createRadialGradient(x, y, 1, x, y, r); g.addColorStop(0, C[1]); g.addColorStop(0.4, C[0]); g.addColorStop(1, C[0] + '00'); c.globalAlpha = a; c.fillStyle = g; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill(); c.globalAlpha = 1; };
   if (el === 'Brawl') { glow(R * out * 1.1, 0.5 * fade); c.globalAlpha = fade; const k = 0.5 + out * 0.8; c.fillStyle = C[0]; c.beginPath(); for (let i = 0; i < 16; i++) { const a = i / 16 * 6.283, r = (i % 2 ? 9 : 24) * k; c.lineTo(x + Math.cos(a) * r, y + Math.sin(a) * r); } c.fill();
@@ -393,8 +417,9 @@ function exBurst(c, x, y, el, u, seed) {
     for (let i = 0; i < 10; i++) { const k = (u * 1.4 + i * 0.1) % 1; c.globalAlpha = (1 - k) * fade; c.fillStyle = '#ffe08a'; c.beginPath(); c.arc(x - 20 + i * 4.4, y - k * 40, 1.6, 0, 7); c.fill(); } }
   else if (el === 'Steel') { c.globalAlpha = fade; for (const [a0, d] of [[-2.4, 1], [-0.7, -1]]) { const sw = Math.min(1, u * 2.6) * 2.2; c.strokeStyle = 'rgba(255,255,255,.95)'; c.lineWidth = 4; c.beginPath(); c.arc(x + d * 4, y, 24, a0, a0 + sw * (d > 0 ? 1 : 1)); c.stroke(); c.strokeStyle = C[0]; c.lineWidth = 8; c.globalAlpha = 0.4 * fade; c.stroke(); c.globalAlpha = fade; }
     for (let i = 0; i < 6; i++) { const a = i * 1.05, d = 8 + out * 22; c.fillStyle = '#fff6c8'; c.fillRect(x + Math.cos(a) * d - 1, y + Math.sin(a) * d - 1, 2.4, 2.4); } }
-  else if (el === 'Spark') { glow(R * 1.2, 0.6 * fade * (0.6 + 0.4 * Math.sin(u * 40))); c.globalAlpha = fade; for (let i = 0; i < 5; i++) { const a = i / 5 * 6.283 + seed % 7, L = 10 + out * 26; c.strokeStyle = C[0]; c.lineWidth = 3.5; c.beginPath(); c.moveTo(x, y);
-      for (let k = 1; k <= 4; k++) { const d = L * k / 4, j = (k % 2 ? 1 : -1) * 6; c.lineTo(x + Math.cos(a) * d - Math.sin(a) * j, y + Math.sin(a) * d + Math.cos(a) * j); } c.stroke(); c.strokeStyle = '#fff'; c.lineWidth = 1.4; c.stroke(); } }
+  else if (el === 'Spark') { glow(R * 1.3, 0.7 * fade * (0.6 + 0.4 * Math.sin(u * 50))); c.globalAlpha = fade; const fl = Math.floor(u * 14);
+    if (u < 0.45) for (let i = 0; i < 3; i++) { const a = i / 3 * 6.283 + fl * 0.9, L = (12 + out * 20) / (p2k || 1); exBolt(c, x, y, x + Math.cos(a) * L, y + Math.sin(a) * L, fl * 7 + i, 0.3); }
+    for (let i = 0; i < 10; i++) { const a = i * 0.63 + seed % 5, d = (8 + out * 30) / (p2k || 1); c.globalAlpha = fade * (0.5 + 0.5 * Math.sin(u * 60 + i)); c.fillStyle = i % 2 ? '#fff' : '#ffe14d'; c.fillRect(x + Math.cos(a) * d - 1, y + Math.sin(a) * d - 1, 2, 2); } }
   else if (el === 'Charm') { glow(R * 1.2, 0.45 * fade); c.globalAlpha = fade; for (let i = 0; i < 7; i++) { const a = -1.57 + (i - 3) * 0.45, d = 6 + out * 30, hx = x + Math.cos(a) * d, hy = y + Math.sin(a) * d - u * 10, r = 4.5 + (i % 2) * 2;
       c.fillStyle = i % 2 ? C[0] : '#ff6fae'; c.beginPath(); c.moveTo(hx, hy + r); c.bezierCurveTo(hx - r * 1.6, hy - r * 0.2, hx - r * 0.6, hy - r * 1.4, hx, hy - r * 0.4); c.bezierCurveTo(hx + r * 0.6, hy - r * 1.4, hx + r * 1.6, hy - r * 0.2, hx, hy + r); c.fill(); } }
   else if (el === 'Light') { glow(R * (0.6 + out), 0.7 * fade); c.globalAlpha = 0.85 * fade; c.strokeStyle = C[1]; for (let i = 0; i < 12; i++) { const a = i / 12 * 6.283 + u * 0.4; c.lineWidth = i % 2 ? 2 : 3.5; c.beginPath(); c.moveTo(x + Math.cos(a) * 10, y + Math.sin(a) * 10); c.lineTo(x + Math.cos(a) * (16 + out * 34), y + Math.sin(a) * (16 + out * 34)); c.stroke(); } }
@@ -408,14 +433,106 @@ function exBurst(c, x, y, el, u, seed) {
     for (let i = 0; i < 10; i++) { const a = -0.3 - i * 0.28, v = 30 + i % 3 * 10, px = x + Math.cos(a) * v * out, py = y + Math.sin(a) * v * out + u * u * 40; c.fillStyle = i % 2 ? C[0] : C[1]; c.beginPath(); c.ellipse(px, py, 2.4, 3.2, 0, 0, 7); c.fill(); } }
   c.restore();
 }
-/* the element gathering round the Snabit before it lets go: streaks pulled in, a ring tightening, a glow under its feet */
+/* each element gathers in its own way before the move goes off */
 function exChargeDraw(c, x, y, el, u, t) {
-  const C = EX_EL_COL[el] || EX_EL_COL.Brawl; u = Math.min(1, Math.max(0, u)); c.save(); c.lineCap = 'round';
-  const g = c.createRadialGradient(x, GROUND, 2, x, GROUND, 40); g.addColorStop(0, C[1]); g.addColorStop(0.5, C[0] + '88'); g.addColorStop(1, C[0] + '00');
-  c.globalAlpha = 0.5 + 0.4 * u; c.fillStyle = g; c.beginPath(); c.ellipse(x, GROUND, 40, 9, 0, 0, 7); c.fill();
-  for (let i = 0; i < 16; i++) { const a = i * 2.4 + i * i * 0.13, k = ((u * 2.2 + i * 0.137) % 1), d = 70 * (1 - k) + 8, px = x + Math.cos(a) * d, py = y + Math.sin(a) * d * 0.8;
-    c.globalAlpha = k * (0.9 - u * 0.2); c.strokeStyle = i % 2 ? C[0] : C[1]; c.lineWidth = 2.5; c.beginPath(); c.moveTo(px, py); c.lineTo(px + Math.cos(a) * 12 * (1 - k), py + Math.sin(a) * 10 * (1 - k)); c.stroke(); }
-  c.globalAlpha = 0.85; c.strokeStyle = C[1]; c.lineWidth = 3 + u * 2; c.shadowColor = C[0]; c.shadowBlur = 12; c.beginPath(); c.arc(x, y, 46 - u * 26, 0, 7); c.stroke();
+  const C = EX_EL_COL[el] || EX_EL_COL.Brawl; u = Math.min(1, Math.max(0, u)); c.save(); c.lineCap = 'round'; c.lineJoin = 'round';
+  const pool = (r, a) => { const g = c.createRadialGradient(x, GROUND, 2, x, GROUND, r); g.addColorStop(0, C[1]); g.addColorStop(0.5, C[0] + '88'); g.addColorStop(1, C[0] + '00'); c.globalAlpha = a; c.fillStyle = g; c.beginPath(); c.ellipse(x, GROUND, r, r * 0.22, 0, 0, 7); c.fill(); c.globalAlpha = 1; };
+  const R = k => { const v = Math.sin(k * 127.1 + Math.floor(t / 60) * 311.7) * 43758.5; return v - Math.floor(v); };
+  if (el === 'Spark') {   // arcs crawl over its body and jump to the ground
+    pool(34, 0.5 + 0.3 * R(1));
+    for (let i = 0; i < 4 + Math.floor(u * 4); i++) { const a0 = R(i + 2) * 6.28, r0 = 14 + R(i + 9) * 8; let px = x + Math.cos(a0) * r0, py = y + Math.sin(a0) * r0 * 0.9; const pts = [[px, py]];
+      for (let k = 0; k < 4; k++) { px += (R(i * 7 + k) - 0.5) * 16; py += (R(i * 5 + k + 3) - 0.3) * 12; pts.push([px, py]); }
+      for (const [w, col] of [[6, C[0] + '66'], [3, C[0]], [1.2, '#fff']]) { c.strokeStyle = col; c.lineWidth = w; c.beginPath(); pts.forEach(([a, b], k) => k ? c.lineTo(a, b) : c.moveTo(a, b)); c.stroke(); } }
+    c.globalAlpha = 0.35 + 0.4 * R(5); const g = c.createRadialGradient(x, y, 2, x, y, 30); g.addColorStop(0, '#fff'); g.addColorStop(1, '#ffe14d00'); c.fillStyle = g; c.fillRect(x - 30, y - 30, 60, 60); }
+  else if (el === 'Blaze') { pool(36, 0.6); for (let i = 0; i < 7; i++) { const fx = x + (i - 3) * 6, k = Math.min(1, u * 2 - Math.abs(i - 3) * 0.1); if (k > 0) { c.globalAlpha = 0.85; exFlame(c, fx, GROUND - 2, 4 + (i % 2) * 2, (14 + 10 * Math.sin(t / 80 + i * 1.9)) * k * (1 + u * 0.5), Math.sin(t / 110 + i) * 2); } }
+    for (let i = 0; i < 8; i++) { const k = (u * 1.5 + i / 8) % 1; c.globalAlpha = 1 - k; c.fillStyle = '#ffd34d'; c.beginPath(); c.arc(x + Math.sin(i * 2.3 + t / 300) * 18, y + 10 - k * 46, 1.6, 0, 7); c.fill(); } }
+  else if (el === 'Steel') { pool(30, 0.4); for (let i = 0; i < 3; i++) { const a = t / 120 + i * 2.09, r = 26 - u * 8; c.save(); c.translate(x + Math.cos(a) * r, y + Math.sin(a) * r * 0.5); c.rotate(a + 1.2);
+      const g = c.createLinearGradient(-10, 0, 10, 0); g.addColorStop(0, '#8a96a3'); g.addColorStop(0.5, '#ffffff'); g.addColorStop(1, '#8a96a3'); c.fillStyle = g; c.beginPath(); c.moveTo(-11, 0); c.quadraticCurveTo(0, -5, 11, -1); c.quadraticCurveTo(0, 2, -11, 0); c.fill(); c.restore(); }
+    if ((t / 90 | 0) % 3 === 0) { c.fillStyle = '#fff'; const gx = x + 10, gy = y - 12; c.beginPath(); for (let i = 0; i < 8; i++) { const a = i * 0.785, r = i % 2 ? 2 : 9; c.lineTo(gx + Math.cos(a) * r, gy + Math.sin(a) * r); } c.fill(); } }
+  else if (el === 'Charm') { pool(30, 0.4); for (let i = 0; i < 9; i++) { const a = i * 0.7 + t / 500, k = ((u * 1.6 + i / 9) % 1), d = 40 * (1 - k) + 6, hx = x + Math.cos(a) * d, hy = y + Math.sin(a) * d * 0.7 - 6, r = 3 + (i % 3);
+      c.globalAlpha = k; c.fillStyle = i % 2 ? '#ff6fae' : '#ffc2df'; c.beginPath(); c.moveTo(hx, hy + r); c.bezierCurveTo(hx - r * 1.6, hy - r * 0.2, hx - r * 0.6, hy - r * 1.4, hx, hy - r * 0.4); c.bezierCurveTo(hx + r * 0.6, hy - r * 1.4, hx + r * 1.6, hy - r * 0.2, hx, hy + r); c.fill(); } }
+  else if (el === 'Light') { c.globalAlpha = 0.5 * u; const g = c.createLinearGradient(0, y - 70, 0, y + 14); g.addColorStop(0, '#fffbe000'); g.addColorStop(1, '#fffbe0'); c.fillStyle = g; c.fillRect(x - 16, y - 70, 32, 84);
+    c.globalAlpha = 0.9; c.strokeStyle = '#ffd76a'; c.lineWidth = 2.5; c.shadowColor = '#ffd76a'; c.shadowBlur = 10; c.beginPath(); c.ellipse(x, y - 26, 12 * u + 2, 3.5, 0, 0, 7); c.stroke(); c.shadowBlur = 0;
+    for (let i = 0; i < 10; i++) { const k = (u * 1.3 + i / 10) % 1; c.globalAlpha = (1 - k) * 0.9; c.fillStyle = '#fffbe0'; c.beginPath(); c.arc(x + Math.sin(i * 2.9) * 22, y + 16 - k * 50, 1.8, 0, 7); c.fill(); } }
+  else if (el === 'Shade') { c.fillStyle = '#1a1028'; c.globalAlpha = 0.75; c.beginPath(); c.ellipse(x, GROUND, 14 + u * 26, 3 + u * 5, 0, 0, 7); c.fill();
+    for (let i = 0; i < 6; i++) { const bx = x + (i - 2.5) * 8, h = (16 + (i % 3) * 8) * u * (0.8 + 0.2 * Math.sin(t / 150 + i)); c.strokeStyle = i % 2 ? '#5a3f86' : '#2e2046'; c.lineWidth = 4; c.globalAlpha = 0.8;
+      c.beginPath(); c.moveTo(bx, GROUND); c.bezierCurveTo(bx + 6 * Math.sin(t / 200 + i), GROUND - h * 0.5, bx - 6, GROUND - h * 0.8, bx + 3 * Math.sin(t / 130 + i), GROUND - h); c.stroke(); }
+    c.globalAlpha = 0.3; c.fillStyle = '#a68ad6'; c.beginPath(); c.arc(x, y, 22, 0, 7); c.fill(); }
+  else if (el === 'Frost') { pool(32, 0.4); c.strokeStyle = '#eaf8ff'; c.lineWidth = 1.5;
+    for (let i = 0; i < 8; i++) { const a = i * 0.785 + t / 600, d = 34 - u * 14, fx = x + Math.cos(a) * d, fy = y + Math.sin(a) * d * 0.7; c.globalAlpha = 0.9; for (let k = 0; k < 3; k++) { const b = k * 1.047; c.beginPath(); c.moveTo(fx - Math.cos(b) * 4, fy - Math.sin(b) * 4); c.lineTo(fx + Math.cos(b) * 4, fy + Math.sin(b) * 4); c.stroke(); } }
+    for (let i = 0; i < 5; i++) { const sx = x + (i - 2) * 9, h = (5 + (i % 2) * 5) * u; c.fillStyle = '#bfe8ff'; c.globalAlpha = 0.85; c.beginPath(); c.moveTo(sx - 3, GROUND); c.lineTo(sx, GROUND - h); c.lineTo(sx + 3, GROUND); c.fill(); } }
+  else if (el === 'Tide') { for (let i = 0; i < 3; i++) { const a0 = t / 160 + i * 2.09; c.strokeStyle = i % 2 ? '#3ea0e0' : '#bfe8ff'; c.lineWidth = 4 - i; c.globalAlpha = 0.85;
+      c.beginPath(); for (let k = 0; k <= 16; k++) { const a = a0 + k * 0.2, r = 30 - u * 8 - k * 0.6; k ? c.lineTo(x + Math.cos(a) * r, y + Math.sin(a) * r * 0.55) : c.moveTo(x + Math.cos(a) * r, y + Math.sin(a) * r * 0.55); } c.stroke(); }
+    for (let i = 0; i < 8; i++) { const a = i + t / 200; c.fillStyle = '#7cc6f0'; c.globalAlpha = 0.8; c.beginPath(); c.ellipse(x + Math.cos(a) * 28, y + Math.sin(a) * 14, 1.6, 2.4, 0, 0, 7); c.fill(); } }
+  else if (el === 'Speed') { for (let i = 0; i < 12; i++) { const yy = y - 24 + i * 4.5, k = ((t / 200 + i * 0.37) % 1); c.globalAlpha = 0.7 * (1 - k); c.strokeStyle = '#ffffff'; c.lineWidth = 1.6; c.beginPath(); c.moveTo(x + 40 - k * 90, yy); c.lineTo(x + 40 - k * 90 - 18 - u * 14, yy); c.stroke(); }
+    if (Math.sin(t / 60) > 0.6) { c.fillStyle = '#d8cfc2'; c.globalAlpha = 0.6; c.beginPath(); c.arc(x - 10, GROUND - 3, 5, 0, 7); c.fill(); } }
+  else if (el === 'Mind') { c.globalAlpha = 0.5 + 0.3 * u; const g = c.createRadialGradient(x, y - 14, 1, x, y - 14, 28); g.addColorStop(0, '#f1e6ff'); g.addColorStop(1, '#b48cff00'); c.fillStyle = g; c.fillRect(x - 28, y - 42, 56, 56);
+    const sig = ['△', '□', '○', '✦', '◇']; c.font = '700 11px system-ui'; c.textAlign = 'center';
+    for (let i = 0; i < 5; i++) { const a = t / 400 + i * 1.256, r = 30 - u * 6; c.globalAlpha = 0.85; c.fillStyle = '#d9c4ff'; c.fillText(sig[i], x + Math.cos(a) * r, y - 10 + Math.sin(a) * r * 0.45); } }
+  else if (el === 'Insight') { for (let k = 0; k < 3; k++) { const v = ((t / 700) + k / 3) % 1; c.globalAlpha = (1 - v) * 0.7; c.strokeStyle = '#6fe0cc'; c.lineWidth = 2; c.beginPath(); c.ellipse(x + 10 + v * 50, y - 6, 4 + v * 20, 10 + v * 30, 0, -1.2, 1.2); c.stroke(); }
+    c.globalAlpha = 0.8; c.fillStyle = '#fff'; c.beginPath(); for (let i = 0; i < 8; i++) { const a = i * 0.785, r = i % 2 ? 1.5 : 6 * u + 2; c.lineTo(x + 6 + Math.cos(a) * r, y - 14 + Math.sin(a) * r); } c.fill(); }
+  else if (el === 'Grit') { pool(34, 0.4); for (let i = 0; i < 4; i++) { const k = ((t / 500) + i / 4) % 1; c.globalAlpha = (1 - k) * 0.6; c.fillStyle = '#f2ece4'; c.beginPath(); c.arc(x + (i % 2 ? 10 : -10) + k * (i % 2 ? 8 : -8), y - 22 - k * 24, 3 + k * 7, 0, 7); c.fill(); }
+    c.globalAlpha = 0.25 + 0.2 * Math.sin(t / 70); c.fillStyle = '#ff5a3a'; c.beginPath(); c.arc(x, y, 20, 0, 7); c.fill(); }
+  else if (el === 'Stone') { pool(34, 0.5); for (let i = 0; i < 5; i++) { const a = t / 260 + i * 1.256, r = 30 - u * 6, rx = x + Math.cos(a) * r, ry = y + 6 + Math.sin(a) * r * 0.35 - u * 10 - Math.sin(t / 150 + i) * 3;
+      c.fillStyle = i % 2 ? '#9a8a74' : '#7d6f5c'; SC.blob(c, rx, ry, [[0, 0, 3.5], [2, 1, 2.5]]); c.fill(); } }
+  else { pool(40, 0.5 + 0.4 * u);
+    for (let i = 0; i < 16; i++) { const a = i * 2.4 + i * i * 0.13, k = ((u * 2.2 + i * 0.137) % 1), d = 70 * (1 - k) + 8, px = x + Math.cos(a) * d, py = y + Math.sin(a) * d * 0.8;
+      c.globalAlpha = k * (0.9 - u * 0.2); c.strokeStyle = i % 2 ? C[0] : C[1]; c.lineWidth = 2.5; c.beginPath(); c.moveTo(px, py); c.lineTo(px + Math.cos(a) * 12 * (1 - k), py + Math.sin(a) * 10 * (1 - k)); c.stroke(); }
+    c.globalAlpha = 0.85; c.strokeStyle = C[1]; c.lineWidth = 3 + u * 2; c.shadowColor = C[0]; c.shadowBlur = 12; c.beginPath(); c.arc(x, y, 46 - u * 26, 0, 7); c.stroke(); }
+  c.restore();
+}
+/* a forked bolt between two points: a wide soft glow, the yellow body and a white core, re-forked every few frames */
+function exBolt(c, x1, y1, x2, y2, seed, w = 1) {
+  const R = k => { const v = Math.sin(k * 91.7 + seed * 13.1) * 43758.5; return v - Math.floor(v); }, n = 9, pts = [[x1, y1]], dx = x2 - x1, dy = y2 - y1, L = Math.hypot(dx, dy), nx = -dy / L, ny = dx / L;
+  for (let i = 1; i < n; i++) { const f = i / n, j = (R(i) - 0.5) * L * 0.22 * Math.sin(f * Math.PI); pts.push([x1 + dx * f + nx * j, y1 + dy * f + ny * j]); } pts.push([x2, y2]);
+  const path = P => { c.beginPath(); P.forEach(([a, b], k) => k ? c.lineTo(a, b) : c.moveTo(a, b)); };
+  c.save(); c.lineCap = 'round'; c.lineJoin = 'round';
+  for (const [lw, col, blur] of [[14 * w, 'rgba(255,225,77,.25)', 18], [6 * w, '#ffe14d', 8], [2.4 * w, '#ffffff', 0]]) { c.strokeStyle = col; c.lineWidth = lw; c.shadowColor = '#ffe14d'; c.shadowBlur = blur; path(pts); c.stroke();
+    for (let b = 2; b < n - 1; b += 3) { const [bx, by] = pts[b], br = [[bx, by]]; let px = bx, py = by; for (let k = 0; k < 3; k++) { px += dx / n * 0.6 + nx * (R(b * 9 + k) - 0.3) * 18; py += dy / n * 0.6 + ny * (R(b * 5 + k) - 0.3) * 18; br.push([px, py]); }
+      c.lineWidth = lw * 0.5; path(br); c.stroke(); } }
+  c.restore();
+}
+/* what a cast or thrown move looks like in the air, one per element */
+function exShot(c, p, u, t) {
+  const { x, y, x2, y2, el } = p, C = EX_EL_COL[el] || EX_EL_COL.Brawl, hx = x + (x2 - x) * u, hy = y + (y2 - y) * u - Math.sin(u * Math.PI) * (el === 'Charm' ? 16 : 0), a = Math.atan2(y2 - y, x2 - x);
+  c.save(); c.lineCap = 'round';
+  if (el === 'Spark') { const flick = Math.floor(t / 40); exBolt(c, x, y, x + (x2 - x) * Math.min(1, u * 1.2), y + (y2 - y) * Math.min(1, u * 1.2), flick, 1.2); if (u >= 1) exBolt(c, x, y - 4, x2, y2 + 4, flick + 7, 0.6); }
+  else if (el === 'Light') { const w = 10 + 6 * Math.sin(t / 40); c.translate(x, y); c.rotate(a); const L = Math.hypot(x2 - x, y2 - y) * Math.min(1, u * 1.3);
+    const g = c.createLinearGradient(0, -w, 0, w); g.addColorStop(0, '#ffd76a00'); g.addColorStop(0.3, '#ffd76a'); g.addColorStop(0.5, '#ffffff'); g.addColorStop(0.7, '#ffd76a'); g.addColorStop(1, '#ffd76a00');
+    c.fillStyle = g; c.shadowColor = '#ffd76a'; c.shadowBlur = 20; c.fillRect(0, -w, L, w * 2); c.fillStyle = '#fff'; c.beginPath(); c.arc(0, 0, w * 0.9, 0, 7); c.fill(); }
+  else if (el === 'Tide') { c.translate(x, y); c.rotate(a); const L = Math.hypot(x2 - x, y2 - y) * Math.min(1, u * 1.2);
+    for (const [w, col] of [[11, '#2f86c9'], [7, '#3ea0e0'], [3, '#d6f1ff']]) { c.fillStyle = col; c.beginPath(); c.moveTo(0, -w * 0.5); for (let k = 0; k <= 12; k++) { const xx = L * k / 12; c.lineTo(xx, -w * (0.5 + 0.3 * k / 12) + Math.sin(t / 50 + k) * 1.5); } for (let k = 12; k >= 0; k--) { const xx = L * k / 12; c.lineTo(xx, w * (0.5 + 0.3 * k / 12) + Math.sin(t / 60 + k * 1.3) * 1.5); } c.fill(); }
+    for (let i = 0; i < 6; i++) { c.fillStyle = '#bfe8ff'; c.beginPath(); c.arc(L * ((t / 300 + i / 6) % 1), Math.sin(i * 3 + t / 70) * 6, 1.6, 0, 7); c.fill(); } }
+  else if (el === 'Shade') { for (let i = 0; i < 6; i++) { const k = i / 6, tx = hx - Math.cos(a) * k * 30, ty = hy - Math.sin(a) * k * 30 + Math.sin(t / 60 + i) * 3; c.globalAlpha = (1 - k) * 0.6; c.fillStyle = i % 2 ? '#5a3f86' : '#2e2046'; c.beginPath(); c.arc(tx, ty, 9 - k * 6, 0, 7); c.fill(); }
+    c.globalAlpha = 1; const g = c.createRadialGradient(hx - 3, hy - 3, 1, hx, hy, 13); g.addColorStop(0, '#5a3f86'); g.addColorStop(0.7, '#1a1028'); g.addColorStop(1, '#a68ad6'); c.fillStyle = g; c.beginPath(); c.arc(hx, hy, 13, 0, 7); c.fill(); c.strokeStyle = '#a68ad6'; c.lineWidth = 2; c.stroke(); }
+  else if (el === 'Frost') { for (let i = 0; i < 3; i++) { const v = Math.max(0, Math.min(1, u * 1.3 - i * 0.15)), ix = x + (x2 - x) * v, iy = y + (y2 - y) * v + (i - 1) * 9; c.save(); c.translate(ix, iy); c.rotate(a);
+      const g = c.createLinearGradient(-18, 0, 8, 0); g.addColorStop(0, '#8fd3ff00'); g.addColorStop(1, '#eaf8ff'); c.fillStyle = g; c.fillRect(-26, -2, 20, 4); c.fillStyle = '#bfe8ff'; c.strokeStyle = '#fff'; c.lineWidth = 1;
+      c.beginPath(); c.moveTo(10, 0); c.lineTo(-8, -4.5); c.lineTo(-6, 0); c.lineTo(-8, 4.5); c.closePath(); c.fill(); c.stroke(); c.restore(); } }
+  else if (el === 'Charm') { const r = 10 + Math.sin(t / 60) * 1.5; c.translate(hx, hy); c.rotate(Math.sin(t / 90) * 0.3); c.shadowColor = '#ff8fc4'; c.shadowBlur = 14; c.fillStyle = '#ff6fae';
+    c.beginPath(); c.moveTo(0, r); c.bezierCurveTo(-r * 1.6, -r * 0.2, -r * 0.6, -r * 1.4, 0, -r * 0.4); c.bezierCurveTo(r * 0.6, -r * 1.4, r * 1.6, -r * 0.2, 0, r); c.fill(); c.fillStyle = '#ffd6ea'; c.beginPath(); c.arc(-r * 0.45, -r * 0.45, r * 0.22, 0, 7); c.fill(); }
+  else { c.shadowColor = C[0]; c.shadowBlur = 14; c.strokeStyle = C[0]; c.lineWidth = 12; c.globalAlpha = 0.6; const tx = x + (x2 - x) * Math.max(0, u - 0.45), ty = y + (y2 - y) * Math.max(0, u - 0.45);
+    c.beginPath(); c.moveTo(tx, ty); c.lineTo(hx, hy); c.stroke(); c.globalAlpha = 1;
+    if (el === 'Blaze') { c.save(); c.translate(hx, hy); c.rotate(a - Math.PI / 2); exFlame(c, 0, 0, 9, 30, Math.sin(t / 40) * 3); c.restore(); }
+    c.fillStyle = C[1]; c.beginPath(); c.arc(hx, hy, 9, 0, 7); c.fill(); }
+  c.restore();
+}
+/* three steel claws raked through on a slant: tapered blades of light that leave glowing gouges and sparks */
+function exClaw(c, x, y, u, t) {
+  c.save(); c.lineCap = 'round';
+  for (let i = 0; i < 3; i++) { const o = (i - 1) * 22, draw = Math.min(1, u * 5 - i * 0.25), fade = 1 - Math.max(0, u - 0.4) / 0.6; if (draw <= 0) continue;
+    const x0 = x - 40 + o, y0 = y - 34 + o * 0.3, x1 = x + 36 + o, y1 = y + 30 + o * 0.3, mx = x + o + 14, my = y - 4 + o * 0.3, n = 18, pts = [];
+    for (let k = 0; k <= n * draw; k++) { const f = k / n, qx = (1 - f) * (1 - f) * x0 + 2 * (1 - f) * f * mx + f * f * x1, qy = (1 - f) * (1 - f) * y0 + 2 * (1 - f) * f * my + f * f * y1; pts.push([qx, qy, Math.sin(f * Math.PI)]); }
+    for (const [w, col, blur] of [[12, 'rgba(185,196,207,.35)', 14], [6, '#dfe6ee', 6], [2.4, '#ffffff', 0]]) { c.globalAlpha = fade; c.strokeStyle = col; c.shadowColor = '#cfe6ff'; c.shadowBlur = blur;
+      for (let k = 1; k < pts.length; k++) { c.lineWidth = w * (0.2 + pts[k][2] * 0.8); c.beginPath(); c.moveTo(pts[k - 1][0], pts[k - 1][1]); c.lineTo(pts[k][0], pts[k][1]); c.stroke(); } }
+    if (draw >= 1) for (let k = 0; k < 5; k++) { const v = Math.min(1, (u - 0.2) * 2), a = -0.6 + k * 0.35 + i, d = 10 + v * 30; c.globalAlpha = (1 - v) * fade; c.fillStyle = k % 2 ? '#fff6c8' : '#ffffff'; c.fillRect(x1 + Math.cos(a) * d - 1.5, y1 - 10 + Math.sin(a) * d - 1.5, 3, 3); } }
+  c.restore();
+}
+/* stone spikes thrust up from the ground under the target */
+function exSpikes(c, x, y, h) {
+  if (h <= 0) return; c.save();
+  c.fillStyle = 'rgba(40,28,18,.35)'; c.beginPath(); c.ellipse(x, y + 1, 34, 5, 0, 0, 7); c.fill();
+  for (const [dx, H, w] of [[-20, 30, 9], [-6, 46, 12], [10, 40, 11], [22, 26, 8]]) { const hh = H * h; c.fillStyle = '#7d6f5c'; c.beginPath(); c.moveTo(x + dx - w, y + 2); c.lineTo(x + dx - 1, y - hh); c.lineTo(x + dx + w, y + 2); c.fill();
+    c.fillStyle = '#ab9c82'; c.beginPath(); c.moveTo(x + dx - 1, y - hh); c.lineTo(x + dx + w, y + 2); c.lineTo(x + dx + 2, y + 2); c.fill(); c.fillStyle = 'rgba(255,255,255,.25)'; c.beginPath(); c.moveTo(x + dx - 1, y - hh); c.lineTo(x + dx - w * 0.4, y - hh * 0.4); c.lineTo(x + dx - 1, y - hh * 0.5); c.fill(); }
   c.restore();
 }
 /* comic impact lines bursting out from where the hit lands */
@@ -444,6 +561,64 @@ function exPillar(c, x, y, u, t) {
   for (let i = 0; i < 10; i++) { const k = (u * 1.5 + i / 10) % 1; c.globalAlpha = (1 - k) * 0.9; c.fillStyle = '#fff'; c.beginPath(); c.arc(x + Math.sin(i * 3 + t / 200) * w * 0.8, y - k * 150, 1.8, 0, 7); c.fill(); }
   c.restore();
 }
+/* ---------- a chest: it rattles, light leaks from the seams, the lid bursts open and the find rises out ---------- */
+const EX_ITEM_COL = { Berry: '#e2483f', 'Energy nut': '#a8692e', 'Honey cake': '#f2b33d', 'Cool leaf': '#5fbf6a', Medicine: '#f4f4f4', Candy: '#ff8fc4', 'Stat seed': '#ffd23f', 'Lucky bit': '#f2c14e', 'Element stone': '#a77ef0' };
+function exChestDraw(c, p, t) {
+  const s = p.s || 1.4, sh = p.shake ? Math.sin(t / 25) * p.shake : 0; c.save(); c.translate(p.x + sh, p.y); c.rotate(sh * 0.02); c.translate(-(p.x + sh), -p.y);
+  XA.chest(c, p.x + sh, p.y, p.open, t, s);
+  if (!p.open && p.glow > 0) { const W = 30 * s, top = p.y - 17 * s; c.globalAlpha = p.glow; c.strokeStyle = '#fff2b0'; c.lineWidth = 2; c.shadowColor = '#ffd76a'; c.shadowBlur = 12;
+    c.beginPath(); c.moveTo(p.x - W / 2 + 2, top); c.lineTo(p.x + W / 2 - 2, top); c.stroke();
+    for (let i = 0; i < 5; i++) { const a = -Math.PI / 2 + (i - 2) * 0.3, L = 10 + 14 * p.glow + Math.sin(t / 60 + i) * 3; c.globalAlpha = p.glow * 0.6; c.beginPath(); c.moveTo(p.x + (i - 2) * 6, top); c.lineTo(p.x + (i - 2) * 6 + Math.cos(a) * L, top + Math.sin(a) * L); c.stroke(); } }
+  c.restore();
+}
+function exItemDraw(c, p, t) {
+  const u = Math.min(1, p.u || 0), x = p.x, y = p.y - 50 * (1 - Math.pow(1 - u, 3)) + Math.sin(t / 200) * 2 * u, col = EX_ITEM_COL[p.item] || '#ffd23f', r = 9 + 3 * u; c.save();
+  const g = c.createRadialGradient(x, y, 2, x, y, 34); g.addColorStop(0, '#fffbe0'); g.addColorStop(0.4, '#ffd76a88'); g.addColorStop(1, '#ffd76a00'); c.fillStyle = g; c.fillRect(x - 34, y - 34, 68, 68);
+  c.strokeStyle = '#fff6c8'; c.lineWidth = 2; for (let i = 0; i < 10; i++) { const a = i * 0.628 + t / 900, r0 = 14, r1 = 22 + 6 * Math.sin(t / 150 + i); c.globalAlpha = 0.7; c.beginPath(); c.moveTo(x + Math.cos(a) * r0, y + Math.sin(a) * r0); c.lineTo(x + Math.cos(a) * r1, y + Math.sin(a) * r1); c.stroke(); }
+  c.globalAlpha = 1; SC.depth(c, () => { c.beginPath(); c.arc(x, y, r, 0, 7); }, col, 1.5, 0.3); c.fillStyle = 'rgba(255,255,255,.6)'; c.beginPath(); c.arc(x - r * 0.35, y - r * 0.35, r * 0.3, 0, 7); c.fill();
+  c.restore();
+}
+async function exChest(item, big) {
+  const s = RS, ch = prop({ k: 'chest2', x: 150, y: GROUND, s: big ? 1.8 : 1.4, open: false, glow: 0, shake: 0 }); await walkTo(118, 60, 'walk'); s.pose = 'idle';
+  exFocus(140, 1.75); exDim(0.35); spark(s.x, headY() - 8, 'q'); await rwait(500);
+  try {
+    for (let i = 0; i < 3; i++) { ch.shake = 2 + i; rsfx('rattle'); await rwait(260); ch.shake = 0; await rwait(160); }
+    exSfx('charge'); ch.shake = 1.5; await exTween(700, u => { ch.glow = u; }); ch.shake = 0;
+    ch.open = true; ch.glow = 0; rsfx('creak'); exSfx('rays'); exFlash('#fff2b0', 0.7, 320); exShake(4, 300); prop({ k: 'exburst', el: 'Light', x: 150, y: GROUND - 30, t0: exNow(), k2: big ? 1.5 : 1.1 });
+    const it = prop({ k: 'exitem', item, x: 150, y: GROUND - 24, u: 0 }); s.pose = 'happy'; await exTween(600, u => { it.u = u; });
+    exSfx('win'); spark(150, GROUND - 74, 'sparkle', 10); banner(`${/^[AEIOU]/.test(item) ? 'An' : 'A'} ${item}!`, '#ffe9a8'); await hop(10, 300); await rwait(900); banner(''); unprop(it);
+  } finally { exCalm(); unprop(ch); }
+}
+
+/* ---------- the secret fight at the end of an expedition: a wild Snabit that has followed them, fought on its own ---------- */
+// the grade it comes at: up to the ranch's own, one above when the Snabit's stats are strong enough for it, and the
+// strongest one its stats suit within that
+function exSecretFoe(s, reg) {
+  const ri = Math.min(5, rankIdx()), f = playerFighter(s), avg = ['pow', 'grd', 'mnd', 'spr', 'spd'].reduce((a, k) => a + f.base[k], 0) / 5;
+  let cap = ri; if (ri < 5 && avg >= exNeed(GRADES[ri + 1]) * 0.95) cap = ri + 1;
+  let g = 0; for (let i = 0; i <= cap; i++) if (exNeed(GRADES[i]) <= avg * 1.1) g = i;
+  if (g > 0 && Math.random() < 0.3) g--;
+  const grade = GRADES[g], G = GRADE_INFO[grade], over = clamp(avg / exNeed(grade) - 0.9, 0, 0.6) / 0.6, lv = Math.round(G.lv[0] + (G.lv[1] - G.lv[0]) * over);
+  const foe = gradedOpponent(grade, lv, Math.random, reg.rift ? null : reg.el); return { foe, grade };
+}
+async function exSecret(reg, nm, K, found) {
+  const s = RS; if (Math.random() > 0.5) return;
+  const { foe, grade } = exSecretFoe(s, reg), G = GRADE_INFO[grade], prize = Math.round(G.purse * 0.75);
+  await sceneFade(true, 300); s.props = []; s.x = 80; s.dusk = 1; s.camJump = true; await sceneFade(false, 400);
+  const bush = prop({ k: 'xbush', x: 190, y: GROUND, col: '#3f6a2e', shake: 1 }); K('Wait. Something has been following us.'); exSfx('rumble'); await rwait(1400);
+  exFocus(140, 1.5); exDim(0.5); bush.shake = 0; const fp = prop({ k: 'foe', x: 190, y: GROUND, grid: foe.fm.grid, pal: foe.fm.pal, fm: foe.fm, jy: 0 });
+  prop({ k: 'exlines', x: 175, y: GROUND - 30, t0: exNow() }); exSfx('growl'); exSfx('impact'); exFlash('#ffffff', 0.6, 260); exShake(8, 500);
+  await exTween(420, u => { fp.x = 190 - 20 * u; fp.jy = -Math.sin(u * Math.PI) * 30; }); fp.jy = 0; await exFreeze(140);
+  banner('A secret fight', '#ff8a5c'); K(`A wild ${foe.m.name} jumped out of the bushes!`); await rwait(1800); banner(''); exCalm();
+  await sceneFade(true, 400); let won = false;
+  await new Promise(done => arenaFight({ s: fightSnapshot(s), foe, mode: 'auto', title: 'Secret fight', noDraw: true, onEnd: r => { won = !!(r && r.winner === 0); done(); } }));
+  unprop(fp); unprop(bush); s.trip = true; s.camJump = true; s.pose = won ? 'happy' : 'tired'; await sceneFade(false, 400);
+  if (won) { PLAYER.bits += prize; drawUI(); found.push(`${prize.toLocaleString()} bits`); exSfx('win'); spark(s.x, headY() - 6, 'sparkle', 10); await hop(14, 360);
+    K(`${nm} won the secret fight, and the League pays ${prize.toLocaleString()} bits for a ${foe.m.name} like that.`); await rwait(2200); }
+  else { s.stress += 4; clampAll(); K(`That ${foe.m.name} was too much for ${nm} this time.`); await rwait(2000); }
+  s.dusk = 0;
+}
+
 /* map icons and props for the teacher's camp and a stop on the path */
 function exTent(c, x, y, s) {
   SC.depth(c, () => { c.beginPath(); c.moveTo(x - 20 * s, y); c.lineTo(x, y - 26 * s); c.lineTo(x + 20 * s, y); c.closePath(); }, '#d9a14a', 2 * s, 0.3);
