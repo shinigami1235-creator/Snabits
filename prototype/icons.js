@@ -15,6 +15,7 @@ const ICONS = (() => {
     Up: `<path d="M6 21l10-11 10 11z" fill="#fff4dc" ${O}/>`, Down: `<path d="M6 11l10 11 10-11z" fill="#fff4dc" ${O}/>`,
     Shove: `<path d="M9 27V14a2 2 0 0 1 4 0V9a2 2 0 0 1 4 0v-1a2 2 0 0 1 4 0v2a2 2 0 0 1 4 0v10c0 4-3 7-7 7z" fill="#ffd9b3" ${O}/><path d="M13 14v4M17 9v8M21 10v7" stroke="#3a2618" stroke-width="1.6" stroke-linecap="round"/>`,
     Auto: `<path d="M25 13a9.5 9.5 0 0 0-17-3" fill="none" stroke="#3a2618" stroke-width="4.4" stroke-linecap="round"/><path d="M25 13a9.5 9.5 0 0 0-17-3" fill="none" stroke="#7cc35a" stroke-width="2" stroke-linecap="round"/><path d="M7 19a9.5 9.5 0 0 0 17 3" fill="none" stroke="#3a2618" stroke-width="4.4" stroke-linecap="round"/><path d="M7 19a9.5 9.5 0 0 0 17 3" fill="none" stroke="#7cc35a" stroke-width="2" stroke-linecap="round"/><path d="M5 6l3 5 5-2z M27 26l-3-5-5 2z" fill="#7cc35a" ${O}/>`,
+    Dodge: `<path d="M24 22a9 9 0 1 0-15-8" fill="none" stroke="#3a2618" stroke-width="4.4" stroke-linecap="round"/><path d="M24 22a9 9 0 1 0-15-8" fill="none" stroke="#8fd3ff" stroke-width="2.4" stroke-linecap="round"/><path d="M4 11l5 6 5-5z" fill="#8fd3ff" ${O}/>`,
     Skip: `<path d="M4 8l11 8-11 8zM16 8l11 8-11 8z" fill="#fff4dc" ${O}/>`,
     Music: `<path d="M12 23V8l14-3v15" fill="none" ${O}/><circle cx="9" cy="23" r="3.5" fill="#5cb8ff" ${O}/><circle cx="23" cy="20" r="3.5" fill="#5cb8ff" ${O}/>`
   };
@@ -28,7 +29,7 @@ function iconize() {
   document.querySelectorAll('#r-menu .rb').forEach(b => put(b, b.dataset.m, true, 28));
   put(document.getElementById('r-info'), 'Info', true, 20); put(document.getElementById('r-gear'), 'Menu', false, 22);
   const co = document.getElementById('r-coins'); if (co && !co.querySelector('.ic')) co.insertAdjacentHTML('afterbegin', ICON('Bits', 22));
-  for (const [id, n] of [['at-l', 'Left'], ['at-r', 'Right'], ['at-up', 'Up'], ['at-dn', 'Down'], ['at-auto', 'Auto']]) put(document.getElementById(id), n, false, 28);
+  for (const [id, n] of [['at-l', 'Left'], ['at-r', 'Right'], ['at-up', 'Up'], ['at-dn', 'Down'], ['at-dodge', 'Dodge']]) put(document.getElementById(id), n, false, 28);
   const sh = document.getElementById('at-shove'); if (sh) { const skip = /Skip/.test(sh.textContent); if (skip) { if (sh.dataset.ic !== 'Skip') { sh.dataset.ic = 'Skip'; sh.innerHTML = ICON('Skip', 22) + '<span>Skip</span>'; sh.style.gap = '6px'; } } else put(sh, 'Shove', false, 28); }
 }
 

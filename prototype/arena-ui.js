@@ -45,7 +45,7 @@ function atStyle(){
 #atest .ctl3{display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:56px 64px;gap:6px;padding:8px 12px calc(env(safe-area-inset-bottom,0px) + 10px);background:#14151d}
 #atest .ctl3 .btn{font-size:20px}#atest .ctl3 .walk{font-size:26px}#atest .ctl3 svg{width:24px;height:24px}#atest .ctl3 .off{opacity:.35}#atest .ctl3 .on{border-color:#ffc93c;color:#ffc93c}
 #atest .atk{grid-column:2/4;flex-direction:column;gap:1px;background:#ffc93c;color:#14151d;border-color:#ffc93c;font-size:16px}#atest .atk small{font-size:10px;font-weight:600;opacity:.8}
-#atest .ctl3 .btn:disabled{opacity:.3}
+#atest .ctl3 .btn:disabled{opacity:.3}#atest .ctl3 .dodge{position:relative;isolation:isolate}#atest .ctl3 .dodge::before{content:"";position:absolute;inset:3px;border-radius:inherit;z-index:-1;background:conic-gradient(rgba(143,211,255,.55) var(--cd,360deg),rgba(20,16,30,.45) 0)}#atest .ctl3 .dodge.cool{filter:saturate(.5)}
 #atest .atk.poor{background:#3a3d52;color:#ff8a7a;border-color:#ff8a7a}#atest .atk.wait{filter:saturate(.4) brightness(.75)}
 #atest .atk.no{animation:atno .3s}@keyframes atno{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
 #atest .res{position:absolute;left:16px;right:16px;top:30%;background:#1d1f2b;border:2px solid #ffc93c;border-radius:14px;padding:16px;text-align:center}
@@ -93,6 +93,8 @@ function atMake(src,R,level,grade){
   if(src.kind==="scan") f.name=src.m.name;
   return {f,o,spec:typeof chibiSpec==="function"?chibiSpec(o.fm):null,level:lv};
 }
+/* the fight plays itself on the Snabit's habits: Auto fights, and the test drivers */
+function atSetAuto(on){ if(!AT||!AT.ar) return; AT.auto=!!on; AT.ar.p[0].ai=on?"smart":"human"; }
 function atStop(){ if(AT){ cancelAnimationFrame(AT.raf); AT=null; } }
 function atStart(meFam,foeFam){   // picks: see atMake
   atStop(); const R=Math.random, A=atMake(meFam,R), B=atMake(foeFam,R,A.level,A.grade);
@@ -127,12 +129,12 @@ function atBegin(A,B,opts){
         <div class="side foe"><div class="mv" id="at-mv1"></div><div class="strip">${cells(1)}</div><div class="fob"><i id="at-fo1"></i></div></div></div></div>
     <div class="ctl3"><button class="btn walk" id="at-l" aria-label="Walk left">◀</button>
       <button class="btn arr" id="at-up" aria-label="Previous move for this range">▲</button><button class="btn arr" id="at-dn" aria-label="Next move for this range">▼</button><button class="btn walk" id="at-r" aria-label="Walk right">▶</button>
-      <button class="btn ico" id="at-shove" aria-label="Shove">${AT_ICON.shove}</button><button class="btn atk" id="at-atk"><span id="at-atk-n">Attack</span><small id="at-atk-c"></small></button><button class="btn ico" id="at-auto" aria-label="Auto">${AT_ICON.auto}</button></div>`;
+      <button class="btn ico dodge" id="at-dodge" aria-label="Dodge">${AT_ICON.out}</button><button class="btn atk" id="at-atk"><span id="at-atk-n">Attack</span><small id="at-atk-c"></small></button><button class="btn ico" id="at-shove" aria-label="Shove">${AT_ICON.shove}</button></div>`;
   const hold=(id,dir)=>{ const b=document.getElementById(id), on=e=>{ e.preventDefault(); ar.p[0].wantDir=dir; b.classList.add("on"); }, off=()=>{ if(ar.p[0].wantDir===dir) ar.p[0].wantDir=0; b.classList.remove("on"); };
     b.addEventListener("pointerdown",on); b.addEventListener("pointerup",off); b.addEventListener("pointercancel",off); b.addEventListener("pointerleave",off); };
   hold("at-l",-1); hold("at-r",1);
   document.getElementById("at-shove").onclick=()=>ar.shove(ar.p[0]);
-  document.getElementById("at-auto").onclick=e=>{ AT.auto=!AT.auto; ar.p[0].ai=AT.auto?"smart":"human"; e.currentTarget.classList.toggle("on",AT.auto); };
+  document.getElementById("at-dodge").onclick=()=>{ if(!ar.dodge(ar.p[0])){ const k=document.getElementById("at-dodge"); k.classList.remove("no"); void k.offsetWidth; k.classList.add("no"); } };
   // ▲ ▼ change the move for the range you're standing in; Attack uses it
   const cyc=dirn=>{ const b=ar.band(), n=AT.lists[b].length; if(!n) return; AT.idx[b]=((AT.idx[b]+dirn)%n+n)%n; AT.rowsHtml=null; atRows(); };
   document.getElementById("at-up").onclick=()=>cyc(-1); document.getElementById("at-dn").onclick=()=>cyc(1);
@@ -140,8 +142,8 @@ function atBegin(A,B,opts){
     if(!ar.start(ar.p[0],m)){ const k=document.getElementById("at-atk"); k.classList.remove("no"); void k.offsetWidth; k.classList.add("no"); } };
   atRows(); atSize();
   // Auto plays it for you on your Snabit's habits; Skip runs it at four times the speed
-  if(auto){ AT.auto=true; const b=document.getElementById("at-auto"); b.classList.add("on"); b.disabled=true;
-    for(const id of ["at-l","at-r","at-up","at-dn","at-atk"]) document.getElementById(id).disabled=true;
+  if(auto){ atSetAuto(true);
+    for(const id of ["at-l","at-r","at-up","at-dn","at-atk","at-dodge"]) document.getElementById(id).disabled=true;
     const sk=document.getElementById("at-shove"); sk.innerHTML="Skip ▸▸"; sk.style.fontSize="14px"; sk.onclick=()=>{ AT.fast=!AT.fast; sk.classList.toggle("on",AT.fast); }; }
   AT.raf=requestAnimationFrame(atLoop);
 }
@@ -259,7 +261,8 @@ function atEvent(e,now){
   }
   if(e.t==="step"){ S.hop={t0:te,h:16}; if(typeof atSfx==="function") atSfx("step"); }
   if(e.t==="sulk"){ S.pose={p:"droopy",until:te+900}; return; }   // it turns its nose up at the call
-    if(e.t==="swap"){ AT.side[e.i].hop={t0:te,h:78,d:480}; AT.side[1-e.i].hop={t0:te,h:8,d:480};   // the swapper leaps over, the other ducks
+    if(e.t==="dodgebtn"){ S.hop={t0:te,h:26,d:380}; try{ sfx("whoosh"); }catch(err){} }
+  if(e.t==="swap"){ AT.side[e.i].hop={t0:te,h:78,d:480}; AT.side[1-e.i].hop={t0:te,h:8,d:480};   // the swapper leaps over, the other ducks
     try{ sfx("whoosh"); }catch(err){} }
   if(e.t==="hit"){ const o=AT.side[1-e.i], mt=S.anim&&S.anim.tier||"light", tier=e.crit?(mt==="special"?"special":mt==="heavy"?"special":"heavy"):mt==="light"&&e.dmg>=25?"medium":mt, T=AT_TIER[tier];
     if(e.h===0||!o.react||te-o.react.t0>120){ o.react={kind:"hit",t0:te,tier,own:S.anim&&ANIM[S.anim.kind]&&(ANIM[S.anim.kind].sig||/^sg_/.test(S.anim.kind))}; if(mt==="special") AT.freeze=Math.max(AT.freeze,now+T.stop); AT.trauma=Math.min(1,AT.trauma+T.trauma);
@@ -823,6 +826,7 @@ function atHud(){
   document.getElementById("at-fb0").classList.toggle("ok",ar.p[0].focus>=mc&&ar.inRange(m));
   document.getElementById("at-clock").textContent=Math.max(0,Math.ceil(AR.TIME-ar.t));
   const sh=document.getElementById("at-shove"), can=arBand(g)==="Close"&&!(ar.p[0].shoveCool>0); if(!(AT.opts&&AT.opts.mode==="auto")) sh.classList.toggle("off",!can);
+  { const dg=document.getElementById("at-dodge"), p0=ar.p[0]; if(dg){ const k=p0.dodgeCool>0?1-p0.dodgeCool/ar.dodgeWait(p0):1; dg.style.setProperty("--cd",(k*360).toFixed(1)+"deg"); dg.classList.toggle("cool",k<1); } }   // the ring fills back up as Dodge recharges
 
 }
 function atStage(c,W,H,FY,wild){

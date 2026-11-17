@@ -35,7 +35,7 @@ async def main():
                 print('fight started without the picker', await pg.evaluate("()=>[!!AT&&!!AT.ar, !document.querySelector('#atest .pick')]"))
                 await pg.screenshot(path='arena/gf_cupfight.png')
                 print('music', await pg.evaluate("()=>[musWant(), AT.opts.mus, AT.ar.p[0].f.moves.length]"))
-                await pg.click('#at-auto')
+                await pg.evaluate('()=>atSetAuto(true)')
                 ok=await wait_result(pg)
             else:
                 await pg.click('#t-auto'); await pg.wait_for_timeout(600)

@@ -767,7 +767,7 @@ class Arena{
   /* a and b: fighters from makeFighter, each with .moves (arMoves) and .family; ai: "smart" or "naive" per side */
   constructor(a,b,rand,ai=["smart","smart"]){
     this.rand=rand; this.t=0; this.over=false; this.winner=null; this.log=[]; this.ev=[];   // ev: what happened this step, for the screen to animate
-    this.p=[a,b].map((f,i)=>({f,i,x:i?70:30,focus:30,act:null,cool:0,think:0.6,hold:0,slow:0,stun:0,sleep:0,thawT:0,shoveCool:0,buff:{},hp:f.maxhp,maxhp:f.maxhp,ai:ai[i],dealt:0,
+    this.p=[a,b].map((f,i)=>({f,i,x:i?70:30,focus:30,act:null,cool:0,think:0.6,hold:0,slow:0,stun:0,sleep:0,thawT:0,shoveCool:0,dodgeCool:0,dodging:false,buff:{},hp:f.maxhp,maxhp:f.maxhp,ai:ai[i],dealt:0,
       st:null,stg:{pow:0,grd:0,mnd:0,spr:0,spd:0},stgT:{},heals:0,uses:{},last:null,regenT:0,counterMul:1.5,halo:0,sunT:0,abSeen:{}}));
     for(const q of this.p){ const e0=q.f.ability==="Steeping"?4:3; if(q.f.energy>e0) q.focus+=10*(q.f.energy-e0);   // a Party hat starts it with more focus
       if(q.f.ability==="Long Stride"){ q.think=0; q.stride=1; } }   // Stilt's Long Stride: it's ready to act the moment the fight starts
@@ -846,7 +846,7 @@ class Arena{
     return o.buff.mirror&&m.cast&&m.dmg?"mirror":"hit"; }
   /* on screen: the move lands at its contact frame, then the turn ends when the animation finishes */
   land(){ if(!this.turn||this.turn.done) return; this.turn.done=true; this.resolve(this.p[this.turn.i],this.turn.m,this.turn.roll); }
-  endTurn(){ if(!this.turn) return; const p=this.p[this.turn.i]; if(!this.turn.done) this.land(); this.turn=null; this.afterTurn(p); }
+  endTurn(){ if(!this.turn) return; const p=this.p[this.turn.i]; if(!this.turn.done) this.land(); this.turn=null; for(const q of this.p) q.dodging=false; this.afterTurn(p); }
   afterTurn(p){ p.cool=0.6; for(const q of this.p) q.think=Math.max(q.think,0.35+this.rand()*0.35); }
   checkEnd(){
     for(const q of this.p){ if(q.hp<=0) continue;
@@ -901,7 +901,7 @@ class Arena{
     if(!this.opened){ this.opened=true; for(const q of this.p) if(q.f.ability==="Beguile"){ this.ab(q,"Beguile"); this.stage(this.p[1-q.i],{pow:1},-1,q); }
       for(const q of this.p) if(q.f.ability==="Fright"){ this.ab(q,"Fright"); this.stage(this.p[1-q.i],{spd:1},-1,q); } }   // Jack's Fright   // Charm's Beguile
     for(const p of this.p){ if(!p.buff.brace) p.focus=Math.min(99,p.focus+this.regen(p)*AR.DT*(p.f.ability==="Steeping"&&(p.walkT==null||this.t-p.walkT>0.5)?1.1:1)*(p.f.ability==="Wind Up"?1.15:1)*(this.p[1-p.i].f.ability==="Lullaby"?0.9:1));   // Ditty's Lullaby   // Tock's Wind Up   // Teep's Steeping
-      for(const k of ["cool","hold","slow","stun","sleep","thawT","shoveCool","think"]) p[k]=Math.max(0,p[k]-AR.DT);
+      for(const k of ["cool","hold","slow","stun","sleep","thawT","shoveCool","dodgeCool","think"]) p[k]=Math.max(0,p[k]-AR.DT);
       for(const k in p.buff){ p.buff[k]-=AR.DT; if(p.buff[k]<=0){ delete p.buff[k]; this.ev.push({t:"unbuff",i:p.i,k}); } }
       for(const k in p.stgT){ p.stgT[k]-=AR.DT; if(p.stgT[k]<=0){ delete p.stgT[k]; p.stg[k]=0; this.ev.push({t:"stage",i:p.i,k,n:0,end:1}); } }
       if(p.f.ability==="Nap"&&p.hp>0){ if(p.walkT!=null&&this.t-p.walkT<0.3) p.napT=0; else { p.napT=(p.napT||0)+AR.DT; if(p.napT>=2){ p.napT-=2; if(p.hp<p.maxhp){ this.ab(p,"Nap",true); this.heal(p,p.maxhp*0.03,"heal"); } } } }   // Snooze
@@ -967,6 +967,7 @@ class Arena{
   stepMove(p,m){ const o=this.p[1-p.i], d=this.dirTo(p); this.ev.push({t:"step",i:p.i,m}); const s=m.step*d*(m.step<0&&this.undertow(p)?0.75:1), lo=o.x<p.x?o.x+AR.BODY:0, hi=o.x>p.x?o.x-AR.BODY:AR.LEN; p.x=Math.max(lo,Math.min(hi,p.x+s)); }
   strike(p,m,roll){
     const o=this.p[1-p.i], d=this.dirTo(p), R=this.rand;
+    if(o.dodging&&m.dmg&&!m.noDodge){ o.dodging=false; this.ev.push({t:"miss",i:p.i,m,why:"dodge",tapped:true}); return; }   // the player tapped Dodge in time
     if(m.dash){ const want=m.dash==="near"?14:AR.BODY+2; p.x=o.x-d*want; p.x=Math.max(0,Math.min(AR.LEN,p.x)); }
     else if(!this.inRange(m)){ this.ev.push({t:"miss",i:p.i,m,why:"out"}); return; }   // it stepped out of reach during the windup
     if(o.buff.bubble&&(m.range==="Mid"||m.range==="Far")){ delete o.buff.bubble; this.ev.push({t:"miss",i:p.i,m,why:"block"}); return; }
@@ -1089,6 +1090,13 @@ class Arena{
     this.checkEnd();
   }
   // Shove is free, with a 1.5 second wait between shoves
+  /* Dodge (Gid, 18 Nov 2026): a hop back, on a cooldown that Speed shortens. Tapped while the other one's move is on its way,
+     that hit misses. A Snabit held in place by Root can't dodge, and nothing can dodge in the middle of its own move. */
+  dodgeWait(p){ return Math.max(1.8,Math.min(4.5,3.2*12/this.speed(p))); }
+  dodge(p){ const T=this.turn; if(this.over||p.dodgeCool>0||!this.canAct(p)||this.has(p,"Root")||T&&T.i===p.i) return false;
+    const o=this.p[1-p.i], d=this.dirTo(p), lo=o.x<p.x?o.x+AR.BODY:0, hi=o.x>p.x?o.x-AR.BODY:AR.LEN;
+    p.dodgeCool=this.dodgeWait(p); p.dodging=!!(T&&!T.done); p.x=Math.max(lo,Math.min(hi,p.x-d*7));
+    this.ev.push({t:"dodgebtn",i:p.i,inc:p.dodging}); return true; }
   shove(p){ if(this.band()!=="Close"||p.shoveCool>0) return false; const ok=this.start(p,AR_SHOVE); if(ok) p.shoveCool=1.5; return ok; }
   /* the range a Snabit fights best at: the band where its moves do the most damage for their focus */
   prefer(p){ if(p.pref) return p.pref; const sc={Close:0,Near:0,Mid:0,Far:0};
