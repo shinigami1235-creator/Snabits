@@ -98,7 +98,8 @@ function deepFollow(T, leadOf) {
       const idle = m.idle && now < m.idleUntil ? m.idle : null;
       p.pose = m.down ? 'tired' : m.act || (moving ? 'walk' : idle === 'sit' ? 'sit' : idle === 'sniff' ? 'lean' : 'idle');
       p.jy = -((m.act === 'happy' || idle === 'hop') && !m.down ? Math.abs(Math.sin(now / 140 + k)) * 5 : 0);
-      p.fade = m.down ? 0.55 : 1; }
+      p.fade = m.down ? 0.55 : 1;
+      if (m.sink != null) { p.jy = m.sink * (m.sinkDy ?? 34); p.fade *= 1 - m.sink; } }   // going down the stairwell, or into the arch up
     RS.snapFollow = false;
     for (const [m, p] of props) if (m.s === L.s) { const i = RS.props.indexOf(p); if (i >= 0) RS.props.splice(i, 1); props.delete(m); m.gap = null; } };
   const iv = setInterval(tick, 16); return () => { clearInterval(iv); for (const p of props.values()) { const i = RS.props.indexOf(p); if (i >= 0) RS.props.splice(i, 1); } };
@@ -115,8 +116,22 @@ async function deepCross(swap, ms = 280) {
 // the room's own prop for something, when the scene already shows it, or a new one
 function deepUse(o, n) { const p = (n && RS.props.find(q => q.nid === n.id)) || RS.props.find(q => !q.follower && q.k === o.k && q.nid == null); return p || prop(o); }
 // sends the Snabits behind the leader to stand at the given spots, with a pose, or back behind the leader
-function deepCrew(T, lead, xs, act) { let k = 0; for (const [i, m] of T.entries()) { if (i === lead || m.down) continue; m.goX = xs[k++] ?? null; m.act = act || null; m.face = null; } }
-function deepCrewOff(T) { for (const m of T) { m.goX = null; m.act = null; m.face = null; } }
+function deepCrew(T, lead, xs, act) { let k = 0; for (const [i, m] of T.entries()) { if (i === lead || m.down) continue; m.goX = xs[k++] ?? null; m.act = act || null; m.face = null; m.cur = null; } }
+// the others gather round a spot, each staying on the side it's already on, so nobody walks through the leader
+function deepGather(T, lead, x, gap, act) { const n = { '-1': 0, '1': 0 }; for (const [i, m] of T.entries()) { if (i === lead || m.down) continue;
+  const side = m.prop ? Math.sign(m.prop.x - x) || 1 : 1; n[side]++; m.goX = clamp(x + side * gap * n[side], 12, RW - 12); m.act = act || null; m.face = null; m.cur = null; } }
+// the one of the others standing nearest x, or null on a trip alone
+const deepNearest = (T, lead, x) => T.filter((m, i) => i !== lead && !m.down && m.prop).sort((a, b) => Math.abs(a.prop.x - x) - Math.abs(b.prop.x - x))[0] || null;
+// now and then one of the others goes over to look at something in the room on its own
+function deepCurious(T, lead) {
+  const who = T.filter((m, i) => i !== lead && !m.down && m.prop && m.goX == null); if (!who.length || Math.random() < 0.35) return;
+  const m = who[Math.floor(Math.random() * who.length)], things = RS.props.filter(p => !p.follower && p.k !== 'foe'), th = things[Math.floor(Math.random() * things.length)];
+  const x = th ? th.x + (m.prop.x < th.x ? -16 : 16) : 30 + Math.random() * (RW - 60), tok = {}; m.cur = tok;
+  setTimeout(() => { if (m.cur !== tok) return; m.goX = x; m.act = null;
+    setTimeout(() => { if (m.cur !== tok) return; m.act = 'lean'; m.face = th ? (th.x > x ? 1 : -1) : null;
+      setTimeout(() => { if (m.cur !== tok) return; m.goX = null; m.act = null; m.face = null; m.cur = null; }, 1500); }, 1600); }, 500 + Math.random() * 900);
+}
+function deepCrewOff(T) { for (const m of T) { m.goX = null; m.act = null; m.face = null; m.cur = null; m.sink = null; } }
 async function deepFight(T, leadI, foe, title, K, o = {}) {
   const order = [leadI, ...T.map((m, i) => i).filter(i => i !== leadI)].filter(i => !T[i].down);
   let foeHp = null; const done = won => { for (const m of T) m.out = false; return won; };
@@ -179,7 +194,7 @@ const DEEP_SEE = { chest: 'a chest', spring: 'a spring', shrine: 'a waystone', c
 const capFirst = t => t[0].toUpperCase() + t.slice(1);
 // the scene prop for something in a room (deep-art.js and explore-art.js)
 function deepPropOf(n) {
-  switch (n.k) { case 'chest': case 'cache': return { k: 'chest' }; case 'spring': return { k: 'spring' }; case 'shrine': return { k: 'shrine' }; case 'camp': return { k: 'tent' };
+  switch (n.k) { case 'chest': case 'cache': return { k: 'chest' }; case 'spring': return { k: 'fountain' }; case 'shrine': return { k: 'shrine' }; case 'camp': return { k: 'tent' };
     case 'down': return { k: 'stairsdown', locked: n.locked }; case 'up': return { k: 'stairsup' }; case 'lever': return { k: 'lever' }; case 'relic': return { k: 'relic' };
     case 'tear': return { k: 'tear' }; case 'lair': return { k: 'lairdoor' }; case 'event': return { k: DEEP_EV[n.ev].prop, n: deepPlates(n) }; }
   return null;
@@ -217,12 +232,12 @@ async function runDeep(reg, team, pack = {}) {
   const roomBg = () => { const F = Fl(), rm = F.rooms[at.room]; return `deep:${reg.el}:${F.kind === 'caves' ? 'cave' : 'room'}:${rm.design}:${rm.dark ? 1 : 0}:${at.f * 100 + at.room}:${F.adj[at.room].filter(e => !e.hidden).length}`; }, hallBg = `deep:${reg.el}:hall:plain:0`;
   const sx = x => { const rm = Fl().rooms[at.room]; return 36 + clamp((x - rm.x1) / Math.max(1, rm.x2 - rm.x1), 0, 1) * 168; };
   const roomProps = () => { const F = Fl(), L = [];
-    for (const n of Object.values(F.feat)) { if (F.room[dgI(F, n.x, n.y)] !== at.room) continue; const pr = deepPropOf(n); if (pr) L.push({ ...pr, nid: n.id, x: sx(n.x), y: GROUND }); }
+    for (const n of Object.values(F.feat)) { if (F.room[dgI(F, n.x, n.y)] !== at.room) continue; const pr = deepPropOf(n); if (pr) L.push({ ...pr, nid: n.id, x: sx(n.x), y: GROUND, open: used.includes(n.id) || (n.k === 'chest' && st.got.includes(n.id)) || undefined }); }   // a chest already opened is still open
     // things in the same room never stand on top of each other
     L.sort((a, b) => a.x - b.x); for (let i = 1; i < L.length; i++) L[i].x = Math.max(L[i].x, L[i - 1].x + 44);
     const over = L.length ? L[L.length - 1].x - (RW - 18) : 0; if (over > 0) for (const q of L) q.x = Math.max(18, q.x - over);
     RS.props = RS.props.filter(p => p.follower).concat(L); };
-  const enterRoom = () => { RS.bg = roomBg(); RS.x = sx(at.x); RS.tx = null; RS.camJump = true; RS.jy = 0; roomProps(); };
+  const enterRoom = () => { RS.bg = roomBg(); RS.x = sx(at.x); RS.tx = null; RS.camJump = true; RS.jy = 0; roomProps(); deepCurious(T, lead); };
   const scenery = async () => { RS.parts = []; RS.jy = 0; RS.tx = null; };
   let boxes = [];
   const draw = () => { boxes = deepTeamDraw(el('dp-team'), T, lead); deepDraw(el('ex-map'), M, at, T, lead, see, trail, `${where} · Floor ${at.f + 1} · Day ${day}`); };
@@ -252,13 +267,28 @@ async function runDeep(reg, team, pack = {}) {
     const F = Fl(), i = dgI(F, n.x, n.y), nm = name(T[lead]);
     if (n.k === 'down') {
       if (n.locked) { K("The gate's shut. There has to be a lever somewhere on this floor."); await rwait(1500); return; }
-      await sceneFade(true, 450); at.f++; const F2 = Fl(); placeIn(F2.upRoom); [at.x, at.y] = F2.up; prev = null;
+      // everyone goes down the steps: the leader first, out of sight behind the near lip, then the others one after the other
+      const sp = RS.props.find(q => q.nid === n.id), X = sp ? sp.x : RS.x; if (Math.abs(RS.x - X) > 2) await walkTo(X, 50, 'walk');
+      RS.clipY = GROUND + 9; RS.pose = 'walk'; for (let k = 1; k <= 30; k++) { RS.jy = -k * 2.4 + Math.sin(k * 0.9) * 1.2; await rwait(30); } RS.pose = 'idle';
+      for (const m of live()) if (m !== T[lead]) { m.goX = X; m.act = null; m.cur = null; for (let w = 0; w < 80 && m.prop && Math.abs(m.prop.x - X) > 2; w++) await rwait(30); m.sinkDy = 34; for (let k = 1; k <= 20; k++) { m.sink = k / 20; await rwait(30); } }
+      await sceneFade(true, 450); RS.clipY = null; RS.jy = 0; deepCrewOff(T); at.f++; const F2 = Fl(); placeIn(F2.upRoom); [at.x, at.y] = F2.up; prev = null;
       enterRoom(); look(); await sceneFade(false, 450);
       if (!used.includes('floor' + at.f)) { used.push('floor' + at.f); K(at.f === 2 ? (ring ? "It's the bottom of this ring. Whatever lives down here knows we're here." : "This is as deep as it goes. The guardian's down here somewhere.") : 'Watch your step. It goes deeper from here.'); await rwait(1300); }
       return; }
-    if (n.k === 'up') { if (!at.f) return; await sceneFade(true, 450); at.f--; const F2 = Fl(); placeIn(F2.downRoom); [at.x, at.y] = F2.down; prev = null;
+    if (n.k === 'up') { if (!at.f) return;
+      // up through the arch in the back wall, one after the other
+      const sp = RS.props.find(q => q.nid === n.id), X = sp ? sp.x : RS.x; if (Math.abs(RS.x - X) > 2) await walkTo(X, 50, 'walk');
+      for (const m of live()) if (m !== T[lead]) { m.goX = X + (m.prop && m.prop.x < X ? -14 : 14); m.cur = null; }
+      await rwait(500); for (const m of live()) if (m !== T[lead]) { m.sinkDy = -6; for (let k = 1; k <= 14; k++) { m.sink = k / 14; await rwait(30); } }
+      await sceneFade(true, 450); deepCrewOff(T); at.f--; const F2 = Fl(); placeIn(F2.downRoom); [at.x, at.y] = F2.down; prev = null;
       enterRoom(); look(); await sceneFade(false, 450); return; }
-    if (n.k === 'lever') { const lp = RS.props.find(p => p.k === 'lever'); if (lp) { await walkTo(lp.x - 18, 60, 'walk'); lp.on = true; } delete F.feat[i]; const d = F.feat[dgI(F, ...F.down)]; if (d) d.locked = false; rsfx('creak'); RS.shake = 4; K(`${nm} pulls the lever, and something heavy grinds open far away.`); await rwait(1600); return; }
+    if (n.k === 'lever') { const lp = RS.props.find(p => p.k === 'lever'); let who = nm;
+      if (lp) { const h = deepNearest(T, lead, lp.x);   // one of the others runs over and hauls on it while the leader watches
+        if (h) { h.goX = lp.x + (h.prop.x < lp.x ? -16 : 16); h.cur = null; for (let w = 0; w < 90 && Math.abs(h.prop.x - h.goX) > 2; w++) await rwait(30); h.act = 'effort'; h.face = h.prop.x < lp.x ? 1 : -1; await rwait(600); who = name(h); }
+        else { await walkTo(lp.x - 18, 60, 'walk'); RS.pose = 'effort'; await rwait(600); }
+        lp.on = true; }
+      delete F.feat[i]; const d = F.feat[dgI(F, ...F.down)]; if (d) d.locked = false; rsfx('creak'); RS.shake = 4; deepGather(T, lead, RS.x, 30, 'happy'); RS.pose = 'happy';
+      K(`${who} pulls the lever, and something heavy grinds open far away.`); await rwait(1600); deepCrewOff(T); RS.pose = 'idle'; return; }
     if (n.k === 'relic') { delete F.feat[i]; const r = rng(hashStr('relic|' + reg.n + '|' + n.id + '|' + exSeason())), item = RELICS[Math.floor(r() * RELICS.length)], a = /^[AEIOU]/.test(item) ? 'an' : 'a';
       const rp = RS.props.find(p => p.k === 'relic'); if (rp) { deepCrew(T, lead, [rp.x + 26, rp.x + 48]); await walkTo(rp.x - 16, 60, 'walk'); unprop(rp); }
       addItem(item); found.push(`${a} ${item}`); gotItems.push(item); RS.pose = 'happy'; deepCrew(T, lead, [], 'happy'); setTimeout(() => deepCrewOff(T), 1600);
@@ -287,6 +317,7 @@ async function runDeep(reg, team, pack = {}) {
     const isEl = (m, el) => m.s.m.el1 === el || m.s.m.el2 === el;
     RS.pose = 'idle'; deepCrew(T, lead, []); await rwait(250);
     let line;
+    if (e.trap === 1 || e.trap === 4 || e.trap === 5) deepCrew(T, lead, [], 'guard');
     if (e.trap === 1 || e.trap === 4) { const darts = e.trap === 1, fly = prop(darts ? { k: 'dart', x: RS.x + 170, y: G0 - 30 } : { k: 'arrow', x: RS.x + 110, y: G0 - 170, a: 2.3 }); rsfx('whiz');   // both come in from off the screen
       await anim(20, k => { fly.x = (darts ? RS.x + 170 : RS.x + 110) - k * (darts ? 162 : 104); if (!darts) fly.y = G0 - 170 + k * 144; if (dodge) RS.jy = -Math.sin(k * Math.PI) * 16; });
       unprop(fly);
@@ -562,20 +593,28 @@ async function deepNode(reg, n, st, g, need, T, leadOf, setLead, K, used, found,
     // overnight a wild Snabit can wander in somewhere out of sight
     if (Math.random() < 0.5 && M.spawn && M.spawn()) { K('Something was moving around out there last night. Keep your eyes open.'); await rwait(1200); }
     return 'camp'; }
-  if (n.k === 'spring') { if (used.includes(n.id)) { await rwait(200); return; } used.push(n.id); const sp = deepUse({ k: 'spring', x: 150, y: GROUND }, n); deepCrew(T, leadOf(), []); await walkTo(sp.x - 26, 60, 'walk'); s.pose = 'eat'; spark(sp.x, GROUND - 10, 'drip', 8); rsfx('splash'); await rwait(900); s.pose = 'happy'; deepCrew(T, leadOf(), [], 'happy');
-    for (const m of T) if (!m.down) { m.e = Math.min(m.max, m.e + 3); m.hp = Math.min(m.hpMax, m.hp + Math.round(m.hpMax * 0.15)); } K("There's fresh water here. Drink up, all of you."); await rwait(1300); unprop(sp); deepCrewOff(T); return; }
+  if (n.k === 'spring') { if (used.includes(n.id)) { await rwait(200); return; } used.push(n.id);
+    // everyone lines up at the basin and drinks
+    const sp = deepUse({ k: 'fountain', x: 150, y: GROUND }, n); await walkTo(sp.x - 14, 60, 'walk'); deepGather(T, leadOf(), sp.x - 14, 26);
+    await rwait(900); s.pose = 'eat'; deepCrew(T, leadOf(), T.filter((m, i) => i !== leadOf() && !m.down).map(m => m.goX), 'eat'); spark(sp.x, GROUND - 26, 'drip', 8); rsfx('splash');
+    await rwait(1100); s.pose = 'happy'; deepCrew(T, leadOf(), T.filter((m, i) => i !== leadOf() && !m.down).map(m => m.goX), 'happy');
+    for (const m of T) if (!m.down) { m.e = Math.min(m.max, m.e + 3); m.hp = Math.min(m.hpMax, m.hp + Math.round(m.hpMax * 0.15)); } K("There's fresh water here. Drink up, all of you."); await rwait(1300); deepCrewOff(T); return; }
   if (n.k === 'chest') { if (once) { K('The chest here is empty now.'); await rwait(900); return; }
-    const c = deepUse({ k: 'chest', x: 150, y: GROUND }, n); deepCrew(T, leadOf(), []); await walkTo(c.x - 24, 60, 'walk'); await rwait(300);
-    await rwait(400); c.open = true; rsfx('creak'); s.pose = 'happy'; deepCrew(T, leadOf(), [], 'happy'); spark(c.x, GROUND - 22, 'sparkle', 6);
+    const c = deepUse({ k: 'chest', x: 150, y: GROUND }, n); await walkTo(c.x - 24, 60, 'walk');
+    const help = deepNearest(T, leadOf(), c.x + 24), look = T.find((m, i) => i !== leadOf() && !m.down && m !== help && m.prop);
+    if (help) { help.goX = c.x + 24; help.cur = null; } if (look) { look.goX = c.x - 50; look.cur = null; }
+    for (let w = 0; w < 90 && help && Math.abs(help.prop.x - help.goX) > 2; w++) await rwait(30);
+    s.pose = 'effort'; if (help) { help.act = 'effort'; help.face = -1; } rsfx('creak'); await rwait(700);
+    c.open = true; s.pose = 'happy'; if (help) help.act = 'happy'; if (look) { look.act = 'happy'; look.face = 1; } spark(c.x, GROUND - 22, 'sparkle', 6);
     const R = rng(hashStr('deep' + reg.n + n.id + '|' + exSeason())), tr = f === 2 && R() < 0.15, item = tr ? deepTreasure(R) : R() < 0.5 ? EX_RARE[Math.floor(R() * EX_RARE.length)] : EX_FINDS[Math.floor(R() * EX_FINDS.length)], a = /^[AEIOU]/.test(item) ? 'an' : 'a';
     addItem(item); found.push(`${a} ${item}`); st.got.push(n.id); K(`${nm} found ${a} ${item} in an old chest.`);
     if (T.lucky) { T.lucky = false; const x2 = EX_RARE[Math.floor(R() * EX_RARE.length)], a2 = /^[AEIOU]/.test(x2) ? 'an' : 'a'; addItem(x2); found.push(`${a2} ${x2}`); await rwait(1300); K(`And there's ${a2} ${x2} under it. That waystone was right.`); }   // luck from a waystone (deep-more.js)
-    await rwait(1400); unprop(c); deepCrewOff(T); return; }
+    await rwait(1400); deepCrewOff(T); return; }   // the open chest stays where it is
   if (n.k === 'wild') { if (used.includes(n.id)) { await rwait(200); return; } used.push(n.id);
     const G = GRADE_INFO[g], foe = gradedOpponent(g, Math.round(G.lv[0] + (G.lv[1] - G.lv[0]) * [0.4, 0.55, 0.7][f]), Math.random, reg.el), prize = Math.round(G.purse * [0.4, 0.5, 0.6][f]);   // deeper floors, stronger Snabits
     const fp = await deepFoeIn(foe);
     const won = await deepFight(T, leadOf(), foe, 'Wild', K, { fp, where: 'A wild Snabit', line: `A wild ${foe.m.name} caught up with us.` }); if (T[leadOf()].down && T.some(m => !m.down)) setLead(T.findIndex(m => !m.down));
-    if (won) { deepPay(T, 'wild', prize); RS.pose = 'happy'; deepCrew(T, leadOf(), [], 'happy'); K(DEEP_WON[Math.floor(Math.random() * DEEP_WON.length)]); await rwait(1300); deepCrewOff(T); return; }
+    if (won) { deepPay(T, 'wild', prize); RS.pose = 'happy'; deepGather(T, leadOf(), RS.x, 26, 'happy'); K(DEEP_WON[Math.floor(Math.random() * DEEP_WON.length)]); await rwait(1300); deepCrewOff(T); return; }
     used.splice(used.indexOf(n.id), 1); K(`That ${foe.m.name} beat ${deepAll(T)}.`); await rwait(1400); return 'lost'; }
   if (n.k === 'guard') {
     const [tName, fam] = TEACHER[reg.el], G = GRADE_INFO[g], R = rng(hashStr('guard' + reg.n)), foe = gradedOpponent(g, G.lv[1], R, null, null, randomOpponent(R, fam)); foe.boss = tName;

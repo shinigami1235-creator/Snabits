@@ -80,7 +80,7 @@ Object.assign(DA, {
       c.fillStyle = SC.dark(P.wall, 0.32); c.beginPath(); c.moveTo(xw, 0); c.lineTo(xw, H); c.lineTo(xo, RH + 40); c.lineTo(xo, 0); c.closePath(); c.fill();
       c.strokeStyle = SC.dark(P.wall, 0.5); c.lineWidth = 0.8; for (let k = 1; k < 6; k++) { c.beginPath(); c.moveTo(xw, H * k / 6); c.lineTo(xo, H * k / 6 + (RH + 40 - H) * 0.0); c.stroke(); } }
     // the ways out: one on each side, more on the back wall
-    for (const x of ways >= 3 ? [40, 200, 120 + (R() - 0.5) * 40] : [40, 200]) DA.door(c, P, x, 0);   // doorways sit in the back wall, standing on the floor
+    for (const x of [40, 200]) DA.door(c, P, x, 0);   // doorways sit in the back wall, standing on the floor
     for (const x of [64, 176]) { DA.glow(c, x, H - 62, 70); DA.torch(c, x, H - 70, t); DA.glow(c, x, H + 20, 46, 0.18); }
   },
   hall(c, P, el, t, off) {
@@ -110,32 +110,32 @@ Object.assign(DA, {
   // the room's design, in the middle of the room behind the team
   design(c, P, el, design, t, R, cave, ways = 2) {
     const H = DA_HZ, G = GROUND, stone = SC.light(P.wall, 0.12);
-    if (design === 'pillars') for (const [x, w] of [[44, 18], [196, 18], [92, 10], [148, 10]]) { const y0 = w > 12 ? 8 : 20, y1 = w > 12 ? G - 6 : H, g = c.createLinearGradient(x - w / 2, 0, x + w / 2, 0);
+    if (design === 'pillars') for (const [x, w] of [[44, 18], [196, 18], [92, 10], [148, 10]]) { const y0 = w > 12 ? 8 : 20, y1 = w > 12 ? H + 12 : H, g = c.createLinearGradient(x - w / 2, 0, x + w / 2, 0);
       g.addColorStop(0, SC.dark(stone, 0.25)); g.addColorStop(0.35, SC.light(stone, 0.15)); g.addColorStop(1, SC.dark(stone, 0.4)); c.fillStyle = g; c.fillRect(x - w / 2, y0, w, y1 - y0);
       c.fillStyle = SC.dark(stone, 0.2); c.fillRect(x - w / 2 - 4, y0, w + 8, 6); c.fillRect(x - w / 2 - 4, y1 - 6, w + 8, 6); c.fillStyle = 'rgba(0,0,0,.25)'; c.beginPath(); c.ellipse(x + 4, y1, w * 0.9, 3, 0, 0, 7); c.fill(); }
-    if (design === 'pool') { const px = 176, py = G - 14, rx = cave ? 62 : 48, ry = cave ? 10 : 8;
+    if (design === 'pool') { const px = 176, py = DA_HZ + 7, rx = cave ? 52 : 40, ry = cave ? 7 : 5;   // at the back of the room, so the team walks in front of it
       SC.depth(c, () => { c.beginPath(); c.ellipse(px, py, rx + 6, ry + 4, 0, 0, 7); }, stone, 2, 0.3);
       const g = c.createLinearGradient(0, py - ry, 0, py + ry); g.addColorStop(0, '#2f6f9a'); g.addColorStop(1, '#6fb8dc'); c.fillStyle = g; c.beginPath(); c.ellipse(px, py, rx, ry, 0, 0, 7); c.fill();
       c.strokeStyle = 'rgba(255,255,255,.45)'; c.lineWidth = 0.9; for (let k = 0; k < 3; k++) { const r = (t / 40 + k * 14) % 42; c.globalAlpha = 1 - r / 42; c.beginPath(); c.ellipse(px - 10, py, r, r * 0.16, 0, 0, 7); c.stroke(); } c.globalAlpha = 1;
       if (el === 'Wild' || el === 'Charm' || el === 'Venom') { c.fillStyle = '#5fa24a'; for (const [dx, dy] of [[-26, 2], [18, -3]]) { c.beginPath(); c.ellipse(px + dx, py + dy, 6, 2, 0, 0.3, 6.1); c.fill(); } }
       if (el === 'Tide' || el === 'Frost') { c.fillStyle = '#ff9a5a'; const fx = px - 20 + Math.sin(t / 700) * 20; c.beginPath(); c.ellipse(fx, py + 2, 3.5, 1.4, 0, 0, 7); c.fill(); } }
     if (design === 'rubble') { const col = SC.mix(P.wall, '#9b927f', 0.45);
-      c.save(); c.translate(198, G - 10); c.rotate(-0.12); SC.depth(c, () => { c.beginPath(); c.roundRect(-30, -9, 60, 16, 4); }, SC.light(P.wall, 0.1), 2, 0.3); c.strokeStyle = SC.dark(P.wall, 0.3); c.beginPath(); c.moveTo(-8, -9); c.lineTo(-4, 7); c.stroke(); c.restore();
-      for (const [x, y, r] of [[20, G - 6, 11], [36, G - 3, 7], [148, G - 18, 5], [226, G - 2, 6], [96, G - 20, 4]]) SC.depth(c, () => { c.beginPath(); c.ellipse(x, y - r * 0.4, r, r * 0.75, 0, 0, 7); }, col, 2, 0.3);
-      c.fillStyle = 'rgba(200,190,170,.25)'; c.beginPath(); c.ellipse(120, G - 4, 90, 6, 0, 0, 7); c.fill(); }
+      c.save(); c.translate(198, H + 10); c.rotate(-0.12); SC.depth(c, () => { c.beginPath(); c.roundRect(-30, -9, 60, 16, 4); }, SC.light(P.wall, 0.1), 2, 0.3); c.strokeStyle = SC.dark(P.wall, 0.3); c.beginPath(); c.moveTo(-8, -9); c.lineTo(-4, 7); c.stroke(); c.restore();
+      for (const [x, y, r] of [[20, H + 12, 10], [36, H + 14, 6], [148, H + 6, 5], [226, H + 13, 6], [96, H + 6, 4]]) SC.depth(c, () => { c.beginPath(); c.ellipse(x, y - r * 0.4, r, r * 0.75, 0, 0, 7); }, col, 2, 0.3);
+      c.fillStyle = 'rgba(200,190,170,.25)'; c.beginPath(); c.ellipse(120, H + 10, 90, 5, 0, 0, 7); c.fill(); }
     if (design === 'garden') { const g = c.createLinearGradient(110, 0, 150, G); g.addColorStop(0, 'rgba(255,250,210,.4)'); g.addColorStop(1, 'rgba(255,250,210,0)'); c.fillStyle = g; c.beginPath(); c.moveTo(104, -10); c.lineTo(132, -10); c.lineTo(176, G); c.lineTo(96, G); c.fill();
       c.fillStyle = 'rgba(120,180,90,.35)'; c.beginPath(); c.ellipse(130, G - 6, 110, 10, 0, 0, 7); c.fill();
       for (let x = 4; x < RW; x += 13) SC.tuft(c, x, G - 3 - (x % 3), 6 + (x % 5), x % 2 ? '#5fa24a' : '#4f8a3a');
-      for (const [x, y] of [[30, G - 14], [210, G - 10]]) { SC.depth(c, () => SC.blob(c, x, y, [[0, 0, 12], [-9, 4, 9], [9, 4, 9]]), '#4f8a3a', 2, 0.3); for (let k = 0; k < 4; k++) SC.flower(c, x - 8 + k * 5, y - 4 + (k % 2) * 6, 2.4, ['#f2a6cf', '#ffe28a', '#a6c8ff', '#ffffff'][k]); }
+      for (const [x, y] of [[30, H + 6], [210, H + 8]]) { SC.depth(c, () => SC.blob(c, x, y, [[0, 0, 12], [-9, 4, 9], [9, 4, 9]]), '#4f8a3a', 2, 0.3); for (let k = 0; k < 4; k++) SC.flower(c, x - 8 + k * 5, y - 4 + (k % 2) * 6, 2.4, ['#f2a6cf', '#ffe28a', '#a6c8ff', '#ffffff'][k]); }
       for (let k = 0; k < 2; k++) { const bx = 100 + Math.sin(t / 900 + k * 3) * 50, by = 60 + Math.cos(t / 700 + k) * 20; c.fillStyle = ['#ffe28a', '#f2a6cf'][k]; c.beginPath(); c.ellipse(bx - 2, by, 2.4, 1.6 + Math.sin(t / 60) * 1.2, -0.5, 0, 7); c.ellipse(bx + 2, by, 2.4, 1.6 + Math.sin(t / 60) * 1.2, 0.5, 0, 7); c.fill(); } }
-    if (design === 'plain' && !cave && ways < 3) { const x = 120; c.fillStyle = '#7a3a2e'; c.fillRect(x - 13, 16, 26, 40); c.fillStyle = '#e0b64a'; c.beginPath(); c.moveTo(x - 13, 56); c.lineTo(x, 64); c.lineTo(x + 13, 56); c.fill();   // a League banner
+    if (design === 'plain' && !cave) { const x = 120; c.fillStyle = '#7a3a2e'; c.fillRect(x - 13, 16, 26, 40); c.fillStyle = '#e0b64a'; c.beginPath(); c.moveTo(x - 13, 56); c.lineTo(x, 64); c.lineTo(x + 13, 56); c.fill();   // a League banner
       c.strokeStyle = '#e0b64a'; c.lineWidth = 1.4; c.beginPath(); c.arc(x, 32, 7, 0, 7); c.stroke(); c.beginPath(); c.moveTo(x, 25); c.lineTo(x, 39); c.moveTo(x - 7, 32); c.lineTo(x + 7, 32); c.stroke(); c.fillStyle = '#5a3d24'; c.fillRect(x - 16, 14, 32, 3); }
   },
   // a few things lying about, in the region's own kind: two or three per room, never the same set twice
   decor(c, P, el, t, R) {
     const G = GROUND, H = DA_HZ, n = 2 + Math.floor(R() * 2), spots = [18, 74, 166, 222].sort(() => R() - 0.5).slice(0, n);
     const kinds = DA.decorOf[el] || ['crate', 'pot'];
-    for (const x of spots) { const k = kinds[Math.floor(R() * kinds.length)], y = G - 2 - R() * 10; DA.thing[k] && DA.thing[k](c, x, y, t, P, R); }
+    for (const x of spots) { const k = kinds[Math.floor(R() * kinds.length)], y = H + 8 + R() * 6; DA.thing[k] && DA.thing[k](c, x, y, t, P, R); }
   },
   decorOf: { Blaze: ['ember', 'pot', 'obsidian'], Tide: ['coral', 'shell', 'pot'], Frost: ['snow', 'icy', 'crate'], Spark: ['coil', 'crate', 'pipe'], Wild: ['shroom', 'roots', 'pot'],
     Stone: ['statue', 'sand', 'pot'], Brawl: ['dummy', 'crate', 'rack'], Steel: ['crate', 'pipe', 'gear'], Light: ['crystal', 'pot', 'statue'], Shade: ['candle', 'web', 'shroom'],
@@ -171,17 +171,41 @@ Object.assign(DA, {
 function deepProp(c, p, t, front) {
   const x = p.x, y = p.y, G = GROUND;
   switch (p.k) {
-    case 'stairsdown': if (front) return true;   // a dark way down with steps
-      c.fillStyle = '#17121c'; c.beginPath(); c.moveTo(x - 18, y); c.lineTo(x - 18, y - 40); c.arc(x, y - 40, 18, Math.PI, 0); c.lineTo(x + 18, y); c.fill();
-      for (let k = 0; k < 4; k++) { c.fillStyle = SC.mix('#6b5d52', '#17121c', k * 0.25); c.fillRect(x - 15 + k * 2, y - 8 - k * 6, 30 - k * 4, 4); }
-      if (p.locked) { c.strokeStyle = '#4a4f57'; c.lineWidth = 2.4; for (let b = -14; b <= 14; b += 7) { c.beginPath(); c.moveTo(x + b, y); c.lineTo(x + b, y - 52); c.stroke(); } c.fillStyle = '#4a4f57'; c.fillRect(x - 18, y - 32, 36, 3); }
-      return true;
-    case 'stairsup': if (front) return true;
-      for (let k = 0; k < 5; k++) SC.depth(c, () => { c.beginPath(); c.rect(x - 16 + k * 3, y - 6 - k * 7, 32 - k * 3, 7); }, SC.mix('#9a8a76', '#d8ccb4', k * 0.15), 1, 0.3);
-      return true;
+    // the way down: a stairwell cut into the floor with a stone rim and a rail along its back edge; steps drop away into the
+    // dark. The near lip is drawn in front, so a Snabit going down disappears behind it (RS.clipY in deep.js)
+    case 'stairsdown': { const hw = 24, by = y - 7, fy = y + 9, rim = '#8d8273';
+      if (front) { c.fillStyle = rim; c.beginPath(); c.moveTo(x - hw - 7, fy); c.lineTo(x + hw + 7, fy); c.lineTo(x + hw + 9, fy + 4); c.lineTo(x - hw - 9, fy + 4); c.closePath(); c.fill();
+        c.fillStyle = 'rgba(0,0,0,.25)'; c.fillRect(x - hw - 9, fy + 4, hw * 2 + 18, 1.5);
+        if (p.locked) { c.strokeStyle = '#3e434b'; c.lineWidth = 2; for (let b = -hw + 4; b < hw; b += 6) { c.beginPath(); c.moveTo(x + b - 2, by + 1); c.lineTo(x + b * 1.12, fy - 1); c.stroke(); }
+          c.beginPath(); c.moveTo(x - hw - 2, by + 8); c.lineTo(x + hw + 2, by + 8); c.stroke(); SC.depth(c, () => { c.beginPath(); c.roundRect(x - 4, by + 5, 8, 7, 1.5); }, '#b08a3a', 1, 0.3); }
+        return true; }
+      SC.depth(c, () => { c.beginPath(); c.moveTo(x - hw - 4, by - 3); c.lineTo(x + hw + 4, by - 3); c.lineTo(x + hw + 9, fy + 1); c.lineTo(x - hw - 9, fy + 1); c.closePath(); }, rim, 1.5, 0.3);
+      c.fillStyle = '#0c090f'; c.beginPath(); c.moveTo(x - hw, by); c.lineTo(x + hw, by); c.lineTo(x + hw + 4, fy); c.lineTo(x - hw - 4, fy); c.closePath(); c.fill();
+      for (let k = 0; k < 4; k++) { const yy = by + 2 + k * 3.4, ww = hw - 1 + k; c.fillStyle = SC.mix('#7a6e60', '#0c090f', 0.25 + k * 0.2); c.fillRect(x - ww, yy, ww * 2, 2.2); }
+      for (const d of [-1, 1]) SC.depth(c, () => { c.beginPath(); c.roundRect(x + d * (hw + 2) - 3, by - 16, 6, 14, 1.5); }, '#9a8f80', 1, 0.3);   // posts and the rail between them
+      SC.depth(c, () => { c.beginPath(); c.roundRect(x - hw - 3, by - 17, hw * 2 + 6, 3.5, 1.5); }, '#a89c8c', 1, 0.3);
+      return true; }
+    // the way up: a staircase climbing inside an arch in the back wall, lit from above
+    case 'stairsup': { if (front) return true; const H = GROUND - 34, w = 18, top = H - 54;
+      SC.depth(c, () => { c.beginPath(); c.moveTo(x - w - 6, H + 2); c.lineTo(x - w - 6, top + 4); c.arc(x, top + 4, w + 6, Math.PI, 0); c.lineTo(x + w + 6, H + 2); c.closePath(); }, '#9a8f80', 0, 0);
+      const g = c.createLinearGradient(0, top, 0, H); g.addColorStop(0, '#f2dfae'); g.addColorStop(1, '#2a2126'); c.fillStyle = g;
+      c.beginPath(); c.moveTo(x - w, H); c.lineTo(x - w, top + 4); c.arc(x, top + 4, w, Math.PI, 0); c.lineTo(x + w, H); c.closePath(); c.fill();
+      for (let k = 0; k < 6; k++) { const yy = H - 4 - k * 7, ww = w - 1 - k * 1.2; c.fillStyle = SC.mix('#3a3030', '#c9b48c', k / 6); c.fillRect(x - ww, yy, ww * 2, 4); c.fillStyle = 'rgba(0,0,0,.25)'; c.fillRect(x - ww, yy + 4, ww * 2, 1.5); }
+      SC.depth(c, () => { c.beginPath(); c.rect(x - 4, top - 4, 8, 7); }, '#b2a694', 1, 0.3);   // keystone
+      SC.depth(c, () => { c.beginPath(); c.rect(x - w - 9, H, (w + 9) * 2, 5); }, '#8d8273', 1, 0.3);   // the threshold on the floor
+      return true; }
+    // a lever on a stone post standing on the floor
     case 'lever': if (front) return true;
-      SC.depth(c, () => { c.beginPath(); c.roundRect(x - 8, y - 46, 16, 22, 3); }, '#6b6f76', 1.5, 0.3);
-      c.strokeStyle = '#a7acb3'; c.lineWidth = 3; c.lineCap = 'round'; c.beginPath(); c.moveTo(x, y - 35); c.lineTo(x + (p.on ? -9 : 9), y - 52); c.stroke(); c.fillStyle = '#c8553d'; c.beginPath(); c.arc(x + (p.on ? -9 : 9), y - 52, 3.4, 0, 7); c.fill(); return true;
+      SC.depth(c, () => { c.beginPath(); c.roundRect(x - 7, y - 30, 14, 30, 2); }, '#7a7068', 1.5, 0.3); SC.depth(c, () => { c.beginPath(); c.roundRect(x - 9, y - 34, 18, 6, 2); }, '#8d8273', 1, 0.3);
+      c.strokeStyle = '#a7acb3'; c.lineWidth = 3; c.lineCap = 'round'; c.beginPath(); c.moveTo(x, y - 33); c.lineTo(x + (p.on ? -10 : 10), y - 50); c.stroke(); c.fillStyle = '#c8553d'; c.beginPath(); c.arc(x + (p.on ? -10 : 10), y - 50, 3.4, 0, 7); c.fill(); return true;
+    // a spring: water running out of a stone spout in the back wall into a basin against the wall, behind where the team walks
+    case 'fountain': { if (front) return true; const H = GROUND - 34, by = H + 8;
+      SC.depth(c, () => { c.beginPath(); c.roundRect(x - 9, H - 44, 18, 16, 3); }, '#9a8f80', 1.5, 0.3); c.fillStyle = '#3a3238'; c.beginPath(); c.arc(x, H - 34, 3, 0, 7); c.fill();   // the spout
+      const wob = Math.sin(t / 80) * 0.6; c.fillStyle = 'rgba(150,210,240,.85)'; c.fillRect(x - 1.6 + wob, H - 33, 3.2, by - (H - 33) - 2);
+      SC.depth(c, () => { c.beginPath(); c.moveTo(x - 30, by - 4); c.lineTo(x + 30, by - 4); c.quadraticCurveTo(x + 30, by + 12, x + 22, by + 12); c.lineTo(x - 22, by + 12); c.quadraticCurveTo(x - 30, by + 12, x - 30, by - 4); c.closePath(); }, '#9a8f80', 2, 0.3);
+      const g = c.createLinearGradient(0, by - 6, 0, by); g.addColorStop(0, '#4f9cc8'); g.addColorStop(1, '#8fd0ee'); c.fillStyle = g; c.beginPath(); c.ellipse(x, by - 4, 27, 4, 0, 0, 7); c.fill();
+      c.strokeStyle = 'rgba(255,255,255,.6)'; c.lineWidth = 0.8; for (let k = 0; k < 2; k++) { const r = (t / 50 + k * 9) % 18; c.globalAlpha = 1 - r / 18; c.beginPath(); c.ellipse(x, by - 4, r + 2, (r + 2) * 0.16, 0, 0, 7); c.stroke(); } c.globalAlpha = 1;
+      if (p.used) { c.fillStyle = 'rgba(0,0,0,.0)'; } return true; }
     case 'relic': if (front) return true;
       SC.depth(c, () => { c.beginPath(); c.roundRect(x - 9, y - 12, 18, 12, 2); }, '#8a7a66', 2, 0.3);
       c.fillStyle = '#7fd6e0'; c.beginPath(); c.moveTo(x, y - 26 + Math.sin(t / 400) * 1.5); c.lineTo(x + 6, y - 19); c.lineTo(x, y - 12); c.lineTo(x - 6, y - 19); c.fill();

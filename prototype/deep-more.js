@@ -80,28 +80,28 @@ async function deepEvent(reg, n, g, T, leadOf, setLead, K, found, M, need) {
   if (n.ev === 'plates') {   // a plate for every Snabit; one short, the strongest shoves a stone onto the last plate
     const N = deepPlates(n), xs = [...Array(N)].map((_, k) => X + (k - (N - 1) / 2) * 34), on = Math.min(N, live.length);
     deepCrew(T, leadOf(), xs.slice(1)); await walkTo(xs[0], 60, 'walk'); await rwait(400); pr.on = on; rsfx('thud');
-    if (on < N) { const o = best('pow'); if (st(o, 'pow') < need * 1.15) { K(`There are ${N} plates and only ${on} of us. Nothing happens.`); await rwait(1800); unprop(pr); return 'retry'; }
+    if (on < N) { const o = best('pow'); if (st(o, 'pow') < need * 1.15) { K(`There are ${N} plates and only ${on} of us. Nothing happens.`); await rwait(1800); return 'retry'; }
       K(`${nm(o)} shoves a loose stone onto the last plate.`); await rwait(1200); pr.on = N; }
-    rsfx('creak'); RS.shake = 3; await rwait(600); await gift('Something clicked in the wall, and a hidden shelf slid out with {x} on it.'); unprop(pr); return; }
+    rsfx('creak'); RS.shake = 3; await rwait(600); await gift('Something clicked in the wall, and a hidden shelf slid out with {x} on it.'); return; }
   if (n.ev === 'lid') {   // everyone lifts together
     deepCrew(T, leadOf(), [X + 26, X + 6]); await walkTo(X - 26, 60, 'walk'); await rwait(300); s.pose = 'effort'; deepCrew(T, leadOf(), [X + 26, X + 6], 'effort'); rsfx('rumble'); await rwait(900);
-    if (sum('pow') < need * 1.9) { for (const o of live) o.m.e = Math.max(0, o.m.e - 2); K(live.length > 1 ? "It won't budge. Not even with all of us lifting." : `${nm(live[0])} can't lift it alone.`); await rwait(1800); unprop(pr); return 'fail'; }
-    pr.open = true; rsfx('creak'); s.pose = 'happy'; await rwait(500); await gift(live.length > 1 ? 'Everyone lifted together, and the lid came off. There was {x} inside.' : `${nm(live[0])} heaved the lid off by itself. There was {x} inside.`, true); unprop(pr); return; }
+    if (sum('pow') < need * 1.9) { for (const o of live) o.m.e = Math.max(0, o.m.e - 2); K(live.length > 1 ? "It won't budge. Not even with all of us lifting." : `${nm(live[0])} can't lift it alone.`); await rwait(1800); return 'fail'; }
+    pr.open = true; rsfx('creak'); s.pose = 'happy'; await rwait(500); await gift(live.length > 1 ? 'Everyone lifted together, and the lid came off. There was {x} inside.' : `${nm(live[0])} heaved the lid off by itself. There was {x} inside.`, true); return; }
   if (n.ev === 'stuck') {   // a little wild Snabit under fallen rocks
     deepCrew(T, leadOf(), [X + 30, X + 50]); await walkTo(X - 28, 60, 'walk'); K("There's a little wild Snabit stuck under those rocks."); await rwait(1300); s.pose = 'effort'; deepCrew(T, leadOf(), [X + 28, X + 42], 'effort'); rsfx('rumble'); await rwait(900);
-    if (sum('pow') < need * 1.6) { for (const o of live) o.m.e = Math.max(0, o.m.e - 2); K(live.length > 1 ? "We pulled and pulled, and the rocks won't move." : `${nm(live[0])} can't move the rocks on its own.`); await rwait(1800); unprop(pr); return 'fail'; }
-    pr.free = true; rsfx('thud'); s.pose = 'happy'; deepCrew(T, leadOf(), [X + 28, X + 42], 'happy'); await rwait(700); await gift('Everyone pulled the rocks away, and it ran off. It left {x} behind for us.'); unprop(pr); return; }
+    if (sum('pow') < need * 1.6) { for (const o of live) o.m.e = Math.max(0, o.m.e - 2); K(live.length > 1 ? "We pulled and pulled, and the rocks won't move." : `${nm(live[0])} can't move the rocks on its own.`); await rwait(1800); return 'fail'; }
+    pr.free = true; rsfx('thud'); s.pose = 'happy'; deepCrew(T, leadOf(), [X + 28, X + 42], 'happy'); await rwait(700); await gift('Everyone pulled the rocks away, and it ran off. It left {x} behind for us.'); return; }
   if (n.ev === 'mural') {   // the best Mind reads it: a map of the floor
     const o = best('mnd'); await lead(o); deepCrew(T, leadOf(), [X - 34, X + 34], 'lean'); await walkTo(X, 60, 'walk'); s.pose = 'lean'; await rwait(900); s.pose = 'idle';
-    if (st(o, 'mnd') < need * 1.05) { K('None of us can make sense of it.'); await rwait(1600); unprop(pr); return 'fail'; }
+    if (st(o, 'mnd') < need * 1.05) { K('None of us can make sense of it.'); await rwait(1600); return 'fail'; }
     pr.read = true; rsfx('sparkle'); M.reveal(); const F = M.floors[n.f], hid = F.E.filter(e => e.hidden); hid.forEach(e => e.hidden = false);
-    K(`${nm(o)} worked it out. It's a map of this floor` + (hid.length ? ", with a room nobody's been in." : '.')); await rwait(2000); unprop(pr); return; }
+    K(`${nm(o)} worked it out. It's a map of this floor` + (hid.length ? ", with a room nobody's been in." : '.')); await rwait(2000); return; }
   // a crack: the fastest jumps it
   const o = best('spd'); await lead(o); deepCrew(T, leadOf(), [X - 50, X - 72]); await walkTo(X - 24, 60, 'walk'); await rwait(400);
-  if (st(o, 'spd') < need * 1.05) { K("It's too far for any of us to jump."); await rwait(1600); unprop(pr); return 'fail'; }
+  if (st(o, 'spd') < need * 1.05) { K("It's too far for any of us to jump."); await rwait(1600); return 'fail'; }
   const x0 = s.x; for (let k = 0; k <= 20; k++) { s.x = x0 + k * 2.6; s.jy = -Math.sin(k / 20 * Math.PI) * 26; await rwait(16); } pr.got = true;
   await gift(`${nm(o)} jumped the crack and came back with {x}.`); for (let k = 0; k <= 20; k++) { s.x = x0 + 52 - k * 2.6; s.jy = -Math.sin(k / 20 * Math.PI) * 26; await rwait(16); }
-  unprop(pr);
+ 
 }
 
 /* one of the new circles, called from deepNode */
@@ -116,20 +116,20 @@ async function deepMore(reg, n, st, g, T, leadOf, setLead, K, used, found, M) {
     if (c === 0) { for (const m of T) if (!m.down) { m.e = Math.min(m.max, m.e + 4); m.hp = Math.min(m.hpMax, m.hp + Math.round(m.hpMax * 0.3)); } K('That feels better. Let\'s keep going.'); }
     if (c === 1) { M.reveal(); K('There. Now we can see the whole way.'); }
     if (c === 2) { T.lucky = true; K('Let\'s find a chest while our luck lasts.'); }
-    await rwait(1300); unprop(p); return; }
+    await rwait(1300); return; }
   if (n.k === 'seal') {
     const [what, how] = DEEP_SEAL[n.el], p = prop({ k: 'seal', x: 170, y: GROUND, el: n.el }); K(what); await rwait(1400);
     const who = T.map((m, i) => ({ m, i })).find(({ m }) => !m.down && (m.s.m.el1 === n.el || m.s.m.el2 === n.el));
-    if (!who) { K(`A ${n.el} Snabit could get us past that. Maybe next season.`); await rwait(1600); unprop(p); return 'fail'; }
+    if (!who) { K(`A ${n.el} Snabit could get us past that. Maybe next season.`); await rwait(1600); return 'fail'; }
     used.push(n.id);
     if (who.i !== leadOf()) { await sceneFade(true, 200); setLead(who.i); RS.props = [p]; RS.x = 70; RS.camJump = true; await sceneFade(false, 200); }
     await walkTo(140, 60, 'walk'); RS.pose = 'happy'; p.open = true; spark(170, GROUND - 30, 'sparkle', 10); rsfx('creak');
-    K(how(displayName(who.m.s))); await rwait(1500); unprop(p); return 'open'; }
+    K(how(displayName(who.m.s))); await rwait(1500); return 'open'; }
   if (n.k === 'cache') {   // what the sealed way kept safe
     used.push(n.id); const c = deepUse({ k: 'chest', x: 150, y: GROUND, big: true }, n); deepCrew(T, leadOf(), []); await walkTo(c.x - 24, 60, 'walk'); await rwait(300); c.open = true; rsfx('creak'); s.pose = 'happy'; deepCrew(T, leadOf(), [], 'happy'); spark(c.x, GROUND - 22, 'sparkle', 8);
     const R = rng(hashStr('seal|' + reg.n + '|' + n.id + '|' + exSeason())), item = EX_RARE[Math.floor(R() * EX_RARE.length)], bits = Math.round(G.purse), a = /^[AEIOU]/.test(item) ? 'an' : 'a';
     addItem(item); deepPay(T, 'find', bits); found.push(`${a} ${item}`);
-    K(`There's an old League cache back here, with ${a} ${item} in it.`); await rwait(1700); unprop(c); return; }
+    K(`There's an old League cache back here, with ${a} ${item} in it.`); await rwait(1700); return; }
   if (n.k === 'rival') {
     used.push(n.id); const R = Math.random, lv = Math.round(G.lv[0] + (G.lv[1] - G.lv[0]) * 0.75);
     say("Well, look who made it out here. My team's been waiting for someone to beat.", 'rival'); await rwait(2200);
