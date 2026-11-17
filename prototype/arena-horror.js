@@ -149,22 +149,28 @@ const sgTidalGrasp={C:940,D:1750,sig:true,
 
 /* ---- Dagon's Fisher's Song: it sings, the notes drift out over the arena, water spreads across the floor, and a great curling wave full of fish
    rises between them, rolls forward, pitches over and crashes down on the target, leaving whitewater and foam as it drains away. */
-function hrWave(c,o){ const {back,front,ground,H,dir,t,R}=o, pitch=Math.min(1.25,o.pitch); if(H<2) return; const crestX=front-dir*R*(0.55-0.25*Math.min(1,pitch)), crestY=ground-H, lipX=front+dir*R*(0.35+1.15*pitch), lipY=Math.min(ground,ground-H*(1-pitch*0.82)+R*0.15);
-  const path=()=>{ c.beginPath(); c.moveTo(back,ground); for(let j=0;j<=16;j++){ const f=j/16; c.lineTo(back+(crestX-back)*f,ground-H*(0.1+0.9*Math.pow(f,1.7))+Math.sin(f*11+t/90)*R*0.05*f); }
-    c.quadraticCurveTo(crestX+dir*R*0.9,crestY-R*0.4,lipX,lipY); c.quadraticCurveTo(front+dir*R*0.35,lipY-R*0.25,front-dir*R*0.1,ground-H*0.5); c.quadraticCurveTo(front-dir*R*0.2,ground-H*0.15,front+dir*R*0.3,ground); c.closePath(); };
-  c.save(); path(); const g=c.createLinearGradient(0,ground-H,0,ground); g.addColorStop(0,"#9be6f4"); g.addColorStop(0.25,"#46a8de"); g.addColorStop(0.65,"#1d64b4"); g.addColorStop(1,"#0f3a7c"); c.fillStyle=g; c.fill(); c.clip();
-  const lg=c.createLinearGradient(crestX-dir*R*1.5,0,lipX,0); lg.addColorStop(0,"rgba(120,235,230,0)"); lg.addColorStop(1,"rgba(150,245,235,.65)"); c.fillStyle=lg; c.fillRect(Math.min(back,lipX)-R,ground-H-R,Math.abs(lipX-back)+R*3,H*0.55);   // light through the lip
-  c.fillStyle="rgba(8,30,80,.45)"; c.beginPath(); c.ellipse(front+dir*R*0.15,ground-H*0.48,R*0.45+R*0.4*pitch,H*0.28,0,0,7); c.fill();   // the dark inside of the curl
-  c.strokeStyle="rgba(210,245,255,.35)"; c.lineWidth=2; for(let i=0;i<9;i++){ const xx=back+(front-back)*(0.25+i*0.08), sh=Math.sin(i*2.3+t/120)*R*0.1; c.beginPath(); c.moveTo(xx,ground-H*0.15); c.quadraticCurveTo(xx+sh,ground-H*0.45,xx-dir*R*0.15,ground-H*(0.7+0.05*(i%3))); c.stroke(); }
-  for(let i=0;i<5;i++){ const fx=back+(front-back)*(0.3+0.13*i)+Math.sin(t/200+i)*R*0.2, fy=ground-H*(0.25+0.11*((i*3)%5))+Math.sin(t/150+i*2)*R*0.08, z=R*(0.16+0.05*(i%2)); c.save(); c.translate(fx,fy); c.scale(dir,1); c.rotate(-0.25+0.1*Math.sin(t/90+i));
+function hrWave(c,o){ const {back,front:f,ground:g,H,dir,t,R}=o, p=Math.max(0,Math.min(1,o.pitch)); if(H<2) return;
+  // a plunging wave: a rounded top that rolls forward over a hollow, and a lip that curls down in front of it
+  const X=v=>f+dir*R*v, Y=v=>g-H*v;
+  const T=[X(-0.35),Y(1)], c1=[X(0.3+0.6*p),Y(1.04)], O=[X(0.5+1.0*p),Y(0.93-0.05*p)], c2=[X(0.8+1.3*p),Y(0.92-0.2*p)], L=[X(0.7+1.25*p),Y(0.9-0.7*p)],
+    c3=[X(0.5+1.0*p),Y(0.95-0.65*p)], U=[X(0.45+0.85*p),Y(0.8-0.55*p)], c4=[X(0.05),Y(0.85)], B=[X(-0.1),Y(0.45)], c5=[X(-0.15),Y(0.12)], E=[X(0.35),g];
+  const slope=j=>{ const q=j/16; return [back+(T[0]-back)*q,g-H*(0.1+0.9*Math.pow(q,1.7))+Math.sin(q*11+t/90)*R*0.05*q]; };
+  const top=()=>{ c.quadraticCurveTo(c1[0],c1[1],O[0],O[1]); c.quadraticCurveTo(c2[0],c2[1],L[0],L[1]); };
+  const path=()=>{ c.beginPath(); c.moveTo(back,g); for(let j=0;j<=16;j++){ const q=slope(j); c.lineTo(q[0],q[1]); } top(); c.quadraticCurveTo(c3[0],c3[1],U[0],U[1]); c.quadraticCurveTo(c4[0],c4[1],B[0],B[1]); c.quadraticCurveTo(c5[0],c5[1],E[0],E[1]); c.closePath(); };
+  c.save(); path(); const gr=c.createLinearGradient(0,g-H,0,g); gr.addColorStop(0,"#9be6f4"); gr.addColorStop(0.25,"#46a8de"); gr.addColorStop(0.65,"#1d64b4"); gr.addColorStop(1,"#0f3a7c"); c.fillStyle=gr; c.fill(); c.clip();
+  const lg=c.createLinearGradient(T[0],0,L[0],0); lg.addColorStop(0,"rgba(120,235,230,0)"); lg.addColorStop(1,"rgba(150,245,235,.6)"); c.fillStyle=lg; c.fillRect(Math.min(back,L[0])-R,g-H*1.1,Math.abs(L[0]-back)+R*2,H*0.5);   // light through the lip
+  const bg=c.createRadialGradient(X(0.35+0.4*p),Y(0.45),R*0.05,X(0.35+0.4*p),Y(0.45),R*(0.5+0.6*p)); bg.addColorStop(0,"rgba(6,24,66,.55)"); bg.addColorStop(1,"rgba(6,24,66,0)"); c.fillStyle=bg; c.fillRect(X(-1)-R*2,g-H,R*6,H);   // shade inside the curl
+  c.strokeStyle="rgba(210,245,255,.35)"; c.lineWidth=2; for(let i=0;i<9;i++){ const xx=back+(f-back)*(0.25+i*0.08), sh=Math.sin(i*2.3+t/120)*R*0.1; c.beginPath(); c.moveTo(xx,g-H*0.15); c.quadraticCurveTo(xx+sh,g-H*0.45,xx-dir*R*0.15,g-H*(0.7+0.05*(i%3))); c.stroke(); }
+  for(let i=0;i<5;i++){ const fx=back+(f-back)*(0.3+0.13*i)+Math.sin(t/200+i)*R*0.2, fy=g-H*(0.25+0.11*((i*3)%5))+Math.sin(t/150+i*2)*R*0.08, z=R*(0.16+0.05*(i%2)); c.save(); c.translate(fx,fy); c.scale(dir,1); c.rotate(-0.25+0.1*Math.sin(t/90+i));
     c.fillStyle="rgba(12,40,90,.55)"; c.beginPath(); c.ellipse(0,0,z,z*0.42,0,0,7); c.fill(); c.beginPath(); c.moveTo(-z*0.8,0); c.lineTo(-z*1.45,-z*0.4); c.lineTo(-z*1.45,z*0.4); c.closePath(); c.fill(); c.fillStyle="rgba(200,240,255,.6)"; c.beginPath(); c.arc(z*0.5,-z*0.1,z*0.09,0,7); c.fill(); c.restore(); }   // fish carried in the wave
-  for(let i=0;i<10;i++){ const q=((t/900)+i/10)%1; c.strokeStyle=`rgba(230,250,255,${0.6*(1-q)})`; c.lineWidth=1.2; c.beginPath(); c.arc(back+(front-back)*(0.2+0.7*atH(i*3)),ground-H*0.9*q,R*(0.03+0.03*(i%3)),0,7); c.stroke(); }
+  for(let i=0;i<10;i++){ const q=((t/900)+i/10)%1; c.strokeStyle=`rgba(230,250,255,${0.6*(1-q)})`; c.lineWidth=1.2; c.beginPath(); c.arc(back+(f-back)*(0.2+0.7*atH(i*3)),g-H*0.9*q,R*(0.03+0.03*(i%3)),0,7); c.stroke(); }
   c.restore();
-  c.save(); c.strokeStyle="rgba(255,255,255,.95)"; c.lineWidth=R*0.16; c.lineCap="round"; c.beginPath(); c.moveTo(back+(crestX-back)*0.55,ground-H*(0.1+0.9*Math.pow(0.55,1.7))); for(let j=12;j<=16;j++){ const f=j/16; c.lineTo(back+(crestX-back)*f,ground-H*(0.1+0.9*Math.pow(f,1.7))); }
-  c.quadraticCurveTo(crestX+dir*R*0.9,crestY-R*0.4,lipX,lipY); c.stroke();
-  c.fillStyle="#ffffff"; for(let i=0;i<14;i++){ const u=i/13, bx=crestX+(lipX-crestX)*u+dir*Math.sin(u*Math.PI)*R*0.45, by=crestY+(lipY-crestY)*u-Math.sin(u*Math.PI)*R*0.3; c.beginPath(); c.arc(bx+Math.sin(t/70+i)*R*0.04,by,R*(0.09+0.06*atH(i)),0,7); c.fill(); }
-  for(let i=0;i<18;i++){ const q=((t/500)+i*0.13)%1, sx=crestX+(lipX-crestX)*atH(i)-dir*q*R*1.6, sy=crestY-R*0.2-q*R*0.9+q*q*R*1.4; c.fillStyle=`rgba(240,252,255,${0.85*(1-q)})`; c.beginPath(); c.arc(sx,sy,R*(0.04+0.04*atH(i*2))*(1-q*0.4),0,7); c.fill(); }   // spray blown off the crest
-  for(let i=0;i<22;i++){ const u=atH(i*5+2), xx=back+(front+dir*R*0.4-back)*u, z=R*(0.08+0.12*atH(i*3)); c.fillStyle=`rgba(250,255,255,${0.55+0.4*atH(i*9)})`; c.beginPath(); c.ellipse(xx+Math.sin(t/110+i)*R*0.05,ground-z*0.5,z*1.6,z*0.7,0,0,7); c.fill(); } c.restore(); }
+  c.save(); c.strokeStyle="rgba(255,255,255,.95)"; c.lineWidth=R*0.15; c.lineCap="round"; c.lineJoin="round"; c.beginPath(); { const q=slope(10); c.moveTo(q[0],q[1]); } for(let j=11;j<=16;j++){ const q=slope(j); c.lineTo(q[0],q[1]); } top(); c.stroke();
+  const bz=(a,k,b,u)=>[(1-u)*(1-u)*a[0]+2*(1-u)*u*k[0]+u*u*b[0],(1-u)*(1-u)*a[1]+2*(1-u)*u*k[1]+u*u*b[1]];
+  c.fillStyle="#ffffff"; for(let i=0;i<14;i++){ const u=i/13, P=u<0.5?bz(T,c1,O,u*2):bz(O,c2,L,(u-0.5)*2); c.beginPath(); c.arc(P[0]+Math.sin(t/70+i)*R*0.03,P[1]-R*0.03,R*(0.08+0.05*atH(i)),0,7); c.fill(); }   // foam along the crest
+  for(let i=0;i<18;i++){ const q=((t/500)+i*0.13)%1, P=bz(T,c1,O,atH(i)), sx=P[0]-dir*q*R*1.5, sy=P[1]-R*0.15-q*R*0.8+q*q*R*1.3; c.fillStyle=`rgba(240,252,255,${0.85*(1-q)})`; c.beginPath(); c.arc(sx,sy,R*(0.04+0.04*atH(i*2))*(1-q*0.4),0,7); c.fill(); }   // spray blown back off the crest
+  for(let i=0;i<22;i++){ const u=atH(i*5+2), xx=back+(E[0]+dir*R*0.4-back)*u, z=R*(0.08+0.12*atH(i*3)); c.fillStyle=`rgba(250,255,255,${0.55+0.4*atH(i*9)})`; c.beginPath(); c.ellipse(xx+Math.sin(t/110+i)*R*0.05,g-z*0.5,z*1.6,z*0.7,0,0,7); c.fill(); }
+  c.restore(); }
 const sgFishersSong={C:1000,D:1900,tail:900,sig:true,
   atk:t=>({pose:atPose(t<1300?"cast":"idle",{open:t<850?0.6+0.25*Math.sin(t/60):0,eyes:t<850?"shut":undefined}),arc:t<850?-5*Math.sin(t/200):0}),
   def:t=>{ if(t<1000||t>1700) return null; const k=(t-1000)/700; return {off:[30*Math.sin(Math.min(1,k*1.6)*Math.PI/2)*(1-k),0],arc:-34*Math.sin(Math.min(1,k*1.5)*Math.PI),rot:0.9*Math.sin(Math.min(1,k*1.5)*Math.PI),pose:"hurt"}; },
@@ -173,7 +179,7 @@ const sgFishersSong={C:1000,D:1900,tail:900,sig:true,
       c.beginPath(); c.ellipse(px,py,5.5,4,-0.4,0,7); c.fill(); c.stroke(); c.fillRect(px+4,py-15,2,15); if(i%2){ c.beginPath(); c.moveTo(px+6,py-15); c.quadraticCurveTo(px+12,py-11,px+10,py-5); c.lineWidth=2; c.strokeStyle=`rgba(210,240,255,${a})`; c.stroke(); } }
     const sheet=t<350?0:t<1500?Math.min(1,(t-350)/300):Math.max(0,1-(t-1500)/350); if(sheet>0){ const L=Math.min(s.x,tg.x)-R*1.6, Rr=Math.max(s.x,tg.x)+R*1.6; c.save(); c.globalAlpha*=sheet*0.7; const g=c.createLinearGradient(0,ground-R*0.3,0,ground+R*0.3); g.addColorStop(0,"#7fd0f2"); g.addColorStop(1,"#2a6ab0");
       c.fillStyle=g; c.beginPath(); c.ellipse((L+Rr)/2,ground+2,(Rr-L)/2,R*0.32,0,0,7); c.fill(); c.strokeStyle="rgba(240,252,255,.7)"; c.lineWidth=1.5; for(let i=0;i<5;i++){ const xx=L+(Rr-L)*(0.1+0.2*i)+Math.sin(t/200+i)*R*0.3; c.beginPath(); c.moveTo(xx-R*0.3,ground+R*0.05*(i%3)); c.lineTo(xx+R*0.3,ground+R*0.05*(i%3)); c.stroke(); } c.restore(); }
-    if(t>=450&&t<1300){ const k=Math.min(1,(t-450)/550), cr=t<1000?0:eio(Math.min(1,(t-1000)/280)), H=R*4.2*eo(Math.min(1,(t-450)/350))*(1-0.88*cr), pitch=(t<780?0:eio(Math.min(1,(t-780)/220)))+0.25*cr,
+    if(t>=450&&t<1300){ const k=Math.min(1,(t-450)/550), cr=t<1000?0:eio(Math.min(1,(t-1000)/300)), H=R*4.2*eo(Math.min(1,(t-450)/350))*(1-0.85*cr), pitch=t<760?0:eio(Math.min(1,(t-760)/260)),
         front=s.x+d*R*1.3+(tg.x-d*R*1.1-(s.x+d*R*1.3))*eio(k)+d*R*1.6*cr, back=front-d*Math.min(R*3.2,Math.abs(front-(s.x+d*R*0.3)));
       c.save(); c.globalAlpha*=t<1180?1:Math.max(0,1-(t-1180)/120); hrWave(c,{back,front,ground,H,pitch,dir:d,t,R}); c.restore(); if(typeof AT!=="undefined"&&AT) AT.trauma=Math.max(AT.trauma||0,0.12*k); }
     if(t>=960&&t<1700){ const k=(t-960)/740, lx=tg.x+d*R*(0.2+1.4*eo(k));   // whitewater rolls on from where the lip came down
@@ -472,12 +478,11 @@ const sgSunkenRise={C:950,D:2050,tail:1100,sig:true,
     HR.splash(c,hx,ground,R,(t-540)/450,14,[120,200,245]);   // the dive
     if(t>=760&&t<960){ const k=(t-760)/200, h=R*0.9*eo(k); const g=c.createRadialGradient(tg.x,ground-h*0.5,2,tg.x,ground,R*1.6); g.addColorStop(0,"rgba(200,240,255,.9)"); g.addColorStop(1,"rgba(60,140,215,.85)"); c.fillStyle=g; c.beginPath(); c.ellipse(tg.x,ground,R*1.5,Math.max(1,h),0,Math.PI,0); c.fill();
       for(let i=0;i<8;i++){ const q=(k*2+i/8)%1; c.strokeStyle=`rgba(240,252,255,${0.8*(1-q)})`; c.lineWidth=1.3; c.beginPath(); c.arc(tg.x+(i-3.5)*R*0.3,ground-q*h*1.4,R*0.05,0,7); c.stroke(); } }   // the water swells under the target
-    if(t>=880&&t<1450){ const k=(t-880)/570, ca=SR.atk(t,{}).arc||0, H=Math.max(0,(-ca+R*0.5)*Math.min(1,k*4))*(t<1250?1:1-ei((t-1250)/200)), w=R*(0.85+0.3*k); c.save(); c.globalAlpha*=0.85;   // the column it bursts out of
-      if(H>2){ const g=c.createLinearGradient(0,ground-H,0,ground); g.addColorStop(0,"rgba(235,250,255,.95)"); g.addColorStop(0.4,"rgba(120,200,245,.9)"); g.addColorStop(1,"rgba(30,100,190,.92)"); c.fillStyle=g;
-        c.beginPath(); c.moveTo(tg.x-w*1.4,ground); c.quadraticCurveTo(tg.x-w*0.7,ground-H*0.35,tg.x-w*0.85,ground-H); for(let i=0;i<=8;i++){ const u=i/8; c.lineTo(tg.x-w*0.85+w*1.7*u,ground-H-Math.abs(Math.sin(u*Math.PI*4+t/40))*R*0.35); } c.quadraticCurveTo(tg.x+w*0.7,ground-H*0.35,tg.x+w*1.4,ground); c.closePath(); c.fill();
-        c.strokeStyle="rgba(255,255,255,.6)"; c.lineWidth=2; for(let i=0;i<4;i++){ const xx=tg.x+(i-1.5)*w*0.4; c.beginPath(); c.moveTo(xx,ground-R*0.2); c.quadraticCurveTo(xx+Math.sin(t/60+i)*R*0.15,ground-H*0.5,xx,ground-H*0.9); c.stroke(); }
-        c.fillStyle="#fff"; for(let i=0;i<10;i++){ c.beginPath(); c.arc(tg.x-w*0.8+w*1.6*i/9,ground-H-Math.abs(Math.sin(i*1.7+t/50))*R*0.3,R*(0.12+0.08*atH(i)),0,7); c.fill(); } }
-      c.restore(); HR.splash(c,tg.x,ground,R*1.6,Math.min(1,Math.max(0,(t-950)/500)*1.2),26,[110,195,245]); SG.ring(c,tg.x,ground,R*(1+3*k),R*(0.25+0.6*k),[255,255,255],3,0.9*(1-k)); }
+    if(t>=930&&t<1500){ const k=(t-930)/570, up=t<1010?eo((t-930)/80):1-ei(Math.min(1,(t-1010)/380)), H=R*1.9*up, w=R*1.1;   // the water bursts up as it breaks the surface and falls straight back
+      if(H>2){ c.save(); c.globalAlpha*=0.9; for(let i=0;i<9;i++){ const u=(i-4)/4, px=tg.x+u*w*(1+0.5*k), hh=H*(0.55+0.45*Math.cos(u*1.4))*(0.85+0.3*atH(i*7)), lean=u*R*0.35*k; const gr=c.createLinearGradient(0,ground-hh,0,ground); gr.addColorStop(0,"rgba(240,252,255,.95)"); gr.addColorStop(1,"rgba(70,155,225,.9)"); c.fillStyle=gr;
+          c.beginPath(); c.moveTo(px-R*0.16,ground); c.quadraticCurveTo(px-R*0.08+lean*0.5,ground-hh*0.6,px+lean,ground-hh); c.quadraticCurveTo(px+R*0.08+lean*0.5,ground-hh*0.6,px+R*0.16,ground); c.closePath(); c.fill(); HR.drop(c,px+lean*1.2,ground-hh-R*0.15+k*k*R*0.6,R*0.08,[235,250,255],0.9*(1-k)); }
+        c.restore(); }
+      HR.splash(c,tg.x,ground,R*1.6,Math.min(1,Math.max(0,(t-950)/520)*1.15),26,[110,195,245]); SG.ring(c,tg.x,ground,R*(1+3*k),R*(0.25+0.6*k),[255,255,255],3,0.9*(1-k)); }
     if(t>=950&&t<1180){ const k=(t-950)/230; c.save(); c.globalCompositeOperation="lighter"; c.strokeStyle=`rgba(140,255,220,${1-k})`; c.lineWidth=4.5; c.lineCap="round";   // claw marks raking upward
       for(let j=0;j<3;j++){ const xx=tg.x+(j-1)*R*0.32; c.beginPath(); c.moveTo(xx-R*0.1,tg.y+R*0.5); c.quadraticCurveTo(xx+R*0.15,tg.y-R*0.3,xx+R*0.05,tg.y-R*(0.9+0.6*k)); c.stroke(); } c.restore(); }
     HR.splash(c,tg.x,ground,R*0.9,(t-1340)/400,12,[130,205,248]); SG.ring(c,hx,ground,R*(0.6+1.4*Math.max(0,(t-1620)/400)),R*(0.15+0.3*Math.max(0,(t-1620)/400)),[230,248,255],2,t>=1620&&t<2020?0.8*(1-(t-1620)/400):0);
