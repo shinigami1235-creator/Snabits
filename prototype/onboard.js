@@ -122,9 +122,9 @@ function obConfirmNew(){
 const OB_INTRO=[
   ["hidden",null,"Snabits live everywhere, camouflaged in the colour of whatever they hide in, like a red mailbox, a green leaf or the blue sky."],
   ["scope",null,"Only a Snaboscope can uncover them. It reads the colours of whatever it's pointed at and shows the Snabit hiding there."],
-  ["town","Josie","Hi, I'm Josie. I run a ranch up the hill, and I was just putting up this job request for someone to help me with it."],
-  ["town","Josie","You look like you'd be a good fit. The job is raising Snabits, training them and taking them to cups. The ranch is empty right now, so we'd start by finding your first one."],
-  ["handover","Josie","Your phone can work as a Snaboscope. Scan as many things as you like, see what comes out of each, and bring your favourite home."],
+  ["town","Josie","Hi, I'm Josie. I run a ranch up the hill and I was just putting up this job request for someone to help me with it."],
+  ["town","Josie","You look like you'd be a good fit. The job is raising Snabits, training them and taking them to cups. The ranch is empty right now so we'd start by finding your first one."],
+  ["handover","Josie","Your phone can work as a Snaboscope. Scan as many things as you like, see what comes out of each and bring your favourite home."],
 ];
 function obIntro(){
   if(!PLAYER) PLAYER=newPlayer();
@@ -157,10 +157,10 @@ function obStartScope(){
 }
 function obCoachText(){
   if(!ONB||!ONB.tut) return "";
-  if(mode==="aim") return "Drag the circle onto what you want scanned, then tap Scan.";
-  if(!stream) return window.DEV_GALLERY?"The Snaboscope needs your camera. Allow it when your browser asks, or use a photo from your gallery.":"The Snaboscope needs your camera. Allow it when your browser asks.";
-  if(ONB.picks.length===0) return "Point it at something with strong colour, like a toy, a fruit or a shirt. The circle looks hardest at what's inside it. Tap the round button to scan.";
-  return `You've scanned ${ONB.picks.length} so far. Try something a different colour, since the main colour decides its element.`;
+  if(mode==="aim") return "Move the circle onto the thing you want and tap Scan.";
+  if(!stream) return window.DEV_GALLERY?"The Snaboscope needs your camera. Allow it when your browser asks or use a photo from your gallery.":"The Snaboscope needs your camera. Allow it when your browser asks.";
+  if(ONB.picks.length===0) return "Point it at something bright like a toy, a fruit or a shirt. Keep it inside the circle and tap the round button.";
+  return `You have scanned ${ONB.picks.length} now. Try something in a different colour since the main colour decides what kind of Snabit comes out.`;
 }
 function obCoach(){
   let d=document.getElementById("ob-coach");
@@ -175,7 +175,7 @@ function obSheet(m){
   if(!ONB||!ONB.tut) return false;
   const acts=card.querySelector(".sheet-actions"); if(!acts) return false;
   const n=ONB.picks.length+1;
-  acts.innerHTML=`<p class="ob-note">This one's ${/^[AEIOU]/.test(m.el1)?"an":"a"} ${m.el1} ${m.family}. Keep it, or scan something else to see what else is out there.</p>
+  acts.innerHTML=`<p class="ob-note">This one's ${/^[AEIOU]/.test(m.el1)?"an":"a"} ${m.el1} ${m.family}. Keep it or scan something else to see what else is out there.</p>
     <button class="big" id="ob-keepme">Keep this one</button><button class="btn2" id="ob-again">Scan again</button>
     ${n>1?`<button class="btn2" id="ob-choose">${n<=OB_SHOW?`Choose from all ${n}`:`Choose from the last ${OB_SHOW}`}</button>`:""}`;
   const cur=lastMon;

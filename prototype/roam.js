@@ -35,8 +35,8 @@ function roamInRegion(s, reg, R) { const D = roamState(); if (!D || D.fought ===
 /* after a fight with it: a win and it follows you home */
 function roamResult(won) {
   const D = PLAYER.roam; if (!D || D.caught) return '';
-  if (!won) return 'It got away, so keep an ear out for where it turns up next.';
-  const e = addToRoster(JSON.parse(JSON.stringify(D.m))); if (!e) return "It wanted to come home with you, but the Freezer's full, so it wandered off.";
+  if (!won) return 'It got away so keep an ear out for where it turns up next.';
+  const e = addToRoster(JSON.parse(JSON.stringify(D.m))); if (!e) return "It wanted to come home with you but the Freezer's full so it wandered off.";
   D.caught = true; saveGame(); return `It's following you home! The ${D.m.name} with the strange colours is in the Freezer now.`;
 }
 /* the bestiary's line about it */

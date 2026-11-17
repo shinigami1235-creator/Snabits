@@ -67,7 +67,7 @@ function wildCard(res,card){
   const hq=o.hunt&&typeof huntActive==="function"&&huntActive();
   const el=o.m.el2?`${o.m.el1} / ${o.m.el2}`:o.m.el1;
   const notes=[o.drifter?"<b style=\"color:#ffd23f\">Strange colours.</b> No scan gives colours like these.":o.shiny?"<b style=\"color:#ffd23f\">Rare colours!</b> It pays double.":"",
-    o.famShift?"Same colours, but a different family showed up this time.":"", o.elShift?"Its second element shifted with the light.":""].filter(Boolean).join(" ");
+    o.famShift?"Same colours but a different family showed up this time.":"", o.elShift?"Its second element shifted with the light.":""].filter(Boolean).join(" ");
   const chip=e=>`<span class="elc" style="${chipStyle(ELC(e))}">${e}</span>`;
   card.innerHTML=`<div class="sheet-head"><canvas id="wild-spr" class="mon-tile"></canvas>
       <div class="sheet-id"><div class="sheet-meta" style="margin:0 0 2px;color:var(--gold)">${WILD.hunt?"Hunt":"Wild"} · ${wildLeft(s)} fight${wildLeft(s)===1?"":"s"} left this week</div><h2>${o.fm.name}</h2>
@@ -100,7 +100,7 @@ function wildFight(){
       PLAYER.bits+=bits; lines.push(`It beat the wild ${o.fm.name}. ${exp} exp and ${bits} bits.`);
       const lv=giveExp(s,exp); lines.push(...lv);
       if(Math.random()<0.4){ const fd=rollFind(Math.random,o.shiny?2:1); if(fd.item){ addItem(fd.item); lines.push(`It dropped ${/^[AEIOU]/.test(fd.item)?"an":"a"} ${fd.item}.`); } else if(fd.bits){ PLAYER.bits+=fd.bits; lines.push(`It dropped ${fd.bits} more bits.`); } }
-    } else lines.push(r.winner===null?"It was a draw, and the wild one wandered off.":"The wild one won and ran off. Your Snabit is tired but not hurt.");
+    } else lines.push(r.winner===null?"It was a draw and the wild one wandered off.":"The wild one won and ran off. Your Snabit is tired but not hurt.");
     if(r.learned.length) lines.push(...r.learned);
     if(o.drifter&&typeof roamResult==="function") lines.push(roamResult(won));
     const hu=typeof huntAfter==="function"?huntAfter(o,won):{lines:[]}; lines.push(...hu.lines);   // a hunt: the reward, or what the poster says next (hunts.js)

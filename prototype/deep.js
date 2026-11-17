@@ -225,7 +225,7 @@ async function runDeep(reg, team, pack = {}) {
       return; }
     if (n.k === 'up') { if (!at.f) return; await sceneFade(true, 450); at.f--; const F2 = Fl(); placeIn(F2.downRoom); [at.x, at.y] = F2.down; prev = null;
       enterRoom(); look(); await sceneFade(false, 450); return; }
-    if (n.k === 'lever') { const lp = RS.props.find(p => p.k === 'lever'); if (lp) { await walkTo(lp.x - 18, 60, 'walk'); lp.on = true; } delete F.feat[i]; const d = F.feat[dgI(F, ...F.down)]; if (d) d.locked = false; rsfx('creak'); RS.shake = 4; K(`${nm} pulls the lever, and something heavy grinds open far away.`); await rwait(1600); return; }
+    if (n.k === 'lever') { const lp = RS.props.find(p => p.k === 'lever'); if (lp) { await walkTo(lp.x - 18, 60, 'walk'); lp.on = true; } delete F.feat[i]; const d = F.feat[dgI(F, ...F.down)]; if (d) d.locked = false; rsfx('creak'); RS.shake = 4; K(`${nm} pulls the lever and something heavy grinds open far away.`); await rwait(1600); return; }
     if (n.k === 'relic') { delete F.feat[i]; const r = rng(hashStr('relic|' + reg.n + '|' + n.id + '|' + exSeason())), item = RELICS[Math.floor(r() * RELICS.length)], a = /^[AEIOU]/.test(item) ? 'an' : 'a';
       const rp = RS.props.find(p => p.k === 'relic'); if (rp) { deepCrew(T, lead, [rp.x + 26, rp.x + 48]); await walkTo(rp.x - 16, 60, 'walk'); unprop(rp); }
       addItem(item); found.push(`${a} ${item}`); gotItems.push(item); RS.pose = 'happy'; deepCrew(T, lead, [], 'happy'); setTimeout(() => deepCrewOff(T), 1600);
@@ -258,28 +258,28 @@ async function runDeep(reg, team, pack = {}) {
       const box = darts ? prop({ k: 'darttrap', x: RS.x + 130, y: G0 }) : null; rsfx('whiz');
       await anim(18, k => { fly.x = (darts ? RS.x + 120 : RS.x + 90) - k * (darts ? 112 : 84) - (dodge ? -0 : 0); if (!darts) fly.y = G0 - 90 + k * 64; if (dodge) RS.jy = -Math.sin(k * Math.PI) * 16; });
       unprop(fly); if (box) unprop(box);
-      if (dodge) line = `${darts ? 'Darts came out of the wall' : 'Arrows came down from the ceiling'}, and ${nm} jumped clear!`;
+      if (dodge) line = `${darts ? 'Darts came out of the wall' : 'Arrows came down from the ceiling'} and ${nm} jumped clear!`;
       else { hit(L, 0.22); RS.pose = 'hurt'; spark(RS.x + 4, G0 - 30, 'star', 5); rsfx('thud'); line = `${darts ? 'Darts came out of the wall' : 'Arrows came down from the ceiling'} and hit ${nm}!`; } }
     else if (e.trap === 2) { const b = prop({ k: 'boulder', x: -30, y: G0, rot: 0 }), strong = team.slice().sort((a, c) => playerFighter(c.s).base.pow - playerFighter(a.s).base.pow)[0], stop = deepVs(strong.s, 'pow', need) >= 1.25;
       rsfx('rumble'); RS.shake = 3;
       if (stop) { const si = T.indexOf(strong); if (si !== lead) strong.goX = x0 - 56; await anim(30, k => { b.x = -30 + k * (x0 - 112 + 30); b.rot = k * 6; }); if (si !== lead) strong.act = 'happy'; else RS.pose = 'happy';
-        line = `A boulder came rolling down the corridor, and ${name(strong)} stopped it!`; await rwait(500); }
+        line = `A boulder came rolling down the corridor and ${name(strong)} stopped it!`; await rwait(500); }
       else { await anim(34, k => { b.x = -30 + k * 300; b.rot = k * 9; }); for (const m of team) hit(m, 0.14); RS.pose = 'hurt'; deepCrew(T, lead, [x0 - 28, x0 - 54], 'hurt'); spark(RS.x, G0 - 24, 'dust', 6);
         line = `A boulder came rolling down the corridor and knocked everyone over!`; }
       unprop(b); }
     else if (e.trap === 3) { const pit = prop({ k: 'pit', x: RS.x, y: G0, w: 22 }); await anim(14, k => { RS.jy = k * 26; }); rsfx('thud');
-      if (bag.Rope > 0) { bag.Rope--; hit(L, 0.06); deepCrew(T, lead, [x0 - 26, x0 + 26]); line = `The floor gave way under ${nm}, and the others pulled it out on the rope.`; }
+      if (bag.Rope > 0) { bag.Rope--; hit(L, 0.06); deepCrew(T, lead, [x0 - 26, x0 + 26]); line = `The floor gave way under ${nm} and the others pulled it out on the rope.`; }
       else { hit(L, 0.3); deepCrew(T, lead, [x0 - 26, x0 + 26]); line = `The floor gave way under ${nm}! It took a while to get it back out.`; }
       await rwait(500); await anim(14, k => { RS.jy = (1 - k) * 26; }); RS.pose = 'hurt'; unprop(pit); }
     else if (e.trap === 5) { const jets = [prop({ k: 'firejet', x: RS.x - 10, y: G0 + 4 }), prop({ k: 'firejet', x: RS.x + 20, y: G0 + 4 })]; await rwait(300); jets.forEach(j => j.on = true); rsfx('ember');
       await rwait(700); jets.forEach(j => j.on = false);
-      if (isEl(L, 'Blaze')) line = `Fire came out of the walls, and ${nm} didn't even blink.`;
-      else if (dodge) line = `Fire came out of the walls, and ${nm} jumped clear!`;
+      if (isEl(L, 'Blaze')) line = `Fire came out of the walls and ${nm} didn't even blink.`;
+      else if (dodge) line = `Fire came out of the walls and ${nm} jumped clear!`;
       else { hit(L, 0.22); RS.pose = 'hurt'; line = `Fire came out of the walls and caught ${nm}!`; }
       await rwait(300); jets.forEach(unprop); }
     else { const gas = prop({ k: 'gas', x: RS.x - 20, y: G0, r: 10, a: 0 }); await anim(30, k => { gas.r = 10 + k * 40; gas.a = Math.min(0.7, k * 1.2); }); rsfx('puff');
       const ok = team.filter(m => isEl(m, 'Venom')), sick = team.filter(m => !isEl(m, 'Venom')); for (const m of sick) hit(m, 0.12);
-      line = ok.length ? `Poison gas! ${name(ok[0])} doesn't mind it, but the others are coughing.` : 'Poison gas! Everyone through, quick!';
+      line = ok.length ? `Poison gas! ${name(ok[0])} doesn't mind it but the others are coughing.` : 'Poison gas! Everyone through, quick!';
       deepCrew(T, lead, [x0 - 28, x0 - 54], 'hurt'); RS.pose = sick.includes(L) ? 'hurt' : 'idle'; await anim(30, k => { gas.a = 0.7 * (1 - k); }); unprop(gas); }
     draw(); const down = T.filter(m => m.down && team.includes(m)); if (down.length) line += ` ${down.map(name).join(' and ')} can't go on.`;
     K(line); await rwait(1700); RS.pose = 'idle'; RS.jy = 0; deepCrewOff(T); afterFight(); };
@@ -360,7 +360,7 @@ async function runDeep(reg, team, pack = {}) {
         { const fresh = live().filter(m => m !== T[lead] && m.e >= 2).sort((a, b) => b.e - a.e)[0];   // out of energy in front: whoever has the most takes over
           if (T[lead].e <= 0 && fresh) { fresh.e -= 1; setLead(T.indexOf(fresh)); K(`${name(fresh)}, you go in front.`); await rwait(900); continue; } }
         const L2 = live(); if (!warned && (L2.some(m => m.hp <= m.hpMax * 0.5) || L2.reduce((a, m) => a + Math.max(0, m.e), 0) <= L2.reduce((a, m) => a + m.max, 0) * 0.25)) {
-          warned = true; K("We're running low. We should head back to camp, or go home."); await rwait(1600); continue; }
+          warned = true; K("We're running low. We should head back to camp or go home."); await rwait(1600); continue; }
         const c = await deepChoose(M, at, T, lead, vis, prev, nights, bag, boxes);
         if (!c) break;
         let r;
@@ -396,7 +396,7 @@ async function runDeep(reg, team, pack = {}) {
     const brought = keep.length === 1 ? `We brought home ${keep[0]}.` : keep.length ? `We brought home ${keep.length} things.${best ? ` One of them is ${best}.` : ''}` : '';
     const got = (keep.length ? brought : left ? '' : "We didn't find anything this time.") + league + (left ? ` We had to leave ${keep.length ? 'the rest' : 'everything we found'} down there when we ran. I'll ask the League to send a team after it.` : '');
     const whoHurt = hurt.length === T.length && T.length > 1 ? (T.length === 2 ? 'Both of them' : 'All three') : hurt.join(' and ');
-    const mo = deepLife(g, ring) / 4, ow = hurt.length ? ` ${whoHurt} came home hurt, and it cost ${hurt.length > 1 ? 'each of them' : 'it'} ${mo} month${mo > 1 ? 's' : ''} of ${hurt.length > 1 ? 'their' : 'its'} prime.` : '';
+    const mo = deepLife(g, ring) / 4, ow = hurt.length ? ` ${whoHurt} came home hurt and it cost ${hurt.length > 1 ? 'each of them' : 'it'} ${mo} month${mo > 1 ? 's' : ''} of ${hurt.length > 1 ? 'their' : 'its'} prime.` : '';
     await tripHome(`${retreat ? 'We made it out.' : 'Time to head back.'}${got ? ' ' + got : ''}${ow}`, "We're back at the ranch. Everyone will sleep well tonight.", keep.length && !hurt.length ? 'happy' : 'idle');
     RS.weekAct = 'Expedition'; await endWeek(2, `${T.length === 1 ? name(T[0]) : 'The team'} explored ${ring ? reg.n.replace('The Rift, ', '') + ' of the Rift' : 'deep ' + reg.n}.`);   // Walt has already said what came home
   });
@@ -547,7 +547,7 @@ async function deepNode(reg, n, st, g, need, T, leadOf, setLead, K, used, found,
     const alive = T.findIndex(m => !m.down); if (alive >= 0 && T[leadOf()].down) setLead(alive);
     const sp = EX_DEEP_STONE[reg.n], L0 = sp && stoneList(), have = L0 ? L0.includes(sp) : once;   // a save that beat this guardian when it guarded two items still finds the stone
     if (sp && !have) { const p = prop({ k: 'pstone', x: 170, y: GROUND, glow: true, sp }); await walkTo(140, 60, 'walk'); RS.pose = 'happy'; if (!once) st.got.push(n.id); const L = stoneList(); if (L && !L.includes(sp)) L.push(sp);
-      found.push('a Pattern Stone'); spark(170, GROUND - 40, 'sparkle', 8); banner('A Pattern Stone', '#ffe9a8'); K("Look behind it. Someone painted a pattern on that stone, and the Snaboscope's humming at it."); await rwait(2800); banner(''); unprop(p); return 'end'; }
+      found.push('a Pattern Stone'); spark(170, GROUND - 40, 'sparkle', 8); banner('A Pattern Stone', '#ffe9a8'); K("Look behind it. Someone painted a pattern on that stone and the Snaboscope's humming at it."); await rwait(2800); banner(''); unprop(p); return 'end'; }
     let gift = '';
     if (!once) { st.got.push(n.id); const R2 = rng(hashStr('guardchest' + reg.n)), items = [EX_RARE[Math.floor(R2() * 3)], typeof deepTreasure === 'function' ? deepTreasure(R2) : EX_RARE[Math.floor(R2() * 3)]]; items.forEach(addItem); found.push(...items.map(i => `${/^[AEIOU]/.test(i) ? 'an' : 'a'} ${i}`)); gift = ` It was guarding ${items.map(i => `${/^[AEIOU]/.test(i) ? 'an' : 'a'} ${i}`).join(' and ')}.`; }
     deepPay(T, tName, Math.round(G.purse * 1.5));

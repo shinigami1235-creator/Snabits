@@ -35,8 +35,8 @@ const TREASURE_PRICE = { 'Timeworn amber': 6000, 'Star shard': 5000, "Mender's m
   window.useItem = useItem = function (k) {
     const s = RS, bag = PLAYER.bag;
     if (k === 'Timeworn amber') { if ((s.amber || 0) >= 3) { say("It's had three already. Another won't do anything."); return; } s.amber = (s.amber || 0) + 1; s.used = Math.max(0, (s.used || 0) - 4); say('It held the amber for a long time. That gave back a month of its prime.'); }
-    else if (k === 'Star shard') { s.tp = s.tp.map(v => v + 5 * EARN_DIV); say('The shard went dim, and every stat went up by 5.'); }
-    else if (k === "Mender's moss") { if (!s.injured && s.fatigue < 10 && s.stress < 10) { say("It's in good shape, so the moss would be wasted."); return; } s.injured = false; s.fatigue = 0; s.stress = 0; say("The moss did its work. It's good as new."); }
+    else if (k === 'Star shard') { s.tp = s.tp.map(v => v + 5 * EARN_DIV); say('The shard went dim and every stat went up by 5.'); }
+    else if (k === "Mender's moss") { if (!s.injured && s.fatigue < 10 && s.stress < 10) { say("It's in good shape so the moss would be wasted."); return; } s.injured = false; s.fatigue = 0; s.stress = 0; say("The moss did its work. It's good as new."); }
     else if (k === "Pathfinder's compass") { say('The compass is for packing on a deep expedition.'); return; }
     else return base(k);
     bag[k]--; if (bag[k] <= 0) delete bag[k]; clampAll(); drawUI(); saveGame(); openItems();

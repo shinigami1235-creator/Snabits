@@ -12,7 +12,7 @@ It opens on a title screen. A new player sees a short intro, meets Josie in town
 
 From there it plays like Monster Rancher 2: weekly drills and rests, feeding and care, praise and scolding, evolution from Bit to Byte to Mega, missions and skill trips played out on screen, MR2-style cups in a stadium, wild battles, the fusion lab, the town shops, friend battles in live rooms or by ghost code, and Team battle, a 6 on 6 mode for fully trained monsters.
 
-The camera needs a phone browser with camera permission. Players can only scan with the live camera, since a saved photo would let anyone download a Pattern Stone or a colour chart. Open the game once with `?dev` on the end of the address to get "From gallery" back in that browser, and `?dev=0` to turn it off. Adding `#test` to the address skips the title screen and turns the gallery on, which the test scripts use.
+The camera needs a phone browser with camera permission. Players can only scan with the live camera, since a saved photo would let anyone download a Pattern Stone or a colour chart. Open the game once with `?dev` on the end of the address to get "From gallery" back in that browser and `?dev=0` to turn it off. Adding `#test` to the address skips the title screen and turns the gallery on, which the test scripts use.
 
 ## Files
 

@@ -44,7 +44,7 @@ function dexCount() {
 function dexPrizes() {
   const D = dex(), got = PLAYER.dexGot = PLAYER.dexGot || {}, { seen, raised } = dexCount(), lines = [];
   const give = (key, p, what) => { if (got[key]) return; got[key] = 1; if (p[1] === 'bits') PLAYER.bits += p[2]; else addItem(p[1]);
-    lines.push(`${p[0]} kinds ${what} in the bestiary, so Dr. Ines sent ${p[1] === 'bits' ? p[2] + ' bits' : (/^[AEIOU]/.test(p[1]) ? 'an ' : 'a ') + p[1]}.`); };
+    lines.push(`${p[0]} kinds ${what} in the bestiary so Dr. Ines sent ${p[1] === 'bits' ? p[2] + ' bits' : (/^[AEIOU]/.test(p[1]) ? 'an ' : 'a ') + p[1]}.`); };
   for (const p of DEX_SEEN_PRIZE) if (seen >= p[0]) give('s' + p[0], p, 'seen');
   for (const p of DEX_RAISE_PRIZE) if (raised >= p[0]) give('r' + p[0], p, 'raised');
   if (typeof openCos === 'function') { const a = seen >= 30 && openCos('Panda', 'Dr. Ines sent a League pattern card for seeing 30 kinds.'), b = raised >= 10 && openCos('Cow', 'Dr. Ines sent a League pattern card for raising 10 kinds.'); if (a) lines.push(a); if (b) lines.push(b); }

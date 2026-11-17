@@ -62,7 +62,7 @@ function openArenaTest(){
   d.style.display="flex"; window.PRACTICE=false;
   const fams=Object.keys(FAM_MOVES), pick=AT_PICK, roster=(typeof PLAYER!=="undefined"&&PLAYER&&PLAYER.roster?PLAYER.roster:[]).map(atRanchOf);
   const on=q=>JSON.stringify(q)===JSON.stringify(pick.me)?"on":"";
-  const draw=()=>{ d.innerHTML=`<div class="pick"><h2>Practice battle</h2><p>Pick who fights. Presets and scans fight at level 30 with every family move learned, and your own Snabits fight as they are now. Nothing here touches your save.</p>
+  const draw=()=>{ d.innerHTML=`<div class="pick"><h2>Practice battle</h2><p>Pick who fights. Presets and scans fight at level 30 with every family move learned and your own Snabits fight as they are now. Nothing here touches your save.</p>
     ${roster.length?`<h2 style="font-size:15px">Your Snabits</h2><div class="fams" id="at-ros">${roster.map((s,k)=>`<button class="btn ${on({kind:"ros",k})}" data-k="${k}" style="font-size:12px">${typeof displayName==="function"?displayName(s):s.m.name}<br>Lv ${s.level}</button>`).join("")}</div>`:""}
     <h2 style="font-size:15px">A new scan</h2><div class="fams"><button class="btn ${pick.me.kind==="scan"?"on":""}" id="at-scan" style="grid-column:1/5">${pick.me.kind==="scan"?`${pick.me.m.name} at level 30 · scan again`:"Scan a photo"}</button></div>
     <h2 style="font-size:15px">Presets</h2><div class="fams" id="at-me">${fams.map(f=>`<button class="btn ${on({kind:"fam",fam:f})}" data-f="${f}">${f}</button>`).join("")}</div>
@@ -852,7 +852,7 @@ function atResult(){
   const div=document.createElement("div"); div.className="res";
   const how=ar.judged?"The judges called it after 60 seconds":`It ended in a knockout at ${Math.round(ar.t)} seconds`;
   if(!o.onEnd){
-    div.innerHTML=`<h2>${w===0?"You win":w===1?"You lose":"Draw"}</h2><div>${how}, and you dealt ${ar.p[0].dealt} and took ${ar.p[1].dealt}.</div>
+    div.innerHTML=`<h2>${w===0?"You win":w===1?"You lose":"Draw"}</h2><div>${how} and you dealt ${ar.p[0].dealt} and took ${ar.p[1].dealt}.</div>
       <div class="row"><button class="btn" id="at-again">Again</button><button class="btn" id="at-pick">Pick Snabits</button></div>`;
     d.appendChild(div);
     document.getElementById("at-again").onclick=()=>atStart(AT.me,AT.foe); document.getElementById("at-pick").onclick=openArenaTest; return; }
@@ -861,7 +861,7 @@ function atResult(){
   const tz=s&&s.likeT&&typeof taste==="function"?taste("battle",null,s):null; let tl="";
   if(tz){ const first=tasteFound(tz,s); s.stress=Math.max(0,s.stress+(tz==="like"?-4:6)); s.spoil+=tz==="like"?2:-1; tl=tz==="like"?(first?"It loves a good fight.":"It enjoyed that."):(first?"It hates fighting.":"It didn't enjoy that."); }
   if(typeof musJingle==="function"&&w!==null) musJingle(w===0);
-  div.innerHTML=`<h2>${w===0?"Win":w===1?"Loss":"Draw"}</h2><div>${how}, and ${displayNameOf(ar.p[0])} dealt ${ar.p[0].dealt} and took ${ar.p[1].dealt}.</div>
+  div.innerHTML=`<h2>${w===0?"Win":w===1?"Loss":"Draw"}</h2><div>${how} and ${displayNameOf(ar.p[0])} dealt ${ar.p[0].dealt} and took ${ar.p[1].dealt}.</div>
     ${lines.map(t=>`<div style="margin-top:6px;color:#ffc93c">${t}</div>`).join("")}${tl?`<div style="margin-top:6px">${tl}</div>`:""}
     <div class="row"><button class="btn" id="at-cont" style="background:#ffc93c;color:#14151d;border-color:#ffc93c">Continue</button></div>`;
   d.appendChild(div);

@@ -45,7 +45,7 @@ function openTrips(){
     regs.map((r,i)=>{ const [a,b]=TRIP_STATS[r.n]; return `<button class="rb" data-t="${i}">${r.n} · ${tripCost(r).toLocaleString()} bits<small>${r.el}, ${STATS[a]} and ${STATS[b]}. ${tutorLine(s,r)}</small></button>`; }).join("")+
     `<button class="rb" id="tr-back">Back</button>`);
   el("r-panel").querySelectorAll("[data-t]").forEach(b=>b.onclick=()=>{ const r=regs[+b.dataset.t], cost=tripCost(r);
-    if(PLAYER.bits<cost){ say(`I charge ${cost.toLocaleString()} bits for ${r.n}, and you have ${PLAYER.bits.toLocaleString()}.`,"guide"); return; }
+    if(PLAYER.bits<cost){ say(`I charge ${cost.toLocaleString()} bits for ${r.n} and you have ${PLAYER.bits.toLocaleString()}.`,"guide"); return; }
     PLAYER.bits-=cost; drawUI(); runTrip(r); });
   el("tr-back").onclick=()=>menu("Out");
 }
@@ -58,7 +58,7 @@ async function runTrip(reg){
     await tripLeave(`Walt is here to take ${nm} to ${reg.n}. They'll train there for four weeks.`);
     await tripArrive(reg.el);
     s.tripLabel=`${reg.n} · Week 1 of 4`; drawUI();
-    await stageCard(reg.n,`We'll train ${STATS[main]} the most here, and ${STATS[second]} a little too.`,"guide");
+    await stageCard(reg.n,`We'll train ${STATS[main]} the most here and ${STATS[second]} a little too.`,"guide");
     const areas=TRIP_AREAS[reg.el], tName=TEACHER[reg.el][0], tThe=/^The /.test(tName)?tName:"the "+tName, Cap=t=>t[0].toUpperCase()+t.slice(1), lc=t=>t[0].toLowerCase()+t.slice(1);
     let teacher=null, okWeeks=0;
     for(let w=0;w<4;w++){
@@ -74,7 +74,7 @@ async function runTrip(reg){
       s.tp[main]+=a; s.tp[second]+=b; gain[0]+=a; gain[1]+=b; s.fatigue+=Math.round(14*tireMul(s)); s.stress+=6;   // four weeks of this brings it home worn out, and one full rest puts it right
       drawUI(); popStat(main,"+"+a); popStat(second,"+"+b);
       let line=`Week ${w+1}, ${A.name}: ${STATS[main]} +${a}, ${STATS[second]} +${b}.${ok?"":" It was a rough week."}`;
-      await stageResult(ok,ok?`That was a good week. ${STATS[main]} went up by ${a} and ${STATS[second]} by ${b}.`:`That was a rough week, so ${STATS[main]} only went up by ${a} and ${STATS[second]} by ${b}.`,"guide");
+      await stageResult(ok,ok?`That was a good week. ${STATS[main]} went up by ${a} and ${STATS[second]} by ${b}.`:`That was a rough week so ${STATS[main]} only went up by ${a} and ${STATS[second]} by ${b}.`,"guide");
       if(ok){
         { const ck={"Saffron Dojo":"Tiger","Coral Shallows":"Clownfish","Tanglewood":"Ladybug"}[reg.n], cl=ck&&typeof openCos==="function"&&openCos(ck,`${nm} found a League pattern card on the trail.`); if(cl){ line+=" "+cl; K(cl); await rwait(1800); } }   // a costume found on a good week
         s.uses=s.uses||{}; for(const n of knownSkills(s)) if(SKILLS[n].el===reg.el) s.uses[n]=(s.uses[n]||0)+5;
@@ -110,11 +110,11 @@ async function runTrip(reg){
       await sceneFade(true,400); let won=false;
       await new Promise(done=>arenaFight({s:fightSnapshot(s),foe,mode:"auto",title:champ?"Boss":"Wild",noDraw:true,onEnd:r=>{ won=!!(r&&r.winner===0); done(); }}));
       unprop(fp); s.trip=true; s.camJump=true; s.pose=won?"happy":"tired"; await sceneFade(false,500);
-      if(won){ PLAYER.bits+=prize; drawUI(); spark(s.x,headY()-6,"sparkle",8); await hop(14,360); K(`${nm} won, and that's ${prize.toLocaleString()} bits.`); weeks.push(`On the last day it beat ${champ?`the ${foe.boss}`:`a stray ${foe.m.name}`} and brought home ${prize.toLocaleString()} bits.`); }
+      if(won){ PLAYER.bits+=prize; drawUI(); spark(s.x,headY()-6,"sparkle",8); await hop(14,360); K(`${nm} won and that's ${prize.toLocaleString()} bits.`); weeks.push(`On the last day it beat ${champ?`the ${foe.boss}`:`a stray ${foe.m.name}`} and brought home ${prize.toLocaleString()} bits.`); }
       else { K(`The stray was too much for ${nm} this time.`); weeks.push(`On the last day a stray ${foe.m.name} beat it.`); }
       await rwait(1200);
     }
-    await tripHome(`That's the end of the four weeks. Time to take ${nm} home.`,`We're back at the ranch. ${nm} worked hard, so give it a good rest.`,learned.length?"happy":"idle");
+    await tripHome(`That's the end of the four weeks. Time to take ${nm} home.`,`We're back at the ranch. ${nm} worked hard so give it a good rest.`,learned.length?"happy":"idle");
     if(learned.length) spark(s.x,headY()-6,"sparkle",10); await rwait(400);
     RS.weekAct="Trip"; await endWeek(4,`Welcome back, ${nm}! Its ${STATS[main]} went up by ${gain[0]} and its ${STATS[second]} by ${gain[1]}${learned.length?`, and it learned ${learned.join(" and ")}`:""}.`);
   });

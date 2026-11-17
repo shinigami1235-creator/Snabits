@@ -14,7 +14,7 @@ const SNACKS={
   "Berry":{c:"#c43b6a",say:"Down in one bite.",fx:s=>{s.fatigue-=10;s.spoil+=1;s.fear+=1;},react:"happy"},
   "Candy":{c:"#ff8fd0",say:"It loves the sugar a little too much.",fx:s=>{s.weight+=5;s.stress-=2;s.spoil+=1;},react:"happy"},
   "Honey cake":{c:"#f2b134",say:"It spins with joy.",fx:s=>{s.spoil+=10;s.fear-=5;s.weight+=5;},react:"spin"},
-  "Bitter root":{c:"#6b4a2b",say:"It shudders, but it's listening now.",fx:s=>{s.fear+=20;s.spoil-=10;s.weight-=5;},react:"shudder"},
+  "Bitter root":{c:"#6b4a2b",say:"It shudders but it's listening now.",fx:s=>{s.fear+=20;s.spoil-=10;s.weight-=5;},react:"shudder"},
   "Slim tea":{c:"#9bd16b",say:"A little lighter on its feet.",fx:s=>{s.weight-=15;s.fatigue+=5;},react:"calm"},
 };
 const SNACK_FX={"Cool leaf":"stress halved","Energy nut":"fatigue -25","Berry":"fatigue -10","Candy":"weight +5, stress -2","Honey cake":"spoil +10, fear -5, weight +5","Bitter root":"fear +20, spoil -10, weight -5","Slim tea":"weight -15, fatigue +5"};
@@ -36,8 +36,8 @@ function tasteFound(t,s=RS){ s.found=s.found||{}; const first=!s.found[t]; s.fou
 const tasteName=T=>!T?"":T.k==="meal"?MEALS[T.v][0]:T.k==="drill"?DRILLS[T.v]:T.k==="battle"?"Battles":T.v;
 const EVO_TOTAL={Squib:[90,220],Stilt:[90,220],Skit:[100,240],Antik:[110,250],Chomp:[110,250],Pinch:[120,260],Moko:[130,280],Booly:[130,280],Plod:[120,260],Bipped:[110,250],Fizz:[110,250],Teep:[120,260],Lern:[130,280],Eagle:[120,270],Vampire:[130,280],Phoenix:[140,300],Kitsune:[130,280],Naga:[130,280],Yeti:[130,280],Puff:[110,250],Flit:[90,220],Glop:[120,260],Tock:[100,240],Mitt:[110,250],Brolly:[110,250],Spine:[120,260],Burr:[110,250],Kraken:[130,280],Golem:[140,300],Unicorn:[130,280],Jack:[130,280],Wick:[100,240],Lumo:[100,240],Snooze:[120,260],Inky:[110,250],Cobble:[120,260],Nimbo:[100,240],Dango:[110,250],Oaklet:[120,260],Roly:[120,260],Trundle:[130,270],Clank:[120,260],Crease:[110,250],Twiglet:[130,280],Swirl:[120,260],Ditty:[110,250],Sizzle:[110,250],Aero:[100,240],Nesta:[130,280],Magna:[120,260],Helm:[130,280],Bloop:[100,240],Sox:[100,240],Cuppy:[110,250],Suds:[100,240],Scoop:[100,240],Tome:[110,250],Gumball:[110,250],Pina:[110,250],Jingle:[120,260],Presto:[120,260],Vroom:[110,250],Shutter:[120,260],Yoyo:[110,250],Lava:[130,280],Pogo:[120,260],Tengu:[130,280],Tanuki:[130,280],Mermaid:[130,280],Diwata:[130,280],Sphinx:[130,280],Garuda:[130,280],Werewolf:[130,280],Minotaur:[140,300],Dragon:[140,300],Thunderbird:[130,280],Hydra:[140,300],Griffin:[130,280],Kirin:[130,280],Salamander:[130,280],Bakunawa:[140,300],Cerberus:[140,300],Djinn:[130,280],Troll:[140,300],Mummy:[130,280],Sarimanok:[130,280],Cthulhu:[150,320],Hastur:[150,320],Shoggoth:[150,320],Dagon:[150,320],Migo:[150,320],Nightgaunt:[150,320],Ghoul:[150,320],Gug:[150,320],Yog:[150,320],Shub:[150,320]};
 const STAT_SKILLS=[[["Second Wind",30],["Endure",80],["Body Slam",150],["Regrow",240]],[["Haymaker",30],["Pump Up",80],["Crush",150],["Rampage",240]],[["Harden",30],["Shield Bash",80],["Retaliate",150],["Bulwark",240]],[["Concentrate",30],["Mind Spike",80],["Foresight",150],["Brainstorm",240]],[["Calm",30],["Still Water",80],["Spirit Ward",150],["Soul Flare",240]],[["Dart",30],["Agility",80],["Barrage",150],["Afterimage",240]]];
-const CONDITION=[[20,"It's full of energy!"],[50,"It's in good shape."],[70,"It seems a little tired."],[90,"It's really tired. It needs a rest."],[999,"It's exhausted!"]];
-const condition=()=>RS.injured?"It's hurt and needs a rest or some medicine.":RS.sick?"It has a cold and needs a rest or some medicine.":CONDITION.find(c=>RS.fatigue<c[0])[1];
+const CONDITION=[[20,"It is full of energy!"],[50,"It is in good shape."],[70,"It seems a little tired."],[90,"It is really tired and needs a rest."],[999,"It is exhausted!"]];
+const condition=()=>RS.injured?"It is hurt and needs a rest or some medicine.":RS.sick?"It has a cold and needs a rest or some medicine.":CONDITION.find(c=>RS.fatigue<c[0])[1];
 const CONDITION_SHORT=[[20,"Fresh"],[50,"Fine"],[70,"Tired"],[90,"Worn out"],[999,"Exhausted"]];
 const conditionShort=()=>CONDITION_SHORT.find(c=>RS.fatigue<c[0])[1];
 const SEASON_COL={ground:["#78c556","#5fb043","#c49a45","#e9eef3"],hill:["#4f9a45","#3f8a38","#9c7a3a","#c5d3de"],leaf:["#58b45a","#3d9a3d","#d9822b",null]};
@@ -190,7 +190,7 @@ function agePhase(s=RS){ const f=s.used/(s.m.lifespan*4); return AGE_PHASES.find
 function ageMult(s=RS){ return agePhase(s)[1]; }
 /* how old it is. Its lifespan and life stage stay hidden: the player finds out from Josie and from how training takes */
 function ageText(s){ const mo=Math.floor((s.used||0)/4); return mo<1?"Under a month old":`${mo} month${mo>1?"s":""} old`; }
-const AGE_NOTE={Prime:"It's in its prime now, so training sticks better than it did.",Elder:"It's getting on in years, and training doesn't take as well as it used to."};
+const AGE_NOTE={Prime:"It's in its prime now so training sticks better than it did.",Elder:"It's getting on in years and training doesn't take as well as it used to."};
 function dateShort(){const w=PLAYER.week, y=Math.floor(w/48)+1, mo=Math.floor(w/4)%12;return `${SEASON[Math.floor(mo/3)]} · Month ${mo%3+1} · Week ${w%4+1}${y>1?` · Year ${y}`:""}`;}
 function dateText(){const w=PLAYER.week, y=Math.floor(w/48)+1, mo=Math.floor(w/4)%12, s=Math.floor(mo/3);return `Year ${y}, ${SEASON[s]}, month ${mo%3+1}, week ${w%4+1}`;}
 
@@ -202,7 +202,7 @@ function openRanch(m){
   injectRanch();
   if(m){ if(RS&&RS.id) saveGame(); const e=addToRoster(m); if(!e){ alert("The Freezer is full."); return; } PLAYER.active=e.id; }
   const e=activeEntry(); if(!e){ el("ranch").style.display="flex"; RS=null; panel(""); openFreezer(); return; }
-  if(!RS||RS.id!==e.id){ RS=newRanch(e); RS.say=e.st?"Welcome back.":"This is the ranch. Train it, feed it, and watch how it takes it.";
+  if(!RS||RS.id!==e.id){ RS=newRanch(e); RS.say=e.st?"Welcome back.":"This is the ranch. Train it, feed it and watch how it takes it.";
     if(!e.st&&typeof applyLegacy==="function"){ const lg=applyLegacy(RS); if(lg) RS.say=lg; } }
   if(typeof dexRaise==="function"){ dexBackfill(); dexRaise(RS.m,RS.stage); }
   el("ranch").style.display="flex"; RS.open=true;
@@ -230,7 +230,7 @@ function injectRanch(){
   document.body.appendChild(d);
   el("r-back").onclick=()=>{ el("r-foot").classList.remove("open"); openScope(); };
   el("r-codego").onclick=async()=>{ const m=typeof redeemCode==="function"?await redeemCode(el("r-code").value):""; el("r-codemsg").textContent=m; if(/^That code gave/.test(m)) el("r-code").value=""; };
-  const fileWhen=()=>{ el("r-filewhen").textContent=PLAYER.lastExport?`Last saved to a file on ${new Date(PLAYER.lastExport).toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"})}.`:"Clearing this site's data in the browser deletes the game, so keep a save file."; };
+  const fileWhen=()=>{ el("r-filewhen").textContent=PLAYER.lastExport?`Last saved to a file on ${new Date(PLAYER.lastExport).toLocaleDateString(undefined,{day:"numeric",month:"short",year:"numeric"})}.`:"Clearing this site's data in the browser deletes the game so keep a save file."; };
   el("r-gear").onclick=()=>{ installShow(); fileWhen(); el("r-fileask").innerHTML=""; el("r-foot").classList.toggle("open"); };
   el("r-export").onclick=async()=>{ await exportSave(); fileWhen(); };
   el("r-import").onchange=async e=>{ const f=e.target.files[0]; e.target.value=""; if(!f) return; const box=el("r-fileask");
@@ -346,7 +346,7 @@ function menu(which){
   if(which==="Train"){
     const heavy=hearts()>=2, noTrain=false, noHeavy=!heavy||s.fatigue>=90||s.fatigue+2*s.stress>=90;
     panel(DRILLS.map((d,i)=>`<button class="rb" data-d="${i}" ${noTrain?"disabled":""}>${d}<small>${STATS[i]}<span class="dbg-only">, rank ${rankOf(FAMILY[s.m.family].base[i])}</span></small></button>`).join("")+
-      `<div style="flex-basis:100%;font-size:12px;opacity:.7">${s.injured?"It's hurt, so drills give less until a rest week or medicine. ":s.sick?"It has a cold, so drills give less until a rest week or medicine. ":""}${!heavy?"Heavy drills open at 2 hearts.":noHeavy?"It's too worn out for heavy drills.":"Heavy drills push one stat hard, raise a second and lower a third."}</div>`+
+      `<div style="flex-basis:100%;font-size:12px;opacity:.7">${s.injured?"It's hurt so drills give less until a rest week or medicine. ":s.sick?"It has a cold so drills give less until a rest week or medicine. ":""}${!heavy?"Heavy drills open at 2 hearts.":noHeavy?"It's too worn out for heavy drills.":"Heavy drills push one stat hard, raise a second and lower a third."}</div>`+
       HEAVY.map((h,k)=>`<button class="rb" data-d="${6+k}" ${noTrain||noHeavy?"disabled":""}>${h[0]}<small class="fx"><span>${STATS[h[1]]} ↑</span><span>${STATS[h[2]]} +</span><span>${STATS[h[3]]} −2</span></small></button>`).join(""));
     el("r-panel").querySelectorAll("[data-d]").forEach(b=>b.onclick=()=>runDrill(+b.dataset.d));
   }
@@ -366,7 +366,7 @@ function menu(which){
     el("r-skills").onclick=()=>openInfo("skills"); el("r-items").onclick=openItems; el("r-wear").onclick=openWear;
     el("r-pet").onclick=()=>runCare("pet"); el("r-play").onclick=()=>runCare("play");
     if(s.mess) el("r-clean").onclick=()=>runCare("clean");
-    if(el("r-med")) el("r-med").onclick=()=>{ if(PLAYER.bag.Medicine) PLAYER.bag.Medicine--; else if(PLAYER.bits<80){say("We can't afford medicine right now.");return;} else PLAYER.bits-=80; s.sick=0; s.injured=false; say("Medicine's in, and it's well again."); drawUI(); menu("Care"); };
+    if(el("r-med")) el("r-med").onclick=()=>{ if(PLAYER.bag.Medicine) PLAYER.bag.Medicine--; else if(PLAYER.bits<80){say("We can't afford medicine right now.");return;} else PLAYER.bits-=80; s.sick=0; s.injured=false; say("Medicine's in and it's well again."); drawUI(); menu("Care"); };
   }
   if(which==="Out"){
     if(s.away){ missionStatus(); return; }
@@ -575,7 +575,7 @@ function hungerCheck(){ const s=RS, today=dayKey(); if(!s||s.hungerDay===today) 
   if(!s.mealDay){ s.mealDay=dayKey(new Date(Date.now()-864e5)); s.hungerDay=today; return null; }
   const missed=Math.min(4,daysBetween(s.mealDay,today)-1); s.hungerDay=today; if(missed<=0) return null;
   s.stress+=5*missed; s.weight-=3*missed; s.spoil-=missed; clampAll();
-  return missed===1?"It went a whole day without a meal yesterday, and it's cranky about it.":`It went ${missed} days without a meal. It's hungry and thinner.`; }
+  return missed===1?"It went a whole day without a meal yesterday and it's cranky about it.":`It went ${missed} days without a meal. It's hungry and thinner.`; }
 async function dayFade(kind,atBlack){
   const s=RS, d=el("r-dusk"); if(!d) return;
   const to=async(col,ms,hold=0)=>{ d.style.transition=`background-color ${Math.round(ms/rk())}ms ease`; d.style.backgroundColor=col; await rwait(ms+hold); };
@@ -644,7 +644,7 @@ async function runDrill(i){
     if(Math.random()<hurtP){ s.injured=true; s.used+=2; s.pose="hurt"; spark(s.x,headY()-4,"star",4); say("It pushed too hard and got hurt."); await rwait(1200); s.pose="tired"; }
     await praiseOrScold(res);
     await dayFade("night",()=>{ if(place) backHome(); s.drillMus=false; });   // the morning tune comes in as the next day starts
-    await endWeek(1, tLine+" "+(s.injured?"It pushed too hard and got hurt. That's 2 weeks off its prime, and it needs a rest or medicine.":{great:"That was its best yet.",success:"Solid work.",fail:"It'll get it next time.",slack:"It wandered off halfway. It's getting a bit spoiled."}[res]));
+    await endWeek(1, tLine+" "+(s.injured?"It pushed too hard and got hurt. That's 2 weeks off its prime and it needs a rest or medicine.":{great:"That was its best yet.",success:"Solid work.",fail:"It'll get it next time.",slack:"It wandered off halfway. It's getting a bit spoiled."}[res]));
   }); } finally { if(RS){ RS.drillMus=false; RS.drillDone=false; } }
 }
 /* How you react after a drill, the Monster Rancher 2 way: praise is for a great result, scolding is for when it ignored
@@ -835,7 +835,7 @@ async function runMeal(i){
     let [ , , st,sp,fe,wt]=ml; s.stress+=st; s.spoil+=sp; s.fear+=fe; s.weight+=wt;
     if(like==="like"){ s.stress-=3; s.spoil+=2; if(has("Kitchen")) s.fatigue-=5; } if(like==="dis"){ s.stress+=12; s.spoil-=6; s.fear+=2; }
     const first=!s.known[i]; s.known[i]=like; if(like!=="neutral") tasteFound(like);
-    say(like==="like"?(first?"It loves this! I'll mark it with a heart.":"It loves this and finished it in seconds."):like==="dis"?(first?"It hates this one. I'll mark it so we remember.":"It ate it, but it wasn't happy."):"It ate all of it.");
+    say(like==="like"?(first?"It loves this! I'll mark it with a heart.":"It loves this and finished it in seconds."):like==="dis"?(first?"It hates this one. I'll mark it so we remember.":"It ate it but it wasn't happy."):"It ate all of it.");
     clampAll();
   });
 }
@@ -853,7 +853,7 @@ async function runSnack(n){
     else { s.pose="idle"; spark(s.x,headY()-4,"sparkle",3); await rwait(600); }
     sn.fx(s); const tz=taste("snack",n), tFirst=tz?tasteFound(tz):false;
     if(tz==="like"){ s.stress-=5; s.spoil+=3; spark(s.x,headY()-4,"heart",3); } if(tz==="dis"){ s.stress+=8; s.spoil-=3; }
-    clampAll(); say(!tz?sn.say:tz==="like"?(tFirst?`It loves ${n}! I'll remember that.`:`Its favourite snack.`):(tFirst?`It spat half the ${n} out. It doesn't like those.`:`It ate the ${n}, but it wasn't happy.`));
+    clampAll(); say(!tz?sn.say:tz==="like"?(tFirst?`It loves ${n}! I'll remember that.`:`Its favourite snack.`):(tFirst?`It spat half the ${n} out. It doesn't like those.`:`It ate the ${n} but it wasn't happy.`));
   });
 }
 async function runCare(kind){
@@ -961,37 +961,37 @@ async function endWeek(weeks,line){
   // the week's events
   const season=Math.floor((PLAYER.week%48)/12), W=[["Rain",["Tide","Wild"]],["A heatwave",["Blaze","Light"]],["Wind",["Spark","Charm"]],["Snow",["Frost","Steel"]]][season];
   s.weather=Math.random()<0.3?W[0]:null; s.weatherBonus=!!s.weather&&W[1].includes(s.m.el1);
-  if(s.weatherBonus) notes.push(`${W[0]} is coming, and ${s.m.el1} monsters love it, so drills will go better next week.`);
-  if(Math.random()<0.05){ const v=randomOpponent(Math.random); s.visitor={m:v,x:RW+20,until:performance.now()+9000}; s.stress-=10; notes.push(`A wild ${v.name} wandered in, and they played until sundown.`); }
-  if(PLAYER.week>s.born&&(PLAYER.week-s.born)%52===0){ const g=COMMON_FINDS[Math.floor(Math.random()*COMMON_FINDS.length)]; addItem(g); s.spoil+=5; notes.push(`It's its birthday! There was cake, and a ${g} as a present.`); }
-  { const mo=Math.floor(PLAYER.week/4)%12, wk=PLAYER.week%4; if(mo%3===2&&wk===2&&typeof rookMon==="function"&&story().seen.intro){ const r=rookMon(s.grade); notes.push(`Rook dropped by with ${r.m.name} to show off before the official cup. It's a ${r.m.el1} ${r.m.family}, so plan for that.`); } }
-  { const fest=typeof festivalOf==="function"&&festivalOf(PLAYER.week); if(fest&&fest[0]==="Lantern Festival"&&!famOpen("Lern")&&GRADES.indexOf(bestGrade())>=2){ openFam("Lern"); notes.push("Lern came out of the lanterns at the festival, and the League stand registered the ranch for them. A scan can find one now."); }   // Lern opens at the Lantern Festival from grade C
-    if(!famOpen("Mitt")&&story().rookW>=3){ openFam("Mitt"); notes.push("Rook dropped off a signed League form for Mitt. The ranch can register Mitt now, so a scan can find one."); }
-    if(!famOpen("Brolly")&&s.weather==="Rain"&&GRADES.indexOf(bestGrade())>=1){ openFam("Brolly"); notes.push("A wild Brolly waited out the rain under the barn roof, and Walt filed a League form for it. The ranch can register Brolly now, so a scan can find one."); }
-    if(!famOpen("Spine")&&s.stage==="Mega"){ openFam("Spine"); notes.push(`Dr. Ines came out to see ${displayName(s)} and signed the League form for Spine while she was here. The ranch can register Spine now, so a scan can find one.`); }
-    if(!famOpen("Burr")&&Object.keys(PLAYER.journal||{}).length>=5){ openFam("Burr"); notes.push("A Burr dug in under the fence, and Walt filed a League form for it. The ranch can register Burr now, so a scan can find one."); }
-    { const iron=PLAYER.explore&&PLAYER.explore["Iron Foundry"]; if(!famOpen("Clank")&&iron&&iron.got&&iron.got.includes("6:1")){ openFam("Clank"); notes.push("A tin Clank followed the ranch home from the Iron Foundry, and Walt filed a League form for it. The ranch can register Clank now, so a scan can find one."); } }
-    if(!famOpen("Crease")&&PLAYER.evSeen&&PLAYER.evSeen.fan){ openFam("Crease"); notes.push(`The kid who sent the fan letter folded a paper crane for ${displayName(s)} and posted it with a League form for Crease. The ranch can register Crease now, so a scan can find one.`); }
-    if(!famOpen("Twiglet")&&PLAYER.week-s.born>=104){ openFam("Twiglet"); notes.push(`Nora sent a little potted tree for ${displayName(s)}'s second year on the ranch, with a League form for Twiglet in the pot. The ranch can register Twiglet now, so a scan can find one.`); }
-    if(!famOpen("Swirl")&&s.weather==="Snow"&&GRADES.indexOf(bestGrade())>=2){ openFam("Swirl"); notes.push("A Swirl rolled down the hill in the snow and stopped at the barn door, and Walt filed a League form for it. The ranch can register Swirl now, so a scan can find one."); }
-    if(!famOpen("Sizzle")&&PLAYER.upgrades&&PLAYER.upgrades.Kitchen){ openFam("Sizzle"); notes.push("The new kitchen's first breakfast burnt, and a Sizzle hopped out of the toaster. Walt filed a League form for it. The ranch can register Sizzle now, so a scan can find one."); }
-    if(!famOpen("Aero")&&(PLAYER.towerBest||0)>=10){ openFam("Aero"); notes.push("A kite caught on the Tower's tenth floor came down at the ranch with a League form for Aero tied to its tail. The ranch can register Aero now, so a scan can find one."); }
-    if(!famOpen("Nesta")&&PLAYER.fused){ openFam("Nesta"); notes.push("Dr. Ines sent a nesting doll from the lab after the first fusion, with a League form for Nesta inside the smallest one. The ranch can register Nesta now, so a scan can find one."); }
-    if(!famOpen("Magna")&&PLAYER.roam&&PLAYER.roam.caught){ openFam("Magna"); notes.push("The Drifter dragged home a horseshoe magnet with a League form for Magna stuck to it. The ranch can register Magna now, so a scan can find one."); }
-    if(!famOpen("Helm")&&Object.keys(PLAYER.dex||{}).length>=100){ openFam("Helm"); notes.push("Dr. Ines sent a brass diving helmet for the hundredth kind in the bestiary, with a League form for Helm in it. The ranch can register Helm now, so a scan can find one."); }
-    if(!famOpen("Jingle")&&PLAYER.bits>=20000){ openFam("Jingle"); notes.push("A gold coin turned up in the bottom of the bits jar, and the League sent a form for Jingle with the bank statement. The ranch can register Jingle now, so a scan can find one."); }
-    if(!famOpen("Presto")&&Object.keys(PLAYER.evSeen||{}).length>=6){ openFam("Presto"); notes.push("A travelling magician stopped at the gate, pulled a League form for Presto out of a top hat and left the hat behind. The ranch can register Presto now, so a scan can find one."); }
-    if(!famOpen("Vroom")&&PLAYER.upgrades&&PLAYER.upgrades["Better hut"]){ openFam("Vroom"); notes.push("Something kept the new barn spotless all week, and Walt found a Vroom under the hay with a League form stuck to it. The ranch can register Vroom now, so a scan can find one."); }
-    if(!famOpen("Shutter")&&typeof cosOpenList==="function"&&(cosOpenList()||[]).length>=1){ openFam("Shutter"); notes.push("A photographer from the town paper came to shoot the new pattern card and left a League form for Shutter on the fence. The ranch can register Shutter now, so a scan can find one."); }
-    if(!famOpen("Yoyo")&&(s.wins||0)>=20){ openFam("Yoyo"); notes.push(`A kid who's watched all ${s.wins} wins sent a yo-yo for ${displayName(s)}, with a League form for Yoyo wound round the string. The ranch can register Yoyo now, so a scan can find one.`); }
-    if(!famOpen("Lava")&&s.weather==="A heatwave"&&GRADES.indexOf(bestGrade())>=2){ openFam("Lava"); notes.push("The heat melted a candle in the barn into a slow, glowing blob, and Walt filed a League form for a Lava. The ranch can register Lava now, so a scan can find one."); }
-    if(!famOpen("Pogo")&&typeof hearts==="function"&&hearts()>=5){ openFam("Pogo"); notes.push(`${displayName(s)} was so happy it bounced round the yard all week, and a Pogo bounced along with it. Walt filed a League form for it. The ranch can register Pogo now, so a scan can find one.`); }
-    if(!famOpen("Ditty")&&PLAYER.traded){ openFam("Ditty"); notes.push("The friend from the trade sent a music box as thanks, with a League form for Ditty under the dancer. The ranch can register Ditty now, so a scan can find one."); }
+  if(s.weatherBonus) notes.push(`${W[0]} is coming and ${s.m.el1} monsters love it so drills will go better next week.`);
+  if(Math.random()<0.05){ const v=randomOpponent(Math.random); s.visitor={m:v,x:RW+20,until:performance.now()+9000}; s.stress-=10; notes.push(`A wild ${v.name} wandered in and they played until sundown.`); }
+  if(PLAYER.week>s.born&&(PLAYER.week-s.born)%52===0){ const g=COMMON_FINDS[Math.floor(Math.random()*COMMON_FINDS.length)]; addItem(g); s.spoil+=5; notes.push(`It's its birthday! There was cake and a ${g} as a present.`); }
+  { const mo=Math.floor(PLAYER.week/4)%12, wk=PLAYER.week%4; if(mo%3===2&&wk===2&&typeof rookMon==="function"&&story().seen.intro){ const r=rookMon(s.grade); notes.push(`Rook dropped by with ${r.m.name} to show off before the official cup. It's a ${r.m.el1} ${r.m.family} so plan for that.`); } }
+  { const fest=typeof festivalOf==="function"&&festivalOf(PLAYER.week); if(fest&&fest[0]==="Lantern Festival"&&!famOpen("Lern")&&GRADES.indexOf(bestGrade())>=2){ openFam("Lern"); notes.push("Lern came out of the lanterns at the festival and the League stand registered the ranch for them. A scan can find one now."); }   // Lern opens at the Lantern Festival from grade C
+    if(!famOpen("Mitt")&&story().rookW>=3){ openFam("Mitt"); notes.push("Rook dropped off a signed League form for Mitt. The ranch can register Mitt now so a scan can find one."); }
+    if(!famOpen("Brolly")&&s.weather==="Rain"&&GRADES.indexOf(bestGrade())>=1){ openFam("Brolly"); notes.push("A wild Brolly waited out the rain under the barn roof and Walt filed a League form for it. The ranch can register Brolly now so a scan can find one."); }
+    if(!famOpen("Spine")&&s.stage==="Mega"){ openFam("Spine"); notes.push(`Dr. Ines came out to see ${displayName(s)} and signed the League form for Spine while she was here. The ranch can register Spine now so a scan can find one.`); }
+    if(!famOpen("Burr")&&Object.keys(PLAYER.journal||{}).length>=5){ openFam("Burr"); notes.push("A Burr dug in under the fence and Walt filed a League form for it. The ranch can register Burr now so a scan can find one."); }
+    { const iron=PLAYER.explore&&PLAYER.explore["Iron Foundry"]; if(!famOpen("Clank")&&iron&&iron.got&&iron.got.includes("6:1")){ openFam("Clank"); notes.push("A tin Clank followed the ranch home from the Iron Foundry and Walt filed a League form for it. The ranch can register Clank now so a scan can find one."); } }
+    if(!famOpen("Crease")&&PLAYER.evSeen&&PLAYER.evSeen.fan){ openFam("Crease"); notes.push(`The kid who sent the fan letter folded a paper crane for ${displayName(s)} and posted it with a League form for Crease. The ranch can register Crease now so a scan can find one.`); }
+    if(!famOpen("Twiglet")&&PLAYER.week-s.born>=104){ openFam("Twiglet"); notes.push(`Nora sent a little potted tree for ${displayName(s)}'s second year on the ranch, with a League form for Twiglet in the pot. The ranch can register Twiglet now so a scan can find one.`); }
+    if(!famOpen("Swirl")&&s.weather==="Snow"&&GRADES.indexOf(bestGrade())>=2){ openFam("Swirl"); notes.push("A Swirl rolled down the hill in the snow and stopped at the barn door and Walt filed a League form for it. The ranch can register Swirl now so a scan can find one."); }
+    if(!famOpen("Sizzle")&&PLAYER.upgrades&&PLAYER.upgrades.Kitchen){ openFam("Sizzle"); notes.push("The new kitchen's first breakfast burnt and a Sizzle hopped out of the toaster. Walt filed a League form for it. The ranch can register Sizzle now so a scan can find one."); }
+    if(!famOpen("Aero")&&(PLAYER.towerBest||0)>=10){ openFam("Aero"); notes.push("A kite caught on the Tower's tenth floor came down at the ranch with a League form for Aero tied to its tail. The ranch can register Aero now so a scan can find one."); }
+    if(!famOpen("Nesta")&&PLAYER.fused){ openFam("Nesta"); notes.push("Dr. Ines sent a nesting doll from the lab after the first fusion, with a League form for Nesta inside the smallest one. The ranch can register Nesta now so a scan can find one."); }
+    if(!famOpen("Magna")&&PLAYER.roam&&PLAYER.roam.caught){ openFam("Magna"); notes.push("The Drifter dragged home a horseshoe magnet with a League form for Magna stuck to it. The ranch can register Magna now so a scan can find one."); }
+    if(!famOpen("Helm")&&Object.keys(PLAYER.dex||{}).length>=100){ openFam("Helm"); notes.push("Dr. Ines sent a brass diving helmet for the hundredth kind in the bestiary, with a League form for Helm in it. The ranch can register Helm now so a scan can find one."); }
+    if(!famOpen("Jingle")&&PLAYER.bits>=20000){ openFam("Jingle"); notes.push("A gold coin turned up in the bottom of the bits jar and the League sent a form for Jingle with the bank statement. The ranch can register Jingle now so a scan can find one."); }
+    if(!famOpen("Presto")&&Object.keys(PLAYER.evSeen||{}).length>=6){ openFam("Presto"); notes.push("A travelling magician stopped at the gate, pulled a League form for Presto out of a top hat and left the hat behind. The ranch can register Presto now so a scan can find one."); }
+    if(!famOpen("Vroom")&&PLAYER.upgrades&&PLAYER.upgrades["Better hut"]){ openFam("Vroom"); notes.push("Something kept the new barn spotless all week and Walt found a Vroom under the hay with a League form stuck to it. The ranch can register Vroom now so a scan can find one."); }
+    if(!famOpen("Shutter")&&typeof cosOpenList==="function"&&(cosOpenList()||[]).length>=1){ openFam("Shutter"); notes.push("A photographer from the town paper came to shoot the new pattern card and left a League form for Shutter on the fence. The ranch can register Shutter now so a scan can find one."); }
+    if(!famOpen("Yoyo")&&(s.wins||0)>=20){ openFam("Yoyo"); notes.push(`A kid who's watched all ${s.wins} wins sent a yo-yo for ${displayName(s)}, with a League form for Yoyo wound round the string. The ranch can register Yoyo now so a scan can find one.`); }
+    if(!famOpen("Lava")&&s.weather==="A heatwave"&&GRADES.indexOf(bestGrade())>=2){ openFam("Lava"); notes.push("The heat melted a candle in the barn into a slow, glowing blob and Walt filed a League form for a Lava. The ranch can register Lava now so a scan can find one."); }
+    if(!famOpen("Pogo")&&typeof hearts==="function"&&hearts()>=5){ openFam("Pogo"); notes.push(`${displayName(s)} was so happy it bounced round the yard all week and a Pogo bounced along with it. Walt filed a League form for it. The ranch can register Pogo now so a scan can find one.`); }
+    if(!famOpen("Ditty")&&PLAYER.traded){ openFam("Ditty"); notes.push("The friend from the trade sent a music box as thanks, with a League form for Ditty under the dancer. The ranch can register Ditty now so a scan can find one."); }
     if(typeof mythWeek==="function") notes.push(...mythWeek(s,fest),...horrorHallWeek());   // the horrors' myths, and a retired horror's statue going (horror.js)
     if(typeof deepWeek==="function") notes.push(...deepWeek());   // what a League team brings back from a deep trip that went wrong (deep-pack.js)
     if(fest&&fest[0]==="Harvest Fair"&&GRADES.indexOf(bestGrade())>=3){ const L=stoneList(); if(L&&!L.includes("Sarimanok")){ L.push("Sarimanok"); notes.push("A farmer at the Harvest Fair gave the ranch a painted stone from her stall."); } }
     if(fest){ const fk={"Blossom Festival":"Strawberry","Harvest Fair":"Watermelon","Snow Fair":"Candy cane"}[fest[0]], fl=fk&&openCos(fk,`A League stand at the ${fest[0]} was giving out pattern cards.`); if(fl) notes.push(fl);
-      addItem(fest[1]); s.stress-=10; notes.push(`The ${fest[0]} is on in town this week. Nora gave every ranch ${/^[AEIOU]/.test(fest[1])?"an":"a"} ${fest[1]}, and the music took 10 stress off.`); } }
+      addItem(fest[1]); s.stress-=10; notes.push(`The ${fest[0]} is on in town this week. Nora gave every ranch ${/^[AEIOU]/.test(fest[1])?"an":"a"} ${fest[1]} and the music took 10 stress off.`); } }
   clampAll();   // the festival, a visitor, the plants and worn things move stress after the clamp at the top
   { const c=condition(); notes.push(act==='Expedition'?c.replace(/^It(?=['\s])/,s.m.name):c); }   // after a team trip "It" would read as the team, so Josie names who she means
   if(s.stress>50) notes.push("It seems tense lately, maybe give it a rest.");
@@ -1006,7 +1006,7 @@ async function endWeek(weeks,line){
   { const ph=agePhase(s)[2]; if(s.phaseSeen&&s.phaseSeen!==ph&&AGE_NOTE[ph]) notes.push(AGE_NOTE[ph]); s.phaseSeen=ph; }
   const past=s.used-lifeWeeks();
   const leaving=typeof horrorDue==="function"&&horrorDue(s,weeks);   // a horror doesn't retire: it leaves in the night (horror.js)
-  if(past>=0&&past<weeks&&!leaving) notes.push("It's reached the end of its lifespan. It's a veteran now. It still fights as hard as ever, but training barely changes it. Whenever you're ready, it's earned its place in the Hall of Fame.");
+  if(past>=0&&past<weeks&&!leaving) notes.push("It's reached the end of its lifespan. It's a veteran now. It still fights as hard as ever but training barely changes it. Whenever you're ready, it's earned its place in the Hall of Fame.");
   if(weeks===1&&typeof weekEvent==="function"){ const ev=weekEvent(s); if(ev&&!ev.choices) notes.push(ev.text); else if(ev) s.pendingEv=ev; }   // a letter or a visitor
   say(notes.filter(Boolean).join(" ")); drawUI(); saveGame();
   if(typeof storyAfterWeek==="function") await storyAfterWeek();

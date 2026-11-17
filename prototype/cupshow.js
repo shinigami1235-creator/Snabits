@@ -369,14 +369,14 @@ const anA = w => /^[AEIOU]/.test(w) ? 'an' : 'a';
 const CUPLINE = {
   open: c => { const prize = c.prize ? ` and ${anA(c.prize)} ${c.prize}` : '', bits = c.purse.toLocaleString();
     return vary([`Welcome, everyone, to the ${c.name}! We've got ${c.size} Snabits here today, all after ${bits} bits${prize}!`,
-      `It's a packed house for the ${c.name}! ${c.size} Snabits came to fight, and only one of them goes home with ${bits} bits${prize}.`,
+      `It's a packed house for the ${c.name}! ${c.size} Snabits came to fight and only one of them goes home with ${bits} bits${prize}.`,
       `Hello and welcome to the ${c.name}! Grab your seats, folks, because ${c.size} Snabits are about to fight for ${bits} bits${prize}!`], 'open' + c.name); },
-  rules: c => c.visit ? vary(["The Northreach League sailed all the way here for this one, and they don't guard up north, so nobody guards today!",
-      "Northreach is in town, folks! Their house rule is no guarding, so every Snabit here has to take its hits!"], 'rules' + c.name) : vary(c.format === 'robin' ? ["Every Snabit here fights every other one today, so there's nowhere to hide!", "It's a round robin, folks, and everybody gets a shot at everybody!"]
-    : c.format === 'single' ? ['It all comes down to one match, and the winner takes everything!', 'It all comes down to one match today!']
-    : c.format === 'bo3' ? ["Every match is best of three today, so nobody goes out on one bad round!", "Best of three all the way, folks. Let's see who's got staying power!"]
-    : ["It's a knockout today, so one loss and you're going home!", "Win and you're through, lose and your day's over. Let's get started!"], 'rules' + c.name),
-  draw: (me, foe) => vary([`Here's the draw! ${me} opens against ${foe}.`, `The draw is in, and first up for ${me} is ${foe}!`], 'draw' + me),
+  rules: c => c.visit ? vary(["The Northreach League sailed all the way here for this one and they don't guard up north so nobody guards today!",
+      "Northreach is in town, folks! Their house rule is no guarding so every Snabit here has to take its hits!"], 'rules' + c.name) : vary(c.format === 'robin' ? ["Every Snabit here fights every other one today so there's nowhere to hide!", "It's a round robin, folks and everybody gets a shot at everybody!"]
+    : c.format === 'single' ? ['It all comes down to one match and the winner takes everything!', 'It all comes down to one match today!']
+    : c.format === 'bo3' ? ["Every match is best of three today so nobody goes out on one bad round!", "Best of three all the way, folks. Let's see who's got staying power!"]
+    : ["It's a knockout today so one loss and you're going home!", "Win and you're through, lose and your day's over. Let's get started!"], 'rules' + c.name),
+  draw: (me, foe) => vary([`Here's the draw! ${me} opens against ${foe}.`, `The draw is in and first up for ${me} is ${foe}!`], 'draw' + me),
   vs: (round, me, foe) => { const them = foe.rook ? `${foe.name.replace(/^Rook's /, '')} with Rook from the Grand Ranch` : `${foe.name}, trained by ${foe.breeder}`;
     return vary([`${round}! From Josie's ranch, it's ${me.name}! And taking it on, ${them}!`, `${round}! ${me.name} from Josie's ranch goes up against ${them}!`,
       `${round}, and here they come! ${me.name} from Josie's ranch against ${them}!`], 'vs' + round + foe.name); },
@@ -386,31 +386,31 @@ const CUPLINE = {
     if (hit > 1) return `${meName}'s ${meF.el1} skills are strong against ${foeName}. Use them early and keep up the pressure.`;
     if (hurt > 1) return `${foeName}'s ${foeF.el1} skills hit ${meName} hard. Guard when it charges up and try to end it quickly.`;
     const st = ['pow', 'grd', 'mnd', 'spr', 'spd'], top = st.reduce((a, k) => foeF.base[k] > foeF.base[a] ? k : a, 'pow');
-    if (meF.base.spd > foeF.base.spd * 1.15) return `${meName} is quicker than ${foeName}, so it should get the first hit in. Start with your strongest skill.`;
+    if (meF.base.spd > foeF.base.spd * 1.15) return `${meName} is quicker than ${foeName} so it should get the first hit in. Start with your strongest skill.`;
     if (top === 'pow' || top === 'mnd') return `${foeName} hits hard. Guard when it charges up and hit back on the next turn.`;
     if (top === 'grd') return `${foeName} can take a lot of hits. Save your energy for strong skills rather than chipping away.`;
-    if (top === 'spr') return `${foeName} rarely misses and shakes off statuses, so hit it hard rather than trying to slow it down.`;
+    if (top === 'spr') return `${foeName} rarely misses and shakes off statuses so hit it hard rather than trying to slow it down.`;
     return `${foeName} looks about even with ${meName}. Watch its first few moves before using your strongest skills.`;
   },
   recap(res, me, foe) {
     const k = 'recap' + me + foe + (res.secs || res.turns), secs = res.secs != null ? `${res.secs} seconds` : `${res.turns} turns`;
-    if (res.winner === null) return vary(["Time's up, and the judges can't split them! We've got a draw!", 'The judges call it even! It ends in a draw!'], k);
+    if (res.winner === null) return vary(["Time's up and the judges can't split them! We've got a draw!", 'The judges call it even! It ends in a draw!'], k);
     if (res.winner === 0) {
-      if (res.judged) return vary([`Time's up, and the judges give it to ${me}!`, `It goes to the judges, and they pick ${me}!`], k);
+      if (res.judged) return vary([`Time's up and the judges give it to ${me}!`, `It goes to the judges and they pick ${me}!`], k);
       if (res.secs != null ? res.secs <= 12 : res.turns <= 4) return vary([`Over in ${secs}! ${me} didn't waste a second!`, `${me} wins it in ${secs}! What a start!`], k);
       if (res.hpLeft > 0.6) return vary([`${me} wins it and barely took a scratch!`, `What a performance from ${me}! ${foe} couldn't keep up.`], k);
-      if (res.hpLeft < 0.2) return vary([`${me} wins it, and only just! It was hanging on by a thread.`, `What a finish! ${me} was nearly out on its feet, but it wins!`], k);
-      return vary([`${me} wins it! ${foe} gave it everything, but it wasn't enough.`, `And ${me} takes it after a real battle!`], k);
+      if (res.hpLeft < 0.2) return vary([`${me} wins it and only just! It was hanging on by a thread.`, `What a finish! ${me} was nearly out on its feet but it wins!`], k);
+      return vary([`${me} wins it! ${foe} gave it everything but it wasn't enough.`, `And ${me} takes it after a real battle!`], k);
     }
-    if (res.judged) return vary([`Time's up, and the judges give it to ${foe}.`, `The judges go with ${foe} on this one.`], k);
-    if (res.foeHpLeft < 0.2) return vary([`${foe} wins, but ${me} made it work for every bit of it!`, `${me} nearly had it, but ${foe} hangs on to win!`], k);
-    if (res.foeHpLeft > 0.6) return vary([`${foe} wins, and it hardly broke a sweat.`, `${foe} was just too much for ${me} today.`], k);
+    if (res.judged) return vary([`Time's up and the judges give it to ${foe}.`, `The judges go with ${foe} on this one.`], k);
+    if (res.foeHpLeft < 0.2) return vary([`${foe} wins but ${me} made it work for every bit of it!`, `${me} nearly had it but ${foe} hangs on to win!`], k);
+    if (res.foeHpLeft > 0.6) return vary([`${foe} wins and it hardly broke a sweat.`, `${foe} was just too much for ${me} today.`], k);
     return vary([`${foe} takes this one.`, `And the match goes to ${foe}!`], k);
   },
   /* Josie after a match: what it means for the cup */
   after(res, me, c, cup) {
     const won = res.winner === 0;
-    if (c.format === 'robin') { const left = cup.rounds.length - cup.round; return won ? `Good job, ${me}! That's ${cup.pts[0]} points${left ? ` with ${left} round${left > 1 ? 's' : ''} to go` : ''}.` : res.winner === null ? `A draw still gets us a point.${left ? ` There ${left > 1 ? 'are' : 'is'} ${left} round${left > 1 ? 's' : ''} left.` : ''}` : left ? `We lost that one, but there ${left > 1 ? 'are' : 'is'} still ${left} round${left > 1 ? 's' : ''} to go.` : `We lost that one, ${me}. Let's see where we finish.`; }
+    if (c.format === 'robin') { const left = cup.rounds.length - cup.round; return won ? `Good job, ${me}! That's ${cup.pts[0]} points${left ? ` with ${left} round${left > 1 ? 's' : ''} to go` : ''}.` : res.winner === null ? `A draw still gets us a point.${left ? ` There ${left > 1 ? 'are' : 'is'} ${left} round${left > 1 ? 's' : ''} left.` : ''}` : left ? `We lost that one but there ${left > 1 ? 'are' : 'is'} still ${left} round${left > 1 ? 's' : ''} to go.` : `We lost that one, ${me}. Let's see where we finish.`; }
     if (c.format === 'single') return won ? `We did it, ${me}!` : `It's okay, ${me}. We'll train up and come back for the next one.`;
     if (!won) return `It's okay, ${me}. ${cup.lastFoe} was stronger this time. We'll train up and come back for the next one.`;
     const nx = ['the semi-final', 'the final'][cup.round - 1];

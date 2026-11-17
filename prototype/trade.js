@@ -18,7 +18,7 @@ function tStatus(t) { const e = el('tr-msg'); if (e) e.textContent = t || ''; }
 function openTrade(msg) {
   if (LT.on) { tradeRoom(); return; }
   panel(`<div class="full lab-head"><b>Trade</b><button class="small" id="tr-back">Back</button></div>
-    <div class="full lab-info">One of you opens a trade and sends the code, and the other types it in.</div>
+    <div class="full lab-info">One of you opens a trade and sends the code and the other types it in.</div>
     <button class="rb" id="tr-host">Open a trade</button>
     <div style="flex-basis:100%;display:flex;gap:8px;align-items:center"><input id="tr-code" maxlength="5" placeholder="K7QPX" style="width:120px;font-size:20px;font-weight:800;letter-spacing:3px;text-transform:uppercase;padding:6px 10px;border-radius:10px;border:0"><button class="rb" id="tr-join" style="flex:0 0 auto">Join</button></div>
     <div id="tr-msg" class="full" style="font-size:13px;color:#ffd23f"></div>`);
@@ -65,7 +65,7 @@ function tCommit() {
   PLAYER.roster.push(e); PLAYER.traded = (PLAYER.traded || 0) + 1;
   if (PLAYER.active === give.id || !PLAYER.active) { PLAYER.active = e.id; RS = null; }
   if (typeof dexRaise === 'function') dexRaise(e.m, (e.st && e.st.stage) || 'Bit');
-  saveGame(); const line = `${give.name} went to your friend's ranch, and ${get.name} is here now.`;
+  saveGame(); const line = `${give.name} went to your friend's ranch and ${get.name} is here now.`;
   setTimeout(tClose, 400); LT.on = false;
   if (!RS) openRanch(); else { panel(''); menu('Out'); }
   say(line);

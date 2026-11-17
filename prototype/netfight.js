@@ -33,7 +33,7 @@ async function nWakeLock(on){ try{ if(on&&!nWake&&navigator.wakeLock&&document.v
 function nStatus(t){ const e=el("nr-msg"); if(e) e.textContent=t||""; }
 function openRooms(msg){
   if(LN.on){ LN.host?hostWait():guestWait(); return; }
-  panel(`<div style="flex-basis:100%;font-size:13px">One of you hosts a room and sends the 5-letter code, and the other types it in. You both need the internet while you fight. Friend fights use no week and teach nothing.</div>
+  panel(`<div style="flex-basis:100%;font-size:13px">One of you hosts a room and sends the 5-letter code and the other types it in. You both need the internet while you fight. Friend fights use no week and teach nothing.</div>
     <button class="rb" id="nr-host">Host a room</button>
     <div style="flex-basis:100%;display:flex;gap:8px;align-items:center"><input id="nr-code" maxlength="5" placeholder="K7QPX" style="width:120px;font-size:20px;font-weight:800;letter-spacing:3px;text-transform:uppercase;padding:6px 10px;border-radius:10px;border:0"><button class="rb" id="nr-join" style="flex:0 0 auto">Join</button></div>
     <div id="nr-msg" style="flex-basis:100%;font-size:13px;color:#ffd23f"></div>

@@ -10,7 +10,7 @@ function entryName(e){ const st=entryState(e); return st.stage&&st.stage!=="Bit"
 async function openFreezer(){
   const tk=visitTicket(); if(RS&&RS.id){ saveGame(); if(RS.visit!=="lab") await visitPlace("lab"); } if(visitStale(tk)) return;
   const list=PLAYER.roster;
-  npcPanel((RS?npcBox("aide",`I look after the Freezer. Snabits stored in it don't age, and it holds up to ${freezerMax()}.`):`<div style="flex-basis:100%;font-size:13px">The Freezer holds up to ${freezerMax()} Snabits, and they don't age while they're in it.</div>`)+`<div id="frz" style="flex-basis:100%;display:flex;flex-direction:column;gap:6px"></div><button class="rb" id="f-back">Back</button>`);
+  npcPanel((RS?npcBox("aide",`I look after the Freezer. Snabits stored in it don't age and it holds up to ${freezerMax()}.`):`<div style="flex-basis:100%;font-size:13px">The Freezer holds up to ${freezerMax()} Snabits and they don't age while they're in it.</div>`)+`<div id="frz" style="flex-basis:100%;display:flex;flex-direction:column;gap:6px"></div><button class="rb" id="f-back">Back</button>`);
   const box=el("frz");
   if(!list.length) box.innerHTML="<div style='font-size:13px;opacity:.7'>The Freezer is empty. Scan a photo and tap Raise it.</div>";
   list.forEach(e=>{ const st=entryState(e), row=document.createElement("div");
@@ -41,10 +41,10 @@ function openItems(){
 function useItem(k){
   const s=RS, bag=PLAYER.bag;
   if(k==="Life fruit"){ if(s.fruitUsed){ say("It's already had a Life fruit. They only work once."); return; } bag[k]--; s.fruitUsed=true; s.used=Math.max(0,s.used-12); say("It ate the Life fruit. That's 3 more months."); }
-  else if(k==="Medicine"){ if(!s.sick&&!s.injured){ say("It's healthy, so medicine would be wasted."); return; } bag[k]--; s.sick=0; s.injured=false; say("Medicine's in, and the cold is gone."); }
+  else if(k==="Medicine"){ if(!s.sick&&!s.injured){ say("It's healthy so medicine would be wasted."); return; } bag[k]--; s.sick=0; s.injured=false; say("Medicine's in and the cold is gone."); }
   else if(k.startsWith("Skill chip: ")){ const n=k.slice(12), sk=SKILLS[n], own=!sk.el||sk.el===s.m.el1||sk.el===s.m.el2;
     if(knownSkills(s).includes(n)){ say(`It already knows ${n}.`); return; }
-    if(tierOf(n)>=2&&!own){ say(`${n} is a Tier 2 ${sk.el} skill, and a skill like that from another element has to be learned on a trip.`); return; }
+    if(tierOf(n)>=2&&!own){ say(`${n} is a Tier 2 ${sk.el} skill and a skill like that from another element has to be learned on a trip.`); return; }
     bag[k]--; s.skillsKnown=(s.skillsKnown||[]).concat(n); fixEquip(s); say(`It learned ${n} from the chip.`); }
   else if(SNACKS[k]){ menu("Feed"); return; }
   else if(k==="Rebirth seed"||CATALYSTS.includes(k)){ say(`The ${k} is used in the Fusion lab.`); return; }
@@ -75,7 +75,7 @@ async function openLab(line){
   const e1=R.find(e=>e.id===LAB.a), e2=R.find(e=>e.id===LAB.b);
   if(e1&&e2){ const m=compat(e1,e2), carry=Math.min(40,10+5*m);
     const fam=e1.m.family===e2.m.family?`${e1.m.family} 100%`:`${e1.m.family} 55%, ${e2.m.family} 30%, a hybrid 15%`;
-    info=npcBox("aide",ASSIST[m])+`<div class="full lab-info">The child will be ${fam}, and it keeps about ${carry}% of the parents' training. Both parents are used up, and it costs 500 bits.</div>`; }
+    info=npcBox("aide",ASSIST[m])+`<div class="full lab-info">The child will be ${fam} and it keeps about ${carry}% of the parents' training. Both parents are used up and it costs 500 bits.</div>`; }
   const st=RS&&RS.id?RS:null, elder=st&&st.used>=lifeWeeks()*0.7;
   npcPanel(npcBox("doc",line||"Welcome to the lab. Put two Snabits on the pads and I can fuse them for 500 bits.")+`
     <label class="fld">First parent<select id="l-a">${opt(LAB.a,LAB.b)}</select><small>Counts twice as much</small></label>
@@ -89,7 +89,7 @@ async function openLab(line){
   el("l-fuse").onclick=()=>doFuse(e1,e2,LAB.cat);
   const rd=el("l-read"); if(rd) rd.onclick=()=>{ if(!st) return; if(PLAYER.bits<300){ openLab("A reading is 300 bits. Come back when you have it."); return; }
     PLAYER.bits-=300; st.read=true; syncRead(); saveGame();
-    openLab(`${displayName(st)}'s ${STATS[st.m.pers[1]]} grows fastest and its ${STATS[st.m.pers[2]]} slowest. It has ${st.m.pool.length} skills it can learn, and its growth ranks are on its info page now.`); };
+    openLab(`${displayName(st)}'s ${STATS[st.m.pers[1]]} grows fastest and its ${STATS[st.m.pers[2]]} slowest. It has ${st.m.pool.length} skills it can learn and its growth ranks are on its info page now.`); };
   el("l-reb").onclick=()=>{ if(!elder){ openLab("It isn't old enough yet. Rebirth only takes on a Snabit that has started to slow down with age."); return; } rebirthPick(); };
   if(el("l-frz")) el("l-frz").onclick=openFreezer;
   el("l-back").onclick=()=>{ if(RS) menu("Out"); else openScope(); };
@@ -136,7 +136,7 @@ function fuseChild(e1,e2,cat,R){
   return {m,st,hybrid,carry:Math.round(carry*100),inherit};
 }
 async function doFuse(e1,e2,cat){
-  if(PLAYER.bits<500){ openLab("A fusion costs 500 bits, and you don't have enough yet."); return; }
+  if(PLAYER.bits<500){ openLab("A fusion costs 500 bits and you don't have enough yet."); return; }
   PLAYER.bits-=500; saveGame();
   const R=rng(hashStr(e1.id+e2.id+PLAYER.week));
   if(cat){ PLAYER.bag[cat]--; if(PLAYER.bag[cat]<=0) delete PLAYER.bag[cat]; }

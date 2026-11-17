@@ -58,17 +58,17 @@ const ITEMS={
    The exact effect shows after it when Show hidden numbers is on. */
 const DESC={
   "Rice ball":"Plain and filling. It won't thank you for it.","Milk":"Warm and gentle on the tummy.","Fish":"Fresh from the market. A solid meal.",
-  "Jelly":"Light and wobbly. Good for trimming down.","Meat":"Rich and hearty. Fattening.","Vitamin pack":"Tastes like medicine, but melts stress away.",
+  "Jelly":"Light and wobbly. Good for trimming down.","Meat":"Rich and hearty. Fattening.","Vitamin pack":"Tastes like medicine but melts stress away.",
   "Cool leaf":"A minty leaf that relieves stress.","Energy nut":"A crunchy nut that perks up a tired body.","Berry":"Sweet and juicy. A small pick-me-up.",
   "Candy":"Sugary. Not something to have too often.","Honey cake":"Sweet and fattening. It'll love you for it.","Bitter root":"Tastes awful. It listens better afterwards.",
   "Slim tea":"A grassy tea for slimming down. Tiring, though.",
   "Medicine":"Bitter syrup for colds and sprains.","Duck pattern":"A League pattern card, printed in yellow.","Ball":"A bouncy toy for playtime.","Stat seed":"A seed packed with strength, for fusion.",
-  "Element stone":"A stone that hums with one element. For fusion, or to hold in battle.","Lucky bit":"A shiny charm. Luck seems to follow it.",
+  "Element stone":"A stone that hums with one element. For fusion or to hold in battle.","Lucky bit":"A shiny charm. Luck seems to follow it.",
   "Life fruit":"A rare fruit said to add to a life.","Rebirth seed":"Lets an old Snabit start over.",
   "Energy cell":"A buzzing battery. More energy in a fight, a bit less body.","Life seed":"Sprouts when a fight starts going badly.",
-  "Cap":"A sporty cap that lifts its spirits.","Top hat":"Very distinguished. Wise, if a little slow.","Crown":"Fit for a champion. It learns quicker, but gets proud.",
+  "Cap":"A sporty cap that lifts its spirits.","Top hat":"Very distinguished. Wise, if a little slow.","Crown":"Fit for a champion. It learns quicker but gets proud.",
   "Party hat":"Gets the fun started early in a fight.","Bow":"A cute bow. Cheerful rather than fierce.","Sunglasses":"Looks cool. Hits harder when it lands, misses a little more.",
-  "Monocle":"For studying the opponent up close.","Mustache":"A strongman's mustache.","Bat wings":"Light and quick, but flimsy. It might learn to fly.",
+  "Monocle":"For studying the opponent up close.","Mustache":"A strongman's mustache.","Bat wings":"Light and quick but flimsy. It might learn to fly.",
   "Angel wings":"Soft feathers that lift the spirit. It might learn to fly.","Boots":"Sturdy boots. Steady footing, heavy steps."
 };
 const itemDesc=k=>{ if(k.startsWith("Skill chip: ")) return "Teaches "+k.slice(12); const d=DESC[k]||"";
@@ -252,7 +252,7 @@ function styleText(s){
       const best=Object.entries(rg).sort((a,b)=>b[1]-a[1])[0], hit=Object.values(rg).reduce((a,b)=>a+b,0);
       if(best&&best[1]/hit>=0.5) lines.push(`It likes to fight ${{Close:"up close",Near:"at arm's length",Mid:"from mid range",Far:"from far off"}[best[0]]}.`); }catch(e){}
     return lines.join(" "); }
-  const H=s.habits||[]; if(H.length<6) return "It hasn't fought enough matches under your control to have a style yet, so on Auto it fights on the game's own sense.";
+  const H=s.habits||[]; if(H.length<6) return "It hasn't fought enough matches under your control to have a style yet so on Auto it fights on the game's own sense.";
   const top=list=>{ const c={}; list.forEach(h=>c[h.n]=(c[h.n]||0)+1); const e=Object.entries(c).sort((a,b)=>b[1]-a[1])[0]; return e?[e[0],e[1]/list.length]:null; };
   const lines=[], op=top(H.filter(h=>h.o)), low=top(H.filter(h=>h.k[0]==="L")), all=top(H);
   if(op) lines.push(`Opens with ${op[0]} ${op[1]>0.7?"almost every time":op[1]>0.45?"most of the time":"now and then"}.`);

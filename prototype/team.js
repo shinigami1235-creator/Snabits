@@ -62,7 +62,7 @@ const TM={pick:[],ready:[],foes:null};
 function drawTeamPick(){
   const n=TM.pick.length;
   panel(`<div class="full lab-head"><b>Team battle · ${n} of ${TEAM_SIZE}</b><button class="small" id="tm-back">Back</button></div>
-    <div class="full lab-info">Pick 6. The first one you pick leads. Switching takes a turn, and a knocked-out monster is replaced for free.</div>
+    <div class="full lab-info">Pick 6. The first one you pick leads. Switching takes a turn and a knocked-out monster is replaced for free.</div>
     ${TM.ready.map(s=>{ const k=TM.pick.indexOf(s.id); return `<button class="rb tm-pick ${k>=0?"on":""}" data-id="${s.id}"><span class="tm-n">${k>=0?k+1:""}</span><b>${displayName(s)}</b><small>Lv ${s.level} · ${s.m.el1}${s.m.el2?" / "+s.m.el2:""} · ${s.stage==="Mega"?"Mega":"Veteran"}</small></button>`; }).join("")}
     <button class="big full" id="tm-find" ${n===TEAM_SIZE?"":"disabled"}>Find a team</button>`);
   el("tm-back").onclick=()=>menu("Out");
@@ -79,7 +79,7 @@ function findTeam(){
   TM.grade=grade; TM.lv=lv;
   const prize=teamPrize();
   panel(`<div class="full lab-head"><b>Their team</b><button class="small" id="tm-back">Back</button></div>
-    <div class="full lab-info">A grade ${grade} team at about Lv ${lv}. ${prize?`Your first win this week pays ${prize} bits.`:"You've had this week's prize, so this one's for practice."}</div>
+    <div class="full lab-info">A grade ${grade} team at about Lv ${lv}. ${prize?`Your first win this week pays ${prize} bits.`:"You've had this week's prize so this one's for practice."}</div>
     ${TM.foes.map(o=>`<div class="rb tm-row"><b>${o.fm.name}</b><small>Lv ${o.level} · ${o.m.el1}${o.m.el2?" / "+o.m.el2:""} · ${o.m.family}</small></div>`).join("")}
     <button class="btn2" id="tm-other">Another team</button><button class="big" id="tm-go">Fight</button>`);
   el("tm-back").onclick=drawTeamPick; el("tm-other").onclick=findTeam; el("tm-go").onclick=()=>teamFight(mine,TM.foes);

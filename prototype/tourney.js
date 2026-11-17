@@ -60,7 +60,7 @@ function fightCond(s){
   return {name:"Exhausted",mult:0.88,bad:true};
 }
 function fightCondLine(s){ const c=fightCond(s), nm=displayName(s);
-  return c.good?`${nm} is in top shape, so it'll fight a little above itself.`:c.name==="Good"?`${nm} is in good shape.`:c.name==="Worn"?`${nm} is worn out and will fight a little below its best.`:`${nm} is exhausted and will fight well below its best. It needs a rest.`; }
+  return c.good?`${nm} is in top shape so it'll fight a little above itself.`:c.name==="Good"?`${nm} is in good shape.`:c.name==="Worn"?`${nm} is worn out and will fight a little below its best.`:`${nm} is exhausted and will fight well below its best. It needs a rest.`; }
 /* the next cup this Snabit can enter, and how many weeks away */
 function nextCupFor(s){
   for(let k=0;k<20;k++){ const x=PLAYER.week+k; const c=cupsOfWeek(x).find(c=>!cupBlock(c,s)&&!c.open&&(c.official||c.grade===s.grade||c.major||c.legend)); if(c) return {c,k}; }
@@ -86,13 +86,13 @@ const signedCupNow=()=>signups().find(x=>x.w===PLAYER.week&&cupsOfWeek(PLAYER.we
 function toggleSignup(w,name){ const L=signups(), i=L.findIndex(x=>x.w===w&&x.name===name); if(i>=0) L.splice(i,1); else L.push({w,name}); if(typeof saveGame==="function") saveGame(); return i<0; }
 /* what we signed up for this week, as Josie says it */
 function signedNowLine(){ const cn=n=>n.replace(/ \([A-SF]\)$/,""), L=signups().filter(x=>x.w===PLAYER.week);
-  return L.length?`The ${cn(L[0].name)} is this week, and we're signed up for it.`:""; }
+  return L.length?`The ${cn(L[0].name)} is this week and we're signed up for it.`:""; }
 function aheadLines(s){
   const nm=displayName(s), cn=n=>n.replace(/ \([A-SF]\)$/,""), rest=/Top|Good/.test(fightCond(s).name)?"":` A rest this week would have ${nm} fresh for it.`, out=[];
   const w1=PLAYER.week+1, mine=signups().filter(x=>x.w===w1);
-  if(mine.length) out.push(`The ${cn(mine[0].name)} is next week, and we're signed up for it.${rest}`);
+  if(mine.length) out.push(`The ${cn(mine[0].name)} is next week and we're signed up for it.${rest}`);
   else { const big=cupsOfWeek(w1).filter(c=>!cupBlock(c,s)).find(c=>(c.official&&c.grade===s.grade&&s.grade!=="S")||c.major||c.legend);
-    const x=big&&cupChances(big,s); if(x&&x.cup>=0.25) out.push(`The ${cn(big.name)} is next week, and I think ${nm}'s ready for it.${rest}`); }
+    const x=big&&cupChances(big,s); if(x&&x.cup>=0.25) out.push(`The ${cn(big.name)} is next week and I think ${nm}'s ready for it.${rest}`); }
   if(!out.length&&weekParts(w1).wk===2&&typeof story==="function"&&story().seen.gradeD) out.push("Rook is at the stadium next week for a rival match.");
   return out.join(" ");
 }
@@ -148,14 +148,14 @@ function cupOdds(c,s){ const x=cupChances(c,s); return x?x.match:null; }
 function cupAdvice(c,s){
   const x=cupChances(c,s); if(!x) return null;
   const nm=displayName(s), up=c.official&&c.grade===s.grade&&s.grade!=="S", pct=Math.round(x.cup*10)*10;
-  if(x.cup>=0.5) return {ok:true,t:up?`${nm} is strong enough for it, so I'd enter. I'd give it about ${pct}% to take first place.`:`${nm} should do well here, so I'd enter. I'd give it about ${pct}% to take first place.`};
-  if(x.cup>=0.25) return {t:x.match>=0.55&&c.format!=="single"?`It's a close one. ${nm} wins most of its matches, but first place is about a ${pct}% chance, so it needs to be in good shape on the day.`:`It's a close one. ${nm} can win it if it's in good shape on the day.`};
-  if(x.match>=0.45) return {weak:true,t:up?`${nm} can win some matches there, but first place is a long shot. The next one is in three months, and a few more weeks of training would help.`:`${nm} can win some matches here, but first place is a long shot.`};
-  return {weak:true,t:up?`Are you sure? The monsters there are a good deal stronger than ${nm}, so it may not win a match. The next one is in three months, and a few more weeks of training would help.`:`Are you sure? The monsters in this cup are a good deal stronger than ${nm}, so it may not win a match.`};
+  if(x.cup>=0.5) return {ok:true,t:up?`${nm} is strong enough for it so I'd enter. I'd give it about ${pct}% to take first place.`:`${nm} should do well here so I'd enter. I'd give it about ${pct}% to take first place.`};
+  if(x.cup>=0.25) return {t:x.match>=0.55&&c.format!=="single"?`It's a close one. ${nm} wins most of its matches but first place is about a ${pct}% chance so it needs to be in good shape on the day.`:`It's a close one. ${nm} can win it if it's in good shape on the day.`};
+  if(x.match>=0.45) return {weak:true,t:up?`${nm} can win some matches there but first place is a long shot. The next one is in three months and a few more weeks of training would help.`:`${nm} can win some matches here but first place is a long shot.`};
+  return {weak:true,t:up?`Are you sure? The monsters there are a good deal stronger than ${nm} so it may not win a match. The next one is in three months and a few more weeks of training would help.`:`Are you sure? The monsters in this cup are a good deal stronger than ${nm} so it may not win a match.`};
 }
 function startCup(c){
   const fee=cupFee(c);
-  if(fee&&PLAYER.bits<fee){ venueSay(`The ${c.name} costs ${fee} bits to enter, and we have ${PLAYER.bits}.`); return; } PLAYER.bits-=fee; dropSignup(PLAYER.week); drawUI();
+  if(fee&&PLAYER.bits<fee){ venueSay(`The ${c.name} costs ${fee} bits to enter and we have ${PLAYER.bits}.`); return; } PLAYER.bits-=fee; dropSignup(PLAYER.week); drawUI();
   const s=RS, R=rng(hashStr(s.id+"|cup|"+PLAYER.week+"|"+c.name)), cg=c.grade==="F"?s.grade:c.grade;
   const field=[{me:true,name:displayName(s)}];
   const big=c.major||c.legend;
@@ -169,7 +169,7 @@ function startCup(c){
     CUP.rounds=rounds;
   }
   if(c.format==="team5"){ CUP.teams=["Hill League","Bay League"]; CUP.bouts=[0,1,2,3,4].map(k=>({a:k,b:k+5,res:null})); }
-  CUP.ann=c.format==="team5"?`Five bouts, Hill League against Bay League. ${displayName(s)} fights the first bout, and three bout wins take the exhibition.`:`${c.name.replace(/ \([A-S]\)$/,"")}, ${field.length} monsters. ${c.format==="robin"?"3 points for a win, 1&nbsp;for&nbsp;a&nbsp;draw.":c.format==="single"?"One match, winner takes the purse.":"Lose once and you're out."}`;
+  CUP.ann=c.format==="team5"?`Five bouts, Hill League against Bay League. ${displayName(s)} fights the first bout and three bout wins take the exhibition.`:`${c.name.replace(/ \([A-S]\)$/,"")}, ${field.length} monsters. ${c.format==="robin"?"3 points for a win, 1&nbsp;for&nbsp;a&nbsp;draw.":c.format==="single"?"One match, winner takes the purse.":"Lose once and you're out."}`;
   nextMatch();
 }
 function fighterOf(e){ return e.me?null:e.o; }
@@ -242,13 +242,13 @@ function finishCup(){
   const lines=[];
   if(place===null) lines.push(`It dropped out of the ${c.name}.`);
   else if((c.format==="elim"||c.format==="bo3")&&place>1) lines.push(`It went out in the ${place===2?"final":place===3?"semi-final":"quarter-final"} of the ${c.name}.`);
-  else if(c.format==="team5"){ const n=CUP.bouts.filter(b=>b.res==="w").length; lines.push(`The Hill League ${place===1?"won":"lost"} the exhibition ${Math.max(n,5-n)} bouts to ${Math.min(n,5-n)}, and ${displayName(s)} ${own?"won":"lost"} its own bout.`); }
+  else if(c.format==="team5"){ const n=CUP.bouts.filter(b=>b.res==="w").length; lines.push(`The Hill League ${place===1?"won":"lost"} the exhibition ${Math.max(n,5-n)} bouts to ${Math.min(n,5-n)} and ${displayName(s)} ${own?"won":"lost"} its own bout.`); }
   else lines.push(`${place===1?"It won":"It finished "+["","first","second","third","fourth","fifth","sixth"][Math.min(place,6)]+" in"} the ${c.name}.`);
   if(prize){ PLAYER.bits+=prize; lines.push(`It brings home ${prize} bits.`); }
   if(place===1&&c.name==="Northreach Invitational"&&typeof stoneList==="function"){ const L=stoneList(); if(L&&!L.includes("Troll")){ L.push("Troll"); lines.push("The Northreach team left one of their painted stones with the trophy."); } }
   if(place===1&&c.prize){ addItem(c.prize); lines.push(`The prize table also had ${/^[AEIOU]/.test(c.prize)?"an":"a"} ${c.prize}.`); }
-  if(place===1&&c.licence&&!famOpen(c.licence)){ openFam(c.licence); lines.push(`The Snabit League lets the ranch register ${c.licence} now, so a scan can find one.`); }
-  if(place===1&&c.visit){ const shut=VISIT_FAMS.filter(f=>!famOpen(f)); if(shut.length){ const f=shut[Math.floor(CUP.R()*shut.length)]; openFam(f); lines.push(`The Northreach breeders signed a League form for the ranch, so it can register ${f} now and a scan can find one.`); } }
+  if(place===1&&c.licence&&!famOpen(c.licence)){ openFam(c.licence); lines.push(`The Snabit League lets the ranch register ${c.licence} now so a scan can find one.`); }
+  if(place===1&&c.visit){ const shut=VISIT_FAMS.filter(f=>!famOpen(f)); if(shut.length){ const f=shut[Math.floor(CUP.R()*shut.length)]; openFam(f); lines.push(`The Northreach breeders signed a League form for the ranch so it can register ${f} now and a scan can find one.`); } }
   if(place===1&&c.qualifier){ s.exQual=`${weekParts(PLAYER.week).yr}:${c.grade}`; lines.push("It's in this year's Summer Exhibition, next month."); }
   // MR2's numbers: a cup wears it out but takes a lot of stress off, most of all with a win
   const last=place===null||(c.format==="robin"&&place===c.size)||((c.format==="elim"||c.format==="bo3")&&place===5)||((c.format==="single"||c.format==="team5")&&place===2);
@@ -257,7 +257,7 @@ function finishCup(){
     if(c.official&&c.grade===s.grade&&s.grade!=="S"){ s.grade=GRADES[GRADES.indexOf(s.grade)+1]; lines.push(`It moves up to grade ${s.grade}.`); }
     if(c.official&&c.grade==="S"&&!s.majorInvite){ s.majorInvite=true; lines.push("It's been invited to the Major 4, one big cup each season."); }
     if(c.major){ s.majors=[...new Set((s.majors||[]).concat(c.season))]; lines.push(`That's ${s.majors.length} of the Major 4.`);
-      if(s.majors.length===4&&!s.master){ s.master=true; lines.push("It's won all four. It's a Master now, and the Legend Cup opens in the first month of each Summer."); } }
+      if(s.majors.length===4&&!s.master){ s.master=true; lines.push("It's won all four. It's a Master now and the Legend Cup opens in the first month of each Summer."); } }
     if(c.legend){ lines.push("A Legend Cup champion. Its name goes on the wall in town."); story().legendWon=true; }
     if((c.grade==="A"||c.grade==="S")&&CUP.R()<0.3){ addItem("Rebirth seed"); lines.push("The prize table had a Rebirth seed."); }
     if(c.grade==="A"&&c.official){ addItem("Life fruit"); lines.push("It also won a Life fruit."); } }
