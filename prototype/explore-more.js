@@ -284,7 +284,7 @@ async function exObstacle2(stat, ok, seed) {
     unprop(lt); const bk = prop({ k: 'exbooks', x: 154, y: GROUND, lift: 0, open: 0, sent: 0, bad: 0 }); exSfx('shine');
     try {
       await exTween(900, u => { bk.lift = u; }, exOut); for (let i = 0; i < 3; i++) rsfx('page');
-      await exTween(400, u => { bk.open = u; }); exSfx('page'); await rwait(200);
+      await exTween(400, u => { bk.open = u; }); rsfx('page'); await rwait(200);
       if (ok) { for (let i = 1; i <= 3; i++) { await exTween(320, u => { bk.sent = i - 1 + u; }); d.lit = i; exSfx('chime'); exShake(2, 160); }
         await exTween(500, u => { bk.lift = 1 - u * 0.9; bk.open = 1 - u; }); unprop(bk); await exDoorOpen(d, 'Mind'); s.pose = 'happy'; exSfx('win'); await walkTo(212, 60, 'walk'); }
       else { bk.bad = 1; await exTween(320, u => { bk.sent = u * 0.8; }); exSfx('zap'); const b = prop({ k: 'exbeam', el: 'Spark', x: 184, y: GROUND - 34, x2: s.x + 6, y2: headY() + 8, t0: exNow() }); await rwait(230); unprop(b);
