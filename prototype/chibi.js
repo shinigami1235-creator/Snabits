@@ -13,7 +13,7 @@ const CHIBI = (() => {
      (canvas pixels, after every transform), so attacks can start from the right spot */
   let CAP = null;
   const capPt = (c, x, y) => { const p = c.getTransform().transformPoint({ x, y }); return { x: p.x, y: p.y }; };
-  function capBody(c, g) { if (!CAP) return; CAP.top = capPt(c, g.cx, g.top + g.bh * 0.18); CAP.center = capPt(c, g.cx, g.top + g.bh * 0.5); CAP.feet = capPt(c, g.cx, 186); }
+  function capBody(c, g) { if (!CAP) return; CAP.top = capPt(c, g.cx, g.top + g.bh * 0.18); CAP.center = capPt(c, g.cx, g.top + g.bh * 0.5); CAP.feet = capPt(c, g.cx, 186); CAP.box = [capPt(c, g.left, g.top), capPt(c, g.left + g.bw, g.bot)]; }   // the body's box, so a move can start from a spot on its own body
   function capFace(c, cx, ey, ex, my, one) { if (!CAP) return; CAP.eyes = one ? [capPt(c, cx, ey)] : [capPt(c, cx - ex, ey), capPt(c, cx + ex, ey)]; CAP.mouth = capPt(c, cx, my); }
 
   /* Bit keeps the silhouette, eyes, feet, colour and the toothy mouth. Byte adds arms and the training mark.
