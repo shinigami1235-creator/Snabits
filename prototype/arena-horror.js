@@ -153,23 +153,24 @@ const sgTidalGrasp={C:940,D:1750,sig:true,
 function hrWave(c,o){ const {back,front:f,ground:g,H,dir,t,R}=o, p=Math.max(0,Math.min(1,o.pitch)); if(H<2) return;
   // a plunging wave: a rounded top that rolls forward over a hollow, and a lip that curls down in front of it
   const X=v=>f+dir*R*v, Y=v=>g-H*v;
-  const T=[X(-0.4+0.3*p),Y(1)], c1=[X(0.2+1.0*p),Y(1.04-0.02*p)], O=[X(0.55+1.5*p),Y(0.94-0.12*p*p)], c2=[X(0.9+2.1*p),Y(0.9-0.25*p*p)], L=[X(0.75+2.2*p),Y(0.86-0.74*p*p)],
-    c3=[X(0.55+1.8*p),Y(0.92-0.55*p*p)], U=[X(0.45+1.45*p),Y(0.8-0.5*p*p)], c4=[X(0.1+0.4*p),Y(0.86-0.05*p)], B=[X(-0.05),Y(0.5)], c5=[X(-0.12),Y(0.14)], E=[X(0.35),g];
+  const T=[X(-0.4+0.3*p),Y(1)], L=[X(0.75+2.0*p),Y(0.88-0.6*p*p)], k1=[X(0.35+1.3*p),Y(1.05)], k2=[L[0]+dir*R*(0.45+0.25*p),L[1]-H*(0.12+0.3*p)],
+    E=[X(0.25+1.25*p),g], f1=[L[0]-dir*R*(0.05+0.25*p),L[1]+H*0.12], f2=[E[0]+dir*R*0.05,g-H*(0.35-0.1*p)];
   const slope=j=>{ const q=j/16; return [back+(T[0]-back)*q,g-H*(0.1+0.9*Math.pow(q,1.7))+Math.sin(q*11+t/90)*R*0.05*q]; };
-  const top=()=>{ c.quadraticCurveTo(c1[0],c1[1],O[0],O[1]); c.quadraticCurveTo(c2[0],c2[1],L[0],L[1]); };
-  const path=()=>{ c.beginPath(); c.moveTo(back,g); for(let j=0;j<=16;j++){ const q=slope(j); c.lineTo(q[0],q[1]); } top(); c.quadraticCurveTo(c3[0],c3[1],U[0],U[1]); c.quadraticCurveTo(c4[0],c4[1],B[0],B[1]); c.quadraticCurveTo(c5[0],c5[1],E[0],E[1]); c.closePath(); };
+  const top=()=>c.bezierCurveTo(k1[0],k1[1],k2[0],k2[1],L[0],L[1]);
+  const path=()=>{ c.beginPath(); c.moveTo(back,g); for(let j=0;j<=16;j++){ const q=slope(j); c.lineTo(q[0],q[1]); } top(); c.bezierCurveTo(f1[0],f1[1],f2[0],f2[1],E[0],E[1]); c.closePath(); };
   c.save(); path(); const gr=c.createLinearGradient(0,g-H,0,g); gr.addColorStop(0,"#9be6f4"); gr.addColorStop(0.25,"#46a8de"); gr.addColorStop(0.65,"#1d64b4"); gr.addColorStop(1,"#0f3a7c"); c.fillStyle=gr; c.fill(); c.clip();
-  const lg=c.createLinearGradient(T[0],0,L[0],0); lg.addColorStop(0,"rgba(120,235,230,0)"); lg.addColorStop(1,"rgba(150,245,235,.6)"); c.fillStyle=lg; c.fillRect(Math.min(back,L[0])-R,g-H*1.1,Math.abs(L[0]-back)+R*2,H*0.5);   // light through the lip
-  const bg=c.createRadialGradient(X(0.35+0.4*p),Y(0.45),R*0.05,X(0.35+0.4*p),Y(0.45),R*(0.5+0.6*p)); bg.addColorStop(0,"rgba(6,24,66,.55)"); bg.addColorStop(1,"rgba(6,24,66,0)"); c.fillStyle=bg; c.fillRect(X(-1)-R*2,g-H,R*6,H);   // shade inside the curl
+  const lg=c.createLinearGradient(T[0],0,L[0]+dir*R*0.3,0); lg.addColorStop(0,"rgba(120,235,230,0)"); lg.addColorStop(1,"rgba(150,245,235,.6)"); c.fillStyle=lg; c.fillRect(Math.min(back,L[0])-R,g-H*1.1,Math.abs(L[0]-back)+R*2,H*0.5);   // light through the lip
+  const fg=c.createLinearGradient(L[0]-dir*R*1.2,0,L[0]+dir*R*0.4,0); fg.addColorStop(0,"rgba(10,40,100,0)"); fg.addColorStop(1,"rgba(10,40,100,.35)"); c.fillStyle=fg; c.fillRect(Math.min(L[0],E[0])-R*2,g-H*1.1,R*4,H*1.1);   // the face under the curl is deeper and darker
   c.strokeStyle="rgba(210,245,255,.35)"; c.lineWidth=2; for(let i=0;i<9;i++){ const xx=back+(f-back)*(0.25+i*0.08), sh=Math.sin(i*2.3+t/120)*R*0.1; c.beginPath(); c.moveTo(xx,g-H*0.15); c.quadraticCurveTo(xx+sh,g-H*0.45,xx-dir*R*0.15,g-H*(0.7+0.05*(i%3))); c.stroke(); }
   for(let i=0;i<5;i++){ const fx=back+(f-back)*(0.3+0.13*i)+Math.sin(t/200+i)*R*0.2, fy=g-H*(0.25+0.11*((i*3)%5))+Math.sin(t/150+i*2)*R*0.08, z=R*(0.16+0.05*(i%2)); c.save(); c.translate(fx,fy); c.scale(dir,1); c.rotate(-0.25+0.1*Math.sin(t/90+i));
     c.fillStyle="rgba(12,40,90,.55)"; c.beginPath(); c.ellipse(0,0,z,z*0.42,0,0,7); c.fill(); c.beginPath(); c.moveTo(-z*0.8,0); c.lineTo(-z*1.45,-z*0.4); c.lineTo(-z*1.45,z*0.4); c.closePath(); c.fill(); c.fillStyle="rgba(200,240,255,.6)"; c.beginPath(); c.arc(z*0.5,-z*0.1,z*0.09,0,7); c.fill(); c.restore(); }   // fish carried in the wave
   for(let i=0;i<10;i++){ const q=((t/900)+i/10)%1; c.strokeStyle=`rgba(230,250,255,${0.6*(1-q)})`; c.lineWidth=1.2; c.beginPath(); c.arc(back+(f-back)*(0.2+0.7*atH(i*3)),g-H*0.9*q,R*(0.03+0.03*(i%3)),0,7); c.stroke(); }
   c.restore();
   c.save(); c.strokeStyle="rgba(255,255,255,.95)"; c.lineWidth=R*0.15; c.lineCap="round"; c.lineJoin="round"; c.beginPath(); { const q=slope(10); c.moveTo(q[0],q[1]); } for(let j=11;j<=16;j++){ const q=slope(j); c.lineTo(q[0],q[1]); } top(); c.stroke();
-  const bz=(a,k,b,u)=>[(1-u)*(1-u)*a[0]+2*(1-u)*u*k[0]+u*u*b[0],(1-u)*(1-u)*a[1]+2*(1-u)*u*k[1]+u*u*b[1]];
-  c.fillStyle="#ffffff"; for(let i=0;i<14;i++){ const u=i/13, P=u<0.5?bz(T,c1,O,u*2):bz(O,c2,L,(u-0.5)*2); c.beginPath(); c.arc(P[0]+Math.sin(t/70+i)*R*0.03,P[1]-R*0.03,R*(0.08+0.05*atH(i)),0,7); c.fill(); }   // foam along the crest
-  for(let i=0;i<18;i++){ const q=((t/500)+i*0.13)%1, P=bz(T,c1,O,atH(i)), sx=P[0]-dir*q*R*1.5, sy=P[1]-R*0.15-q*R*0.8+q*q*R*1.3; c.fillStyle=`rgba(240,252,255,${0.85*(1-q)})`; c.beginPath(); c.arc(sx,sy,R*(0.04+0.04*atH(i*2))*(1-q*0.4),0,7); c.fill(); }   // spray blown back off the crest
+  const bz=u=>{ const v=1-u; return [v*v*v*T[0]+3*v*v*u*k1[0]+3*v*u*u*k2[0]+u*u*u*L[0],v*v*v*T[1]+3*v*v*u*k1[1]+3*v*u*u*k2[1]+u*u*u*L[1]]; };
+  c.fillStyle="#ffffff"; for(let i=0;i<16;i++){ const P=bz(i/15); c.beginPath(); c.arc(P[0]+Math.sin(t/70+i)*R*0.03,P[1]-R*0.02,R*(0.08+0.05*atH(i)),0,7); c.fill(); }   // foam along the crest
+  c.strokeStyle="rgba(255,255,255,.7)"; c.lineWidth=R*0.08; c.beginPath(); c.moveTo(L[0],L[1]); c.bezierCurveTo(f1[0],f1[1],f2[0],f2[1],E[0],E[1]); c.stroke();   // white water running down the front
+  for(let i=0;i<18;i++){ const q=((t/500)+i*0.13)%1, P=bz(atH(i)*0.6), sx=P[0]-dir*q*R*1.5, sy=P[1]-R*0.15-q*R*0.8+q*q*R*1.3; c.fillStyle=`rgba(240,252,255,${0.85*(1-q)})`; c.beginPath(); c.arc(sx,sy,R*(0.04+0.04*atH(i*2))*(1-q*0.4),0,7); c.fill(); }   // spray blown back off the crest
   for(let i=0;i<22;i++){ const u=atH(i*5+2), xx=back+(E[0]+dir*R*0.4-back)*u, z=R*(0.08+0.12*atH(i*3)); c.fillStyle=`rgba(250,255,255,${0.55+0.4*atH(i*9)})`; c.beginPath(); c.ellipse(xx+Math.sin(t/110+i)*R*0.05,g-z*0.5,z*1.6,z*0.7,0,0,7); c.fill(); }
   c.restore(); }
 const sgFishersSong={C:1000,D:1900,tail:900,sig:true,
@@ -388,7 +389,7 @@ const sgGateOpen={C:1060,D:2400,tail:1300,sig:true,
   atk:t=>({pose:t<1950?"cast":"idle",arc:t<1950?-8*Math.sin(Math.min(1,t/300)*Math.PI/2):0}),
   def(t){ if(t<620||t>2050) return null; if(t<880){ const k=ei((t-620)/260); return {sx:1-0.55*k,sy:1+0.25*k,alpha:1-0.95*k,off:[14*k,-R0*k],rot:0.4*k,pose:"hurt"}; } if(t<1680) return {alpha:0,pose:"hurt"};
     const k=(t-1680)/370; return {alpha:Math.min(1,k*4),sx:0.7+0.3*eo(k),off:[20*(1-eo(k)),0],arc:-40*Math.sin(Math.min(1,k)*Math.PI),rot:-1.2*(1-eo(k)),pose:"hurt"}; },
-  back(c,t,x){ if(t<150||t>2250) return; const th=YG.thump(t); if(th){ c.save(); c.translate(Math.sin(t/12)*th*3,0); YG.draw(c,t,x); c.restore(); } else YG.draw(c,t,x); const {gx,gy,w,R}=YG.geo(x,t), op=YG.open(t); if(op>0){ c.save(); c.globalCompositeOperation="lighter"; const g=c.createLinearGradient(gx,gy,gx-x.target.r*3*atDir(x),gy); g.addColorStop(0,`rgba(230,200,255,${0.45*op})`); g.addColorStop(1,"rgba(230,200,255,0)"); c.fillStyle=g;
+  back(c,t,x){ if(t<150||t>2250) return; YG.draw(c,t,x); const {gx,gy,w,R}=YG.geo(x,t), op=YG.open(t); if(op>0){ c.save(); c.globalCompositeOperation="lighter"; const g=c.createLinearGradient(gx,gy,gx-x.target.r*3*atDir(x),gy); g.addColorStop(0,`rgba(230,200,255,${0.45*op})`); g.addColorStop(1,"rgba(230,200,255,0)"); c.fillStyle=g;
       c.beginPath(); c.moveTo(gx-w/2,gy); c.lineTo(gx+w/2,gy); c.lineTo(gx+w*1.6,gy+R*0.45); c.lineTo(gx-w*1.6,gy+R*0.45); c.closePath(); c.fill(); c.restore(); } },
   fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, {gx,gy,h,w}=YG.geo(x,t), op=YG.open(t);
     if(t<1800){ for(let i=0;i<5;i++){ const an=t/350+i*1.26, k=Math.min(1,t/300); HR.globe(c,s.x+Math.cos(an)*s.r*1.4,s.y-s.r*0.5+Math.sin(an)*s.r*0.5,s.r*0.18,[[255,140,200],[150,240,230],[255,230,140],[190,150,255],[255,170,140]][i],true,Math.cos(an),k); } }
@@ -447,12 +448,12 @@ const sgDreamCall={C:1000,D:1900,sig:true,
    swims under the surface to the target, the water swells, and it bursts up out of a tall column of water right under the target, claws first,
    throwing it into the air. Then it drops back into the sea and comes up again at its own spot as the flood drains. */
 const SR={ home:null,
-  atk(t,x){ const g=(x&&x.gap)||220, d=(x&&x.dir)||1, at=k=>[d*g*k,0];
+  atk(t,x){ const g=(x&&x.gap)||220, d=(x&&x.dir)||1, at=k=>[d*g*0.84*k,0];   // it comes up just in front of the target, so it isn't hidden behind it
     if(t<250){ const k=eo(t/250); return {sy:1-0.12*k,sx:1+0.08*k,pose:"crouch"}; }
     if(t<420){ const k=(t-250)/170; return {arc:-70*Math.sin(k*Math.PI*0.5),sy:1.06,pose:"slamup"}; }
     if(t<580){ const k=ei((t-420)/160), ac=-70+170*k; return {arc:ac,alpha:ac<-10?1:Math.max(0,1-(ac+10)/35),sy:1.1,sx:0.9,rot:0.25*d*k,pose:"slam"}; }
-    if(t<820) return {alpha:0,off:at(eio((t-580)/240)),arc:100,pose:"slam"};
-    if(t<950){ const k=eo((t-820)/130), ac=100-150*k; return {off:at(1),arc:ac,alpha:ac>40?0:ac>0?1-ac/40:1,sy:1.12,sx:0.92,pose:"slamup"}; }
+    if(t<720) return {alpha:0,off:at(eio((t-580)/140)),arc:100,pose:"slam"};
+    if(t<950){ const k=ei((t-720)/230), ac=100-150*k; return {off:at(1),arc:ac,alpha:ac>60?0:ac>20?1-(ac-20)/40:1,sy:1.12,sx:0.92,rot:0.05*Math.sin(t/40),pose:"slamup"}; }
     if(t<1120){ const k=eo((t-950)/170); return {off:at(1),arc:-50-25*k,sy:1.08,pose:"slamup"}; }
     if(t<1380){ const k=ei((t-1120)/260), ac=-75+175*k; return {off:at(1),arc:ac,alpha:ac<-10?1:Math.max(0,1-(ac+10)/35),rot:-0.2*d*k,pose:"slam"}; }
     if(t<1620) return {alpha:0,off:at(1-eio((t-1380)/240)),arc:100,pose:"idle"};
@@ -477,8 +478,13 @@ const sgSunkenRise={C:950,D:2050,tail:1100,sig:true,
       c.strokeStyle="rgba(245,253,255,.95)"; c.lineWidth=2.4; for(const sd of [-1,1]){ c.beginPath(); c.moveTo(sx+d*R*0.8,ground); c.lineTo(sx-d*R*2.0,ground+sd*R*0.36); c.stroke(); } for(let i=0;i<5;i++){ const q=((t/250)+i/5)%1; c.strokeStyle=`rgba(240,252,255,${0.8*(1-q)})`; c.lineWidth=1.3; c.beginPath(); c.arc(sx-d*R*q*1.5,ground-q*R*0.5,R*0.06,0,7); c.stroke(); } c.restore(); } },
   fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, ground=HR.floor(sgSunkenRise,t,tg)+2, hx=SR.home==null?s.x:SR.home;
     HR.splash(c,hx,ground,R,(t-540)/450,14,[120,200,245]);   // the dive
-    if(t>=760&&t<960){ const k=(t-760)/200, h=R*0.9*eo(k); const g=c.createRadialGradient(tg.x,ground-h*0.5,2,tg.x,ground,R*1.6); g.addColorStop(0,"rgba(200,240,255,.9)"); g.addColorStop(1,"rgba(60,140,215,.85)"); c.fillStyle=g; c.beginPath(); c.ellipse(tg.x,ground,R*1.5,Math.max(1,h),0,Math.PI,0); c.fill();
-      for(let i=0;i<8;i++){ const q=(k*2+i/8)%1; c.strokeStyle=`rgba(240,252,255,${0.8*(1-q)})`; c.lineWidth=1.3; c.beginPath(); c.arc(tg.x+(i-3.5)*R*0.3,ground-q*h*1.4,R*0.05,0,7); c.stroke(); } }   // the water swells under the target
+    if(t>=620&&t<960){ const k=(t-620)/340, h=R*1.1*eo(k), sx0=t<720?tg.x:s.x; const g=c.createRadialGradient(sx0,ground-h*0.5,2,sx0,ground,R*1.6); g.addColorStop(0,"rgba(200,240,255,.9)"); g.addColorStop(1,"rgba(60,140,215,.85)"); c.fillStyle=g; c.beginPath(); c.ellipse(sx0,ground,R*1.5,Math.max(1,h),0,Math.PI,0); c.fill();
+      for(let i=0;i<8;i++){ const q=(k*2+i/8)%1; c.strokeStyle=`rgba(240,252,255,${0.8*(1-q)})`; c.lineWidth=1.3; c.beginPath(); c.arc(sx0+(i-3.5)*R*0.3,ground-q*h*1.4,R*0.05,0,7); c.stroke(); } }   // the water swells under the target
+    if(t>=720&&t<1300){ const top=Math.min(ground,s.foot), wl=ground, body=Math.max(0,wl-(s.y-s.r*1.1)), k=(t-720)/580;   // water pouring off it as it comes up through the surface
+      if(top<wl-2){ const drain=Math.min(1,Math.max(0,(t-900)/350)), h=(wl-top)*(1-drain), w=s.r*0.95; if(h>2){ const g=c.createLinearGradient(0,wl-h,0,wl); g.addColorStop(0,"rgba(190,235,255,.55)"); g.addColorStop(1,"rgba(60,140,215,.8)"); c.fillStyle=g;
+          c.beginPath(); c.moveTo(s.x-w*1.3,wl); c.quadraticCurveTo(s.x-w,wl-h*0.5,s.x-w*0.8,wl-h); c.lineTo(s.x+w*0.8,wl-h); c.quadraticCurveTo(s.x+w,wl-h*0.5,s.x+w*1.3,wl); c.closePath(); c.fill(); } }
+      for(let i=0;i<10;i++){ const ph=((t/320)+i/10)%1, px=s.x+(i-4.5)*s.r*0.2, py=s.y-s.r*(0.7-0.2*(i%3))+ph*(wl-(s.y-s.r*0.7)); if(py<wl) HR.drop(c,px,py,s.r*0.06,[170,220,255],0.9*(1-ph)*(1-Math.max(0,k-0.7)/0.3)); }
+      if(t<1050){ const q=Math.min(1,(t-720)/330); SG.ring(c,s.x,wl,s.r*(1.0+0.9*q),s.r*(0.22+0.15*q),[255,255,255],3,0.9*(1-q*0.6)); c.fillStyle="rgba(255,255,255,.85)"; for(let i=0;i<9;i++){ const an=i/9*Math.PI*2+t/200; c.beginPath(); c.arc(s.x+Math.cos(an)*s.r*1.05,wl+Math.sin(an)*s.r*0.22,s.r*0.12,0,7); c.fill(); } } }   // foam round it at the waterline
     if(t>=930&&t<1500){ const k=(t-930)/570, up=t<1010?eo((t-930)/80):1-ei(Math.min(1,(t-1010)/380)), H=R*1.9*up, w=R*1.1;   // the water bursts up as it breaks the surface and falls straight back
       if(H>2){ c.save(); c.globalAlpha*=0.9; for(let i=0;i<9;i++){ const u=(i-4)/4, px=tg.x+u*w*(1+0.5*k), hh=H*(0.55+0.45*Math.cos(u*1.4))*(0.85+0.3*atH(i*7)), lean=u*R*0.35*k; const gr=c.createLinearGradient(0,ground-hh,0,ground); gr.addColorStop(0,"rgba(240,252,255,.95)"); gr.addColorStop(1,"rgba(70,155,225,.9)"); c.fillStyle=gr;
           c.beginPath(); c.moveTo(px-R*0.16,ground); c.quadraticCurveTo(px-R*0.08+lean*0.5,ground-hh*0.6,px+lean,ground-hh); c.quadraticCurveTo(px+R*0.08+lean*0.5,ground-hh*0.6,px+R*0.16,ground); c.closePath(); c.fill(); HR.drop(c,px+lean*1.2,ground-hh-R*0.15+k*k*R*0.6,R*0.08,[235,250,255],0.9*(1-k)); }
