@@ -180,7 +180,7 @@ Deep expeditions for a team of three trained Snabits, approved by Gid from `docs
   - A farmer at the Harvest Fair gives the ranch a painted stone from her stall once its best Snabit has reached grade B.
 - **The cost:** fatigue and stress on all three, so the player plans for it like a Major.
 
-## The horror series (Proposed, built 16 Nov 2026, `horror.js`)
+## The horror series (OKed by Gid 17 Nov 2026, built 16 and 17 Nov 2026, `horror.js`)
 
 Ten cosmic horrors from past the Rift, drawn cute: Cthulhu, Hastur, Shoggoth, Dagon, Mi-Go, Nightgaunt, Ghoul, Gug, Yog-Sothoth and Shub-Niggurath. Gid OKed the plan in `docs/HORROR-PLAN.md` on 16 Nov 2026. They're late game, and no scan calls one until it has joined the ranch once.
 
