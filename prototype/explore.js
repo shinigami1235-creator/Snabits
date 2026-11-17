@@ -185,7 +185,7 @@ async function runExpedition(reg) {
     await tripLeave(`Walt has a League permit for ${reg.n}. ${nm} goes with him for the week.`);
     s.bg = `area:${reg.el}:${areas[0].key}`; s.trip = true; s.night = 0; s.dusk = 0; s.props = []; s.x = 60; s.pose = 'idle'; s.camJump = true; s.tripLabel = `${reg.n} expedition`; drawUI();
     await sceneFade(false, 700); banner(reg.n, '#fff'); K(reg.rift ? "This is the edge of the Rift. The League's mapped this far and no further." : 'The trail ends here. Where to?'); await rwait(1200); banner('');
-    if (wx) { s.exWx = wx; K(EX_WX_LINE[wx](nm)); await rwait(2000); }
+    if (wx) { s.exWx = wx; if (typeof exAmb === 'function') exAmb(wx); K(EX_WX_LINE[wx](nm)); await rwait(2000); }
     el('r-panel').innerHTML = `<canvas id="ex-map" class="full" style="width:100%;display:block"></canvas><button class="rb full" id="ex-home">Head home<small>Keeps everything found so far</small></button>`;
     el('ranch').classList.add('exploring');
     try {
@@ -207,7 +207,7 @@ async function runExpedition(reg) {
         if (n.c === 6) { await rwait(600); break; }
         saveGame();
       }
-    } finally { el('ranch').classList.remove('exploring'); el('r-panel').innerHTML = ''; delete s.exWx; }
+    } finally { el('ranch').classList.remove('exploring'); el('r-panel').innerHTML = ''; delete s.exWx; if (typeof exAmbStop === 'function') exAmbStop(); }
     const got = found.length ? `${nm} brought home ${found.join(', ')}.` : `${nm} didn't find anything this time.`;
     await tripHome(`Time to head back. ${got}`, `We're back at the ranch. ${nm} will sleep well tonight.`, found.length ? 'happy' : 'idle');
     s.fatigue += Math.round(12 * tireMul(s)); s.stress += 4; clampAll();
@@ -264,6 +264,7 @@ const exBack = async x => { RS.dir = -1; await walkTo(x, 60, 'walk'); RS.dir = 1
 /* what each obstacle looks like, getting through or not */
 async function exObstacle(stat, ok, seed = 0) {
   const s = RS;
+  if (typeof exObstacle2 === 'function' && await exObstacle2(stat, ok, seed)) return;   // the newer, bigger versions (explore-more.js)
   if (stat === 1) {   // Power: a giant boulder across the path
     const b = prop({ k: 'xrock', x: 172, y: GROUND, s: 1.7, rot: 0 }); await walkTo(172 - 44 - RS.P.scale * 4, 50, 'walk'); s.pose = 'effort'; await rwait(700);
     if (ok) { for (let i = 0; i < 26; i++) { b.x += 1.2; s.x += 1.2; b.rot += 0.05; if (i % 5 === 0) spark(s.x - 8, GROUND - 1, 'dust'); if (i % 8 === 0) rsfx('rumble'); await rwait(34); }
