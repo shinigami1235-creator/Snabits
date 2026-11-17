@@ -197,8 +197,9 @@ async function exMoveOpen(stat, mv, seed) {
     if (stat === 1) { const b = prop({ k: 'xrockb', x: 172, y: GROUND, s: 1.7, broke: 0 }); await walkTo(104, 60, 'walk');
       if (el === 'Stone') { let done = false; const hit = exHit(mv, 162, GROUND - 26).then(() => { done = true; }); while (!EXD.spikes) await rwait(16); const sp = EXD.spikes;
         while (!done) { b.y = GROUND - sp.h * 22; await rwait(16); } b.y = GROUND - 22; await hit; EXD.spikes = null;   // the boulder rides up on the spikes
-        exSfx('crumble'); spark(172, GROUND - 4, 'dust', 16); exShake(5, 700);   // it breaks on top of them, the halves settle to the ground and the spikes sink back in
-        await exTween(1300, u => { b.broke = u; b.y = GROUND - 22 * (1 - exOut(Math.min(1, u * 1.4))); sp.h = 1 - Math.max(0, (u - 0.45) / 0.55); }); unprop(sp); unprop(b); }
+        await rwait(120); exSfx('thud'); exSfx('crumble'); spark(172, GROUND - 40, 'dust', 16); exShake(8, 600); exFlash('#fff', 0.4, 160);   // the middle spike shoots up through it and splits it
+        await exTween(130, u => { sp.c = u; b.broke = u * 0.12; }, exOut); await exFreeze(110);
+        await exTween(1300, u => { b.broke = 0.12 + u * 0.88; b.y = GROUND - 22 * (1 - exOut(Math.min(1, u * 1.4))); sp.h = 1 - Math.max(0, (u - 0.45) / 0.55); }); unprop(sp); unprop(b); }   // the halves settle and the spikes sink back in
       else { await exHit(mv, 162, GROUND - 26); exSfx('crumble'); spark(172, GROUND - 4, 'dust', 16); exShake(5, 700); await exTween(1300, u => { b.broke = u; }); unprop(b); } }
     else if (stat === 2) { const th = prop({ k: 'thorns2', x: 168, y: GROUND, s: 1.35, gone: 0, how: el === 'Blaze' ? 'burn' : 'cut' }); await walkTo(110, 60, 'walk'); await exHit(mv, 160, GROUND - 24);
       if (el === 'Blaze') exSfx('crackle'); else { th.how = 'shred'; exSfx('snap'); } await exTween(el === 'Blaze' ? 1700 : 1200, u => { th.gone = u; }); }
@@ -334,7 +335,7 @@ async function exObstacle2(stat, ok, seed) {
         prop({ k: 'exripple', x: ax(wrong), y: GROUND - 20, t0: exNow(), el: 'Insight' }); exSfx('thud'); spark(ax(wrong), GROUND - 30, 'dust', 4);
         exFlash('#ffffff', 0.5, 220); exShake(5, 350); s.pose = 'hurt'; s.flash = 2; await exFreeze(130); spark(s.x, headY() - 4, 'star', 3);
         const x1 = s.x; await exTween(420, u => { s.x = x1 - 36 * u; s.jy = Math.sin(u * Math.PI) * 12; }, exOut); s.jy = 0;
-        m.van = { i: wrong, u: 0 }; exSfx('fizzle'); spark(ax(wrong), GROUND - 18, 'sparkle', 6); await exTween(900, u => { m.van.u = u; });   // it was a fake and shimmers away
+        m.gone = 0; exSfx('fizzle'); exSfx('shine'); spark(170, GROUND - 24, 'sparkle', 10); await exTween(1200, u => { m.gone = u; });   // the whole hedge was a mirage and shimmers away
         s.pose = 'sad'; await rwait(500); exCalm(); await exBack(90); }
     } finally { exCalm(); }
     return true; }
@@ -393,7 +394,7 @@ function exProp2(c, p, t, front) {
     case 'exglyph': if (!front) return true; exGlyphs(c, x, y, p.u || 0, p.lock || 0, p.bad, t); return true;
     case 'exshot': if (!front) return true; exShot(c, p, Math.min(1, (exNow() - p.t0) / p.ms), t); return true;
     case 'exclaw': if (!front) return true; { const u = (exNow() - p.t0) / 700; if (u < 1) exClaw(c, x, y, u, t); } return true;
-    case 'exspikes': if (front) return true; exSpikes(c, x, y, p.h || 0); return true;
+    case 'exspikes': if (front) return true; exSpikes(c, x, y, p.h || 0, p.c); return true;
     case 'chest2': if (front) return true; exChestDraw(c, p, t); return true;
     case 'exitem': if (!front) return true; exItemDraw(c, p, t); return true;
     case 'exarchmask': if (!front) return true; if (p.door) { c.save(); c.globalAlpha = p.a; XA.door(c, x, y, 3, 61, t); c.restore(); return true; } { const k = p.s || 1, w = 8 * k; c.save(); c.globalAlpha = p.a; c.fillStyle = '#16211a'; c.beginPath(); c.moveTo(x - w, y + 2); c.lineTo(x - w, y - 16 * k); c.arc(x, y - 16 * k, w, Math.PI, 0); c.lineTo(x + w, y + 2); c.closePath(); c.fill();
@@ -644,10 +645,10 @@ function exClaw(c, x, y, u, t) {
   c.restore();
 }
 /* stone spikes thrust up from the ground under the target */
-function exSpikes(c, x, y, h) {
+function exSpikes(c, x, y, h, cc) {
   if (h <= 0) return; c.save();
   c.fillStyle = 'rgba(40,28,18,.35)'; c.beginPath(); c.ellipse(x, y + 1, 34, 5, 0, 0, 7); c.fill();
-  for (const [dx, H, w] of [[-20, 30, 9], [-6, 46, 12], [10, 40, 11], [22, 26, 8]]) { const hh = H * h; c.fillStyle = '#7d6f5c'; c.beginPath(); c.moveTo(x + dx - w, y + 2); c.lineTo(x + dx - 1, y - hh); c.lineTo(x + dx + w, y + 2); c.fill();
+  for (const [dx, H, w] of [[-22, 30, 9], [-11, 40, 11], [0, 44 + 70 * (cc || 0), 12], [12, 38, 11], [23, 26, 8]]) { const hh = H * h; c.fillStyle = '#7d6f5c'; c.beginPath(); c.moveTo(x + dx - w, y + 2); c.lineTo(x + dx - 1, y - hh); c.lineTo(x + dx + w, y + 2); c.fill();
     c.fillStyle = '#ab9c82'; c.beginPath(); c.moveTo(x + dx - 1, y - hh); c.lineTo(x + dx + w, y + 2); c.lineTo(x + dx + 2, y + 2); c.fill(); c.fillStyle = 'rgba(255,255,255,.25)'; c.beginPath(); c.moveTo(x + dx - 1, y - hh); c.lineTo(x + dx - w * 0.4, y - hh * 0.4); c.lineTo(x + dx - 1, y - hh * 0.5); c.fill(); }
   c.restore();
 }
