@@ -380,6 +380,65 @@ const SUMMON = (() => {
       return { dy: -H * 0.45 * (1 - k), pose: tt < 800 ? 'hover' : tt < 1000 ? 'land' : 'happy',
         under(c, x, y, h) { if (tt < 800) return; const p = seg(tt, 800, 1600); if (p >= 1) return; const cols = [[226, 72, 63], [240, 138, 36], [242, 207, 43], [77, 168, 60], [47, 111, 216], [138, 79, 224]];
           cols.forEach((col, i) => { const ang = Math.PI * (1.1 + i * 0.16); c.strokeStyle = `rgba(${col},${0.8 * (1 - p)})`; c.lineWidth = h * 0.06; c.lineCap = 'round'; c.beginPath(); c.moveTo(x, y - h * 0.4); c.lineTo(x + Math.cos(ang) * h * (0.5 + p * 0.5), y - h * 0.4 + Math.sin(ang) * h * (0.5 + p * 0.5)); c.stroke(); }); } }; },
+    /* the ten horrors (17 Nov 2026): each one comes out of something, so nothing just pops in */
+    Ghoul(tt, H) { const k = out3(seg(tt, 250, 1050)), sh = tt < 1050 ? Math.sin(tt / 30) * H * 0.006 : 0;   // it claws its way up out of a grave mound
+      return { clip: true, dy: H * 0.38 * (1 - k), dx: sh, pose: tt < 1050 ? 'crouch' : tt < 1300 ? 'determined' : 'happy',
+        over(c, x, y, h) { const m = Math.min(1, tt / 250) * (1 - seg(tt, 1300, 1800)); if (m <= 0) return; const x0 = x - sh;
+          c.fillStyle = `rgba(92,66,44,${m})`; c.beginPath(); c.ellipse(x0, y + 2, h * 0.5, h * 0.2 * m, 0, Math.PI, 0); c.fill();
+          c.fillStyle = `rgba(122,92,62,${m})`; c.beginPath(); c.ellipse(x0 - h * 0.12, y - h * 0.08 * m, h * 0.2, h * 0.06 * m, -0.2, 0, 7); c.fill();
+          const r = rng(4); for (let i = 0; i < 9; i++) { const p = seg(tt, 300 + i * 70, 900 + i * 70); if (p <= 0 || p >= 1) continue; const dir = r() > 0.5 ? 1 : -1, vx = dir * h * (0.2 + r() * 0.4), vy = h * (0.5 + r() * 0.4);
+            c.fillStyle = `rgba(110,80,52,${1 - p * 0.5})`; c.beginPath(); c.arc(x0 + vx * p, y - h * 0.1 - vy * p + vy * 1.3 * p * p, h * 0.03, 0, 7); c.fill(); } } }; },
+    Nightgaunt(tt, H) { const k = out3(seg(tt, 0, 950)), lit = seg(tt, 950, 1250);   // it drops out of the dark without a sound, a black shape until it lands
+      return { dy: -H * 0.62 * (1 - k), filter: lit < 1 ? `brightness(${0.12 + 0.88 * lit})` : null, pose: tt < 950 ? 'hover' : tt < 1150 ? 'land' : 'happy',
+        under(c, x, y, h) { const p = seg(tt, 900, 1400); if (p <= 0 || p >= 1) return; c.strokeStyle = `rgba(200,190,230,${0.6 * (1 - p)})`; c.lineWidth = 2;
+          for (const sd of [-1, 1]) { c.beginPath(); c.ellipse(x + sd * h * (0.25 + p * 0.4), y, h * 0.18 * (1 + p), h * 0.04, 0, sd < 0 ? 0 : Math.PI, sd < 0 ? Math.PI : 0, true); c.stroke(); } } }; },
+    Migo(tt, H, W) { const k = out3(seg(tt, 150, 1000)), j = tt < 1000 ? Math.sin(tt / 18) * W * 0.004 : 0;   // it hums down a pink shaft of light, buzzing the whole way
+      return { dy: -H * 0.45 * (1 - k), dx: j, pose: tt < 1050 ? 'hover' : 'happy', t: tt * 2,
+        under(c, x, y, h) { const a = Math.min(1, tt / 200) * (1 - seg(tt, 1000, 1500)); if (a <= 0) return; const g = c.createLinearGradient(0, 0, 0, y);
+          g.addColorStop(0, `rgba(240,140,220,0)`); g.addColorStop(1, `rgba(240,140,220,${0.45 * a})`); c.fillStyle = g; c.beginPath(); c.moveTo(x - h * 0.12, 0); c.lineTo(x + h * 0.12, 0); c.lineTo(x + h * 0.5, y); c.lineTo(x - h * 0.5, y); c.fill();
+          c.strokeStyle = `rgba(255,190,240,${0.7 * a})`; c.lineWidth = 1.5; for (let i = 0; i < 3; i++) { const p = ((tt / 500) + i / 3) % 1; c.beginPath(); c.ellipse(x, y - h * 0.5 + p * h * 0.5, h * 0.3 * (0.5 + p * 0.5), h * 0.05, 0, 0, 7); c.stroke(); } } }; },
+    Dagon(tt, H) { const k = out3(seg(tt, 200, 1100));   // a black pool opens, bubbles boil up and it rises out with the water pouring off it
+      return { clip: true, dy: H * 0.4 * (1 - k), pose: tt < 1100 ? 'idle' : tt < 1300 ? 'determined' : 'happy',
+        under(c, x, y, h) { const a = Math.min(1, tt / 300) * (1 - seg(tt, 1200, 1800)); if (a <= 0) return; c.fillStyle = `rgba(16,40,44,${0.9 * a})`; c.beginPath(); c.ellipse(x, y + 2, h * 0.75, h * 0.11, 0, 0, 7); c.fill();
+          for (let i = 0; i < 9; i++) { const p = ((tt / 450) + i / 9) % 1; c.strokeStyle = `rgba(120,200,190,${a * (1 - p)})`; c.lineWidth = 1.5; c.beginPath(); c.arc(x + (i - 4) * h * 0.13, y - p * h * 0.35, h * (0.02 + p * 0.03), 0, 7); c.stroke(); } },
+        over(c, x, y, h) { const p = seg(tt, 1000, 1700); if (p <= 0 || p >= 1) return; const r = rng(11);
+          for (let i = 0; i < 12; i++) { const ox = (r() - 0.5) * h * 0.6, oy = h * (0.2 + r() * 0.7); c.fillStyle = `rgba(140,210,220,${0.8 * (1 - p)})`; c.beginPath(); c.ellipse(x + ox, y - oy + p * oy, h * 0.012, h * 0.028, 0, 0, 7); c.fill(); } } }; },
+    Shub(tt, H) { const lit = seg(tt, 800, 1150);   // eyes open all round it in the dark, then it steps out and its young scatter
+      return { filter: lit < 1 ? `brightness(${0.1 + 0.9 * lit})` : null, sx: 1 + spring(tt - 1150, 0.07), sy: 1 - spring(tt - 1150, 0.07), pose: tt < 1150 ? 'idle' : 'happy',
+        under(c, x, y, h) { const r = rng(21), a = 1 - seg(tt, 900, 1300); if (a > 0) for (let i = 0; i < 14; i++) { const ang = r() * 7, rr = h * (0.45 + r() * 0.4), ex = x + Math.cos(ang) * rr, ey = y - h * 0.45 + Math.sin(ang) * rr * 0.6, on = tt > i * 45 && Math.floor((tt + i * 97) / 340) % 5;
+            if (!on) continue; c.fillStyle = `rgba(250,226,90,${a})`; for (const dd of [-1, 1]) { c.beginPath(); c.ellipse(ex + dd * h * 0.04, ey, h * 0.02, h * 0.03, 0, 0, 7); c.fill(); } }
+          const p = seg(tt, 1150, 1900); if (p <= 0 || p >= 1) return; for (let i = 0; i < 8; i++) { const sd = i % 2 ? 1 : -1, d = h * (0.2 + (i >> 1) * 0.12) * (0.3 + p * 1.6);
+            c.fillStyle = `rgba(30,24,22,${1 - p})`; c.beginPath(); c.ellipse(x + sd * d, y - h * 0.04 - Math.abs(Math.sin(p * 18 + i)) * h * 0.04, h * 0.05, h * 0.04, 0, 0, 7); c.fill(); } } }; },
+    Gug(tt, H, W) { const open = io3(seg(tt, 250, 1000)), st = tt > 1000 && tt < 1350 ? Math.sin(tt / 22) * W * 0.012 * (1 - seg(tt, 1000, 1350)) : 0;   // the two halves of a sealed gate grind apart and it stomps through
+      return { dx: st, sx: 1 + spring(tt - 1050, 0.1), sy: 1 - spring(tt - 1050, 0.1), pose: tt < 1000 ? 'idle' : tt < 1300 ? 'determined' : 'happy',
+        over(c, x, y, h) { const sink = seg(tt, 1050, 1600); if (sink >= 1) return; const a = 1, gw = h * 0.6, gh = h * 1.2, xo = open * h * 0.95; c.save(); c.beginPath(); c.rect(x - h * 3, 0, h * 6, y + 2); c.clip(); c.translate(0, sink * gh);
+          for (const sd of [-1, 1]) { const gx = x - st + sd * xo + (sd < 0 ? -gw : 0); c.fillStyle = `rgba(118,112,104,${a})`; c.fillRect(gx, y - gh, gw, gh + 2);
+            c.strokeStyle = `rgba(70,66,60,${a})`; c.lineWidth = 2; c.strokeRect(gx + 3, y - gh + 3, gw - 6, gh - 4);
+            c.fillStyle = `rgba(150,120,200,${0.8 * a})`; c.beginPath(); c.arc(x - st + sd * xo, y - gh * 0.55, h * 0.05, sd < 0 ? Math.PI / 2 : -Math.PI / 2, sd < 0 ? -Math.PI / 2 : Math.PI / 2, sd < 0); c.fill(); } c.restore(); } }; },
+    Shoggoth(tt, H) { const k = seg(tt, 150, 1000), w = spring(tt - 1000, 0.12, 180, 60);   // a puddle of goo heaves up into its shape, then its eyes open one by one
+      return { sx: 1 + (1 - k) * 0.7 + w, sy: Math.max(0.08, k) - w, pose: tt < 1100 ? poseWith('idle', { eyes: 'shut' }) : tt < 1400 ? poseWith('idle', { eyes: 'open' }) : 'happy',
+        under(c, x, y, h) { const a = 1 - seg(tt, 900, 1400); if (a <= 0) return; c.fillStyle = `rgba(40,30,50,${0.85 * a})`; c.beginPath(); c.ellipse(x, y + 2, h * (0.5 + 0.2 * Math.sin(tt / 140)) * (1.2 - k * 0.4), h * 0.07, 0, 0, 7); c.fill();
+          for (let i = 0; i < 6; i++) { const p = ((tt / 380) + i / 6) % 1; c.fillStyle = `rgba(80,60,100,${a * (1 - p)})`; c.beginPath(); c.arc(x + (i - 2.5) * h * 0.16, y - h * 0.02 - Math.sin(p * Math.PI) * h * 0.18, h * 0.025, 0, 7); c.fill(); } } }; },
+    Hastur(tt, H) { const open = io3(seg(tt, 200, 1000));   // a yellow curtain parts on a stage, and it bows
+      return { pose: tt < 1000 ? 'idle' : tt < 1350 ? 'crouch' : 'happy', sy: tt > 1000 && tt < 1350 ? 1 - 0.08 * Math.sin(seg(tt, 1000, 1350) * Math.PI) : 1,
+        over(c, x, y, h) { const up = io3(seg(tt, 1350, 1900)); if (up >= 1) return; const a = 1, cw = h * 0.62, ch = h * 1.3, sh = open * cw * 0.85; c.save(); c.translate(0, -up * (y + h * 0.2));
+          for (const sd of [-1, 1]) { const x0 = x + sd * sh, g = c.createLinearGradient(x0 - cw, 0, x0 + cw, 0); g.addColorStop(0, `rgba(170,128,20,${a})`); g.addColorStop(0.5, `rgba(232,190,60,${a})`); g.addColorStop(1, `rgba(170,128,20,${a})`);
+            c.fillStyle = g; c.beginPath(); c.moveTo(x0, y - ch); c.lineTo(x0 + sd * cw * (1 - open * 0.4), y - ch); c.quadraticCurveTo(x0 + sd * cw * 0.9, y - ch * 0.4, x0 + sd * cw * (1.05 - open * 0.3), y + 2); c.lineTo(x0, y + 2); c.closePath(); c.fill();
+            c.strokeStyle = `rgba(140,100,10,${0.6 * a})`; c.lineWidth = 1.2; for (let f = 1; f < 4; f++) { const fx = x0 + sd * cw * f * 0.22; c.beginPath(); c.moveTo(fx, y - ch); c.lineTo(fx + sd * f * 2, y); c.stroke(); } }
+          c.fillStyle = `rgba(120,30,30,${a})`; c.fillRect(x - h * 1.5, y - ch - h * 0.08, h * 3, h * 0.1); c.restore(); } }; },
+    Yog(tt, H) { const k = seg(tt, 700, 1100);   // glowing globes circle in from a doorway of light and become it
+      return { alpha: k, sx: 0.6 + 0.4 * out3(k), sy: 0.6 + 0.4 * out3(k), pose: tt < 1100 ? 'hover' : 'happy',
+        under(c, x, y, h) { const a = Math.min(1, tt / 300) * (1 - seg(tt, 1100, 1600)); if (a > 0) { c.strokeStyle = `rgba(200,180,255,${0.8 * a})`; c.lineWidth = 3; c.shadowColor = 'rgba(200,170,255,.9)'; c.shadowBlur = 14;
+            const dw = h * 0.42 * Math.min(1, tt / 400), dh = h * 1.05; c.strokeRect(x - dw, y - dh, dw * 2, dh); c.shadowBlur = 0; }
+          const g = 1 - k; if (g <= 0) return; const cols = [[150, 90, 230], [80, 220, 230], [240, 120, 200]];
+          for (let i = 0; i < 7; i++) { const ang = i / 7 * 6.283 + tt / 260, rr = h * 0.55 * g + h * 0.05, gx = x + Math.cos(ang) * rr, gy = y - h * 0.45 + Math.sin(ang) * rr * 0.6, col = cols[i % 3];
+            const gg = c.createRadialGradient(gx - h * 0.02, gy - h * 0.02, 1, gx, gy, h * 0.08); gg.addColorStop(0, `rgba(255,255,255,${g})`); gg.addColorStop(0.5, `rgba(${col},${g})`); gg.addColorStop(1, `rgba(${col},0)`);
+            c.fillStyle = gg; c.beginPath(); c.arc(gx, gy, h * 0.08, 0, 7); c.fill(); } } }; },
+    Cthulhu(tt, H) { const k = out3(seg(tt, 100, 1100)), wake = seg(tt, 1150, 1350);   // it floats up asleep out of a green haze, dreaming, then its eyes open
+      return { clip: true, dy: H * 0.22 * (1 - k) - Math.sin(tt / 420) * H * 0.012 * (1 - wake), pose: tt < 1150 ? poseWith('idle', { eyes: 'shut' }) : tt < 1500 ? poseWith('idle', { eyes: 'open' }) : 'happy',
+        under(c, x, y, h) { const a = Math.min(1, tt / 300) * (1 - seg(tt, 1300, 1900)); if (a <= 0) return; glow(c, x, y - h * 0.35, h * 0.9, [60, 140, 110], 0.5 * a);
+          c.strokeStyle = `rgba(150,230,190,${0.5 * a})`; c.lineWidth = 1.5; for (let i = 0; i < 3; i++) { const p = ((tt / 900) + i / 3) % 1; c.beginPath(); c.ellipse(x, y - h * 0.45, h * (0.4 + p * 0.6), h * (0.25 + p * 0.35), 0, 0, 7); c.globalAlpha = 1 - p; c.stroke(); c.globalAlpha = 1; } },
+        over(c, x, y, h) { if (tt > 1150 && tt < 1500) { const p = seg(tt, 1150, 1500); c.fillStyle = `rgba(160,255,200,${0.5 * Math.sin(p * Math.PI)})`; c.beginPath(); c.arc(x, y - h * 0.62, h * 0.35 * p + h * 0.05, 0, 7); c.fill(); } } }; },
     pop(tt) { const k = back(seg(tt, 0, 420)); return { sx: k, sy: k, pose: 'idle' }; }
   };
 
@@ -454,7 +513,9 @@ const SUMMON = (() => {
       if (t >= 3500) { const tt = t - 3500, e = E(tt, H, W), x = cx + (e.dx || 0), y = feet + (e.dy || 0);
         c.fillStyle = 'rgba(0,0,0,.25)'; c.beginPath(); c.ellipse(cx + (e.dx || 0), feet, hM * 0.32 * (e.alpha == null ? 1 : e.alpha), hM * 0.05, 0, 0, 7); c.fill();
         if (e.under) e.under(c, x, y, hM);
+        if (e.clip) { c.save(); c.beginPath(); c.rect(0, 0, W, feet + 2); c.clip(); }   // what's still under the ground stays hidden
         mon(c, o.spec, x, y, hM, e.pose, e.t != null ? e.t : tt, e);
+        if (e.clip) c.restore();
         if (e.over) e.over(c, x, y, hM);
         if (tt > 1100 && o.name) { const a = seg(tt, 1100, 1450); c.globalAlpha = a; c.font = `700 ${Math.round(W * 0.08)}px Pix, monospace`; c.textAlign = 'center';
           c.fillStyle = 'rgba(0,0,0,.45)'; c.fillText(o.name, cx + 2, feet + hM * 0.24 + 2 + (1 - a) * 12); c.fillStyle = '#f5f0e2'; c.fillText(o.name, cx, feet + hM * 0.24 + (1 - a) * 12); c.globalAlpha = 1; } }

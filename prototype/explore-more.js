@@ -86,7 +86,7 @@ function exShake(px, ms) {   // smooth sines that die away, on the backdrop and 
     els.forEach(e => e.style.transform = `translate(${(Math.sin(t / 23) * k).toFixed(1)}px,${(Math.cos(t / 31) * k * 0.7).toFixed(1)}px)`); requestAnimationFrame(step); };
   requestAnimationFrame(step);
 }
-function exCalm() { exDim(0); exFocusOff(); const s = RS; s.ghosts = false; s.props = s.props.filter(p => !/^ex(burst|charge|lines|beam)/.test(p.k)); }
+function exCalm() { exDim(0); exFocusOff(); const s = RS; s.ghosts = false; s.shade = 0; s.props = s.props.filter(p => !/^ex(burst|charge|lines|beam)/.test(p.k)); }
 
 /* ---------- nothing pops in: a place stays dark until whatever is there has been set out, and the Snabit walks in ---------- */
 function exShow() { if (!EXD.hold) return; EXD.hold = false; clearTimeout(EXD.holdT); sceneFade(false, 250); }
@@ -98,9 +98,9 @@ async function exArchIn(x, kind = 'arch') {
   await exTween(600, u => { mk.a = u; s.bx = Math.sin(u * 12) * 0.5; }); s.bx = 0; s.hidden = true; EXD.archExit = kind;
 }
 function exArchOut() {
-  if (!EXD.archExit) return; const door = EXD.archExit === 'door'; EXD.archExit = false; const s = RS; s.hidden = false; s.x = 44;
-  prop(door ? { k: 'sealdoor', x: 44, y: GROUND, lit: 3, drop: 61 } : { k: 'exarchway', x: 44, y: GROUND, s: 1.2 }); const mk = prop({ k: 'exarchmask', x: 44, y: GROUND, a: 1, s: 1.2, door });
-  (async () => { await rwait(500); await exTween(500, u => { mk.a = 1 - u; }); unprop(mk); })().catch(() => {});
+  if (!EXD.archExit) return; const door = EXD.archExit === 'door'; EXD.archExit = false; const s = RS; s.hidden = false; s.x = 44; s.shade = 1;
+  prop(door ? { k: 'sealdoor', x: 44, y: GROUND, lit: 3, drop: 61 } : { k: 'exarchway', x: 44, y: GROUND, s: 1.2 });
+  (async () => { const t0 = exNow(); while (s.shade > 0) { s.shade = Math.max(0, Math.min((64 - s.x) / 20, 1 - Math.max(0, exNow() - t0 - 700) / 500)); await rwait(16); } })().catch(() => { s.shade = 0; });   // it steps out of the dark doorway in front of it
 }
 
 /* ---------- the sounds of it, made from the game's own synth and its recorded hits ---------- */
@@ -175,7 +175,8 @@ async function exHit(mv, tx, ty) {
     await exTween(240, u => { s.jy = Math.sin(u * Math.PI / 2) * 30; }, exOut); await exTween(110, u => { s.jy = 30 * (1 - u); }, exIn); s.jy = 0;
     exSfx('thud'); exSfx('rumble'); exShake(7, 300); spark(s.x, GROUND - 2, 'dust', 10); prop({ k: 'exring', x: s.x, y: GROUND, t0: exNow(), el: 'Stone' }); prop({ k: 'excrack', x: s.x, y: GROUND, g: 1 });
     const cl = prop({ k: 'excrackline', x: s.x + 10, x2: tx + 10, y: GROUND, g: 0 }); await exTween(260, u => { cl.g = u; if (Math.random() < 0.4) spark(s.x + 10 + (tx - s.x) * u, GROUND - 1, 'dust', 1, true); });
-    const sp = prop({ k: 'exspikes', x: tx + 10, y: GROUND, h: 0 }); s.props.splice(s.props.indexOf(sp), 1); s.props.unshift(sp); EXD.spikes = sp;   // behind the boulder, so it rides up on them await rwait(140); await exTween(160, u => { sp.h = u; }, exOut); big(); await exFreeze(140);
+    const sp = prop({ k: 'exspikes', x: tx + 10, y: GROUND, h: 0 }); s.props.splice(s.props.indexOf(sp), 1); s.props.unshift(sp); EXD.spikes = sp;   // behind the boulder, so it rides up on them
+    await rwait(140); await exTween(220, u => { sp.h = u; }, exOut); big(); await exFreeze(140);
   } else if (mv.kind === 'Strike') {
     const x0 = s.x; s.ghosts = true; exSfx('whoosh'); await exTween(170, u => { s.x = x0 + (tx - 30 - x0) * u; }, exIn);
     prop({ k: 'exlines', x: tx, y: ty, t0: exNow() }); prop({ k: 'exburst', el, x: tx, y: ty, t0: exNow(), k2: 1.7 }); big(); await exFreeze(140);
@@ -194,8 +195,11 @@ async function exMoveOpen(stat, mv, seed) {
   const s = RS, el = mv.el, line = EX_MOVE_WIN[stat](el);
   try {
     if (stat === 1) { const b = prop({ k: 'xrockb', x: 172, y: GROUND, s: 1.7, broke: 0 }); await walkTo(104, 60, 'walk');
-      if (el === 'Stone') { const hit = exHit(mv, 162, GROUND - 26); while (!EXD.spikes) await rwait(16); const sp = EXD.spikes; await exTween(300, () => { b.y = GROUND - sp.h * 22; }); await hit; EXD.spikes = null;
-        exSfx('crumble'); spark(172, GROUND - 4, 'dust', 16); exShake(5, 700); await exTween(1300, u => { b.broke = u; sp.h = 1 - u * 0.4; if (u > 0.5) b.y = GROUND - 22 + (u - 0.5) * 44; }); unprop(sp); unprop(b); }
+      if (el === 'Stone') { let done = false; const hit = exHit(mv, 162, GROUND - 26).then(() => { done = true; }); while (!EXD.spikes) await rwait(16); const sp = EXD.spikes;
+        while (!done) { b.y = GROUND - sp.h * 22; await rwait(16); } b.y = GROUND - 22; await hit; EXD.spikes = null;   // the boulder rides up on the spikes
+        await rwait(120); exSfx('thud'); exSfx('crumble'); spark(172, GROUND - 40, 'dust', 16); exShake(8, 600); exFlash('#fff', 0.4, 160);   // the middle spike shoots up through it and splits it
+        await exTween(130, u => { sp.c = u; b.broke = u * 0.12; }, exOut); await exFreeze(110);
+        await exTween(1300, u => { b.broke = 0.12 + u * 0.88; b.y = GROUND - 22 * (1 - exOut(Math.min(1, u * 1.4))); sp.h = 1 - Math.max(0, (u - 0.45) / 0.55); }); unprop(sp); unprop(b); }   // the halves settle and the spikes sink back in
       else { await exHit(mv, 162, GROUND - 26); exSfx('crumble'); spark(172, GROUND - 4, 'dust', 16); exShake(5, 700); await exTween(1300, u => { b.broke = u; }); unprop(b); } }
     else if (stat === 2) { const th = prop({ k: 'thorns2', x: 168, y: GROUND, s: 1.35, gone: 0, how: el === 'Blaze' ? 'burn' : 'cut' }); await walkTo(110, 60, 'walk'); await exHit(mv, 160, GROUND - 24);
       if (el === 'Blaze') exSfx('crackle'); else { th.how = 'shred'; exSfx('snap'); } await exTween(el === 'Blaze' ? 1700 : 1200, u => { th.gone = u; }); }
@@ -207,7 +211,11 @@ async function exMoveOpen(stat, mv, seed) {
       await exDoorOpen(d, el); exSfx('win'); await exArchIn(184, 'door'); return line; }
     else if (stat === 4) { const real = seed % 3, m = prop({ k: 'mirage', x: 170, y: GROUND, real, reveal: 0, s: 1.2 }); await walkTo(98, 60, 'walk');
       if (el === 'Light' || el === 'Shade') await exMirageMove(m, real, mv); else { await exHit(mv, 170, GROUND - 30); await exMirageBreak(m, real, 'Insight'); } exCalm(); await exArchIn(170 - 55 + 110 * (0.2 + real * 0.3)); return line; }
-    else { const tr = prop({ k: 'darttrap', x: 206, y: GROUND, live: false, s: 1.5 }), coat = prop({ k: 'excoat', el, x: 206, y: GROUND, s: 1.5, a: 0 }); await walkTo(120, 60, 'walk'); await exHit(mv, 200, GROUND - 40);
+    else { const tr = prop({ k: 'darttrap', x: 206, y: GROUND, live: false, s: 1.5 }), coat = prop({ k: 'excoat', el, x: 206, y: GROUND, s: 1.5, a: 0 }); await walkTo(120, 60, 'walk');
+      await rwait(300); const dt = prop({ k: 'exdart', x: 194, y: GROUND - 40, t0: exNow(), rot: 0 }); exSfx('dart'); tr.flash = 1;   // the totem fires over its head
+      while (dt.x > s.x - 24) { dt.x -= 5.2; if (dt.x < s.x + 44) s.pose = 'duck'; await rwait(16); } exSfx('whoosh'); s.pose = 'idle';
+      (async () => { while (dt.x > -60) { dt.x -= 5.2; await rwait(16); } unprop(dt); })().catch(() => {});   // and flies on off the screen
+      await rwait(250); await exHit(mv, 200, GROUND - 40);
       tr.live = false;
       if (el === 'Tide') { unprop(coat); tr.k = 'darttrap2'; tr.rot = 0; exSfx('surge'); await exTween(500, u => { tr.rot = 0.12 * Math.sin(u * Math.PI * 3) * (1 - u) + u * 0.25; });
         await exTween(420, u => { tr.rot = 0.25 + u * 1.32; }, exIn); exSfx('thud'); exSfx('surge'); exShake(7, 400); spark(232, GROUND - 4, 'drip', 16); spark(232, GROUND - 4, 'dust', 8);
@@ -303,9 +311,9 @@ async function exObstacle2(stat, ok, seed) {
     } finally { s.ghosts = false; s.jy = 0; exCalm(); }
     return true; }
   if (stat === 3) {   // Mind: it lifts the books off the pile, they fall open, and each page sends its rune to the door
-    const d = prop({ k: 'sealdoor', x: 184, y: GROUND, lit: 0, drop: 0 }), lt = prop({ k: 'litter', x: 154, y: GROUND, s: 1.3 }); await walkTo(118, 60, 'walk');
+    const d = prop({ k: 'sealdoor', x: 184, y: GROUND, lit: 0, drop: 0 }), bk = prop({ k: 'exbooks', x: 154, y: GROUND, lift: 0, open: 0, sent: 0, bad: 0 }); await walkTo(118, 60, 'walk');
     exFocus(158, 1.6); exDim(0.45); s.pose = 'idle'; spark(s.x, headY() - 10, 'bulb'); const ch = prop({ k: 'excharge', el: 'Mind', x: s.x, y: GROUND - 14, t0: exNow() }); exSfx('charge'); await rwait(800); unprop(ch);
-    unprop(lt); const bk = prop({ k: 'exbooks', x: 154, y: GROUND, lift: 0, open: 0, sent: 0, bad: 0 }); exSfx('shine');
+    exSfx('shine');
     try {
       await exTween(900, u => { bk.lift = u; }, exOut); for (let i = 0; i < 3; i++) rsfx('page');
       await exTween(400, u => { bk.open = u; }); rsfx('page'); await rwait(200);
@@ -324,9 +332,11 @@ async function exObstacle2(stat, ok, seed) {
       if (ok) { const ch = prop({ k: 'excharge', el: 'Insight', x: s.x, y: GROUND - 14, t0: exNow() }); exSfx('charge'); await rwait(800); unprop(ch);
         await exMirageBreak(m, real, 'Insight'); exCalm(); exSfx('win'); await exArchIn(ax(real)); }
       else { const wrong = (real + 1) % 3; s.pose = 'happy'; await walkTo(ax(wrong) - 14, 80, 'walk');
-        prop({ k: 'exripple', x: ax(wrong), y: GROUND - 20, t0: exNow(), el: 'Insight' }); prop({ k: 'exlines', x: ax(wrong) - 6, y: GROUND - 22, t0: exNow() }); exSfx('thud'); spark(ax(wrong), GROUND - 30, 'dust', 4);
+        prop({ k: 'exripple', x: ax(wrong), y: GROUND - 20, t0: exNow(), el: 'Insight' }); exSfx('thud'); spark(ax(wrong), GROUND - 30, 'dust', 4);
         exFlash('#ffffff', 0.5, 220); exShake(5, 350); s.pose = 'hurt'; s.flash = 2; await exFreeze(130); spark(s.x, headY() - 4, 'star', 3);
-        const x1 = s.x; await exTween(420, u => { s.x = x1 - 36 * u; s.jy = Math.sin(u * Math.PI) * 12; }, exOut); s.jy = 0; s.pose = 'sad'; await rwait(500); exCalm(); await exBack(90); }
+        const x1 = s.x; await exTween(420, u => { s.x = x1 - 36 * u; s.jy = Math.sin(u * Math.PI) * 12; }, exOut); s.jy = 0;
+        m.gone = 0; exSfx('fizzle'); exSfx('shine'); spark(170, GROUND - 24, 'sparkle', 10); await exTween(1200, u => { m.gone = u; });   // the whole hedge was a mirage and shimmers away
+        s.pose = 'sad'; await rwait(500); exCalm(); await exBack(90); }
     } finally { exCalm(); }
     return true; }
   if (stat === 2) {   // Constitution: it takes the scratches, then roars and blasts the bramble apart
@@ -384,7 +394,7 @@ function exProp2(c, p, t, front) {
     case 'exglyph': if (!front) return true; exGlyphs(c, x, y, p.u || 0, p.lock || 0, p.bad, t); return true;
     case 'exshot': if (!front) return true; exShot(c, p, Math.min(1, (exNow() - p.t0) / p.ms), t); return true;
     case 'exclaw': if (!front) return true; { const u = (exNow() - p.t0) / 700; if (u < 1) exClaw(c, x, y, u, t); } return true;
-    case 'exspikes': if (front) return true; exSpikes(c, x, y, p.h || 0); return true;
+    case 'exspikes': if (front) return true; exSpikes(c, x, y, p.h || 0, p.c); return true;
     case 'chest2': if (front) return true; exChestDraw(c, p, t); return true;
     case 'exitem': if (!front) return true; exItemDraw(c, p, t); return true;
     case 'exarchmask': if (!front) return true; if (p.door) { c.save(); c.globalAlpha = p.a; XA.door(c, x, y, 3, 61, t); c.restore(); return true; } { const k = p.s || 1, w = 8 * k; c.save(); c.globalAlpha = p.a; c.fillStyle = '#16211a'; c.beginPath(); c.moveTo(x - w, y + 2); c.lineTo(x - w, y - 16 * k); c.arc(x, y - 16 * k, w, Math.PI, 0); c.lineTo(x + w, y + 2); c.closePath(); c.fill();
@@ -436,6 +446,21 @@ function exRockBreak(c, x, y, s, u) {
 }
 /* fire catches along the bramble, chars it black and it sinks into a pile of ash with smoke rising; a blade cuts it on a
    slant and the top slides off and drops */
+function exFire(c, x, y, w, h, t) {
+  const sw = Math.sin(t / 110) * w * 0.12, sw2 = Math.sin(t / 83 + 1) * w * 0.1;
+  const shape = (k, dy) => { const W = w * k, H = h * k, b = y - dy; c.beginPath(); c.moveTo(x - W, b);
+    c.bezierCurveTo(x - W * 1.15, b - H * 0.35, x - W * 0.95, b - H * 0.5, x - W * 0.62 + sw2, b - H * 0.68);   // the left tongue
+    c.quadraticCurveTo(x - W * 0.42, b - H * 0.5, x - W * 0.3, b - H * 0.52);
+    c.bezierCurveTo(x - W * 0.3, b - H * 0.8, x - W * 0.05, b - H * 0.85, x + sw, b - H);                       // the tall middle one
+    c.bezierCurveTo(x + W * 0.25, b - H * 0.78, x + W * 0.35, b - H * 0.62, x + W * 0.32, b - H * 0.5);
+    c.quadraticCurveTo(x + W * 0.5, b - H * 0.5, x + W * 0.66 - sw2, b - H * 0.62);                           // the right tongue
+    c.bezierCurveTo(x + W * 0.95, b - H * 0.45, x + W * 1.15, b - H * 0.3, x + W, b);
+    c.quadraticCurveTo(x, b + W * 0.35, x - W, b); c.closePath(); };
+  const grad = (k, stops) => { const g = c.createLinearGradient(0, y - h * k, 0, y); stops.forEach(([o, col]) => g.addColorStop(o, col)); return g; };
+  shape(1, 0); c.fillStyle = grad(1, [[0, '#b8281a'], [0.45, '#e2502a'], [1, '#ff8a2a']]); c.fill();
+  shape(0.66, 0); c.fillStyle = grad(0.66, [[0, '#ff7a22'], [0.6, '#ffb43a'], [1, '#ffd34d']]); c.fill();
+  shape(0.34, 0); c.fillStyle = grad(0.34, [[0, '#ffd34d'], [1, '#fff4c2']]); c.fill();
+}
 function exFlame(c, fx, fy, w, h, sway) {
   for (const [col, k] of [['#e2502a', 1], ['#ff8a2a', 0.72], ['#ffd34d', 0.42]]) { const W = w * k, H = h * k;
     c.fillStyle = col; c.beginPath(); c.moveTo(fx - W, fy); c.bezierCurveTo(fx - W * 1.1, fy - H * 0.45, fx - W * 0.4 + sway * 0.5, fy - H * 0.7, fx + sway, fy - H);
@@ -449,8 +474,7 @@ function exThornsGone(c, x, y, s, u, how, t) {
     c.fillStyle = '#3a3330'; c.globalAlpha = Math.min(1, sink * 2); SC.blob(c, x, y - 2, [[0, 0, 9 * s], [-12 * s, 2, 7 * s], [12 * s, 2, 7 * s], [-5 * s, 1, 8 * s]]); c.fill();   // the ash
     c.globalAlpha = 1;
     const grow = Math.min(1, u / 0.18), left = 1 - sink * 0.92, end = 1 - Math.max(0, u - 0.9) / 0.1;   // the fire catches, then burns down with the bush to the ground
-    for (let i = 0; i < 7; i++) { const fx = x + (i - 3) * 8.5 * s, k = Math.max(0, Math.min(1, grow * 1.3 - Math.abs(i - 3) * 0.12)) * end; if (k <= 0) continue;
-      const bushH = (34 + (i % 3) * 8) * s * left; exFlame(c, fx, y - 1, (4 + (i % 2) * 2) * s * (0.6 + 0.4 * left) * k, (bushH * 1.15 + 8 * s + 8 * Math.sin(t / 90 + i * 1.7) * left) * k, Math.sin(t / 120 + i) * 3 * s * left); }
+    { const k = grow * end; if (k > 0) exFire(c, x, y - 1, (12 + 9 * left) * s * k, (16 + 24 * left) * s * k, t); }   // one fire, as tall as the bush that's left
     for (let i = 0; i < 6; i++) { const k = (u * 1.2 + i / 6) % 1, sx = x + (i - 2.5) * 8 * s + Math.sin(t / 400 + i) * 4, sy = y - 40 * s - k * 50 * s; c.globalAlpha = (1 - k) * 0.45 * Math.min(1, u * 3); c.fillStyle = '#6b6461'; c.beginPath(); c.arc(sx, sy, (4 + k * 8) * s, 0, 7); c.fill(); }
     for (let i = 0; i < 14; i++) { const k = (i * 0.37 + u * 1.6) % 1, ex = x - 26 * s + (i * 13 % 52) * s + Math.sin(t / 200 + i) * 3, ey = y - 6 - k * 70 * s; c.globalAlpha = (1 - k) * flame; c.fillStyle = i % 3 ? '#ff9a3c' : '#ffe08a'; c.beginPath(); c.arc(ex, ey, 1.5 * s, 0, 7); c.fill(); }
   } else if (how === 'shred') {   // cut into three slices along the claw marks, which slide apart and drop
@@ -621,10 +645,10 @@ function exClaw(c, x, y, u, t) {
   c.restore();
 }
 /* stone spikes thrust up from the ground under the target */
-function exSpikes(c, x, y, h) {
+function exSpikes(c, x, y, h, cc) {
   if (h <= 0) return; c.save();
   c.fillStyle = 'rgba(40,28,18,.35)'; c.beginPath(); c.ellipse(x, y + 1, 34, 5, 0, 0, 7); c.fill();
-  for (const [dx, H, w] of [[-20, 30, 9], [-6, 46, 12], [10, 40, 11], [22, 26, 8]]) { const hh = H * h; c.fillStyle = '#7d6f5c'; c.beginPath(); c.moveTo(x + dx - w, y + 2); c.lineTo(x + dx - 1, y - hh); c.lineTo(x + dx + w, y + 2); c.fill();
+  for (const [dx, H, w] of [[-22, 30, 9], [-11, 40, 11], [0, 44 + 70 * (cc || 0), 12], [12, 38, 11], [23, 26, 8]]) { const hh = H * h; c.fillStyle = '#7d6f5c'; c.beginPath(); c.moveTo(x + dx - w, y + 2); c.lineTo(x + dx - 1, y - hh); c.lineTo(x + dx + w, y + 2); c.fill();
     c.fillStyle = '#ab9c82'; c.beginPath(); c.moveTo(x + dx - 1, y - hh); c.lineTo(x + dx + w, y + 2); c.lineTo(x + dx + 2, y + 2); c.fill(); c.fillStyle = 'rgba(255,255,255,.25)'; c.beginPath(); c.moveTo(x + dx - 1, y - hh); c.lineTo(x + dx - w * 0.4, y - hh * 0.4); c.lineTo(x + dx - 1, y - hh * 0.5); c.fill(); }
   c.restore();
 }
@@ -770,10 +794,10 @@ function exBooks(c, p, t) {
   const { x, y } = p, lift = p.lift || 0, open = p.open || 0, sent = p.sent || 0, B = [['#9e3a32', -20, 'tri', '#e2483f'], ['#2f5f9e', 0, 'sq', '#4878c4'], ['#3a7a44', 20, 'circ', '#f2c14e']];
   const home = [[176, GROUND - 35], [192, GROUND - 35], [184, GROUND - 19]];
   c.save();
-  B.forEach(([col, dx, sh, rc], i) => { const bx = x + dx * (0.4 + 0.6 * lift), by = y - 4 - lift * (46 + (i === 1 ? 10 : 0)) + Math.sin(t / 300 + i) * 2 * lift, a = (1 - open) * (i - 1) * 0.3 + Math.sin(t / 400 + i) * 0.06 * lift;
+  B.forEach(([col, dx, sh, rc], i) => { const up = Math.min(1, lift * 3), bx = x + dx * (1.1 - 0.1 * lift) + (i === 1 ? -4 : 0) * (1 - up), by = y - 2 - 2 * up - lift * (46 + (i === 1 ? 10 : 0)) + Math.sin(t / 300 + i) * 2 * lift, a = ((1 - open) * (i - 1) * 0.3) * up + [0.05, -0.04, 0.08][i] * (1 - up) + Math.sin(t / 400 + i) * 0.06 * lift;   // lying flat on the ground until it lifts
     if (lift > 0.05) { const g = c.createRadialGradient(bx, by, 2, bx, by, 24); g.addColorStop(0, p.bad ? '#ff6b6b88' : '#b48cff88'); g.addColorStop(1, '#b48cff00'); c.fillStyle = g; c.fillRect(bx - 24, by - 24, 48, 48);
       c.fillStyle = 'rgba(30,20,50,.18)'; c.beginPath(); c.ellipse(bx, y + 1, 9 * (1 - lift * 0.5), 2, 0, 0, 7); c.fill(); }   // its shadow on the ground
-    c.save(); c.translate(bx, by); c.rotate(a); exBook(c, col, open, t, i); c.restore();
+    c.save(); c.translate(bx, by); c.rotate(a); c.scale(1, 0.32 + 0.68 * up); exBook(c, col, open, t, i); c.restore();
     const g2 = Math.max(0, Math.min(1, sent - i)); if (open > 0.6 && g2 < 1) { const [hx, hy] = p.bad ? home[(i + 1) % 3] : home[i], px = bx + (hx - bx) * g2, py = by - 10 + (hy - by + 10) * g2 - Math.sin(g2 * Math.PI) * 20, cc = p.bad ? '#ff3b3b' : rc, r = 5;
       const gg = c.createRadialGradient(px, py, 1, px, py, 14); gg.addColorStop(0, cc + 'cc'); gg.addColorStop(1, cc + '00'); c.fillStyle = gg; c.fillRect(px - 14, py - 14, 28, 28);
       c.fillStyle = cc; c.strokeStyle = '#fff'; c.lineWidth = 1.2; c.beginPath(); if (sh === 'tri') { c.moveTo(px, py - r); c.lineTo(px + r, py + r * 0.8); c.lineTo(px - r, py + r * 0.8); c.closePath(); } else if (sh === 'sq') c.rect(px - r * 0.8, py - r * 0.8, r * 1.6, r * 1.6); else c.arc(px, py, r * 0.85, 0, 7); c.fill(); c.stroke(); } });

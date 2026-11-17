@@ -157,18 +157,20 @@ const XA = {
   dart(c, x, y, s = 1) { c.strokeStyle = '#5a4128'; c.lineWidth = 1.3 * s; c.beginPath(); c.moveTo(x - 5 * s, y); c.lineTo(x + 3 * s, y); c.stroke(); c.fillStyle = '#c9c2b6'; c.beginPath(); c.moveTo(x - 7 * s, y); c.lineTo(x - 4 * s, y - 1.4 * s); c.lineTo(x - 4 * s, y + 1.4 * s); c.fill(); c.fillStyle = '#d24f43'; c.beginPath(); c.moveTo(x + 3 * s, y); c.lineTo(x + 6 * s, y - 2 * s); c.lineTo(x + 5 * s, y); c.lineTo(x + 6 * s, y + 2 * s); c.fill(); },
 
   // a hedge wall with three archways that look the same; two of them shimmer because they aren't really there
-  mirage(c, x, y, real, reveal, t, s = 1) {
+  mirage(c, x, y, real, reveal, t, s = 1, van = null) {
+    const A = c.globalAlpha;   // so the whole thing can fade
     const W = 92 * s, H = 40 * s, L = x - W / 2;
     SC.depth(c, () => { c.beginPath(); c.roundRect(L, y - H, W, H, [12 * s, 12 * s, 2, 2]); }, '#3f7046', 2 * s, 0.3);
     c.fillStyle = '#4f8656'; SC.blob(c, x, y - H + 2 * s, [[-34 * s, 0, 8 * s], [-16 * s, -2 * s, 9 * s], [2 * s, 0, 8 * s], [20 * s, -2 * s, 9 * s], [36 * s, 0, 7 * s]]); c.fill();
-    for (let i = 0; i < 3; i++) { const ax = L + W * (0.2 + i * 0.3), fake = i !== real, ph = (t || 0) / 260 + i, wob = fake ? Math.sin(ph) * 0.8 * s : 0;
+    for (let i = 0; i < 3; i++) { const vu = van && van.i === i ? van.u : 0, rv = Math.max(reveal || 0, vu), fake = i !== real && rv > 0;   // the same as the real one until it's found out
+      const ax = L + W * (0.2 + i * 0.3), ph = (t || 0) / 260 + i, wob = fake ? Math.sin(ph) * 0.8 * s * Math.min(1, rv * 4) : 0;
       const hole = () => { c.beginPath(); c.moveTo(ax - 8 * s, y); c.lineTo(ax - 8 * s + wob, y - 16 * s); c.arc(ax + wob, y - 16 * s, 8 * s, Math.PI, 0); c.lineTo(ax + 8 * s, y); c.closePath(); };
-      if (fake && reveal) { c.globalAlpha = 1 - reveal; }
-      hole(); c.fillStyle = fake ? '#2f4a36' : '#1d2a20'; c.fill();
+      if (fake) { c.globalAlpha = A * (1 - rv); }
+      hole(); c.fillStyle = '#1d2a20'; c.fill();
       if (fake) { c.strokeStyle = `rgba(190,230,255,${0.35 + 0.25 * Math.sin(ph * 1.7)})`; c.lineWidth = 1 * s; hole(); c.stroke();
         c.fillStyle = 'rgba(220,240,255,.7)'; for (let k = 0; k < 2; k++) { const q = ((t || 0) / 900 + k * 0.5 + i * 0.3) % 1; c.beginPath(); c.arc(ax + Math.sin(q * 6 + i) * 5 * s, y - q * 20 * s, 0.8 * s, 0, 7); c.fill(); } }
-      c.globalAlpha = 1;
-      if (fake && reveal) { c.globalAlpha = reveal; hole(); c.fillStyle = '#3f7046'; c.fill(); c.globalAlpha = 1; } }   // a fake goes completely: the hedge is whole where it was
+      c.globalAlpha = A * (1);
+      if (fake) { c.globalAlpha = A * (rv); hole(); c.fillStyle = '#3f7046'; c.fill(); c.globalAlpha = A * (1); } }   // a fake goes completely: the hedge is whole where it was
     c.fillStyle = SC.light('#3f7046', 0.25); for (const [lx, ly] of [[-40, -30], [-12, -34], [16, -30], [40, -24]]) { c.beginPath(); c.ellipse(x + lx * s, y + ly * s, 2.6 * s, 1.2 * s, -0.5, 0, 7); c.fill(); }
   },
 
@@ -247,7 +249,12 @@ function exProp(c, p, t, front) {
     case 'litter': if (front) XA.litter(c, x, y, p.s || 1); return true;
     case 'darttrap': if (!front) XA.darts(c, x, y, t, p.s || 1, p.live !== false); return true;
     case 'dart': if (front) XA.dart(c, x, y, p.s || 1); return true;
-    case 'mirage': if (!front) XA.mirage(c, x, y, p.real, p.reveal || 0, t, p.s || 1); return true;
+    case 'mirage': if (front) return true;
+      if (p.gone) { const g = p.gone, H = 70 * (p.s || 1);   // shimmering away: it breaks into wavering strips that thin out and fade
+        for (let k = 0; k < 14; k++) { const y0 = y - H + k * H / 14; c.save(); c.globalAlpha = Math.max(0, 1 - g * (1.2 + (k % 3) * 0.15)); c.beginPath(); c.rect(x - 80, y0, 160, H / 14 + 0.6); c.clip();
+          c.translate(Math.sin(t / 50 + k * 1.3) * g * 10, 0); XA.mirage(c, x, y, p.real, p.reveal || 0, t, p.s || 1, p.van); c.restore(); }
+        return true; }
+      XA.mirage(c, x, y, p.real, p.reveal || 0, t, p.s || 1, p.van); return true;
     case 'spring': if (!front) XA.spring(c, x, y, t); return true;
     case 'page': if (front) XA.page(c, x, y, t); return true;
     case 'pstone': if (!front) XA.stone(c, x, y, p.sp, p.glow, t); return true;
