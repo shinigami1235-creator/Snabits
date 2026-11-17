@@ -725,7 +725,7 @@ function atDraw(now,dte){
     c.translate(x,y); c.rotate(st.rot); c.scale(mir*u*st.sx,u*st.sy); c.translate(-100,-188);
     atBody(c,i,{...sp,capture:(S.cap={})},P,dte2,[0.6*S.dir*mir,0],st.flash); c.restore();
     const cp=S.cap||{}, d=q=>q?toWorld.transformPoint(q):null;
-    placed[i]={x,y:y-h*u*0.45,foot:y,lift:st.lift,back:false,r:CHIBI.width(sp.stage,sp.family)*u*0.55,eyes:cp.eyes&&cp.eyes.map(d),mouth:d(cp.mouth),hands:(cp.hands||[]).map(d),top:d(cp.top)||{x,y:y-50},center:d(cp.center),doff:st.doff};
+    placed[i]={x,y:y-h*u*0.45,foot:y,lift:st.lift,back:false,r:CHIBI.width(sp.stage,sp.family)*u*0.55,eyes:cp.eyes&&cp.eyes.map(d),mouth:d(cp.mouth),hands:(cp.hands||[]).map(d),top:d(cp.top)||{x,y:y-50},center:d(cp.center),box:cp.box&&cp.box.map(d),doff:st.doff};
   });
   AT.lastPlaced=placed;
   [0,1].forEach(i=>{ const P=placed[i]; if(P){ const cn=P.center||P; atFxFront(c,i,{i,x:P.x,cx:cn.x,cy:cn.y,foot:P.foot,H:P.foot-P.top.y,r:P.r,eyes:P.eyes},te,dte); } });
