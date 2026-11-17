@@ -51,9 +51,9 @@ const BEATS = {
     await walkOut(w); s.pose = 'happy';
     await talk('tala', `Cup prizes are the quickest way to get that money. We can pay it off at the Town Hall a bit at a time, out of what ${nm} wins.`);
   },
-  async loan25() { await talk('tala', "A quarter of the loan is paid. The Workshop says they can start on the barn now."); },
-  async loan50() { await talk('tala', "Half the loan is paid. The Workshop can fix up the training places now."); },
-  async loan75() { await talk('tala', "Three quarters of the loan is paid. The Workshop can add a second level to the training places now."); },
+  async loan25() { await talk('tala', "A quarter of the loan's paid. The Workshop says they can start on the barn now."); },
+  async loan50() { await talk('tala', "Half the loan's paid. The Workshop can fix up the training places now."); },
+  async loan75() { await talk('tala', "Three quarters of the loan's paid. The Workshop can add a second level to the training places now."); },
   async loan100() {
     const s = RS; const w = await walkIn('rival', { mon: rookMon(bestGrade()) });
     w.p.face = 'worried'; await talk('rival', 'My father got your last payment and told me to bring you the deed.');
