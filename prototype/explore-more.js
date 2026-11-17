@@ -62,33 +62,211 @@ const EX_MOVE_WIN = {
   4: el => el === 'Light' ? 'The light showed which archway is real.' : 'The fake archways faded away.',
   5: el => el === 'Frost' ? 'The totem froze solid.' : 'Water jammed the totem.',
 };
-const exTween = async (ms, fn) => { const t0 = performance.now(); for (;;) { const u = Math.min(1, (performance.now() - t0) / ms); fn(u); if (u >= 1) return; await rwait(16); } };
-/* the Snabit uses its move on the obstacle: a lunge for a strike, a streak for anything thrown or cast */
+/* ---------- the drama: a slower clock for hit stop, the camera, a dimmed backdrop, shake and flash ---------- */
+const EXD = { frozen: 0, stopAt: 0, stopUntil: 0 };
+const exNow = () => { const n = performance.now(); return (n < EXD.stopUntil ? EXD.stopAt : n) - EXD.frozen; };
+const exTween = async (ms, fn, ease) => { const t0 = exNow(); for (;;) { const u = Math.min(1, (exNow() - t0) / ms); fn(ease ? ease(u) : u); if (u >= 1) return; await rwait(16); } };
+const exOut = u => 1 - Math.pow(1 - u, 3), exIn = u => u * u * u;
+async function exFreeze(ms) { EXD.stopAt = performance.now(); EXD.stopUntil = EXD.stopAt + ms; await rwait(ms); EXD.frozen += ms; EXD.stopUntil = 0; }
+function exFocus(x, z) { const s = RS; s.panC = x; s.panUntil = performance.now() + 1e9; s.zoomT = z; }
+function exFocusOff() { const s = RS; s.panUntil = 0; s.panC = null; s.zoomT = null; }
+function exDim(a, ms = 350) { const c = el('r-scene'); if (!c) return; c.style.transition = `filter ${ms}ms ease`; c.style.filter = a ? `brightness(${1 - a}) saturate(${1 - a * 0.6})` : ''; }
+function exLayer() { let f = el('ex-fx'); if (!f) { const fr = el('r-frame'); if (!fr) return null; f = document.createElement('div'); f.id = 'ex-fx'; f.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:5;opacity:0'; fr.appendChild(f); } return f; }
+async function exFlash(col = '#fff', a = 0.85, ms = 260) { const f = exLayer(); if (!f) return; f.style.background = col; await exTween(ms, u => { f.style.opacity = String(a * (1 - u)); }); f.style.opacity = '0'; }
+function exShake(px, ms) {   // smooth sines that die away, on the backdrop and the sprite layer together
+  const els = ['r-scene', 'r-chibi', 'r-canvas'].map(el).filter(Boolean), t0 = performance.now();
+  const step = () => { const u = (performance.now() - t0) / ms; if (u >= 1) { els.forEach(e => e.style.transform = ''); return; } const k = px * Math.pow(1 - u, 2), t = performance.now();
+    els.forEach(e => e.style.transform = `translate(${(Math.sin(t / 23) * k).toFixed(1)}px,${(Math.cos(t / 31) * k * 0.7).toFixed(1)}px)`); requestAnimationFrame(step); };
+  requestAnimationFrame(step);
+}
+function exCalm() { exDim(0); exFocusOff(); const s = RS; s.ghosts = false; s.props = s.props.filter(p => !/^ex(burst|charge|lines|beam)/.test(p.k)); }
+
+/* ---------- the sounds of it, made from the game's own synth and its recorded hits ---------- */
+function exSfx(kind) {
+  try { const d = sfxBus(); if (!d) return; MC = AC; const t = AC.currentTime + 0.01, R = Math.random;
+    switch (kind) {
+      case 'charge': { const o = mo('triangle', 160, t), g = MC.createGain(); o.frequency.exponentialRampToValueAtTime(880, t + 0.75); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.09, t + 0.6); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.8); o.connect(g); g.connect(d); o.start(t); o.stop(t + 0.85);
+        nsw(d, t, 0.75, 0.1, 'bandpass', 300, 2600, 2); break; }
+      case 'impact': smp('hitH', 0.9); smp('ko', 0.55); dKick(d, t, 0.9); dNoise(d, t, 0.25, 0.25, 'lowpass', 900); break;
+      case 'crumble': for (let i = 0; i < 9; i++) dNoise(d, t + i * 0.07 + R() * 0.04, 0.09, 0.16, 'lowpass', 500 + R() * 600); dNoise(d, t, 0.9, 0.12, 'lowpass', 160); smp('hitL', 0.5, 0.25); smp('hitM', 0.4, 0.45); break;
+      case 'roar': nsw(d, t, 1.3, 0.22, 'lowpass', 350, 2200); dNoise(d, t, 1.4, 0.1, 'lowpass', 220); for (let i = 0; i < 18; i++) dNoise(d, t + 0.1 + i * 0.07 + R() * 0.05, 0.03, 0.12, 'highpass', 3500 + R() * 2500); break;
+      case 'crackle': for (let i = 0; i < 10; i++) dNoise(d, t + i * 0.09 + R() * 0.08, 0.025, 0.08, 'highpass', 4000 + R() * 2000); break;
+      case 'slash': smp('whoosh', 0.7, 0, 1.7); sTone(d, t + 0.05, 'triangle', 3400, 2600, 0.35, 0.05); sTone(d, t + 0.05, 'sine', 5200, 5000, 0.5, 0.025); break;
+      case 'zap': for (let i = 0; i < 10; i++) sTone(d, t + i * 0.035, 'sawtooth', 80 + R() * 400, 60, 0.05, 0.05); dNoise(d, t, 0.45, 0.16, 'highpass', 3500); sTone(d, t, 'square', 3200, 600, 0.3, 0.03); break;
+      case 'chime': [1047, 1319, 1568, 2093].forEach((f, i) => sTone(d, t + i * 0.08, 'sine', f, 0, 0.6, 0.06)); break;
+      case 'shine': [784, 1175, 1568, 2349].forEach(f => sTone(d, t, 'sine', f, f * 1.01, 1.1, 0.035)); nsw(d, t, 0.9, 0.05, 'highpass', 2000, 7000); break;
+      case 'shadow': nsw(d, t, 0.8, 0.18, 'lowpass', 150, 900); sTone(d, t, 'sine', 70, 45, 0.9, 0.12); sTone(d, t + 0.1, 'sawtooth', 110, 55, 0.6, 0.03); break;
+      case 'freeze': for (let i = 0; i < 12; i++) dNoise(d, t + i * 0.04 + R() * 0.03, 0.03, 0.1, 'highpass', 5000); [3136, 2637, 2093].forEach((f, i) => sTone(d, t + 0.2 + i * 0.06, 'sine', f, 0, 0.5, 0.05)); break;
+      case 'surge': nsw(d, t, 0.9, 0.3, 'lowpass', 500, 2600); nsw(d, t + 0.2, 0.7, 0.14, 'bandpass', 2400, 700, 1); sTone(d, t, 'sine', 260, 90, 0.4, 0.08); break;
+      case 'whoosh': smp('whoosh', 0.8, 0, 1.1); break;
+      case 'win': [523, 659, 784, 1047].forEach((f, i) => sTone(d, t + i * 0.07, 'triangle', f, 0, 0.3, 0.055)); break;
+      case 'thud': smp('hitH', 0.8); dKick(d, t, 0.8); break;
+      case 'rumble': dNoise(d, t, 1.2, 0.16, 'lowpass', 140); dKick(d, t, 0.5); break;
+      case 'glass': for (let i = 0; i < 14; i++) sTone(d, t + i * 0.025 + R() * 0.03, 'triangle', 2500 + R() * 3500, 1800, 0.18, 0.035); dNoise(d, t, 0.35, 0.18, 'highpass', 4500); break;
+      case 'slowmo': nsw(d, t, 1.4, 0.2, 'lowpass', 900, 180); sTone(d, t, 'sine', 180, 60, 1.3, 0.1); break;
+      case 'dart': smp('whoosh', 0.35, 0, 2); break;
+      case 'thunk': dNoise(d, t, 0.06, 0.18, 'bandpass', 900, 2); sTone(d, t, 'square', 260, 120, 0.06, 0.03); break;
+      case 'growl': nsw(d, t, 0.9, 0.25, 'lowpass', 160, 700); sTone(d, t, 'sawtooth', 90, 70, 0.8, 0.07); sTone(d, t, 'sawtooth', 135, 100, 0.8, 0.04); break;
+      case 'scratch': dNoise(d, t, 0.08, 0.16, 'highpass', 3200); sTone(d, t, 'square', 600, 300, 0.05, 0.02); break;
+      case 'rays': [523, 784, 1047, 1568, 2093].forEach((f, i) => sTone(d, t + i * 0.05, 'sine', f, f, 1.3, 0.045)); nsw(d, t, 1.2, 0.08, 'highpass', 1500, 6000); break;
+      case 'learn': [523, 659, 784, 1047, 1319, 1568].forEach((f, i) => sTone(d, t + i * 0.08, 'triangle', f, 0, 0.5, 0.06)); [1047, 1568, 2093].forEach(f => sTone(d, t + 0.55, 'sine', f, 0, 1.2, 0.05)); break;
+      case 'fizzle': nsw(d, t, 0.6, 0.12, 'highpass', 2500, 600); sTone(d, t, 'sine', 600, 150, 0.5, 0.05); break;
+      case 'thunder': dKick(d, t, 0.7); dNoise(d, t, 0.08, 0.3, 'highpass', 2500); dNoise(d, t + 0.05, 2.2, 0.22, 'lowpass', 220); dNoise(d, t + 0.4, 1.6, 0.14, 'lowpass', 120); break;
+    } } catch (err) {}
+}
+/* the weather's own sound, looped noise through a filter, and thunder now and then in the rain */
+const EXA = { nodes: [], timer: null };
+function exAmb(kind) {
+  exAmbStop();
+  if (kind === 'Rain') { EXA.timer = setInterval(() => { if (Math.random() < 0.5) exThunder(); }, 3200); setTimeout(exThunder, 900); }   // the flashes show with the sound off too
+  if (kind === 'Heat') EXA.timer = setInterval(() => exSfx('crackle'), 1400);
+  try { const d = sfxBus(); if (!d) return; MC = AC; const t = AC.currentTime;
+    const loop = (type, f, q, v, lfo) => { const len = AC.sampleRate * 2, buf = AC.createBuffer(1, len, AC.sampleRate), ch = buf.getChannelData(0); for (let i = 0; i < len; i++) ch[i] = Math.random() * 2 - 1;
+      const src = AC.createBufferSource(), fl = AC.createBiquadFilter(), g = AC.createGain(); src.buffer = buf; src.loop = true; fl.type = type; fl.frequency.value = f; fl.Q.value = q;
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(v, t + 0.8); src.connect(fl); fl.connect(g); g.connect(d); src.start(t); EXA.nodes.push({ src, g });
+      if (lfo) { const o = AC.createOscillator(), og = AC.createGain(); o.frequency.value = lfo; og.gain.value = f * 0.5; o.connect(og); og.connect(fl.frequency); o.start(t); EXA.nodes.push({ src: o }); } };
+    if (kind === 'Rain') { loop('bandpass', 2600, 0.6, 0.11); loop('lowpass', 500, 0.7, 0.07); }
+    else if (kind === 'Snow') { loop('lowpass', 700, 1.2, 0.12, 0.17); loop('bandpass', 1800, 2, 0.03, 0.31); }
+    else if (kind === 'Fog') { loop('lowpass', 300, 1, 0.08, 0.08); }
+    else if (kind === 'Heat') { loop('highpass', 6000, 0.7, 0.025); }
+  } catch (err) {}
+}
+function exAmbStop() { try { const t = AC.currentTime; for (const n of EXA.nodes) { if (n.g) n.g.gain.setTargetAtTime(0.0001, t, 0.2); n.src.stop(t + 0.8); } } catch (err) {} EXA.nodes = []; clearInterval(EXA.timer); EXA.timer = null; }
+function exThunder() { const f = exLayer(); if (f) { f.style.background = '#eef4ff'; let k = 0; const seq = [0.8, 0.1, 0.6, 0]; const step = () => { f.style.opacity = String(seq[k] || 0); if (++k < seq.length) setTimeout(step, 70); }; step(); } exSfx('thunder'); }
+const EX_EL_SFX = { Brawl: 'thud', Stone: 'crumble', Blaze: 'roar', Steel: 'slash', Spark: 'zap', Charm: 'chime', Light: 'shine', Shade: 'shadow', Frost: 'freeze', Tide: 'surge' };
+
+/* ---------- getting past an obstacle with a move ---------- */
+/* the move as a moment: the camera pushes in, the backdrop darkens, the element gathers round the Snabit, then it lets go
+   with a lunge or a shot, time stops on the hit, the screen flashes and shakes, and the obstacle comes apart */
 async function exHit(mv, tx, ty) {
-  const s = RS, el = mv.el; banner(mv.name, '#ffd23f'); s.pose = 'attack';
-  if (mv.kind === 'Strike') { const x0 = s.x; await exTween(160, u => { s.x = x0 + 22 * u; }); prop({ k: 'exburst', el, x: tx, y: ty, t0: performance.now() }); rsfx('hit'); await rwait(140); await exTween(220, u => { s.x = x0 + 22 * (1 - u); }); }
-  else { await rwait(220); const b = prop({ k: 'exbeam', el, x: s.x + 14, y: headY() + 8, x2: tx, y2: ty, t0: performance.now() }); rsfx('whiz'); await rwait(220); unprop(b); prop({ k: 'exburst', el, x: tx, y: ty, t0: performance.now() }); rsfx('zap'); }
-  await rwait(500); banner(''); s.pose = 'idle';
+  const s = RS, el = mv.el;
+  exFocus((s.x + tx) / 2, 1.6); exDim(0.5); await rwait(450);
+  banner(mv.name, '#ffd23f'); s.pose = 'effort'; exSfx('charge'); if (typeof elSfx === 'function') elSfx(el, 'cast');
+  const ch = prop({ k: 'excharge', el, x: s.x, y: GROUND - 14, t0: exNow() }); await rwait(800); unprop(ch);
+  s.pose = 'attack'; banner('');
+  if (mv.kind === 'Strike') { const x0 = s.x; s.ghosts = true; exSfx('whoosh'); await exTween(170, u => { s.x = x0 + (tx - 30 - x0) * u; }, exIn); }
+  else { exSfx('whoosh'); const b = prop({ k: 'exbeam', el, x: s.x + 14, y: headY() + 8, x2: tx, y2: ty, t0: exNow() }); await rwait(230); unprop(b); }
+  prop({ k: 'exlines', x: tx, y: ty, t0: exNow() }); prop({ k: 'exburst', el, x: tx, y: ty, t0: exNow(), k2: 1.7 });
+  exSfx('impact'); exSfx(EX_EL_SFX[el]); if (typeof elSfx === 'function') elSfx(el, 'hit');
+  exFlash(EX_EL_COL[el] ? EX_EL_COL[el][1] : '#fff', 0.8, 300); exShake(9, 520); await exFreeze(140);
+  s.ghosts = false;
+  if (mv.kind === 'Strike') { const x1 = s.x; await exTween(260, u => { s.x = x1 - 26 * u; s.jy = -Math.sin(u * Math.PI) * 8; }, exOut); s.jy = 0; }
+  s.pose = 'idle';
 }
 async function exMoveOpen(stat, mv, seed) {
-  const s = RS, el = mv.el; let line = EX_MOVE_WIN[stat](el);
-  const clear = () => { s.props = s.props.filter(p => p.k !== 'exburst'); };
-  if (stat === 1) { const b = prop({ k: 'xrockb', x: 172, y: GROUND, s: 1.7, broke: 0 }); await walkTo(108, 60, 'walk'); await exHit(mv, 166, GROUND - 26);
-    rsfx('rumble'); spark(172, GROUND - 4, 'dust', 10); await exTween(1100, u => { b.broke = u; }); unprop(b); }
-  else if (stat === 2) { const th = prop({ k: 'thorns2', x: 168, y: GROUND, s: 1.35, gone: 0, how: el === 'Blaze' ? 'burn' : 'cut' }); await walkTo(118, 60, 'walk'); await exHit(mv, 162, GROUND - 24);
-    if (el === 'Blaze') rsfx('snap'); await exTween(el === 'Blaze' ? 1500 : 1000, u => { th.gone = u; }); unprop(th); }
-  else if (stat === 3) { const d = prop({ k: 'sealdoor', x: 184, y: GROUND, lit: 0, drop: 0 }), lt = prop({ k: 'litter', x: 154, y: GROUND, s: 1.3 }); await walkTo(122, 60, 'walk'); await exHit(mv, 184, GROUND - 40);
-    for (let i = 1; i <= 3; i++) { d.lit = i; rsfx('chip'); await rwait(180); } await exTween(380, u => { d.drop = 61 * u; }); spark(184, GROUND - 4, 'dust', 6); rsfx('rumble'); unprop(d); unprop(lt); }
-  else if (stat === 4) { const real = seed % 3, m = prop({ k: 'mirage', x: 170, y: GROUND, real, reveal: 0, s: 1.2 }); await walkTo(98, 60, 'walk'); await exHit(mv, 170, GROUND - 30);
-    await exTween(700, u => { m.reveal = u; }); clear(); await walkTo(170 - 55 + 110 * (0.2 + real * 0.3), 60, 'walk'); await walkTo(224, 60, 'walk'); unprop(m); }
-  else { const tr = prop({ k: 'darttrap', x: 206, y: GROUND, live: true, s: 1.5 }), coat = prop({ k: 'excoat', el, x: 206, y: GROUND, s: 1.5, a: 0 }); await walkTo(122, 60, 'walk'); await exHit(mv, 200, GROUND - 40);
-    tr.live = false; await exTween(500, u => { coat.a = u; }); await rwait(300); await walkTo(236, 120, 'run'); unprop(tr); unprop(coat); }
-  clear(); await walkTo(Math.max(s.x, 226), 60, 'walk'); s.pose = 'happy';
+  const s = RS, el = mv.el, line = EX_MOVE_WIN[stat](el);
+  try {
+    if (stat === 1) { const b = prop({ k: 'xrockb', x: 172, y: GROUND, s: 1.7, broke: 0 }); await walkTo(104, 60, 'walk'); await exHit(mv, 162, GROUND - 26);
+      exSfx('crumble'); spark(172, GROUND - 4, 'dust', 16); exShake(5, 700); await exTween(1300, u => { b.broke = u; }); unprop(b); }
+    else if (stat === 2) { const th = prop({ k: 'thorns2', x: 168, y: GROUND, s: 1.35, gone: 0, how: el === 'Blaze' ? 'burn' : 'cut' }); await walkTo(110, 60, 'walk'); await exHit(mv, 160, GROUND - 24);
+      if (el === 'Blaze') exSfx('crackle'); await exTween(el === 'Blaze' ? 1700 : 1100, u => { th.gone = u; }); unprop(th); }
+    else if (stat === 3) { const d = prop({ k: 'sealdoor', x: 184, y: GROUND, lit: 0, drop: 0 }), lt = prop({ k: 'litter', x: 154, y: GROUND, s: 1.3 }); await walkTo(118, 60, 'walk'); await exHit(mv, 184, GROUND - 40);
+      const RU = [[176, GROUND - 35], [192, GROUND - 35], [184, GROUND - 19]];
+      for (let i = 1; i <= 3; i++) { d.lit = i; const [rx, ry] = RU[i - 1]; prop({ k: 'exburst', el, x: rx, y: ry, t0: exNow(), k2: 0.6 }); exSfx(el === 'Spark' ? 'zap' : 'chime'); exShake(2, 200); await rwait(260); }
+      await exDoorOpen(d, el); unprop(lt); }
+    else if (stat === 4) { const real = seed % 3, m = prop({ k: 'mirage', x: 170, y: GROUND, real, reveal: 0, s: 1.2 }); await walkTo(98, 60, 'walk'); await exHit(mv, 170, GROUND - 30);
+      await exMirageBreak(m, real, el); exCalm(); await walkTo(170 - 55 + 110 * (0.2 + real * 0.3), 60, 'walk'); await walkTo(224, 60, 'walk'); unprop(m); }
+    else { const tr = prop({ k: 'darttrap', x: 206, y: GROUND, live: true, s: 1.5 }), coat = prop({ k: 'excoat', el, x: 206, y: GROUND, s: 1.5, a: 0 }); await walkTo(120, 60, 'walk'); await exHit(mv, 200, GROUND - 40);
+      tr.live = false; spark(206, GROUND - 40, el === 'Frost' ? 'sparkle' : 'drip', 12); await exTween(700, u => { coat.a = u; });
+      const mist = prop({ k: 'exmist', el, x: 206, y: GROUND, t0: exNow() }); exSfx(el === 'Frost' ? 'freeze' : 'surge'); await rwait(700); exCalm(); await walkTo(236, 120, 'run'); unprop(tr); unprop(coat); unprop(mist); }
+  } finally { exCalm(); }
+  await walkTo(Math.max(s.x, 226), 60, 'walk'); s.pose = 'happy'; exSfx('win'); spark(s.x, headY() - 6, 'sparkle', 6); await hop(10, 300);
   return line;
 }
 
+/* the rune door slides down and light pours out of the doorway */
+async function exDoorOpen(d, el) {
+  const r = prop({ k: 'exrays', x: 184, y: GROUND - 25, a: 0, el: el || 'Mind' }); exSfx('rumble'); exSfx('rays'); exShake(5, 800);
+  await exTween(700, u => { d.drop = 61 * u; r.a = u; }, exIn); spark(184, GROUND - 4, 'dust', 12); exFlash('#fffbe0', 0.5, 300); await rwait(500);
+  await exTween(500, u => { r.a = 1 - u; }); unprop(r); unprop(d);
+}
+/* the two fake archways crack and shatter, and the real one glows */
+async function exMirageBreak(m, real, el) {
+  const ax = i => 170 - 55 + 110 * (0.2 + i * 0.3), fakes = [0, 1, 2].filter(i => i !== real);
+  const rip = prop({ k: 'exripple', x: RS.x, y: GROUND - 20, t0: exNow(), el: el || 'Insight' }); exSfx('shine'); await rwait(450);
+  for (const i of fakes) prop({ k: el === 'Shade' ? 'exburst' : 'exshards', el: 'Shade', x: ax(i), y: GROUND - 20, t0: exNow(), k2: 0.8 });
+  exSfx(el === 'Shade' ? 'shadow' : 'glass'); exShake(4, 400); exFlash('#ffffff', 0.4, 200);
+  await exTween(600, u => { m.reveal = u; }); unprop(rip);
+  const gl = prop({ k: 'exglow', x: ax(real), y: GROUND - 18, t0: exNow() }); await rwait(700); unprop(gl);
+}
+/* ---------- getting past on its own stats, each with its own big moment (not the drill version) ---------- */
+// returns true when it played the obstacle itself; explore.js falls back to the old version for the rest
+async function exObstacle2(stat, ok, seed) {
+  const s = RS;
+  if (stat === 1) {   // Power: it digs in, the ground cracks, it charges and slams the boulder off down the trail
+    const b = prop({ k: 'xrock', x: 176, y: GROUND, s: 1.7, rot: 0 }); await walkTo(104, 60, 'walk');
+    exFocus(140, 1.6); exDim(0.35); await rwait(400);
+    s.pose = 'effort'; exSfx('rumble'); const ck = prop({ k: 'excrack', x: s.x, y: GROUND, g: 0 }), ch = prop({ k: 'excharge', el: 'Brawl', x: s.x, y: GROUND - 14, t0: exNow() });
+    await exTween(900, u => { ck.g = u; s.bx = Math.sin(u * 60) * u * 1.2; }); unprop(ch); s.bx = 0; exSfx('charge');
+    s.pose = 'attack'; s.ghosts = true; exSfx('whoosh'); const x0 = s.x; await exTween(200, u => { s.x = x0 + (176 - 44 - x0) * u; }, exIn);
+    prop({ k: 'exlines', x: 150, y: GROUND - 26, t0: exNow() }); exSfx('thud'); exShake(ok ? 10 : 6, 500); exFlash('#fff', 0.7, 240); await exFreeze(130); s.ghosts = false;
+    try {
+      if (ok) { exSfx('rumble'); let v = 0;
+        exFocus(190, 1.25); await exTween(1500, u => { v = 0.6 + u * 3.4; b.x += v; b.rot += v * 0.045; if (Math.random() < 0.6) spark(b.x - 22, GROUND - 2, 'dust', 1, true); });
+        exSfx('impact'); exShake(7, 600); spark(232, GROUND - 6, 'dust', 14); s.pose = 'happy'; exSfx('win'); await hop(12, 320); unprop(ck); }
+      else { for (let i = 0; i < 2; i++) { b.rot = 0.06; await rwait(120); b.rot = -0.04; await rwait(120); } b.rot = 0;
+        s.pose = 'hurt'; s.flash = 2; exSfx('thud'); spark(s.x, headY() - 4, 'star', 4); const x1 = s.x; await exTween(420, u => { s.x = x1 - 46 * u; s.jy = -Math.sin(u * Math.PI) * 16; }, exOut); s.jy = 0;
+        exShake(4, 300); s.pose = 'tired'; spark(s.x, headY(), 'sweat', 3); await rwait(500); unprop(ck); exCalm(); await exBack(70); }
+    } finally { exCalm(); unprop(b); }
+    return true; }
+  if (stat === 5) {   // Speed: time slows, darts hang in the air and it weaves between them
+    const tr = prop({ k: 'darttrap', x: 206, y: GROUND, live: true, s: 1.5 }); await walkTo(104, 60, 'walk');
+    exFocus(150, 1.5); exDim(0.45); s.pose = 'effort'; const ch = prop({ k: 'excharge', el: 'Speed', x: s.x, y: GROUND - 14, t0: exNow() }); exSfx('charge'); await rwait(800); unprop(ch);
+    exSfx('slowmo'); exFlash('#dff6ff', 0.4, 300); tr.live = false; const ds = [];
+    for (const [hy, at] of [[0.78, 0], [0.42, 200], [0.62, 400], [0.3, 600]]) setTimeout(() => { ds.push(prop({ k: 'dart', x: 194, y: GROUND - 69 * (1 - hy), s: 1.4 })); exSfx('dart'); }, at);
+    s.pose = 'run'; s.ghosts = true; const x0 = s.x;
+    try {
+      if (ok) { await exTween(1500, u => { s.x = x0 + (236 - x0) * u; s.jy = -Math.abs(Math.sin(u * Math.PI * 3)) * 14; for (const d of ds) d.x -= 0.9; });
+        s.jy = 0; s.ghosts = false; exFlash('#ffffff', 0.5, 200); for (const d of ds) { d.x -= 0; exSfx('thunk'); spark(d.x, GROUND - 2, 'dust', 3); } exShake(3, 300); s.pose = 'happy'; exSfx('win'); await hop(12, 320); }
+      else { await exTween(700, u => { s.x = x0 + 50 * u; s.jy = -Math.abs(Math.sin(u * Math.PI * 2)) * 10; for (const d of ds) d.x -= 0.9; });
+        s.ghosts = false; prop({ k: 'exlines', x: s.x + 6, y: headY() + 8, t0: exNow() }); exSfx('thud'); exFlash('#ff8a8a', 0.5, 250); exShake(6, 400); s.pose = 'hurt'; s.flash = 2; await exFreeze(130);
+        spark(s.x, headY() - 4, 'star', 4); const x1 = s.x; await exTween(450, u => { s.x = x1 - 50 * u; s.jy = -Math.sin(u * Math.PI) * 14; }, exOut); s.jy = 0; s.pose = 'tired'; await rwait(500); exCalm(); await exBack(84); }
+    } finally { ds.forEach(unprop); exCalm(); unprop(tr); }
+    return true; }
+  if (stat === 3) {   // Mind: the runes lift off the door, circle it, and lock back in the right order
+    const d = prop({ k: 'sealdoor', x: 184, y: GROUND, lit: 0, drop: 0 }), lt = prop({ k: 'litter', x: 154, y: GROUND, s: 1.3 }); await walkTo(118, 60, 'walk');
+    exFocus(158, 1.6); exDim(0.45); s.pose = 'idle'; spark(s.x, headY() - 10, 'bulb'); const ch = prop({ k: 'excharge', el: 'Mind', x: s.x, y: GROUND - 14, t0: exNow() }); exSfx('charge'); await rwait(800); unprop(ch);
+    const g = prop({ k: 'exglyph', x: 184, y: GROUND, u: 0, lock: 0, bad: 0 }); exSfx('shine');
+    try {
+      await exTween(1200, u => { g.u = u; });
+      if (ok) { for (let i = 1; i <= 3; i++) { await exTween(240, u => { g.lock = i - 1 + u; }); d.lit = i; exSfx('chime'); exShake(2, 160); } unprop(g); await exDoorOpen(d, 'Mind'); unprop(lt);
+        s.pose = 'happy'; exSfx('win'); await walkTo(212, 60, 'walk'); }
+      else { g.bad = 1; exSfx('zap'); const b = prop({ k: 'exbeam', el: 'Spark', x: 184, y: GROUND - 34, x2: s.x + 6, y2: headY() + 8, t0: exNow() }); await rwait(230); unprop(b); unprop(g);
+        exFlash('#ffe14d', 0.6, 250); exShake(6, 400); s.pose = 'hurt'; s.flash = 2; await exFreeze(120); spark(s.x, headY() - 4, 'zap', 3);
+        const x1 = s.x; await exTween(420, u => { s.x = x1 - 34 * u; s.jy = -Math.sin(u * Math.PI) * 10; }, exOut); s.jy = 0; s.pose = 'sad'; await rwait(600); exCalm(); await exBack(96); unprop(d); unprop(lt); }
+    } finally { unprop(g); exCalm(); }
+    return true; }
+  if (stat === 4) {   // Insight: it sees through them, a ripple runs out and the fake archways shatter
+    const real = seed % 3, m = prop({ k: 'mirage', x: 170, y: GROUND, real, reveal: 0, s: 1.2 }), ax = i => 170 - 55 + 110 * (0.2 + i * 0.3);
+    await walkTo(98, 60, 'walk'); exFocus(150, 1.5); exDim(0.4); s.pose = 'idle'; spark(s.x + 4, headY() - 2, 'sparkle', 4);
+    try {
+      if (ok) { const ch = prop({ k: 'excharge', el: 'Insight', x: s.x, y: GROUND - 14, t0: exNow() }); exSfx('charge'); await rwait(800); unprop(ch);
+        await exMirageBreak(m, real, 'Insight'); exCalm(); s.pose = 'happy'; exSfx('win'); await walkTo(ax(real), 60, 'walk'); await walkTo(224, 60, 'walk'); }
+      else { const wrong = (real + 1) % 3; s.pose = 'happy'; await walkTo(ax(wrong) - 14, 80, 'walk');
+        prop({ k: 'exripple', x: ax(wrong), y: GROUND - 20, t0: exNow(), el: 'Insight' }); prop({ k: 'exlines', x: ax(wrong) - 6, y: GROUND - 22, t0: exNow() }); exSfx('thud'); exSfx('glass');
+        exFlash('#ffffff', 0.5, 220); exShake(5, 350); s.pose = 'hurt'; s.flash = 2; await exFreeze(130); spark(s.x, headY() - 4, 'star', 3);
+        const x1 = s.x; await exTween(420, u => { s.x = x1 - 36 * u; s.jy = -Math.sin(u * Math.PI) * 12; }, exOut); s.jy = 0; s.pose = 'sad'; await rwait(500); exCalm(); await exBack(90); }
+    } finally { exCalm(); unprop(m); }
+    return true; }
+  if (stat === 2) {   // Constitution: it takes the scratches, then roars and blasts the bramble apart
+    const th = prop({ k: 'thorns2', x: 168, y: GROUND, s: 1.35, gone: 0, how: 'blast' }); await walkTo(132, 60, 'walk');
+    exFocus(152, 1.6); exDim(0.4); s.pose = 'effort';
+    try {
+      for (let i = 0; i < 4; i++) { s.x += 2; s.flash = 1; spark(s.x + 12, headY() + 4 + i * 3, 'star', 1); exSfx('scratch'); exShake(2, 120); await rwait(260); }
+      if (ok) { const ch = prop({ k: 'excharge', el: 'Grit', x: s.x, y: GROUND - 14, t0: exNow() }); exSfx('charge'); await rwait(700); unprop(ch);
+        s.pose = 'attack'; exSfx('growl'); prop({ k: 'exring', x: s.x, y: GROUND - 18, t0: exNow(), el: 'Grit' }); exFlash('#ffd9b0', 0.6, 300); exShake(9, 600); await exFreeze(120);
+        exSfx('crumble'); await exTween(1000, u => { th.gone = u; }); s.pose = 'happy'; exSfx('win'); await walkTo(222, 60, 'walk'); }
+      else { const w = prop({ k: 'exwrap', x: s.x, y: GROUND, a: 0 }); await exTween(500, u => { w.a = u; w.x = s.x; });
+        for (let i = 0; i < 6; i++) { s.bx = i % 2 ? 2 : -2; exSfx('scratch'); await rwait(140); } s.bx = 0; exSfx('snap');
+        unprop(w); exShake(5, 300); s.pose = 'hurt'; s.flash = 2; spark(s.x, headY() - 4, 'star', 3); const x1 = s.x; await exTween(420, u => { s.x = x1 - 40 * u; s.jy = -Math.sin(u * Math.PI) * 10; }, exOut); s.jy = 0;
+        s.pose = 'tired'; await rwait(500); exCalm(); await exBack(84); }
+    } finally { exCalm(); unprop(th); }
+    return true; }
+  return false;
+}
+
 /* ---------- the props those use ---------- */
-const EX_EL_COL = { Brawl: ['#ffd23f', '#fff6c8'], Stone: ['#9a8a74', '#d6c8ae'], Blaze: ['#ff7a2a', '#ffd34d'], Steel: ['#b9c4cf', '#ffffff'], Spark: ['#ffe14d', '#ffffff'],
+const EX_EL_COL = { Speed: ['#8fe3ff', '#ffffff'], Mind: ['#b48cff', '#f1e6ff'], Insight: ['#6fe0cc', '#e8fffb'], Grit: ['#e0763a', '#ffd9b0'], Brawl: ['#ffd23f', '#fff6c8'], Stone: ['#9a8a74', '#d6c8ae'], Blaze: ['#ff7a2a', '#ffd34d'], Steel: ['#b9c4cf', '#ffffff'], Spark: ['#ffe14d', '#ffffff'],
   Charm: ['#ff8fc4', '#ffe0ef'], Light: ['#ffd76a', '#fffbe0'], Shade: ['#5a3f86', '#a68ad6'], Frost: ['#8fd3ff', '#eaf8ff'], Tide: ['#3ea0e0', '#bfe8ff'] };
 function exProp2(c, p, t, front) {
   const x = p.x, y = p.y, now = performance.now();
@@ -96,11 +274,38 @@ function exProp2(c, p, t, front) {
     case 'xrockb': if (front) return true; exRockBreak(c, x, y, p.s || 1, p.broke || 0); return true;
     case 'thorns2': if (front) return true; exThornsGone(c, x, y, p.s || 1, p.gone || 0, p.how, t); return true;
     case 'excoat': if (front) return true; exCoat(c, x, y, p.s || 1, p.el, p.a || 0, t); return true;
-    case 'exburst': if (!front) return true; { const u = Math.min(1, (now - p.t0) / 900); if (u < 1) exBurst(c, x, y, p.el, u, p.t0); } return true;
-    case 'exbeam': if (!front) return true; { const C = EX_EL_COL[p.el] || EX_EL_COL.Brawl, u = Math.min(1, (now - p.t0) / 220); c.save(); c.lineCap = 'round';
+    case 'exburst': if (!front) return true; { const u = Math.min(1, (exNow() - p.t0) / 1000); if (u < 1) { c.save(); const k2 = p.k2 || 1; c.translate(x, y); c.scale(k2, k2); c.translate(-x, -y); exBurst(c, x, y, p.el, u, p.t0); c.restore(); } } return true;
+    case 'exbeam': if (!front) return true; { const C = EX_EL_COL[p.el] || EX_EL_COL.Brawl, u = Math.min(1, (exNow() - p.t0) / 230); c.save(); c.lineCap = 'round';
       const hx = p.x + (p.x2 - p.x) * u, hy = p.y + (p.y2 - p.y) * u, tx = p.x + (p.x2 - p.x) * Math.max(0, u - 0.45), ty = p.y + (p.y2 - p.y) * Math.max(0, u - 0.45);
-      c.strokeStyle = C[0]; c.lineWidth = 7; c.globalAlpha = 0.55; c.beginPath(); c.moveTo(tx, ty); c.lineTo(hx, hy); c.stroke(); c.strokeStyle = C[1]; c.lineWidth = 3; c.globalAlpha = 1; c.stroke();
-      c.fillStyle = C[1]; c.beginPath(); c.arc(hx, hy, 5, 0, 7); c.fill(); c.restore(); } return true;
+      c.shadowColor = C[0]; c.shadowBlur = 14; c.strokeStyle = C[0]; c.lineWidth = 12; c.globalAlpha = 0.6; c.beginPath(); c.moveTo(tx, ty); c.lineTo(hx, hy); c.stroke(); c.strokeStyle = C[1]; c.lineWidth = 5; c.globalAlpha = 1; c.stroke();
+      if (p.el === 'Blaze') { const a = Math.atan2(p.y2 - p.y, p.x2 - p.x); c.save(); c.translate(hx, hy); c.rotate(a - Math.PI / 2); exFlame(c, 0, 0, 9, 30, Math.sin(t / 40) * 3); c.restore(); }
+      c.fillStyle = C[1]; c.beginPath(); c.arc(hx, hy, 9, 0, 7); c.fill(); c.restore(); } return true;
+    case 'excharge': if (!front) return true; exChargeDraw(c, x, y, p.el, (exNow() - p.t0) / 800, t); return true;
+    case 'exlines': if (!front) return true; { const u = (exNow() - p.t0) / 320; if (u < 1) exLines(c, x, y, u); } return true;
+    case 'exrays': if (front) return true; { const C = EX_EL_COL[p.el] || EX_EL_COL.Light; c.save(); c.globalAlpha = p.a; const g = c.createLinearGradient(x, y, x - 140, y); g.addColorStop(0, C[1]); g.addColorStop(1, C[1] + '00'); c.fillStyle = g;
+      for (let i = 0; i < 5; i++) { const a = Math.PI + (i - 2) * 0.16 + Math.sin(t / 400 + i) * 0.03; c.beginPath(); c.moveTo(x, y - 12); c.lineTo(x + Math.cos(a - 0.05) * 160, y + Math.sin(a - 0.05) * 160 - 12); c.lineTo(x + Math.cos(a + 0.05) * 160, y + Math.sin(a + 0.05) * 160 - 12); c.closePath(); c.fill(); }
+      const r = c.createRadialGradient(x, y - 10, 2, x, y - 10, 40); r.addColorStop(0, C[1]); r.addColorStop(1, C[1] + '00'); c.fillStyle = r; c.fillRect(x - 40, y - 50, 80, 80); c.restore(); } return true;
+    case 'exripple': if (!front) return true; { const u = (exNow() - p.t0) / 800; if (u >= 1) return true; const C = EX_EL_COL[p.el] || EX_EL_COL.Insight; c.save();
+      for (let k = 0; k < 3; k++) { const v = u - k * 0.12; if (v <= 0) continue; c.globalAlpha = (1 - v) * 0.8; c.strokeStyle = k ? C[0] : C[1]; c.lineWidth = 4 - k; c.beginPath(); c.ellipse(x, y, 10 + v * 150, 6 + v * 60, 0, 0, 7); c.stroke(); } c.restore(); } return true;
+    case 'exshards': if (!front) return true; { const u = (exNow() - p.t0) / 900; if (u >= 1) return true; c.save();
+      for (let i = 0; i < 14; i++) { const a = i * 0.45 + 0.3, v = 30 + (i % 4) * 14, px = x + Math.cos(a) * v * u * 1.2, py = y - 4 + Math.sin(a) * v * u * 0.7 - 20 * u + 60 * u * u, r = 3 + (i % 3) * 2;
+        c.save(); c.globalAlpha = 1 - u; c.translate(px, py); c.rotate(u * 6 + i); c.fillStyle = i % 2 ? 'rgba(200,255,245,.85)' : 'rgba(120,200,180,.75)'; c.strokeStyle = '#fff'; c.lineWidth = 0.8;
+        c.beginPath(); c.moveTo(0, -r); c.lineTo(r * 0.8, r * 0.6); c.lineTo(-r * 0.7, r * 0.4); c.closePath(); c.fill(); c.stroke(); c.restore(); }
+      c.restore(); } return true;
+    case 'exglow': if (front) return true; { const u = Math.min(1, (exNow() - p.t0) / 300); c.save(); c.globalAlpha = u * (0.7 + 0.2 * Math.sin(t / 120)); const g = c.createRadialGradient(x, y, 2, x, y, 34); g.addColorStop(0, '#fffbe0'); g.addColorStop(0.5, '#ffd76a88'); g.addColorStop(1, '#ffd76a00'); c.fillStyle = g; c.fillRect(x - 34, y - 34, 68, 68); c.restore(); } return true;
+    case 'exring': if (!front) return true; { const u = (exNow() - p.t0) / 600; if (u >= 1) return true; const C = EX_EL_COL[p.el] || EX_EL_COL.Brawl; c.save(); c.globalAlpha = 1 - u; c.strokeStyle = C[1]; c.lineWidth = 6 * (1 - u) + 1; c.shadowColor = C[0]; c.shadowBlur = 10;
+      c.beginPath(); c.ellipse(x, y, 10 + u * 110, 8 + u * 50, 0, 0, 7); c.stroke(); c.restore(); } return true;
+    case 'exwrap': if (!front) return true; { c.save(); c.globalAlpha = p.a; c.strokeStyle = '#4f7a34'; c.lineWidth = 3.5; c.lineCap = 'round';
+      for (let i = 0; i < 4; i++) { const yy = y - 6 - i * 9; c.beginPath(); c.ellipse(x, yy, 15 + Math.sin(t / 90 + i) * 1.5, 4, 0.15 * (i % 2 ? 1 : -1), 0, 7); c.stroke();
+        c.fillStyle = '#e6e0c8'; for (let k = 0; k < 3; k++) { const a = k * 2.1 + i; c.beginPath(); c.moveTo(x + Math.cos(a) * 15, yy + Math.sin(a) * 4); c.lineTo(x + Math.cos(a) * 19, yy + Math.sin(a) * 4 - 3); c.lineTo(x + Math.cos(a + 0.2) * 15, yy + Math.sin(a + 0.2) * 4); c.fill(); } } c.restore(); } return true;
+    case 'exmist': if (!front) return true; { const u = (exNow() - p.t0) / 1400; if (u >= 1) return true; c.save(); const col = p.el === 'Frost' ? '230,246,255' : '240,244,248';
+      for (let i = 0; i < 8; i++) { const k = (u + i / 8) % 1, mx = x + (i - 4) * 9 + Math.sin(i * 2 + u * 3) * 6, my = y - 10 - k * 60, r = 8 + k * 14; c.globalAlpha = (1 - k) * 0.5 * (1 - u * 0.5); c.fillStyle = `rgb(${col})`; c.beginPath(); c.arc(mx, my, r, 0, 7); c.fill(); }
+      c.restore(); } return true;
+    case 'expillar': if (!front) return true; exPillar(c, x, y, (exNow() - p.t0) / 1600, t); return true;
+    case 'exglyph': if (!front) return true; exGlyphs(c, x, y, p.u || 0, p.lock || 0, p.bad, t); return true;
+    case 'excrack': if (front) return true; { const g = p.g || 0; if (g <= 0) return true; c.save(); c.strokeStyle = 'rgba(40,28,18,.75)'; c.lineWidth = 1.6; c.lineCap = 'round';
+      for (let i = 0; i < 7; i++) { const dir = i % 2 ? 1 : -1, L = (14 + i * 6) * g; c.beginPath(); c.moveTo(x, y); let px = x, py = y; for (let k = 1; k <= 4; k++) { px += dir * L / 4; py += (k % 2 ? 1.2 : -0.8) + i * 0.15; c.lineTo(px, py); } c.stroke(); }
+      c.fillStyle = 'rgba(40,28,18,.25)'; c.beginPath(); c.ellipse(x, y + 1, 20 * g, 3 * g, 0, 0, 7); c.fill(); c.restore(); } return true;
     case 'tent': if (front) return true; exTent(c, x, y, p.s || 1); return true;
     case 'sign': if (front) return true; exSign(c, x, y, p.s || 1); return true;
   }
@@ -141,6 +346,12 @@ function exThornsGone(c, x, y, s, u, how, t) {
       exFlame(c, fx, y - 4 - (1 - sink) * 6 * s, (5 + (i % 2) * 2) * s * k, (24 + 10 * Math.sin(t / 90 + i * 1.7) + (i % 3) * 6) * s * k, Math.sin(t / 120 + i) * 3 * s); }
     for (let i = 0; i < 6; i++) { const k = (u * 1.2 + i / 6) % 1, sx = x + (i - 2.5) * 8 * s + Math.sin(t / 400 + i) * 4, sy = y - 40 * s - k * 50 * s; c.globalAlpha = (1 - k) * 0.45 * Math.min(1, u * 3); c.fillStyle = '#6b6461'; c.beginPath(); c.arc(sx, sy, (4 + k * 8) * s, 0, 7); c.fill(); }
     for (let i = 0; i < 14; i++) { const k = (i * 0.37 + u * 1.6) % 1, ex = x - 26 * s + (i * 13 % 52) * s + Math.sin(t / 200 + i) * 3, ey = y - 6 - k * 70 * s; c.globalAlpha = (1 - k) * flame; c.fillStyle = i % 3 ? '#ff9a3c' : '#ffe08a'; c.beginPath(); c.arc(ex, ey, 1.5 * s, 0, 7); c.fill(); }
+  } else if (how === 'blast') {
+    const e = 1 - Math.pow(1 - u, 2), fade = 1 - Math.max(0, u - 0.6) / 0.4;
+    for (const side of [-1, 1]) { c.save(); c.globalAlpha = Math.max(0, fade); const px = x + side * 30 * s; c.translate(px + side * e * 50 * s, y - Math.sin(u * Math.PI) * 24 * s); c.rotate(side * e * 0.9); c.translate(-px, -y);
+      c.beginPath(); side < 0 ? c.rect(x - 120, y - 140, 120, 150) : c.rect(x, y - 140, 120, 150); c.clip(); XA.bramble(c, x, y, s); c.restore(); }
+    for (let i = 0; i < 14; i++) { const a = -0.3 - i * 0.2, v = (40 + (i % 4) * 16) * s, lx = x + Math.cos(a) * v * e * (i % 2 ? 1 : -1), ly = y - 30 * s + Math.sin(a) * v * e + 50 * u * u * s;
+      c.save(); c.globalAlpha = Math.max(0, fade); c.translate(lx, ly); c.rotate(u * 8 + i); c.fillStyle = i % 3 ? '#5f9a3e' : '#7fb24a'; c.beginPath(); c.ellipse(0, 0, 4 * s, 2 * s, 0, 0, 7); c.fill(); c.restore(); }
   } else {
     const ax = x - 34 * s, ay = y - 30 * s, bx = x + 34 * s, by = y - 12 * s, e = Math.max(0, (u - 0.2) / 0.8), fall = e * e, fade = 1 - Math.max(0, u - 0.75) * 4;
     c.globalAlpha = Math.max(0, fade);
@@ -197,6 +408,42 @@ function exBurst(c, x, y, el, u, seed) {
     for (let i = 0; i < 10; i++) { const a = -0.3 - i * 0.28, v = 30 + i % 3 * 10, px = x + Math.cos(a) * v * out, py = y + Math.sin(a) * v * out + u * u * 40; c.fillStyle = i % 2 ? C[0] : C[1]; c.beginPath(); c.ellipse(px, py, 2.4, 3.2, 0, 0, 7); c.fill(); } }
   c.restore();
 }
+/* the element gathering round the Snabit before it lets go: streaks pulled in, a ring tightening, a glow under its feet */
+function exChargeDraw(c, x, y, el, u, t) {
+  const C = EX_EL_COL[el] || EX_EL_COL.Brawl; u = Math.min(1, Math.max(0, u)); c.save(); c.lineCap = 'round';
+  const g = c.createRadialGradient(x, GROUND, 2, x, GROUND, 40); g.addColorStop(0, C[1]); g.addColorStop(0.5, C[0] + '88'); g.addColorStop(1, C[0] + '00');
+  c.globalAlpha = 0.5 + 0.4 * u; c.fillStyle = g; c.beginPath(); c.ellipse(x, GROUND, 40, 9, 0, 0, 7); c.fill();
+  for (let i = 0; i < 16; i++) { const a = i * 2.4 + i * i * 0.13, k = ((u * 2.2 + i * 0.137) % 1), d = 70 * (1 - k) + 8, px = x + Math.cos(a) * d, py = y + Math.sin(a) * d * 0.8;
+    c.globalAlpha = k * (0.9 - u * 0.2); c.strokeStyle = i % 2 ? C[0] : C[1]; c.lineWidth = 2.5; c.beginPath(); c.moveTo(px, py); c.lineTo(px + Math.cos(a) * 12 * (1 - k), py + Math.sin(a) * 10 * (1 - k)); c.stroke(); }
+  c.globalAlpha = 0.85; c.strokeStyle = C[1]; c.lineWidth = 3 + u * 2; c.shadowColor = C[0]; c.shadowBlur = 12; c.beginPath(); c.arc(x, y, 46 - u * 26, 0, 7); c.stroke();
+  c.restore();
+}
+/* comic impact lines bursting out from where the hit lands */
+function exLines(c, x, y, u) {
+  c.save(); c.globalAlpha = 1 - u; c.fillStyle = '#fff'; c.strokeStyle = 'rgba(40,30,20,.6)'; c.lineWidth = 1;
+  for (let i = 0; i < 18; i++) { const a = i / 18 * 6.283 + (i % 2) * 0.1, r0 = 22 + u * 30, r1 = r0 + 30 + (i % 3) * 16, w = 0.07;
+    c.beginPath(); c.moveTo(x + Math.cos(a - w) * r0, y + Math.sin(a - w) * r0); c.lineTo(x + Math.cos(a) * r1, y + Math.sin(a) * r1); c.lineTo(x + Math.cos(a + w) * r0, y + Math.sin(a + w) * r0); c.closePath(); c.fill(); c.stroke(); }
+  c.restore();
+}
+/* the door's three runes lifted off and circling, then locking back one at a time */
+function exGlyphs(c, x, y, u, lock, bad, t) {
+  const home = [[x - 8, y - 35, 'tri', '#e2483f'], [x + 8, y - 35, 'sq', '#4878c4'], [x, y - 19, 'circ', '#f2c14e']];
+  c.save();
+  home.forEach(([hx, hy, sh, col], i) => { const a = t / 300 + i * 2.09, ox = x + Math.cos(a) * 34, oy = y - 34 + Math.sin(a) * 18, out = Math.min(1, u * 2.5), back = Math.min(1, Math.max(0, lock - i));
+    const px = hx + (ox - hx) * out * (1 - back), py = hy + (oy - hy) * out * (1 - back), cc = bad ? '#ff3b3b' : col, r = 6 + 2 * out * (1 - back);
+    const g = c.createRadialGradient(px, py, 1, px, py, r * 3); g.addColorStop(0, cc + 'cc'); g.addColorStop(1, cc + '00'); c.fillStyle = g; c.fillRect(px - r * 3, py - r * 3, r * 6, r * 6);
+    c.fillStyle = cc; c.strokeStyle = '#fff'; c.lineWidth = 1.2; c.beginPath();
+    if (sh === 'tri') { c.moveTo(px, py - r); c.lineTo(px + r, py + r * 0.8); c.lineTo(px - r, py + r * 0.8); c.closePath(); } else if (sh === 'sq') c.rect(px - r * 0.8, py - r * 0.8, r * 1.6, r * 1.6); else c.arc(px, py, r * 0.85, 0, 7);
+    c.fill(); c.stroke(); });
+  c.restore();
+}
+/* a column of light over the Snabit when a lesson takes */
+function exPillar(c, x, y, u, t) {
+  if (u <= 0) return; c.save(); const w = 26 * Math.min(1, u * 3) * (1 - Math.max(0, u - 0.7) / 0.3), g = c.createLinearGradient(x - w, 0, x + w, 0);
+  g.addColorStop(0, '#fff6c800'); g.addColorStop(0.5, '#fffbe8'); g.addColorStop(1, '#fff6c800'); c.globalAlpha = 0.85; c.fillStyle = g; c.fillRect(x - w, y - 260, w * 2, 262);
+  for (let i = 0; i < 10; i++) { const k = (u * 1.5 + i / 10) % 1; c.globalAlpha = (1 - k) * 0.9; c.fillStyle = '#fff'; c.beginPath(); c.arc(x + Math.sin(i * 3 + t / 200) * w * 0.8, y - k * 150, 1.8, 0, 7); c.fill(); }
+  c.restore();
+}
 /* map icons and props for the teacher's camp and a stop on the path */
 function exTent(c, x, y, s) {
   SC.depth(c, () => { c.beginPath(); c.moveTo(x - 20 * s, y); c.lineTo(x, y - 26 * s); c.lineTo(x + 20 * s, y); c.closePath(); }, '#d9a14a', 2 * s, 0.3);
@@ -217,12 +464,22 @@ async function exTeach(reg, st, nm, K, found) {
   K(`${Cap(tThe)} has a camp up here.`); await rwait(1500); banner('');
   const opts = tripOptions(s, reg).filter(x => x.chainOk && x.score >= x.need);
   if (!opts.length) { K(`${Cap(tThe)} watched ${nm} for a while and says it isn't ready for anything new.`); s.pose = 'sad'; await rwait(2200); unprop(tp); return; }
-  const x = opts[Math.floor(Math.random() * opts.length)], got = Math.random() * 100 < Math.min(70, 35 + Math.floor((x.score - x.need) / 4));
-  banner('Special training', '#ffd23f'); K(`${Cap(tThe)} will show ${nm} how to do ${x.n}.`); await rwait(1200); banner('');
-  for (let k = 0; k < 3; k++) { s.pose = 'effort'; await hop(8, 240); spark(s.x + 14, headY() + 6, k === 2 && got ? 'sparkle' : 'dust', k === 2 && got ? 8 : 3); s.pose = 'idle'; await rwait(260); }
-  if (got) { if (x.fam) s.famMoves = (s.famMoves || []).concat(x.n); else { s.skillsKnown = (s.skillsKnown || []).concat(x.n); bookMark(s, x.n, 'learned'); }
-    found.push(`a new move, ${x.n}`); banner(`Learned ${x.n}!`, '#7dff9a'); K(`${nm} has learned ${x.n}.`); s.pose = 'happy'; await rwait(1700); banner(''); }
-  else { banner('Not yet', '#ff8a8a'); K(`${nm} couldn't get ${x.n} this time.`); s.pose = 'sad'; await rwait(1500); banner(''); }
+  const x = opts[Math.floor(Math.random() * opts.length)], got = Math.random() * 100 < Math.min(70, 35 + Math.floor((x.score - x.need) / 4)), el = reg.el;
+  banner('Special training', '#ffd23f'); K(`${Cap(tThe)} will show ${nm} how to do ${x.n}.`); await rwait(1300); banner('');
+  try {
+    // the teacher shows it first
+    exFocus(158, 1.45); exDim(0.45); let ch = prop({ k: 'excharge', el, x: 186, y: GROUND - 30, t0: exNow() }); exSfx('charge'); if (typeof elSfx === 'function') elSfx(el, 'cast'); await rwait(800); unprop(ch);
+    prop({ k: 'exburst', el, x: 150, y: GROUND - 26, t0: exNow(), k2: 1.4 }); prop({ k: 'exlines', x: 150, y: GROUND - 26, t0: exNow() }); exSfx(EX_EL_SFX[el] || 'impact'); exFlash('#ffffff', 0.5, 220); exShake(6, 400); await rwait(900);
+    // then the Snabit tries, twice short and once for real
+    for (let k = 0; k < 3; k++) { s.pose = 'effort'; ch = prop({ k: 'excharge', el, x: s.x, y: GROUND - 14, t0: exNow() }); exSfx('charge'); await rwait(k < 2 ? 450 : 800); unprop(ch);
+      s.pose = 'attack'; if (k < 2) { spark(s.x + 16, headY() + 6, 'smoke', 3); exSfx('fizzle'); await rwait(420); continue; }
+      if (got) { prop({ k: 'exburst', el, x: s.x + 30, y: GROUND - 20, t0: exNow(), k2: 1.3 }); exSfx(EX_EL_SFX[el] || 'impact'); exShake(5, 300); await exFreeze(110); }
+      else { spark(s.x + 16, headY() + 6, 'smoke', 5); exSfx('fizzle'); } }
+    if (got) { if (x.fam) s.famMoves = (s.famMoves || []).concat(x.n); else { s.skillsKnown = (s.skillsKnown || []).concat(x.n); bookMark(s, x.n, 'learned'); }
+      found.push(`a new move, ${x.n}`); const pl = prop({ k: 'expillar', x: s.x, y: GROUND, t0: exNow() }); exSfx('learn'); exFlash('#fffbe0', 0.6, 400); s.pose = 'happy'; await hop(14, 360);
+      banner(`Learned ${x.n}!`, '#7dff9a'); K(`${nm} has learned ${x.n}.`); spark(s.x, headY() - 6, 'sparkle', 10); await rwait(1700); banner(''); unprop(pl); }
+    else { banner('Not yet', '#ff8a8a'); K(`${nm} couldn't get ${x.n} this time.`); s.pose = 'sad'; await rwait(1500); banner(''); }
+  } finally { exCalm(); }
   unprop(tp);
 }
 
