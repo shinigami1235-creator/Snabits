@@ -106,6 +106,7 @@ The other chat builds their moves, signature skills, arena animations and entran
 7. A horror that reaches the end of its lifespan outside the Freezer vanishes or flies off in a week event and leaves its stone. A retired one's statue is gone after 4 weeks and leaves its stone on the plinth.
 8. A stone scan calls its horror only between 9pm and 3am on the phone's clock, with vague clues to the hour and the colours.
 9. Cthulhu has no mouth.
+10. Most horrors are friendly, so each fight has a reason from its myth (17 Nov 2026): the Ghoul's wrestle is a game, the Nightgaunt and the Shoggoth are afraid, the Mi-Go is curious, the Dagon and Shub-Niggurath are on guard, the Gug is the only hostile one, Hastur's is a play, Yog-Sothoth's a test and Cthulhu's a dream. The reason shows as the fight's banner, and Walt's lines and the myths say it (`HORROR_WHY` in horror.js).
 
 ## Built (16 Nov 2026, batch-horror)
 
