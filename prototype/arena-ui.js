@@ -247,7 +247,7 @@ function atEvent(e,now){
     if(!ANIM[kind]) kind="tackle";
     // the whole animation plays at its own pace now; a slow, heavy move gets a little longer windup on top
     const K=ANIM[kind], rate=Math.max(0.75,Math.min(1.25,K.C/Math.max(300,m.wind*900))), isSig=atIsSig(e.i,m)||!!K.sig, tier=m.dmg||isSig?atMoveTier(e.i,m):"light", ch=!m.dmg&&!isSig?0:isSig&&tier==="special"?AT_CHARGE.sig:AT_CHARGE[tier];
-    AT.turn={t0:te,C:ch+K.C/rate,D:ch+Math.min(K.D/rate,K.C/rate+700)};
+    AT.turn={t0:te,C:ch+K.C/rate,D:ch+Math.min(K.D/rate,(K.C+(K.tail||700))/rate)};   // tail: a move whose story goes on after the hit, like a swallow and a spit, holds the turn longer
     const col=m.el&&typeof ELC==="function"?hexRgb(ELC(m.el)):AT_FAMCOL[AT.ar.p[e.i].f.family]||[255,214,90];
     S.anim={kind,t0:te+ch,tier,rate,el:m.el||null,name:m.name,src:typeof sourceFor==="function"?sourceFor({name:m.name,kind:m.cast?"Cast":"Strike"},sp):"mouth",col,pw:m.dmg>=70?1.35:m.dmg>=40?1.05:0.8,contact:!!K.contact||/^(tackle|bite|stomp|punch|claw|shadowstrike|shadowclaw|fly)$/.test(kind)};
     if(tier==="special"&&!S.anim.contact&&!m.lower) S.anim.mega=/^(beam|bolt|spear|volley|drain|gust)$/.test(kind)?"beam":kind==="lightning"?"bolt":/^(meteor|icefall|boulder|rockpath)$/.test(kind)?"fall":kind==="pillar"&&m.el==="Frost"?"glacier":/^(tornado|firespin)$/.test(kind)?(m.el==="Blaze"?"inferno":"funnel"):kind==="wave"?"tsunami":kind==="push"?"shock":kind==="lift"?"nightmare":/^(pillar|mist|mistcast)$/.test(kind)?"rise":null;
@@ -612,7 +612,7 @@ function atSideState(S,te){
       else if(W==="gears"||W==="steam") out.rot+=Math.sin(te/40)*0.05*kk;
       else if(W==="signal"){ out.off[0]+=(atH(Math.floor(te/40))-0.5)*4*kk; out.sx*=1+0.03*Math.sin(te/25); } }
   else if(A){ const t=(te-A.t0)*A.rate, K=ANIM[A.kind]; if(t>(A.mega?Math.max(K.D,K.C+950):K.D)) S.anim=null; else Object.assign(out,K.atk(t,{foeH:60,perp:[0,-1],dir:S.dir,fam:S.spec&&S.spec.family,stage:S.spec&&S.spec.stage,gapU:atGapU(S)})); }
-  const O=S.foe.anim; if(O&&!S.anim){ const t=(te-O.t0)*O.rate, K=ANIM[O.kind]; if(t<=K.D&&K.def){ const d=K.def(t,{foeH:60,perp:[0,-1]}); if(d) Object.assign(out,d); } }
+  const O=S.foe.anim; if(O&&!S.anim){ const t=(te-O.t0)*O.rate, K=ANIM[O.kind]; if(t<=K.D&&K.def){ const d=K.def(t,{foeH:60,perp:[0,-1],dir:S.dir,gap:S.foe&&S.foe.dx!=null&&S.dx!=null?Math.abs(S.foe.dx-S.dx):null}); if(d) Object.assign(out,d); } }
   if(S.pose&&te<S.pose.until&&!S.anim) out.pose=S.pose.p;
   if(S.recoil){ const k=(te-S.recoil.t0)/170; if(k>1) S.recoil=null; else out.off[0]-=S.dir*S.recoil.amt*Math.sin(k*Math.PI); }
   const dg=atDodge(S,te), R=S.react;

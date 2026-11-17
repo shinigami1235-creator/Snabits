@@ -5,11 +5,6 @@ HR.bone=(c,x,y,z,rot,a=1)=>{ c.save(); c.globalAlpha*=a; c.translate(x,y); c.rot
   c.fillRect(-z,-z*0.18,z*2,z*0.36); for(const sx of [-1,1]) for(const sy of [-1,1]){ c.beginPath(); c.arc(sx*z,sy*z*0.2,z*0.26,0,7); c.fill(); } c.restore(); };
 HR.eye=(c,x,y,r,open,look=0)=>{ if(open<=0.02) return; c.save(); c.translate(x,y); c.scale(1,open); c.fillStyle="#fffdf4"; c.strokeStyle="rgba(60,20,60,.9)"; c.lineWidth=1.4;
   c.beginPath(); c.ellipse(0,0,r,r*0.75,0,0,7); c.fill(); c.stroke(); c.fillStyle="#c23a6e"; c.beginPath(); c.arc(look*r*0.3,0,r*0.45,0,7); c.fill(); c.fillStyle="#1a0f1e"; c.beginPath(); c.arc(look*r*0.3,0,r*0.22,0,7); c.fill(); c.restore(); };
-HR.kid=(c,x,y,z,ph,col)=>{ c.save(); c.translate(x,y); const b=Math.abs(Math.sin(ph))*z*0.25; c.translate(0,-b);
-  c.strokeStyle="#2a2026"; c.lineWidth=z*0.14; c.lineCap="round"; for(const lx of [-0.4,-0.15,0.15,0.4]){ c.beginPath(); c.moveTo(lx*z,z*0.2); c.lineTo(lx*z+Math.sin(ph+lx*6)*z*0.15,z*0.62); c.stroke(); }
-  c.fillStyle=atRgba(col,1); for(let i=0;i<5;i++){ c.beginPath(); c.arc((i-2)*z*0.22,Math.sin(i)*z*0.06,z*0.3,0,7); c.fill(); }   // a woolly little body
-  c.beginPath(); c.arc(-z*0.62,-z*0.18,z*0.24,0,7); c.fill(); c.strokeStyle="#d8cdb8"; c.lineWidth=z*0.08; c.beginPath(); c.arc(-z*0.55,-z*0.42,z*0.14,Math.PI,Math.PI*1.8); c.stroke();
-  c.fillStyle="#ffe08a"; c.beginPath(); c.arc(-z*0.7,-z*0.2,z*0.05,0,7); c.fill(); c.restore(); };
 HR.jaw=(c,x,y,h,w,open,side,col)=>{ c.save(); c.translate(x,y); c.scale(side,1); c.fillStyle=atRgba(col,0.96); c.beginPath(); c.moveTo(0,-h/2); c.quadraticCurveTo(w*(0.4+open),0,0,h/2); c.closePath(); c.fill();
   c.fillStyle="#fffbe8"; for(let i=0;i<6;i++){ const yy=-h/2+h*(i+0.5)/6, bx=w*(0.4+open)*Math.cos((yy/(h/2))*Math.PI/2)*0.92; c.beginPath(); c.moveTo(bx*0.5,yy-h*0.06); c.lineTo(bx*0.5-w*0.32,yy); c.lineTo(bx*0.5,yy+h*0.06); c.closePath(); c.fill(); } c.restore(); };
 const hrBats=(c,t,x0,y0,n,spread,a)=>{ for(let i=0;i<n;i++){ const q=((t/700)+i/n)%1, px=x0+(i-(n-1)/2)*spread*0.3+Math.sin(t/90+i)*8, py=y0-q*spread; c.fillStyle=`rgba(30,14,40,${a*(1-q)})`; c.beginPath(); c.moveTo(px,py); c.quadraticCurveTo(px-6,py-6,px-12,py-1); c.quadraticCurveTo(px-6,py-2,px,py+3); c.quadraticCurveTo(px+6,py-2,px+12,py-1); c.quadraticCurveTo(px+6,py-6,px,py); c.fill(); } };
@@ -64,41 +59,6 @@ Object.assign(ANIM,{
       c.save(); c.globalAlpha*=ja; c.fillStyle="rgba(210,235,255,.35)"; c.strokeStyle="rgba(230,245,255,.9)"; c.lineWidth=2; c.beginPath(); c.moveTo(jx-z*0.7,jy-z*0.6); c.lineTo(jx-z*0.75,jy+z*0.8); c.quadraticCurveTo(jx,jy+z*1.05,jx+z*0.75,jy+z*0.8); c.lineTo(jx+z*0.7,jy-z*0.6); c.closePath(); c.fill(); c.stroke();
       if(t>620){ const g=Math.min(1,(t-620)/300); atGlowA(c,jx,jy+z*0.25,z*0.6*g,[255,120,210],0.9); }   // the harvested glow inside
       c.fillStyle=t>820?"#9aa3ad":"rgba(154,163,173,.0)"; c.fillRect(jx-z*0.78,jy-z*0.8,z*1.56,z*0.25); c.restore(); atImpact(t,820,0.3,0.08); }},
-  /* Dagon's Tidal Grasp: a huge webbed hand of seawater rises under the target, closes round it and slams it down */
-  sg_tidalgrasp:{C:880,D:1600,
-    atk:t=>({pose:t<300?"cast":t<1200?"push":"idle",sy:t<300?1-0.08*eo(t/300):1}),
-    def(t){ if(t<500||t>1400) return null; if(t<880){ const k=eio((t-500)/380); return {arc:-50*k,pose:"hurt",sx:0.9}; } const k=(t-880)/520; return {arc:-50*(1-ei(Math.min(1,k*3))),sy:k<0.15?0.8:1,pose:"hurt"}; },
-    fx(c,t,x){ const tg=x.target, R=tg.r; if(t<200||t>1450) return; const rise=t<500?eo((t-200)/300):1, grip=t<500?0:t<760?eo((t-500)/260):1, slam=t<880?0:Math.min(1,(t-880)/120), fade=t<1150?1:1-(t-1150)/300;
-      const base=tg.foot, top=base-R*3.2*rise+(t>=500&&t<880?-R*0.7*eio((t-500)/380):0)+R*1.6*slam, cx=tg.x;
-      c.save(); c.globalAlpha*=fade; const g=c.createLinearGradient(0,top,0,base); g.addColorStop(0,"rgba(150,215,255,.85)"); g.addColorStop(1,"rgba(40,110,190,.85)"); c.fillStyle=g;
-      c.beginPath(); c.moveTo(cx-R*0.7,base); c.lineTo(cx-R*0.6,top+R*1.0); for(let i=0;i<5;i++){ const fx=cx-R*0.75+i*R*0.38, bend=grip*R*0.5*(i<4?1:-0.6); c.lineTo(fx+bend*(i<4?0.6:1),top-R*0.4*(i===4?0.4:1)+bend*0.4); c.lineTo(fx+R*0.18+bend*0.5,top+R*0.25); }
-      c.lineTo(cx+R*0.7,top+R*1.0); c.lineTo(cx+R*0.75,base); c.closePath(); c.fill(); c.strokeStyle="rgba(230,248,255,.8)"; c.lineWidth=2; c.stroke(); c.restore();
-      if(t>=880&&t<1300){ const k=(t-880)/420; for(let i=0;i<12;i++){ const a=-Math.PI*(0.1+0.8*atH(i*7)), sp=R*(0.5+2*eo(k)); c.fillStyle=`rgba(170,220,255,${0.9*(1-k)})`; c.beginPath(); c.arc(cx+Math.cos(a)*sp,base+Math.sin(a)*sp+k*k*R*2,R*0.08,0,7); c.fill(); } }
-      atImpact(t,880,0.65,0.12); }},
-  /* Dagon's Fisher's Song: it sings, the notes ring out over the water, and the sea answers with a great wave over the target */
-  sg_fishersong:{C:1000,D:1700,
-    atk:t=>({pose:atPose(t<1300?"cast":"idle",{open:t<900?0.6+0.2*Math.sin(t/60):0,eyes:t<900?"shut":undefined}),arc:t<900?-5*Math.sin(t/200):0}),
-    def:t=>{ if(t<1000) return null; const k=(t-1000)/600; return k<1?{off:[22*Math.sin(Math.min(1,k*2)*Math.PI),0],arc:-26*Math.sin(Math.min(1,k*1.6)*Math.PI),pose:"hurt"}:null; },
-    fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, d=atDir(x); if(t<900) for(let i=0;i<6;i++){ const q=((t/700)+i/6)%1, px=s.x+d*R*(0.5+q*2.5), py=s.y-s.r*1.1-q*R*1.2+Math.sin(q*9+i)*8; c.fillStyle=`rgba(200,235,255,${1-q})`; c.beginPath(); c.ellipse(px,py,5,3.6,-0.4,0,7); c.fill(); c.fillRect(px+3.6,py-14,1.8,14); }
-      if(t>500){ const W=ANIM.wave.fx; c.save(); c.translate(tg.x,tg.foot); c.scale(1.7,1.7); c.translate(-tg.x,-tg.foot); W(c,(t-500)*1.0,{...x,pw:1.4}); c.restore(); }
-      atImpact(t,1000,0.6,0.1); }},
-  /* Shub-Niggurath's Kid Stampede: a herd of little black goat kids bursts out of her and stampedes through the target */
-  sg_kidstampede:{C:560,D:1500,
-    atk:t=>({pose:t<300?"crouch":t<1000?"push":"idle",sy:t<300?1-0.1*eo(t/300):1,sx:t<300?1+0.08*eo(t/300):1}),
-    def(t){ if(t<560||t>1200) return null; const p=((t-560)%150)/150; return {off:[(1-p)*7,0],arc:-6*Math.sin(p*Math.PI),pose:"hurt"}; },
-    fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, d=atDir(x), col=(x.body||[60,40,60]).map(v=>v*0.35+20);
-      for(let i=0;i<4;i++){ const t0=260+i*150, k=(t-t0)/600; if(k<0||k>1) continue; const px=s.x+d*(Math.abs(tg.x-s.x)+R*2.4)*k, py=tg.foot-R*0.3-(i%2)*R*0.25; c.save(); c.translate(px,py); c.scale(d>0?-1:1,1); HR.kid(c,0,0,R*0.42,t/40+i,col); c.restore(); SG.dust(c,px-d*R*0.4,tg.foot,R*0.4,(t/200+i*0.3)%1,3); }
-      for(let i=0;i<4;i++) atImpact(t,560+i*150,0.2,0); }},
-  /* Shub-Niggurath's Black Grove: black trees burst out of the ground in a ring round the target and their roots close on it */
-  sg_blackgrove:{C:900,D:1700,
-    atk:t=>({pose:t<1300?"cast":"idle",sy:t<500?1-0.06*eo(t/500):1}),
-    def:t=>t>=900&&t<1500?{off:[Math.sin(t/20)*1.5,0],sy:0.95,pose:"hurt"}:null,
-    fx(c,t,x){ const tg=x.target, R=tg.r; if(t<300||t>1650) return; const a=t<1400?1:1-(t-1400)/250;
-      for(let i=0;i<7;i++){ const an=i/7*Math.PI*2, dx=Math.cos(an)*R*1.6, dz=Math.sin(an), g=Math.max(0,Math.min(1,(t-300-i*60)/360)), h=R*(1.6+0.6*atH(i))*eo(g), bx=tg.x+dx, by=tg.foot+dz*R*0.3;
-        c.save(); c.globalAlpha*=a*(dz<0?0.75:1); c.strokeStyle="#1e1622"; c.lineCap="round"; c.lineWidth=R*0.18; c.beginPath(); c.moveTo(bx,by); c.quadraticCurveTo(bx-dx*0.15,by-h*0.6,bx-dx*0.3,by-h); c.stroke();
-        c.lineWidth=R*0.07; for(let b=0;b<3;b++){ const yy=by-h*(0.45+b*0.18); c.beginPath(); c.moveTo(bx-dx*0.15*(0.45+b*0.18)*2,yy); c.lineTo(bx-dx*0.15*(0.45+b*0.18)*2+(b%2?1:-1)*R*0.35,yy-R*0.3); c.stroke(); } c.restore(); }
-      if(t>=900){ const k=Math.min(1,(t-900)/300); c.save(); c.globalAlpha*=a; c.strokeStyle="#2c1f2a"; c.lineWidth=R*0.12; for(let i=0;i<4;i++){ const yy=tg.y-R*(0.6-i*0.3); c.beginPath(); c.ellipse(tg.x,yy,R*(1.2-0.3*k),R*0.18,0.1*(i-1.5),0,Math.PI*2*k); c.stroke(); } c.restore(); }
-      atImpact(t,900,0.45,0.08); }},
   /* Gug's Gate Knock: it raises its fists and pounds the ground three times, knocking like a giant at a door; the last knock heaves the target up */
   sg_gateknock:{C:1000,D:1700,
     atk:t=>{ const beats=[300,650,1000]; let r={pose:"cast"}; for(const b of beats){ if(t>=b-260&&t<b){ const k=(t-b+260)/260; r={pose:"slamup",sy:1+0.06*k,arc:-10*k}; } if(t>=b&&t<b+120){ r={pose:"slam",sy:0.88,arc:0}; } } if(t>1250) r={pose:"idle"}; return r; },
@@ -124,77 +84,371 @@ Object.assign(ANIM,{
       c.save(); c.globalAlpha*=fade; SG.fog(c,tg.x,tg.y-R*0.3,R*2.4,[30,10,40],0.5*Math.min(1,(t-200)/400));
       for(let i=0;i<11;i++){ const an=atH(i*13)*Math.PI*2, rr=R*(1.2+0.9*atH(i*7)), px=tg.x+Math.cos(an)*rr, py=tg.y-R*0.3+Math.sin(an)*rr*0.7, o=Math.max(0,Math.min(1,(t-250-i*45)/160)), blink=Math.abs(Math.sin(t/260+i))>0.97?0.1:1;
         HR.eye(c,px,py,R*(0.16+0.1*atH(i*3)),o*blink,Math.max(-1,Math.min(1,(tg.x-px)/R))); }
-      if(t>820&&t<1350){ const k=(t-820)/530; SG.ring(c,tg.x,tg.y-R*0.3,R*(0.5+k),R*(0.4+0.8*k),[160,60,200],4,0.8*(1-k)); } c.restore(); atImpact(t,820,0.35,0.1); }},
-  /* Shoggoth's Swallow Whole: it surges forward as a wave of goo, swallows the target into a bubble of itself, holds it, then spits it out */
-  sg_swallowwhole:{C:640,D:1900,contact:true,marks:true,
-    atk:t=>{ if(t<640){ const k=ei(t/640); return {f:0.85*k,sx:1+0.35*k,sy:1-0.2*k,pose:"tackle"}; } if(t<1500) return {f:0.85,sx:1.35+0.05*Math.sin(t/60),sy:0.8+0.04*Math.sin(t/60),pose:"push"}; const k=(t-1500)/400; return {f:0.85*(1-eio(k)),sx:1.35-0.35*eo(k),sy:0.8+0.2*eo(k),pose:"idle"}; },
-    def(t){ if(t<640||t>1750) return null; if(t<1500) return {alpha:0.55,sx:0.8,sy:0.85,off:[Math.sin(t/40)*3,-Math.cos(t/50)*3],pose:"hurt"}; const k=(t-1500)/250; return {off:[30*(1-k),0],arc:-30*Math.sin(Math.min(1,k)*Math.PI),pose:"hurt"}; },
-    fx(c,t,x){ const tg=x.target, R=tg.r, col=x.body||[100,120,90]; if(t<560||t>1560) return; const k=Math.min(1,(t-560)/200), a=t<1450?1:1-(t-1450)/110;
-      c.save(); c.globalAlpha*=a*0.75; const g=c.createRadialGradient(tg.x-R*0.3,tg.y-R*0.6,R*0.2,tg.x,tg.y-R*0.2,R*1.5*k); g.addColorStop(0,atRgba(col.map(v=>Math.min(255,v+60)),0.6)); g.addColorStop(1,atRgba(col,0.85)); c.fillStyle=g;
-      c.beginPath(); for(let i=0;i<=24;i++){ const an=i/24*Math.PI*2, rr=R*1.45*k*(1+0.06*Math.sin(an*5+t/80)); c.lineTo(tg.x+Math.cos(an)*rr,tg.y-R*0.2+Math.sin(an)*rr*0.95); } c.closePath(); c.fill(); c.restore();
-      if(t>700) for(let i=0;i<4;i++){ const an=i*1.7+0.4; HR.eye(c,tg.x+Math.cos(an)*R*1.0,tg.y-R*0.2+Math.sin(an)*R*0.9,R*0.13,Math.min(1,(t-700-i*60)/120)*a,Math.sin(t/300+i)); }
-      for(let i=0;i<5;i++){ const ph=((t/500)+i/5)%1; c.strokeStyle=`rgba(255,255,255,${0.5*(1-ph)*a})`; c.lineWidth=1.5; c.beginPath(); c.arc(tg.x+(i-2)*R*0.3,tg.y-R*(0.2+ph*1.1),R*0.06,0,7); c.stroke(); }
-      atImpact(t,640,0.45,0.08); atImpact(t,1500,0.4,0); }},
-  /* Hastur's Curtain Call: two red theatre curtains drop over the target in a spotlight, and it falls asleep behind them */
-  sg_curtaincall:{C:820,D:1700,
-    atk:t=>({pose:t<1300?"cast":"idle",arc:t<1300?-4*Math.sin(t/200):0}),
-    def:t=>t>=820&&t<1500?{pose:atPose("hurt",{eyes:"shut"}),rot:0.1*Math.sin(t/200)}:null,
-    fx(c,t,x){ const tg=x.target, R=tg.r; if(t<200||t>1650) return; const top=tg.y-R*2.6, floor=tg.foot+4, w=R*1.4, close=t<820?eio((t-400)/420):t<1350?1:1-eio((t-1350)/250), sp=Math.max(0,Math.min(1,(t-200)/200))*(t>1500?1-(t-1500)/150:1);
-      c.save(); c.globalCompositeOperation="lighter"; const g=c.createRadialGradient(tg.x,tg.y-R*0.4,R*0.2,tg.x,tg.y-R*0.4,R*1.8); g.addColorStop(0,`rgba(255,240,170,${0.45*sp})`); g.addColorStop(1,"rgba(255,240,170,0)"); c.fillStyle=g; c.beginPath(); c.moveTo(tg.x-R*0.3,top-R); c.lineTo(tg.x+R*0.3,top-R); c.lineTo(tg.x+R*1.6,floor); c.lineTo(tg.x-R*1.6,floor); c.closePath(); c.fill(); c.restore();
-      if(close>0) for(const sd of [-1,1]){ const inner=tg.x+sd*w*(1-Math.max(0,close))*1.0, outer=tg.x+sd*w*1.25; c.fillStyle="#9c1c2c"; c.beginPath(); c.moveTo(outer,top); c.lineTo(inner,top); for(let i=0;i<=8;i++){ const y=top+(floor-top)*i/8; c.lineTo(inner+sd*Math.sin(i*1.4+t/200)*R*0.06,y); } c.lineTo(outer,floor); c.closePath(); c.fill();
-        c.strokeStyle="rgba(60,0,10,.5)"; c.lineWidth=1.5; for(let k=1;k<4;k++){ const xx=inner+(outer-inner)*k/4; c.beginPath(); c.moveTo(xx,top); c.lineTo(xx,floor); c.stroke(); } }
-      c.fillStyle="#e9b23a"; c.fillRect(tg.x-w*1.3,top-6,w*2.6,6);
-      if(t>900&&t<1500) for(let i=0;i<3;i++){ const ph=((t/500)+i/3)%1; c.fillStyle=`rgba(240,235,255,${1-ph})`; c.font=`bold ${Math.round(R*(0.35+ph*0.3))}px sans-serif`; c.fillText("z",tg.x+R*(0.3+ph*0.6),tg.y-R*(1+ph))}
-      atImpact(t,820,0.3,0.05); }},
-  /* Hastur's Tattered Cloak: the tatters of its cloak stream out, wrap the target, and a yellow sign burns on it */
-  sg_tatteredcloak:{C:900,D:1700,
-    atk:t=>({pose:t<1300?"cast":"idle",sx:1+0.06*Math.sin(Math.min(1,t/600)*Math.PI)}),
-    def:t=>t>=900&&t<1500?{off:[Math.sin(t/18)*1.5,0],pose:"hurt",sy:0.96}:null,
-    fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, col=(x.body||[120,80,150]).map(v=>v*0.6); if(t<200||t>1650) return; const reach=t<900?eio((t-200)/700):t<1350?1:1-eio((t-1350)/300);
-      for(let i=0;i<6;i++){ const ox=s.x, oy=s.y+s.r*(0.2+i*0.12), ex=tg.x+Math.cos(i*1.1+t/300)*R*0.6, ey=tg.y-R*(0.6-i*0.22), mx=(ox+ex)/2, my=Math.min(oy,ey)-R*(0.6+0.3*Math.sin(t/120+i));
-        const px=ox+(ex-ox)*reach, py=oy+(ey-oy)*reach; c.strokeStyle=atRgba(col,0.9); c.lineWidth=R*0.14*(1-i*0.08); c.lineCap="round"; c.beginPath(); c.moveTo(ox,oy); c.quadraticCurveTo(ox+(mx-ox)*reach*1.2,oy+(my-oy)*reach,px,py); c.stroke(); }
-      if(t>=900&&t<1500){ const k=(t-900)/600, a=k<0.8?1:1-(k-0.8)*5; c.save(); c.translate(tg.x,tg.y-R*0.3); c.globalAlpha*=a; c.strokeStyle="#ffd84a"; c.lineWidth=3; c.shadowColor="#ffd84a"; c.shadowBlur=10;
-        c.beginPath(); c.arc(0,0,R*0.5,0.3,Math.PI*1.6); c.stroke(); c.beginPath(); c.moveTo(0,-R*0.5); c.lineTo(0,R*0.55); c.moveTo(-R*0.4,R*0.15); c.quadraticCurveTo(0,-R*0.05,R*0.45,R*0.3); c.stroke(); c.restore(); }   // the yellow sign
-      atImpact(t,900,0.4,0.1); }},
-  /* Yog-Sothoth's Gate Open: a glowing door opens behind the target, pulls it through, slams, and spits it back out dazed */
-  sg_gateopen:{C:1150,D:1800,
-    atk:t=>({pose:t<1350?"cast":"idle",arc:t<1350?-8*Math.sin(Math.min(1,t/300)*Math.PI/2):0}),
-    def(t){ if(t<500||t>1500) return null; if(t<800){ const k=ei((t-500)/300); return {sx:1-0.6*k,sy:1-0.3*k,alpha:1-0.9*k,off:[-12*k,0],pose:"hurt"}; } if(t<1150) return {alpha:0,pose:"hurt"}; const k=(t-1150)/350; return {alpha:Math.min(1,k*3),sx:0.6+0.4*eo(k),off:[20*(1-k),0],rot:0.5*(1-k),pose:"hurt"}; },
-    fx(c,t,x){ const tg=x.target, R=tg.r, d=atDir(x); if(t<150||t>1650) return; const gx=tg.x+d*R*0.4, gy=tg.foot, h=R*2.6, w=R*1.3, open=t<500?eo((t-150)/350):t<900?1:t<1100?1-eio((t-900)/200):t<1300?eo((t-1100)/200):1-eio(Math.min(1,(t-1450)/200)), fade=t<1450?1:1-(t-1450)/200;
-      c.save(); c.globalAlpha*=fade; c.strokeStyle="#ffe7a0"; c.lineWidth=4; c.shadowColor="#c9a0ff"; c.shadowBlur=14; c.strokeRect(gx-w/2,gy-h,w,h);
-      const g=c.createLinearGradient(gx,gy-h,gx,gy); g.addColorStop(0,"rgba(200,160,255,.9)"); g.addColorStop(1,"rgba(255,240,200,.9)"); c.fillStyle=g; c.fillRect(gx-w/2*open,gy-h,w*open,h);
-      c.shadowBlur=0; for(let i=0;i<3;i++){ const q=((t/400)+i/3)%1; atGlowA(c,gx+(i-1)*w*0.2,gy-h*(0.2+q*0.7),R*0.12,[255,250,220],open*(1-q)); }
-      c.fillStyle="#6b4fa0"; c.fillRect(gx-w/2-4,gy-h-6,w+8,6); c.restore(); atImpact(t,800,0.3,0.15); atImpact(t,1150,0.5,0.1); }},
-  /* Yog-Sothoth's Globe Storm: the glowing globes that orbit it fly out one after another and crash into the target */
-  sg_globestorm:{C:500,D:1600,
-    atk:t=>({pose:t<1200?"cast":"idle",off:[t<1200?Math.sin(t/30):0,0]}),
-    def(t){ if(t<500||t>1250) return null; const p=((t-500)%125)/125; return {off:[(1-p)*6,0],pose:"hurt",flash:p<0.3?2:0}; },
-    fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, cols=[[255,140,200],[200,220,255],[255,240,160],[190,150,255],[150,240,230],[255,170,140]];
-      for(let i=0;i<6;i++){ const t0=200+i*125, k=(t-t0)/300; const orb=t<t0; if(orb&&t<1250){ const an=t/400+i*1.05; atGlowA(c,s.x+Math.cos(an)*s.r*1.3,s.y-s.r*0.6+Math.sin(an)*s.r*0.5,s.r*0.25,cols[i],0.9); continue; }
-        if(k<0||k>1.4) continue; if(k<=1){ const px=s.x+(tg.x-s.x)*ei(k), py=s.y-s.r*0.6+(tg.y-R*0.3-(s.y-s.r*0.6))*ei(k)-Math.sin(k*Math.PI)*R*1.2*(i%2?1:-0.6); atGlowA(c,px,py,R*0.32,cols[i],0.95); atGlowA(c,px,py,R*0.12,[255,255,255],1); }
-        else { const q=(k-1)/0.4; SG.ring(c,tg.x,tg.y-R*0.3,R*(0.3+0.9*q),R*(0.3+0.9*q),cols[i],3,1-q); } }
-      for(let i=0;i<6;i++) atImpact(t,500+i*125,0.18,0.03); }},
-  /* Cthulhu's Dream Call: the arena dims, a vast shadow of its own head rises behind the target, its eyes open, and the dread lands */
-  sg_dreamcall:{C:1000,D:1800,
-    atk:t=>({pose:atPose(t<1400?"cast":"idle",{eyes:t<900?"shut":undefined}),arc:t<1400?-6*Math.sin(t/250):0}),
-    def:t=>t>=1000&&t<1600?{off:[Math.sin(t/14)*2,0],pose:"hurt",sy:0.95}:null,
-    fx(c,t,x){ const tg=x.target, R=tg.r, W=x.W||1000, H=x.H||800; if(t<150||t>1750) return; const dim=t<500?(t-150)/350:t<1400?1:1-(t-1400)/350, rise=t<900?eio(Math.max(0,(t-300)/600)):1;
-      c.save(); c.fillStyle=`rgba(10,6,24,${0.45*dim})`; c.fillRect(0,0,W,H);
-      const hx=tg.x, hy=tg.foot-R*(1+3.2*rise), hr=R*2.1; c.globalAlpha*=dim*0.85; c.fillStyle="rgba(30,20,60,.95)"; c.beginPath(); c.ellipse(hx,hy,hr*0.9,hr*1.1,0,0,7); c.fill();
-      c.strokeStyle="rgba(30,20,60,.95)"; c.lineCap="round"; for(let i=0;i<6;i++){ const sx=hx+(i-2.5)*hr*0.28; c.lineWidth=hr*0.16*(1-Math.abs(i-2.5)*0.12); c.beginPath(); c.moveTo(sx,hy+hr*0.6); c.quadraticCurveTo(sx+Math.sin(t/200+i)*hr*0.3,hy+hr*1.4,sx+Math.sin(t/150+i)*hr*0.2,hy+hr*2.1); c.stroke(); }
-      if(t>900){ const e=Math.min(1,(t-900)/150); for(const sd of [-1,1]) atGlowA(c,hx+sd*hr*0.32,hy-hr*0.1,hr*0.22*e,[255,60,80],1); }
-      c.restore(); atImpact(t,1000,0.5,0.12); }},
-  /* Cthulhu's Sunken Rise: the ground floods, it rises high out of the water and comes down claws first on the target in a huge splash */
-  sg_sunkenrise:{C:1050,D:1800,
-    atk:t=>{ if(t<350){ const k=eo(t/350); return {sy:1-0.12*k,sx:1+0.06*k,arc:10*k,pose:"crouch",alpha:1-0.3*k}; } if(t<800){ const k=eo((t-350)/450); return {f:0.4*k,arc:10-150*k,pose:"slamup",alpha:0.7+0.3*k}; }
-      if(t<1050){ const k=ei((t-800)/250); return {f:0.4+0.38*k,arc:-140+140*k,pose:"slam"}; } if(t<1250) return {f:0.78,pose:"slam",sy:0.9}; const k=(t-1250)/550; return {f:0.78*(1-eio(k)),arc:-30*Math.sin(Math.min(1,k)*Math.PI),pose:"idle"}; },
-    def:t=>SG.knock(t,1050,1,50,600),
-    fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r; if(t<1600){ const a=t<200?t/200:t<1300?1:1-(t-1300)/300; c.save(); c.globalAlpha*=a*0.6; c.fillStyle="#2a6ab0"; c.beginPath(); c.ellipse((s.x+tg.x)/2,Math.max(s.foot,tg.foot)+2,Math.abs(tg.x-s.x)*0.9+R*1.5,R*0.35,0,0,7); c.fill(); c.restore();
-        for(let i=0;i<4;i++){ const ph=((t/600)+i/4)%1; SG.ring(c,(s.x+tg.x)/2,Math.max(s.foot,tg.foot)+2,Math.abs(tg.x-s.x)*0.5*ph+R,R*0.25*ph+3,[200,235,255],2,0.7*(1-ph)*a); } }
-      if(t>=350&&t<800){ const k=(t-350)/450; for(let i=0;i<8;i++){ const ph=(k+i/8)%1; c.fillStyle=`rgba(170,220,255,${1-ph})`; c.beginPath(); c.arc(s.x+(i-3.5)*s.r*0.25,s.foot-ph*s.r*2.5,s.r*0.07,0,7); c.fill(); } }
-      if(t>=1050&&t<1600){ const k=(t-1050)/550; for(let i=0;i<16;i++){ const a=-Math.PI*(0.08+0.84*atH(i*5)), sp=R*(0.6+2.6*eo(k)); c.fillStyle=`rgba(170,225,255,${0.9*(1-k)})`; c.beginPath(); c.arc(tg.x+Math.cos(a)*sp,tg.foot+Math.sin(a)*sp+k*k*R*2.4,R*0.1,0,7); c.fill(); } for(const sd of [-1,1]){ c.strokeStyle=`rgba(255,255,255,${1-k})`; c.lineWidth=3; for(let j=0;j<3;j++){ c.beginPath(); c.moveTo(tg.x+sd*R*(0.2+j*0.2),tg.y-R*0.9); c.lineTo(tg.x+sd*R*(0.05+j*0.2),tg.y+R*0.1); c.stroke(); } } }
-      atImpact(t,1050,0.8,0.15); }}
+      if(t>820&&t<1350){ const k=(t-820)/530; SG.ring(c,tg.x,tg.y-R*0.3,R*(0.5+k),R*(0.4+0.8*k),[160,60,200],4,0.8*(1-k)); } c.restore(); atImpact(t,820,0.35,0.1); }}
 });
+/* Gid's notes on the horror preview (17 Nov 2026): Tidal Grasp is a clawed hand of water that closes round the target, Fisher's Song brings a real
+   tsunami, Kid Stampede has more and better kids, Black Grove has thorny trees and spikes, Shoggoth devours the target and spits it out, Hastur's
+   curtains are its own colour and its cloak rags are torn cloth, and Yog and Cthulhu get more detail all round. These replace the first versions. */
+const HRC=(col,k)=>col.map(v=>Math.max(0,Math.min(255,Math.round(v*k))));
+const HRL=(col,a)=>col.map(v=>Math.round(v+(255-v)*a));
+// a tapered limb along a list of points: outline, body and a light streak, each pass over the whole limb so joints don't show
+HR.limb=(c,pts,w0,w1,col,edge,hi)=>{ c.lineCap="round"; c.lineJoin="round"; for(let pass=0;pass<3;pass++) for(let i=0;i<pts.length-1;i++){ const u=i/Math.max(1,pts.length-2), w=w0+(w1-w0)*u;
+  c.strokeStyle=pass===0?edge:pass===1?col:hi; c.lineWidth=pass===0?w+3:pass===1?w:Math.max(1,w*0.2); const o=pass===2?-w*0.2:0; c.beginPath(); c.moveTo(pts[i][0]+o,pts[i][1]+o*0.6); c.lineTo(pts[i+1][0]+o,pts[i+1][1]+o*0.6); c.stroke(); } };
+HR.smooth=pts=>{ let P=pts; for(let r=0;r<2;r++){ const Q=[P[0]]; for(let i=0;i<P.length-1;i++){ const a=P[i], b=P[i+1]; Q.push([a[0]*0.75+b[0]*0.25,a[1]*0.75+b[1]*0.25],[a[0]*0.25+b[0]*0.75,a[1]*0.25+b[1]*0.75]); } Q.push(P[P.length-1]); P=Q; } return P; };
+HR.claw=(c,p,q,L,fill,edge)=>{ const dx=q[0]-p[0], dy=q[1]-p[1], n=Math.hypot(dx,dy)||1, ux=dx/n, uy=dy/n, px=-uy, py=ux;
+  c.fillStyle=fill; c.strokeStyle=edge; c.lineWidth=1.5; c.beginPath(); c.moveTo(q[0]+px*L*0.3,q[1]+py*L*0.3); c.quadraticCurveTo(q[0]+ux*L*0.7+px*L*0.35,q[1]+uy*L*0.7+py*L*0.35,q[0]+ux*L+px*L*0.12,q[1]+uy*L+py*L*0.12);
+  c.quadraticCurveTo(q[0]+ux*L*0.45,q[1]+uy*L*0.45,q[0]-px*L*0.3,q[1]-py*L*0.3); c.closePath(); c.fill(); c.stroke(); };
+HR.drop=(c,x,y,r,col,a)=>{ if(a<=0) return; c.fillStyle=atRgba(col,a); c.beginPath(); c.moveTo(x,y-r*1.8); c.quadraticCurveTo(x+r,y-r*0.2,x,y+r); c.quadraticCurveTo(x-r,y-r*0.2,x,y-r*1.8); c.fill(); };
+HR.splash=(c,x,y,R,k,n,col)=>{ if(k<0||k>1) return; for(let i=0;i<n;i++){ const a=-Math.PI*(0.06+0.88*atH(i*7+3)), v=R*(0.8+2.4*atH(i*5+1)); HR.drop(c,x+Math.cos(a)*v*eo(k),y+Math.sin(a)*v*eo(k)+k*k*R*2.6,R*(0.07+0.05*atH(i)),i%3?col:[240,250,255],0.95*(1-k)); }
+  SG.ring(c,x,y,R*(0.6+2*k),R*(0.15+0.45*k),[230,248,255],3,0.8*(1-k)); };
+// a sphere with a light side, a dark rim and a shine; Yog's globes from Byte have an eye in them
+HR.globe=(c,x,y,r,col,eye,look=0,a=1)=>{ if(r<=0.5||a<=0) return; c.save(); c.globalAlpha*=a; const g=c.createRadialGradient(x-r*0.35,y-r*0.4,r*0.1,x,y,r); g.addColorStop(0,atRgba(HRL(col,0.75),1)); g.addColorStop(0.55,atRgba(col,1)); g.addColorStop(1,atRgba(HRC(col,0.45),1));
+  c.fillStyle=g; c.beginPath(); c.arc(x,y,r,0,7); c.fill(); c.strokeStyle=atRgba(HRC(col,0.35),0.8); c.lineWidth=1.2; c.stroke();
+  if(eye){ c.fillStyle="#fffdf6"; c.beginPath(); c.ellipse(x+look*r*0.15,y,r*0.55,r*0.42,0,0,7); c.fill(); c.fillStyle=atRgba(HRC(col,0.7),1); c.beginPath(); c.arc(x+look*r*0.3,y,r*0.28,0,7); c.fill(); c.fillStyle="#140a1c"; c.beginPath(); c.arc(x+look*r*0.3,y,r*0.13,0,7); c.fill(); }
+  c.fillStyle="rgba(255,255,255,.75)"; c.beginPath(); c.ellipse(x-r*0.38,y-r*0.45,r*0.22,r*0.13,-0.6,0,7); c.fill(); c.restore(); };
+
+/* ---- Dagon's Tidal Grasp: a pool opens under the target, a clawed hand of seawater rises out of it behind the target with its fingers spread,
+   closes round it from the top, lifts and squeezes it, then bursts back into water and drops it. The palm and arm are drawn behind the target
+   and the fingers in front once they start to close. */
+const TG={ lift:t=>t<560?0:t<940?-62*eio((t-560)/380):t<1200?-62:t<1380?-62*(1-ei((t-1200)/180)):0,
+  curl:t=>t<560?0:t<940?eio((t-560)/380):t<1200?1+0.05*Math.sin((t-940)/28):1-0.5*Math.min(1,(t-1200)/200),
+  rise:t=>t<240?0:t<560?eo((t-240)/320):1, melt:t=>t<1200?0:Math.min(1,(t-1200)/260),
+  WATER:{fill:"rgba(86,172,238,.92)",edge:"rgba(22,86,166,.95)",hi:"rgba(232,250,255,.85)"},
+  geo(t,x){ const tg=x.target, R=tg.r*1.6, lift=TG.lift(t), ground=tg.foot-lift, drop=(1-TG.rise(t))*R*3.8+TG.melt(t)*R*1.6, cx=tg.x, py=tg.foot-tg.r*0.85+drop, curl=TG.curl(t), sd=x.self&&x.self.x<tg.x?-1:1;
+    const fingers=[[-0.62,-0.34,1.15],[-0.21,-0.11,1.3],[0.21,0.11,1.25],[0.62,0.3,1.05]].map(([bx,sp,L],i)=>{ let X=cx+bx*R, Y=py-R*0.7; const pts=[[X,Y]], seg=[0.4,0.35,0.25], bend=[1.45,1.2,0.45]; let th=0;
+      for(let j=0;j<3;j++){ th+=curl*bend[j]; const len=L*R*seg[j]*(1+0.1*(1-curl)); X+=Math.sin(sp)*len*(1-curl*0.75)-bx*R*0.22*curl*(j?0.5:0.15)+Math.sin(t/130+i+j)*R*0.02*(1-curl); Y+=-Math.cos(th)*len; pts.push([X,Y]); } return pts; });
+    const ta=-0.85-curl*2.45, tb=ta-0.55*curl, t0=[cx+sd*R*0.86,py-R*0.05], t1=[t0[0]+sd*Math.cos(ta)*R*0.5,t0[1]+Math.sin(ta)*R*0.5], t2=[t1[0]+sd*Math.cos(tb)*R*0.42,t1[1]+Math.sin(tb)*R*0.42];
+    return {R,TR:tg.r,ground,cx,py,curl,fingers,thumb:[t0,t1,t2],a:1-TG.melt(t)}; },
+  hand(c,g,t,front){ const {R,cx,py,fingers,thumb}=g, W=TG.WATER;
+    for(let i=0;i<3;i++){ const A=fingers[i], B=fingers[i+1]; c.fillStyle="rgba(110,195,245,.5)"; c.beginPath(); c.moveTo(A[0][0],A[0][1]); c.lineTo(A[1][0],A[1][1]); c.quadraticCurveTo((A[1][0]+B[1][0])/2,(A[1][1]+B[1][1])/2+R*0.12,B[1][0],B[1][1]); c.lineTo(B[0][0],B[0][1]); c.closePath(); c.fill(); }
+    for(const f of [...fingers,thumb]){ HR.limb(c,HR.smooth(f),R*0.34,R*0.2,W.fill,W.edge,W.hi);
+      c.strokeStyle="rgba(235,252,255,.45)"; c.lineWidth=1.2; c.beginPath(); f.forEach((p,j)=>{ const o=Math.sin(t/60+j*2)*R*0.05; j?c.lineTo(p[0]+o,p[1]+R*0.06):c.moveTo(p[0]+o,p[1]+R*0.06); }); c.stroke(); for(let j=1;j<f.length-1;j++){ c.strokeStyle="rgba(230,250,255,.5)"; c.lineWidth=1.2; c.beginPath(); c.arc(f[j][0],f[j][1],R*0.09,0.6,2.4); c.stroke(); }
+      HR.claw(c,f[f.length-2],f[f.length-1],R*0.28,"#f2fcff","rgba(30,100,170,.95)"); }
+    if(front) for(let i=0;i<5;i++){ const f=i<4?fingers[i]:thumb, tip=f[f.length-1], q=((t/380)+i*0.37)%1; HR.drop(c,tip[0],tip[1]+q*R*1.2,R*0.06,[150,215,250],0.85*(1-q)); } },
+  arm(c,g,t){ const {R,ground,cx,py}=g, top=py+R*0.35; c.save(); const gr=c.createLinearGradient(0,py-R,0,ground); gr.addColorStop(0,"rgba(150,220,252,.94)"); gr.addColorStop(0.5,"rgba(64,150,226,.92)"); gr.addColorStop(1,"rgba(24,86,170,.95)"); c.fillStyle=gr;
+    c.beginPath(); c.moveTo(cx-R*0.6,top); for(let i=0;i<=10;i++){ const y=top+(ground-top)*i/10; c.lineTo(cx-R*(0.6+0.22*i/10)+Math.sin(i*1.3+t/90)*R*0.05,y); } c.lineTo(cx+R*0.82,ground); for(let i=10;i>=0;i--){ const y=top+(ground-top)*i/10; c.lineTo(cx+R*(0.6+0.22*i/10)+Math.sin(i*1.1-t/80)*R*0.05,y); } c.closePath(); c.fill();
+    c.beginPath(); c.ellipse(cx,py,R*1.0,R*0.84,0,0,7); c.fill(); c.strokeStyle="rgba(225,247,255,.9)"; c.lineWidth=2; c.stroke();
+    c.strokeStyle="rgba(230,250,255,.55)"; c.lineWidth=2; for(let i=0;i<3;i++){ c.beginPath(); c.arc(cx-R*0.15+i*R*0.12,py+R*0.05,R*(0.35+i*0.15),3.6,4.6); c.stroke(); }   // palm lines
+    for(let i=0;i<7;i++){ const q=((t/700)+i/7)%1; c.strokeStyle=`rgba(235,250,255,${0.7*(1-q)})`; c.lineWidth=1.3; c.beginPath(); c.arc(cx+Math.sin(i*2.1)*R*0.45,ground-(ground-py+R*0.5)*q,R*(0.04+0.03*(i%3)),0,7); c.stroke(); }   // bubbles rising inside
+    c.restore(); },
+  pool(c,x,t){ const tg=x.target, R=tg.r, ground=tg.foot-TG.lift(t), grow=Math.min(1,Math.max(0,(t-150)/250)), a=t<1400?1:Math.max(0,1-(t-1400)/250); if(grow<=0||a<=0) return;
+    c.save(); c.globalAlpha*=a; const g=c.createRadialGradient(tg.x,ground,R*0.2,tg.x,ground,R*2*grow); g.addColorStop(0,"rgba(20,70,150,.85)"); g.addColorStop(0.7,"rgba(50,130,210,.7)"); g.addColorStop(1,"rgba(120,200,245,0)"); c.fillStyle=g; c.beginPath(); c.ellipse(tg.x,ground,R*2*grow,R*0.42*grow,0,0,7); c.fill();
+    for(let i=0;i<3;i++){ const q=((t/600)+i/3)%1; SG.ring(c,tg.x,ground,R*(0.6+1.4*q)*grow,R*(0.13+0.28*q)*grow,[220,245,255],2,0.7*(1-q)); } c.restore(); } };
+const sgTidalGrasp={C:940,D:1750,sig:true,
+  atk:t=>({pose:t<300?"cast":t<1200?"push":"idle",sy:t<300?1-0.08*eo(t/300):1,arc:t>=560&&t<1200?-8*Math.sin((t-560)/640*Math.PI):0}),
+  def(t){ if(t<560||t>1550) return null; const lift=TG.lift(t); if(t<940) return {arc:lift,sx:1-0.1*eio((t-560)/380),pose:"hurt"}; if(t<1200) return {arc:lift,sx:0.86+0.03*Math.sin(t/25),sy:1.04,pose:"hurt"};
+    return {arc:lift,sy:t>1380&&t<1450?0.8:1,pose:"hurt"}; },
+  back(c,t,x){ if(t<150||t>1650) return; TG.pool(c,x,t); if(t<260) return; const g=TG.geo(t,x); c.save(); c.globalAlpha*=g.a; c.beginPath(); c.rect(g.cx-g.R*8,g.ground-g.R*12,g.R*16,g.R*12+1); c.clip();
+    TG.arm(c,g,t); if(g.curl<0.35) TG.hand(c,g,t,false); c.restore(); },
+  fx(c,t,x){ const tg=x.target, R=tg.r; if(t<260||t>1700) return; const g=TG.geo(t,x);
+    if(g.curl>=0.35&&g.a>0){ c.save(); c.globalAlpha*=g.a; c.beginPath(); c.rect(g.cx-R*8,g.ground-R*12,R*16,R*12+1); c.clip(); TG.hand(c,g,t,true); c.restore(); }
+    else if(t<560) for(let i=0;i<4;i++){ const tip=g.fingers[i][3], q=((t/300)+i*0.4)%1; HR.drop(c,tip[0],tip[1]+q*R,R*0.06,[150,215,250],0.8*(1-q)); }
+    if(t>=940&&t<1200){ const k=(t-940)/260; for(let i=0;i<10;i++){ const a=i/10*Math.PI*2, v=R*(0.9+1.3*eo(k)); HR.drop(c,tg.x+Math.cos(a)*v,tg.y-R*0.1+Math.sin(a)*v*0.8+k*k*R,R*0.07,[160,220,252],0.9*(1-k)); } }
+    HR.splash(c,tg.x,g.ground,R,(t-1200)/400,14,[120,200,245]); HR.splash(c,tg.x,g.ground,R*0.8,(t-1380)/350,10,[150,215,250]);
+    atImpact(t,940,0.5,0.1); atImpact(t,1380,0.4,0); }};
+
+/* ---- Dagon's Fisher's Song: it sings, the notes drift out over the arena, water spreads across the floor, and a great curling wave full of fish
+   rises between them, rolls forward, pitches over and crashes down on the target, leaving whitewater and foam as it drains away. */
+function hrWave(c,o){ const {back,front,ground,H,pitch,dir,t,R}=o; if(H<2) return; const crestX=front-dir*R*(0.55-0.25*pitch), crestY=ground-H, lipX=front+dir*R*(0.35+1.15*pitch), lipY=ground-H*(1-pitch*0.82)+R*0.15;
+  const path=()=>{ c.beginPath(); c.moveTo(back,ground); for(let j=0;j<=16;j++){ const f=j/16; c.lineTo(back+(crestX-back)*f,ground-H*(0.1+0.9*Math.pow(f,1.7))+Math.sin(f*11+t/90)*R*0.05*f); }
+    c.quadraticCurveTo(crestX+dir*R*0.9,crestY-R*0.4,lipX,lipY); c.quadraticCurveTo(front+dir*R*0.35,lipY-R*0.25,front-dir*R*0.1,ground-H*0.5); c.quadraticCurveTo(front-dir*R*0.2,ground-H*0.15,front+dir*R*0.3,ground); c.closePath(); };
+  c.save(); path(); const g=c.createLinearGradient(0,ground-H,0,ground); g.addColorStop(0,"#9be6f4"); g.addColorStop(0.25,"#46a8de"); g.addColorStop(0.65,"#1d64b4"); g.addColorStop(1,"#0f3a7c"); c.fillStyle=g; c.fill(); c.clip();
+  const lg=c.createLinearGradient(crestX-dir*R*1.5,0,lipX,0); lg.addColorStop(0,"rgba(120,235,230,0)"); lg.addColorStop(1,"rgba(150,245,235,.65)"); c.fillStyle=lg; c.fillRect(Math.min(back,lipX)-R,ground-H-R,Math.abs(lipX-back)+R*3,H*0.55);   // light through the lip
+  c.fillStyle="rgba(8,30,80,.45)"; c.beginPath(); c.ellipse(front+dir*R*0.15,ground-H*0.48,R*0.45+R*0.4*pitch,H*0.28,0,0,7); c.fill();   // the dark inside of the curl
+  c.strokeStyle="rgba(210,245,255,.35)"; c.lineWidth=2; for(let i=0;i<9;i++){ const xx=back+(front-back)*(0.25+i*0.08), sh=Math.sin(i*2.3+t/120)*R*0.1; c.beginPath(); c.moveTo(xx,ground-H*0.15); c.quadraticCurveTo(xx+sh,ground-H*0.45,xx-dir*R*0.15,ground-H*(0.7+0.05*(i%3))); c.stroke(); }
+  for(let i=0;i<5;i++){ const fx=back+(front-back)*(0.3+0.13*i)+Math.sin(t/200+i)*R*0.2, fy=ground-H*(0.25+0.11*((i*3)%5))+Math.sin(t/150+i*2)*R*0.08, z=R*(0.16+0.05*(i%2)); c.save(); c.translate(fx,fy); c.scale(dir,1); c.rotate(-0.25+0.1*Math.sin(t/90+i));
+    c.fillStyle="rgba(12,40,90,.55)"; c.beginPath(); c.ellipse(0,0,z,z*0.42,0,0,7); c.fill(); c.beginPath(); c.moveTo(-z*0.8,0); c.lineTo(-z*1.45,-z*0.4); c.lineTo(-z*1.45,z*0.4); c.closePath(); c.fill(); c.fillStyle="rgba(200,240,255,.6)"; c.beginPath(); c.arc(z*0.5,-z*0.1,z*0.09,0,7); c.fill(); c.restore(); }   // fish carried in the wave
+  for(let i=0;i<10;i++){ const q=((t/900)+i/10)%1; c.strokeStyle=`rgba(230,250,255,${0.6*(1-q)})`; c.lineWidth=1.2; c.beginPath(); c.arc(back+(front-back)*(0.2+0.7*atH(i*3)),ground-H*0.9*q,R*(0.03+0.03*(i%3)),0,7); c.stroke(); }
+  c.restore();
+  c.save(); c.strokeStyle="rgba(255,255,255,.95)"; c.lineWidth=R*0.16; c.lineCap="round"; c.beginPath(); c.moveTo(back+(crestX-back)*0.55,ground-H*(0.1+0.9*Math.pow(0.55,1.7))); for(let j=12;j<=16;j++){ const f=j/16; c.lineTo(back+(crestX-back)*f,ground-H*(0.1+0.9*Math.pow(f,1.7))); }
+  c.quadraticCurveTo(crestX+dir*R*0.9,crestY-R*0.4,lipX,lipY); c.stroke();
+  c.fillStyle="#ffffff"; for(let i=0;i<14;i++){ const u=i/13, bx=crestX+(lipX-crestX)*u+dir*Math.sin(u*Math.PI)*R*0.45, by=crestY+(lipY-crestY)*u-Math.sin(u*Math.PI)*R*0.3; c.beginPath(); c.arc(bx+Math.sin(t/70+i)*R*0.04,by,R*(0.09+0.06*atH(i)),0,7); c.fill(); }
+  for(let i=0;i<18;i++){ const q=((t/500)+i*0.13)%1, sx=crestX+(lipX-crestX)*atH(i)-dir*q*R*1.6, sy=crestY-R*0.2-q*R*0.9+q*q*R*1.4; c.fillStyle=`rgba(240,252,255,${0.85*(1-q)})`; c.beginPath(); c.arc(sx,sy,R*(0.04+0.04*atH(i*2))*(1-q*0.4),0,7); c.fill(); }   // spray blown off the crest
+  for(let i=0;i<22;i++){ const u=atH(i*5+2), xx=back+(front+dir*R*0.4-back)*u, z=R*(0.08+0.12*atH(i*3)); c.fillStyle=`rgba(250,255,255,${0.55+0.4*atH(i*9)})`; c.beginPath(); c.ellipse(xx+Math.sin(t/110+i)*R*0.05,ground-z*0.5,z*1.6,z*0.7,0,0,7); c.fill(); } c.restore(); }
+const sgFishersSong={C:1000,D:1900,sig:true,
+  atk:t=>({pose:atPose(t<1300?"cast":"idle",{open:t<850?0.6+0.25*Math.sin(t/60):0,eyes:t<850?"shut":undefined}),arc:t<850?-5*Math.sin(t/200):0}),
+  def:t=>{ if(t<1000||t>1700) return null; const k=(t-1000)/700; return {off:[30*Math.sin(Math.min(1,k*1.6)*Math.PI/2)*(1-k),0],arc:-34*Math.sin(Math.min(1,k*1.5)*Math.PI),rot:0.9*Math.sin(Math.min(1,k*1.5)*Math.PI),pose:"hurt"}; },
+  fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, d=atDir(x), ground=Math.max(s.foot,tg.foot);
+    if(t<900) for(let i=0;i<7;i++){ const q=((t/800)+i/7)%1, px=s.x+d*R*(0.4+q*2.6), py=s.y-s.r*1.1-q*R*1.4+Math.sin(q*9+i)*8, a=Math.min(1,(1-q)*2)*(t<700?1:(900-t)/200); c.fillStyle=`rgba(210,240,255,${a})`; c.strokeStyle=`rgba(40,90,150,${a*0.6})`; c.lineWidth=1;
+      c.beginPath(); c.ellipse(px,py,5.5,4,-0.4,0,7); c.fill(); c.stroke(); c.fillRect(px+4,py-15,2,15); if(i%2){ c.beginPath(); c.moveTo(px+6,py-15); c.quadraticCurveTo(px+12,py-11,px+10,py-5); c.lineWidth=2; c.strokeStyle=`rgba(210,240,255,${a})`; c.stroke(); } }
+    const sheet=t<350?0:t<1500?Math.min(1,(t-350)/300):Math.max(0,1-(t-1500)/350); if(sheet>0){ const L=Math.min(s.x,tg.x)-R*1.6, Rr=Math.max(s.x,tg.x)+R*1.6; c.save(); c.globalAlpha*=sheet*0.7; const g=c.createLinearGradient(0,ground-R*0.3,0,ground+R*0.3); g.addColorStop(0,"#7fd0f2"); g.addColorStop(1,"#2a6ab0");
+      c.fillStyle=g; c.beginPath(); c.ellipse((L+Rr)/2,ground+2,(Rr-L)/2,R*0.32,0,0,7); c.fill(); c.strokeStyle="rgba(240,252,255,.7)"; c.lineWidth=1.5; for(let i=0;i<5;i++){ const xx=L+(Rr-L)*(0.1+0.2*i)+Math.sin(t/200+i)*R*0.3; c.beginPath(); c.moveTo(xx-R*0.3,ground+R*0.05*(i%3)); c.lineTo(xx+R*0.3,ground+R*0.05*(i%3)); c.stroke(); } c.restore(); }
+    if(t>=450&&t<1060){ const k=Math.min(1,(t-450)/550), H=R*4.2*eo(Math.min(1,(t-450)/350)), pitch=t<780?0:eio(Math.min(1,(t-780)/220)), front=s.x+d*R*1.3+(tg.x-d*R*1.1-(s.x+d*R*1.3))*eio(k), back=front-d*Math.min(R*3.2,Math.abs(front-(s.x+d*R*0.3)));
+      hrWave(c,{back,front,ground,H:H*(t<1000?1:1-(t-1000)/60),pitch,dir:d,t,R}); if(typeof AT!=="undefined"&&AT) AT.trauma=Math.max(AT.trauma||0,0.12*k); }
+    if(t>=1000&&t<1500){ const k=(t-1000)/500; c.save(); for(let i=0;i<16;i++){ const a=atH(i*3)*Math.PI*2, rr=R*(0.4+1.2*atH(i*7))*(0.6+0.6*eo(k)), px=tg.x+d*R*0.3*k+Math.cos(a)*rr, py=tg.y-R*0.2+Math.sin(a)*rr*0.7+k*k*R*1.2;
+        c.fillStyle=`rgba(${i%3?"235,248,255":"150,215,248"},${0.95*(1-k)})`; c.beginPath(); c.arc(px,py,R*(0.35+0.25*atH(i))*(1-k*0.5),0,7); c.fill(); } c.restore(); HR.splash(c,tg.x,ground,R*1.3,k,20,[110,195,245]); }
+    if(t>=1300&&t<1850){ const k=(t-1300)/550; c.strokeStyle=`rgba(255,255,255,${0.8*(1-k)})`; c.lineWidth=2; for(let i=0;i<4;i++){ c.beginPath(); c.ellipse(tg.x+d*R*(0.5+i*0.4)*k,ground+2,R*(1+i*0.5),R*(0.12+i*0.05),0,Math.PI*0.05,Math.PI*0.95); c.stroke(); }
+      for(let i=0;i<6;i++){ const q=(k*1.4+i/6)%1; HR.drop(c,tg.x+(i-2.5)*R*0.28,tg.y-R*0.6+q*R*1.1,R*0.05,[150,210,245],0.8*(1-q)*(1-k)); } }
+    atImpact(t,1000,0.7,0.12); }};
+
+/* ---- Shub-Niggurath's Kid Stampede: nine of her little black kids burst out of the woods behind her in two rows and gallop through the target.
+   Each kid has a woolly coat, curled horn nubs, floppy ears, a pale muzzle, a goat's yellow eye and hooves; some have a little feeler on their back. */
+HR.kid=(c,x,y,z,ph,col,feeler)=>{ c.save(); c.translate(x,y); const bob=Math.abs(Math.sin(ph))*z*0.16; c.translate(0,-bob); c.rotate(Math.sin(ph)*0.07);
+  const dark=atRgba(HRC(col,0.62),1), mid=atRgba(col,1), light=atRgba(HRL(col,0.28),1);
+  const leg=(lx,a,near)=>{ const fx=lx+Math.sin(a)*z*0.16, fy=z*0.42+bob*0.6-Math.max(0,Math.cos(a))*z*0.06; c.strokeStyle=near?mid:dark; c.lineWidth=z*0.14; c.lineCap="round"; c.beginPath(); c.moveTo(lx,z*0.12); c.lineTo(fx,fy); c.stroke();
+    c.fillStyle="#2a1c16"; c.beginPath(); c.ellipse(fx,fy+z*0.03,z*0.08,z*0.055,0,0,7); c.fill(); };
+  leg(-z*0.28,ph+Math.PI,false); leg(z*0.2,ph,false);
+  c.strokeStyle=mid; c.lineWidth=z*0.1; c.lineCap="round"; c.beginPath(); c.moveTo(-z*0.42,-z*0.12); c.quadraticCurveTo(-z*0.58,-z*0.28,-z*0.5,-z*0.38-Math.sin(ph*2)*z*0.05); c.stroke();
+  if(feeler){ c.strokeStyle=dark; c.lineWidth=z*0.07; c.beginPath(); c.moveTo(-z*0.12,-z*0.3); c.quadraticCurveTo(-z*0.3+Math.sin(ph*1.5)*z*0.12,-z*0.55,-z*0.12+Math.sin(ph)*z*0.1,-z*0.72); c.stroke(); c.fillStyle=dark; c.beginPath(); c.arc(-z*0.12+Math.sin(ph)*z*0.1,-z*0.74,z*0.05,0,7); c.fill(); }
+  c.fillStyle=mid; c.beginPath(); c.ellipse(-z*0.04,0,z*0.47,z*0.34,0,0,7); c.fill();
+  for(let i=0;i<9;i++){ const an=Math.PI*(1.05+0.9*i/8); c.beginPath(); c.arc(-z*0.04+Math.cos(an)*z*0.44,Math.sin(an)*z*0.31,z*0.12,0,7); c.fill(); }   // woolly bumps along the back
+  c.strokeStyle=light; c.lineWidth=z*0.045; c.beginPath(); c.ellipse(-z*0.06,-z*0.02,z*0.32,z*0.2,0,Math.PI*1.15,Math.PI*1.75); c.stroke();
+  leg(-z*0.14,ph,true); leg(z*0.32,ph+Math.PI,true);
+  const hx=z*0.42, hy=-z*0.3; c.fillStyle=dark; c.beginPath(); c.ellipse(hx-z*0.24,hy+z*0.12,z*0.08,z*0.2,0.5+Math.sin(ph)*0.2,0,7); c.fill();   // floppy ear, hanging behind the head
+  c.fillStyle=mid; c.beginPath(); c.arc(hx,hy,z*0.3,0,7); c.fill();
+  c.strokeStyle="#efe2c8"; c.lineWidth=z*0.065; c.lineCap="round"; for(const ox of [-0.12,0.06]){ c.beginPath(); c.arc(hx+ox*z,hy-z*0.3,z*0.08,Math.PI*0.95,Math.PI*1.95); c.stroke(); }   // curled horn nubs
+  c.fillStyle="#8a7a86"; c.beginPath(); c.ellipse(hx+z*0.24,hy+z*0.1,z*0.15,z*0.12,0.15,0,7); c.fill(); c.fillStyle="#3a2a32"; c.beginPath(); c.arc(hx+z*0.33,hy+z*0.06,z*0.025,0,7); c.fill();
+  c.fillStyle="#ffcf3a"; c.beginPath(); c.ellipse(hx+z*0.08,hy-z*0.05,z*0.095,z*0.085,0,0,7); c.fill(); c.fillStyle="#1a0f14"; c.beginPath(); c.ellipse(hx+z*0.09,hy-z*0.05,z*0.06,z*0.022,0,0,7); c.fill();   // a goat's eye
+  c.fillStyle="#fff"; c.beginPath(); c.arc(hx+z*0.05,hy-z*0.09,z*0.025,0,7); c.fill();
+  c.fillStyle="rgba(255,140,170,.45)"; c.beginPath(); c.ellipse(hx+z*0.14,hy+z*0.1,z*0.06,z*0.035,0,0,7); c.fill();
+  c.strokeStyle=mid; c.lineWidth=z*0.05; c.beginPath(); c.moveTo(hx+z*0.22,hy+z*0.2); c.lineTo(hx+z*0.2,hy+z*0.3); c.stroke(); c.restore(); };   // little beard
+const KIDS=[...Array(9)].map((_,i)=>({t0:200+i*90,row:i%3===1?0:1,z:i%3===1?0.62:0.78+0.1*atH(i*5),feel:i%3===2,shade:0.75+0.25*atH(i*7)}));
+const kidPos=(t,x,k)=>{ const s=x.self, tg=x.target, R=tg.r, d=atDir(x), q=(t-k.t0)/560; if(q<0||q>1) return null; const ground=k.row?tg.foot:tg.foot-R*0.32;
+  return {x:s.x-d*R*0.4+d*(Math.abs(tg.x-s.x)+R*3.4)*q, y:ground-R*k.z*0.5, q, d}; };
+const kidCol=()=>[46,36,52];   // her kids are black, whatever colour she is
+const sgKidStampede={C:560,D:1700,sig:true,
+  atk:t=>({pose:t<300?"crouch":t<1100?"push":"idle",sy:t<300?1-0.1*eo(t/300):1,sx:t<300?1+0.08*eo(t/300):1}),
+  def(t){ if(t<540||t>1320) return null; const p=((t-540)%90)/90; return {off:[(1-p)*6,0],arc:-8*Math.sin(p*Math.PI),rot:0.12*Math.sin(t/40),pose:"hurt"}; },
+  back(c,t,x){ const col=kidCol(x); for(let i=0;i<KIDS.length;i++){ const k=KIDS[i]; if(k.row) continue; const p=kidPos(t,x,k); if(!p) continue; c.save(); c.translate(p.x,p.y); c.scale(p.d,1); HR.kid(c,0,0,x.target.r*k.z,t/38+i,HRC(col,0.8*k.shade),k.feel); c.restore(); } },
+  fx(c,t,x){ const tg=x.target, R=tg.r, col=kidCol(x);
+    for(let i=0;i<KIDS.length;i++){ const k=KIDS[i], p=kidPos(t,x,k); if(!p) continue; SG.dust(c,p.x-p.d*R*0.5,k.row?tg.foot:tg.foot-R*0.32,R*0.35,(t/180+i*0.3)%1,3); if(!k.row) continue; c.save(); c.translate(p.x,p.y); c.scale(p.d,1); HR.kid(c,0,0,R*k.z,t/38+i,HRC(col,k.shade),k.feel); c.restore(); }
+    for(let i=0;i<8;i++) atImpact(t,560+i*90,0.18,0); }};
+
+/* ---- Shub-Niggurath's Black Grove: the ground cracks in a ring round the target and black trees tear up out of it, gnarled and covered in thorns,
+   with goat eyes opening in the dark between them. Black thorn spikes burst up under the target and thorny roots bind it. */
+HR.thorn=(c,x,y,ang,L,col)=>{ const ux=Math.sin(ang), uy=-Math.cos(ang), px=-uy, py=ux; c.fillStyle=col; c.beginPath(); c.moveTo(x+px*L*0.18,y+py*L*0.18); c.quadraticCurveTo(x+ux*L*0.6+px*L*0.12,y+uy*L*0.6+py*L*0.12,x+ux*L,y+uy*L); c.lineTo(x-px*L*0.18,y-py*L*0.18); c.closePath(); c.fill(); };
+HR.tree=(c,x,y,h,g,seed,t,dark)=>{ if(g<=0) return; const H=h*eo(Math.min(1,g*1.25)), col=dark?"#140d18":"#1f1526", rim=dark?"rgba(120,70,160,.35)":"rgba(170,110,210,.6)", lean=(atH(seed)-0.5)*h*0.22+Math.sin(t/500+seed)*h*0.015, bw=h*0.085;
+  const tx=x+lean, ty=y-H; c.fillStyle=col; c.beginPath(); c.moveTo(x-bw*2.2,y+bw*0.2); c.quadraticCurveTo(x-bw*0.9,y-bw*0.2,x-bw,y-H*0.2); c.quadraticCurveTo(x-bw*0.6+lean*0.3,y-H*0.6,tx-bw*0.25,ty); c.lineTo(tx+bw*0.25,ty);
+  c.quadraticCurveTo(x+bw*0.6+lean*0.3,y-H*0.6,x+bw,y-H*0.2); c.quadraticCurveTo(x+bw*0.9,y-bw*0.2,x+bw*2.2,y+bw*0.2); c.closePath(); c.fill();
+  c.strokeStyle=rim; c.lineWidth=1.6; c.beginPath(); c.moveTo(x+bw*0.95,y-H*0.15); c.quadraticCurveTo(x+bw*0.55+lean*0.3,y-H*0.6,tx+bw*0.2,ty+H*0.05); c.stroke();
+  c.strokeStyle="rgba(0,0,0,.45)"; c.lineWidth=1; for(let i=0;i<4;i++){ const yy=y-H*(0.15+0.18*i); c.beginPath(); c.moveTo(x+lean*(0.15+0.18*i)*0.5-bw*0.4,yy); c.quadraticCurveTo(x+lean*(0.15+0.18*i)*0.5,yy-H*0.06,x+lean*(0.15+0.18*i)*0.5+bw*0.3,yy-H*0.1); c.stroke(); }   // bark
+  for(let i=0;i<5;i++){ const u=0.15+0.15*i, sd=i%2?1:-1; HR.thorn(c,x+lean*u*0.6+sd*bw*(1-u*0.5),y-H*u,sd*(1.2+0.3*atH(seed+i)),h*0.07,col); }
+  const bg=Math.max(0,Math.min(1,(g-0.45)/0.55)); if(bg<=0) return;
+  const br=(px,py,ang,len,w,dpt)=>{ if(dpt>3) return; const L=len*eo(bg), ex=px+Math.sin(ang)*L, ey=py-Math.cos(ang)*L, bend=(atH(seed+dpt*13+ang)-0.5)*0.8;
+    c.strokeStyle=col; c.lineWidth=w; c.lineCap="round"; c.beginPath(); c.moveTo(px,py); c.quadraticCurveTo(px+Math.sin(ang+bend)*L*0.55,py-Math.cos(ang+bend)*L*0.55,ex,ey); c.stroke();
+    for(let k=1;k<3;k++){ const u=k/3; HR.thorn(c,px+(ex-px)*u,py+(ey-py)*u,ang+(k%2?1.2:-1.2),w*1.3+h*0.025,col); }
+    if(dpt>=2) HR.thorn(c,ex,ey,ang,h*0.09,col);
+    br(ex,ey,ang-0.42-atH(seed+dpt*7)*0.35,len*0.66,w*0.6,dpt+1); br(ex,ey,ang+0.38+atH(seed+dpt*11)*0.35,len*0.6,w*0.58,dpt+1); };
+  br(tx,ty+H*0.02,-0.15+(atH(seed+3)-0.5)*0.5,h*0.3,bw*0.9,1); br(x+lean*0.5,y-H*0.62,-1.0,h*0.28,bw*0.7,1); br(x+lean*0.5,y-H*0.7,0.95,h*0.26,bw*0.65,1); };
+HR.spike=(c,x,y,h,ang,k)=>{ if(k<=0) return; const L=h*eo(Math.min(1,k)), ux=Math.sin(ang), uy=-Math.cos(ang), px=-uy, py=ux, w=h*0.14;
+  c.fillStyle="#130c17"; c.beginPath(); c.moveTo(x-px*w,y-py*w); c.quadraticCurveTo(x+ux*L*0.5-px*w*0.6,y+uy*L*0.5-py*w*0.6,x+ux*L,y+uy*L); c.quadraticCurveTo(x+ux*L*0.5+px*w*0.6,y+uy*L*0.5+py*w*0.6,x+px*w,y+py*w); c.closePath(); c.fill();
+  c.strokeStyle="rgba(190,120,230,.75)"; c.lineWidth=1.5; c.beginPath(); c.moveTo(x+px*w*0.7,y+py*w*0.7); c.quadraticCurveTo(x+ux*L*0.5+px*w*0.4,y+uy*L*0.5+py*w*0.4,x+ux*L,y+uy*L); c.stroke(); };
+const BG_TREES=[[-2.6,0.9],[-1.95,1.2],[-1.3,1.05],[-0.6,1.25],[0.6,1.3],[1.3,1.0],[1.95,1.15],[2.6,0.85]];
+const BG_FRONT=[[-1.9,0.75,0.55],[1.85,0.8,0.5]];
+const BG_SPIKES=[[-1.05,1.0,0.35],[-0.7,1.35,0.22],[-0.35,0.9,0.12],[0.3,1.1,-0.15],[0.65,1.4,-0.25],[1.0,0.95,-0.38]];
+const sgBlackGrove={C:900,D:1800,sig:true,
+  atk:t=>({pose:t<1300?"cast":"idle",sy:t<500?1-0.06*eo(t/500):1}),
+  def:t=>t>=900&&t<1550?{off:[Math.sin(t/20)*1.5,0],sy:0.94,pose:"hurt"}:null,
+  back(c,t,x){ const tg=x.target, R=tg.r; if(t<200||t>1750) return; const a=t<1450?1:1-(t-1450)/300, ground=tg.foot;
+    c.save(); c.globalAlpha*=a; SG.fog(c,tg.x,ground-R*0.4,R*3.4,[40,14,50],0.55*Math.min(1,(t-200)/300)); SG.cracks(c,tg.x,ground,R*2.6,9,4,Math.min(1,(t-200)/200));
+    BG_TREES.forEach(([ox,hs],i)=>{ const g=Math.max(0,Math.min(1,(t-300-i*45)/420)); HR.tree(c,tg.x+ox*R,ground-R*0.35,R*2.3*hs,g,i*3+1,t,true); if(g>0.6&&i%3!==2){ const e=Math.min(1,(t-650-i*40)/120)*(Math.abs(Math.sin(t/300+i))>0.96?0.1:1); if(e>0){ c.fillStyle=`rgba(255,215,80,${e})`; for(const sd of [-1,1]){ c.beginPath(); c.ellipse(tg.x+ox*R+sd*R*0.09,ground-R*(0.9+0.5*hs),R*0.05,R*0.03*e,0,0,7); c.fill(); } } }
+      if(g>0&&g<0.7){ const k=g/0.7; for(let j=0;j<4;j++) SG.shard(c,tg.x+ox*R+(j-1.5)*R*0.2,ground-R*0.35-k*R*0.6*atH(i*4+j)+k*k*R*0.6,R*0.07,t/80+j,"#4a3428"); } });
+    c.restore(); },
+  fx(c,t,x){ const tg=x.target, R=tg.r; if(t<300||t>1750) return; const a=t<1450?1:1-(t-1450)/300, ground=tg.foot; c.save(); c.globalAlpha*=a;
+    BG_FRONT.forEach(([ox,hs,dl],i)=>{ HR.tree(c,tg.x+ox*R,ground+R*0.25,R*2.3*hs,Math.max(0,Math.min(1,(t-300-dl*400)/420)),20+i*5,t,false); });
+    BG_SPIKES.forEach(([ox,hs,ang],i)=>{ const k=(t-880-i*25)/90; HR.spike(c,tg.x+ox*R,ground+R*0.1,R*hs,ang,k); });
+    if(t>=880&&t<1250){ const k=(t-880)/370; SG.dust(c,tg.x,ground,R*1.2,k,10); for(let j=0;j<8;j++) SG.shard(c,tg.x+(j-3.5)*R*0.3,ground-k*R*1.2*atH(j*5)+k*k*R*1.3,R*0.08,t/70+j,"#3a2a22"); }
+    if(t>=950){ const k=Math.min(1,(t-950)/300); for(let i=0;i<3;i++){ const yy=tg.y-R*(0.5-i*0.38), rx=R*(1.15-0.25*k), ry=R*0.2; c.strokeStyle="#1a1120"; c.lineWidth=R*0.12; c.beginPath(); c.ellipse(tg.x,yy,rx,ry,0.12*(i-1),0,Math.PI*k); c.stroke();
+      c.strokeStyle="rgba(170,110,210,.6)"; c.lineWidth=1.4; c.beginPath(); c.ellipse(tg.x,yy-R*0.04,rx,ry,0.12*(i-1),0.2,Math.PI*k*0.9); c.stroke();
+      for(let j=0;j<5;j++){ const an=(j+0.5)/5*Math.PI*k, px=tg.x+Math.cos(an)*rx, py=yy+Math.sin(an)*ry; HR.thorn(c,px,py,Math.PI+(j%2?0.6:-0.6),R*0.16,"#1a1120"); } } }
+    c.restore(); atImpact(t,900,0.5,0.08); }};
+
+/* ---- Shoggoth's Swallow Whole: it rears up and its front splits into a huge mouth ringed with teeth and eyes, the mouth stretches out round the
+   target and snaps shut, the bulge is dragged back into its body where the target tumbles about, dazed, then it heaves and spits the target back out
+   covered in goo. */
+const SW={ lerp:(a,b,k)=>a+(b-a)*k,
+  maw(t,x){ const s=x.self, tg=x.target, R=tg.r, d=atDir(x); if(t<760){ const k0=eo(Math.min(1,t/380)), k1=t<380?0:eio(Math.min(1,(t-380)/320)), k2=t<700?0:(t-700)/60;
+      const mx=SW.lerp(s.x+d*s.r*0.55,tg.x,k1), my=SW.lerp(s.y-s.r*0.05,tg.y-R*0.15,k1), rx=SW.lerp(s.r*0.62*k0,R*1.3,k1), ry=SW.lerp(s.r*0.72*k0,R*1.45,k1)*(1-0.8*Math.max(0,k2));
+      return {mx,my,rx,ry,open:true}; } return null; },
+  ring(c,m,col,t,x){ const {mx,my,rx,ry}=m, w=Math.max(4,Math.min(rx,ry)*0.32); c.save(); c.lineWidth=w; c.strokeStyle=atRgba(col,0.97); c.beginPath(); c.ellipse(mx,my,rx,ry,0,0,7); c.stroke();
+    c.lineWidth=w*0.25; c.strokeStyle=atRgba(HRL(col,0.35),0.8); c.beginPath(); c.ellipse(mx,my,rx,ry,0,3.5,5.6); c.stroke();
+    c.fillStyle="#fff8ec"; for(let i=0;i<18;i++){ const an=i/18*Math.PI*2, ex=mx+Math.cos(an)*rx, ey=my+Math.sin(an)*ry, ix=mx+Math.cos(an)*(rx-w*1.25), iy=my+Math.sin(an)*(ry-w*1.25), px=-Math.sin(an)*w*0.32, py=Math.cos(an)*w*0.32;
+      c.beginPath(); c.moveTo(ex+px-(ex-mx)*0.06,ey+py-(ey-my)*0.06); c.lineTo(ix,iy); c.lineTo(ex-px-(ex-mx)*0.06,ey-py-(ey-my)*0.06); c.closePath(); c.fill(); }
+    for(let i=0;i<5;i++){ const an=-2.6+i*0.55, ex=mx+Math.cos(an)*(rx+w*0.15), ey=my+Math.sin(an)*(ry+w*0.15); HR.eye(c,ex,ey,w*(0.32+0.1*(i%2)),1,Math.sin(t/250+i)); }
+    c.strokeStyle=atRgba(HRL(col,0.2),0.45); c.lineWidth=2; for(let i=0;i<3;i++){ const xx=mx+(i-1)*rx*0.45, sag=Math.sin(t/120+i)*ry*0.08; c.beginPath(); c.moveTo(xx,my-ry+w*0.6); c.quadraticCurveTo(xx+rx*0.05,my+sag,xx,my+ry-w*0.6); c.stroke(); } c.restore(); },
+  neck(c,m,s,col,d){ const fx=s.x+d*s.r*0.35; c.fillStyle=atRgba(col,0.96); c.beginPath(); c.moveTo(fx,s.y-s.r*0.6); c.quadraticCurveTo((fx+m.mx)/2,Math.min(s.y-s.r*0.7,m.my-m.ry*0.9),m.mx-d*m.rx*0.5,m.my-m.ry*0.85);
+    c.lineTo(m.mx-d*m.rx*0.5,m.my+m.ry*0.85); c.quadraticCurveTo((fx+m.mx)/2,s.foot,fx,s.foot-2); c.closePath(); c.fill(); },
+  bulb(t,x){ const s=x.self, tg=x.target, R=tg.r, d=atDir(x); if(t<700||t>=1000) return null; const k=t<780?0:eio((t-780)/220), sh=t<780?eo((t-700)/80):1;
+    return {bx:SW.lerp(tg.x,s.x+d*s.r*0.2,k),by:SW.lerp(tg.y-R*0.1,s.y,k),br:SW.lerp(R*1.35,s.r*0.75,k)*(0.7+0.3*sh),k}; },
+  lump(c,x,y,r,t,a){ c.save(); c.globalAlpha*=a; c.fillStyle="rgba(20,8,26,.55)"; c.beginPath(); c.arc(x,y,r,0,7); c.fill(); c.strokeStyle="rgba(255,255,255,.85)"; c.lineWidth=Math.max(1.2,r*0.09); c.lineCap="round";
+    for(const sd of [-1,1]){ const ex=x+sd*r*0.32, ey=y-r*0.12, e=r*0.13; c.beginPath(); c.moveTo(ex-e,ey-e); c.lineTo(ex+e,ey+e); c.moveTo(ex+e,ey-e); c.lineTo(ex-e,ey+e); c.stroke(); }
+    for(let i=0;i<3;i++){ const an=t/160+i*2.1; atStar4(c,x+Math.cos(an)*r*0.8,y-r*0.7+Math.sin(an)*r*0.25,r*0.18,"rgba(255,230,120,.9)"); } c.restore(); } };
+const sgSwallowWhole={C:760,D:2300,tail:1500,sig:true,
+  atk:t=>{ if(t<380){ const k=eo(t/380); return {f:0,sx:1-0.06*k,sy:1+0.28*k,pose:"bitewide"}; } if(t<760){ const k=ei((t-380)/380); return {f:0.6*k,sx:0.94+0.36*k,sy:1.28-0.2*k,pose:"bitewide"}; }
+    if(t<1000){ const k=eio((t-760)/240); return {f:0.6-0.35*k,sx:1.3,sy:1.08+0.12*k,pose:"chomp"}; }
+    if(t<1550) return {f:0.25,sx:1.32+0.07*Math.sin(t/70),sy:1.2-0.07*Math.sin(t/70),rot:0.05*Math.sin(t/110),pose:Math.floor(t/180)%2?"chomp":"idle"};
+    if(t<1690){ const k=(t-1550)/140; return {f:0.25,sx:1.32+0.12*k,sy:1.2-0.35*k,pose:"chomp"}; }
+    if(t<1800) return {f:0.3,sx:1.15,sy:1.18,pose:"bitewide"};
+    const k=Math.min(1,(t-1800)/450); return {f:0.3*(1-eio(k)),sx:1.15-0.15*eo(k),sy:1.18-0.18*eo(k),pose:"idle"}; },
+  def(t,x){ const gap=(x&&x.gap)||220, dir=(x&&x.dir)||1; if(t<600) return null; if(t<760){ const k=(t-600)/160; return {off:[dir*gap*0.05*k,0],sx:1-0.08*k,pose:"hurt"}; }
+    if(t<1690) return {alpha:0,pose:"hurt"};
+    if(t<2050){ const k=(t-1690)/360; return {off:[dir*gap*0.5*(1-eo(k)),0],arc:-70*Math.sin(k*Math.PI),rot:-dir*5.5*(1-eo(k)),pose:"hurt"}; }
+    if(t<2250){ const k=(t-2050)/200; return {sy:0.78+0.22*eo(k),sx:1.12-0.12*eo(k),pose:"hurt"}; } return null; },
+  back(c,t,x){ const m=SW.maw(t,{...x,target:x.target}); if(!m||m.rx<2) return; c.save(); const g=c.createRadialGradient(m.mx,m.my,2,m.mx,m.my,Math.max(m.rx,m.ry)); g.addColorStop(0,"#16040e"); g.addColorStop(0.6,"#4c0c26"); g.addColorStop(1,"#8a2442");
+    c.fillStyle=g; c.beginPath(); c.ellipse(m.mx,m.my,m.rx,m.ry,0,0,7); c.fill(); c.fillStyle="rgba(200,70,110,.6)"; c.beginPath(); c.ellipse(m.mx,m.my+m.ry*0.55,m.rx*0.55,m.ry*0.22,0,0,7); c.fill(); c.restore(); },
+  fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, d=atDir(x), col=x.body||[100,120,90]; if(t>2300) return;
+    const m=SW.maw(t,x); if(m&&m.rx>2){ if(t>380) SW.neck(c,m,s,col,d); SW.ring(c,m,col,t,x); }
+    const b=SW.bulb(t,x); if(b){ SW.neck(c,{mx:b.bx,my:b.by,rx:b.br,ry:b.br},s,col,d); c.fillStyle=atRgba(col,0.97); c.beginPath(); c.arc(b.bx,b.by,b.br,0,7); c.fill(); c.strokeStyle=atRgba(HRL(col,0.3),0.7); c.lineWidth=2; c.beginPath(); c.arc(b.bx,b.by,b.br*0.85,3.6,5.4); c.stroke();
+      SW.lump(c,b.bx,b.by,b.br*0.6,t,0.8); for(let i=0;i<3;i++) HR.eye(c,b.bx+Math.cos(i*2.2+1)*b.br*0.75,b.by+Math.sin(i*2.2+1)*b.br*0.7,b.br*0.16,1,-d); }
+    if(t>=1000&&t<1690){ const k=t<1550?0:(t-1550)/140, lx=s.x+Math.sin(t/120)*s.r*0.25+d*s.r*0.5*k, ly=s.y+s.r*0.2+Math.cos(t/150)*s.r*0.12-k*s.r*0.3; SW.lump(c,lx,ly,s.r*0.4,t,0.65);
+      c.strokeStyle=atRgba(HRL(col,0.4),0.5); c.lineWidth=1.5; for(let i=0;i<5;i++){ const q=((t/400)+i/5)%1; c.beginPath(); c.arc(s.x+(i-2)*s.r*0.3,s.y-s.r*(0.2+q*0.9),s.r*0.05,0,7); c.stroke(); }
+      if(t<1150){ const k2=(t-1000)/150; SG.ring(c,s.x,s.y,s.r*(0.6+0.8*k2),s.r*(0.5+0.6*k2),HRL(col,0.4),3,0.7*(1-k2)); } }
+    if(t>=1690&&t<2100){ const k=(t-1690)/410; for(let i=0;i<12;i++){ const a=(atH(i*3)-0.5)*1.4, v=R*(1+2.5*atH(i*7)), px=s.x+d*s.r*0.6+d*Math.cos(a)*v*eo(k), py=s.y-s.r*0.1+Math.sin(a)*v*0.6*eo(k)+k*k*R*1.5;
+        c.fillStyle=atRgba(col,0.9*(1-k)); c.beginPath(); c.arc(px,py,R*(0.08+0.07*atH(i)),0,7); c.fill(); } }
+    if(t>=1750&&t<2300){ const k=(t-1750)/550; for(let i=0;i<5;i++){ const q=(k*1.6+i/5)%1; HR.drop(c,tg.x+(i-2)*R*0.3,tg.y-R*0.5+q*R*1.1,R*0.07,col,0.85*(1-q)*(1-k)); }
+      if(t>2050){ const k2=(t-2050)/250; c.fillStyle=atRgba(col,0.6*(1-k2)); c.beginPath(); c.ellipse(tg.x,tg.foot+2,R*(0.9+0.4*k2),R*0.18,0,0,7); c.fill(); } }
+    atImpact(t,760,0.45,0.08); atImpact(t,1690,0.4,0); }};
+
+/* ---- Hastur's Curtain Call: a spotlight finds the target and two heavy stage curtains in Hastur's own colour drop and close over it, with a
+   scalloped valance and gold fringe on top; it falls asleep behind them. */
+const sgCurtainCall={C:820,D:1700,sig:true,
+  atk:t=>({pose:t<1300?"cast":"idle",arc:t<1300?-4*Math.sin(t/200):0}),
+  def:t=>t>=820&&t<1500?{pose:atPose("hurt",{eyes:"shut"}),rot:0.1*Math.sin(t/200)}:null,
+  fx(c,t,x){ const tg=x.target, R=tg.r, col=x.body||[220,180,60]; if(t<200||t>1650) return; const top=tg.y-R*2.6, floor=tg.foot+4, w=R*1.45, close=t<820?eio(Math.max(0,(t-400)/420)):t<1350?1:1-eio((t-1350)/250), sp=Math.max(0,Math.min(1,(t-200)/200))*(t>1500?1-(t-1500)/150:1), drop=Math.min(1,Math.max(0,(t-250)/220));
+    c.save(); c.globalCompositeOperation="lighter"; const g=c.createRadialGradient(tg.x,tg.y-R*0.4,R*0.2,tg.x,tg.y-R*0.4,R*1.8); g.addColorStop(0,`rgba(255,240,170,${0.45*sp})`); g.addColorStop(1,"rgba(255,240,170,0)"); c.fillStyle=g; c.beginPath(); c.moveTo(tg.x-R*0.3,top-R); c.lineTo(tg.x+R*0.3,top-R); c.lineTo(tg.x+R*1.6,floor); c.lineTo(tg.x-R*1.6,floor); c.closePath(); c.fill(); c.restore();
+    const ty=top-(1-drop)*R*3; c.save(); c.beginPath(); c.rect(tg.x-w*2,ty-R,w*4,floor-ty+R); c.clip();
+    if(close>0) for(const sd of [-1,1]){ const inner=tg.x+sd*w*(1-close), outer=tg.x+sd*w*1.3, N=4, bot=SW.lerp(ty,floor,drop);
+      for(let f=0;f<N;f++){ const x0=inner+(outer-inner)*f/N, x1=inner+(outer-inner)*(f+1)/N, gl=c.createLinearGradient(x0,0,x1,0); gl.addColorStop(0,atRgba(HRC(col,0.62),1)); gl.addColorStop(0.3,atRgba(HRC(col,0.92),1)); gl.addColorStop(0.55,atRgba(HRL(col,0.18),1)); gl.addColorStop(0.8,atRgba(HRC(col,0.85),1)); gl.addColorStop(1,atRgba(HRC(col,0.6),1));
+        c.fillStyle=gl; c.beginPath(); c.moveTo(x0,ty); c.lineTo(x1,ty); for(let i=0;i<=8;i++){ const y=ty+(bot-ty)*i/8; c.lineTo(x1+Math.sin(i*1.3+t/220+f)*R*0.04,y); } c.quadraticCurveTo((x0+x1)/2,bot+R*0.12,x0,bot+Math.sin(t/200+f)*R*0.03); c.closePath(); c.fill(); }
+      c.strokeStyle=atRgba(HRC(col,0.3),0.6); c.lineWidth=1.5; c.beginPath(); c.moveTo(inner,ty); for(let i=0;i<=8;i++) c.lineTo(inner+sd*Math.sin(i*1.4+t/200)*R*0.06,ty+(bot-ty)*i/8); c.stroke();
+      c.fillStyle="#e9b23a"; c.beginPath(); c.ellipse(outer-sd*w*0.32,ty+(bot-ty)*0.55,R*0.12,R*0.07,0,0,7); c.fill(); }   // a gold tie-back on each side
+    c.restore();
+    const vy=ty-R*0.05; c.fillStyle=atRgba(HRC(col,0.7),1); c.fillRect(tg.x-w*1.32,vy-R*0.12,w*2.64,R*0.42); c.beginPath(); for(let i=0;i<=8;i++){ const xx=tg.x-w*1.32+w*2.64*i/8; c.arc(xx-w*0.165,vy+R*0.3,w*0.165,0,Math.PI); } c.fill();
+    c.fillStyle="#e9b23a"; c.fillRect(tg.x-w*1.36,vy-R*0.18,w*2.72,R*0.08); c.strokeStyle="#e9b23a"; c.lineWidth=1.3; for(let i=0;i<32;i++){ const xx=tg.x-w*1.3+w*2.6*i/31; c.beginPath(); c.moveTo(xx,vy+R*0.3); c.lineTo(xx+Math.sin(t/150+i)*1.5,vy+R*0.42); c.stroke(); }
+    if(t>900&&t<1500) for(let i=0;i<3;i++){ const ph=((t/500)+i/3)%1; c.fillStyle=`rgba(240,235,255,${1-ph})`; c.font=`bold ${Math.round(R*(0.35+ph*0.3))}px sans-serif`; c.fillText("z",tg.x+R*(0.3+ph*0.6),tg.y-R*(1+ph)); }
+    atImpact(t,820,0.3,0.05); }};
+
+/* ---- Hastur's Tattered Cloak: long torn strips of its cloak stream out from under it, rippling, with frayed ends and holes, wrap round the target
+   in bands, and the yellow sign burns on it. */
+HR.rag=(c,pts,w0,w1,col,t,seed)=>{ const n=pts.length; if(n<2) return; const L=[], Rt=[];
+  for(let i=0;i<n;i++){ const p=pts[i], q=pts[Math.min(n-1,i+1)], o=pts[Math.max(0,i-1)], dx=q[0]-o[0], dy=q[1]-o[1], m=Math.hypot(dx,dy)||1, nx=-dy/m, ny=dx/m, u=i/(n-1), w=(w0+(w1-w0)*u)*(1+0.12*Math.sin(u*14+seed))/2;
+    L.push([p[0]+nx*w,p[1]+ny*w]); Rt.push([p[0]-nx*w,p[1]-ny*w]); }
+  c.fillStyle=atRgba(col,0.97); c.beginPath(); c.moveTo(L[0][0],L[0][1]); for(const p of L) c.lineTo(p[0],p[1]);
+  const e=pts[n-1], pr=pts[n-2], dx=e[0]-pr[0], dy=e[1]-pr[1], m=Math.hypot(dx,dy)||1;   // a frayed end in three torn points
+  for(let j=0;j<3;j++){ const u=(j+0.5)/3, bx=L[n-1][0]+(Rt[n-1][0]-L[n-1][0])*u, by=L[n-1][1]+(Rt[n-1][1]-L[n-1][1])*u, len=w1*(0.9+0.8*atH(seed+j)); c.lineTo(bx+dx/m*len,by+dy/m*len); c.lineTo(L[n-1][0]+(Rt[n-1][0]-L[n-1][0])*(j+1)/3,L[n-1][1]+(Rt[n-1][1]-L[n-1][1])*(j+1)/3); }
+  for(let i=n-1;i>=0;i--) c.lineTo(Rt[i][0],Rt[i][1]); c.closePath(); c.fill();
+  c.strokeStyle=atRgba(HRC(col,0.45),0.9); c.lineWidth=1.3; c.stroke();
+  c.strokeStyle=atRgba(HRL(col,0.4),0.7); c.lineWidth=1.4; c.beginPath(); c.moveTo(L[0][0],L[0][1]); for(const p of L) c.lineTo(p[0],p[1]); c.stroke();
+  c.fillStyle=atRgba(HRC(col,0.3),0.85); for(const u of [0.35,0.7]){ const i=Math.floor(u*(n-1)), p=pts[i]; c.beginPath(); c.ellipse(p[0]+Math.sin(seed)*w0*0.1,p[1],w0*0.12,w0*0.07,seed,0,7); c.fill(); } };   // moth holes
+const sgTatteredCloak={C:900,D:1750,sig:true,
+  atk:t=>({pose:t<1300?"cast":"idle",sx:1+0.06*Math.sin(Math.min(1,t/600)*Math.PI)}),
+  def:t=>t>=900&&t<1500?{off:[Math.sin(t/18)*1.5,0],pose:"hurt",sy:0.96}:null,
+  fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, d=atDir(x), col=x.body||[200,170,60]; if(t<200||t>1700) return; const reach=t<900?eio((t-200)/700):t<1350?1:1-eio((t-1350)/300);
+    const RG=[[-0.5,0.55,1.5,0.0],[0.4,0.25,-0.6,0.9],[-0.1,0.0,2.3,1.9],[0.55,-0.25,0.4,2.8],[-0.35,-0.5,1.1,3.7]];
+    RG.forEach(([ox0,band,arch,ph],i)=>{ const delay=i*60, rr=t<900?eio(Math.max(0,Math.min(1,(t-200-delay)/(700-delay)))):reach, ox=s.x+ox0*s.r*0.9, oy=s.foot-s.r*(0.12+0.06*(i%2)), ex=tg.x-d*R*0.95, ey=tg.y-R*band, N=16, pts=[];
+      for(let j=0;j<=N;j++){ const u=j/N*rr, bx=ox+(ex-ox)*u, sw=Math.sin(u*Math.PI); pts.push([bx+Math.sin(u*6-t/90+ph)*R*0.1*sw,oy+(ey-oy)*u-sw*R*arch+Math.sin(u*7-t/60+ph)*R*0.22*sw]); }
+      if(rr>0.02) HR.rag(c,pts,R*0.44,R*0.24,HRC(col,[0.72,0.86,0.8,0.92,0.76][i]),t,i*1.7+ph); });
+    if(reach>0.85){ const k=Math.min(1,(reach-0.85)/0.15); [[0.55,-0.25],[0.15,0.2],[-0.3,-0.15]].forEach(([yy0,tilt],i)=>{ const yy=tg.y-R*yy0, pts=[]; for(let j=0;j<=14;j++){ const an=Math.PI+j/14*Math.PI*k*1.1; pts.push([tg.x+Math.cos(an)*R*1.05*-d,yy+Math.sin(an)*-R*0.24+Math.cos(an)*R*tilt]); }
+      HR.rag(c,pts,R*0.34,R*0.22,HRC(col,0.88-i*0.05),t,i*2.3+5); }); }
+    if(t>=900&&t<1500){ const k=(t-900)/600, a=k<0.8?1:1-(k-0.8)*5; c.save(); c.translate(tg.x,tg.y-R*0.3); c.globalAlpha*=a; c.strokeStyle="#ffd84a"; c.lineWidth=3.5; c.shadowColor="#ffd84a"; c.shadowBlur=14; c.lineCap="round";
+      const z=R*(0.5+0.08*Math.sin(t/60)); c.beginPath(); c.arc(0,0,z,0.3,Math.PI*1.6); c.stroke(); c.beginPath(); c.moveTo(0,-z); c.lineTo(0,z*1.1); c.moveTo(-z*0.8,z*0.3); c.quadraticCurveTo(0,-z*0.1,z*0.9,z*0.6); c.moveTo(-z*0.5,-z*0.4); c.quadraticCurveTo(-z*0.1,-z*0.7,z*0.3,-z*0.35); c.stroke();
+      c.shadowBlur=0; for(let i=0;i<8;i++){ const an=i/8*Math.PI*2+t/400; c.strokeStyle=`rgba(255,216,74,${0.5*a})`; c.lineWidth=2; c.beginPath(); c.moveTo(Math.cos(an)*z*1.3,Math.sin(an)*z*1.3); c.lineTo(Math.cos(an)*z*(1.6+0.2*Math.sin(t/80+i)),Math.sin(an)*z*(1.6+0.2*Math.sin(t/80+i))); c.stroke(); } c.restore(); }
+    atImpact(t,900,0.4,0.1); }};
+
+/* ---- Yog-Sothoth's Gate Open: a stone gate carved with runes rises behind the target, its double doors swing open on a spiralling sky of stars
+   and eyed globes, light floods out over the floor, the target is stretched and pulled through, the doors slam, then open once more to throw it
+   back out, and the gate breaks apart into globes that fly back to Yog. */
+const YG={ open:t=>t<450?0:t<720?eo((t-450)/270):t<930?1:t<1060?1-eio((t-930)/130):t<1150?0:t<1300?eo((t-1150)/150):t<1420?1:1-eio(Math.min(1,(t-1420)/180)),
+  rise:t=>t<150?0:t<450?eo((t-150)/300):t<1550?1:Math.max(0,1-(t-1550)/180),
+  geo(x){ const tg=x.target, R=tg.r, d=atDir(x); return {gx:tg.x+d*R*0.55,gy:tg.foot-R*0.1,h:R*3.1,w:R*1.6,R,d}; },
+  draw(c,t,x){ const {gx,gy,h,w,R}=YG.geo(x), rise=YG.rise(t), op=YG.open(t); if(rise<=0) return; const top=gy-h*rise, fw=R*0.32; c.save(); c.beginPath(); c.rect(gx-w*2,gy-h*1.4,w*4,h*1.4); c.clip();
+    c.fillStyle="#0a0614"; c.fillRect(gx-w/2,top,w,gy-top);
+    if(op>0){ const v=c.createRadialGradient(gx,top+h*0.5,2,gx,top+h*0.5,h*0.75); v.addColorStop(0,"#fff2c4"); v.addColorStop(0.18,"#c79bff"); v.addColorStop(0.55,"#3a1f78"); v.addColorStop(1,"#0c0620"); c.fillStyle=v; c.fillRect(gx-w/2,top,w,gy-top);
+      c.save(); c.beginPath(); c.rect(gx-w/2,top,w,gy-top); c.clip(); c.translate(gx,top+h*0.5); for(let arm=0;arm<3;arm++) for(let i=0;i<22;i++){ const u=i/22, an=arm*2.09+u*4.5+t/500, rr=u*h*0.55; c.fillStyle=`rgba(255,250,235,${0.9*(1-u)})`; c.beginPath(); c.arc(Math.cos(an)*rr,Math.sin(an)*rr*0.8,1+2*(1-u),0,7); c.fill(); }
+      const GC=[[255,140,200],[150,240,230],[255,230,140],[190,150,255]]; for(let i=0;i<4;i++){ const an=t/700+i*1.6, rr=h*(0.18+0.08*i); HR.globe(c,Math.cos(an)*rr*0.6,Math.sin(an)*rr,R*(0.14+0.03*i),GC[i],true,Math.cos(an)); } c.restore(); }
+    for(const sd of [-1,1]){ const hx=gx+sd*w/2, fx=hx-sd*(w/2)*Math.max(0.05,1-op), sk=op*h*0.07; c.fillStyle="#2a1846"; c.beginPath(); c.moveTo(hx,top); c.lineTo(fx,top-sk); c.lineTo(fx,gy+sk*0.3); c.lineTo(hx,gy); c.closePath(); c.fill();
+      c.strokeStyle="rgba(230,190,90,.85)"; c.lineWidth=1.6; for(let i=0;i<3;i++){ const u=0.2+0.3*i; c.beginPath(); c.moveTo(hx+(fx-hx)*0.18,top+(gy-top)*u); c.lineTo(hx+(fx-hx)*0.82,top+(gy-top)*u-sk*(0.5-u)); c.stroke(); }
+      c.fillStyle="#e2b94f"; for(let i=0;i<4;i++){ c.beginPath(); c.arc(hx+(fx-hx)*0.85,top+(gy-top)*(0.12+0.25*i),R*0.035,0,7); c.fill(); } }
+    for(const sd of [-1,1]){ const px=gx+sd*(w/2+fw/2); const pg=c.createLinearGradient(px-fw/2,0,px+fw/2,0); pg.addColorStop(0,"#4a3c5c"); pg.addColorStop(0.5,"#7a6890"); pg.addColorStop(1,"#3a2e4a"); c.fillStyle=pg; c.fillRect(px-fw/2,top-R*0.15,fw,gy-top+R*0.15);
+      for(let i=0;i<6;i++){ const on=Math.max(0,Math.min(1,(t-300-i*60)/120))*(0.7+0.3*Math.sin(t/90+i)); const ry=top+(gy-top)*(0.1+0.15*i); c.strokeStyle=`rgba(255,220,120,${on})`; c.shadowColor="#ffd77a"; c.shadowBlur=on*8; c.lineWidth=1.8; c.beginPath();
+        if(i%3===0){ c.arc(px,ry,fw*0.2,0,7); } else if(i%3===1){ c.moveTo(px-fw*0.22,ry-fw*0.2); c.lineTo(px+fw*0.22,ry+fw*0.2); c.moveTo(px+fw*0.22,ry-fw*0.2); c.lineTo(px-fw*0.22,ry+fw*0.2); } else { c.moveTo(px,ry-fw*0.25); c.lineTo(px,ry+fw*0.25); c.moveTo(px-fw*0.2,ry); c.lineTo(px+fw*0.2,ry); } c.stroke(); } c.shadowBlur=0; }
+    c.fillStyle="#5a4870"; c.fillRect(gx-w/2-fw*1.2,top-R*0.45,w+fw*2.4,R*0.32); c.fillStyle="#e2b94f"; c.fillRect(gx-w/2-fw*1.2,top-R*0.16,w+fw*2.4,R*0.05);
+    HR.globe(c,gx,top-R*0.3,R*0.22,[200,160,255],true,Math.sin(t/300)); c.restore(); } };
+const R0=24;   // how far up the pulled target drifts toward the middle of the gate, in arena units
+const sgGateOpen={C:1060,D:1900,sig:true,behind:false,
+  atk:t=>({pose:t<1450?"cast":"idle",arc:t<1450?-8*Math.sin(Math.min(1,t/300)*Math.PI/2):0}),
+  def(t){ if(t<620||t>1550) return null; if(t<880){ const k=ei((t-620)/260); return {sx:1-0.55*k,sy:1+0.25*k,alpha:1-0.95*k,off:[14*k,-R0*k],rot:0.4*k,pose:"hurt"}; } if(t<1180) return {alpha:0,pose:"hurt"};
+    const k=(t-1180)/370; return {alpha:Math.min(1,k*4),sx:0.7+0.3*eo(k),off:[20*(1-eo(k)),0],arc:-40*Math.sin(Math.min(1,k)*Math.PI),rot:-1.2*(1-eo(k)),pose:"hurt"}; },
+  back(c,t,x){ if(t<150||t>1750) return; YG.draw(c,t,x); const {gx,gy,w,R}=YG.geo(x), op=YG.open(t); if(op>0){ c.save(); c.globalCompositeOperation="lighter"; const g=c.createLinearGradient(gx,gy,gx-x.target.r*3*atDir(x),gy); g.addColorStop(0,`rgba(230,200,255,${0.45*op})`); g.addColorStop(1,"rgba(230,200,255,0)"); c.fillStyle=g;
+      c.beginPath(); c.moveTo(gx-w/2,gy); c.lineTo(gx+w/2,gy); c.lineTo(gx+w*1.6,gy+R*0.45); c.lineTo(gx-w*1.6,gy+R*0.45); c.closePath(); c.fill(); c.restore(); } },
+  fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, {gx,gy,h,w}=YG.geo(x), op=YG.open(t);
+    if(t<1300){ for(let i=0;i<5;i++){ const an=t/350+i*1.26, k=Math.min(1,t/300); HR.globe(c,s.x+Math.cos(an)*s.r*1.4,s.y-s.r*0.5+Math.sin(an)*s.r*0.5,s.r*0.18,[[255,140,200],[150,240,230],[255,230,140],[190,150,255],[255,170,140]][i],true,Math.cos(an),k); } }
+    if(op>0.3&&t>500&&t<930){ c.save(); c.globalCompositeOperation="lighter"; for(let i=0;i<16;i++){ const q=((t/420)+i/16)%1, sx=tg.x+(atH(i*3)-0.5)*R*2.4, sy=tg.y-R*0.3+(atH(i*7)-0.5)*R*2, px=sx+(gx-sx)*q, py=sy+(gy-h*0.5-sy)*q; atGlowA(c,px,py,R*0.08,[220,190,255],0.9*(1-q)); } c.restore(); }
+    if(t>=1060&&t<1450){ const k=(t-1060)/390; SG.ring(c,gx,gy-h*0.5,R*(0.6+2.4*k),R*(0.8+2*k),[220,190,255],4,0.8*(1-k)); SG.dust(c,gx,gy,R*1.2,k,8); }
+    if(t>=1180&&t<1550){ const k=(t-1180)/370; for(let i=0;i<10;i++){ const a=atH(i*5)*Math.PI*2, v=R*(0.4+1.4*eo(k)); atStar4(c,tg.x+Math.cos(a)*v,tg.y-R*0.3+Math.sin(a)*v,R*0.14*(1-k),"rgba(255,240,200,.95)"); } }
+    if(t>=1550&&t<1900){ const k=(t-1550)/350; for(let i=0;i<4;i++){ const sx0=gx+(i-1.5)*w*0.4, sy0=gy-h*(0.3+0.15*i), px=sx0+(s.x-sx0)*eio(k), py=sy0+(s.y-s.r*0.5-sy0)*eio(k)-Math.sin(k*Math.PI)*R; HR.globe(c,px,py,R*0.17,[[255,140,200],[150,240,230],[255,230,140],[190,150,255]][i],true,0,1-k*0.3); } }
+    atImpact(t,880,0.3,0.15); atImpact(t,1060,0.55,0.1); atImpact(t,1180,0.35,0.05); }};
+
+/* ---- Yog-Sothoth's Globe Storm: its globes swing out into a wide orbit, each one with an eye that turns to the target, then fly in one after another
+   on curving paths, trailing light, and burst on the target in rings and sparks of their own colour. */
+const GS_COL=[[255,140,200],[150,220,255],[255,230,140],[190,150,255],[150,240,210],[255,170,140]];
+const sgGlobeStorm={C:500,D:1700,sig:true,
+  atk:t=>({pose:t<1250?"cast":"idle",off:[t<1250?Math.sin(t/30):0,0],arc:t<1250?-6*Math.sin(Math.min(1,t/250)*Math.PI/2):0}),
+  def(t){ if(t<500||t>1300) return null; const p=((t-500)%125)/125; return {off:[(1-p)*7,0],pose:"hurt",flash:p<0.3?2:0,rot:0.08*Math.sin(t/30)}; },
+  fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, d=atDir(x);
+    if(t<1250){ const a=Math.min(1,t/200)*(t<1100?1:(1250-t)/150); c.save(); c.globalCompositeOperation="lighter"; atGlowA(c,s.x,s.y-s.r*0.5,s.r*2.2,[150,110,255],0.35*a); SG.ring(c,s.x,s.y-s.r*0.5,s.r*1.5,s.r*0.55,[220,200,255],1.5,0.6*a); c.restore(); }
+    for(let i=0;i<6;i++){ const t0=200+i*125, k=(t-t0)/300, col=GS_COL[i];
+      if(t<t0&&t<1250){ const an=t/380+i*1.05, sp=Math.min(1,t/250), ox=s.x+Math.cos(an)*s.r*1.9*sp, oy=s.y-s.r*0.5+Math.sin(an)*s.r*0.7*sp; HR.globe(c,ox,oy,s.r*0.3,col,true,d,1); continue; }
+      if(k<0||k>1.5) continue;
+      if(k<=1){ const path=q=>{ const e=ei(q); return [s.x+(tg.x-s.x)*e+Math.sin(q*Math.PI)*R*0.6*(i%2?1:-1)*0.5, s.y-s.r*0.6+(tg.y-R*0.3-(s.y-s.r*0.6))*e-Math.sin(q*Math.PI)*R*1.3*(i%2?1:-0.6)]; };
+        c.save(); c.globalCompositeOperation="lighter"; for(let j=6;j>=1;j--){ const p=path(Math.max(0,k-j*0.05)); atGlowA(c,p[0],p[1],R*0.42*(1-j/8),col,0.5*(1-j/7)); } c.restore();
+        const p=path(k); HR.globe(c,p[0],p[1],R*0.4,col,true,d,1); }
+      else { const q=(k-1)/0.5; c.save(); c.globalCompositeOperation="lighter"; atGlowA(c,tg.x,tg.y-R*0.3,R*(0.6+0.6*q),col,0.8*(1-q)); c.restore(); SG.ring(c,tg.x,tg.y-R*0.3,R*(0.3+1.1*q),R*(0.3+0.9*q),col,3,1-q);
+        for(let j=0;j<7;j++){ const a=j/7*Math.PI*2+i, v=R*(0.4+1.1*eo(q)); atStar4(c,tg.x+Math.cos(a)*v,tg.y-R*0.3+Math.sin(a)*v,R*0.12*(1-q),atRgba(HRL(col,0.5),1-q)); } } }
+    for(let i=0;i<6;i++) atImpact(t,500+i*125,0.2,0.03); }};
+
+/* ---- Cthulhu's Dream Call: the arena sinks into a dark dream with drifting motes, rings ripple out, and a vast shadow of Cthulhu rises behind the
+   target with ribbed bat wings spread, a ridged head and a beard of feelers with suckers. Its eyes open as red slits and the dread lands. */
+HR.dreamShade=(c,hx,hy,hr,t,eye)=>{ const body="rgba(24,14,48,.96)", rim="rgba(150,110,230,.55)";
+  for(const sd of [-1,1]){ c.fillStyle="rgba(18,10,38,.92)"; c.beginPath(); c.moveTo(hx+sd*hr*0.5,hy+hr*0.5); c.quadraticCurveTo(hx+sd*hr*1.6,hy-hr*1.4,hx+sd*hr*2.5,hy-hr*0.9);
+    for(let i=0;i<4;i++){ const u=i/3, ex=hx+sd*hr*(2.5-0.55*u), ey=hy-hr*(0.9-1.5*u); c.quadraticCurveTo(hx+sd*hr*(2.1-0.55*u),ey+hr*0.15,ex-sd*hr*0.3,ey+hr*0.45); } c.lineTo(hx+sd*hr*0.6,hy+hr*1.1); c.closePath(); c.fill();
+    c.strokeStyle=rim; c.lineWidth=1.5; for(let i=0;i<4;i++){ const u=i/3; c.beginPath(); c.moveTo(hx+sd*hr*0.55,hy+hr*0.5); c.quadraticCurveTo(hx+sd*hr*(1.4-0.2*u),hy-hr*(0.6-0.6*u),hx+sd*hr*(2.5-0.55*u),hy-hr*(0.9-1.5*u)); c.stroke(); } }   // ribbed bat wings
+  c.fillStyle=body; c.beginPath(); c.ellipse(hx,hy+hr*1.4,hr*0.85,hr*0.9,0,0,7); c.fill();
+  c.beginPath(); c.moveTo(hx-hr*0.85,hy+hr*0.2); c.quadraticCurveTo(hx-hr*0.95,hy-hr*1.15,hx,hy-hr*1.25); c.quadraticCurveTo(hx+hr*0.95,hy-hr*1.15,hx+hr*0.85,hy+hr*0.2); c.quadraticCurveTo(hx,hy+hr*0.55,hx-hr*0.85,hy+hr*0.2); c.fill();
+  c.strokeStyle=rim; c.lineWidth=2; c.beginPath(); c.moveTo(hx-hr*0.82,hy); c.quadraticCurveTo(hx-hr*0.9,hy-hr*1.1,hx,hy-hr*1.22); c.quadraticCurveTo(hx+hr*0.9,hy-hr*1.1,hx+hr*0.82,hy); c.stroke();
+  c.strokeStyle="rgba(120,90,200,.35)"; c.lineWidth=1.4; for(let i=0;i<3;i++){ c.beginPath(); c.arc(hx,hy-hr*0.2,hr*(0.5+0.18*i),Math.PI*1.2,Math.PI*1.8); c.stroke(); }   // ridges on the head
+  for(let i=0;i<8;i++){ const u=(i-3.5)/3.5, sx=hx+u*hr*0.62, L=hr*(1.3+0.5*(1-Math.abs(u))), pts=[]; for(let j=0;j<=10;j++){ const v=j/10; pts.push([sx+Math.sin(t/240+i+v*3)*hr*0.18*v+u*hr*0.2*v,hy+hr*0.3+L*v]); }
+    c.strokeStyle=body; c.lineCap="round"; for(let j=0;j<10;j++){ c.lineWidth=hr*0.17*(1-j/12); c.beginPath(); c.moveTo(pts[j][0],pts[j][1]); c.lineTo(pts[j+1][0],pts[j+1][1]); c.stroke(); }
+    c.fillStyle="rgba(170,130,240,.45)"; for(let j=2;j<9;j+=2){ c.beginPath(); c.arc(pts[j][0]+hr*0.03,pts[j][1],hr*0.025*(1-j/12),0,7); c.fill(); } }
+  if(eye>0) for(const sd of [-1,1]){ const ex=hx+sd*hr*0.36, ey=hy-hr*0.18; atGlowA(c,ex,ey,hr*0.45*eye,[255,40,70],0.7); c.fillStyle="#ffe3e8"; c.beginPath(); c.ellipse(ex,ey,hr*0.17,hr*0.1*eye,sd*0.25,0,7); c.fill(); c.fillStyle="#d01838"; c.beginPath(); c.ellipse(ex,ey,hr*0.045,hr*0.095*eye,0,0,7); c.fill(); } };
+const sgDreamCall={C:1000,D:1900,sig:true,
+  atk:t=>({pose:atPose(t<1400?"cast":"idle",{eyes:t<900?"shut":undefined}),arc:t<1400?-6*Math.sin(t/250):0}),
+  def:t=>t>=1000&&t<1650?{off:[Math.sin(t/14)*2,0],pose:"hurt",sy:0.94}:null,
+  back(c,t,x){ const tg=x.target, R=tg.r, W=1e4; if(t<150||t>1850) return; const dim=t<500?(t-150)/350:t<1450?1:Math.max(0,1-(t-1450)/400), rise=t<950?eio(Math.max(0,(t-300)/650)):1;
+    c.save(); c.fillStyle=`rgba(8,4,22,${0.55*dim})`; c.fillRect(-W,-W,W*2,W*2); const v=c.createRadialGradient(tg.x,tg.y,R,tg.x,tg.y,R*6); v.addColorStop(0,"rgba(60,30,110,0)"); v.addColorStop(1,`rgba(10,4,26,${0.5*dim})`); c.fillStyle=v; c.fillRect(tg.x-R*8,tg.y-R*8,R*16,R*16);
+    for(let i=0;i<24;i++){ const q=((t/2400)+atH(i*3))%1, px=tg.x+(atH(i*7)-0.5)*R*9, py=tg.y+R*2-q*R*7; atGlowA(c,px,py,R*0.06,[190,170,255],dim*Math.sin(q*Math.PI)); }
+    const hr=R*1.25, hx=tg.x, hy=tg.foot-R*(0.6+2.3*rise); c.globalAlpha*=dim*Math.min(1,rise*1.5); HR.dreamShade(c,hx,hy,hr,t,t<900?0:Math.min(1,(t-900)/160)); c.restore(); },
+  fx(c,t,x){ const tg=x.target, R=tg.r; if(t<150||t>1850) return; const dim=t<500?(t-150)/350:t<1450?1:Math.max(0,1-(t-1450)/400);
+    for(let i=0;i<3;i++){ const q=((t/1100)+i/3)%1; SG.ring(c,tg.x,tg.y-R*0.3,R*(0.5+3*q),R*(0.35+2.1*q),[150,110,230],2,0.5*(1-q)*dim); }
+    if(t>=1000&&t<1500){ const k=(t-1000)/500; c.save(); c.globalCompositeOperation="lighter"; atGlowA(c,tg.x,tg.y-R*0.3,R*(1+1.5*k),[220,40,80],0.6*(1-k)); c.restore(); for(let i=0;i<10;i++){ const a=i/10*Math.PI*2, v=R*(0.6+1.6*eo(k)); c.strokeStyle=`rgba(40,10,60,${0.9*(1-k)})`; c.lineWidth=3; c.beginPath(); c.moveTo(tg.x+Math.cos(a)*v*0.6,tg.y-R*0.3+Math.sin(a)*v*0.6); c.lineTo(tg.x+Math.cos(a)*v,tg.y-R*0.3+Math.sin(a)*v); c.stroke(); } }
+    atImpact(t,1000,0.5,0.12); }};
+
+/* ---- Cthulhu's Sunken Rise: seawater floods the floor between them with drowned ruins showing under it, Cthulhu sinks into it and rises high
+   with water pouring off it, then comes down claws first on the target in a tall crown of spray, and the waves roll out across the flood. */
+const sgSunkenRise={C:1050,D:1900,sig:true,
+  atk:t=>{ if(t<350){ const k=eo(t/350); return {sy:1-0.12*k,sx:1+0.06*k,arc:14*k,pose:"crouch",alpha:1-0.45*k}; } if(t<800){ const k=eo((t-350)/450); return {f:0.4*k,arc:14-164*k,pose:"slamup",alpha:0.55+0.45*k}; }
+    if(t<1050){ const k=ei((t-800)/250); return {f:0.4+0.38*k,arc:-150+150*k,pose:"slam"}; } if(t<1250) return {f:0.78,pose:"slam",sy:0.9}; const k=(t-1250)/550; return {f:0.78*(1-eio(k)),arc:-30*Math.sin(Math.min(1,k)*Math.PI),pose:"idle"}; },
+  def:t=>SG.knock(t,1050,1,50,600),
+  back(c,t,x){ const s=x.self, tg=x.target, R=tg.r; if(t>1750) return; const a=t<200?t/200:t<1400?1:Math.max(0,1-(t-1400)/350), cx=(s.x+tg.x)/2, ground=tg.foot+2, rx=Math.abs(tg.x-s.x)*0.9+R*1.8, ry=R*0.45;
+    c.save(); c.globalAlpha*=a; c.beginPath(); c.ellipse(cx,ground,rx,ry,0,0,7); c.clip(); const g=c.createLinearGradient(0,ground-ry,0,ground+ry); g.addColorStop(0,"#5aa6dc"); g.addColorStop(1,"#163e7e"); c.fillStyle=g; c.fillRect(cx-rx,ground-ry,rx*2,ry*2);
+    c.fillStyle="rgba(10,30,60,.45)"; for(let i=0;i<6;i++){ const px=cx+(i-2.5)*rx*0.32, w=R*0.18, h=R*(0.2+0.15*(i%3)); c.fillRect(px-w/2,ground-h*0.2,w,h); c.fillRect(px-w*0.8,ground-h*0.2-R*0.06,w*1.6,R*0.06); }   // drowned ruins under the water
+    c.strokeStyle="rgba(235,250,255,.6)"; c.lineWidth=1.5; for(let i=0;i<6;i++){ const xx=cx+(i-2.5)*rx*0.3+Math.sin(t/250+i)*R*0.4, yy=ground+(i%3-1)*ry*0.4; c.beginPath(); c.moveTo(xx-R*0.4,yy); c.lineTo(xx+R*0.4,yy); c.stroke(); } c.restore();
+    for(let i=0;i<4;i++){ const ph=((t/700)+i/4)%1; SG.ring(c,cx,ground,rx*0.25+rx*0.75*ph,ry*0.3+ry*0.7*ph,[210,240,255],1.5,0.6*(1-ph)*a); } },
+  fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, ground=tg.foot+2;
+    if(t>=330&&t<900){ const k=(t-330)/570, top=s.foot+(s.y-s.foot)*0.2, h=Math.max(0,s.foot+2-top)*Math.sin(Math.min(1,k*1.3)*Math.PI*0.5)*(1-Math.max(0,(k-0.75)/0.25)), w=s.r*(0.55+0.15*Math.sin(t/60)); if(h>2){ const g=c.createLinearGradient(0,s.foot-h,0,s.foot); g.addColorStop(0,"rgba(220,245,255,.9)"); g.addColorStop(1,"rgba(60,140,215,.85)");
+      c.fillStyle=g; c.beginPath(); c.moveTo(s.x-w,s.foot+2); c.quadraticCurveTo(s.x-w*0.55,s.foot-h*0.5,s.x-w*0.7,s.foot-h); c.lineTo(s.x+w*0.7,s.foot-h); c.quadraticCurveTo(s.x+w*0.55,s.foot-h*0.5,s.x+w,s.foot+2); c.closePath(); c.fill();
+      c.fillStyle="#fff"; for(let i=0;i<7;i++){ c.beginPath(); c.arc(s.x+(i-3)*w*0.24,s.foot-h+Math.sin(t/50+i)*3,w*0.16,0,7); c.fill(); } } }   // the water spout it rises on
+    if(t>=350&&t<1000){ const k=(t-350)/650; for(let i=0;i<9;i++){ const ph=(k*2+i/9)%1, sx=s.x+(i-4)*s.r*0.22; c.strokeStyle=`rgba(170,220,255,${0.8*(1-ph)})`; c.lineWidth=2.4; c.beginPath(); c.moveTo(sx,s.y-s.r*0.4+ph*s.r*0.8); c.lineTo(sx,s.y-s.r*0.4+ph*s.r*0.8+s.r*0.5); c.stroke();
+      HR.drop(c,sx+Math.sin(i)*s.r*0.1,s.foot-ph*s.r*0.2+ph*ph*s.r*1.8,s.r*0.06,[170,220,255],0.9*(1-ph)); } }
+    if(t>=1050&&t<1700){ const k=(t-1050)/650; for(let i=0;i<9;i++){ const u=(i-4)/4, hgt=R*(1.6+1.6*(1-Math.abs(u)))*Math.sin(Math.min(1,k*1.5)*Math.PI*0.5)*(1-k), px=tg.x+u*R*1.4*(0.7+0.5*k); c.fillStyle=`rgba(${i%2?"200,236,255":"120,195,245"},${0.9*(1-k)})`;
+        c.beginPath(); c.moveTo(px-R*0.12,ground); c.quadraticCurveTo(px,ground-hgt*1.1,px+R*0.12,ground); c.fill(); HR.drop(c,px+u*R*0.3*k,ground-hgt-R*0.1,R*0.08,[230,248,255],0.9*(1-k)); }
+      HR.splash(c,tg.x,ground,R*1.4,k,22,[110,195,245]); SG.ring(c,tg.x,ground,R*(1+3*k),R*(0.25+0.6*k),[255,255,255],3,0.9*(1-k));
+      for(const sd of [-1,1]){ c.save(); c.globalCompositeOperation="lighter"; c.strokeStyle=`rgba(140,255,220,${1-k})`; c.lineWidth=4; c.lineCap="round"; for(let j=0;j<3;j++){ c.beginPath(); c.moveTo(tg.x+sd*R*(0.15+j*0.24),tg.y-R*1.0); c.quadraticCurveTo(tg.x+sd*R*(0.05+j*0.24),tg.y-R*0.4,tg.x+sd*R*(0.0+j*0.22),tg.y+R*0.2); c.stroke(); } c.restore(); } }
+    atImpact(t,1050,0.85,0.15); }};
+
+Object.assign(ANIM,{sg_tidalgrasp:sgTidalGrasp,sg_fishersong:sgFishersSong,sg_kidstampede:sgKidStampede,sg_blackgrove:sgBlackGrove,sg_swallowwhole:sgSwallowWhole,
+  sg_curtaincall:sgCurtainCall,sg_tatteredcloak:sgTatteredCloak,sg_gateopen:sgGateOpen,sg_globestorm:sgGlobeStorm,sg_dreamcall:sgDreamCall,sg_sunkenrise:sgSunkenRise});
+
 for(const k of ["sg_carryoff","sg_pinklights","sg_jarharvest","sg_tidalgrasp","sg_fishersong","sg_kidstampede","sg_blackgrove","sg_gateknock","sg_splitmaw","sg_manyeyes","sg_swallowwhole","sg_curtaincall","sg_tatteredcloak","sg_gateopen","sg_globestorm","sg_dreamcall","sg_sunkenrise","sg_feast"]) ANIM[k].sig=true;
 Object.assign(AR_KIND,{"Grave Dig":"sg_gravedig","Feast":"sg_feast","Carry Off":"sg_carryoff","Tickle Storm":"sg_ticklestorm","Pink Lights":"sg_pinklights","Jar Harvest":"sg_jarharvest",
   "Tidal Grasp":"sg_tidalgrasp","Fisher's Song":"sg_fishersong","Kid Stampede":"sg_kidstampede","Black Grove":"sg_blackgrove","Gate Knock":"sg_gateknock","Split Maw":"sg_splitmaw",
@@ -209,17 +463,17 @@ if(typeof KSND!=="undefined") Object.assign(KSND,{
   sg_ticklestorm:(d,t)=>{ for(let j=0;j<6;j++){ dNoise(d,t+0.28+j*0.105,0.05,0.12,'highpass',3500,2); sTone(d,t+0.28+j*0.105,'triangle',1500+(j%3)*300,1900,0.06,0.04); } },
   sg_pinklights:(d,t)=>{ sTone(d,t+0.1,'sine',600,1200,0.6,0.04); sTone(d,t+0.1,'sine',903,1800,0.6,0.025); [0.76,0.95,1.14].forEach(x=>sTone(d,t+x,'sine',1400,700,0.2,0.04)); },
   sg_jarharvest:(d,t)=>{ sTone(d,t+0.2,'triangle',2000,2000,0.1,0.04); sTone(d,t+0.45,'sine',400,1600,0.4,0.04); dNoise(d,t+0.82,0.05,0.3,'highpass',3000,2); sTone(d,t+0.84,'triangle',2400,2400,0.2,0.05); },
-  sg_tidalgrasp:(d,t)=>{ dNoise(d,t+0.2,0.6,0.14,'lowpass',600); dNoise(d,t+0.5,0.3,0.1,'bandpass',500,0.6); dKick(d,t+0.88,1); dNoise(d,t+0.88,0.6,0.3,'lowpass',900); },
+  sg_tidalgrasp:(d,t)=>{ dNoise(d,t+0.2,0.6,0.14,"lowpass",600); dNoise(d,t+0.56,0.38,0.1,"bandpass",500,0.6); dKick(d,t+0.94,1); dNoise(d,t+0.94,0.3,0.3,"lowpass",900); dNoise(d,t+1.38,0.5,0.25,"lowpass",900); },
   sg_fishersong:(d,t)=>{ [392,440,494,523,494,440].forEach((f,i)=>sTone(d,t+0.05+i*0.14,'sine',f,f,0.2,0.06)); dNoise(d,t+0.5,0.6,0.16,'lowpass',700); dKick(d,t+1.0,0.7); dNoise(d,t+1.0,0.6,0.25,'lowpass',900); },
-  sg_kidstampede:(d,t)=>{ for(let i=0;i<14;i++) dKick(d,t+0.26+i*0.06,0.12); for(let j=0;j<4;j++) sTone(d,t+0.56+j*0.15,'sawtooth',520,420,0.12,0.03); },
+  sg_kidstampede:(d,t)=>{ for(let i=0;i<22;i++) dKick(d,t+0.22+i*0.045,0.1); for(let j=0;j<8;j++){ sTone(d,t+0.56+j*0.09,'sawtooth',560+(j%3)*70,440,0.1,0.025); dNoise(d,t+0.56+j*0.09,0.05,0.12,'bandpass',900,1); } },
   sg_blackgrove:(d,t)=>{ for(let i=0;i<7;i++) dNoise(d,t+0.3+i*0.06,0.2,0.12,'lowpass',300+i*30); dNoise(d,t+0.9,0.3,0.14,'bandpass',500,0.8); sTone(d,t+0.9,'sine',120,80,0.6,0.06); },
   sg_gateknock:(d,t)=>{ [0.3,0.65,1.0].forEach((x,i)=>{ dKick(d,t+x,0.6+i*0.25); dNoise(d,t+x,0.3,0.2+i*0.06,'lowpass',300); }); },
   sg_splitmaw:(d,t)=>{ dNoise(d,t+0.42,0.3,0.12,'bandpass',300,0.6); sTone(d,t+0.42,'sawtooth',80,60,0.3,0.05); dKick(d,t+0.72,0.9); dNoise(d,t+0.72,0.12,0.4,'bandpass',1500,1.5); },
   sg_manyeyes:(d,t)=>{ for(let i=0;i<11;i++) dNoise(d,t+0.25+i*0.045,0.03,0.08,'bandpass',2500,3); sTone(d,t+0.82,'sine',220,110,0.6,0.07); sTone(d,t+0.82,'sine',233,117,0.6,0.05); },
-  sg_swallowwhole:(d,t)=>{ dNoise(d,t+0.1,0.5,0.14,'lowpass',500); sTone(d,t+0.64,'sine',300,90,0.5,0.06); for(let i=0;i<5;i++) sTone(d,t+0.8+i*0.15,'sine',300+i*80,500+i*80,0.06,0.03); dNoise(d,t+1.5,0.2,0.2,'bandpass',700,0.8); },
+  sg_swallowwhole:(d,t)=>{ dNoise(d,t+0.05,0.5,0.14,'lowpass',500); sTone(d,t+0.4,'sawtooth',90,60,0.35,0.04); dKick(d,t+0.76,0.8); sTone(d,t+0.78,'sine',300,90,0.4,0.06); for(let i=0;i<6;i++) sTone(d,t+1.0+i*0.11,'sine',260+i*40,420+i*40,0.07,0.03); sTone(d,t+1.55,'sine',120,300,0.14,0.05); dNoise(d,t+1.69,0.25,0.25,'bandpass',700,0.8); dKick(d,t+2.05,0.4); },
   sg_curtaincall:(d,t)=>{ dNoise(d,t+0.4,0.4,0.1,'bandpass',800,0.5); dKick(d,t+0.82,0.3); [0.9,1.1,1.3].forEach((x,i)=>sTone(d,t+x,'sine',600-i*100,500-i*100,0.25,0.04)); },
   sg_tatteredcloak:(d,t)=>{ dNoise(d,t+0.2,0.7,0.1,'bandpass',600,0.5); sTone(d,t+0.9,'sawtooth',110,104,0.6,0.04); sTone(d,t+0.9,'triangle',880,860,0.5,0.03); },
-  sg_gateopen:(d,t)=>{ sTone(d,t+0.15,'sine',200,800,0.4,0.05); dNoise(d,t+0.8,0.1,0.25,'lowpass',500); dKick(d,t+0.8,0.5); sTone(d,t+1.15,'sine',800,300,0.3,0.05); dKick(d,t+1.15,0.6); },
+  sg_gateopen:(d,t)=>{ dNoise(d,t+0.15,0.3,0.1,'lowpass',300); sTone(d,t+0.45,'sine',200,800,0.4,0.05); sTone(d,t+0.62,'sine',300,1200,0.3,0.03); dKick(d,t+1.06,0.7); dNoise(d,t+1.06,0.2,0.3,'lowpass',500); sTone(d,t+1.18,'sine',900,300,0.3,0.05); for(let i=0;i<4;i++) sTone(d,t+1.55+i*0.06,'triangle',1200+i*200,1600,0.08,0.03); },
   sg_globestorm:(d,t)=>{ for(let i=0;i<6;i++){ sTone(d,t+0.2+i*0.125,'sine',800+i*120,500,0.15,0.04); dKick(d,t+0.5+i*0.125,0.2); } },
   sg_dreamcall:(d,t)=>{ sTone(d,t+0.15,'sine',55,50,1.4,0.1); sTone(d,t+0.15,'sine',82,78,1.4,0.06); dNoise(d,t+0.3,1.0,0.06,'lowpass',200); sTone(d,t+1.0,'sawtooth',110,90,0.5,0.05); },
   sg_sunkenrise:(d,t)=>{ dNoise(d,t+0.05,0.4,0.12,'lowpass',500); sTone(d,t+0.35,'sine',100,300,0.45,0.05); dKick(d,t+1.05,1.1); dNoise(d,t+1.05,0.8,0.3,'lowpass',900); }
