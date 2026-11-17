@@ -80,7 +80,8 @@ function chibiRanch(s, t) {
       c.strokeStyle = 'rgba(255,255,255,.85)'; c.lineWidth = 1.6 * k; c.beginPath(); c.ellipse(x, wy, bw, bw * 0.16, 0, 0, Math.PI * 2); c.stroke();
     } else {
     c.setTransform(u * kx, 0, 0, u, x - 100 * u * kx, y - 188 * u);
-    CHIBI.draw(c, spec, pose, t);
+    if (s.shade) c.filter = `brightness(${1 - s.shade * 0.85})`;   // still in a dark doorway
+    CHIBI.draw(c, spec, pose, t); c.filter = 'none';
     }
     const h = CHIBI.height(spec.stage, spec.marks, spec.family) * ppu, w = CHIBI.width(spec.stage, spec.family) * ppu * kx;   // tap box for petting
     s.bbox = [s.x - w / 2, GROUND - h, s.x + w / 2, GROUND];
