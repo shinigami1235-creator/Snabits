@@ -941,9 +941,10 @@ Object.assign(ANIM,{
     atk:t=>({f:0,pose:t<180?"cast":t<860?"push":"idle"}),
     fx(c,t,x){ const o=x.from[0], tg=x.target; if(t<180){ c.fillStyle="rgba(255,255,255,.7)"; c.beginPath(); c.arc(o.x,o.y,3+t/30,0,7); c.fill(); return; }
       const w=Math.min(1,(t-180)/120)*Math.min(1,(900-t)/160); if(w<=0) return;
-      for(let i=0;i<14;i++){ const k=((t-180)/520+i/14)%1, p=lerpP(o,tg,k,0,Math.sin(i*2.1+t/90)*6*k), r=(4+k*14)*atBig(x);
-        c.fillStyle=`rgba(255,255,255,${0.75*w*(1-k*0.6)})`; c.beginPath(); c.arc(p.x,p.y-k*8,r,0,7); c.fill(); }
-      c.fillStyle=rgbS(x.col,0.25*w); c.beginPath(); c.arc(tg.x,tg.y,18*atBig(x),0,7); c.fill(); }},
+      const n=x.name||"", tint=/Toxic|Poison|Venom|Stink|Rot|Spore/.test(n)?[170,120,220]:/Smoke|Soot|Ash|Smog/.test(n)?[120,115,120]:/Sleep|Dream/.test(n)?[210,190,255]:/Fire|Hot|Scald|Steam/.test(n)?[255,250,250]:[245,248,255];   // 17 Nov 2026 audit: a cloud big enough to read, tinted by what it is
+      for(let i=0;i<18;i++){ const k=((t-180)/520+i/18)%1, p=lerpP(o,tg,k,0,Math.sin(i*2.1+t/90)*10*k), r=(8+k*26)*atBig(x);
+        SG.puff(c,p.x,p.y-k*10,r,0.85*w*(1-k*0.55),tint); }
+      c.fillStyle=rgbS(x.col,0.25*w); c.beginPath(); c.arc(tg.x,tg.y,28*atBig(x),0,7); c.fill(); }},
   /* Lern: it glows brighter and brighter, then bursts in rays that wash over the target */
   flash:{C:380,D:900,
     atk:t=>({f:0,pose:t<300?"cast":t<700?"push":"idle"}),

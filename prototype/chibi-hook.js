@@ -143,7 +143,12 @@ const unitOf = (st, h) => { const px = h.size * Math.min(0.86, Math.max(0.4, 0.6
 const ANIM = {
   tackle: { C: 330, D: 760,
     atk: t => t < 180 ? { f: -0.05 * eo(t / 180), pose: 'crouch' } : t < 330 ? { f: -0.05 + 0.87 * ei((t - 180) / 150), pose: 'tackle' }
-      : t < 440 ? { f: 0.82 - 0.14 * eo((t - 330) / 110), pose: 'tackle' } : { f: 0.68 * (1 - eio((t - 440) / 320)), arc: -Math.sin(eio((t - 440) / 320) * Math.PI) * 22, pose: 'idle' } },
+      : t < 440 ? { f: 0.82 - 0.14 * eo((t - 330) / 110), pose: 'tackle' } : { f: 0.68 * (1 - eio((t - 440) / 320)), arc: -Math.sin(eio((t - 440) / 320) * Math.PI) * 22, pose: 'idle' },
+    /* 17 Nov 2026 audit: a kick of dust as it pushes off, speed lines behind it as it charges, and a ring where it lands */
+    fx(c, t, x) { const s = x.self, tg = x.target, d = tg.x > s.x ? 1 : -1, R = tg.r || 30;
+      if (t > 150 && t < 420) { const k = (t - 150) / 270; c.save(); c.globalAlpha = 0.7 * (1 - k); c.fillStyle = '#e8dcc4'; for (let i = 0; i < 4; i++) { c.beginPath(); c.arc(s.x - d * (s.r * 0.8 + i * 10 + k * 26), s.foot - 4 - i * 3 - k * 10, 5 + i * 2 + k * 6, 0, 7); c.fill(); } c.restore(); }
+      if (t > 180 && t < 360) { const k = (t - 180) / 180; c.save(); c.strokeStyle = 'rgba(255,255,255,' + (0.8 * (1 - k)) + ')'; c.lineCap = 'round'; for (let i = 0; i < 5; i++) { const y = s.y - s.r * (0.6 - i * 0.3), L = 26 + (i % 2) * 18; c.lineWidth = 3 - (i % 2); c.beginPath(); c.moveTo(s.x - d * (s.r * 0.9), y); c.lineTo(s.x - d * (s.r * 0.9 + L), y); c.stroke(); } c.restore(); }
+      if (t > 330 && t < 600) { const k = (t - 330) / 270; c.save(); c.strokeStyle = 'rgba(255,255,255,' + (0.85 * (1 - k)) + ')'; c.lineWidth = 3; c.beginPath(); c.ellipse(tg.x - d * R * 0.5, tg.y, R * (0.3 + 0.7 * k), R * (0.5 + 0.9 * k), 0, d > 0 ? Math.PI * 0.55 : -Math.PI * 0.45, d > 0 ? Math.PI * 1.45 : Math.PI * 0.45); c.stroke(); c.restore(); } } },
   bite: { C: 300, D: 720,
     atk: t => t < 150 ? { f: -0.04 * eo(t / 150), pose: 'crouch' } : t < 300 ? { f: -0.04 + 0.8 * ei((t - 150) / 150), pose: 'bitewide' }
       : t < 410 ? { f: 0.76, pose: 'chomp' } : { f: 0.76 * (1 - eio((t - 410) / 300)), arc: -Math.sin(eio((t - 410) / 300) * Math.PI) * 16, pose: 'idle' },

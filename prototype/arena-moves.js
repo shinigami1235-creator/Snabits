@@ -70,7 +70,7 @@ Object.assign(ANIM,{
   drool:{C:620,D:1300,
     atk:t=>t<220?{sx:1-0.04*eo(t/220),sy:1+0.06*eo(t/220),pose:"bitewide",arc:-4*eo(t/220)}:t<320?{pose:"chomp",sy:0.94}:{pose:t<800?"happy":"idle"},
     def:t=>{ if(t<620||t>1300) return null; const a=1-(t-620)/680; return {sy:1-0.1*a,sx:1+0.06*a,pose:"hurt",off:[Math.sin(t/20)*2*a,0]}; },
-    fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, d=atDir(x), a={x:s.x+d*s.r*0.6,y:s.y}, b={x:tg.x,y:tg.y-R*0.4}, G=[176,112,226];
+    fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, d=atDir(x), a={x:s.x+d*s.r*0.6,y:s.y}, b={x:tg.x,y:tg.y-R*0.4}, nm=x.name||"", G=/Ink/.test(nm)?[36,26,52]:/Silk|Web/.test(nm)?[240,240,245]:/Goo|Slime|Gloop/.test(nm)?(x.body||[120,200,120]):/Mud/.test(nm)?[120,90,60]:[176,112,226];   // 17 Nov 2026 audit: goo is its own colour, ink is black, silk is white
       if(t>=150&&t<300){ const k=(t-150)/150; c.fillStyle=atRgba(G,0.9); c.beginPath(); c.ellipse(a.x,a.y+k*s.r*0.2,s.r*0.1,s.r*(0.1+0.25*k),0,0,7); c.fill(); }
       if(t>=300&&t<620){ const k=(t-300)/320, p=lerpP(a,b,k,R*2.4), w=R*0.32; c.fillStyle=atRgba(G,0.95); c.beginPath(); c.ellipse(p.x,p.y,w*(1+0.15*Math.sin(t/30)),w*(1-0.12*Math.sin(t/30)),0,0,7); c.fill();
         c.fillStyle="rgba(255,240,255,.6)"; c.beginPath(); c.arc(p.x-w*0.3,p.y-w*0.3,w*0.25,0,7); c.fill(); const q=lerpP(a,b,Math.max(0,k-0.1),R*2.4); c.strokeStyle=atRgba(G,0.6); c.lineWidth=w*0.4; c.beginPath(); c.moveTo(q.x,q.y); c.lineTo(p.x,p.y); c.stroke(); }
