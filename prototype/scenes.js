@@ -453,7 +453,8 @@ function awayScene(c, s, t, k) {
   c.setTransform(k, 0, 0, k, 0, 0); const g = c.createLinearGradient(0, 0, 0, G); skyCols.forEach((col, i) => g.addColorStop(i / 2, col)); c.fillStyle = g; c.fillRect(0, 0, vw, vh);
   const world = () => c.setTransform(k * Z, 0, 0, k * Z, -L * Z * k, (G - GROUND * Z) * k);
   world();
-  if (area && typeof areaArt === 'function' && areaArt(c, area[1], area[2], t)) { if (s.night || s.dusk) { c.setTransform(k, 0, 0, k, 0, 0); regionNight(c, s, t, vw, vh, G); world(); } }
+  if (typeof deepArt === 'function' && deepArt(c, s, bg, t, off)) { /* a team expedition's corridor or room (deep-art.js) */ }
+  else if (area && typeof areaArt === 'function' && areaArt(c, area[1], area[2], t)) { if (s.night || s.dusk) { c.setTransform(k, 0, 0, k, 0, 0); regionNight(c, s, t, vw, vh, G); world(); } }
   else if (reg) { regionArt(c, reg, t, off); if ((s.night || s.dusk) && typeof regionNight === 'function') { c.setTransform(k, 0, 0, k, 0, 0); regionNight(c, s, t, vw, vh, G); world(); } }
   else if (typeof npcPlaceArt === 'function' && npcPlaceArt(c, s, bg, t)) { /* the shop or the lab */ }
   else { drillArt(c, s, bg, t, off); placeDeco(c, bg, t); }

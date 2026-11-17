@@ -3,7 +3,7 @@
    - The pack: before setting off, the team takes things from the bag. How many it can carry comes from the three Snabits'
      Power added up, against what the grade's Snabits have. Whatever isn't used comes back to the bag.
    - Nora sells the expedition things: trail mix and energy nuts for energy, bandages and medicine for HP, a lantern to see
-     further on one floor, and rope that gets the team past the next trap.
+     further on one floor, and rope for climbing out of a pit.
    - Relics: old things found in hidden rooms. Nora buys them, or they stay in the bag.
    Needs deep.js, town.js and game.js. */
 
@@ -13,7 +13,7 @@ const RELIC_PRICE = { 'Old League badge': 1600, 'Fossil shell': 1200, 'Carved st
 (function deepGoods() {
   if (typeof MARKET !== 'undefined') Object.assign(MARKET, { 'Trail mix': 60, 'Bandage': 90, 'Lantern': 150, 'Rope': 120 });
   if (typeof DESC !== 'undefined') Object.assign(DESC, { 'Trail mix': 'Nuts and dried fruit for a long day out exploring.', 'Bandage': 'Wraps up a scrape on an expedition.',
-    'Lantern': 'Lights the way further ahead on an expedition.', 'Rope': 'Strong rope for getting past a trap on an expedition.',
+    'Lantern': 'Lights the way further ahead on an expedition.', 'Rope': 'Strong rope for climbing out of a pit on an expedition.',
     'Old League badge': 'A League badge from long before the League was called that.', 'Fossil shell': 'A shell turned to stone, from a sea that dried up long ago.',
     'Carved stone mask': 'A stone face with a Snabit carved on its forehead.', 'Silver compass': "It doesn't point north. It points somewhere.",
     'Faded map': 'A map of a place nobody has found yet.', 'Ancient coin': 'A coin with a Snabit on one side and nothing on the other.', 'Cracked crystal egg': 'Something was in this once.' });

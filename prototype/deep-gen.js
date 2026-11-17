@@ -314,7 +314,10 @@ function dgFirst(F, from, to, ok) { const H = dgHops(F, from, ok); if (H.D[to] <
 
 /* traps on some corridors, a hidden way into one dead-end room with a relic in it, and now and then a gate over the stairs down
    with a lever somewhere else on the floor */
-function dgSecrets(M, R) {
+// the traps a region's corridors lean towards: 1 darts, 2 a boulder, 3 a pit, 4 arrows, 5 fire from the walls, 6 poison gas
+const DG_TRAPS = { Blaze: [5, 5, 2], Venom: [6, 6, 1], Stone: [2, 3, 3], Brawl: [2, 4], Steel: [4, 1, 5], Spark: [1, 4], Tide: [3, 1], Frost: [3, 2], Wild: [6, 1, 3], Shade: [3, 4, 6], Light: [4, 5], Charm: [1, 3], Void: [6, 5, 3] };
+function dgSecrets(M, R, el) {
+  const kinds = [1, 2, 3, 4, 5, 6].concat(DG_TRAPS[el] || [], DG_TRAPS[el] || []);
   M.floors.forEach((F, f) => {
     dgGraph(F);
     if (f === 1 && R() < 0.4) { const L = M.place('lever', {}, [1], R); if (L) { const d = F.feat[dgI(F, ...F.down)]; if (d) d.locked = true; } }
@@ -325,6 +328,6 @@ function dgSecrets(M, R) {
       for (const p of F.pats) if (F.room[dgI(F, p.x, p.y)] === k) { const o = (e.a === k ? e.b : e.a), fr = dgFree(F, o); if (fr.length) [p.x, p.y] = fr[fr.length >> 1]; }   // a patrol inside moves out first
       const c = dgFree(F, k)[0]; if (c) { const i = dgI(F, ...c); F.feat[i] = { k: 'relic', id: `${f}:relic:${i}`, f, x: c[0], y: c[1] }; } }
     const ways = F.E.filter(e => !e.hidden && e.block < 0 && e.a !== F.upRoom && e.b !== F.upRoom);
-    for (let t = 0, nT = 1 + f + Math.floor(R() * 2); t < nT && ways.length; t++) ways.splice(Math.floor(R() * ways.length), 1)[0].trap = 1 + Math.floor(R() * 3);
+    for (let t = 0, nT = 1 + f + Math.floor(R() * 2); t < nT && ways.length; t++) ways.splice(Math.floor(R() * ways.length), 1)[0].trap = kinds[Math.floor(R() * kinds.length)];
   });
 }
