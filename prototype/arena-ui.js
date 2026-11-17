@@ -214,7 +214,7 @@ function atLoop(now){
     if(!ar.turn.done&&t>=AT.turn.C) run(()=>ar.land());
     if(ar.turn&&t>=AT.turn.D){ run(()=>ar.endTurn()); AT.turn=null; } }
   while(AT.acc>=AR.DT&&!ar.over&&!ar.turn){ AT.acc-=AR.DT; ar.step(); flush(); }
-  if(ar.over) for(const i of [0,1]) if(ar.winner===1-i&&AT.side[i].ko==null){ AT.side[i].ko=AT.te; if(typeof atSfx==="function") atSfx("ko"); }
+  if(ar.over) for(const i of [0,1]) if(ar.winner===1-i&&AT.side[i].ko==null){ AT.side[i].ko=AT.te; if(typeof atCheer==="function") atCheer(2400); if(typeof atSfx==="function") atSfx("ko"); }
   atHud(); atRows(); atDraw(now,frozen?0:step*1000);
   if(ar.over&&!AT.done){ AT.done=true; setTimeout(atResult,1300); }
   AT.raf=requestAnimationFrame(atLoop);
@@ -271,6 +271,7 @@ function atEvent(e,now){
       if(tier==="heavy"||tier==="special") AT.dust={i:1-e.i,t0:te,n:tier==="special"?14:8};
       AT.spark={i:1-e.i,n:T.sparks,col:S.anim?S.anim.col:[255,236,160]}; if(S.anim&&S.anim.contact) S.recoil={t0:te,amt:tier==="heavy"?10:6};
       try{ sfx(tier==="heavy"?"heavy":tier==="medium"?"hit":"tap"); if(S.anim) elSfx(S.anim.el,"hit"); }catch(err){} }
+    if(e.h===0&&(e.crit||tier==="special")&&typeof atCheer==="function") atCheer(1300);   // the crowd gets to its feet for a crit or a special
     AT.fx.push({i:1-e.i,t0:now+e.h*90,txt:String(e.dmg),crit:e.crit,size:{light:20,medium:23,heavy:28,special:36}[tier]}); if(e.crit&&e.h===0) AT.fx.push({i:1-e.i,t0:now,txt:"Critical!",crit:true,size:13,lift:30}); }
   if(e.t==="miss"){ const o=AT.side[1-e.i];
     if((e.why==="dodge"||e.why==="phase"||e.why==="parry")&&!o.dodgeAt&&!(o.react&&o.react.kind==="dodge")) atPlanDodge(e.i,te+150,S.anim?S.anim.kind:"bolt",e.why);
@@ -661,12 +662,13 @@ function atDraw(now,dte){
     // outside a special's close-up, both Snabits always stay in the shot however the camera leans
     if(!cine||ck>=0.86){ const need=Math.max(Math.abs(a-mid),Math.abs(b-mid))+60*scale; z=Math.min(z,W/(2*need)); }
     AT.zoom=AT.zoom==null?z:AT.zoom+(z-AT.zoom)*(1-Math.exp(-dte/(fast?90:260)));
+    if(!cine||ck>=0.86){ const need=Math.max(Math.abs(a-mid),Math.abs(b-mid))+60*scale; AT.zoom=Math.max(AT.zMin||0,Math.min(AT.zoom,W/(2*need))); }   // a knockback pulls the camera out at once, so nobody is thrown off the screen
     const v=W/AT.zoom, want=Math.max(0,Math.min(WW-v,mid-v/2)); AT.cam=AT.cam==null?want:AT.cam+(want-AT.cam)*(1-Math.exp(-dte/(fast?70:140))); AT.cam=Math.max(0,Math.min(WW-v,AT.cam)); }
   const pk=AT.punch?Math.max(0,1-(te-AT.punch.t0)/260):0, z=AT.zoom*(1+(AT.punch?AT.punch.amt:0)*Math.sin(Math.min(1,pk)*Math.PI*0.5)*pk), zc=W/2;
   const tilt=cine?0.06*Math.sin(Math.min(1,ck/0.2)*Math.PI/2)*(ck<0.86?1:Math.max(0,1-(ck-0.86)/0.14)):0;
   c.setTransform(dpr,0,0,dpr,0,0); c.clearRect(0,0,W,H);
   if(tilt){ c.translate(W/2,AT.floorS); c.rotate(-tilt*(AT.side[cine.i].dir||1)); c.translate(-W/2,-AT.floorS); }
-  c.translate(sx,AT.floorS+sy); c.translate(zc,0); c.scale(z/AT.zoom,z/AT.zoom); c.translate(-zc,0); c.scale(AT.zoom,AT.zoom); c.translate(-AT.cam,-FY); c.drawImage(AT.bg,0,0,WW,HH);
+  c.translate(sx,AT.floorS+sy); c.translate(zc,0); c.scale(z/AT.zoom,z/AT.zoom); c.translate(-zc,0); c.scale(AT.zoom,AT.zoom); c.translate(-AT.cam,-FY); c.drawImage(AT.bg,0,0,WW,HH); if(typeof atCrowdDraw==="function") atCrowdDraw(c,te);
   // a special's charge dims the arena and throws speed lines out from the attacker
   if(cine){ const fade=Math.min(1,ck/0.15)*(ck<0.86?1:Math.max(0,1-(ck-0.86)/0.14)), P=AT.lastPlaced&&AT.lastPlaced[cine.i];
     c.fillStyle=`rgba(10,8,22,${0.72*fade})`; c.fillRect(0,0,WW,HH);
@@ -833,6 +835,7 @@ function atStage(c,W,H,FY,wild){
     const gr=c.createLinearGradient(0,FY-130,0,H); gr.addColorStop(0,"#9ad46e"); gr.addColorStop(1,"#6fae4c"); c.fillStyle=gr; c.fillRect(0,FY-130,W,H-FY+130);
     for(let k=0;k<W*(H-FY+130)/600;k++){ const x=(k*7919)%W, y=FY-130+((k*104729)%(H-FY+130)); c.fillStyle=k%3?"rgba(60,110,40,.35)":"rgba(220,250,180,.4)"; c.fillRect(x,y,2,6); }
     return; }
+  if(typeof atStageVenue==="function") return atStageVenue(c,W,H,FY,atVenueOf(AT&&AT.opts));   // the town ring, the stadiums or the Tower (arena-venues.js)
   const sand=FY-230, crowd=sand-12, ctop=Math.max(0,crowd-380);
   const sky=c.createLinearGradient(0,0,0,ctop+40); sky.addColorStop(0,"#140f26"); sky.addColorStop(1,"#2a1f4a"); c.fillStyle=sky; c.fillRect(0,0,W,ctop+40);
   for(let k=0;k<W;k+=W/7){ c.fillStyle="rgba(255,236,170,.9)"; c.beginPath(); c.arc(k+W/14,ctop-60,5,0,7); c.fill(); c.fillStyle="rgba(255,236,170,.08)"; c.beginPath(); c.arc(k+W/14,ctop-60,26,0,7); c.fill(); }
@@ -873,10 +876,10 @@ function atResult(){
 }
 const displayNameOf=p=>p.f.name||"It";
 /* the game's fights on the new arena. Takes the same options the old fight screen took and hands back the same result */
-function arenaGame({s,foe,mode="control",title="",noDraw=false,record=false,learn=false,foeHabits=null,rand=Math.random,foeHp=null,deep=null,onEnd}){
+function arenaGame({s,foe,mode="control",title="",noDraw=false,record=false,learn=false,foeHabits=null,rand=Math.random,foeHp=null,deep=null,venue=null,onEnd}){
   if(record) s.fightNo=(s.fightNo||0)+1;
   if(foe&&foe.m&&typeof dexSee==="function") dexSee(foe.m);
-  const wild=/^Wild/.test(title), opts={s,mode,title,noDraw,learn,rand,onEnd,wild,foeHp,deep,mus:foe.boss?"boss":wild?"wild":"cup"};
+  const wild=/^Wild/.test(title), opts={s,mode,title,noDraw,learn,rand,onEnd,wild,foeHp,deep,venue,mus:foe.boss?"boss":wild?"wild":"cup"};
   // a ghost is a friend's Snabit: it fights with its own moves, preset and habits, the way the player's does
   const go=()=>{ const A={f:arPlayer(s),spec:chibiSpec(fightMon(s),s),level:s.level}, B=foeHabits&&foeHabits.m?{f:arPlayer(foeHabits),spec:chibiSpec(fightMon(foeHabits),foeHabits),level:foeHabits.level}:{f:arFoe(foe),spec:chibiSpec(foe.fm),level:foe.level};
     if(foeHabits&&typeof displayName==="function") B.f.name=displayName(foeHabits)+"'s ghost";
