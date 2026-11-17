@@ -150,7 +150,7 @@ function atSize(){ const cv=document.getElementById("at-cv"), scr=cv.parentEleme
   cv.style.height=H+"px"; cv.width=W*dpr; cv.height=H*dpr; AT.W=W; AT.H=H; AT.dpr=dpr; AT.WW=Math.round(W*1.6); AT.bg=null;
   // feet a little below the middle, so the fight sits in the centre of the screen with the clock in view.
   // the arena is drawn tall enough to fill the screen when the camera pulls all the way back
-  const hb=document.getElementById("at-hbot"); AT.floorS=Math.round(Math.min(H-(hb?hb.offsetHeight:90)-22,H*0.6)); AT.zMin=W/AT.WW; AT.HH=Math.ceil(H/AT.zMin); AT.FY=Math.round(AT.floorS/AT.zMin); }
+  const hb=document.getElementById("at-hbot"); AT.floorS=Math.round(Math.min(H-(hb?hb.offsetHeight:90)-22,H*(AT.opts&&AT.opts.deep?0.6:0.7))); AT.zMin=W/AT.WW; AT.HH=Math.ceil(H/AT.zMin); AT.FY=Math.round(AT.floorS/AT.zMin); }   // feet in the lower third, so the fighters fill the stage instead of standing on a field of empty sand
 window.addEventListener("resize",()=>{ if(AT&&document.getElementById("at-cv")) atSize(); });
 /* the range cells on the fight screen: yours and the opponent's, lit where the two of you stand now */
 /* your four moves sit in a row under your feet, Close nearest the opponent, so you can see at a glance which are in reach,
@@ -271,7 +271,7 @@ function atEvent(e,now){
       if(tier==="heavy"||tier==="special") AT.dust={i:1-e.i,t0:te,n:tier==="special"?14:8};
       AT.spark={i:1-e.i,n:T.sparks,col:S.anim?S.anim.col:[255,236,160]}; if(S.anim&&S.anim.contact) S.recoil={t0:te,amt:tier==="heavy"?10:6};
       try{ sfx(tier==="heavy"?"heavy":tier==="medium"?"hit":"tap"); if(S.anim) elSfx(S.anim.el,"hit"); }catch(err){} }
-    AT.fx.push({i:1-e.i,t0:now+e.h*90,txt:String(e.dmg),crit:e.crit,size:{light:16,medium:19,heavy:24,special:32}[tier]}); if(e.crit&&e.h===0) AT.fx.push({i:1-e.i,t0:now,txt:"Critical!",crit:true,size:13,lift:30}); }
+    AT.fx.push({i:1-e.i,t0:now+e.h*90,txt:String(e.dmg),crit:e.crit,size:{light:20,medium:23,heavy:28,special:36}[tier]}); if(e.crit&&e.h===0) AT.fx.push({i:1-e.i,t0:now,txt:"Critical!",crit:true,size:13,lift:30}); }
   if(e.t==="miss"){ const o=AT.side[1-e.i];
     if((e.why==="dodge"||e.why==="phase"||e.why==="parry")&&!o.dodgeAt&&!(o.react&&o.react.kind==="dodge")) atPlanDodge(e.i,te+150,S.anim?S.anim.kind:"bolt",e.why);
     AT.fx.push({i:1-e.i,t0:now,txt:{out:"Out of reach",block:"Blocked",parry:"Parried",dodge:"Dodged",phase:"Phased",resist:"Resisted"}[e.why]||"Miss",col:e.why==="resist"?"#c9cbd6":null}); }
@@ -774,7 +774,7 @@ function atDraw(now,dte){
   atStreams(c,placed,te); drawSparks(c,dte); drawPuffs(c); atParts(c,dte);
   // damage numbers and words over the head
   AT.fx=AT.fx.filter(f=>now-f.t0<900); c.textAlign="center"; for(const f of AT.fx){ if(now<f.t0) continue; const k=(now-f.t0)/900, p=placed[f.i]; if(!p) continue;
-    const pop=1+0.7*Math.max(0,1-(now-f.t0)/170); c.font=`800 ${Math.round((f.size||(f.crit?19:15))*pop/z)}px system-ui`; c.globalAlpha=1-k*k; c.lineWidth=4; c.strokeStyle="#14151d"; c.fillStyle=f.col||(f.buff?"#8fd3ff":f.crit?"#ffc93c":"#ffffff");
+    const pop=1+0.7*Math.max(0,1-(now-f.t0)/170); c.font=`800 ${Math.round((f.size||(f.crit?21:18))*pop/z)}px system-ui`; c.globalAlpha=1-k*k; c.lineWidth=5/z; c.strokeStyle="#14151d"; c.fillStyle=f.col||(f.buff?"#8fd3ff":f.crit?"#ffc93c":"#ffffff");
     // words that pop up together stack instead of landing on each other, and all of them sit above the status chips
     if(f.stack==null) f.stack=f.side?0:AT.fx.filter(g=>g!==f&&g.i===f.i&&!g.side&&g.stack!=null&&Math.abs(g.t0-f.t0)<450).length;
     const sd=AT.side[f.i]&&AT.side[f.i].dir||1, cn=p.center||p, y=f.side?cn.y-(k*34)/z:p.top.y-(80+Math.min(f.lift||0,12)+f.stack*24+k*26)/z, fx=f.side?p.x-sd*(p.r+16):p.x+(f.dx||0)*(1+k*0.6); c.strokeText(f.txt,fx,y); c.fillText(f.txt,fx,y); c.globalAlpha=1; }
@@ -838,7 +838,10 @@ function atStage(c,W,H,FY,wild){
   for(let k=0;k<W;k+=W/7){ c.fillStyle="rgba(255,236,170,.9)"; c.beginPath(); c.arc(k+W/14,ctop-60,5,0,7); c.fill(); c.fillStyle="rgba(255,236,170,.08)"; c.beginPath(); c.arc(k+W/14,ctop-60,26,0,7); c.fill(); }
   c.fillStyle="#3a2b5e"; c.fillRect(0,ctop,W,crowd-ctop);
   const cols=["#ffb35c","#8fd3ff","#ff8a7a","#c7a6ff","#5ad18a","#ffe07a","#f4efe4"];
+  // the crowd is drawn soft and a little dim, so it reads as the stands behind the fight and the fighters stay the sharpest thing on screen
+  c.save(); c.filter="blur(1.4px)";
   for(let r=0,y=crowd-8;y>ctop+6;r++,y-=15) for(let x=0;x<W;x+=13){ c.fillStyle=cols[((x*131+r*977)>>3)%cols.length]; c.beginPath(); c.arc(x+(r%2?6:0),y,4.5,0,7); c.fill(); }
+  c.restore(); { const dim=c.createLinearGradient(0,ctop,0,crowd); dim.addColorStop(0,"rgba(20,14,38,.55)"); dim.addColorStop(1,"rgba(20,14,38,.25)"); c.fillStyle=dim; c.fillRect(0,ctop,W,crowd-ctop); }
   for(let k=0;k<6;k++){ c.fillStyle=["#e2483f","#3b6fb8","#f2c14e","#4caf6a","#c08cff","#ff8a3d"][k]; c.fillRect(6+k*(W-12)/6,crowd,(W-12)/6-5,12); }
   const fl=c.createLinearGradient(0,sand,0,H); fl.addColorStop(0,"#d9a866"); fl.addColorStop(1,"#b98245"); c.fillStyle=fl; c.fillRect(0,sand,W,H-sand);
   // sand grain, and a painted ring line in front of the fighters
