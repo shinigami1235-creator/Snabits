@@ -60,7 +60,7 @@ async function deepMore(reg, n, st, g, T, leadOf, setLead, K, used, found, M) {
   if (n.k === 'shrine') {
     const p = prop({ k: 'shrine', x: 160, y: GROUND }); await walkTo(130, 60, 'walk'); s.pose = 'idle';
     K("This is an old League waystone. Put a paw on it and pick what we need most."); await rwait(600);
-    const c = await deepChoice([['A rest', 'Everyone gets some energy back'], ['The map', 'Shows every path out here'], ['Luck', 'The next chest has more in it']]);
+    const c = await deepChoice([['A rest', 'For tired legs'], ['The map', 'Every path out here'], ['Luck', 'For the next chest']]);
     used.push(n.id); spark(160, GROUND - 40, 'sparkle', 10); rsfx('sparkle'); s.pose = 'happy';
     if (c === 0) { for (const m of T) if (!m.out) m.e = Math.min(m.max, m.e + 4); K('That feels better. Let\'s keep going.'); }
     if (c === 1) { for (const k of Object.keys(M.N)) if (!st.seen.includes(k)) st.seen.push(k); K('There. Now we can see the whole way.'); }
