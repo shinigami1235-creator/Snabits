@@ -838,6 +838,7 @@ class Arena{
     if(!m.dash&&!this.inRange(m)) return "out";
     if(o.buff.bubble&&(m.range==="Mid"||m.range==="Far")) return "block";
     if(o.buff.protect&&(m.dmg||m.status)) return "block";
+    if(o.buff.riposte&&m.dmg&&!m.cast) return "parry";   // Riposte (Gid, 17 Nov 2026): a ready stance that dodges the next strike and counters
     if(o.f.ability==="Illusion"&&!o.illusion&&m.dmg) return "phase";   // Kitsune's Illusion: a fox-fire copy takes the first attack
     if(roll>this.hitChance(p,m)) return o.buff.phase&&!m.noDodge?"phase":"dodge";
     if(this.slips(p,m,roll)) return "dodge";
@@ -969,6 +970,8 @@ class Arena{
     if(m.dash){ const want=m.dash==="near"?14:AR.BODY+2; p.x=o.x-d*want; p.x=Math.max(0,Math.min(AR.LEN,p.x)); }
     else if(!this.inRange(m)){ this.ev.push({t:"miss",i:p.i,m,why:"out"}); return; }   // it stepped out of reach during the windup
     if(o.buff.bubble&&(m.range==="Mid"||m.range==="Far")){ delete o.buff.bubble; this.ev.push({t:"miss",i:p.i,m,why:"block"}); return; }
+    if(o.buff.riposte&&m.dmg&&!m.cast){ delete o.buff.riposte; const back=Math.max(1,Math.round(m.dmg*0.9*(0.9+R()*0.2)));
+      this.ev.push({t:"miss",i:p.i,m,why:"parry"}); p.hp=Math.max(0,p.hp-back); o.dealt+=back; this.ev.push({t:"riposte",i:o.i,dmg:back}); return; }
     if(o.buff.protect&&(m.dmg||m.status)){ delete o.buff.protect; this.ev.push({t:"block",i:p.i,m}); return; }
     if(o.f.ability==="Illusion"&&!o.illusion&&m.dmg){ o.illusion=1; this.ev.push({t:"ability",i:o.i,name:"Illusion"}); this.ev.push({t:"miss",i:p.i,m,why:"phase"}); return; }
     if(o.f.ability==="Flicker"&&m.dmg&&R()<0.1){ this.ab(o,"Flicker"); this.ev.push({t:"miss",i:p.i,m,why:"phase"}); return; }   // Lumo
@@ -1026,7 +1029,7 @@ class Arena{
       tg.hp=Math.max(0,tg.hp-dmg); hitBy.dealt+=dmg; total+=dmg; this.ev.push({t:"hit",i:hitBy.i,m,dmg,crit,h}); if(SKILLS[m.name]) (tg.f.hitBy=tg.f.hitBy||{})[m.name]=1;
       if(shatter){ this.ev.push({t:"cure",i:tg.i,name:"Freeze",why:"shatter"}); tg.st=null; tg.thawT=5; }
       if(tg.sleep>0){ tg.sleep=0; this.ev.push({t:"wake",i:tg.i}); }
-      if(tg===o&&!m.cast){ const ct=o.buff.counter?o.counterMul:o.buff.riposte?1.5:0;
+      if(tg===o&&!m.cast){ const ct=o.buff.counter?o.counterMul:0;
         if(ct){ const back=Math.round(dmg*ct); p.hp=Math.max(0,p.hp-back); o.dealt+=back; this.ev.push({t:"counter",i:o.i,dmg:back}); if(o.buff.counter) delete o.buff.counter; } }
     }
     if(p.cpunch&&!m.cast&&m.dmg) p.cpunch=0;

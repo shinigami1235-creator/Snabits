@@ -154,6 +154,10 @@ function atFx(e,now){
     atSfx("shatter"); say(1-e.i,"Blocked",{col:"#9fd8ff",size:17}); AT.trauma=Math.min(1,AT.trauma+0.2); }
   if(e.t==="mirror"){ S.mirrorAt=te; say(e.i,"Reflected",{col:"#ffc8f0",size:16}); atSfx("shield"); }
   if(e.t==="counter"){ say(e.i,"Counter",{col:"#ffb35c",size:14,lift:26}); say(1-e.i,String(e.dmg),{col:"#ffb35c",size:19}); AT.side[1-e.i].react={kind:"hit",t0:te+60,tier:"medium"}; AT.trauma=Math.min(1,AT.trauma+0.3); try{ sfx("hit"); }catch(err){} }
+  /* Riposte (Gid, 17 Nov 2026): the ready stance slipped the strike, so it darts back in and counters */
+  if(e.t==="riposte"){ const D2=AT.side[e.i], col=AT.ar&&AT_FAMCOL[AT.ar.p[e.i].f.family]||[255,214,140]; D2.anim={kind:"counterslash",t0:te,rate:1,tier:"medium",col,name:"Riposte",el:null,pw:1,src:"mouth",contact:true};
+    say(e.i,"Riposte",{col:"#ffd36a",size:16,lift:26}); say(1-e.i,String(e.dmg),{col:"#ffb35c",size:21,t0:now+450}); AT.side[1-e.i].react={kind:"hit",t0:te+450,tier:"heavy"}; AT.trauma=Math.min(1,AT.trauma+0.35);
+    setTimeout(()=>{ try{ sfx("heavy"); }catch(err){} },450); }
   if(e.t==="endure"){ atSfx("endure"); say(e.i,"Endured",{col:"#ffd75a",size:18,lift:24}); AT.flash={t0:now,a:0.35}; }
   if(e.t==="recoil"){ atSfx("recoil"); say(e.i,String(e.dmg),{col:"#ffb070",size:15,side:1}); S.recoilAt=te; }
   if(e.t==="steal"){ atSfx("steal"); const o=1-e.i; say(o,`Focus −${e.amt}`,{col:"#8fd3ff",size:13,lift:10}); AT.streams.push({from:o,to:e.i,t0:te,d:480,col:[120,190,255],n:6}); }
@@ -174,7 +178,7 @@ function atFx(e,now){
    sidestepped, and a phased Snabit lets it pass straight through */
 function atPlanDodge(i,at,kind,why){
   const S=AT.side[1-i], r=atH(at), contact=!!(ANIM[kind]&&ANIM[kind].contact)||/^(tackle|bite|punch|claw|shadowstrike|shadowclaw|stomp|fly)$/.test(kind);
-  let style=why==="phase"?"phase":contact?(r<0.7?"back":"leap"):/^(meteor|icefall|boulder|rockpath|pillar|lift)$/.test(kind)?"back":/^(beam|lightning|wave|tornado|firespin|push)$/.test(kind)?(r<0.5?"leap":"sway"):(r<0.55?"leap":"duck");
+  let style=why==="parry"?"back":why==="phase"?"phase":contact?(r<0.7?"back":"leap"):/^(meteor|icefall|boulder|rockpath|pillar|lift)$/.test(kind)?"back":/^(beam|lightning|wave|tornado|firespin|push)$/.test(kind)?(r<0.5?"leap":"sway"):(r<0.55?"leap":"duck");
   // backed against a wall there's no room to hop back, so it jumps instead
   if(style==="back"){ const q=AT.ar.p[1-i], o=AT.ar.p[i], room=q.x>o.x?AR.LEN-q.x:q.x; if(room<14) style="leap"; }
   const lead={back:300,duck:260,leap:300,sway:260,phase:200}[style];
