@@ -1,31 +1,31 @@
 /* More to find on the team expeditions (Gid, 17 Nov 2026: a deep map was done after one or two clears).
-   Each season, every deep map and Rift ring is built anew (deep-gen.js), and three kinds of place turn up on it:
+   Each season, every deep map and Rift ring is built anew (deep-gen.js) and three kinds of place turn up on it:
    - a waystone: an old League marker where the team picks one kind of help for the rest of the trip: a rest, the whole map, or
      luck at the next chest
    - a sealed way: the doorway of a dead-end room, blocked by something only a Snabit of one element can clear, with a League
-     cache inside. The element changes with the season, so a team that can't open it this season might next time
+     cache inside. The element changes with the season so a team that can't open it this season might next time
    - Rook's team: three of Rook's Snabits, one after another with his own partner last, for a big purse. About one map in two
      has them, once the player has met Rook. Losing to them sends the team back to the entrance
    Needs deep.js, explore.js, explore-art.js and npcs.js. */
 
-// what blocks a sealed way, and how a Snabit of that element clears it. Every line waits on Gid's OK
+// what blocks a sealed way and how a Snabit of that element clears it. Every line waits on Gid's OK
 const DEEP_SEAL = {
   Blaze: ['Thick dry vines cover a door in the rock.', n => `${n} burns the vines away.`],
-  Tide: ['There\'s a door with a dry basin in front of it.', n => `${n} fills the basin, and the door floats open.`],
-  Frost: ['Water pours down over a door in the rock.', n => `${n} freezes the water solid, and we can get to the door.`],
-  Spark: ['It\'s too dark to find the handle on this door, and there\'s an old lamp beside it.', n => `${n} lights the old lamp.`],
-  Wild: ['Dead roots have grown over a stone door.', n => `${n} wakes the roots up, and they pull the door open.`],
+  Tide: ['There\'s a door with a dry basin in front of it.', n => `${n} fills the basin and the door floats open.`],
+  Frost: ['Water pours down over a door in the rock.', n => `${n} freezes the water solid and we can get to the door.`],
+  Spark: ['It\'s too dark to find the handle on this door and there\'s an old lamp beside it.', n => `${n} lights the old lamp.`],
+  Wild: ['Dead roots have grown over a stone door.', n => `${n} wakes the roots up and they pull the door open.`],
   Stone: ['Rocks are piled up against a door.', n => `${n} shifts the rocks aside.`],
   Brawl: ['A rusted door is jammed shut.', n => `${n} knocks it open.`],
   Steel: ['A heavy iron bar is across the door.', n => `${n} pulls the iron bar off.`],
   Light: ['There\'s a door at the back of a pitch-black hollow.', n => `${n} lights up the hollow.`],
-  Shade: ['There\'s a door here that only shows in a shadow.', n => `${n} steps into the shadow, and the door opens.`],
-  Charm: ['A big Snabit is asleep against the door.', n => `${n} wakes it gently, and it moves aside.`],
+  Shade: ['There\'s a door here that only shows in a shadow.', n => `${n} steps into the shadow and the door opens.`],
+  Charm: ['A big Snabit is asleep against the door.', n => `${n} wakes it gently and it moves aside.`],
   Venom: ['A thorn bush has grown over the door.', n => `${n} wilts the thorns.`] };
 const DEEP_SEAL_ELS = Object.keys(DEEP_SEAL);
 
-/* called from deepMap: a sealed way on the doorway of a dead-end room with a League cache inside, a waystone, and sometimes Rook's
-   team. The sealed way goes first, so nothing else lands behind it */
+/* called from deepMap: a sealed way on the doorway of a dead-end room with a League cache inside, a waystone and sometimes Rook's
+   team. The sealed way goes first so nothing else lands behind it */
 function deepExtras(reg, M, R) {
   const el = DEEP_SEAL_ELS[Math.floor(R() * DEEP_SEAL_ELS.length)];
   for (const f of [1, 2, 0]) { const L = M.leaf(f); if (!L) continue; const [x, y, k] = L, F = M.floors[f], i = dgI(F, x, y);
@@ -49,7 +49,7 @@ function deepIcon(x, k, cx, cy, n) {
   return false;
 }
 
-/* two to three choices in the menu box, in place of the room's choices, so nothing on screen moves. Resolves with the index picked */
+/* two to three choices in the menu box, in place of the room's choices so nothing on screen moves. Resolves with the index picked */
 function deepChoice(opts) {
   return new Promise(res => { const box = el('dp-acts'); if (!box) { res(0); return; }
     box.innerHTML = `<div id="dp-choice" style="display:contents">` + opts.map((o, i) => `<button class="rb" data-c="${i}">${o[0]}<small>${o[1]}</small></button>`).join('') + `</div>`;
@@ -57,7 +57,7 @@ function deepChoice(opts) {
 }
 
 /* ---------- the room events, where the team works together (Gid, 17 Nov 2026) ----------
-   Each one still works with two Snabits left, or one. Every line waits on Gid's OK */
+   Each one still works with two Snabits left or one. Every line waits on Gid's OK */
 const DEEP_EV = {
   plates: { prop: 'plates', act: 'The stone plates', see: 'stone plates' },
   lid: { prop: 'lid', act: 'The stone chest', see: 'a stone chest' },
@@ -67,7 +67,7 @@ const DEEP_EV = {
 // the events a region's rooms lean towards
 const DEEP_EV_FAV = { Stone: ['lid', 'stuck'], Brawl: ['lid', 'stuck'], Steel: ['plates', 'lid'], Spark: ['plates'], Shade: ['mural'], Light: ['mural'], Charm: ['mural', 'stuck'],
   Void: ['mural'], Wild: ['crack', 'stuck'], Tide: ['crack'], Frost: ['crack'], Venom: ['crack'], Blaze: ['crack', 'lid'] };
-// how many plates: two, or three on the last floor
+// how many plates: two or three on the last floor
 const deepPlates = n => n.f >= 2 ? 3 : 2;
 async function deepEvent(reg, n, g, T, leadOf, setLead, K, found, M, need) {
   const s = RS, G = GRADE_INFO[g], live = T.map((m, i) => ({ m, i })).filter(o => !o.m.down), st = (o, k) => playerFighter(o.m.s).base[k], nm = o => displayName(o.m.s);
@@ -82,15 +82,15 @@ async function deepEvent(reg, n, g, T, leadOf, setLead, K, found, M, need) {
     deepCrew(T, leadOf(), xs.slice(1)); await walkTo(xs[0], 60, 'walk'); await rwait(400); pr.on = on; rsfx('thud');
     if (on < N) { const o = best('pow'); if (st(o, 'pow') < need * 1.15) { K(`There are ${N} plates and only ${on} of us. Nothing happens.`); await rwait(1800); return 'retry'; }
       K(`${nm(o)} shoves a loose stone onto the last plate.`); await rwait(1200); pr.on = N; }
-    rsfx('creak'); RS.shake = 3; await rwait(600); await gift('Something clicked in the wall, and a hidden shelf slid out with {x} on it.'); return; }
+    rsfx('creak'); RS.shake = 3; await rwait(600); await gift('Something clicked in the wall and a hidden shelf slid out with {x} on it.'); return; }
   if (n.ev === 'lid') {   // everyone lifts together
     deepCrew(T, leadOf(), [X + 26, X + 6]); await walkTo(X - 26, 60, 'walk'); await rwait(300); s.pose = 'effort'; deepCrew(T, leadOf(), [X + 26, X + 6], 'effort'); rsfx('rumble'); await rwait(900);
     if (sum('pow') < need * 1.9) { for (const o of live) o.m.e = Math.max(0, o.m.e - 2); K(live.length > 1 ? "It won't budge. Not even with all of us lifting." : `${nm(live[0])} can't lift it alone.`); await rwait(1800); return 'fail'; }
-    pr.open = true; rsfx('creak'); s.pose = 'happy'; await rwait(500); await gift(live.length > 1 ? 'Everyone lifted together, and the lid came off. There was {x} inside.' : `${nm(live[0])} heaved the lid off by itself. There was {x} inside.`, true); return; }
+    pr.open = true; rsfx('creak'); s.pose = 'happy'; await rwait(500); await gift(live.length > 1 ? 'Everyone lifted together and the lid came off. There was {x} inside.' : `${nm(live[0])} heaved the lid off by itself. There was {x} inside.`, true); return; }
   if (n.ev === 'stuck') {   // a little wild Snabit under fallen rocks
     deepCrew(T, leadOf(), [X + 30, X + 50]); await walkTo(X - 28, 60, 'walk'); K("There's a little wild Snabit stuck under those rocks."); await rwait(1300); s.pose = 'effort'; deepCrew(T, leadOf(), [X + 28, X + 42], 'effort'); rsfx('rumble'); await rwait(900);
-    if (sum('pow') < need * 1.6) { for (const o of live) o.m.e = Math.max(0, o.m.e - 2); K(live.length > 1 ? "We pulled and pulled, and the rocks won't move." : `${nm(live[0])} can't move the rocks on its own.`); await rwait(1800); return 'fail'; }
-    pr.free = true; rsfx('thud'); s.pose = 'happy'; deepCrew(T, leadOf(), [X + 28, X + 42], 'happy'); await rwait(700); await gift('Everyone pulled the rocks away, and it ran off. It left {x} behind for us.'); return; }
+    if (sum('pow') < need * 1.6) { for (const o of live) o.m.e = Math.max(0, o.m.e - 2); K(live.length > 1 ? "We pulled and pulled and the rocks won't move." : `${nm(live[0])} can't move the rocks on its own.`); await rwait(1800); return 'fail'; }
+    pr.free = true; rsfx('thud'); s.pose = 'happy'; deepCrew(T, leadOf(), [X + 28, X + 42], 'happy'); await rwait(700); await gift('Everyone pulled the rocks away and it ran off. It left {x} behind for us.'); return; }
   if (n.ev === 'mural') {   // the best Mind reads it: a map of the floor
     const o = best('mnd'); await lead(o); deepCrew(T, leadOf(), [X - 34, X + 34], 'lean'); await walkTo(X, 60, 'walk'); s.pose = 'lean'; await rwait(900); s.pose = 'idle';
     if (st(o, 'mnd') < need * 1.05) { K('None of us can make sense of it.'); await rwait(1600); return 'fail'; }

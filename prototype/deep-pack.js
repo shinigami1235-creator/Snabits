@@ -1,6 +1,6 @@
 /* What a team takes on a deep expedition and what it brings back (Gid, 17 Nov 2026: stock up before a trip, a good way to use
    money; relics and rare things that make an expedition worth it).
-   - Rations: a night at camp feeds every Snabit one ration. One that goes hungry gets back half its energy and little HP, so a
+   - Rations: a night at camp feeds every Snabit one ration. One that goes hungry gets back half its energy and little HP so a
      team of three needs three times what one Snabit does.
    - The pack: the rest comes out of the bag, as many things as the team's Power added up allows. Whatever isn't used comes back.
    - Nora sells rations, trail mix, bandages, lanterns and rope.
@@ -35,14 +35,14 @@ const TREASURE_PRICE = { 'Timeworn amber': 6000, 'Star shard': 5000, "Mender's m
   window.useItem = useItem = function (k) {
     const s = RS, bag = PLAYER.bag;
     if (k === 'Timeworn amber') { if ((s.amber || 0) >= 3) { say("It's had three already. Another won't do anything."); return; } s.amber = (s.amber || 0) + 1; s.used = Math.max(0, (s.used || 0) - 4); say('It held the amber for a long time. That gave back a month of its prime.'); }
-    else if (k === 'Star shard') { s.tp = s.tp.map(v => v + 5 * EARN_DIV); say('The shard went dim, and every stat went up by 5.'); }
-    else if (k === "Mender's moss") { if (!s.injured && s.fatigue < 10 && s.stress < 10) { say("It's in good shape, so the moss would be wasted."); return; } s.injured = false; s.fatigue = 0; s.stress = 0; say("The moss did its work. It's good as new."); }
+    else if (k === 'Star shard') { s.tp = s.tp.map(v => v + 5 * EARN_DIV); say('The shard went dim and every stat went up by 5.'); }
+    else if (k === "Mender's moss") { if (!s.injured && s.fatigue < 10 && s.stress < 10) { say("It's in good shape so the moss would be wasted."); return; } s.injured = false; s.fatigue = 0; s.stress = 0; say("The moss did its work. It's good as new."); }
     else if (k === "Pathfinder's compass") { say('The compass is for packing on a deep expedition.'); return; }
     else return base(k);
     bag[k]--; if (bag[k] <= 0) delete bag[k]; clampAll(); drawUI(); saveGame(); openItems();
   };
 })();
-// a treasure, now and then: from hidden rooms, the last floor's chests, a stone chest, and a guardian beaten for the first time
+// a treasure, now and then: from hidden rooms, the last floor's chests, a stone chest and a guardian beaten for the first time
 function deepTreasure(R) { return TREASURES[Math.floor(R() * TREASURES.length)]; }
 
 // how many things the team can carry: 3 for a weak team, up to 9
@@ -74,7 +74,7 @@ function deepWeek() {
   for (const x of L.filter(x => PLAYER.week >= x.week)) {
     const items = x.items.filter((k, i) => i % 2 === 0), bits = Math.round(x.bits / 2 / 10) * 10; items.forEach(k => addItem(k)); PLAYER.bits += bits;
     const list = deepCount(items.map(k => `${/^[AEIOU]/.test(k) ? 'an' : 'a'} ${k}`)).concat(bits ? [`${bits.toLocaleString()} bits`] : []);
-    out.push(`Walt came by. A League team went back into ${x.where} and found some of what your team left behind${list.length ? `: ${list.join(', ').replace(/, ([^,]*)$/, ' and $1')}` : ', but nothing worth bringing home'}.`); }
+    out.push(`Walt came by. A League team went back into ${x.where} and found some of what your team left behind${list.length ? `: ${list.join(', ').replace(/, ([^,]*)$/, ' and $1')}` : ' but nothing worth bringing home'}.`); }
   PLAYER.deepLost = L.filter(x => PLAYER.week < x.week); return out;
 }
 

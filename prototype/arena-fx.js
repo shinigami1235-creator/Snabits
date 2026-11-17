@@ -200,7 +200,7 @@ function atDodge(S,te){
 
 /* ---------- the body, tinted by its status ---------- */
 function atTintOf(i,te){
-  const p=AT.ar.p[i], S=AT.side[i], st=p.st; let col=null, a=0;
+  const p=AT.ar.p[i], S=AT.side[i], st=p.hp>0?p.st:null; let col=null, a=0;   // nothing shows on a Snabit that's been knocked out
   if(st){ col=st.name==="Dread"?[18,10,36]:atStColOf(i,st.name);
     a={Poison:0.32,Freeze:0.45,Soak:0.26,Curse:0.3,Dread:0.36,Crack:0.16,Burn:0.1,Shock:0.1,Root:0.08,Daze:0.08,Blind:0.1}[st.name]||0;
     if(S.tickAt!=null) a+=0.4*Math.max(0,1-(te-S.tickAt)/320);
@@ -254,7 +254,7 @@ function atBody(c,i,spec,P,te,look,flash){
 function atGhost(c,spec,P,te,look){ CHIBI.draw(c,spec,P,te,look); }
 /* a status can shake or sway the body: Shock jolts, Dread shivers, Poison sways queasily, Daze wobbles */
 function atStatusMove(i,te){
-  const p=AT.ar.p[i], S=AT.side[i], n=p.st&&p.st.name; let dx=0, dy=0, rot=0;
+  const p=AT.ar.p[i], S=AT.side[i], n=p.hp>0&&p.st&&p.st.name; let dx=0, dy=0, rot=0;
   if(S.joltAt!=null&&te-S.joltAt<700){ dx+=(atH(Math.floor(te/30))-0.5)*9; dy+=(atH(Math.floor(te/30)+5)-0.5)*5; }
   if(n==="Dread") dx+=Math.sin(te/22)*1.6;
   if(n==="Poison") rot+=Math.sin(te/380)*0.05;
@@ -624,7 +624,7 @@ function atSigAuraBack(c,ch,x,foot,H,r,te,k){ ch._g={x,foot,H,r}; const W=AT_WIN
 function atSigAuraFront(c,ch,cx,cy,foot,R,te,k){ const g=ch._g||{x:cx,foot,H:(foot-cy)*2,r:R*0.8}, G={...g,cx,cy,R}, W=AT_WINDS[ch.wind]||AT_WINDS.flame, col=atSigCol(ch), lt=col.map(v=>Math.min(255,v+90));
   c.save(); if(ch.soft){ c.globalAlpha*=0.72; k*=0.72; } try{ W.front(c,G,ch,te,te-ch.t0,k,eo(k)*(ch.soft?0.8:1),col,lt); }catch(err){ if(!AT_WINDS.err) console.error(AT_WINDS.err=err); } c.restore(); }
 function atFxBack(c,i,Q,te){
-  const p=AT.ar.p[i], n=p.st&&p.st.name, {x,foot,H,r}=Q;
+  const p=AT.ar.p[i], n=p.hp>0&&p.st&&p.st.name, {x,foot,H,r}=Q;
   { const ch=AT.side[i].charge; if(ch&&ch.wind&&te>=ch.t0&&te-ch.t0<ch.d*1.1) atSigAuraBack(c,ch,x,foot,H,r,te,Math.min(1,(te-ch.t0)/ch.d)); }
   if(n==="Soak"){ c.fillStyle="rgba(70,140,240,.32)"; c.beginPath(); c.ellipse(x,foot+3,r*1.15,11,0,0,7); c.fill(); c.strokeStyle="rgba(200,230,255,.5)"; c.lineWidth=2; c.beginPath(); c.ellipse(x-r*0.3,foot+1,r*0.35,3,0,0,7); c.stroke(); }
   if(n==="Freeze"){ const g=c.createRadialGradient(x,foot,4,x,foot,r*1.4); g.addColorStop(0,"rgba(230,248,255,.75)"); g.addColorStop(1,"rgba(200,236,255,0)"); c.fillStyle=g; c.beginPath(); c.ellipse(x,foot+2,r*1.4,16,0,0,7); c.fill(); }
@@ -711,7 +711,7 @@ function atVines(c,Q,te,back){
 
 /* ---------- in front of the body ---------- */
 function atFxFront(c,i,Q,te,dte){
-  const ar=AT.ar, p=ar.p[i], S=AT.side[i], n=p.st&&p.st.name, {x,cx,cy,foot,H,r}=Q, top=foot-H, sp=dte>0, chance=f=>sp&&Math.random()<f*dte/16;
+  const ar=AT.ar, p=ar.p[i], S=AT.side[i], n=p.hp>0&&p.st&&p.st.name, {x,cx,cy,foot,H,r}=Q, top=foot-H, sp=dte>0, chance=f=>sp&&Math.random()<f*dte/16;
   if(n==="Burn"){ // small flames lick up from its lower edges in front; the big ones burn behind it (atFxBack), with sparks and smoke off the top
     for(const a of [2.5,0.64]) atFlame(c,cx+Math.cos(a)*r*0.92,cy+Math.sin(a)*H*0.4,0.55,te,a*7,a>1.5?-0.35:0.35);
     if(chance(0.5)) atPart({k:"ember",x:cx+(Math.random()-0.5)*r*1.6,y:foot-H*(0.3+Math.random()*0.5),vx:(Math.random()-0.5)*0.03,vy:-0.09-Math.random()*0.06,life:700,s:2.5});
@@ -807,7 +807,7 @@ function atStreams(c,placed,te){
 /* ---------- under each HP bar: its status with seconds left, raised and lowered stats, and its guards ---------- */
 function atChips(c,i,x,y,bw){
   const p=AT.ar.p[i], items=[];
-  if(p.st){ const D=AT_ST[p.st.name], sc=atStColOf(p.i,p.st.name); items.push({t:`${p.st.name} ${Math.ceil(p.st.t)}`,bg:atRgba(sc,1),fg:["Shock","Blind","Freeze","Daze"].includes(p.st.name)||(sc[0]*0.3+sc[1]*0.59+sc[2]*0.11)>170?"#14151d":"#fff",k:p.st.t/AR_STATUS[p.st.name].d}); }
+  if(p.st&&p.hp>0){ const D=AT_ST[p.st.name], sc=atStColOf(p.i,p.st.name); items.push({t:`${p.st.name} ${Math.ceil(p.st.t)}`,bg:atRgba(sc,1),fg:["Shock","Blind","Freeze","Daze"].includes(p.st.name)||(sc[0]*0.3+sc[1]*0.59+sc[2]*0.11)>170?"#14151d":"#fff",k:p.st.t/AR_STATUS[p.st.name].d}); }
   if(p.sleep>0) items.push({t:"Asleep",bg:"#5a6aa8",fg:"#fff"});
   for(const k of AR_STATS) if(p.stg[k]) items.push({t:`${AT_STAT_SHORT[k]}${p.stg[k]>0?"▲":"▼"}${Math.abs(p.stg[k])>1?Math.abs(p.stg[k]):""}`,bg:p.stg[k]>0?"#c4563a":"#3a5fa8",fg:"#fff"});
   const B=p.buff, guard=[["protect","Shield"],["counter","Counter"],["riposte","Counter"],["mirror","Mirror"],["castWard","Ward"],["ward","Calm"],["bulwark","Bulwark"],["endure","Endure"],["phase","Phase"],["regen","Regen"],["foresight","Foresight"],["bubble","Bubble"],["bunker","Bunker"],["taunt","Taunted"]];

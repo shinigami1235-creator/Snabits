@@ -1,13 +1,13 @@
 /* Camera hunts: reasons to go out and point the Snaboscope at the world.
-   A photo of a screen can show any colour, so nothing here hatches a Snabit (Gid, 17 Nov 2026). A hunt scan summons a wild
-   Snabit to fight, and the reward is for winning it.
+   A photo of a screen can show any colour so nothing here hatches a Snabit (Gid, 17 Nov 2026). A hunt scan summons a wild
+   Snabit to fight and the reward is for winning it.
    - Today's colour: one of the 12 colours each real day, every colour once in 12 days. A wild fight from a scan whose main
      colour is today's pays half as much again.
    - The notice board in town: people post a wild Snabit they want found, up to three at a time and one new one a week. Taking
      one makes every wild scan a hunt for it. The poster's first clue says where they saw it. A scan that fits its colours
-     brings it out; a scan that doesn't brings out some other wild Snabit, and after that fight the poster says how close the
+     brings it out; a scan that doesn't brings out some other wild Snabit and after that fight the poster says how close the
      colours were and remembers more. After a second miss, Dr. Ines (or Benji, if the doctor posted it) works out the clearest
-     clue. A scan that's close but not right can still bring the Snabit out, and the odds grow with every miss.
+     clue. A scan that's close but not right can still bring the Snabit out and the odds grow with every miss.
    - The colour atlas in the Bestiary: a 12 by 12 grid of main colour against second colour. The first wild or hunt scan that
      fits a square keeps a tiny crop of the photo there. The crops stay on the phone, in their own storage key next to the save.
      Every 12 squares filled pays out.
@@ -45,10 +45,10 @@ const HUNT_ASK = {
   shop: "A Snabit keeps sneaking into my stockroom. I only ever catch it {place}. Can you track it down?",
   mc: "I want a wild Snabit for the next show. The one I saw was hiding {place}.",
   guide: "There's a wild Snabit on my walking route. I keep spotting it {place}.",
-  aide: "I saw a Snabit nobody's written up yet. It was {place}, and it ran when I got close.",
+  aide: "I saw a Snabit nobody's written up yet. It was {place} and it ran when I got close.",
   doc: "Benji says he saw a Snabit {place}. I'd like it found before it moves on." };
 // what the poster says after a fight with the wrong Snabit, by how close the scan's colours were
-const HUNT_CLOSE = { hot: "That wasn't it, but you're close.", warm: "Not that one, though its colours weren't far off.", cold: 'That one looked nothing like it.' };
+const HUNT_CLOSE = { hot: "That wasn't it but you're close.", warm: "Not that one, though its colours weren't far off.", cold: 'That one looked nothing like it.' };
 // the second clue, from the poster
 const HUNT_MORE = { pair: 'It had some {b} on it too, now I think about it.', mono: 'It was one colour all over, now I think about it.' };
 // the clearest clue, from Dr. Ines or Benji
@@ -124,7 +124,7 @@ function huntPick(res, s, R) {
   const c = huntClose(q, res); WILD.close = c; WILD.hunt = q.id;
   return R() < huntOdds(c, q.misses) ? huntFoe(q, res, s, R) : null;
 }
-// called when a hunt fight ends. Returns lines for the result, and [who, line] for what someone says after
+// called when a hunt fight ends. Returns lines for the result and [who, line] for what someone says after
 function huntAfter(o, won) {
   const q = huntActive(); if (!q || !WILD || WILD.hunt !== q.id) return { lines: [] };
   const H = huntState();
@@ -191,7 +191,7 @@ function atlasHtml() {
   const head = `<div class="atl-c" style="background:none"></div>` + HUNT_G.map(b => `<div class="atl-c atl-h" style="background:${COL[b]}" title="${HUNT_WORD[b]}"></div>`).join('');
   const rows = HUNT_G.map(a => `<div class="atl-c atl-h" style="background:${COL[a]}" title="${HUNT_WORD[a]}"></div>` + HUNT_G.map(b => { const k = a + '|' + b, got = H.atlas[k];
     return `<div class="atl-c ${got ? 'atl-got' : ''}" title="${a === b ? 'all ' + HUNT_WORD[a] : HUNT_WORD[a] + ' with ' + HUNT_WORD[b]}" style="${got && T[k] ? `background-image:url(${T[k]})` : got ? `background:${COL[a]}` : ''}"></div>`; }).join('')).join('');
-  return `<div class="full lab-info">Down the side is the main colour of a wild scan and across the top its second colour. A square on the line from corner to corner is a scan of one colour alone. ${n} of 144 found, and every 12 pays.</div>
+  return `<div class="full lab-info">Down the side is the main colour of a wild scan and across the top its second colour. A square on the line from corner to corner is a scan of one colour alone. ${n} of 144 found and every 12 pays.</div>
     <div class="full atl-grid">${head}${rows}</div>`;
 }
 (function atlasStyle() { const s = document.createElement('style'); s.textContent = `.atl-grid{display:grid;grid-template-columns:repeat(13,1fr);gap:2px;width:100%;max-width:420px;margin:4px auto 8px}
