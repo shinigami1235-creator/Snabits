@@ -163,8 +163,8 @@ async function horrorNode(reg, n, g, T, leadOf, setLead, K, used, found) {
   L.season = season; saveGame();
   const R = rng(hashStr('lair|' + f + '|' + season)), foe = horrorFoe(f, 'Mega', g, R);
   const W = HORROR_WHY[f], ln = () => displayName(T[leadOf()].s);
-  const fp = prop({ k: 'foe', x: 186, y: GROUND, fm: foe.fm }); banner(W.tag, '#d9c8ff'); K(W.lair(ln())); await rwait(2400); K("Nobody's coming to help us in there."); await rwait(1500); banner(''); unprop(fp);
-  const won = await deepFight(T, leadOf(), foe, nm, K);
+  const fp = typeof deepFoeIn === 'function' ? await deepFoeIn(foe) : prop({ k: 'foe', x: 186, y: GROUND, fm: foe.fm }); K(W.lair(ln())); await rwait(2400);
+  const won = await deepFight(T, leadOf(), foe, nm, K, { fp, where: W.tag, line: "Nobody's coming to help us in there." });
   if (!won) { for (const m of T) m.s.stress = Math.min(100, m.s.stress + 15); K(W.lairLost(ln()).replace('all three of you', typeof deepAll === 'function' ? deepAll(T) : 'all three of you')); await rwait(2000); return 'end'; }   // a team can be one or two Snabits
   const alive = T.findIndex(m => !m.down); if (alive >= 0 && T[leadOf()].down) setLead(alive);
   const G = GRADE_INFO[g], bounty = Math.round(G.purse * 2); if (typeof deepPay === 'function') deepPay(T, 'the ' + nm, bounty); else { PLAYER.bits += bounty; found.push(`${bounty.toLocaleString()} bits`); drawUI(); }

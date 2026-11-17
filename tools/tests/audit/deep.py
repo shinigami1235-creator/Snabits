@@ -56,7 +56,7 @@ AUTO = """(want) => { const P = DEEP_LIVE.pick; if (!P) return null; const O = P
   const e = dgFirst(F, at.room, F.downRoom, ok), i = e ? O.findIndex(o => o.t === 'exit' && o.e === e) : -1; if (i >= 0) return take(i, 'to the stairs');
   P.home(); return 'home'; }"""
 
-SAY = "()=>{ window.__said=[]; const s0=say; say=(t,who)=>{ if(t) __said.push((who||'tala')+': '+t); s0(t,who); }; }"
+SAY = "()=>{ window.__said=[]; const s0=say; say=(t,who)=>{ if(t) __said.push((who||'tala')+': '+t); s0(t,who); }; if (!window.__fo) { window.__fo=deepFaceoff; deepFaceoff=(s,foe,w,l)=>{ __said.push('guide: '+l); return __fo(s,foe,w,l); }; } }"
 
 async def drive(pg, want, steps=6000, pick=None):
     picked = False
@@ -100,6 +100,10 @@ async def main():
         C.ok(e == [13, 16, 22, 72, 36, 18], f"Stamina sets a Snabit's energy, 13 to 22, and how fast it comes back behind the leader, every 72 to 18 steps ({e})")
         j = await pg.evaluate("()=>{ const s=RS, f=playerFighter(s).base; return { hp:[deepHpMax(s, f.grd*2), deepHpMax(s, f.grd/2)], slots:[deepSlots([s,s,s], f.pow*3), deepSlots([s,s,s], f.pow/2)], life:[deepLife('C'), deepLife('B'), deepLife('S'), deepLife('S', true)] }; }")
         C.ok(j['hp'] == [28, 50] and j['slots'] == [2, 7] and j['life'] == [4, 8, 12, 16], f"Constitution sets HP, Power how much the pack holds, and a Snabit that can't go on loses more of its prime in harder places ({j})")
+        # a Bit can't join a deep expedition
+        bit = await pg.evaluate("""()=>{ const said=[], s0=say; say=(t,w)=>said.push(t); const b=rosterStates().find(x=>x.stage==='Bit'); DP.pick=[]; openDeepPick(REGIONS[0]);
+          document.querySelector(`#r-panel .tm-pick[data-id="${b.id}"]`).click(); say=s0; const r={ picked: DP.pick.length, said, label: document.getElementById('r-panel').innerText.includes('Too young') }; drawUI(); return r; }""")
+        C.ok(bit['picked'] == 0 and bit['label'] and any('too young' in t for t in bit['said']), f"a Bit is too young to join a deep expedition ({bit})")
         none = await pg.evaluate("()=>{ const k=story().seen.intro; delete story().seen.intro; let n=0; for (let s=0;s<30;s++) n+=deepFeats(deepMap(REGIONS[0], s)).some(x=>x.k==='rival'); story().seen.intro=k; return n; }")
         C.ok(none == 0, "Rook's team stays off the deep maps until the player has met Rook")
         ring = await pg.evaluate("()=>{ const reg={ n:'The Rift, Outer Ring', el:'Void', rift:true, ring:0 }, M=deepMap(reg, 3); return { kinds:M.floors.map(F=>F.kind), lairs:deepFeats(M).filter(n=>n.k==='lair').map(n=>n.fam+'@'+n.f), guard:deepFeats(M).some(n=>n.k==='guard') }; }")

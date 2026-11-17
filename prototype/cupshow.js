@@ -23,7 +23,7 @@ const CUPSHOW = (() => {
   const shadow = (c, x, y, w) => { c.fillStyle = 'rgba(0,0,0,.22)'; c.beginPath(); c.ellipse(x, y, w, w * 0.22, 0, 0, 7); c.fill(); };
   /* the stadium wide shot, with the lights dimmed by `dark` and spotlights sweeping when `spots` */
   function stadium(c, W, H, t, o = {}) {
-    arenaScene(c, W, H, true, [], t, !!o.cheer, o.hz || 0.42, null);
+    if (API.bg) API.bg(c, W, H, t); else arenaScene(c, W, H, true, [], t, !!o.cheer, o.hz || 0.42, null);   // a deep expedition sets its own floor (deep.js)
     if (o.dark) { c.fillStyle = `rgba(6,5,18,${o.dark})`; c.fillRect(0, 0, W, H); }
     if (o.spots) spots(c, W, H, t, o.spots, o.spotAt);
   }
@@ -357,7 +357,7 @@ const CUPSHOW = (() => {
       requestAnimationFrame(step);
     });
   }
-  const API = { B, run, still, frame, mon, trophy, on: false, mus: null };
+  const API = { B, run, still, frame, mon, trophy, on: false, mus: null, bg: null };
   return API;
 })();
 

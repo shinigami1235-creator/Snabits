@@ -109,10 +109,10 @@ async function deepMore(reg, n, st, g, T, leadOf, setLead, K, used, found, M) {
   const s = RS, G = GRADE_INFO[g];
   if (used.includes(n.id)) { await rwait(200); return; }
   if (n.k === 'shrine') {
-    const p = deepUse({ k: 'shrine', x: 160, y: GROUND }, n); deepCrew(T, leadOf(), [p.x + 30, p.x + 52]); await walkTo(p.x - 30, 60, 'walk'); s.pose = 'idle';
+    const p = deepUse({ k: 'shrine', x: 160, y: GROUND }, n); deepCrew(T, leadOf(), []); await walkTo(p.x - 30, 60, 'walk'); s.pose = 'idle';
     K("This is an old League waystone. Put a paw on it and pick what we need most."); await rwait(600);
     const c = await deepChoice([['A rest', 'For tired legs'], ['The map', 'Every path out here'], ['Luck', 'For the next chest']]);
-    used.push(n.id); spark(p.x, GROUND - 40, 'sparkle', 10); rsfx('sparkle'); s.pose = 'happy'; deepCrew(T, leadOf(), [p.x + 30, p.x + 52], 'happy');
+    used.push(n.id); spark(p.x, GROUND - 40, 'sparkle', 10); rsfx('sparkle'); s.pose = 'happy'; deepCrew(T, leadOf(), [], 'happy');
     if (c === 0) { for (const m of T) if (!m.down) { m.e = Math.min(m.max, m.e + 4); m.hp = Math.min(m.hpMax, m.hp + Math.round(m.hpMax * 0.3)); } K('That feels better. Let\'s keep going.'); }
     if (c === 1) { M.reveal(); K('There. Now we can see the whole way.'); }
     if (c === 2) { T.lucky = true; K('Let\'s find a chest while our luck lasts.'); }
@@ -126,7 +126,7 @@ async function deepMore(reg, n, st, g, T, leadOf, setLead, K, used, found, M) {
     await walkTo(140, 60, 'walk'); RS.pose = 'happy'; p.open = true; spark(170, GROUND - 30, 'sparkle', 10); rsfx('creak');
     K(how(displayName(who.m.s))); await rwait(1500); unprop(p); return 'open'; }
   if (n.k === 'cache') {   // what the sealed way kept safe
-    used.push(n.id); const c = deepUse({ k: 'chest', x: 150, y: GROUND, big: true }, n); deepCrew(T, leadOf(), [c.x + 26, c.x - 50]); await walkTo(c.x - 24, 60, 'walk'); await rwait(300); c.open = true; rsfx('creak'); s.pose = 'happy'; deepCrew(T, leadOf(), [c.x + 26, c.x - 50], 'happy'); spark(c.x, GROUND - 22, 'sparkle', 8);
+    used.push(n.id); const c = deepUse({ k: 'chest', x: 150, y: GROUND, big: true }, n); deepCrew(T, leadOf(), []); await walkTo(c.x - 24, 60, 'walk'); await rwait(300); c.open = true; rsfx('creak'); s.pose = 'happy'; deepCrew(T, leadOf(), [], 'happy'); spark(c.x, GROUND - 22, 'sparkle', 8);
     const R = rng(hashStr('seal|' + reg.n + '|' + n.id + '|' + exSeason())), item = EX_RARE[Math.floor(R() * EX_RARE.length)], bits = Math.round(G.purse), a = /^[AEIOU]/.test(item) ? 'an' : 'a';
     addItem(item); deepPay(T, 'find', bits); found.push(`${a} ${item}`);
     K(`There's an old League cache back here, with ${a} ${item} in it.`); await rwait(1700); unprop(c); return; }
@@ -135,8 +135,8 @@ async function deepMore(reg, n, st, g, T, leadOf, setLead, K, used, found, M) {
     say("Well, look who made it out here. My team's been waiting for someone to beat.", 'rival'); await rwait(2200);
     for (let k = 0; k < 3; k++) {
       const foe = k === 2 && typeof rookMon === 'function' ? rookMon(g, 0.85) : gradedOpponent(g, lv, R); foe.boss = null;   // Rook's own partner goes last
-      const fp = prop({ k: 'foe', x: 186, y: GROUND, fm: foe.fm }); banner(`Rook's team, ${k + 1} of 3`, '#ffb04a'); await rwait(1100); banner(''); unprop(fp);
-      const won = await deepFight(T, leadOf(), foe, `Rook's ${foe.m.name}`, K);
+      const fp = await deepFoeIn(foe);
+      const won = await deepFight(T, leadOf(), foe, `Rook's ${foe.m.name}`, K, { fp, where: `Rook's team, ${k + 1} of 3`, line: k === 0 ? `Rook's ${foe.m.name} goes first.` : k === 1 ? `Next up is Rook's ${foe.m.name}.` : `Rook's own ${foe.m.name} is last.` });
       if (!won) { say('Better luck next time. My team never loses out here.', 'rival'); await rwait(1800); K(`Rook's team beat ${deepAll(T)}.`); await rwait(1400); used.splice(used.indexOf(n.id), 1); return 'lost'; }
       const alive = T.findIndex(m => !m.down); if (alive >= 0 && T[leadOf()].down) setLead(alive);
     }

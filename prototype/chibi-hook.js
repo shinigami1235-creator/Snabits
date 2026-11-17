@@ -74,11 +74,11 @@ function chibiRanch(s, t) {
     } else { const room = RW - cv.width, camX = Math.round(clamp(s.camX || 0, 0, room)); ppu = CHIBI_UNIT; u = k * ppu; x = (s.x - camX) * k; y = (GROUND + (s.vExtra || 0) - (s.jy || 0)) * k; }
     const kx = typeof shapeOf === 'function' ? shapeOf(s.weight)[2] : 1;      // feeding still makes it thinner or rounder
     const pose = RANCH_POSE[s.pose] || s.pose || 'idle';
-    if (s.waterY != null && cam) {           // swimming: only what's above the waterline is drawn
-      const wy = k * (cam.Z * s.waterY + GROUND + cam.extra - GROUND * cam.Z);
+    if ((s.waterY != null || s.clipY != null) && cam) {           // swimming, or dropping into a pit: only what's above the line is drawn
+      const wy = k * (cam.Z * (s.waterY ?? s.clipY) + GROUND + cam.extra - GROUND * cam.Z);
       c.save(); c.setTransform(1, 0, 0, 1, 0, 0); c.beginPath(); c.rect(0, 0, c.canvas.width, wy); c.clip(); c.setTransform(u * kx, 0, 0, u, x - 100 * u * kx, y - 188 * u); CHIBI.draw(c, spec, pose, t); c.restore();
       const bw = CHIBI.width(spec.stage, spec.family) * u * 0.62; c.setTransform(1, 0, 0, 1, 0, 0);
-      c.strokeStyle = 'rgba(255,255,255,.85)'; c.lineWidth = 1.6 * k; c.beginPath(); c.ellipse(x, wy, bw, bw * 0.16, 0, 0, Math.PI * 2); c.stroke();
+      if (s.waterY != null) { c.strokeStyle = 'rgba(255,255,255,.85)'; c.lineWidth = 1.6 * k; c.beginPath(); c.ellipse(x, wy, bw, bw * 0.16, 0, 0, Math.PI * 2); c.stroke(); }
     } else {
     c.setTransform(u * kx, 0, 0, u, x - 100 * u * kx, y - 188 * u);
     if (s.shade) c.filter = `brightness(${1 - s.shade * 0.85})`;   // still in a dark doorway

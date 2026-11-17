@@ -42,7 +42,7 @@ function deepArt(c, s, bg, t, off) {
   if (kind === 'hall') DA.hall(c, P, el, t, off);
   else if (kind === 'cave') DA.cave(c, P, el, t, R);
   else DA.room(c, P, el, t, R, +ways || 2);
-  if (kind !== 'hall') DA.design(c, P, el, design, t, R, kind === 'cave');
+  if (kind !== 'hall') DA.design(c, P, el, design, t, R, kind === 'cave', +ways || 2);
   if (kind !== 'hall') DA.decor(c, P, el, t, R);
   // a dark room shows only a circle round the leader; every place gets a soft vignette
   if (dark === '1') { const g = c.createRadialGradient(s.x || 120, G - 30, 18, s.x || 120, G - 30, 84); g.addColorStop(0, 'rgba(5,4,10,0)'); g.addColorStop(1, 'rgba(5,4,10,.94)'); c.fillStyle = g; c.fillRect(-60, -60, RW + 120, RH + 120); }
@@ -80,7 +80,7 @@ Object.assign(DA, {
       c.fillStyle = SC.dark(P.wall, 0.32); c.beginPath(); c.moveTo(xw, 0); c.lineTo(xw, H); c.lineTo(xo, RH + 40); c.lineTo(xo, 0); c.closePath(); c.fill();
       c.strokeStyle = SC.dark(P.wall, 0.5); c.lineWidth = 0.8; for (let k = 1; k < 6; k++) { c.beginPath(); c.moveTo(xw, H * k / 6); c.lineTo(xo, H * k / 6 + (RH + 40 - H) * 0.0); c.stroke(); } }
     // the ways out: one on each side, more on the back wall
-    DA.door(c, P, 0, -1); DA.door(c, P, 0, 1); if (ways >= 3) DA.door(c, P, 120 + (R() - 0.5) * 60, 0);
+    for (const x of ways >= 3 ? [40, 200, 120 + (R() - 0.5) * 40] : [40, 200]) DA.door(c, P, x, 0);   // doorways sit in the back wall, standing on the floor
     for (const x of [64, 176]) { DA.glow(c, x, H - 62, 70); DA.torch(c, x, H - 70, t); DA.glow(c, x, H + 20, 46, 0.18); }
   },
   hall(c, P, el, t, off) {
@@ -108,7 +108,7 @@ Object.assign(DA, {
     DA.glow(c, 60, H - 40, 70, 0.2); DA.glow(c, 190, H - 30, 60, 0.18);
   },
   // the room's design, in the middle of the room behind the team
-  design(c, P, el, design, t, R, cave) {
+  design(c, P, el, design, t, R, cave, ways = 2) {
     const H = DA_HZ, G = GROUND, stone = SC.light(P.wall, 0.12);
     if (design === 'pillars') for (const [x, w] of [[44, 18], [196, 18], [92, 10], [148, 10]]) { const y0 = w > 12 ? 8 : 20, y1 = w > 12 ? G - 6 : H, g = c.createLinearGradient(x - w / 2, 0, x + w / 2, 0);
       g.addColorStop(0, SC.dark(stone, 0.25)); g.addColorStop(0.35, SC.light(stone, 0.15)); g.addColorStop(1, SC.dark(stone, 0.4)); c.fillStyle = g; c.fillRect(x - w / 2, y0, w, y1 - y0);
@@ -128,7 +128,7 @@ Object.assign(DA, {
       for (let x = 4; x < RW; x += 13) SC.tuft(c, x, G - 3 - (x % 3), 6 + (x % 5), x % 2 ? '#5fa24a' : '#4f8a3a');
       for (const [x, y] of [[30, G - 14], [210, G - 10]]) { SC.depth(c, () => SC.blob(c, x, y, [[0, 0, 12], [-9, 4, 9], [9, 4, 9]]), '#4f8a3a', 2, 0.3); for (let k = 0; k < 4; k++) SC.flower(c, x - 8 + k * 5, y - 4 + (k % 2) * 6, 2.4, ['#f2a6cf', '#ffe28a', '#a6c8ff', '#ffffff'][k]); }
       for (let k = 0; k < 2; k++) { const bx = 100 + Math.sin(t / 900 + k * 3) * 50, by = 60 + Math.cos(t / 700 + k) * 20; c.fillStyle = ['#ffe28a', '#f2a6cf'][k]; c.beginPath(); c.ellipse(bx - 2, by, 2.4, 1.6 + Math.sin(t / 60) * 1.2, -0.5, 0, 7); c.ellipse(bx + 2, by, 2.4, 1.6 + Math.sin(t / 60) * 1.2, 0.5, 0, 7); c.fill(); } }
-    if (design === 'plain' && !cave) { const x = 120; c.fillStyle = '#7a3a2e'; c.fillRect(x - 13, 16, 26, 40); c.fillStyle = '#e0b64a'; c.beginPath(); c.moveTo(x - 13, 56); c.lineTo(x, 64); c.lineTo(x + 13, 56); c.fill();   // a League banner
+    if (design === 'plain' && !cave && ways < 3) { const x = 120; c.fillStyle = '#7a3a2e'; c.fillRect(x - 13, 16, 26, 40); c.fillStyle = '#e0b64a'; c.beginPath(); c.moveTo(x - 13, 56); c.lineTo(x, 64); c.lineTo(x + 13, 56); c.fill();   // a League banner
       c.strokeStyle = '#e0b64a'; c.lineWidth = 1.4; c.beginPath(); c.arc(x, 32, 7, 0, 7); c.stroke(); c.beginPath(); c.moveTo(x, 25); c.lineTo(x, 39); c.moveTo(x - 7, 32); c.lineTo(x + 7, 32); c.stroke(); c.fillStyle = '#5a3d24'; c.fillRect(x - 16, 14, 32, 3); }
   },
   // a few things lying about, in the region's own kind: two or three per room, never the same set twice
@@ -214,12 +214,33 @@ function deepProp(c, p, t, front) {
     case 'arrow': if (!front) return true;
       c.save(); c.translate(x, y); c.rotate(p.a || 0); c.strokeStyle = '#6a4a2a'; c.lineWidth = 1.6; c.beginPath(); c.moveTo(-14, 0); c.lineTo(8, 0); c.stroke(); c.fillStyle = '#9aa1a8'; c.beginPath(); c.moveTo(12, 0); c.lineTo(6, -3); c.lineTo(6, 3); c.fill();
       c.fillStyle = '#e2483f'; c.beginPath(); c.moveTo(-14, 0); c.lineTo(-18, -3); c.lineTo(-12, 0); c.lineTo(-18, 3); c.fill(); c.restore(); return true;
-    case 'firejet': if (front) { if (!p.on) return true; for (let k = 0; k < 7; k++) { const r = 5 + k * 2.4, yy = y - 64 + k * 9 + Math.sin(t / 60 + k) * 2; c.fillStyle = k < 2 ? '#fff0a0' : k < 4 ? '#ffb040' : 'rgba(230,80,40,.8)'; c.beginPath(); c.arc(x + Math.sin(t / 80 + k) * 3, yy, r, 0, 7); c.fill(); } return true; }
+    // a stone vent in the wall; when it fires, the flame comes out of the middle of its hole and spreads as it falls to the floor
+    case 'firejet': { const vy = GROUND - 56; if (!front) { SC.depth(c, () => { c.beginPath(); c.roundRect(x - 9, vy - 8, 18, 16, 2); }, '#8a8178', 2, 0.35);
+        c.fillStyle = 'rgba(30,20,20,.35)'; c.beginPath(); c.ellipse(x, vy - 14, 7, 6, 0, 0, 7); c.fill();   // soot above it
+        c.fillStyle = '#5e5650'; c.beginPath(); c.arc(x, vy, 5.5, 0, 7); c.fill(); c.fillStyle = p.on ? '#ffb040' : '#140e10'; c.beginPath(); c.arc(x, vy, 3.8, 0, 7); c.fill(); return true; }
+      if (!p.on) return true; DA.glow(c, x, vy, 34, 0.45);
+      // one tapering tongue of flame from the hole to the floor, flickering at the edges, with a smaller hot core inside it
+      const tongue = (w0, w1, col, k0) => { const y1 = GROUND - 2, n = 10, L = [], Rr = [];
+        for (let k = 0; k <= n; k++) { const f = k / n, yy = vy + f * (y1 - vy), w = (w0 + (w1 - w0) * Math.pow(f, 0.8)) * (1 + Math.sin(t / 45 + k * 1.9 + k0) * 0.12 * f), sw = Math.sin(t / 90 + k0) * 2 * f;
+          L.push([x + sw - w, yy]); Rr.push([x + sw + w, yy]); }
+        c.fillStyle = col; c.beginPath(); c.moveTo(x, vy - 1); for (const [a, b] of L) c.lineTo(a, b); c.quadraticCurveTo(x, y1 + w1 * 0.7, Rr[n][0], Rr[n][1]); for (let k = n - 1; k >= 0; k--) c.lineTo(Rr[k][0], Rr[k][1]); c.closePath(); c.fill(); };
+      const g = c.createLinearGradient(0, vy, 0, GROUND); g.addColorStop(0, '#ffd27a'); g.addColorStop(0.5, '#ff8a30'); g.addColorStop(1, 'rgba(220,60,30,.85)');
+      tongue(3.5, 12, g, 0); const g2 = c.createLinearGradient(0, vy, 0, GROUND); g2.addColorStop(0, '#fffbe6'); g2.addColorStop(1, 'rgba(255,200,80,.6)'); tongue(1.8, 5.5, g2, 2);
+      c.fillStyle = 'rgba(255,140,50,.5)'; c.beginPath(); c.ellipse(x, GROUND - 1, 16, 3.5, 0, 0, 7); c.fill();   // where it hits the floor
+      return true; }
       c.fillStyle = '#2a2026'; c.beginPath(); c.ellipse(x, y - 70, 7, 4, 0, 0, 7); c.fill(); return true;
     case 'gas': if (!front) return true; c.save(); c.globalAlpha = p.a == null ? 0.6 : p.a;
       for (let k = 0; k < 9; k++) { const a = k * 0.7 + t / 900, r = (p.r || 30) * (0.5 + (k % 3) * 0.25); c.fillStyle = k % 2 ? '#9ad05a' : '#b78ad8'; c.beginPath(); c.arc(x + Math.cos(a) * (p.r || 30) * 0.8, y - 26 + Math.sin(a * 1.3) * 12, r * 0.45, 0, 7); c.fill(); }
       c.restore(); return true;
-    case 'pit': if (front) return true; c.fillStyle = '#0d0a10'; c.beginPath(); c.ellipse(x, y + 2, p.w || 24, 5, 0, 0, 7); c.fill(); c.fillStyle = SC.dark('#8a7a66', 0.4); c.fillRect(x - (p.w || 24), y - 1, (p.w || 24) * 2, 2); return true;
+    // a hole in the floor opening to p.w; its near lip is drawn in front, and a rope hangs into it from p.rope when it's there
+    case 'pit': { const w = p.w || 0; if (w < 0.5) return true;
+      if (!front) { c.fillStyle = 'rgba(200,190,170,.5)'; c.beginPath(); c.ellipse(x, y + 2, w + 3.5, 6.5, 0, 0, 7); c.fill();
+        const g = c.createRadialGradient(x, y + 1, 1, x, y + 2, w); g.addColorStop(0, '#000'); g.addColorStop(1, '#2a2026'); c.fillStyle = g; c.beginPath(); c.ellipse(x, y + 2, w, 5, 0, 0, 7); c.fill();
+        c.fillStyle = 'rgba(90,80,70,.8)'; for (const d of [-0.8, -0.3, 0.4, 0.9]) { c.beginPath(); c.arc(x + d * w, y - 1 + Math.abs(d) * 2, 1.6, 0, 7); c.fill(); }
+        return true; }
+      c.strokeStyle = 'rgba(120,110,95,.9)'; c.lineWidth = 2; c.beginPath(); c.ellipse(x, y + 2, w + 1, 5.5, 0, 0.15, Math.PI - 0.15); c.stroke();
+      if (p.rope != null) { c.strokeStyle = '#b08a52'; c.lineWidth = 1.8; c.beginPath(); c.moveTo(p.rope + 8, y - 16); c.quadraticCurveTo((p.rope + x) / 2, y - 4, x - 2, y + 6); c.stroke(); }
+      return true; }
   }
   return false;
 }
