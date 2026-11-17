@@ -199,9 +199,8 @@ function render(full){
   try{
     const res=scan(still,still.width,still.height); show(res);
     if(!full) return;
-    const hl=typeof huntScan==="function"&&!window.PRACTICE?huntScan(res):[];   // today's colour, the notice board and the colour atlas (hunts.js)
-    if(typeof WILD!=="undefined"&&WILD){ wildCard(res,card); huntNote(card,hl); return null; }
-    let m=typeof scanBoost==="function"?scanBoost(hatch(res)):hatch(res); if(typeof huntBoost==="function") m=huntBoost(m,res);
+    if(typeof WILD!=="undefined"&&WILD){ const hl=typeof huntScan==="function"&&!window.PRACTICE?huntScan(res):[]; wildCard(res,card); huntNote(card,hl); return null; }   // today's colour and the colour atlas (hunts.js)
+    let m=typeof scanBoost==="function"?scanBoost(hatch(res)):hatch(res);
     const name=m.name, kind=(m.el2?`${m.el1} / ${m.el2}`:m.el1)+" "+m.family;
     const tint=COL[res.main.g]==="#1b1b1f"?"#8888aa":COL[res.main.g];
     card.innerHTML=`<div class="sheet-head">
@@ -217,7 +216,7 @@ function render(full){
 
         <p class="why">Drag the circle to try another spot.</p>
       </div>`;
-    paintMon(document.getElementById("bit"),m,{stage:"Bit"}); if(typeof huntNote==="function") huntNote(card,hl);
+    paintMon(document.getElementById("bit"),m,{stage:"Bit"});
     if(window.PRACTICE){ const a=card.querySelector(".sheet-actions"); if(a){ a.innerHTML=`<button class="big" id="practicebtn">Practice with it</button>`; document.getElementById("practicebtn").onclick=()=>atFromScan(m); } return m; }
     lastMon=m; const fb=document.getElementById("fightbtn"); if(fb) fb.onclick=()=>openBattle(lastMon); const rb=document.getElementById("raisebtn"); if(rb) rb.onclick=()=>openRanch(lastMon);
     if(typeof obSheet==="function") obSheet(m);
@@ -348,8 +347,9 @@ stage.addEventListener("pointermove",e=>{if(dragging) moveAim(e);});
 stage.addEventListener("pointerup",()=>dragging=false);
 stage.addEventListener("pointercancel",()=>dragging=false);
 function setWildUI(on){
-  document.getElementById("main").textContent=on?"Wild: point at something":"Snaboscope";
-  document.getElementById("msgtext").textContent=on?"Wild battle. Take a photo of something colourful and a wild Snabit jumps out of its colours.":"Take a photo, drag the circle onto what you want scanned, then tap Scan.";
+  const hs=on&&typeof huntScopeText==="function"&&WILD&&WILD.hunt?huntScopeText():null;   // a hunt shows its latest clue (hunts.js)
+  document.getElementById("main").textContent=hs?hs.title:on?"Wild: point at something":"Snaboscope";
+  document.getElementById("msgtext").textContent=hs?hs.text:on?"Wild battle. Take a photo of something colourful and a wild Snabit jumps out of its colours.":"Take a photo, drag the circle onto what you want scanned, then tap Scan.";
   if(on){ if(stream){ aim={x:.5,y:.5}; placeRing(); setMode("live"); } else startCam(); }
   if(typeof musWant==="function") musWant();
 }

@@ -28,29 +28,29 @@ function wildBlock(s){
 }
 function startWild(){
   const s=RS, why=wildBlock(s); if(why){ say(why); return; }
-  WILD={s,seen:0}; closeRanch();
+  WILD={s,seen:0,hunt:typeof huntActive==="function"&&huntActive()?huntActive().id:null}; closeRanch();
   if(typeof setWildUI==="function") setWildUI(true);
 }
 function endWild(){ WILD=null; if(typeof setWildUI==="function") setWildUI(false); }
 
 /* The enemy. res is the scan, s the player's monster, R a fresh random source per scan. */
-function wildFrom(res,s,R){
+function wildFrom(res,s,R,force){   // force: {family, strong} for a hunted Snabit (hunts.js), which keeps its own colours
   let r2=res;
   const third=res.ranked.find(x=>x!==res.main&&x!==res.second&&x.w>=6);
-  const roll=R();
+  const roll=force?1:R();
   if(res.second&&third&&roll<0.3) r2={...res,second:third};          // the third colour takes the second element
   else if(res.second&&roll<0.42) r2={...res,second:null,mono:true};  // the second colour drops out
   else if(!res.second&&third&&roll<0.25) r2={...res,second:third,mono:false};
-  const base=pickFamily(res.cells,res).family, fam=R()<0.45?FAM_COUSINS[base][Math.floor(R()*3)]:base;
+  const base=force?force.family:pickFamily(res.cells,res).family, fam=!force&&R()<0.45?FAM_COUSINS[base][Math.floor(R()*3)]:base;
   const jig=(v,n)=>R()<0.5?v:(v+(R()<0.5?n-1:1))%n;
-  const m=hatch(r2,new Date(Math.floor(R()*4e12)),{family:fam,parts:p=>({eyes:jig(p.eyes,7),mouth:jig(p.mouth,5),top:jig(p.top,5),arms:jig(p.arms,5)})});
+  const m=hatch(r2,force?new Date(hashStr(res.photoKey)*6e4):new Date(Math.floor(R()*4e12)),{family:fam,parts:p=>({eyes:jig(p.eyes,7),mouth:jig(p.mouth,5),top:jig(p.top,5),arms:jig(p.arms,5)})});
   // stats wobble a little on top of the new talent roll
   m.stats=m.stats.map(v=>Math.max(10,Math.round(v*(0.92+R()*0.16))));
-  const shiny=R()<1/40;
+  const shiny=!force&&R()<1/40;
   if(shiny){ const sh=c=>{const [h,sa,v]=rgbToHsv(c);return hsvToRgb([(h+150)%360,sa,v]);}; m.pal={...m.pal,body:sh(m.pal.body),parts:sh(m.pal.parts),accent:sh(m.pal.accent)}; }
   // scaled to the player's monster
-  const level=Math.max(1,s.level+[-1,0,0,1][Math.floor(R()*4)]);
-  const mine=s.tp.reduce((a,b)=>a+b,0), total=Math.round(mine*(0.7+R()*0.4));
+  const level=Math.max(1,s.level+(force&&force.strong?1:[-1,0,0,1][Math.floor(R()*4)]));
+  const mine=s.tp.reduce((a,b)=>a+b,0), total=Math.round(mine*(force&&force.strong?1.1+R()*0.1:0.7+R()*0.4));
   const focus=Math.floor(R()*6), second=(focus+1+Math.floor(R()*5))%6, tp=[0,0,0,0,0,0];
   for(let k=0;k<total;k++){ const r=R(); tp[r<0.4?focus:r<0.6?second:Math.floor(R()*6)]++; }
   const st={m,tp,stage:s.stage,mark:-1,level,grid:m.grid,pal:m.pal};
@@ -63,16 +63,18 @@ function wildFrom(res,s,R){
 /* Called by the scan screen when a photo is taken in wild mode. */
 function wildCard(res,card){
   const s=WILD.s, R=rng(hashStr(res.photoKey+"|"+Date.now()+"|"+(WILD.seen++)));
-  const o=(typeof roamInScan==="function"&&roamInScan(s,R))||wildFrom(res,s,R); WILD.foe=o; o.today=typeof isToday==="function"&&isToday(res);   // today's colour pays half as much again (hunts.js)
+  const o=(typeof huntPick==="function"&&huntPick(res,s,R))||(typeof roamInScan==="function"&&roamInScan(s,R))||wildFrom(res,s,R); WILD.foe=o; o.today=typeof isToday==="function"&&isToday(res);   // the hunted Snabit, and today's colour paying half as much again (hunts.js)
+  const hq=o.hunt&&typeof huntActive==="function"&&huntActive();
   const el=o.m.el2?`${o.m.el1} / ${o.m.el2}`:o.m.el1;
   const notes=[o.drifter?"<b style=\"color:#ffd23f\">Strange colours.</b> No scan gives colours like these.":o.shiny?"<b style=\"color:#ffd23f\">Rare colours!</b> It pays double.":"",
     o.famShift?"Same colours, but a different family showed up this time.":"", o.elShift?"Its second element shifted with the light.":""].filter(Boolean).join(" ");
   const chip=e=>`<span class="elc" style="${chipStyle(ELC(e))}">${e}</span>`;
   card.innerHTML=`<div class="sheet-head"><canvas id="wild-spr" class="mon-tile"></canvas>
-      <div class="sheet-id"><div class="sheet-meta" style="margin:0 0 2px;color:var(--gold)">Wild · ${wildLeft(s)} fight${wildLeft(s)===1?"":"s"} left this week</div><h2>${o.fm.name}</h2>
+      <div class="sheet-id"><div class="sheet-meta" style="margin:0 0 2px;color:var(--gold)">${WILD.hunt?"Hunt":"Wild"} · ${wildLeft(s)} fight${wildLeft(s)===1?"":"s"} left this week</div><h2>${o.fm.name}</h2>
         <div class="sheet-kind">${chip(o.m.el1)}${o.m.el2?chip(o.m.el2):""}<span class="fam">${o.m.family} · Lv ${o.level}${o.stage!=="Bit"?" "+o.stage:""}</span></div></div></div>
     <div class="sheet-actions"><button class="big" id="wild-go">Fight</button><button class="btn2" id="wild-moves">Moves</button><button class="btn2" id="wild-run">Run</button></div>
     <div class="sheet-body">
+      ${hq?`<p class="abil"><b class="hid">That's the one ${NPC[hq.who].name} saw!</b></p>`:""}
       ${o.drifter?`<p class="abil"><b class="hid">Strange colours.</b> No scan gives colours like these.</p>`:o.shiny?`<p class="abil"><b class="hid">Rare colours.</b> It pays double.</p>`:""}
       <p class="abil"><b>${o.m.ability[0]}</b> ${o.m.ability[1]}.</p>
       <p>Skills: ${o.skills.join(", ")}.</p></div>`;
@@ -89,7 +91,7 @@ function wildFight(){
   if(s.wildWeek!==PLAYER.week){ s.wildWeek=PLAYER.week; s.wildCount=0; }
   s.wildCount++;
   WILD.fighting=true;
-  arenaFight({s,foe:o,mode:"control",title:o.shiny?"Wild, rare colours":"Wild",learn:true,onEnd:r=>{
+  arenaFight({s,foe:o,mode:"control",title:o.hunt?"Hunt":o.shiny?"Wild, rare colours":"Wild",learn:true,onEnd:r=>{
     WILD.fighting=false;
     const won=r.winner===0, lines=[];
     s.fatigue=Math.min(100,s.fatigue+Math.round((won?6:10)*tireMul(s)));
@@ -101,6 +103,8 @@ function wildFight(){
     } else lines.push(r.winner===null?"It was a draw, and the wild one wandered off.":"The wild one won and ran off. Your Snabit is tired but not hurt.");
     if(r.learned.length) lines.push(...r.learned);
     if(o.drifter&&typeof roamResult==="function") lines.push(roamResult(won));
+    const hu=typeof huntAfter==="function"?huntAfter(o,won):{lines:[]}; lines.push(...hu.lines);   // a hunt: the reward, or what the poster says next (hunts.js)
     WILD.foe=null; endWild(); openRanch(); say(lines.join(" ")); saveGame();
+    if(hu.after) setTimeout(()=>{ if(RS&&RS.open&&!WILD) say(hu.after[1],hu.after[0]); },3200);
   }});
 }
