@@ -63,7 +63,7 @@ function wildFrom(res,s,R){
 /* Called by the scan screen when a photo is taken in wild mode. */
 function wildCard(res,card){
   const s=WILD.s, R=rng(hashStr(res.photoKey+"|"+Date.now()+"|"+(WILD.seen++)));
-  const o=(typeof roamInScan==="function"&&roamInScan(s,R))||wildFrom(res,s,R); WILD.foe=o;
+  const o=(typeof roamInScan==="function"&&roamInScan(s,R))||wildFrom(res,s,R); WILD.foe=o; o.today=typeof isToday==="function"&&isToday(res);   // today's colour pays half as much again (hunts.js)
   const el=o.m.el2?`${o.m.el1} / ${o.m.el2}`:o.m.el1;
   const notes=[o.drifter?"<b style=\"color:#ffd23f\">Strange colours.</b> No scan gives colours like these.":o.shiny?"<b style=\"color:#ffd23f\">Rare colours!</b> It pays double.":"",
     o.famShift?"Same colours, but a different family showed up this time.":"", o.elShift?"Its second element shifted with the light.":""].filter(Boolean).join(" ");
@@ -94,7 +94,7 @@ function wildFight(){
     const won=r.winner===0, lines=[];
     s.fatigue=Math.min(100,s.fatigue+Math.round((won?6:10)*tireMul(s)));
     if(won){
-      const exp=Math.round(3+1.5*o.level), bits=Math.round((5+2*o.level)*(o.shiny?2:1));
+      const exp=Math.round(3+1.5*o.level), bits=Math.round((5+2*o.level)*(o.shiny?2:1)*(o.today?1.5:1));
       PLAYER.bits+=bits; lines.push(`It beat the wild ${o.fm.name}. ${exp} exp and ${bits} bits.`);
       const lv=giveExp(s,exp); lines.push(...lv);
       if(Math.random()<0.4){ const fd=rollFind(Math.random,o.shiny?2:1); if(fd.item){ addItem(fd.item); lines.push(`It dropped ${/^[AEIOU]/.test(fd.item)?"an":"a"} ${fd.item}.`); } else if(fd.bits){ PLAYER.bits+=fd.bits; lines.push(`It dropped ${fd.bits} more bits.`); } }

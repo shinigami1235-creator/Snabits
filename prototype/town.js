@@ -50,9 +50,9 @@ function openTown(){
   if(RS) RS.inTown=true;
   if(RS&&RS.visit==="shop"){ leaveVisit().then(openTown); return; }
   panel(`<div class="full lab-head"><b>Town</b><button class="small" id="tw-back">Back</button></div><div class="full lab-info">Nora's things to wear and her skill chips change every week.</div>
-    <button class="rb" id="tw-shop">Nora's shop<small>Snacks, medicine, things to wear, skill chips</small></button><button class="rb" id="tw-w">Workshop<small>Ranch upgrades</small></button><button class="rb" id="tw-hall">Town Hall<small>${loanLeft()?`Pay the loan, ${loanLeft().toLocaleString()} bits left`:"The loan is paid"}</small></button>${typeof towerOpen==="function"&&towerOpen(RS)?`<button class="rb" id="tw-tower">The Tower<small>${RS.towerBest?`Best: ${RS.towerBest} floors`:"The League's ladder"}</small></button>`:""}`);
+    <button class="rb" id="tw-shop">Nora's shop<small>Snacks, medicine, things to wear, skill chips</small></button><button class="rb" id="tw-w">Workshop<small>Ranch upgrades</small></button>${typeof openBoard==="function"?`<button class="rb" id="tw-nb">Notice board<small>${(()=>{ huntRefresh(); const n=huntState().open.length; return n?`${n} scan request${n===1?"":"s"}`:"Nothing new this week"; })()}</small></button>`:""}<button class="rb" id="tw-hall">Town Hall<small>${loanLeft()?`Pay the loan, ${loanLeft().toLocaleString()} bits left`:"The loan is paid"}</small></button>${typeof towerOpen==="function"&&towerOpen(RS)?`<button class="rb" id="tw-tower">The Tower<small>${RS.towerBest?`Best: ${RS.towerBest} floors`:"The League's ladder"}</small></button>`:""}`);
   if(el("tw-tower")) el("tw-tower").onclick=openTower;
-  el("tw-shop").onclick=()=>openShop(); el("tw-w").onclick=openWorkshop; el("tw-hall").onclick=()=>openHall(); el("tw-back").onclick=()=>menu("Out");
+  el("tw-shop").onclick=()=>openShop(); el("tw-w").onclick=openWorkshop; if(el("tw-nb")) el("tw-nb").onclick=openBoard; el("tw-hall").onclick=()=>openHall(); el("tw-back").onclick=()=>menu("Out");
 }
 async function openShop(line){
   const tk=visitTicket(); if(RS&&RS.visit!=="shop") await visitPlace("shop"); if(visitStale(tk)) return;
