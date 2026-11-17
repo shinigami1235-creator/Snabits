@@ -154,16 +154,16 @@ function shardFx(c, p, sc, a = 1) {
 }
 ANIM.spear = { C: 520, D: 900,
   atk: t => ({ f: 0, pose: t < 200 ? 'slamup' : t < 640 ? 'push' : 'idle' }),
-  fx(c, t, x) { const pw = x.pw || 1, n = pw < 1 ? 3 : 5, rock = x.el === 'Stone';
+  fx(c, t, x) { const pw = x.pw || 1, n = pw < 1 ? 3 : 5, mat = typeof SP_MAT !== 'undefined' ? (SP_MAT.find(([re]) => re.test(x.name || '')) || [])[1] : null, rock = x.el === 'Stone' || !!mat, trailEl = mat === 'fire' ? 'Blaze' : mat === 'venom' ? 'Venom' : mat === 'thorn' ? 'Wild' : mat ? null : 'Frost';   // a dart in a named material draws as that material (17 Nov 2026 audit)
     for (let i = 0; i < n; i++) { const o = x.from[i % x.from.length], off = (i - (n - 1) / 2) * 12, k = (t - 200 - i * 45) / 300, ang = Math.atan2(x.target.y - o.y, x.target.x - o.x);
       if (t < 200 + i * 45) { const a = Math.min(1, t / 160), sp = { x: o.x + Math.cos(t / 120 + i * 2.1) * 16 * (1 - a * 0.4), y: o.y - 14 + Math.sin(t / 120 + i * 2.1) * 10, ang: ang + Math.sin(t / 90 + i) * 0.6 };
         rock ? spearFx(c, x, sp, i, a) : shardFx(c, sp, 0.8 * a + 0.3, a); }
       else if (k <= 1) { const p = lerpP(o, x.target, k, 10, off);
-        for (let j = 1; j < 7; j++) { const q = lerpP(o, x.target, Math.max(0, k - j * 0.04), 10, off); c.globalAlpha = 0.7 - j * 0.09; ePart(c, 'Frost', q.x + Math.sin(j * 3 + t / 40) * 3, q.y, 1.4, t, j);
-          c.fillStyle = 'rgba(220,240,255,.35)'; c.beginPath(); c.arc(q.x, q.y, 3 + j, 0, 7); c.fill(); }
+        for (let j = 1; j < 7; j++) { const q = lerpP(o, x.target, Math.max(0, k - j * 0.04), 10, off); c.globalAlpha = 0.7 - j * 0.09; if (trailEl) ePart(c, trailEl, q.x + Math.sin(j * 3 + t / 40) * 3, q.y, 1.4, t, j);
+          c.fillStyle = mat ? 'rgba(255,255,255,.25)' : 'rgba(220,240,255,.35)'; c.beginPath(); c.arc(q.x, q.y, 2 + j * 0.7, 0, 7); c.fill(); }
         c.globalAlpha = 1; rock ? spearFx(c, x, p, i, 1.2) : shardFx(c, p, 1.05 + 0.2 * pw); } }
     if (t > 520 && t < 880) { const k = (t - 520) / 360; blast(c, x.target, k, x);
-      c.save(); c.globalAlpha = 0.7 * (1 - k); c.fillStyle = '#dff4ff'; c.beginPath(); c.ellipse(x.target.x, x.target.foot - 2, 30 + 20 * k, 7 + 3 * k, 0, 0, 7); c.fill(); c.restore(); } } };
+      c.save(); c.globalAlpha = 0.7 * (1 - k) * (mat ? 0 : 1); c.fillStyle = '#dff4ff'; c.beginPath(); c.ellipse(x.target.x, x.target.foot - 2, 30 + 20 * k, 7 + 3 * k, 0, 0, 7); c.fill(); c.restore(); } } };
 
 /* ---------- tornado: forms in front of the user, crosses over and lifts the target ---------- */
 function tornadoFx(c, cx, foot, h, w, t, el, a) {
