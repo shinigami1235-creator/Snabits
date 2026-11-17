@@ -39,6 +39,23 @@ const EVENT_LIST = [
       { label: 'Sit with it', small: 'Stay until it calms down', go: () => { s.fear -= 3; s.spoil += 4; s.stress -= 6; clampAll(); return `You stayed in the barn until the rain stopped. ${nameOf(s)} fell asleep against you.`; } },
       { label: 'Fix the door first', small: 'It\'ll be fine', go: () => { s.stress += 4; s.fear += 3; clampAll(); return `You fixed the door, but ${nameOf(s)} took a while to come out of the hay.`; } }] }) },
 ];
+/* Walt notices a Snabit that has outgrown the ranch (Gid, 17 Nov 2026): once its stats would clear most obstacles on the
+   expeditions it can reach, and some region could teach it a move, he comes by once and points it at a skill trip. */
+function waltTripReady(s) {
+  if (!s || s.waltTrip || typeof exRegions !== 'function' || typeof tripOptions !== 'function' || typeof tripsLocked === 'function' && tripsLocked()) return null;
+  const regs = exRegions().filter(r => !r.rift); if (!regs.length) return null;
+  const f = playerFighter(s), keys = ['pow', 'grd', 'mnd', 'spr', 'spd'];
+  const clears = regs.filter(r => { const need = exNeed(exGrade(r)) * 1.1; return keys.filter(k => f.base[k] >= need).length >= 4; }).length;
+  if (clears < Math.ceil(regs.length * 0.6)) return null;
+  const trips = TRIP_REGIONS().filter((r, i) => r.n !== 'The Rift' && i < tripRegionCount());
+  const ready = trips.filter(r => tripOptions(s, r).some(x => x.chainOk && x.score >= x.need));
+  return ready.length ? ready : null;
+}
+const WALT_TRIP = { id: 'walttrip', when: s => !!waltTripReady(s),
+  run: (s, R) => { const ready = waltTripReady(s), reg = pickOf(R, ready); s.waltTrip = PLAYER.week;
+    return { text: `Walt stopped at the fence and watched ${nameOf(s)} train for a while. "That one's outgrown the trails round here. Snabits I take out on a trip come home knowing moves they'd never pick up on a ranch."`, choices: [
+      { label: 'Where would you take it?', small: 'Ask Walt', go: () => `"${reg.n}. Four weeks out there and ${nameOf(s)} would come back with something new. You know where to find me."` },
+      { label: 'Not yet', small: 'It stays home for now', go: () => `"Suit yourself. The offer stands."` }] }; } };
 const pickOf = (R, a) => a[Math.floor(R() * a.length)];
 const aOr = w => /^[AEIOU]/.test(w) ? 'an' : 'a';
 const nameOf = s => s.m.name;
@@ -46,7 +63,9 @@ const nameOf = s => s.m.name;
 /* after a week ends: maybe one of these, with its own panel */
 function weekEvent(s) {
   if (!s || s.dead || s.away || !PLAYER || PLAYER.week < 4 || s.noEvents) return null;
-  const R = rng(hashStr(s.id + '|ev|' + PLAYER.week)); if (R() > 0.25) return null;
+  const R = rng(hashStr(s.id + '|ev|' + PLAYER.week));
+  if (WALT_TRIP.when(s)) return WALT_TRIP.run(s, R);   // Walt's visit doesn't wait for the usual one week in four
+  if (R() > 0.25) return null;
   const seen = PLAYER.evSeen = PLAYER.evSeen || {};
   const ok = EVENT_LIST.filter(e => e.when(s) && !(seen[e.id] > PLAYER.week - 8)); if (!ok.length) return null;
   const e = pickOf(R, ok); seen[e.id] = PLAYER.week; return e.run(s, R);
