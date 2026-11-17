@@ -2,7 +2,8 @@
    They open from grade C, a region at a time, once that region's regular map has been crossed to its far end. A deep map is three
    floors built new every season by the rules of Gid's roguelike (deep-gen.js), seen from above and explored as the team walks:
    a lit room shows whole from its doorway, a corridor only a little way ahead. Tap a spot the team has seen and it walks there.
-   The leader goes in front and tires on a long walk; switching the leader costs the incoming Snabit 1 energy. Wild Snabits walk
+   The leader goes in front and tires on a long walk, while the two behind slowly get energy back. Stamina sets how much energy a
+   Snabit has and how fast it comes back. Switching the leader costs the incoming Snabit 1 energy. Wild Snabits walk
    the floors and come after the team once they see it. Touching one starts a tag-team fight, where the next Snabit steps in
    against whatever HP the last one left, and a Snabit that loses is out until camp. When all three lose, the team wakes up back
    at the entrance with less energy, and the Snabit that beat them is still out there. The lower floors each have a camp by the
@@ -41,7 +42,12 @@ function openDeepPick(reg) {
 /* ---------- the leader stands in for the ranch Snabit while the team is out ---------- */
 const DEEP_KEYS = ['x', 'dir', 'pose', 'jy', 'bx', 'flash', 'shake', 'ghosts', 'trail', 'props', 'parts', 'busy', 'cur', 'skip', 'noScenes', 'showNums', 'bg', 'trip', 'tripLabel', 'night', 'dusk', 'camJump', 'training', 'guide', 'dayHour', 'zx', 'hidden', 'behind', 'upside', 'open', 'cam', 'camL', 'camX', 'pan', 'panC', 'panL', 'panUntil', 'room', 'vExtra', 'visitor', 'weather', 'zoom', 'lull'];
 function deepLead(st) { if (RS === st) return; const o = RS; for (const k of DEEP_KEYS) st[k] = o[k]; st.pose = 'idle'; RS = st; drawUI(); }
-function deepEnergyMax(s) { const f = playerFighter(s), avg = (f.base.pow + f.base.grd + f.base.mnd + f.base.spr + f.base.spd) / 5; return 10 + Math.round(6 * clamp(f.base.sta / Math.max(1, avg), 0.5, 1.5)); }
+// Stamina against what the grade's Snabits have: from half of it to twice it (Gid, 17 Nov 2026: more energy and faster recovery from Stamina)
+const deepSta = (s, need) => clamp(playerFighter(s).base.sta / Math.max(1, need), 0.5, 2);
+// 13 energy at half the grade's Stamina, up to 22 at twice it
+function deepEnergyMax(s, need = exNeed(DEEP_GRADE[s.grade] || 'C')) { return 10 + Math.round(6 * deepSta(s, need)); }
+// a Snabit walking behind gets 1 energy back every this many steps: 72 at half the grade's Stamina, 18 at twice it
+const deepRegen = (s, need) => Math.round(36 / deepSta(s, need));
 
 /* the team strip over the map: a card each with its energy, and whether it leads, can be switched in or is out */
 function deepTeamDraw(cv, T, lead) {
@@ -94,7 +100,7 @@ async function runDeep(reg, team) {
   const home = RS, st = deepState(reg), M = deepMap(reg), g = reg.ring != null ? riftGrade(reg) : DEEP_GRADE[exGrade(reg)], need = exNeed(g), areas = TRIP_AREAS[reg.el], K = t => say(t, 'guide'), found = [];
   if (reg.ring == null && typeof horrorTear === 'function') horrorTear(reg, M);   // a tear with a horror in it, now and then from grade A
   const where = reg.ring != null ? reg.n : `${reg.n}, deep`;   // a Deep Rift ring has its own name
-  const T = team.map(s => { const max = deepEnergyMax(s); return { s, e: max, max, out: false }; });
+  const T = team.map(s => { const max = deepEnergyMax(s, need); return { s, e: max, max, out: false, every: deepRegen(s, need), walked: 0 }; });
   if (st.got.includes('10:1') && !st.got.includes('guard')) st.got.push('guard');   // a guardian beaten on the old maps stays beaten
   st.season = exSeason(); saveGame();
   let lead = 0, day = 1, stop = null, steps = 0, see = new Set(), trail = [], used = [];
@@ -144,6 +150,7 @@ async function runDeep(reg, team) {
       const from = [at.x, at.y]; trail.unshift(from); trail.length = Math.min(trail.length, 2); at.x = nx; at.y = ny;
       if (F.t[i] === DG.DOOR) F.open[i] = 1;
       if (++steps % 10 === 0) L.e -= 1;   // a long walk tires the leader
+      for (const m of T) if (m !== L && !m.out && m.e < m.max && ++m.walked >= m.every) { m.walked = 0; m.e += 1; }   // and the two behind get their breath back
       RS.pose = 'walk'; const seen0 = F.pats.filter(p => p.spotted && !p.dead).length; look();
       if (n) { RS.pose = 'idle'; const r = await feature(n, from); look(); draw(); if (r) return r; }
       let p = F.pats.find(q => !q.dead && Math.abs(q.x - at.x) + Math.abs(q.y - at.y) <= 1) || dgPatrols(F, at, see, Math.random);

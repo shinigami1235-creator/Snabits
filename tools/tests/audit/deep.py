@@ -34,8 +34,9 @@ RULES = """() => { const out = { maps: 0, floors: 0, caves: 0, aspect: 0, wide: 
 
 # the autopilot: heads for the wanted things on this floor, else explores the nearest edge of the unknown, else takes the stairs down
 AUTO = """(want) => { const P = DEEP_LIVE.pick; if (!P) return null; const M = P.M, at = P.at, F = M.floors[at.f];
-  const done = window.__done = window.__done || new Set(), feats = Object.values(F.feat).filter(n => F.seen[dgI(F, n.x, n.y)] && !n.failed && !done.has(n.id));
-  for (const k of want) { const n = feats.find(n => n.k === k || n.k + ':' + n.fam === k); if (n && deepPath(F, [at.x, at.y], [n.x, n.y])) { done.add(n.id); P.go([n.x, n.y]); return 'to ' + k; } }
+  const done = window.__done = window.__done || new Set(); { const here = F.feat[dgI(F, at.x, at.y)]; if (here) done.add(here.id); }   // something stood on and left there, like a lair still shut
+  const feats = Object.values(F.feat).filter(n => F.seen[dgI(F, n.x, n.y)] && !n.failed && !done.has(n.id));
+  for (const k of want) { const n = feats.find(n => n.k === k || n.k + ':' + n.fam === k); if (n && deepPath(F, [at.x, at.y], [n.x, n.y])) { P.go([n.x, n.y]); return 'to ' + k; } }
   const D = dgDist(F, at.x, at.y, F.shut); let best = null, bd = 1e9;
   for (let i = 0; i < F.t.length; i++) { if (!F.seen[i] || D[i] < 1 || D[i] >= bd || F.feat[i]) continue; const x = i % F.w, y = (i / F.w) | 0;
     if ([[1, 0], [-1, 0], [0, 1], [0, -1]].some(([a, b]) => dgIn(F, x + a, y + b) && !F.seen[dgI(F, x + a, y + b)])) { best = [x, y]; bd = D[i]; } }
@@ -76,6 +77,8 @@ async def main():
         C.ok(r['diff'] >= n - 4 - 1, f"the layout changes from season to season ({r['diff']})")
         C.ok(0 < r['caves'] < r['floors'] * 0.25, f"some last floors are caverns ({r['caves']} of {r['floors']})")
         C.ok(all(r['designs'].get(k, 0) > 0 for k in ('plain', 'pillars', 'pool', 'rubble', 'garden')), f"every room design turns up ({r['designs']})")
+        e = await pg.evaluate("()=>{ const s=RS, sta=playerFighter(s).base.sta; return [deepEnergyMax(s, sta*2), deepEnergyMax(s, sta), deepEnergyMax(s, sta/2), deepRegen(s, sta*2), deepRegen(s, sta), deepRegen(s, sta/2)]; }")
+        C.ok(e == [13, 16, 22, 72, 36, 18], f"Stamina sets a Snabit's energy, 13 to 22, and how fast it comes back behind the leader, every 72 to 18 steps ({e})")
         none = await pg.evaluate("()=>{ const k=story().seen.intro; delete story().seen.intro; let n=0; for (let s=0;s<30;s++) n+=deepFeats(deepMap(REGIONS[0], s)).some(x=>x.k==='rival'); story().seen.intro=k; return n; }")
         C.ok(none == 0, "Rook's team stays off the deep maps until the player has met Rook")
         ring = await pg.evaluate("()=>{ const reg={ n:'The Rift, Outer Ring', el:'Void', rift:true, ring:0 }, M=deepMap(reg, 3); return { kinds:M.floors.map(F=>F.kind), lairs:deepFeats(M).filter(n=>n.k==='lair').map(n=>n.fam+'@'+n.f), guard:deepFeats(M).some(n=>n.k==='guard') }; }")
