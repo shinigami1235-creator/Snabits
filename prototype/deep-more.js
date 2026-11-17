@@ -63,13 +63,13 @@ async function deepMore(reg, n, st, g, T, leadOf, setLead, K, used, found, M) {
     K("This is an old League waystone. Put a paw on it and pick what we need most."); await rwait(600);
     const c = await deepChoice([['A rest', 'For tired legs'], ['The map', 'Every path out here'], ['Luck', 'For the next chest']]);
     used.push(n.id); spark(160, GROUND - 40, 'sparkle', 10); rsfx('sparkle'); s.pose = 'happy';
-    if (c === 0) { for (const m of T) if (!m.out) m.e = Math.min(m.max, m.e + 4); K('That feels better. Let\'s keep going.'); }
+    if (c === 0) { for (const m of T) if (!m.down) { m.e = Math.min(m.max, m.e + 4); m.hp = Math.min(m.hpMax, m.hp + Math.round(m.hpMax * 0.3)); } K('That feels better. Let\'s keep going.'); }
     if (c === 1) { M.reveal(); K('There. Now we can see the whole way.'); }
     if (c === 2) { T.lucky = true; K('Let\'s find a chest while our luck lasts.'); }
     await rwait(1300); unprop(p); return; }
   if (n.k === 'seal') {
     const [what, how] = DEEP_SEAL[n.el], p = prop({ k: 'seal', x: 170, y: GROUND, el: n.el }); K(what); await rwait(1400);
-    const who = T.map((m, i) => ({ m, i })).find(({ m }) => !m.out && (m.s.m.el1 === n.el || m.s.m.el2 === n.el));
+    const who = T.map((m, i) => ({ m, i })).find(({ m }) => !m.down && (m.s.m.el1 === n.el || m.s.m.el2 === n.el));
     if (!who) { K(`A ${n.el} Snabit could get us past that. Maybe next season.`); await rwait(1600); unprop(p); return 'fail'; }
     used.push(n.id);
     if (who.i !== leadOf()) { await sceneFade(true, 200); setLead(who.i); RS.props = [p]; RS.x = 70; RS.camJump = true; await sceneFade(false, 200); }
@@ -88,7 +88,7 @@ async function deepMore(reg, n, st, g, T, leadOf, setLead, K, used, found, M) {
       const fp = prop({ k: 'foe', x: 186, y: GROUND, fm: foe.fm }); banner(`Rook's team, ${k + 1} of 3`, '#ffb04a'); await rwait(1100); banner(''); unprop(fp);
       const won = await deepFight(T, leadOf(), foe, `Rook's ${foe.m.name}`, K);
       if (!won) { say('Better luck next time. My team never loses out here.', 'rival'); await rwait(1800); K("Rook's team beat all three of you."); await rwait(1400); used.splice(used.indexOf(n.id), 1); return 'lost'; }
-      const alive = T.findIndex(m => !m.out); if (alive >= 0 && T[leadOf()].out) setLead(alive);
+      const alive = T.findIndex(m => !m.down); if (alive >= 0 && T[leadOf()].down) setLead(alive);
     }
     const bits = Math.round(G.purse * 2.5), R2 = rng(hashStr('rival|' + reg.n + '|' + exSeason())), item = EX_RARE[Math.floor(R2() * EX_RARE.length)], a = /^[AEIOU]/.test(item) ? 'an' : 'a';
     PLAYER.bits += bits; addItem(item); drawUI(); found.push(`${bits.toLocaleString()} bits`, `${a} ${item}`); RS.pose = 'happy';

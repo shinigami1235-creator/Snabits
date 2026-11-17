@@ -41,7 +41,7 @@ async def main():
         await pg.evaluate("ids=>{ window.__said=[]; const s0=say; say=(t,who)=>{ if(t) __said.push((who||'tala')+': '+t); s0(t,who); }; const all=rosterStates(); runDeep(riftRings()[0], ids.map(id=>all.find(s=>s.id===id))); }", ids)
         for k in range(6000):
             await pg.evaluate("o=>__pump(o)", {'control': True})
-            if await pg.evaluate("()=>!!DEEP_LIVE.pick"): await pg.evaluate(AUTO, ['lair:Ghoul', 'camp', 'spring'])
+            if await pg.evaluate("()=>!!DEEP_LIVE.pick"): await pg.evaluate(AUTO, ['lair:Ghoul', 'lever', 'spring'])
             if await pg.evaluate("()=>!!lairState('Ghoul').won && !document.getElementById('ex-map') && !RS.busy"): break
             await pg.wait_for_timeout(60)
         await settle(pg, label='home')

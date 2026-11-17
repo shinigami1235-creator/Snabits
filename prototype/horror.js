@@ -108,7 +108,7 @@ async function horrorNode(reg, n, g, T, leadOf, setLead, K, used, found) {
     const tp = prop({ k: 'tear', x: 186, y: GROUND }); banner('A tear', '#d9c8ff'); K("There's a tear in the air there. Something's on the other side, and it's looking at us."); await rwait(1800); banner('');
     const foe = horrorFoe(f, 'Byte', GRADES.indexOf(g) < 4 ? 'A' : g, Math.random); foe.boss = null;
     const won = await deepFight(T, leadOf(), foe, 'A tear', K); unprop(tp);
-    if (T[leadOf()].out && T.some(m => !m.out)) setLead(T.findIndex(m => !m.out));
+    if (T[leadOf()].down && T.some(m => !m.down)) setLead(T.findIndex(m => !m.down));
     if (!won) { K(`The ${nm} went back through the tear. It's still open.`); await rwait(1600); return 'fail'; }
     used.push(n.id);
     if (mythFind(f, 0)) { found.push('a myth'); banner(MYTH[f][0], '#d9c8ff'); K(`The ${nm} went back through the tear and left something behind. It's the start of a story.`); await rwait(2400); banner(''); }
@@ -125,7 +125,7 @@ async function horrorNode(reg, n, g, T, leadOf, setLead, K, used, found) {
   const fp = prop({ k: 'foe', x: 186, y: GROUND, fm: foe.fm }); banner(nm, '#d9c8ff'); K(`That's the ${nm}. Nobody's coming to help us in there.`); await rwait(2000); banner(''); unprop(fp);
   const won = await deepFight(T, leadOf(), foe, nm, K);
   if (!won) { for (const m of T) m.s.stress = Math.min(100, m.s.stress + 15); K(`The ${nm} threw all three of you out. We're going home.`); await rwait(1800); return 'end'; }
-  const alive = T.findIndex(m => !m.out); if (alive >= 0 && T[leadOf()].out) setLead(alive);
+  const alive = T.findIndex(m => !m.down); if (alive >= 0 && T[leadOf()].down) setLead(alive);
   const G = GRADE_INFO[g], bounty = Math.round(G.purse * 2); PLAYER.bits += bounty; found.push(`${bounty.toLocaleString()} bits`); drawUI();
   s.pose = 'happy'; K(`The ${nm} went back into the Rift.`); await rwait(1500);
   if (!L.won && !horrorOwned()) {

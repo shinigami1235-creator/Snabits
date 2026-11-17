@@ -177,7 +177,7 @@ function dgExpedition(seed, o) {
   M.place = (k, props, fls, R2 = R) => {
     for (let tries = 0; tries < 20; tries++) {
       const f = fls[Math.floor(R2() * fls.length)], F = floors[f], open = dgReach(F, ...F.up, F.shut);
-      const ks = F.rooms.map((r, i) => i).filter(i => i !== F.upRoom && !(k !== 'guard' && i === F.downRoom && f === 2) && !F.leafUsed.includes(i)); if (!ks.length) continue;
+      const ks = F.rooms.map((r, i) => i).filter(i => i !== F.upRoom && !(k !== 'guard' && i === F.downRoom) && !F.leafUsed.includes(i)); if (!ks.length) continue;
       const free = dgFree(F, ks[Math.floor(R2() * ks.length)], open); if (!free.length) continue;
       const [x, y] = free[Math.min(free.length - 1, Math.floor(R2() * Math.min(4, free.length)))], i = dgI(F, x, y);
       return F.feat[i] = { k, id: `${f}:${k}:${i}`, f, x, y, ...props };
@@ -208,10 +208,10 @@ function dgStock(F, f, R, o) {
     const i = dgLoopTile(F, R, F.shut); if (i < 0) continue; at(i % F.w, (i / F.w) | 0, n); F.shut.add(i);
   }
   if (f === o.sealFloor) { const L = dgLeaf(F, F.leafUsed); if (!L) return false; F.sealLeaf = L; F.leafUsed.push(L[2]); }   // a dead-end room kept for the sealed way (deep-more.js)
-  // a camp on the lower floors, next to the stairs you arrive by
+  // a campsite at the entrance of every floor, next to the stairs you arrive by
   const open = dgReach(F, ...up, F.shut), put = (k, props) => { const ks = F.rooms.map((r, i) => i).filter(i => i !== F.upRoom && i !== F.downRoom && !F.leafUsed.includes(i));
     for (let t = 0; t < 12; t++) { const free = dgFree(F, ks[Math.floor(R() * ks.length)], open); if (free.length) { const [x, y] = free[Math.floor(R() * Math.min(5, free.length))]; return at(x, y, { k, ...props }); } } return null; };
-  if (f > 0) { const c = dgFree(F, F.upRoom, open)[0]; if (c) at(...c, { k: "camp" }); }
+  { const c = dgFree(F, F.upRoom, open)[0]; if (c) at(...c, { k: "camp" }); }   // the campsite, drawn as a tent
   for (let k = 0; k < (f === 2 ? 1 : 2); k++) put('chest');
   if (f < 2) put('spring');
   // the Snabits that walk the floor
@@ -274,3 +274,57 @@ function dgSpawn(F, L, R) {
 }
 // rock with open floor next to it, which the map shows as wall
 function dgWall(F, i) { const x = i % F.w, y = (i / F.w) | 0; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (F.t[i] === DG.ROCK && dgAt(F, x + dx, y + dy) !== DG.ROCK) return true; return false; }
+
+/* ---------- rooms as places to choose between (Gid, 17 Nov 2026: every room a choice of which way to go) ---------- */
+// the ways out of every room: an edge for each pair of rooms a corridor joins without passing through a third room.
+// An edge carries the tiles to walk, and the blocker on it when every corridor between the two has one
+function dgGraph(F) {
+  const n = F.w * F.h, E = [], adj = F.rooms.map(() => []);
+  const bfs = (a, shut) => { const prev = new Int32Array(n).fill(-2), q = [], found = {};
+    for (let i = 0; i < n; i++) if (F.room[i] === a && dgPass(F.t[i])) { prev[i] = -1; q.push(i); }
+    for (let h = 0; h < q.length; h++) { const i = q[h], x = i % F.w, y = (i / F.w) | 0;
+      for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const nx = x + dx, ny = y + dy; if (!dgIn(F, nx, ny)) continue; const j = dgI(F, nx, ny);
+        if (prev[j] !== -2 || !dgPass(F.t[j]) || (shut && shut.has(j))) continue; const r = F.room[j]; if (r === a) continue;
+        prev[j] = i; if (r >= 0) { if (!(r in found)) found[r] = j; continue; } q.push(j); } }
+    return { prev, found }; };
+  const trace = (B, j) => { const P = []; for (let i = j; i >= 0; i = B.prev[i]) P.unshift(i); return P; };
+  F.rooms.forEach((rm, a) => {
+    const open = bfs(a, F.shut), any = bfs(a, null);
+    for (const b of Object.keys(any.found).map(Number)) { if (b <= a) continue;
+      const P = b in open.found ? trace(open, open.found[b]) : trace(any, any.found[b]), blk = P.find(i => F.shut.has(i));
+      const e = { a, b, path: P, block: blk == null ? -1 : blk, id: E.length }; E.push(e); adj[a].push(e); adj[b].push(e); } });
+  F.E = E; F.adj = adj; return F;
+}
+// the tiles of an edge, walked from room `from`
+const dgWay = (e, from) => e.a === from ? e.path : e.path.slice().reverse();
+// the direction of an edge's doorway from the middle of a room
+function dgDir(F, e, from) {
+  const P = dgWay(e, from), [cx, cy] = dgRoomCentre(F.rooms[from]), d = P.find(i => F.room[i] !== from) ?? P[P.length - 1];
+  const a = Math.atan2((d / F.w | 0) - cy, d % F.w - cx), k = Math.round(a / (Math.PI / 4)) & 7;
+  return ['east', 'south-east', 'south', 'south-west', 'west', 'north-west', 'north', 'north-east'][k];
+}
+// steps between rooms over the edges a team can use: not hidden, and no blocker still standing
+function dgHops(F, from, ok = e => !e.hidden && (e.block < 0 || !F.shut.has(e.block))) {
+  const D = F.rooms.map(() => -1), via = F.rooms.map(() => null), q = [from]; D[from] = 0;
+  for (let h = 0; h < q.length; h++) { const a = q[h]; for (const e of F.adj[a]) { if (!ok(e)) continue; const b = e.a === a ? e.b : e.a; if (D[b] < 0) { D[b] = D[a] + 1; via[b] = e; q.push(b); } } }
+  return { D, via };
+}
+// the edge to take first from `from` to reach `to`, or null
+function dgFirst(F, from, to, ok) { const H = dgHops(F, from, ok); if (H.D[to] < 0) return null; let r = to, e = null; while (r !== from) { e = H.via[r]; r = e.a === r ? e.b : e.a; } return e; }
+
+/* traps on some corridors, a hidden way into one dead-end room with a relic in it, and now and then a gate over the stairs down
+   with a lever somewhere else on the floor */
+function dgSecrets(M, R) {
+  M.floors.forEach((F, f) => {
+    dgGraph(F);
+    if (f === 1 && R() < 0.4) { const L = M.place('lever', {}, [1], R); if (L) { const d = F.feat[dgI(F, ...F.down)]; if (d) d.locked = true; } }
+    // a dead-end room nothing important is in: a chest or a spring can stay, the stairs, camp, a lever or a patrol can't
+    const keep = ['chest', 'spring'], leaf = F.rooms.map((r, k) => k).filter(k => F.adj[k].length === 1 && k !== F.upRoom && k !== F.downRoom && !F.leafUsed.includes(k)
+      && !Object.values(F.feat).some(n => F.room[dgI(F, n.x, n.y)] === k && !keep.includes(n.k)) && !F.shut.has(F.adj[k][0].block));
+    if (leaf.length && R() < 0.85) { const k = leaf[Math.floor(R() * leaf.length)], e = F.adj[k][0]; e.hidden = true;
+      for (const p of F.pats) if (F.room[dgI(F, p.x, p.y)] === k) { const o = (e.a === k ? e.b : e.a), fr = dgFree(F, o); if (fr.length) [p.x, p.y] = fr[fr.length >> 1]; }   // a patrol inside moves out first
+      const c = dgFree(F, k)[0]; if (c) { const i = dgI(F, ...c); F.feat[i] = { k: 'relic', id: `${f}:relic:${i}`, f, x: c[0], y: c[1] }; } }
+    const ways = F.E.filter(e => !e.hidden && e.block < 0 && e.a !== F.upRoom && e.b !== F.upRoom);
+    for (let t = 0, nT = 1 + f + Math.floor(R() * 2); t < nT && ways.length; t++) ways.splice(Math.floor(R() * ways.length), 1)[0].trap = 1 + Math.floor(R() * 3);
+  });
+}
