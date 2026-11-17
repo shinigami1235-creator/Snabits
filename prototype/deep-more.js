@@ -32,6 +32,9 @@ function deepExtras(reg, M, R) {
     F.leafUsed.push(k); F.feat[i] = { k: 'seal', el, id: `${f}:seal:${i}`, f, x, y }; F.shut.add(i);
     const c = dgFree(F, k)[0]; if (c) { const j = dgI(F, ...c); F.feat[j] = { k: 'cache', id: `${f}:cache:${j}`, f, x: c[0], y: c[1] }; } break; }
   M.place('shrine', {}, [0, 1], R);
+  // the room events: one on each of the first two floors and two on the last, the kinds this region likes coming up more
+  const fav = DEEP_EV_FAV[reg.el] || [], kinds = Object.keys(DEEP_EV), pick = () => { const L = kinds.concat(fav, fav); return L[Math.floor(R() * L.length)]; };
+  for (const f of [0, 1, 2, 2]) M.place('event', { ev: pick() }, [f], R);
   const rook = R() < 0.5; if (rook && PLAYER && typeof story === 'function' && story().seen.intro != null) M.place('rival', {}, [1, 2], R);   // only once the player has met Rook
 }
 
@@ -46,12 +49,59 @@ function deepIcon(x, k, cx, cy, n) {
   return false;
 }
 
-/* two to three buttons under the map; resolves with the index picked */
+/* two to three choices in the menu box, in place of the room's choices, so nothing on screen moves. Resolves with the index picked */
 function deepChoice(opts) {
-  return new Promise(res => { const box = document.createElement('div'); box.className = 'full'; box.id = 'dp-choice';
-    box.innerHTML = opts.map((o, i) => `<button class="rb" data-c="${i}">${o[0]}<small>${o[1]}</small></button>`).join('');
-    const home = el('ex-home'); el('r-panel').insertBefore(box, home); if (home) home.style.display = 'none';
-    box.querySelectorAll('[data-c]').forEach(b => b.onclick = () => { box.remove(); if (home) home.style.display = ''; res(+b.dataset.c); }); });
+  return new Promise(res => { const box = el('dp-acts'); if (!box) { res(0); return; }
+    box.innerHTML = `<div id="dp-choice" style="display:contents">` + opts.map((o, i) => `<button class="rb" data-c="${i}">${o[0]}<small>${o[1]}</small></button>`).join('') + `</div>`;
+    box.querySelectorAll('[data-c]').forEach(b => b.onclick = () => { box.querySelectorAll('button').forEach(x => x.disabled = true); res(+b.dataset.c); }); });
+}
+
+/* ---------- the room events, where the team works together (Gid, 17 Nov 2026) ----------
+   Each one still works with two Snabits left, or one. Every line waits on Gid's OK */
+const DEEP_EV = {
+  plates: { prop: 'plates', act: 'The stone plates', see: 'stone plates' },
+  lid: { prop: 'lid', act: 'The stone chest', see: 'a stone chest' },
+  stuck: { prop: 'stuck', act: 'The fallen rocks', see: 'a Snabit under some rocks' },
+  mural: { prop: 'mural', act: 'The carving on the wall', see: 'a carving' },
+  crack: { prop: 'crack', act: 'The crack in the floor', see: 'a crack in the floor' } };
+// the events a region's rooms lean towards
+const DEEP_EV_FAV = { Stone: ['lid', 'stuck'], Brawl: ['lid', 'stuck'], Steel: ['plates', 'lid'], Spark: ['plates'], Shade: ['mural'], Light: ['mural'], Charm: ['mural', 'stuck'],
+  Void: ['mural'], Wild: ['crack', 'stuck'], Tide: ['crack'], Frost: ['crack'], Venom: ['crack'], Blaze: ['crack', 'lid'] };
+// how many plates: two, or three on the last floor
+const deepPlates = n => n.f >= 2 ? 3 : 2;
+async function deepEvent(reg, n, g, T, leadOf, setLead, K, found, M, need) {
+  const s = RS, G = GRADE_INFO[g], live = T.map((m, i) => ({ m, i })).filter(o => !o.m.down), st = (o, k) => playerFighter(o.m.s).base[k], nm = o => displayName(o.m.s);
+  const best = k => live.slice().sort((a, b) => st(b, k) - st(a, k))[0], sum = k => live.reduce((a, o) => a + st(o, k), 0);
+  const pr = prop({ k: DEEP_EV[n.ev].prop, x: 150, y: GROUND, n: deepPlates(n) });
+  const lead = async o => { if (o.i !== leadOf()) setLead(o.i); };
+  const gift = async (line, rare) => { const R = rng(hashStr('ev|' + reg.n + '|' + n.id + '|' + exSeason())), item = rare || R() < 0.4 ? EX_RARE[Math.floor(R() * EX_RARE.length)] : EX_FINDS[Math.floor(R() * EX_FINDS.length)], a = /^[AEIOU]/.test(item) ? 'an' : 'a', bits = Math.round(G.purse * 0.4);
+    addItem(item); PLAYER.bits += bits; drawUI(); found.push(`${a} ${item}`, `${bits.toLocaleString()} bits`); s.pose = 'happy'; deepCrew(T, leadOf(), [], 'happy'); spark(150, GROUND - 30, 'sparkle', 8);
+    K(line.replace('{x}', `${a} ${item}`) + ` And ${bits.toLocaleString()} bits.`); await rwait(1900); };
+  if (n.ev === 'plates') {   // a plate for every Snabit; one short, the strongest shoves a stone onto the last plate
+    const N = deepPlates(n), xs = [...Array(N)].map((_, k) => 150 + (k - (N - 1) / 2) * 34), on = Math.min(N, live.length);
+    deepCrew(T, leadOf(), xs.slice(1)); await walkTo(xs[0], 60, 'walk'); await rwait(400); pr.on = on; rsfx('thud');
+    if (on < N) { const o = best('pow'); if (st(o, 'pow') < need * 1.15) { K(`There are ${N} plates and only ${on} of us. Nothing happens.`); await rwait(1800); unprop(pr); return 'retry'; }
+      K(`${nm(o)} shoves a loose stone onto the last plate.`); await rwait(1200); pr.on = N; }
+    rsfx('creak'); RS.shake = 3; await rwait(600); await gift('Something clicked in the wall, and a hidden shelf slid out with {x} on it.'); unprop(pr); return; }
+  if (n.ev === 'lid') {   // everyone lifts together
+    deepCrew(T, leadOf(), [176, 124]); await walkTo(150 - 24, 60, 'walk'); await rwait(300); deepCrew(T, leadOf(), [176, 124], 'happy');
+    if (sum('pow') < need * 1.9) { for (const o of live) o.m.e = Math.max(0, o.m.e - 2); K(live.length > 1 ? "It won't budge. Not even with all of us lifting." : `${nm(live[0])} can't lift it alone.`); await rwait(1800); unprop(pr); return 'fail'; }
+    pr.open = true; rsfx('creak'); await rwait(500); await gift(live.length > 1 ? 'Everyone lifted together, and the lid came off. There was {x} inside.' : `${nm(live[0])} heaved the lid off by itself. There was {x} inside.`, true); unprop(pr); return; }
+  if (n.ev === 'stuck') {   // a little wild Snabit under fallen rocks
+    deepCrew(T, leadOf(), [178, 126]); await walkTo(126, 60, 'walk'); K("There's a little wild Snabit stuck under those rocks."); await rwait(1500);
+    if (sum('pow') < need * 1.6) { for (const o of live) o.m.e = Math.max(0, o.m.e - 2); K(live.length > 1 ? "We pulled and pulled, and the rocks won't move." : `${nm(live[0])} can't move the rocks on its own.`); await rwait(1800); unprop(pr); return 'fail'; }
+    pr.free = true; RS.shake = 2; rsfx('thud'); await rwait(700); await gift('Everyone pulled the rocks away, and it ran off. It left {x} behind for us.'); unprop(pr); return; }
+  if (n.ev === 'mural') {   // the best Mind reads it: a map of the floor
+    const o = best('mnd'); await lead(o); deepCrew(T, leadOf(), [120, 182]); await walkTo(150, 60, 'walk'); await rwait(600);
+    if (st(o, 'mnd') < need * 1.05) { K('None of us can make sense of it.'); await rwait(1600); unprop(pr); return 'fail'; }
+    pr.read = true; rsfx('sparkle'); M.reveal(); const F = M.floors[n.f], hid = F.E.filter(e => e.hidden); hid.forEach(e => e.hidden = false);
+    K(`${nm(o)} worked it out. It's a map of this floor` + (hid.length ? ", with a room nobody's been in." : '.')); await rwait(2000); unprop(pr); return; }
+  // a crack: the fastest jumps it
+  const o = best('spd'); await lead(o); deepCrew(T, leadOf(), [90, 70]); await walkTo(126, 60, 'walk'); await rwait(400);
+  if (st(o, 'spd') < need * 1.05) { K("It's too far for any of us to jump."); await rwait(1600); unprop(pr); return 'fail'; }
+  const x0 = s.x; for (let k = 0; k <= 20; k++) { s.x = x0 + k * 2.6; s.jy = -Math.sin(k / 20 * Math.PI) * 26; await rwait(16); } pr.got = true;
+  await gift(`${nm(o)} jumped the crack and came back with {x}.`); for (let k = 0; k <= 20; k++) { s.x = x0 + 52 - k * 2.6; s.jy = -Math.sin(k / 20 * Math.PI) * 26; await rwait(16); }
+  unprop(pr);
 }
 
 /* one of the new circles, called from deepNode */

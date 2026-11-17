@@ -13,7 +13,7 @@ TEAM = """() => { PLAYER.tutorialDone = true; RS.noScenes = true; RS.grade = 'B'
   return rosterStates().slice(0, 3).map(s => s.id); }"""
 
 # the rules every floor has to keep, over many seasons
-RULES = """() => { const out = { gstairs: 0, graph: 0, hidden: 0, traps: 0, relicBad: 0, gates: 0, leverBad: 0, maps: 0, floors: 0, caves: 0, aspect: 0, wide: 0, door: 0, doorTouch: 0, broken: 0, stairs: 0, reach: 0, block: 0, shrine: 0, seal: 0, cache: 0, rival: 0, diff: 0, pats: 0, designs: {}, rooms: 0 };
+RULES = """() => { const out = { events: 0, trapKinds: {}, gstairs: 0, graph: 0, hidden: 0, traps: 0, relicBad: 0, gates: 0, leverBad: 0, maps: 0, floors: 0, caves: 0, aspect: 0, wide: 0, door: 0, doorTouch: 0, broken: 0, stairs: 0, reach: 0, block: 0, shrine: 0, seal: 0, cache: 0, rival: 0, diff: 0, pats: 0, designs: {}, rooms: 0 };
   for (const reg of REGIONS.slice(0, 4)) { let prev = null;
     for (let s = 0; s < 30; s++) { const M = deepMap(reg, s), K = deepFeats(M); out.maps++;
       out.shrine += K.filter(n => n.k === 'shrine').length === 1; out.seal += K.filter(n => n.k === 'seal' && DEEP_SEAL[n.el]).length === 1; out.cache += K.filter(n => n.k === 'cache').length === 1; out.rival += K.some(n => n.k === 'rival');
@@ -33,6 +33,7 @@ RULES = """() => { const out = { gstairs: 0, graph: 0, hidden: 0, traps: 0, reli
         // the ways between rooms: the stairs down past no blocker or hidden way, every room reachable one way or another
         const clear = dgHops(F, F.upRoom, e => !e.hidden && e.block < 0).D, any = dgHops(F, F.upRoom, () => true).D;
         if (clear[F.downRoom] < 0) out.gstairs++; if (any.some(d => d < 0)) out.graph++;
+        out.events += Object.values(F.feat).filter(n => n.k === 'event').length; for (const e of F.E) if (e.trap) out.trapKinds[e.trap] = (out.trapKinds[e.trap] || 0) + 1;
         const hid = F.E.filter(e => e.hidden); out.hidden += hid.length > 0; out.traps += F.E.filter(e => e.trap).length;
         for (const e of hid) { const k = F.adj[e.a].length === 1 ? e.a : e.b; if (!Object.values(F.feat).some(n => n.k === 'relic' && F.room[dgI(F, n.x, n.y)] === k)) out.relicBad++; }
         const dn = F.feat[dgI(F, ...F.down)]; if (dn && dn.locked) { out.gates++; const lv = Object.values(F.feat).find(n => n.k === 'lever'); if (!lv || clear[F.room[dgI(F, lv.x, lv.y)]] < 0) out.leverBad++; } } } }
@@ -45,10 +46,11 @@ AUTO = """(want) => { const P = DEEP_LIVE.pick; if (!P) return null; const O = P
   const live = P.T.filter(m => !m.down), low = live.some(m => m.e <= 1 || m.hp < m.hpMax * 0.35);
   if (low && P.nights > 0) { const c = O.findIndex(o => o.t === 'camp' && !o.off); if (c >= 0) return take(c, 'camp'); const b = O.findIndex(o => o.t === 'back'); if (b >= 0) return take(b, 'back'); }
   const it = O.findIndex(o => o.t === 'item'); if (low && it >= 0) return take(it, 'item');
-  const fresh = O.findIndex(o => o.t === 'exit' && !o.off && !F.rooms[o.to].been); if (fresh >= 0) return take(fresh, 'explore');
+  const gn = Object.values(F.feat).find(n => n.k === 'guard' && F.seen[dgI(F, n.x, n.y)]), gr = gn ? F.room[dgI(F, gn.x, gn.y)] : -1;   // the guardian ends the trip, so it waits until last
+  const fresh = O.findIndex(o => o.t === 'exit' && !o.off && !F.rooms[o.to].been && o.to !== gr); if (fresh >= 0) return take(fresh, 'explore');
   const ok = e => !e.hidden && (e.block < 0 || !F.shut.has(e.block) || (F.feat[e.block] && !F.feat[e.block].failed)), H = dgHops(F, at.room, ok);
   const wantIn = k => Object.values(F.feat).some(n => F.room[dgI(F, n.x, n.y)] === k && (DEEP_ACT[n.k] || n.k === 'guard' || n.k === 'rival') && want.some(w => is(n, w)) && !done.has(n.id) && !(n.k === 'down' && n.locked));
-  const goals = F.rooms.map((r, k) => k).filter(k => H.D[k] > 0 && (!F.rooms[k].been || wantIn(k))).sort((a, b) => H.D[a] - H.D[b]);
+  const goals = F.rooms.map((r, k) => k).filter(k => H.D[k] > 0 && (!F.rooms[k].been || wantIn(k))).sort((a, b) => (a === gr) - (b === gr) || H.D[a] - H.D[b]);
   for (const k of goals) { const e = dgFirst(F, at.room, k, ok), i = O.findIndex(o => o.t === 'exit' && o.e === e && !o.off); if (i >= 0) return take(i, 'to ' + k); }
   const d = O.findIndex(o => o.t === 'act' && o.n.k === 'down' && !o.n.locked); if (d >= 0) return take(d, 'down');
   const e = dgFirst(F, at.room, F.downRoom, ok), i = e ? O.findIndex(o => o.t === 'exit' && o.e === e) : -1; if (i >= 0) return take(i, 'to the stairs');
@@ -58,8 +60,10 @@ SAY = "()=>{ window.__said=[]; const s0=say; say=(t,who)=>{ if(t) __said.push((w
 
 async def drive(pg, want, steps=6000, pick=None):
     picked = False
+    await pg.evaluate("()=>{ window.__heights = new Set(); window.__bgs = new Set(); }")
     for k in range(steps):
         await pg.evaluate("o=>__pump(o)", {'control': True})
+        await pg.evaluate("()=>{ const p=document.getElementById('r-panel'); if (document.getElementById('ex-map')) { __heights.add(p.offsetHeight); if (RS.bg && RS.bg.startsWith('deep:')) __bgs.add(RS.bg.split(':')[2]); } }")
         if pick is not None and not picked and await pg.evaluate(f"()=>!!document.querySelector('#dp-choice [data-c=\"{pick}\"]')"):
             await pg.evaluate(f"()=>document.querySelector('#dp-choice [data-c=\"{pick}\"]').click()"); picked = True
         if await pg.evaluate("()=>!!DEEP_LIVE.pick"):
@@ -88,6 +92,8 @@ async def main():
         C.ok(0 < r['caves'] < r['floors'] * 0.25, f"some last floors are caverns ({r['caves']} of {r['floors']})")
         C.ok(r['gstairs'] == 0 and r['graph'] == 0, f"every room can be walked to room by room, and the stairs down without passing a blocker ({r['gstairs']}, {r['graph']})")
         C.ok(r['floors'] * 0.25 <= r['hidden'] <= r['floors'] * 0.55 and r['relicBad'] == 0, f"about one floor in three has a hidden room, each with a relic ({r['hidden']} of {r['floors']})")
+        C.ok(r['events'] >= n * 3, f"every map has room events for the team ({r['events']} in {n} maps)")
+        C.ok(len(r['trapKinds']) == 6, f"all six kinds of corridor trap turn up ({r['trapKinds']})")
         C.ok(r['traps'] >= r['floors'] and r['gates'] > 0 and r['leverBad'] == 0, f"every floor has traps, and a gate over the stairs always has its lever where the team can reach it ({r['traps']}, {r['gates']}, {r['leverBad']})")
         C.ok(all(r['designs'].get(k, 0) > 0 for k in ('plain', 'pillars', 'pool', 'rubble', 'garden')), f"every room design turns up ({r['designs']})")
         e = await pg.evaluate("()=>{ const s=RS, sta=playerFighter(s).base.sta; return [deepEnergyMax(s, sta*2), deepEnergyMax(s, sta), deepEnergyMax(s, sta/2), deepRegen(s, sta*2), deepRegen(s, sta), deepRegen(s, sta/2)]; }")
@@ -116,15 +122,20 @@ async def main():
         C.ok('can carry' in pk['txt'] and pk['after'] == {'mix': 2, 'rope': 0}, f"the pack takes things out of the bag for the trip ({pk['after']})")
         await pg.wait_for_timeout(1500)
         await pg.screenshot(path='/tmp/deep-start.png')
-        picked = await drive(pg, ['shrine', 'seal', 'cache', 'rival', 'lever', 'relic', 'spring', 'chest', 'guard'], pick=1)
+        picked = await drive(pg, ['shrine', 'seal', 'cache', 'rival', 'lever', 'relic', 'event', 'spring', 'chest', 'guard'], pick=1)
         await settle(pg, max_s=60, label='home')
-        r = await pg.evaluate("reg=>({said:__said, bits:PLAYER.bits, got:deepState(REGIONS.find(x=>x.n===reg)).got, rope:PLAYER.bag['Rope']||0})", reg)
+        r = await pg.evaluate("reg=>({said:__said, bits:PLAYER.bits, got:deepState(REGIONS.find(x=>x.n===reg)).got, rope:PLAYER.bag['Rope']||0, heights:[...__heights], bgs:[...__bgs]})", reg)
         said = ' | '.join(r['said'])
         print(json.dumps(r['said'][-24:], indent=1))
         C.ok(picked and 'see the whole way' in said, 'picking the map at the waystone shows the whole floor')
         C.ok('League cache' in said, 'a team with the right element opens the sealed way and finds the cache inside')
         C.ok('You beat all three' in said, "beating Rook's three Snabits pays out")
         C.ok('caught up with us' in said, 'Snabits on patrol catch up with the team and start fights')
+        C.ok(len(r['heights']) == 1, f"the expedition's screen keeps one height the whole way, whatever the menu shows ({r['heights']})")
+        C.ok('hall' in r['bgs'] and ('room' in r['bgs'] or 'cave' in r['bgs']), f"the scene shows a corridor while the team walks and the room once it's there ({r['bgs']})")
+        C.ok(any(x in said for x in ('hidden shelf', 'lid came off', 'left a', 'map of this floor', 'jumped the crack', "won't budge", 'make sense of it', 'too far', "can't lift", 'only')), 'the team works through room events together')
+        C.ok(any(x in said for x in ('Darts came', 'Arrows came', 'boulder', 'floor gave way', 'Fire came', 'Poison gas')), 'traps go off in the corridors')
+        C.ok(any(x in said for x in ('keeps sniffing', "won't go near", 'keeps looking')), 'Walt notices when one of the team senses something')
         C.ok(r['rope'] <= 2, f"rope the trip didn't use comes back to the bag ({r['rope']})")
         C.ok("That's " in said and 'guard' in r['got'], 'the team gets all the way down and beats the guardian')
         C.ok(r['bits'] > b0, f'the trip pays ({b0} -> {r["bits"]})')

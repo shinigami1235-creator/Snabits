@@ -262,5 +262,5 @@ function exProp(c, p, t, front) {
     case 'seal': if (!front) XA.sealdoor(c, x, y, p.el, p.open, t); return true;
     case 'tear': if (!front) XA.tear(c, x, y, t, p.s || 1); return true;
   }
-  return typeof exProp2 === 'function' && exProp2(c, p, t, front);
+  return (typeof exProp2 === 'function' && exProp2(c, p, t, front)) || (typeof deepProp === 'function' && deepProp(c, p, t, front));   // the team expeditions' own (deep-art.js)
 }
