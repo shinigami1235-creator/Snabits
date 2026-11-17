@@ -79,7 +79,7 @@ function deepFollow(T, leadOf) {
       let p = props.get(m); if (!p || !RS.props.includes(p)) { p = { k: 'foe', follower: true, x: RS.x - 30 * k, y: GROUND, fm: fightMon(m.s), spec: typeof chibiSpec === 'function' ? chibiSpec(null, m.s) : null, right: true, pose: 'idle' }; RS.props.unshift(p); props.set(m, p); }
       m.prop = p;
       const tx = m.goX != null ? m.goX : Math.max(12, RS.x - 30 * k * (RS.dir || 1)), dx = (tx - p.x) * 0.12, moving = Math.abs(dx) > 0.25 || (RS.pose === 'walk' && m.goX == null);
-      p.x += dx; p.right = Math.abs(dx) > 0.2 ? dx > 0 : m.face != null ? m.face > 0 : RS.dir !== -1;
+      if (RS.snapFollow) p.x = tx; else p.x += dx; p.right = Math.abs(dx) > 0.2 ? dx > 0 : m.face != null ? m.face > 0 : RS.dir !== -1;
       // a little life while nothing's happening
       if (!moving && !m.act && !m.down && RS.pose !== 'walk') { if (!m.idleT || now > m.idleT) { m.idleT = now + 2500 + Math.random() * 3500; m.idle = ['look', 'look', 'sit', 'hop', 'sniff', null][Math.floor(Math.random() * 6)]; m.idleUntil = now + 1400; if (m.idle === 'look') m.face = Math.random() < 0.5 ? 1 : -1; } }
       else if (moving) { m.idle = null; m.face = null; }
@@ -87,8 +87,18 @@ function deepFollow(T, leadOf) {
       p.pose = m.down ? 'tired' : m.act || (moving ? 'walk' : idle === 'sit' ? 'sit' : idle === 'sniff' ? 'lean' : 'idle');
       p.jy = -((m.act === 'happy' || idle === 'hop') && !m.down ? Math.abs(Math.sin(now / 140 + k)) * 5 : 0);
       p.fade = m.down ? 0.55 : 1; }
+    RS.snapFollow = false;
     for (const [m, p] of props) if (m.s === L.s) { const i = RS.props.indexOf(p); if (i >= 0) RS.props.splice(i, 1); props.delete(m); } };
   const iv = setInterval(tick, 16); return () => { clearInterval(iv); for (const p of props.values()) { const i = RS.props.indexOf(p); if (i >= 0) RS.props.splice(i, 1); } };
+}
+/* a quick dissolve from one place to the next: a copy of the scene as it was fades out over the new one, so walking from a
+   corridor into a room never cuts to black (Gid, 17 Nov 2026: the scenes kept snapping back and forth) */
+async function deepCross(swap, ms = 280) {
+  const cv = el('r-canvas'); let o = null;
+  if (cv && cv.parentNode) { o = document.createElement('canvas'); o.width = cv.width; o.height = cv.height; o.getContext('2d').drawImage(cv, 0, 0);
+    Object.assign(o.style, { position: 'absolute', left: cv.offsetLeft + 'px', top: cv.offsetTop + 'px', width: cv.offsetWidth + 'px', height: cv.offsetHeight + 'px', pointerEvents: 'none', opacity: '1', transition: `opacity ${ms}ms ease`, zIndex: 1 });
+    cv.parentNode.insertBefore(o, cv.nextSibling); }
+  swap(); RS.snapFollow = true; await rwait(30); if (o) o.style.opacity = '0'; await rwait(ms); if (o) o.remove();
 }
 // the room's own prop for something, when the scene already shows it, or a new one
 function deepUse(o, n) { const p = (n && RS.props.find(q => q.nid === n.id)) || RS.props.find(q => !q.follower && q.k === o.k && q.nid == null); return p || prop(o); }
@@ -111,7 +121,7 @@ async function deepFight(T, leadI, foe, title, K) {
   return done(false);
 }
 // what the League pays for, kept until the team is home: wild Snabits beaten, Rook's team, a guardian, caches and finds
-function deepPay(T, what, bits) { const t = T.tally = T.tally || { wild: 0, beat: [], bits: 0 }; t.bits += bits; if (what === 'wild') t.wild++; else if (what && what !== 'find') t.beat.push(what); }
+function deepPay(T, what, bits, n = 1) { const t = T.tally = T.tally || { wild: 0, beat: [], bits: 0, n: 0 }; t.bits += bits; if (what !== 'find') t.n = (t.n || 0) + n; if (what === 'wild') t.wild++; else if (what && what !== 'find') t.beat.push(what); }
 const deepAll = T => T.length === 1 ? displayName(T[0].s) : T.length === 2 ? 'both of you' : 'all three of you';
 const DEEP_WON = ['Nice work.', "Good. It's run off.", "That one won't bother us again.", 'Well done, everyone.', 'Off it goes.'];
 // takes a share of a Snabit's HP. At 0 it can't go on for the rest of the trip
@@ -187,12 +197,13 @@ async function runDeep(reg, team, pack = {}) {
   const placeIn = (k, near) => { const F = Fl(), fr = dgFree(F, k); const c = near && fr.length ? fr.reduce((m, q) => Math.abs(q[0] - near[0]) + Math.abs(q[1] - near[1]) < Math.abs(m[0] - near[0]) + Math.abs(m[1] - near[1]) ? q : m) : fr[0] || dgRoomCentre(F.rooms[k]);
     at.room = k; [at.x, at.y] = c; trail = []; };
   // walks a list of tiles, one step at a time
-  const steps = async (P, each) => { for (const i of P) { const F = Fl(); if (each) { const r = await each(i); if (r) return r; } const ox = at.x; trail.unshift([at.x, at.y]); trail.length = Math.min(trail.length, 2); at.x = i % F.w; at.y = (i / F.w) | 0;
+  const steps = async (P, each) => { const F0 = Fl(), hx = P.length ? Math.sign(P[P.length - 1] % F0.w - at.x) || RS.dir || 1 : 1;   // a corridor scrolls one way for the whole walk, even round its corners
+    for (const i of P) { const F = Fl(); if (each) { const r = await each(i); if (r) return r; } const ox = at.x; trail.unshift([at.x, at.y]); trail.length = Math.min(trail.length, 2); at.x = i % F.w; at.y = (i / F.w) | 0;
     if (F.t[i] === DG.DOOR) F.open[i] = 1; RS.pose = 'walk';
     const k = F.room[i];
-    if (k < 0) { if (RS.bg !== hallBg) { await sceneFade(true, 130); RS.bg = hallBg; RS.props = RS.props.filter(p => p.follower); RS.x = RS.tx = 120; RS.bgT = RS.bgOff || 0; RS.camJump = true; await sceneFade(false, 130); }
-      RS.dir = at.x < ox ? -1 : 1; RS.bgT = (RS.bgT ?? RS.bgOff ?? 0) + (at.x < ox ? -7 : 7); }
-    else { if (k !== at.room || RS.bg === hallBg) { await sceneFade(true, 130); at.room = k; enterRoom(); await sceneFade(false, 130); } RS.tx = sx(at.x); RS.pose = 'walk'; }
+    if (k < 0) { if (RS.bg !== hallBg) await deepCross(() => { RS.bg = hallBg; RS.props = RS.props.filter(p => p.follower); RS.x = 120; RS.tx = null; RS.dir = hx; RS.bgT = RS.bgOff || 0; RS.camJump = true; });
+      RS.dir = hx; RS.bgT = (RS.bgT ?? RS.bgOff ?? 0) + hx * 7; }
+    else { if (k !== at.room || RS.bg === hallBg) await deepCross(() => { at.room = k; enterRoom(); }); RS.tx = sx(at.x); RS.pose = 'walk'; }
     draw(); await rwait(k < 0 ? 75 : 60); }
     if (RS.tx != null) { await rwait(160); RS.x = RS.tx; RS.tx = null; } RS.pose = 'idle'; };
   // the shortest way inside one room
@@ -368,9 +379,9 @@ async function runDeep(reg, team, pack = {}) {
     const lost = [], tally = T.tally || { wild: 0, beat: [], bits: 0 };
     if (retreat) gotItems.forEach((k, j) => { if ((RELICS.includes(k) || TREASURES.includes(k) || j % 2 === 0) && PLAYER.bag[k] > 0) { PLAYER.bag[k]--; if (!PLAYER.bag[k]) delete PLAYER.bag[k]; lost.push(k); } });
     const left = retreat && (lost.length || tally.bits > 0); if (left) deepLeftBehind(reg, lost.slice(), tally.bits);
-    const beat = (tally.wild ? [`${tally.wild} wild Snabit${tally.wild > 1 ? 's' : ''}`] : []).concat(tally.beat), pay = retreat ? 0 : tally.bits;
+    const pay = retreat ? 0 : tally.bits, n = tally.n || 0;
     if (pay) PLAYER.bits += pay;
-    const league = !pay ? '' : beat.length ? ` You beat ${beat.join(', ').replace(/, ([^,]*)$/, ' and $1')} out there, and the League is paying ${pay.toLocaleString()} bits for it.` : ` The League is paying ${pay.toLocaleString()} bits for what the team found.`;
+    const league = !pay ? '' : n ? ` You beat ${n} Snabit${n > 1 ? 's' : ''} down there. The League is paying you ${pay.toLocaleString()} bits for it.` : ` The League is paying you ${pay.toLocaleString()} bits for what you found.`;
     for (const k in bag) if (bag[k] > 0) addItem(k, bag[k]);   // what's left in the pack goes back in the bag
     // the team comes home: the ranch Snabit takes its place again, and all three carry the trip
     for (const k of DEEP_KEYS) home[k] = RS[k]; RS = home; RS.props = []; drawUI();
@@ -380,10 +391,14 @@ async function runDeep(reg, team, pack = {}) {
     clampAll();
     for (const m of T) if (m.s !== home) { const e = PLAYER.roster.find(r => r.id === m.s.id); if (e) e.st = packRanch(m.s); }
     const keep = found.filter(f => !lost.some(k => f.endsWith(' ' + k)) || (lost.splice(lost.findIndex(k => f.endsWith(' ' + k)), 1), false));
-    const who = T.length === 1 ? name(T[0]) : 'The team', got = (keep.length ? `${who} brought home ${deepCount(keep).join(', ')}.replace(/, ([^,]*)$/, ' and $1')}.` : left ? '' : `${who} didn't find anything this time.`) + league + (left ? ` We had to leave ${keep.length ? 'the rest' : 'everything we found'} down there when we ran. I'll ask the League to send a team after it.` : '');
-    const mo = deepLife(g, ring) / 4, ow = hurt.length ? ` ${hurt.join(', ').replace(/, ([^,]*)$/, ' and $1')} came home hurt, and it cost ${hurt.length > 1 ? 'each of them' : 'it'} ${mo} month${mo > 1 ? 's' : ''} of ${hurt.length > 1 ? 'their' : 'its'} prime.` : '';
-    await tripHome(`${retreat ? `We're out. ${T.length === 1 ? capFirst(name(T[0])) + ' is' : 'Everyone is'} hurt, but we're out.` : 'Time to head back.'}${got ? ' ' + got : ''}${ow}`, "We're back at the ranch. Everyone will sleep well tonight.", keep.length && !hurt.length ? 'happy' : 'idle');
-    RS.weekAct = 'Expedition'; await endWeek(2, `${T.length === 1 ? name(T[0]) : 'The team'} explored ${ring ? reg.n.replace('The Rift, ', '') + ' of the Rift' : 'deep ' + reg.n}.${got ? ' ' + got : ''}${ow}`);
+    // said in short sentences: how many things came home and the best of them, never the whole list (Gid, 17 Nov 2026)
+    const best = keep.find(f => TREASURES.some(k => f.endsWith(' ' + k))) || keep.find(f => RELICS.some(k => f.endsWith(' ' + k)));
+    const brought = keep.length === 1 ? `We brought home ${keep[0]}.` : keep.length ? `We brought home ${keep.length} things.${best ? ` One of them is ${best}.` : ''}` : '';
+    const got = (keep.length ? brought : left ? '' : "We didn't find anything this time.") + league + (left ? ` We had to leave ${keep.length ? 'the rest' : 'everything we found'} down there when we ran. I'll ask the League to send a team after it.` : '');
+    const whoHurt = hurt.length === T.length && T.length > 1 ? (T.length === 2 ? 'Both of them' : 'All three') : hurt.join(' and ');
+    const mo = deepLife(g, ring) / 4, ow = hurt.length ? ` ${whoHurt} came home hurt, and it cost ${hurt.length > 1 ? 'each of them' : 'it'} ${mo} month${mo > 1 ? 's' : ''} of ${hurt.length > 1 ? 'their' : 'its'} prime.` : '';
+    await tripHome(`${retreat ? 'We made it out.' : 'Time to head back.'}${got ? ' ' + got : ''}${ow}`, "We're back at the ranch. Everyone will sleep well tonight.", keep.length && !hurt.length ? 'happy' : 'idle');
+    RS.weekAct = 'Expedition'; await endWeek(2, `${T.length === 1 ? name(T[0]) : 'The team'} explored ${ring ? reg.n.replace('The Rift, ', '') + ' of the Rift' : 'deep ' + reg.n}.`);   // Walt has already said what came home
   });
 }
 

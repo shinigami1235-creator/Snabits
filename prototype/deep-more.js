@@ -141,7 +141,7 @@ async function deepMore(reg, n, st, g, T, leadOf, setLead, K, used, found, M) {
       const alive = T.findIndex(m => !m.down); if (alive >= 0 && T[leadOf()].down) setLead(alive);
     }
     const bits = Math.round(G.purse * 2.5), R2 = rng(hashStr('rival|' + reg.n + '|' + exSeason())), item = EX_RARE[Math.floor(R2() * EX_RARE.length)], a = /^[AEIOU]/.test(item) ? 'an' : 'a';
-    deepPay(T, "Rook's team", bits); addItem(item); found.push(`${a} ${item}`); RS.pose = 'happy';
+    deepPay(T, "Rook's team", bits, 3); addItem(item); found.push(`${a} ${item}`); RS.pose = 'happy';
     say(`Fine. You beat all three. Take this before I change my mind.`, 'rival'); await rwait(1800);
     K(`Rook left ${a} ${item} behind.`); await rwait(1500); return; }
 }
