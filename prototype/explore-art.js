@@ -227,5 +227,5 @@ function exProp(c, p, t, front) {
     case 'pstone': if (!front) XA.stone(c, x, y, p.sp, p.glow, t); return true;
     case 'tear': if (!front) XA.tear(c, x, y, t, p.s || 1); return true;
   }
-  return false;
+  return typeof exProp2 === 'function' && exProp2(c, p, t, front);
 }

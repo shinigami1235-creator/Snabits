@@ -87,6 +87,7 @@ function chibiRanch(s, t) {
     s.bbox = [s.x - w / 2, GROUND - h, s.x + w / 2, GROUND];
   }
   if (cam && typeof ranchProps === 'function') { world(); ranchProps(c, s, t, true); ranchParticles(c, s); if ((s.night || s.dusk) && typeof npcNightPass === 'function') npcNightPass(c, s, t, W, H, world); }
+  if (s.exWx && typeof exWeatherPass === 'function') exWeatherPass(c, s, t, W, H);   // an expedition's weather
   return true;
 }
 
