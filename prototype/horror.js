@@ -19,7 +19,7 @@ const HORROR_LAIR = { Ghoul: 'the Burrows', Nightgaunt: 'the Night Cliffs', Migo
 const MYTH = {
   Ghoul: ['The Diggers', [
     "People at Hollow Moor leave a bone on a grave so the diggers leave the rest alone. The diggers keep to their tunnels under the moor and only come up for what's left out for them.",
-    "A bone turned up on the barn step one morning with a thank-you scratched into it. Some of the diggers used to be people who stayed underground too long, and they still have their manners.",
+    "A bone turned up on the barn step one morning with a thank-you scratched into it. Some of the diggers used to be people who stayed underground too long, and they still thank anyone who feeds them.",
     "The door of the Burrows says the diggers keep their tunnels all the way down to a door far bigger than this one, so nothing on the other side can come up."]],
   Nightgaunt: ['The Ones Who Tickle', [
     "Children who wander Dream Garden at night get carried off by something with no face and dropped home at dawn, giggling and unable to say why.",
@@ -27,7 +27,7 @@ const MYTH = {
     "Painted on the rock at the Night Cliffs is a row of faceless figures carrying children home. One of them is carrying a Snabit."]],
   Migo: ['The Pink Lights', [
     "Hikers on Granite Steps see pink lights over the peaks. A Snabit that wanders up there comes back knowing a move nobody taught it.",
-    "Someone left a jar of something pink on the step of Dr. Ines's lab, with a note asking for her notes in return. She hasn't decided what to send.",
+    "Someone left a jar of something pink on the step of Dr. Ines's lab, with a note asking for her notes in return.",
     "Shelves of jars line the way into the Humming Mine, each one labelled in writing nobody can read. The Mi-Go keep everything they learn, and they're always looking for something new to learn."]],
   Dagon: ["The Fisherman's Friend", [
     "The fishing boats off Coral Shallows always come home full, and the old fishers won't say who they thank for it.",
@@ -36,10 +36,10 @@ const MYTH = {
   Shub: ['The Goat with a Thousand Kids', [
     "Goats in Tanglewood wander off and come back with more kids than any goat could have, and the trees there grow in rings.",
     "A stray kid with black hooves turned up at the ranch in spring, ate half the hay and walked home on its own the next morning.",
-    "The way into the Thousand Grove is a ring of trees, and each one has a kid's name and a birthday carved in it. All of them are hers, and she remembers every one."]],
+    "The way into the Thousand Grove is a ring of trees, and each one has a kid's name and a birthday carved in it. All of them are hers."]],
   Gug: ['The Giants Below', [
     "Under Cinder Peak is a door so big it reads as a cliff, and something on the other side knocks on it every hundred years.",
-    "Something knocked on the barn floor from underneath during the heatwave, three times and then nothing. Walt slept in the house that week.",
+    "Something knocked on the barn floor from underneath during the heatwave, three times and then nothing.",
     "The ancient people shut the Gugs below the world, and the Ghouls keep the tunnels to the door so the Gugs can't come up. Carved on the Sealed Gate is a count of the knocks, and the last one is this year."]],
   Shoggoth: ['The Servant That Forgot', [
     "The ancient people made a helper out of living goo that could take any shape their work needed. When they left, it stayed.",
@@ -118,7 +118,7 @@ async function horrorNode(reg, n, g, T, leadOf, setLead, K, used, found) {
   const P = myth(f), L = lairState(f), season = exSeason();
   banner(HORROR_LAIR[f].replace(/^the /, 'The '), '#d9c8ff'); await rwait(1200); banner('');
   if (!P[0] || !P[1]) { K("There's a door here with something carved on it. We don't know enough about what's behind it yet."); await rwait(1800); return; }
-  if (!P[2]) { mythFind(f, 2); found.push('a myth'); banner(MYTH[f][0], '#d9c8ff'); K("The carving on this door finishes the story. And the door's opening."); await rwait(2400); banner(''); }
+  if (!P[2]) { mythFind(f, 2); found.push('a myth'); banner(MYTH[f][0], '#d9c8ff'); K("The carving on this door finishes the story, and the door's opening."); await rwait(2400); banner(''); }
   if (L.season === season) { K("It's quiet in there now. We'll come back next season."); await rwait(1500); return; }
   L.season = season; saveGame();
   const R = rng(hashStr('lair|' + f + '|' + season)), foe = horrorFoe(f, 'Mega', g, R);
@@ -180,7 +180,7 @@ const HORROR_GO = { Cthulhu: 'spread its wings for the first time and flew off o
 const horrorDue = (s, weeks) => !!(FAMILY[s.m.family] && FAMILY[s.m.family].horror) && s.used - s.m.lifespan * 4 >= 0 && s.used - s.m.lifespan * 4 < weeks;
 async function horrorLeave(s) {
   const f = s.m.family, nm = displayName(s);
-  say(`Last night ${nm} ${HORROR_GO[f]}.`); spark(s.x, GROUND - 30, 'sparkle', 10); s.hidden = true; drawUI(); await rwait(3200);
+  s.hidden = true; drawUI(); say(`Last night ${nm} ${HORROR_GO[f]}.`); await rwait(3200);   // it's already gone when the week opens
   PLAYER.roster = PLAYER.roster.filter(r => r.id !== s.id);
   if (PLAYER.active === s.id) { PLAYER.active = PLAYER.roster.length ? PLAYER.roster[0].id : null; RS = null; }
   const L = stoneList(); if (L && !L.includes(f)) L.push(f);
