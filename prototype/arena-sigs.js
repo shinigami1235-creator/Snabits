@@ -788,12 +788,20 @@ Object.assign(ANIM,{
     def(t){ const a=SG.knock(t,760,1,16,600); if(a){ a.flash=Math.floor(t/60)%2?3:0; a.pose="hurt"; } return a; },
     fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, d=atDir(x), horn={x:s.x+d*s.r*0.5,y:s.top.y+s.r*0.15}, pr={x:(horn.x+tg.x)/2,y:Math.min(horn.y,tg.y)-R*0.8}, dst={x:tg.x,y:tg.y-R*0.15};
       if(t<460){ atGather(c,horn,t/460,[255,255,255],s.r*1.1,4); }
-      const pg=Math.min(1,t/300)*(t>1300?1-(t-1300)/160:1); if(pg>0){ c.save(); c.translate(pr.x,pr.y); c.rotate(t/500); c.globalAlpha=pg; const z=R*0.45; c.fillStyle="rgba(220,240,255,.55)"; c.strokeStyle="rgba(255,255,255,.95)"; c.lineWidth=2;
-        c.beginPath(); c.moveTo(0,-z); c.lineTo(z*0.87,z*0.5); c.lineTo(-z*0.87,z*0.5); c.closePath(); c.fill(); c.stroke(); c.restore(); }
-      if(t>=460&&t<1300){ const k=Math.min(1,(t-460)/150), fade=t>1150?1-(t-1150)/150:1; c.save(); c.globalCompositeOperation="lighter"; c.lineCap="round";
-        c.strokeStyle=`rgba(255,255,255,${0.95*fade})`; c.lineWidth=R*0.2; c.beginPath(); c.moveTo(horn.x,horn.y); c.lineTo(horn.x+(pr.x-horn.x)*k,horn.y+(pr.y-horn.y)*k); c.stroke();
-        if(t>=610){ const k2=Math.min(1,(t-610)/150); c.globalCompositeOperation="source-over"; SG.rainbow.forEach((col,i)=>{ const off=(i-3)*R*0.16, ex=pr.x+(dst.x-pr.x)*k2, ey=pr.y+(dst.y+off-pr.y)*k2; c.strokeStyle=col; c.globalAlpha=0.85*fade; c.lineWidth=R*0.16; c.beginPath(); c.moveTo(pr.x,pr.y); c.lineTo(ex,ey); c.stroke(); }); }
-        c.restore(); }
+      /* 17 Nov 2026, Gid: the beams looked stiff and stuck on. Each beam is now a soft ribbon that tapers, bends and ripples, with a white core, a wide glow, light motes running along it and a flicker, and the prism glints and throws its colours out */
+      const rib=(a,b,w0,w1,col,core,bend,ph,len,alpha)=>{ if(len<=0||alpha<=0) return; const n=24, pts=[], L=Math.hypot(b.x-a.x,b.y-a.y)||1, nx=-(b.y-a.y)/L, ny=(b.x-a.x)/L;
+        for(let j=0;j<=n;j++){ const u=j/n*len, sw=Math.sin(u*Math.PI)*bend+Math.sin(u*9-t/45+ph)*R*0.05*u; pts.push([a.x+(b.x-a.x)*u+nx*sw,a.y+(b.y-a.y)*u+ny*sw,u/len]); }
+        const shape=(wm)=>{ c.beginPath(); for(let j=0;j<=n;j++){ const [x0,y0,q]=pts[j], w=(w0+(w1-w0)*q)*wm*(1+0.12*Math.sin(t/30+j*0.7+ph)); j?c.lineTo(x0+nx*w,y0+ny*w):c.moveTo(x0+nx*w,y0+ny*w); } for(let j=n;j>=0;j--){ const [x0,y0,q]=pts[j], w=(w0+(w1-w0)*q)*wm*(1+0.12*Math.sin(t/30+j*0.7+ph)); c.lineTo(x0-nx*w,y0-ny*w); } c.closePath(); };
+        c.save(); c.globalAlpha=alpha*0.35; c.fillStyle=col; shape(2.4); c.fill(); c.globalAlpha=alpha*0.85; shape(1); c.fill(); if(core){ c.globalAlpha=alpha; c.fillStyle="rgba(255,255,255,.95)"; shape(0.35); c.fill(); }
+        c.globalAlpha=alpha; for(let j=0;j<4;j++){ const q=((t/260)+j/4+ph)%1; if(q>len) continue; const i=Math.round(q/len*n), P=pts[Math.min(n,i)]; atGlowA(c,P[0],P[1],w0*1.6,[255,255,255],0.9); } c.restore(); return pts[n]; };
+      const pg=Math.min(1,t/300)*(t>1300?1-(t-1300)/160:1); if(pg>0){ c.save(); c.translate(pr.x,pr.y); c.rotate(Math.sin(t/260)*0.35); c.globalAlpha=pg; const z=R*0.5, glint=t>=460&&t<1300?0.5+0.5*Math.sin(t/40):0.2;
+        const g=c.createLinearGradient(-z,-z,z,z); g.addColorStop(0,"rgba(255,255,255,.85)"); g.addColorStop(0.5,"rgba(200,225,255,.45)"); g.addColorStop(1,"rgba(255,220,255,.75)"); c.fillStyle=g; c.strokeStyle="rgba(255,255,255,.95)"; c.lineWidth=2;
+        c.beginPath(); c.moveTo(0,-z); c.lineTo(z*0.87,z*0.5); c.lineTo(-z*0.87,z*0.5); c.closePath(); c.fill(); c.stroke(); c.strokeStyle="rgba(255,255,255,.55)"; c.lineWidth=1.2; c.beginPath(); c.moveTo(0,-z); c.lineTo(0,z*0.5); c.stroke();
+        c.globalCompositeOperation="lighter"; atGlowA(c,0,0,z*(1.1+0.4*glint),[255,250,240],0.25*glint+0.08); atStar4(c,-z*0.3,-z*0.35,z*0.35*glint,"rgba(255,255,255,.95)"); c.restore(); }
+      if(t>=460&&t<1300){ const k=eo(Math.min(1,(t-460)/150)), fade=t>1150?1-(t-1150)/150:1;
+        c.save(); c.globalCompositeOperation="lighter"; rib(horn,pr,R*0.07,R*0.13,"rgba(255,250,235,1)",true,R*0.12,0,k,fade); c.restore();
+        if(t>=610){ const k2=eo(Math.min(1,(t-610)/170)); SG.rainbow.forEach((col,i)=>{ const off=(i-3)*R*0.2, end={x:dst.x+(i-3)*R*0.05,y:dst.y+off}; rib(pr,end,R*0.035,R*0.11,col,false,(i-3)*R*0.12,i*0.37,k2,0.92*fade); });
+          c.save(); c.globalCompositeOperation="lighter"; for(let i=0;i<10;i++){ const q=((t/500)+i/10)%1, sp=SG.rainbow[i%7]; atStar4(c,pr.x+(dst.x-pr.x)*q+Math.sin(i*2+t/120)*R*0.4*q,pr.y+(dst.y-pr.y)*q+(i-5)*R*0.08*q,R*0.1*(1-q)*fade,sp); } c.restore(); } }
       if(t>=760){ atImpact(t,760,0.6,0.35); const k=(t-760)/700; c.save(); c.globalCompositeOperation="lighter"; atGlowA(c,dst.x,dst.y,R*(1+1.5*k),[255,255,255],0.8*(1-k)); for(let i=0;i<14;i++){ const a=i/14*Math.PI*2, rr=R*(0.6+1.6*eo(k)); atStar4(c,dst.x+Math.cos(a)*rr,dst.y+Math.sin(a)*rr*0.8,R*0.18*(1-k),SG.rainbow[i%7]); } c.restore(); } }},
   /* Jack: a giant carved pumpkin face looms up over the target, its grin and eyes blazing with purple fire, and it cackles until the target shrinks in terror */
   sg_spookygrin:{C:720,D:1440,sig:true,
