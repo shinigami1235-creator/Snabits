@@ -49,12 +49,11 @@ const BEATS = {
     w.p.face = 'worried'; await talk('rival', "My father wants this land for a second ranch. If Josie can't pay the 30,000 bits, it goes to us.");
     w.p.face = 'happy'; await talk('rival', `I'll make you a deal. ${mon.m.name} and I are entering the official cups too. Win the Legend Cup before we do and I'll get my father to drop what's left of the loan.`);
     await walkOut(w); s.pose = 'happy';
-    await talk('tala', `Cup prizes are the quickest way to pay him back. Take the prize money to the Town Hall in town and pay 1,000 or 5,000 at a time. Every quarter we pay off, the Workshop can build more for ${nm}.`);
-    say('Out > Goals shows how much is paid and what to aim for next.');
+    await talk('tala', `Cup prizes are the quickest way to get that money. We can pay it off at the Town Hall a bit at a time, out of what ${nm} wins.`);
   },
-  async loan25() { await talk('tala', "We've paid off a quarter of the loan, so the Workshop can start building upgrades for the barn."); },
-  async loan50() { await talk('tala', "We've paid off half the loan, so the Workshop can upgrade the training places and drills there will give more."); },
-  async loan75() { await talk('tala', "We've paid off three quarters of the loan, so the Workshop can build the second level of each training place."); },
+  async loan25() { await talk('tala', "A quarter of the loan's paid. The Workshop says they can start on the barn now."); },
+  async loan50() { await talk('tala', "Half the loan's paid. The Workshop can fix up the training places now."); },
+  async loan75() { await talk('tala', "Three quarters of the loan's paid. The Workshop can add a second level to the training places now."); },
   async loan100() {
     const s = RS; const w = await walkIn('rival', { mon: rookMon(bestGrade()) });
     w.p.face = 'worried'; await talk('rival', 'My father got your last payment and told me to bring you the deed.');
@@ -66,7 +65,7 @@ const BEATS = {
     const s = RS; const w = await walkIn('rival', { mon: rookMon('D') });
     w.p.face = 'surprised'; await talk('rival', `Grade D already? It took ${rookMon('D').m.name} a whole season to get there.`);
     w.p.face = 'happy'; await talk('rival', "I'm at the stadium in the third week of every month. Come find me if you want a match.");
-    await walkOut(w); await talk('tala', 'The rival match shows under Out > Tournaments in week 3, and winning it pays a quarter of an official cup prize.');
+    await walkOut(w); await talk('tala', "The third week, then. Beating Rook would pay well too.");
   },
   async gradeC() { await talk('shop', "Grade C! From now on I'll have a second held item for you each week."); },
   async gradeB() {

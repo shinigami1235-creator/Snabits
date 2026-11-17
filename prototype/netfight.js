@@ -111,7 +111,7 @@ function nHandle(m){
   if(LN.host){
     if(t==="hello"){
       if(m.ver!==NET_VER){ const mine=appVerNum(APP_VER), theirs=appVerNum(m.app);
-        if(mine<theirs){ nSend({t:"deny",why:`Your friend's game is on version ${APP_VER} and yours is on ${m.app}. They need to tap Update, then you can join again.`}); say(`Your friend is on version ${m.app}. Tap Update, then host again.`); verCheck(); }
+        if(mine<theirs){ nSend({t:"deny",why:`Your friend's game is on version ${APP_VER} and yours is on ${m.app}. They need to tap Update, then you can join again.`}); say(`Your friend's game is on version ${m.app}. Update yours, then host again.`); verCheck(); }
         else nSend({t:"deny",old:true,why:`Your game is on version ${m.app||"an older build"} and your friend's is on ${APP_VER}. Tap Update, then join again.`});
         return; }
       try{ LN.opp=readGhost(m.mon); }catch(e){ nSend({t:"deny",why:"The host couldn't read your monster."}); return; }

@@ -421,7 +421,7 @@ function deepChoose(M, at, T, lead, vis, prev, nights, bag, boxes) {
   if (at.room !== F.upRoom && dgFirst(F, at.room, F.upRoom)) opts.push({ t: 'back', label: 'Back to camp', sub: (n => `${n} room${n > 1 ? 's' : ''}`)(dgHops(F, at.room).D[F.upRoom]) });
   for (const k of Object.keys(bag)) if (bag[k] > 0 && !['Rope', 'Ration', "Pathfinder's compass"].includes(k)) opts.push({ t: 'item', k, label: `Use ${/^[AEIOU]/.test(k) ? 'an' : 'a'} ${k.toLowerCase()}`, sub: `${bag[k]} in the pack` });
   if (bag.Rope > 0) opts.push({ t: 'none', label: `Rope ×${bag.Rope}`, sub: 'For getting out of a pit', off: true });
-  opts.push({ t: 'home', label: 'Head home', sub: 'Keeps everything found so far' });
+  opts.push({ t: 'home', label: 'Head home', sub: 'Ends the trip' });
   F.rooms[at.room].been = true;
   return new Promise(res => {
     // what was picked stays on show, greyed out, until the next room's choices replace it, so nothing on screen moves
@@ -429,7 +429,8 @@ function deepChoose(M, at, T, lead, vis, prev, nights, bag, boxes) {
     const arrows = deepArrows(cv, F, at, opts.filter(o => o.t === 'exit'));
     let pack = false;
     const bar = () => { const L = pack ? opts.filter(o => o.t === 'item').concat([{ t: 'back2', label: 'Close the pack' }]) : opts.filter(o => o.t !== 'exit' && o.t !== 'item' && o.t !== 'none');
-      if (!pack && opts.some(o => o.t === 'item' || o.t === 'none')) L.splice(L.length - 1, 0, { t: 'pack', label: 'The pack', sub: Object.entries(bag).filter(([k, n]) => n > 0).map(([k, n]) => `${n} ${k.toLowerCase()}`).join(', ') });
+      if (!pack && opts.some(o => o.t === 'item' || o.t === 'none')) { const E = Object.entries(bag).filter(([k, n]) => n > 0), tx = E.map(([k, n]) => `${n} ${k.toLowerCase()}`).join(', '), N = E.reduce((t, [k, n]) => t + n, 0);
+        L.splice(L.length - 1, 0, { t: 'pack', label: 'The pack', sub: tx.length <= 22 ? tx : `${N} things` }); }   // a long list would be cut off on a phone, so it becomes a count
       box.innerHTML = L.map((o, i) => `<button class="rb" data-o="${i}" ${o.off ? 'disabled' : ''}>${o.label}${o.sub ? `<small>${o.sub}</small>` : ''}</button>`).join('');
       box.querySelectorAll('[data-o]').forEach(b => b.onclick = () => { const o = L[+b.dataset.o]; if (o.t === 'pack' || o.t === 'back2') { pack = o.t === 'pack'; bar(); return; } done(o); }); };
     bar();

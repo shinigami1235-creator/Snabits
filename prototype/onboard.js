@@ -158,7 +158,7 @@ function obStartScope(){
 function obCoachText(){
   if(!ONB||!ONB.tut) return "";
   if(mode==="aim") return "Drag the circle onto what you want scanned, then tap Scan.";
-  if(!stream) return "The Snaboscope needs your camera. Allow it when your browser asks, or use a photo from your gallery.";
+  if(!stream) return window.DEV_GALLERY?"The Snaboscope needs your camera. Allow it when your browser asks, or use a photo from your gallery.":"The Snaboscope needs your camera. Allow it when your browser asks.";
   if(ONB.picks.length===0) return "Point it at something with strong colour, like a toy, a fruit or a shirt. The circle looks hardest at what's inside it. Tap the round button to scan.";
   return `You've scanned ${ONB.picks.length} so far. Try something a different colour, since the main colour decides its element.`;
 }

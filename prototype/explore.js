@@ -187,7 +187,7 @@ async function runExpedition(reg) {
     s.bg = `area:${reg.el}:${areas[0].key}`; s.trip = true; s.night = 0; s.dusk = 0; s.props = []; s.x = 60; s.pose = 'idle'; s.camJump = true; s.tripLabel = `${reg.n} expedition`; drawUI();
     await sceneFade(false, 700); banner(reg.n, '#fff'); K(reg.rift ? "This is the edge of the Rift. The League's mapped this far and no further." : 'The trail ends here. Where to?'); await rwait(1200); banner('');
     if (wx) { s.exWx = wx; if (typeof exAmb === 'function') exAmb(wx); K(EX_WX_LINE[wx](nm)); await rwait(2000); }
-    el('r-panel').innerHTML = `<canvas id="ex-map" class="full" style="width:100%;display:block"></canvas><button class="rb full" id="ex-home">Head home<small>Keeps everything found so far</small></button>`;
+    el('r-panel').innerHTML = `<canvas id="ex-map" class="full" style="width:100%;display:block"></canvas><button class="rb full" id="ex-home">Head home<small>Ends the trip</small></button>`;
     el('ranch').classList.add('exploring');
     try {
       for (;;) {

@@ -10,6 +10,19 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
+<script>
+/* Scans come from the live camera. A saved photo would let anyone download a Pattern Stone or a colour chart and skip the hunt,
+   so the gallery only shows on a dev copy: open the game once with ?dev (or #test, which the test drivers use) and it stays on
+   for that browser. ?dev=0 turns it off again. */
+(function(){ try{ const q=new URLSearchParams(location.search);
+  if(q.has('dev')) localStorage.setItem('snabits.dev', q.get('dev')==='0'?'0':'1');
+  window.DEV_GALLERY = /test/.test(location.hash) || localStorage.getItem('snabits.dev')==='1';
+}catch(e){ window.DEV_GALLERY=false; }
+if(window.DEV_GALLERY) document.documentElement.classList.add('dev'); })();
+</script>
+<style>html:not(.dev) label[for="pick"]{display:none!important}
+/* on a computer the camera input opens a file picker, so outside a dev copy only the live camera scans there */
+@media (pointer:fine){ html:not(.dev) label[for="take"]{display:none!important} }</style>
 </head>
 <body class="theme-wood">
 <div id="stage"><video id="video" playsinline muted autoplay></video><canvas id="still"></canvas><div id="ring"></div><div id="corners"><i></i><i></i><i></i><i></i></div></div>

@@ -37,7 +37,7 @@ const tasteName=T=>!T?"":T.k==="meal"?MEALS[T.v][0]:T.k==="drill"?DRILLS[T.v]:T.
 const EVO_TOTAL={Squib:[90,220],Stilt:[90,220],Skit:[100,240],Antik:[110,250],Chomp:[110,250],Pinch:[120,260],Moko:[130,280],Booly:[130,280],Plod:[120,260],Bipped:[110,250],Fizz:[110,250],Teep:[120,260],Lern:[130,280],Eagle:[120,270],Vampire:[130,280],Phoenix:[140,300],Kitsune:[130,280],Naga:[130,280],Yeti:[130,280],Puff:[110,250],Flit:[90,220],Glop:[120,260],Tock:[100,240],Mitt:[110,250],Brolly:[110,250],Spine:[120,260],Burr:[110,250],Kraken:[130,280],Golem:[140,300],Unicorn:[130,280],Jack:[130,280],Wick:[100,240],Lumo:[100,240],Snooze:[120,260],Inky:[110,250],Cobble:[120,260],Nimbo:[100,240],Dango:[110,250],Oaklet:[120,260],Roly:[120,260],Trundle:[130,270],Clank:[120,260],Crease:[110,250],Twiglet:[130,280],Swirl:[120,260],Ditty:[110,250],Sizzle:[110,250],Aero:[100,240],Nesta:[130,280],Magna:[120,260],Helm:[130,280],Bloop:[100,240],Sox:[100,240],Cuppy:[110,250],Suds:[100,240],Scoop:[100,240],Tome:[110,250],Gumball:[110,250],Pina:[110,250],Jingle:[120,260],Presto:[120,260],Vroom:[110,250],Shutter:[120,260],Yoyo:[110,250],Lava:[130,280],Pogo:[120,260],Tengu:[130,280],Tanuki:[130,280],Mermaid:[130,280],Diwata:[130,280],Sphinx:[130,280],Garuda:[130,280],Werewolf:[130,280],Minotaur:[140,300],Dragon:[140,300],Thunderbird:[130,280],Hydra:[140,300],Griffin:[130,280],Kirin:[130,280],Salamander:[130,280],Bakunawa:[140,300],Cerberus:[140,300],Djinn:[130,280],Troll:[140,300],Mummy:[130,280],Sarimanok:[130,280],Cthulhu:[150,320],Hastur:[150,320],Shoggoth:[150,320],Dagon:[150,320],Migo:[150,320],Nightgaunt:[150,320],Ghoul:[150,320],Gug:[150,320],Yog:[150,320],Shub:[150,320]};
 const STAT_SKILLS=[[["Second Wind",30],["Endure",80],["Body Slam",150],["Regrow",240]],[["Haymaker",30],["Pump Up",80],["Crush",150],["Rampage",240]],[["Harden",30],["Shield Bash",80],["Retaliate",150],["Bulwark",240]],[["Concentrate",30],["Mind Spike",80],["Foresight",150],["Brainstorm",240]],[["Calm",30],["Still Water",80],["Spirit Ward",150],["Soul Flare",240]],[["Dart",30],["Agility",80],["Barrage",150],["Afterimage",240]]];
 const CONDITION=[[20,"It's full of energy!"],[50,"It's in good shape."],[70,"It seems a little tired."],[90,"It's really tired. It needs a rest."],[999,"It's exhausted!"]];
-const condition=()=>CONDITION.find(c=>RS.fatigue<c[0])[1];
+const condition=()=>RS.injured?"It's hurt and needs a rest or some medicine.":RS.sick?"It has a cold and needs a rest or some medicine.":CONDITION.find(c=>RS.fatigue<c[0])[1];
 const CONDITION_SHORT=[[20,"Fresh"],[50,"Fine"],[70,"Tired"],[90,"Worn out"],[999,"Exhausted"]];
 const conditionShort=()=>CONDITION_SHORT.find(c=>RS.fatigue<c[0])[1];
 const SEASON_COL={ground:["#78c556","#5fb043","#c49a45","#e9eef3"],hill:["#4f9a45","#3f8a38","#9c7a3a","#c5d3de"],leaf:["#58b45a","#3d9a3d","#d9822b",null]};
@@ -60,7 +60,7 @@ async function enterBarn(id){ const s=RS; s.idling=true;   // idling blocks the 
 function leaveBarn(){ const s=RS; s.room=null; s.x=HUTX(); s.camJump=true; s.pose="idle"; }
 function barnTap(x,y){   // a tap that wasn't on the monster, in yard coords; true if it hit something
   const s=RS; if(s.busy) return false; const S=BARN_SPOTS, inX=r=>x>=r[0]&&x<=r[1];
-  if(!s.room){ if(Math.abs(x-HUTX())<40&&y>GROUND-104&&y<GROUND+4){ const id=s.cur=++RACT; enterBarn(id).then(()=>say("Its room in the barn. Tap the toys, the bed or the wardrobe.")).catch(()=>{}); return true; } return false; }
+  if(!s.room){ if(Math.abs(x-HUTX())<40&&y>GROUND-104&&y<GROUND+4){ const id=s.cur=++RACT; enterBarn(id).then(()=>say("This is its room in the barn. Go on, play with it for a bit.")).catch(()=>{}); return true; } return false; }
   const id=s.cur=++RACT; s.idling=false;
   if(inX(S.door)&&y>GROUND-104){ leaveBarn(); return true; }
   if(inX(S.trophies)&&y>GROUND-108&&y<GROUND-86){ const c=s.cups||[]; say(c.length?`${c.length} cup${c.length>1?"s":""} on the shelf: ${c.join(", ")}.`:"The shelf is empty until it wins its first tournament."); return true; }
@@ -943,7 +943,7 @@ const topMark=()=>{const s=RS, top=s.tp.indexOf(Math.max(...s.tp)); return s.tp.
 /* ---------- the end of a week ---------- */
 async function endWeek(weeks,line){
   const s=RS, missed=(PLAYER.signups||[]).filter(x=>x.w>=PLAYER.week&&x.w<PLAYER.week+Math.max(1,weeks)); PLAYER.week+=Math.max(1,weeks); s.used+=weeks; clampAll();
-  s.log=(s.log||[]).concat(Array(Math.max(1,weeks)).fill(s.weekAct||"Rest")).slice(-8); s.weekAct=null;
+  s.log=(s.log||[]).concat(Array(Math.max(1,weeks)).fill(s.weekAct||"Rest")).slice(-8); const act=s.weekAct; s.weekAct=null;
   let notes=[line];
   { const now=typeof signedNowLine==="function"&&signedNowLine(); if(now) notes.push(now); }   // the sign-up goes near the top so it isn't lost under the week's news
   if(missed.length) notes.push(`We missed the ${missed[0].name.replace(/ \([A-SF]\)$/,"")}${weeks>1?" while we were away":""}.`);
@@ -993,7 +993,7 @@ async function endWeek(weeks,line){
     if(fest){ const fk={"Blossom Festival":"Strawberry","Harvest Fair":"Watermelon","Snow Fair":"Candy cane"}[fest[0]], fl=fk&&openCos(fk,`A League stand at the ${fest[0]} was giving out pattern cards.`); if(fl) notes.push(fl);
       addItem(fest[1]); s.stress-=10; notes.push(`The ${fest[0]} is on in town this week. Nora gave every ranch ${/^[AEIOU]/.test(fest[1])?"an":"a"} ${fest[1]}, and the music took 10 stress off.`); } }
   clampAll();   // the festival, a visitor, the plants and worn things move stress after the clamp at the top
-  notes.push(condition());
+  { const c=condition(); notes.push(act==='Expedition'?c.replace(/^It(?=['\s])/,s.m.name):c); }   // after a team trip "It" would read as the team, so Josie names who she means
   if(s.stress>50) notes.push("It seems tense lately, maybe give it a rest.");
   { const nx=aheadLines(s); if(nx) notes.push(nx); }
   if(typeof roamState==="function"&&PLAYER.week%6===0&&roamState()) notes.push(`Somebody in town saw a Snabit in strange colours near ${roamAt()} this week.`);   // the Drifter   // Josie brings up what we signed up for, and a big cup it looks ready for
