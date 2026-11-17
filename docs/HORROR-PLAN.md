@@ -134,6 +134,6 @@ The moves, signature skills, arena animations and entrances are built in the mai
 - `explore.js`: the ring buttons on the Expeditions screen, the Journal's Myths tab and the map icons for a tear and a lair.
 - Cries, sizes, evolution totals, arena colours and ability effects for all ten.
 - Tests: `tools/tests/audit/horrors.py` (hatching, abilities, stones, the hour) and `tools/tests/audit/rift.py` (rings, tears, a walk to the Ghoul's lair, the second parts, leaving and the Secrets row).
-- Every myth line, Secrets hint, leaving line and Walt line waits on Gid's OK, in the review doc "Snabits horror lines for review".
+- Every myth line, Secrets hint, leaving line and Walt line was OKed by Gid on 17 Nov 2026 in the review doc "Snabits horror lines for review", and both branches were merged into main the same night.
 - Moves, two signatures each, arena animations and balance are built (17 Nov 2026). Each horror has 16 moves, and the sim has all ten between 47% and 54%. Their summon entrances are built too (17 Nov 2026, `ENTER` in `summon.js`, `docs/art/horror-entrances.jpg`): each one comes out of something, like a grave mound, a black pool, a sealed gate or a yellow curtain.
 - Why each one fights (17 Nov 2026): the banners, Walt's lines at every tear and lair, a reason for each little one, and six myth parts rewritten to set it up.
