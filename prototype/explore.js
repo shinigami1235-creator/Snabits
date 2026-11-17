@@ -189,7 +189,8 @@ async function runExpedition(reg) {
         const n = M.N[to], back = at; energy -= 1; at = to;
         const ai = n.c <= 1 ? 0 : n.c <= 3 ? 1 : 2, key = (reg.rift && n.c === 6 ? areas[2] : areas[Math.min(ai, areas.length - 2)]).key;
         exDraw(el('ex-map'), M, st, at, energy, top, blocked, wx ? `${reg.n} · ${wx}` : reg.n);
-        await sceneFade(true, 250); s.props = []; s.parts = []; s.bg = `area:${reg.el}:${key}`; s.x = 50; s.camJump = true; s.jy = 0; await sceneFade(false, 250);
+        await sceneFade(true, 250); s.props = []; s.parts = []; s.bg = `area:${reg.el}:${key}`; s.x = 50; s.camJump = true; s.jy = 0;
+        if (typeof exHold === 'function') exHold(); else await sceneFade(false, 250);   // fades in once the place's things are set out
         const r = await exNode(reg, n, st, need, nm, K, used, found);
         if (r === 'fail') { energy -= 3; blocked.push(to); at = back; }
         if (r === 'spring') energy = Math.min(top, energy + (wx === 'Rain' ? 7 : 4));
@@ -210,16 +211,16 @@ async function runExpedition(reg) {
 /* one circle: what happens there. Returns 'fail' or 'lost' (energy off), 'spring' (energy back) or nothing */
 async function exNode(reg, n, st, need, nm, K, used, found) {
   const s = RS, once = st.got.includes(n.id);
-  await walkTo(100, 70, 'walk'); s.pose = 'idle';
-  if (n.k === 'camp' || n.k === 'path') { await rwait(250); return; }
-  if (n.k === 'spring') { if (used.includes(n.id)) { await rwait(200); return; } used.push(n.id); const sp = prop({ k: 'spring', x: 150, y: GROUND }); await walkTo(124, 60, 'walk'); s.pose = 'happy'; spark(150, GROUND - 10, 'drip', 8); rsfx('splash'); spark(s.x, headY() - 6, 'sparkle', 3); K(`There's fresh water here. Drink up, ${nm}.`); await rwait(1300); unprop(sp); return 'spring'; }
+  if (typeof exArchOut === 'function') exArchOut();   // it comes out of the archway it went into
+  if (n.k === 'camp' || n.k === 'path') { if (typeof exShow === 'function') exShow(); await walkTo(100, 70, 'walk'); await rwait(250); return; }
+  if (n.k === 'spring') { if (used.includes(n.id)) { await rwait(200); return; } used.push(n.id); const sp = prop({ k: 'spring', x: 150, y: GROUND }); await walkTo(124, 60, 'walk'); s.pose = 'happy'; spark(150, GROUND - 10, 'drip', 8); rsfx('splash'); spark(s.x, headY() - 6, 'sparkle', 3); K(`There's fresh water here. Drink up, ${nm}.`); await rwait(1300); return 'spring'; }
   if (n.k === 'chest') { if (used.includes(n.id)) { K('The chest here is empty now.'); await rwait(900); return; } used.push(n.id);
     const R = rng(hashStr(reg.n + n.id + exSeason())), item = n.big ? EX_RARE[Math.floor(R() * EX_RARE.length)] : EX_FINDS[Math.floor(R() * EX_FINDS.length)];
     if (typeof exChest === 'function') await exChest(item, n.big);
     else { const c = prop({ k: 'chest', x: 144, y: GROUND }); await walkTo(120, 60, 'walk'); s.pose = 'idle'; await rwait(300); c.open = true; rsfx('creak'); s.pose = 'happy'; spark(144, GROUND - 22, 'sparkle', 6); await rwait(600); unprop(c); }
     addItem(item); found.push(`${/^[AEIOU]/.test(item) ? 'an' : 'a'} ${item}`); if (!once) st.got.push(n.id); K(`${nm} found ${/^[AEIOU]/.test(item) ? 'an' : 'a'} ${item} in an old chest.`); await rwait(1400); return; }
   if (n.k === 'page') { if (once) { await rwait(300); return; }
-    const p = prop({ k: 'page', x: 140, y: GROUND - 26 }); await walkTo(126, 60, 'walk'); s.pose = 'happy'; spark(140, GROUND - 30, 'sparkle', 4); unprop(p);
+    const p = prop({ k: 'page', x: 140, y: GROUND - 26 }); await walkTo(126, 60, 'walk'); s.pose = 'happy'; spark(140, GROUND - 30, 'sparkle', 4); for (let i = 0; i < 12; i++) { p.x += (s.x - p.x) * 0.3; p.y += (headY() + 8 - p.y) * 0.3; await rwait(16); } unprop(p);   // it picks the page up
     PLAYER.journal = PLAYER.journal || {}; PLAYER.journal[reg.n] = 1; st.got.push(n.id); found.push('a journal page');
     banner('A journal page', '#ffe9a8'); say(EX_PAGES[reg.n]); await rwait(Math.min(7000, 2000 + EX_PAGES[reg.n].length * 38)); banner(''); return; }
   if (n.k === 'stone') { const sp = EX_STONE[reg.n] || (reg.rift ? 'Bakunawa' : null);
@@ -228,7 +229,7 @@ async function exNode(reg, n, st, need, nm, K, used, found) {
     if (!have) { if (!once) st.got.push(n.id); const L = stoneList(); if (L && !L.includes(sp)) L.push(sp); found.push('a Pattern Stone'); spark(150, GROUND - 40, 'sparkle', 8); banner('A Pattern Stone', '#ffe9a8');
       K("Look at this. Someone painted a pattern on this stone, and the Snaboscope's humming at it."); await rwait(2600); banner(''); }
     else { K('The painted stone is still here.'); await rwait(1100); }
-    unprop(p); return; }
+    return; }
   if (n.k === 'teach') { if (used.includes(n.id)) { await rwait(200); return; } used.push(n.id); await exTeach(reg, st, nm, K, found); return; }
   if (n.k === 'stop') { if (used.includes(n.id)) { await rwait(200); return; } used.push(n.id); return await exStop(reg, n, nm, K, found); }
   if (n.k === 'wild') { if (used.includes(n.id)) { await rwait(200); return; } used.push(n.id);
@@ -236,7 +237,8 @@ async function exNode(reg, n, st, need, nm, K, used, found) {
     const fp = prop({ k: 'foe', x: 170, y: GROUND, grid: foe.fm.grid, pal: foe.fm.pal, fm: foe.fm }); banner('A wild Snabit', '#ffd23f'); K(foe.drifter ? `Look at those colours! Everyone in town has been talking about this ${foe.m.name}.` : `A wild ${foe.m.name} is in the way.`); await rwait(1300); banner('');
     await sceneFade(true, 400); let won = false;
     await new Promise(done => arenaFight({ s, foe, mode: 'control', title: 'Wild', noDraw: true, onEnd: r => { won = !!(r && r.winner === 0); done(); } }));
-    unprop(fp); s.trip = true; s.camJump = true; s.pose = won ? 'happy' : 'tired'; await sceneFade(false, 400);
+    s.trip = true; s.camJump = true; s.pose = won ? 'happy' : 'tired'; await sceneFade(false, 400);
+    (async () => { await rwait(700); fp.pose = 'walk'; fp.right = true; for (let i = 0; i < 70; i++) { fp.x += 2.5; await rwait(16); } unprop(fp); })().catch(() => {});   // it heads off down the trail
     if (foe.drifter && typeof roamResult === 'function') { K(roamResult(won)); await rwait(2200); }
     if (won) { PLAYER.bits += prize; drawUI(); found.push(`${prize.toLocaleString()} bits`); K(`You did it! The League pays ${prize.toLocaleString()} bits for that one.`); await rwait(1400); return; }
     K(`That ${foe.m.name} was too strong. Let's get out of here.`); await rwait(1400); return 'lost'; }
@@ -244,7 +246,7 @@ async function exNode(reg, n, st, need, nm, K, used, found) {
   const f = playerFighter(s), v = f.base[EX_KEY[n.stat]], want = need * n.mul;
   let ok = v >= want;
   // close to what it needs: it gets a try, from about one in six up to three in four
-  if (!ok && v >= want * 0.85) { K(`It's close. Come on, ${nm}!`); await rwait(1000); ok = Math.random() < 0.15 + (v / want - 0.85) / 0.15 * 0.6; }
+  if (!ok && v >= want * 0.85) { setTimeout(() => K(`It's close. Come on, ${nm}!`), 600); ok = Math.random() < 0.15 + (v / want - 0.85) / 0.15 * 0.6; }
   // a move that fits gets it through for 2 energy, where turning back costs 3 and shuts the way
   const mv = !ok && typeof exMoveFor === 'function' && exMoveFor(f, n.stat);
   if (mv) { const line = await exMoveOpen(n.stat, mv, hashStr(reg.n + n.id)); K(line); await rwait(1500); return 'move'; }

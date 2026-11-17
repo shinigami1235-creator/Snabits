@@ -88,6 +88,21 @@ function exShake(px, ms) {   // smooth sines that die away, on the backdrop and 
 }
 function exCalm() { exDim(0); exFocusOff(); const s = RS; s.ghosts = false; s.props = s.props.filter(p => !/^ex(burst|charge|lines|beam)/.test(p.k)); }
 
+/* ---------- nothing pops in: a place stays dark until whatever is there has been set out, and the Snabit walks in ---------- */
+function exShow() { if (!EXD.hold) return; EXD.hold = false; clearTimeout(EXD.holdT); sceneFade(false, 250); }
+function exHold() { EXD.hold = true; clearTimeout(EXD.holdT); EXD.holdT = setTimeout(exShow, 150); }
+{ const P = window.prop; window.prop = function (o) { const r = P(o); if (EXD.hold) setTimeout(exShow, 0); return r; }; }   // the first thing set out lets the place fade in
+/* through the real archway: it walks into the dark of the doorway, and at the next place it walks out of one */
+async function exArchIn(x, kind = 'arch') {
+  const s = RS; await walkTo(x, 50, 'walk'); s.pose = 'walk'; const mk = prop({ k: 'exarchmask', x, y: GROUND, a: 0, s: 1.2, door: kind === 'door' });
+  await exTween(600, u => { mk.a = u; s.bx = Math.sin(u * 12) * 0.5; }); s.bx = 0; s.hidden = true; EXD.archExit = kind;
+}
+function exArchOut() {
+  if (!EXD.archExit) return; const door = EXD.archExit === 'door'; EXD.archExit = false; const s = RS; s.hidden = false; s.x = 44;
+  prop(door ? { k: 'sealdoor', x: 44, y: GROUND, lit: 3, drop: 61 } : { k: 'exarchway', x: 44, y: GROUND, s: 1.2 }); const mk = prop({ k: 'exarchmask', x: 44, y: GROUND, a: 1, s: 1.2, door });
+  (async () => { await rwait(500); await exTween(500, u => { mk.a = 1 - u; }); unprop(mk); })().catch(() => {});
+}
+
 /* ---------- the sounds of it, made from the game's own synth and its recorded hits ---------- */
 function exSfx(kind) {
   try { const d = sfxBus(); if (!d) return; MC = AC; const t = AC.currentTime + 0.01, R = Math.random;
@@ -183,22 +198,22 @@ async function exMoveOpen(stat, mv, seed) {
         exSfx('crumble'); spark(172, GROUND - 4, 'dust', 16); exShake(5, 700); await exTween(1300, u => { b.broke = u; sp.h = 1 - u * 0.4; if (u > 0.5) b.y = GROUND - 22 + (u - 0.5) * 44; }); unprop(sp); unprop(b); }
       else { await exHit(mv, 162, GROUND - 26); exSfx('crumble'); spark(172, GROUND - 4, 'dust', 16); exShake(5, 700); await exTween(1300, u => { b.broke = u; }); unprop(b); } }
     else if (stat === 2) { const th = prop({ k: 'thorns2', x: 168, y: GROUND, s: 1.35, gone: 0, how: el === 'Blaze' ? 'burn' : 'cut' }); await walkTo(110, 60, 'walk'); await exHit(mv, 160, GROUND - 24);
-      if (el === 'Blaze') exSfx('crackle'); else { th.how = 'shred'; exSfx('snap'); } await exTween(el === 'Blaze' ? 1700 : 1200, u => { th.gone = u; }); unprop(th); }
+      if (el === 'Blaze') exSfx('crackle'); else { th.how = 'shred'; exSfx('snap'); } await exTween(el === 'Blaze' ? 1700 : 1200, u => { th.gone = u; }); }
     else if (stat === 3) { const d = prop({ k: 'sealdoor', x: 184, y: GROUND, lit: 0, drop: 0 }), lt = prop({ k: 'litter', x: 154, y: GROUND, s: 1.3 }); await walkTo(118, 60, 'walk'); await exHit(mv, 184, GROUND - 40);
       const RU = [[176, GROUND - 35], [192, GROUND - 35], [184, GROUND - 19]]; unprop(lt); const fly = prop({ k: 'exbookfly', x: 154, y: GROUND, t0: exNow() }); exSfx('whoosh');
       const cur = prop({ k: 'excurrent', x: 184, y: GROUND - 40, el, g: 0, n: 0 });
       for (let i = 1; i <= 3; i++) { await exTween(220, u => { cur.n = i - 1 + u; }); d.lit = i; exSfx(el === 'Spark' ? 'zap' : 'chime'); exShake(2, 200); spark(RU[i - 1][0], RU[i - 1][1], 'sparkle', 4); await rwait(120); }
       unprop(cur); setTimeout(() => unprop(fly), 600);
-      await exDoorOpen(d, el); unprop(lt); }
+      await exDoorOpen(d, el); exSfx('win'); await exArchIn(184, 'door'); return line; }
     else if (stat === 4) { const real = seed % 3, m = prop({ k: 'mirage', x: 170, y: GROUND, real, reveal: 0, s: 1.2 }); await walkTo(98, 60, 'walk');
-      if (el === 'Light' || el === 'Shade') await exMirageMove(m, real, mv); else { await exHit(mv, 170, GROUND - 30); await exMirageBreak(m, real, 'Insight'); } exCalm(); await walkTo(170 - 55 + 110 * (0.2 + real * 0.3), 60, 'walk'); await walkTo(224, 60, 'walk'); unprop(m); }
-    else { const tr = prop({ k: 'darttrap', x: 206, y: GROUND, live: true, s: 1.5 }), coat = prop({ k: 'excoat', el, x: 206, y: GROUND, s: 1.5, a: 0 }); await walkTo(120, 60, 'walk'); tr.live = false; await exHit(mv, 200, GROUND - 40);
+      if (el === 'Light' || el === 'Shade') await exMirageMove(m, real, mv); else { await exHit(mv, 170, GROUND - 30); await exMirageBreak(m, real, 'Insight'); } exCalm(); await exArchIn(170 - 55 + 110 * (0.2 + real * 0.3)); return line; }
+    else { const tr = prop({ k: 'darttrap', x: 206, y: GROUND, live: false, s: 1.5 }), coat = prop({ k: 'excoat', el, x: 206, y: GROUND, s: 1.5, a: 0 }); await walkTo(120, 60, 'walk'); await exHit(mv, 200, GROUND - 40);
       tr.live = false;
       if (el === 'Tide') { unprop(coat); tr.k = 'darttrap2'; tr.rot = 0; exSfx('surge'); await exTween(500, u => { tr.rot = 0.12 * Math.sin(u * Math.PI * 3) * (1 - u) + u * 0.25; });
         await exTween(420, u => { tr.rot = 0.25 + u * 1.32; }, exIn); exSfx('thud'); exSfx('surge'); exShake(7, 400); spark(232, GROUND - 4, 'drip', 16); spark(232, GROUND - 4, 'dust', 8);
-        await rwait(700); exCalm(); await walkTo(236, 120, 'run'); unprop(tr); }
+        await rwait(700); exCalm(); await walkTo(236, 120, 'run'); }
       else { spark(206, GROUND - 40, 'sparkle', 12); await exTween(700, u => { coat.a = u; });
-        const mist = prop({ k: 'exmist', el, x: 206, y: GROUND, t0: exNow() }); exSfx('freeze'); await rwait(700); exCalm(); await walkTo(236, 120, 'run'); unprop(tr); unprop(coat); unprop(mist); } }
+        const mist = prop({ k: 'exmist', el, x: 206, y: GROUND, t0: exNow() }); exSfx('freeze'); await rwait(700); exCalm(); await walkTo(236, 120, 'run'); } }
   } finally { exCalm(); }
   await walkTo(Math.max(s.x, 226), 60, 'walk'); s.pose = 'happy'; exSfx('win'); spark(s.x, headY() - 6, 'sparkle', 6); await hop(10, 300);
   return line;
@@ -208,7 +223,7 @@ async function exMoveOpen(stat, mv, seed) {
 async function exDoorOpen(d, el) {
   const r = prop({ k: 'exrays', x: 184, y: GROUND - 25, a: 0, el: el || 'Mind' }); exSfx('rumble'); exSfx('rays'); exShake(5, 800);
   await exTween(700, u => { d.drop = 61 * u; r.a = u; }, exIn); spark(184, GROUND - 4, 'dust', 12); exFlash('#fffbe0', 0.5, 300); await rwait(500);
-  await exTween(500, u => { r.a = 1 - u; }); unprop(r); unprop(d);
+  await exTween(500, u => { r.a = 1 - u; }); unprop(r);
 }
 /* the two fake archways crack and shatter, and the real one glows */
 async function exMirageBreak(m, real, el) {
@@ -252,31 +267,40 @@ async function exObstacle2(stat, ok, seed) {
     try {
       if (ok) { exSfx('rumble'); let v = 0;
         exFocus(190, 1.25); await exTween(1500, u => { v = 0.6 + u * 3.4; b.x += v; b.rot += v * 0.045; if (Math.random() < 0.6) spark(b.x - 22, GROUND - 2, 'dust', 1, true); });
-        exSfx('impact'); exShake(7, 600); spark(232, GROUND - 6, 'dust', 14); s.pose = 'happy'; exSfx('win'); await hop(12, 320); unprop(ck); }
+        exSfx('impact'); exShake(7, 600); spark(232, GROUND - 6, 'dust', 14); s.pose = 'happy'; exSfx('win'); await hop(12, 320); unprop(b); }
       else { for (let i = 0; i < 2; i++) { b.rot = 0.06; await rwait(120); b.rot = -0.04; await rwait(120); } b.rot = 0;
         s.pose = 'hurt'; s.flash = 2; exSfx('thud'); spark(s.x, headY() - 4, 'star', 4); const x1 = s.x; await exTween(420, u => { s.x = x1 - 46 * u; s.jy = Math.sin(u * Math.PI) * 16; }, exOut); s.jy = 0;
-        exShake(4, 300); s.pose = 'tired'; spark(s.x, headY(), 'sweat', 3); await rwait(500); unprop(ck); exCalm(); await exBack(70); }
-    } finally { exCalm(); unprop(b); }
+        exShake(4, 300); s.pose = 'tired'; spark(s.x, headY(), 'sweat', 3); await rwait(500); exCalm(); await exBack(70); }
+    } finally { exCalm(); }
     return true; }
-  if (stat === 5) {   // Speed: it never stops running, and jumps or ducks each dart as it comes
-    const tr = prop({ k: 'darttrap', x: 222, y: GROUND, live: false, s: 1.5 }); await walkTo(64, 60, 'walk');
-    exFocus(150, 1.15); exDim(0.35); s.pose = 'effort'; const ch = prop({ k: 'excharge', el: 'Speed', x: s.x, y: GROUND - 14, t0: exNow() }); exSfx('charge'); await rwait(700); unprop(ch);
-    s.pose = 'run'; s.ghosts = true; const plan = ok ? ['jump', 'duck', 'jump', 'duck'] : ['jump', 'duck', 'hit'], x0 = s.x;
+  if (stat === 5) {   // Speed: it walks up, the totem starts firing, and it keeps running, jumping the low darts and ducking the high ones
+    const TX = 214, tr = prop({ k: 'darttrap', x: TX, y: GROUND, live: false, s: 1.5 }); await walkTo(96, 60, 'walk');
+    exFocus(150, 1.3); exDim(0.35); s.pose = 'effort'; const ch = prop({ k: 'excharge', el: 'Speed', x: s.x, y: GROUND - 14, t0: exNow() }); exSfx('charge'); await rwait(700); unprop(ch);
+    const holes = { low: GROUND - 15, high: GROUND - 40 }, plan = ok ? ['low', 'high', 'low', 'high'] : ['low', 'high', 'hit'], fly = [];
+    // a dart keeps flying until it is well off the left of the screen
+    const shoot = y => { const d = prop({ k: 'exdart', x: TX - 12, y, t0: exNow(), rot: 0 }); fly.push(d); exSfx('dart'); tr.flash = 1; return d; };
+    const flyOn = d => (async () => { while (d.x > -60 && !d.stuck) { d.x -= 5.2; await rwait(16); } if (!d.stuck) unprop(d); })().catch(() => {});
+    s.pose = 'run'; s.ghosts = true; let hit = false;
     try {
-      let hitAt = -1;
       for (let i = 0; i < plan.length; i++) {
-        const hy = plan[i] === 'duck' ? 0.42 : 0.82, d = prop({ k: 'dart', x: 210, y: GROUND - 69 * (1 - hy) + (plan[i] === 'duck' ? 0 : 6), s: 1.5 }); exSfx('dart');
-        const sx = s.x, meet = sx + 30;
-        await exTween(560, u => { s.x = sx + 30 * u; d.x = 210 - (210 - meet) * u;
-          if (plan[i] === 'jump') s.jy = u > 0.45 ? Math.sin((u - 0.45) / 0.55 * Math.PI) * 22 : 0; else if (plan[i] === 'duck' && u > 0.5) s.pose = 'duck'; });
-        if (plan[i] === 'hit') { hitAt = i; unprop(d); break; }
-        s.pose = 'run'; s.jy = 0; exSfx('whoosh'); (async () => { for (let k = 0; k < 20; k++) { d.x -= 6; await rwait(16); } unprop(d); })();
-        if (i === plan.length - 1) { exFlash('#dff6ff', 0.35, 220); }
+        const kind = plan[i] === 'hit' ? 'low' : plan[i], y = holes[kind], d = shoot(y);
+        // it fires when the Snabit is close, and they meet a little ahead of where the Snabit is
+        const sx = s.x, dist = d.x - sx, T = Math.max(260, dist / 5.2 * 16 * 0.62); let dodged = false;
+        await exTween(T, u => { s.x = sx + (dist * 0.38) * u; d.x = (TX - 12) - (dist * 0.62) * u;
+          if (plan[i] === 'hit') return;
+          if (kind === 'low' && u > 0.55) s.jy = Math.sin(Math.min(1, (u - 0.55) / 0.45) * Math.PI * 0.5) * 26;
+          if (kind === 'high' && u > 0.5) { s.pose = 'duck'; } });
+        if (plan[i] === 'hit') { hit = true; d.stuck = true; break; }
+        // the near miss: a moment of slow motion as it goes past
+        exSfx('whoosh'); spark(s.x + 6, y, 'sweat', 1); await exFreeze(90);
+        flyOn(d); await exTween(220, u => { if (kind === 'low') s.jy = 26 * (1 - u); }); s.jy = 0; s.pose = 'run';
       }
-      if (hitAt < 0) { await walkTo(236, 190, 'run'); s.ghosts = false; exSfx('thunk'); s.pose = 'happy'; exSfx('win'); await hop(12, 320); }
-      else { s.ghosts = false; prop({ k: 'exlines', x: s.x + 6, y: headY() + 8, t0: exNow() }); exSfx('thud'); exFlash('#ff8a8a', 0.5, 250); exShake(6, 400); s.pose = 'hurt'; s.flash = 2; await exFreeze(130);
-        spark(s.x, headY() - 4, 'star', 4); const x1 = s.x; await exTween(450, u => { s.x = x1 - 50 * u; s.jy = Math.sin(u * Math.PI) * 14; }, exOut); s.jy = 0; s.pose = 'tired'; await rwait(500); exCalm(); await exBack(64); }
-    } finally { s.ghosts = false; s.jy = 0; exCalm(); unprop(tr); }
+      if (!hit) { await walkTo(TX + 18, 150, 'run'); s.ghosts = false; s.pose = 'happy'; exSfx('win'); await hop(12, 320); }
+      else { s.ghosts = false; const d = fly[fly.length - 1]; exSfx('thud'); exFlash('#ff8a8a', 0.5, 250); exShake(6, 400); s.pose = 'hurt'; s.flash = 2; await exFreeze(130);
+        spark(s.x, headY() - 4, 'star', 4); const x1 = s.x, dx = d.x;
+        await exTween(500, u => { s.x = x1 - 46 * u; s.jy = Math.sin(u * Math.PI) * 14; d.x = dx + 14 * u; d.y = holes.low - Math.sin(u * Math.PI) * 18 + u * 14; d.rot = u * 4; }, exOut); s.jy = 0; d.y = GROUND - 1; d.rot = 0.3;   // the dart bounces off and lands
+        s.pose = 'tired'; await rwait(500); exCalm(); await exBack(80); }
+    } finally { s.ghosts = false; s.jy = 0; exCalm(); }
     return true; }
   if (stat === 3) {   // Mind: it lifts the books off the pile, they fall open, and each page sends its rune to the door
     const d = prop({ k: 'sealdoor', x: 184, y: GROUND, lit: 0, drop: 0 }), lt = prop({ k: 'litter', x: 154, y: GROUND, s: 1.3 }); await walkTo(118, 60, 'walk');
@@ -286,24 +310,24 @@ async function exObstacle2(stat, ok, seed) {
       await exTween(900, u => { bk.lift = u; }, exOut); for (let i = 0; i < 3; i++) rsfx('page');
       await exTween(400, u => { bk.open = u; }); rsfx('page'); await rwait(200);
       if (ok) { for (let i = 1; i <= 3; i++) { await exTween(320, u => { bk.sent = i - 1 + u; }); d.lit = i; exSfx('chime'); exShake(2, 160); }
-        await exTween(500, u => { bk.lift = 1 - u * 0.9; bk.open = 1 - u; }); unprop(bk); await exDoorOpen(d, 'Mind'); s.pose = 'happy'; exSfx('win'); await walkTo(212, 60, 'walk'); }
+        await exTween(600, u => { bk.lift = 1 - u; bk.open = 1 - u; }); exSfx('thunk'); await exDoorOpen(d, 'Mind'); exSfx('win'); await exArchIn(184, 'door'); }
       else { bk.bad = 1; await exTween(320, u => { bk.sent = u * 0.8; }); exSfx('zap'); const b = prop({ k: 'exbeam', el: 'Spark', x: 184, y: GROUND - 34, x2: s.x + 6, y2: headY() + 8, t0: exNow() }); await rwait(230); unprop(b);
         exFlash('#ffe14d', 0.6, 250); exShake(6, 400); s.pose = 'hurt'; s.flash = 2; await exFreeze(120); spark(s.x, headY() - 4, 'zap', 3);
         await exTween(300, u => { bk.lift = 1 - u; bk.open = 1 - u; bk.sent = 0; }, exIn); exSfx('thunk');
-        const x1 = s.x; await exTween(420, u => { s.x = x1 - 34 * u; s.jy = Math.sin(u * Math.PI) * 10; }, exOut); s.jy = 0; s.pose = 'sad'; await rwait(600); exCalm(); await exBack(96); unprop(d); }
-    } finally { unprop(bk); exCalm(); }
+        const x1 = s.x; await exTween(420, u => { s.x = x1 - 34 * u; s.jy = Math.sin(u * Math.PI) * 10; }, exOut); s.jy = 0; s.pose = 'sad'; await rwait(600); exCalm(); await exBack(96); }
+    } finally { exCalm(); }
     return true; }
   if (stat === 4) {   // Insight: it sees through them, a ripple runs out and the fake archways shatter
     const real = seed % 3, m = prop({ k: 'mirage', x: 170, y: GROUND, real, reveal: 0, s: 1.2 }), ax = i => 170 - 55 + 110 * (0.2 + i * 0.3);
     await walkTo(98, 60, 'walk'); exFocus(150, 1.5); exDim(0.4); s.pose = 'idle'; spark(s.x + 4, headY() - 2, 'sparkle', 4);
     try {
       if (ok) { const ch = prop({ k: 'excharge', el: 'Insight', x: s.x, y: GROUND - 14, t0: exNow() }); exSfx('charge'); await rwait(800); unprop(ch);
-        await exMirageBreak(m, real, 'Insight'); exCalm(); s.pose = 'happy'; exSfx('win'); await walkTo(ax(real), 60, 'walk'); await walkTo(224, 60, 'walk'); }
+        await exMirageBreak(m, real, 'Insight'); exCalm(); exSfx('win'); await exArchIn(ax(real)); }
       else { const wrong = (real + 1) % 3; s.pose = 'happy'; await walkTo(ax(wrong) - 14, 80, 'walk');
         prop({ k: 'exripple', x: ax(wrong), y: GROUND - 20, t0: exNow(), el: 'Insight' }); prop({ k: 'exlines', x: ax(wrong) - 6, y: GROUND - 22, t0: exNow() }); exSfx('thud'); spark(ax(wrong), GROUND - 30, 'dust', 4);
         exFlash('#ffffff', 0.5, 220); exShake(5, 350); s.pose = 'hurt'; s.flash = 2; await exFreeze(130); spark(s.x, headY() - 4, 'star', 3);
         const x1 = s.x; await exTween(420, u => { s.x = x1 - 36 * u; s.jy = Math.sin(u * Math.PI) * 12; }, exOut); s.jy = 0; s.pose = 'sad'; await rwait(500); exCalm(); await exBack(90); }
-    } finally { exCalm(); unprop(m); }
+    } finally { exCalm(); }
     return true; }
   if (stat === 2) {   // Constitution: it takes the scratches, then roars and blasts the bramble apart
     const th = prop({ k: 'thorns2', x: 168, y: GROUND, s: 1.35, gone: 0, how: 'blast' }); await walkTo(132, 60, 'walk');
@@ -315,9 +339,9 @@ async function exObstacle2(stat, ok, seed) {
         exSfx('crumble'); await exTween(1000, u => { th.gone = u; }); s.pose = 'happy'; exSfx('win'); await walkTo(222, 60, 'walk'); }
       else { const w = prop({ k: 'exwrap', x: s.x, y: GROUND, a: 0 }); await exTween(500, u => { w.a = u; w.x = s.x; });
         for (let i = 0; i < 6; i++) { s.bx = i % 2 ? 2 : -2; exSfx('scratch'); await rwait(140); } s.bx = 0; exSfx('snap');
-        unprop(w); exShake(5, 300); s.pose = 'hurt'; s.flash = 2; spark(s.x, headY() - 4, 'star', 3); const x1 = s.x; await exTween(420, u => { s.x = x1 - 40 * u; s.jy = Math.sin(u * Math.PI) * 10; }, exOut); s.jy = 0;
+        exTween(260, u => { w.a = 1 - u; }).then(() => unprop(w)).catch(() => {}); exShake(5, 300); s.pose = 'hurt'; s.flash = 2; spark(s.x, headY() - 4, 'star', 3); const x1 = s.x; await exTween(420, u => { s.x = x1 - 40 * u; s.jy = Math.sin(u * Math.PI) * 10; }, exOut); s.jy = 0;
         s.pose = 'tired'; await rwait(500); exCalm(); await exBack(84); }
-    } finally { exCalm(); unprop(th); }
+    } finally { exCalm(); }
     return true; }
   return false;
 }
@@ -363,6 +387,13 @@ function exProp2(c, p, t, front) {
     case 'exspikes': if (front) return true; exSpikes(c, x, y, p.h || 0); return true;
     case 'chest2': if (front) return true; exChestDraw(c, p, t); return true;
     case 'exitem': if (!front) return true; exItemDraw(c, p, t); return true;
+    case 'exarchmask': if (!front) return true; if (p.door) { c.save(); c.globalAlpha = p.a; XA.door(c, x, y, 3, 61, t); c.restore(); return true; } { const k = p.s || 1, w = 8 * k; c.save(); c.globalAlpha = p.a; c.fillStyle = '#16211a'; c.beginPath(); c.moveTo(x - w, y + 2); c.lineTo(x - w, y - 16 * k); c.arc(x, y - 16 * k, w, Math.PI, 0); c.lineTo(x + w, y + 2); c.closePath(); c.fill();
+      c.fillStyle = '#3f7046'; c.fillRect(x - w - 10, y - 16 * k - w - 6, 10, 16 * k + w + 8); c.fillRect(x + w, y - 16 * k - w - 6, 10, 16 * k + w + 8); c.restore(); } return true;
+    case 'exarchway': if (front) return true; { const k = p.s || 1, w = 8 * k, W = 44 * k, H = 40 * k; SC.depth(c, () => { c.beginPath(); c.roundRect(x - W / 2, y - H, W, H, [12 * k, 12 * k, 2, 2]); }, '#3f7046', 2 * k, 0.3);
+      c.fillStyle = '#4f8656'; SC.blob(c, x, y - H + 2 * k, [[-12 * k, 0, 8 * k], [4 * k, -2 * k, 9 * k], [16 * k, 0, 7 * k]]); c.fill();
+      c.fillStyle = '#1d2a20'; c.beginPath(); c.moveTo(x - w, y); c.lineTo(x - w, y - 16 * k); c.arc(x, y - 16 * k, w, Math.PI, 0); c.lineTo(x + w, y); c.closePath(); c.fill(); } return true;
+    case 'exdart': if (!front) return true; { c.save(); c.translate(x, y); c.rotate(p.rot || 0); c.translate(-x, -y); XA.dart(c, x, y, 1.5);
+      if (!p.stuck) { c.strokeStyle = 'rgba(255,255,255,.55)'; c.lineWidth = 1.2; c.beginPath(); c.moveTo(x + 6, y - 2); c.lineTo(x + 26, y - 2); c.moveTo(x + 8, y + 2); c.lineTo(x + 22, y + 2); c.stroke(); } c.restore(); } return true;
     case 'excrackline': if (front) return true; { c.save(); c.strokeStyle = 'rgba(40,28,18,.8)'; c.lineWidth = 2; c.lineCap = 'round'; c.beginPath(); c.moveTo(x, y);
       const L = (p.x2 - x) * p.g; for (let k = 1; k <= 10 && k / 10 <= p.g + 0.001; k++) c.lineTo(x + (p.x2 - x) * k / 10, y + (k % 2 ? 1.5 : -1)); c.stroke(); c.restore(); } return true;
     case 'exbookfly': if (!front) return true; exBookFly(c, x, y, (exNow() - p.t0) / 900, t); return true;
@@ -415,10 +446,11 @@ function exThornsGone(c, x, y, s, u, how, t) {
   if (how === 'burn') {
     const char = Math.min(1, u / 0.55), sink = Math.max(0, (u - 0.45) / 0.55), flame = Math.sin(Math.min(1, u / 0.85) * Math.PI);
     c.save(); c.globalAlpha = 1 - sink; c.filter = `brightness(${1 - char * 0.8}) saturate(${1 - char})`; c.translate(x, y); c.scale(1 - sink * 0.2, 1 - sink * 0.85); XA.bramble(c, 0, 0, s); c.restore();
-    c.fillStyle = '#3a3330'; c.globalAlpha = Math.min(1, sink * 2) * (1 - Math.max(0, u - 0.9) * 10); SC.blob(c, x, y - 2, [[0, 0, 9 * s], [-12 * s, 2, 7 * s], [12 * s, 2, 7 * s], [-5 * s, 1, 8 * s]]); c.fill();   // the ash
+    c.fillStyle = '#3a3330'; c.globalAlpha = Math.min(1, sink * 2); SC.blob(c, x, y - 2, [[0, 0, 9 * s], [-12 * s, 2, 7 * s], [12 * s, 2, 7 * s], [-5 * s, 1, 8 * s]]); c.fill();   // the ash
     c.globalAlpha = 1;
-    for (let i = 0; i < 7; i++) { const fx = x + (i - 3) * 8.5 * s, k = Math.max(0, Math.min(1, flame * 1.4 - Math.abs(i - 3) * 0.12)); if (k <= 0) continue;
-      exFlame(c, fx, y - 4 - (1 - sink) * 6 * s, (5 + (i % 2) * 2) * s * k, (24 + 10 * Math.sin(t / 90 + i * 1.7) + (i % 3) * 6) * s * k, Math.sin(t / 120 + i) * 3 * s); }
+    const grow = Math.min(1, u / 0.18), left = 1 - sink * 0.92, end = 1 - Math.max(0, u - 0.9) / 0.1;   // the fire catches, then burns down with the bush to the ground
+    for (let i = 0; i < 7; i++) { const fx = x + (i - 3) * 8.5 * s, k = Math.max(0, Math.min(1, grow * 1.3 - Math.abs(i - 3) * 0.12)) * end; if (k <= 0) continue;
+      const bushH = (34 + (i % 3) * 8) * s * left; exFlame(c, fx, y - 1, (4 + (i % 2) * 2) * s * (0.6 + 0.4 * left) * k, (bushH * 1.15 + 8 * s + 8 * Math.sin(t / 90 + i * 1.7) * left) * k, Math.sin(t / 120 + i) * 3 * s * left); }
     for (let i = 0; i < 6; i++) { const k = (u * 1.2 + i / 6) % 1, sx = x + (i - 2.5) * 8 * s + Math.sin(t / 400 + i) * 4, sy = y - 40 * s - k * 50 * s; c.globalAlpha = (1 - k) * 0.45 * Math.min(1, u * 3); c.fillStyle = '#6b6461'; c.beginPath(); c.arc(sx, sy, (4 + k * 8) * s, 0, 7); c.fill(); }
     for (let i = 0; i < 14; i++) { const k = (i * 0.37 + u * 1.6) % 1, ex = x - 26 * s + (i * 13 % 52) * s + Math.sin(t / 200 + i) * 3, ey = y - 6 - k * 70 * s; c.globalAlpha = (1 - k) * flame; c.fillStyle = i % 3 ? '#ff9a3c' : '#ffe08a'; c.beginPath(); c.arc(ex, ey, 1.5 * s, 0, 7); c.fill(); }
   } else if (how === 'shred') {   // cut into three slices along the claw marks, which slide apart and drop
@@ -625,30 +657,39 @@ function exPillar(c, x, y, u, t) {
 /* ---------- a chest: it rattles, light leaks from the seams, the lid bursts open and the find rises out ---------- */
 const EX_ITEM_COL = { Berry: '#e2483f', 'Energy nut': '#a8692e', 'Honey cake': '#f2b33d', 'Cool leaf': '#5fbf6a', Medicine: '#f4f4f4', Candy: '#ff8fc4', 'Stat seed': '#ffd23f', 'Lucky bit': '#f2c14e', 'Element stone': '#a77ef0' };
 function exChestDraw(c, p, t) {
-  const s = p.s || 1.4, sh = p.shake ? Math.sin(t / 25) * p.shake : 0; c.save(); c.translate(p.x + sh, p.y); c.rotate(sh * 0.02); c.translate(-(p.x + sh), -p.y);
+  const s = p.s || 1.4, sh = p.shake ? Math.sin(t / 25) * p.shake : 0, bur = p.buried || 0; c.save();
+  if (bur > 0) { c.beginPath(); c.rect(p.x - 60, p.y - 120, 120, 121); c.clip(); }   // under the ground line is hidden
+  c.translate(p.x + sh, p.y + bur * 22 * s); c.rotate(sh * 0.02); c.translate(-(p.x + sh), -p.y);
   XA.chest(c, p.x + sh, p.y, p.open, t, s);
   if (!p.open && p.glow > 0) { const W = 30 * s, top = p.y - 17 * s; c.globalAlpha = p.glow; c.strokeStyle = '#fff2b0'; c.lineWidth = 2; c.shadowColor = '#ffd76a'; c.shadowBlur = 12;
     c.beginPath(); c.moveTo(p.x - W / 2 + 2, top); c.lineTo(p.x + W / 2 - 2, top); c.stroke();
     for (let i = 0; i < 5; i++) { const a = -Math.PI / 2 + (i - 2) * 0.3, L = 10 + 14 * p.glow + Math.sin(t / 60 + i) * 3; c.globalAlpha = p.glow * 0.6; c.beginPath(); c.moveTo(p.x + (i - 2) * 6, top); c.lineTo(p.x + (i - 2) * 6 + Math.cos(a) * L, top + Math.sin(a) * L); c.stroke(); } }
   c.restore();
+  if (p.mound > 0) { c.save(); c.globalAlpha = p.mound; c.fillStyle = '#7a5a38'; SC.blob(c, p.x, p.y + 1, [[0, 0, 13 * s], [-11 * s, 3, 8 * s], [11 * s, 3, 8 * s]]); c.fill();
+    c.fillStyle = 'rgba(255,255,255,.15)'; c.beginPath(); c.ellipse(p.x - 4, p.y - 8, 8, 2, -0.2, 0, 7); c.fill(); c.restore(); }
 }
 function exItemDraw(c, p, t) {
-  const u = Math.min(1, p.u || 0), x = p.x, y = p.y - 50 * (1 - Math.pow(1 - u, 3)) + Math.sin(t / 200) * 2 * u, col = EX_ITEM_COL[p.item] || '#ffd23f', r = 9 + 3 * u; c.save();
+  const u = Math.min(1, p.u || 0), go = p.go || 0, x0 = p.x, y0 = p.y - 50 * (1 - Math.pow(1 - u, 3)) + Math.sin(t / 200) * 2 * u, col = EX_ITEM_COL[p.item] || '#ffd23f', r = 9 + 3 * u; c.save();
+  const x = x0 + ((p.tx || x0) - x0) * go, y = y0 + ((p.ty || y0) - y0) * go; c.globalAlpha = 1 - go;
   const g = c.createRadialGradient(x, y, 2, x, y, 34); g.addColorStop(0, '#fffbe0'); g.addColorStop(0.4, '#ffd76a88'); g.addColorStop(1, '#ffd76a00'); c.fillStyle = g; c.fillRect(x - 34, y - 34, 68, 68);
   c.strokeStyle = '#fff6c8'; c.lineWidth = 2; for (let i = 0; i < 10; i++) { const a = i * 0.628 + t / 900, r0 = 14, r1 = 22 + 6 * Math.sin(t / 150 + i); c.globalAlpha = 0.7; c.beginPath(); c.moveTo(x + Math.cos(a) * r0, y + Math.sin(a) * r0); c.lineTo(x + Math.cos(a) * r1, y + Math.sin(a) * r1); c.stroke(); }
-  c.globalAlpha = 1; exItemShape(c, p.item, x, y, 0.75 + 0.35 * u);
+  c.globalAlpha = 1; exItemShape(c, p.item, x, y, (0.75 + 0.35 * u) * (1 - 0.7 * go));
   c.restore();
 }
 async function exChest(item, big) {
-  const s = RS, ch = prop({ k: 'chest2', x: 150, y: GROUND, s: big ? 1.8 : 1.4, open: false, glow: 0, shake: 0 }); await walkTo(118, 60, 'walk'); s.pose = 'idle';
+  const s = RS, dig = !big && Math.random() < 0.5, ch = prop({ k: 'chest2', x: 150, y: GROUND, s: big ? 1.8 : 1.4, open: false, glow: 0, shake: 0, buried: dig ? 0.75 : 0, mound: dig ? 1 : 0 }); await walkTo(118, 60, 'walk'); s.pose = 'idle';
   exFocus(140, 1.75); exDim(0.35); spark(s.x, headY() - 8, 'q'); await rwait(500);
   try {
+    if (dig) { await walkTo(128, 40, 'walk'); s.pose = 'effort';   // only a corner shows above a mound of earth, so it digs it out
+      for (let i = 0; i < 6; i++) { spark(140, GROUND - 4, 'dust', 4); rsfx('dust'); s.bx = i % 2 ? 2 : -2; ch.buried = 0.75 * (1 - (i + 1) / 6); ch.mound = 1 - (i + 1) / 6; await rwait(170); }
+      s.bx = 0; ch.buried = 0; ch.mound = 0; s.pose = 'happy'; await walkTo(118, 40, 'walk'); s.pose = 'idle'; await rwait(200); }
     for (let i = 0; i < 3; i++) { ch.shake = 2 + i; rsfx('rattle'); await rwait(260); ch.shake = 0; await rwait(160); }
     exSfx('charge'); ch.shake = 1.5; await exTween(700, u => { ch.glow = u; }); ch.shake = 0;
     ch.open = true; ch.glow = 0; rsfx('creak'); exSfx('rays'); exFlash('#fff2b0', 0.7, 320); exShake(4, 300); prop({ k: 'exburst', el: 'Light', x: 150, y: GROUND - 30, t0: exNow(), k2: big ? 1.5 : 1.1 });
     const it = prop({ k: 'exitem', item, x: 150, y: GROUND - 24, u: 0 }); s.pose = 'happy'; await exTween(600, u => { it.u = u; });
-    exSfx('win'); spark(150, GROUND - 74, 'sparkle', 10); banner(`${/^[AEIOU]/.test(item) ? 'An' : 'A'} ${item}!`, '#ffe9a8'); await hop(10, 300); await rwait(900); banner(''); unprop(it);
-  } finally { exCalm(); unprop(ch); }
+    exSfx('win'); spark(150, GROUND - 74, 'sparkle', 10); banner(`${/^[AEIOU]/.test(item) ? 'An' : 'A'} ${item}!`, '#ffe9a8'); await hop(10, 300); await rwait(900); banner('');
+    it.tx = s.x; it.ty = headY() + 10; await exTween(450, u => { it.go = u; }, exIn); unprop(it); spark(s.x, headY() + 4, 'sparkle', 6);   // it takes the find
+  } finally { exCalm(); }
 }
 
 /* ---------- the secret fight at the end of an expedition: a wild Snabit that has followed them, fought on its own ---------- */
@@ -665,8 +706,8 @@ function exSecretFoe(s, reg) {
 async function exSecret(reg, nm, K, found) {
   const s = RS; if (Math.random() > 0.5) return;
   const { foe, grade } = exSecretFoe(s, reg), G = GRADE_INFO[grade], prize = Math.round(G.purse * 0.75);
-  await sceneFade(true, 300); s.props = []; s.x = 80; s.dusk = 1; s.camJump = true; await sceneFade(false, 400);
-  const amb = Math.random() < 0.6, bush = prop({ k: 'xbush', x: 190, y: GROUND, col: '#3f6a2e', shake: amb ? 1 : 0 }); let fp;
+  await sceneFade(true, 300); s.props = []; s.x = 80; s.dusk = 1; s.camJump = true;
+  const amb = Math.random() < 0.6, bush = prop({ k: 'xbush', x: 190, y: GROUND, col: '#3f6a2e', shake: amb ? 1 : 0 }); let fp; await sceneFade(false, 400);
   if (amb) { K('Wait. Something has been following us.'); exSfx('rumble'); await rwait(1400);
     exFocus(140, 1.5); exDim(0.5); bush.shake = 0; fp = prop({ k: 'foe', x: 190, y: GROUND, grid: foe.fm.grid, pal: foe.fm.pal, fm: foe.fm, jy: 0 });
     prop({ k: 'exlines', x: 175, y: GROUND - 30, t0: exNow() }); exSfx('growl'); exSfx('impact'); exFlash('#ffffff', 0.6, 260); exShake(8, 500);
@@ -678,7 +719,8 @@ async function exSecret(reg, nm, K, found) {
   await rwait(1800); banner(''); exCalm();
   await sceneFade(true, 400); let won = false;
   await new Promise(done => arenaFight({ s: fightSnapshot(s), foe, mode: 'auto', title: 'Ambush', noDraw: true, onEnd: r => { won = !!(r && r.winner === 0); done(); } }));
-  unprop(fp); unprop(bush); s.trip = true; s.camJump = true; s.pose = won ? 'happy' : 'tired'; await sceneFade(false, 400);
+  s.trip = true; s.camJump = true; s.pose = won ? 'happy' : 'tired'; fp.pose = won ? 'tired' : 'happy'; await sceneFade(false, 400);
+  (async () => { await rwait(700); fp.pose = 'walk'; fp.right = true; const fx = fp.x; await exTween(1400, u => { fp.x = fx + 170 * u; }); unprop(fp); })().catch(() => {});   // it heads off down the trail
   if (won) { PLAYER.bits += prize; drawUI(); found.push(`${prize.toLocaleString()} bits`); exSfx('win'); spark(s.x, headY() - 6, 'sparkle', 10); await hop(14, 360);
     K(`${nm} won, and the League pays ${prize.toLocaleString()} bits for a ${foe.m.name} like that.`); await rwait(2200); }
   else { s.stress += 4; clampAll(); K(`That ${foe.m.name} was too much for ${nm} this time.`); await rwait(2000); }
@@ -708,19 +750,30 @@ function exCurrent(c, x, y, el, n, t) {
   c.restore();
 }
 /* the books lifted off the pile by its mind: they rise in a glow, fall open, and each sends its rune to the door */
+function exBook(c, col, open, t, i) {
+  const dark = SC.dark ? SC.dark(col, 0.25) : col, gold = '#e8c25a';
+  if (open < 0.2) {   // shut: cover, spine, the page edges showing and a ribbon
+    SC.depth(c, () => { c.beginPath(); c.roundRect(-10, -7, 20, 13, 2); }, col, 1.2, 0.3);
+    c.fillStyle = '#f6efdc'; c.fillRect(-9, 4, 18, 2.2); c.fillStyle = 'rgba(160,130,90,.5)'; c.fillRect(-9, 5, 18, 0.6);
+    c.fillStyle = 'rgba(0,0,0,.18)'; c.fillRect(-10, -7, 3, 13); c.fillStyle = gold; c.fillRect(-9.6, -5, 2.2, 1); c.fillRect(-9.6, 2, 2.2, 1);
+    c.strokeStyle = gold; c.lineWidth = 0.8; c.strokeRect(-5, -4.5, 12, 7); c.fillStyle = gold; c.beginPath(); c.arc(1, -1, 1.6, 0, 7); c.fill();
+    c.fillStyle = '#c43b3b'; c.beginPath(); c.moveTo(6, 6); c.lineTo(6, 11); c.lineTo(7.2, 9.6); c.lineTo(8.4, 11); c.lineTo(8.4, 6); c.fill(); return; }
+  const o = open, wob = Math.sin(t / 160 + i) * 0.8;
+  for (const d of [-1, 1]) {   // the covers, then the pages curving up off the spine
+    c.fillStyle = col; c.beginPath(); c.moveTo(0, 5); c.lineTo(d * (16 * o + 2), 3); c.lineTo(d * (16 * o + 2), -9); c.lineTo(0, -7); c.closePath(); c.fill();
+    c.fillStyle = '#f6efdc'; c.beginPath(); c.moveTo(0, 4); c.quadraticCurveTo(d * 8 * o, 4 + 1.5, d * 15 * o, 2 + wob * d * 0.3); c.lineTo(d * 15 * o, -8 + wob * d * 0.3); c.quadraticCurveTo(d * 8 * o, -8.5 - 1.5, 0, -6.5); c.closePath(); c.fill();
+    c.fillStyle = 'rgba(160,130,90,.25)'; c.beginPath(); c.moveTo(0, 4); c.quadraticCurveTo(d * 3 * o, 4.5, d * 4 * o, 3.5); c.lineTo(d * 4 * o, -7.5); c.quadraticCurveTo(d * 3 * o, -8, 0, -6.5); c.closePath(); c.fill();
+    c.strokeStyle = 'rgba(90,65,40,.45)'; c.lineWidth = 0.6; for (let k = 0; k < 4; k++) { const yy = -5 + k * 2.4; c.beginPath(); c.moveTo(d * 4 * o, yy); c.lineTo(d * 13 * o, yy + 0.3); c.stroke(); } }
+  c.strokeStyle = dark; c.lineWidth = 1; c.beginPath(); c.moveTo(0, -7); c.lineTo(0, 5); c.stroke();
+}
 function exBooks(c, p, t) {
-  const { x, y } = p, lift = p.lift || 0, open = p.open || 0, sent = p.sent || 0, B = [['#b8463b', -20, 'tri', '#e2483f'], ['#3b6fb8', 0, 'sq', '#4878c4'], ['#3f8f4a', 20, 'circ', '#f2c14e']];
+  const { x, y } = p, lift = p.lift || 0, open = p.open || 0, sent = p.sent || 0, B = [['#9e3a32', -20, 'tri', '#e2483f'], ['#2f5f9e', 0, 'sq', '#4878c4'], ['#3a7a44', 20, 'circ', '#f2c14e']];
   const home = [[176, GROUND - 35], [192, GROUND - 35], [184, GROUND - 19]];
   c.save();
-  B.forEach(([col, dx, sh, rc], i) => { const bx = x + dx * (0.4 + 0.6 * lift), by = y - 4 - lift * (46 + (i === 1 ? 10 : 0)) + Math.sin(t / 300 + i) * 2 * lift, a = (1 - open) * (i - 1) * 0.3;
-    if (lift > 0.05) { const g = c.createRadialGradient(bx, by, 2, bx, by, 22); g.addColorStop(0, p.bad ? '#ff6b6b88' : '#b48cff88'); g.addColorStop(1, '#b48cff00'); c.fillStyle = g; c.fillRect(bx - 22, by - 22, 44, 44); }
-    c.save(); c.translate(bx, by); c.rotate(a);
-    if (open < 0.2) { SC.depth(c, () => { c.beginPath(); c.roundRect(-8, -5, 16, 10, 1.5); }, col, 1, 0.3); c.fillStyle = '#f6efdc'; c.fillRect(-7, 3, 14, 1.5); }
-    else { const o = open; c.fillStyle = col; c.beginPath(); c.moveTo(0, 4); c.lineTo(-14 * o - 2, 2); c.lineTo(-14 * o - 2, -8); c.lineTo(0, -6); c.closePath(); c.fill(); c.beginPath(); c.moveTo(0, 4); c.lineTo(14 * o + 2, 2); c.lineTo(14 * o + 2, -8); c.lineTo(0, -6); c.closePath(); c.fill();
-      c.fillStyle = '#f6efdc'; c.beginPath(); c.moveTo(0, 3); c.lineTo(-13 * o, 1.2); c.lineTo(-13 * o, -7.2); c.lineTo(0, -5.5); c.closePath(); c.fill(); c.beginPath(); c.moveTo(0, 3); c.lineTo(13 * o, 1.2); c.lineTo(13 * o, -7.2); c.lineTo(0, -5.5); c.closePath(); c.fill();
-      c.strokeStyle = 'rgba(90,65,40,.4)'; c.lineWidth = 0.6; for (const k of [-9, -5, 5, 9]) { c.beginPath(); c.moveTo(k * o, -4.5); c.lineTo(k * o, 0); c.stroke(); } }
-    c.restore();
-    // the rune leaves the page and flies to its slot on the door
+  B.forEach(([col, dx, sh, rc], i) => { const bx = x + dx * (0.4 + 0.6 * lift), by = y - 4 - lift * (46 + (i === 1 ? 10 : 0)) + Math.sin(t / 300 + i) * 2 * lift, a = (1 - open) * (i - 1) * 0.3 + Math.sin(t / 400 + i) * 0.06 * lift;
+    if (lift > 0.05) { const g = c.createRadialGradient(bx, by, 2, bx, by, 24); g.addColorStop(0, p.bad ? '#ff6b6b88' : '#b48cff88'); g.addColorStop(1, '#b48cff00'); c.fillStyle = g; c.fillRect(bx - 24, by - 24, 48, 48);
+      c.fillStyle = 'rgba(30,20,50,.18)'; c.beginPath(); c.ellipse(bx, y + 1, 9 * (1 - lift * 0.5), 2, 0, 0, 7); c.fill(); }   // its shadow on the ground
+    c.save(); c.translate(bx, by); c.rotate(a); exBook(c, col, open, t, i); c.restore();
     const g2 = Math.max(0, Math.min(1, sent - i)); if (open > 0.6 && g2 < 1) { const [hx, hy] = p.bad ? home[(i + 1) % 3] : home[i], px = bx + (hx - bx) * g2, py = by - 10 + (hy - by + 10) * g2 - Math.sin(g2 * Math.PI) * 20, cc = p.bad ? '#ff3b3b' : rc, r = 5;
       const gg = c.createRadialGradient(px, py, 1, px, py, 14); gg.addColorStop(0, cc + 'cc'); gg.addColorStop(1, cc + '00'); c.fillStyle = gg; c.fillRect(px - 14, py - 14, 28, 28);
       c.fillStyle = cc; c.strokeStyle = '#fff'; c.lineWidth = 1.2; c.beginPath(); if (sh === 'tri') { c.moveTo(px, py - r); c.lineTo(px + r, py + r * 0.8); c.lineTo(px - r, py + r * 0.8); c.closePath(); } else if (sh === 'sq') c.rect(px - r * 0.8, py - r * 0.8, r * 1.6, r * 1.6); else c.arc(px, py, r * 0.85, 0, 7); c.fill(); c.stroke(); } });
@@ -802,7 +855,7 @@ async function exTeach(reg, st, nm, K, found) {
   if (!st.teachSeen) { st.teachSeen = true; banner(Cap(tName), '#fff'); }
   K(`${Cap(tThe)} has a camp up here.`); await rwait(1500); banner('');
   const opts = tripOptions(s, reg).filter(x => x.chainOk && x.score >= x.need);
-  if (!opts.length) { K(`${Cap(tThe)} watched ${nm} for a while and says it isn't ready for anything new.`); s.pose = 'sad'; await rwait(2200); unprop(tp); return; }
+  if (!opts.length) { K(`${Cap(tThe)} watched ${nm} for a while and says it isn't ready for anything new.`); s.pose = 'sad'; await rwait(2200); return; }
   const x = opts[Math.floor(Math.random() * opts.length)], got = Math.random() * 100 < Math.min(70, 35 + Math.floor((x.score - x.need) / 4)), el = reg.el;
   banner('Special training', '#ffd23f'); K(`${Cap(tThe)} will show ${nm} how to do ${x.n}.`); await rwait(1300); banner('');
   try {
@@ -819,7 +872,6 @@ async function exTeach(reg, st, nm, K, found) {
       banner(`Learned ${x.n}!`, '#7dff9a'); K(`${nm} has learned ${x.n}.`); spark(s.x, headY() - 6, 'sparkle', 10); await rwait(1700); banner(''); unprop(pl); }
     else { banner('Not yet', '#ff8a8a'); K(`${nm} couldn't get ${x.n} this time.`); s.pose = 'sad'; await rwait(1500); banner(''); }
   } finally { exCalm(); }
-  unprop(tp);
 }
 
 /* ---------- a stop on the path ---------- */
@@ -841,14 +893,14 @@ async function exStop(reg, n, nm, K, found, force) {
     const o = gradedOpponent(g, G.lv[0], R, null), fp = prop({ k: 'foe', x: 168, y: GROUND, fm: o.fm, grid: o.fm.grid, pal: o.fm.pal, pose: 'sleep' }); await walkTo(120, 60, 'walk'); s.pose = 'idle';
     K(`A League scout's ${o.m.name} is lying by the trail with a hurt leg. The tag on its collar says its scout went on ahead.`);
     const c = await exChoose([['Carry it to the scouts', '2 energy'], ['Leave it for its scout', 'Keep going']]);
-    if (c) { K('We left it where its scout will find it.'); await rwait(1400); unprop(fp); return 0; }
+    if (c) { K('We left it where its scout will find it.'); await rwait(1400); return 0; }
     const pay = Math.round(G.purse * 0.5); fp.pose = 'walk'; fp.right = true; s.pose = 'walk';
     await exTween(1300, u => { s.x = 120 + u * 120; fp.x = 168 + u * 120; }); unprop(fp); s.pose = 'happy';
     PLAYER.bits += pay; drawUI(); found.push(`${pay.toLocaleString()} bits`); K(`${nm} carried it to the scouts' camp, and the League paid ${pay.toLocaleString()} bits for bringing it back.`); await rwait(2400); return -2; }
   if (kind === 'shortcut') {
     const sg = prop({ k: 'sign', x: 160, y: GROUND, s: 1.3 }); await walkTo(126, 60, 'walk'); s.pose = 'idle';
     K("There's an old sign here pointing off the trail. It might be a shortcut.");
-    const c = await exChoose([['Follow the sign', 'Could save time or waste it'], ['Stay on the trail', 'Keep going']]); unprop(sg);
+    const c = await exChoose([['Follow the sign', 'Could save time or waste it'], ['Stay on the trail', 'Keep going']]);
     if (c) { K('We stayed on the trail.'); await rwait(1100); return 0; }
     await walkTo(230, 80, 'walk');
     if (R() < 0.6) { s.pose = 'happy'; K(`The sign was right, and the shortcut saved ${nm} a long walk.`); await rwait(2000); return 2; }
@@ -857,16 +909,16 @@ async function exStop(reg, n, nm, K, found, force) {
     const fire = prop({ k: 'fire', x: 160, y: GROUND }); await walkTo(122, 60, 'walk'); s.pose = 'idle';
     K("There's an old League camp here with the fire still going.");
     const c = await exChoose([['Rest by the fire', '3 energy back'], ['Search the camp', 'Something might be left']]);
-    if (!c) { s.pose = 'sleep'; await rwait(1400); s.pose = 'happy'; K(`${nm} had a long rest by the fire.`); await rwait(1700); unprop(fire); return 3; }
+    if (!c) { s.pose = 'sleep'; await rwait(1400); s.pose = 'happy'; K(`${nm} had a long rest by the fire.`); await rwait(1700); return 3; }
     const item = EX_FINDS[Math.floor(R() * EX_FINDS.length)], a = /^[AEIOU]/.test(item) ? 'an' : 'a'; addItem(item); found.push(`${a} ${item}`);
-    s.pose = 'effort'; await hop(6, 220); s.pose = 'happy'; spark(s.x + 10, headY(), 'sparkle', 4); K(`${nm} found ${a} ${item} under an old crate.`); await rwait(1700); unprop(fire); return 0; }
+    s.pose = 'effort'; await hop(6, 220); s.pose = 'happy'; spark(s.x + 10, headY(), 'sparkle', 4); K(`${nm} found ${a} ${item} under an old crate.`); await rwait(1700); return 0; }
   if (kind === 'stuck') {
     const o = gradedOpponent('E', 1, R, reg.rift ? null : reg.el), bush = prop({ k: 'xbush', x: 168, y: GROUND, col: '#5f8a3e', shake: 1 }); await walkTo(126, 60, 'walk'); s.pose = 'idle';
     K("Something small is stuck in this bush, and it's crying.");
     const c = await exChoose([['Help it out', '1 energy'], ['Leave it', 'Keep going']]);
-    if (c) { bush.shake = 0; K('We kept going.'); await rwait(1000); unprop(bush); return 0; }
+    if (c) { bush.shake = 0; K('We kept going.'); await rwait(1000); return 0; }
     s.pose = 'effort'; await rwait(700); bush.shake = 0; const fp = prop({ k: 'foe', x: 176, y: GROUND, fm: o.fm, grid: o.fm.grid, pal: o.fm.pal, pose: 'happy', right: true });
-    await hop(10, 300); s.pose = 'happy'; await exTween(900, u => { fp.x = 176 + u * 90; fp.jy = -Math.abs(Math.sin(u * 9)) * 8; }); unprop(fp); unprop(bush);
+    await hop(10, 300); s.pose = 'happy'; await exTween(900, u => { fp.x = 176 + u * 90; fp.jy = -Math.abs(Math.sin(u * 9)) * 8; }); unprop(fp);
     s.stress -= 8; clampAll(); K(`A baby ${o.m.name} hopped out and ran off. Helping it calmed ${nm} down, and its stress went down by 8.`); await rwait(2400); return -1; }
   // Rook's team is out after the same stones
   PLAYER.rookEx = exSeason();

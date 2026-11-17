@@ -134,7 +134,7 @@ const XA = {
       if (fake) { c.strokeStyle = `rgba(190,230,255,${0.35 + 0.25 * Math.sin(ph * 1.7)})`; c.lineWidth = 1 * s; hole(); c.stroke();
         c.fillStyle = 'rgba(220,240,255,.7)'; for (let k = 0; k < 2; k++) { const q = ((t || 0) / 900 + k * 0.5 + i * 0.3) % 1; c.beginPath(); c.arc(ax + Math.sin(q * 6 + i) * 5 * s, y - q * 20 * s, 0.8 * s, 0, 7); c.fill(); } }
       c.globalAlpha = 1;
-      if (fake && reveal) { c.globalAlpha = reveal; hole(); c.fillStyle = '#4a7d51'; c.fill(); c.globalAlpha = 1; } }
+      if (fake && reveal) { c.globalAlpha = reveal; hole(); c.fillStyle = '#3f7046'; c.fill(); c.globalAlpha = 1; } }   // a fake goes completely: the hedge is whole where it was
     c.fillStyle = SC.light('#3f7046', 0.25); for (const [lx, ly] of [[-40, -30], [-12, -34], [16, -30], [40, -24]]) { c.beginPath(); c.ellipse(x + lx * s, y + ly * s, 2.6 * s, 1.2 * s, -0.5, 0, 7); c.fill(); }
   },
 
