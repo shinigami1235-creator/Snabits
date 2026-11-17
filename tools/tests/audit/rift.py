@@ -13,15 +13,8 @@ TEAM = """() => { PLAYER.tutorialDone = true; RS.noScenes = true; RS.grade = 'A'
   exState({ n: 'The Rift' }).got.push('6:1'); saveGame();
   return rosterStates().length; }"""
 STRONG = """() => { const T = rosterStates().slice(0, 3); for (const s of T) { s.level = 70; s.tp = [400, 400, 400, 400, 400, 400]; s.m.stats = s.m.stats.map(v => v * 3); s.fatigue = 0; s.stress = 0; } return T.map(s => s.id); }"""
-# walks the map: whenever the map is waiting for a tap, taps the next circle on the way to the target
-PILOT = """([ring, target]) => { const reg = riftRings()[ring], M = deepMap(reg), prev = {}, q = ['0:1']; prev['0:1'] = null;
-  while (q.length) { const a = q.shift(); for (const b of M.near(a)) if (!(b in prev) && M.N[b].c > M.N[a].c) { prev[b] = a; q.push(b); } }
-  const path = []; for (let k = target; k; k = prev[k]) path.unshift(k);
-  window.__pilot = { path, i: 0, M };
-  window.__pilotStep = () => { const P = __pilot, cv = document.getElementById('ex-map'); if (!cv || !cv.onpointerdown || P.i + 1 >= P.path.length) return null;
-    const at = P.M.N[P.path[P.i]], to = P.M.N[P.path[P.i + 1]], off = Math.max(0, Math.min(4, at.c - 3)), W = cv.clientWidth, b = cv.getBoundingClientRect();
-    const x = 26 + (to.c - off) * (W - 52) / 6, y = 52 + to.r * 62; cv.onpointerdown({ clientX: b.left + x, clientY: b.top + y }); P.i++; return to.id; };
-  return path; }"""
+# the deep maps' autopilot (deep.py): heads for the wanted things on a floor, else explores, else takes the stairs down
+AUTO = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'deep.py')).read().split('AUTO = """')[1].split('"""')[0]
 
 async def main():
     C = Checks()
@@ -34,21 +27,21 @@ async def main():
         # tears: about one season in four on each of the eight regions, on a different circle each time
         t = await pg.evaluate("""()=>{ const out={}; const w0=PLAYER.week;
           for(const name of Object.keys(HORROR_REGION)){ const reg=REGIONS.find(r=>r.n===name); let n=0; const spots=new Set();
-            for(let k=0;k<80;k++){ PLAYER.week=w0+k*12; const M=deepMap(reg); horrorTear(reg,M); const t=Object.values(M.N).find(x=>x.k==='tear'); if(t){ n++; spots.add(t.id); if(t.fam!==HORROR_REGION[name]) n=-999; } }
+            for(let k=0;k<80;k++){ PLAYER.week=w0+k*12; const M=deepMap(reg); horrorTear(reg,M); const t=deepFeats(M).find(x=>x.k==='tear'); if(t){ n++; spots.add(t.f+':'+t.x+':'+t.y); if(t.fam!==HORROR_REGION[name]) n=-999; } }
             out[name]=[n,spots.size]; }
-          PLAYER.week=w0; myth('Ghoul')[0]=1; const reg=REGIONS.find(r=>r.n==='Hollow Moor'); let after=0; for(let k=0;k<40;k++){ PLAYER.week=w0+k*12; const M=deepMap(reg); horrorTear(reg,M); if(Object.values(M.N).some(x=>x.k==='tear')) after++; }
-          PLAYER.week=w0; myth('Ghoul')[0]=0; const G=g=>{ RS.grade=g; for(const e of PLAYER.roster) if(e.st) e.st.grade=g; }; G('B'); let low=0; for(let k=0;k<40;k++){ PLAYER.week=w0+k*12; const M=deepMap(reg); horrorTear(reg,M); if(Object.values(M.N).some(x=>x.k==='tear')) low++; }
+          PLAYER.week=w0; myth('Ghoul')[0]=1; const reg=REGIONS.find(r=>r.n==='Hollow Moor'); let after=0; for(let k=0;k<40;k++){ PLAYER.week=w0+k*12; const M=deepMap(reg); horrorTear(reg,M); if(deepFeats(M).some(x=>x.k==='tear')) after++; }
+          PLAYER.week=w0; myth('Ghoul')[0]=0; const G=g=>{ RS.grade=g; for(const e of PLAYER.roster) if(e.st) e.st.grade=g; }; G('B'); let low=0; for(let k=0;k<40;k++){ PLAYER.week=w0+k*12; const M=deepMap(reg); horrorTear(reg,M); if(deepFeats(M).some(x=>x.k==='tear')) low++; }
           PLAYER.week=w0; G('A'); return {out,after,low}; }""")
         print('tears in 80 seasons:', json.dumps(t))
-        C.ok(all(10 <= v[0] <= 32 and v[1] >= 3 for v in t['out'].values()), f'each region shows its own horror\'s tear about one season in four, on different circles ({t["out"]})')
+        C.ok(all(10 <= v[0] <= 32 and v[1] >= 3 for v in t['out'].values()), f'each region shows its own horror\'s tear about one season in four, in different places ({t["out"]})')
         C.ok(t['after'] == 0 and t['low'] == 0, 'no tear once the first part is found, and none below grade A')
         # the Outer Ring with two parts of the Ghoul's myth: the third is on the door, then the fight, then a little one comes home
         await pg.evaluate("()=>{ const P=myth('Ghoul'); P[0]=1; P[1]=1; P[2]=0; }")
         ids = await pg.evaluate(STRONG)
-        path = await pg.evaluate(PILOT, [0, '3:0']); print('path to the Burrows:', path)
         await pg.evaluate("ids=>{ window.__said=[]; const s0=say; say=(t,who)=>{ if(t) __said.push((who||'tala')+': '+t); s0(t,who); }; const all=rosterStates(); runDeep(riftRings()[0], ids.map(id=>all.find(s=>s.id===id))); }", ids)
-        for k in range(3000):
-            await pg.evaluate("o=>__pump(o)", {'control': True}); await pg.evaluate("()=>__pilotStep()")
+        for k in range(6000):
+            await pg.evaluate("o=>__pump(o)", {'control': True})
+            if await pg.evaluate("()=>!!DEEP_LIVE.pick"): await pg.evaluate(AUTO, ['lair:Ghoul', 'camp', 'spring'])
             if await pg.evaluate("()=>!!lairState('Ghoul').won && !document.getElementById('ex-map') && !RS.busy"): break
             await pg.wait_for_timeout(60)
         await settle(pg, label='home')

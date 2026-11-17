@@ -1,12 +1,11 @@
 /* More to find on the team expeditions (Gid, 17 Nov 2026: a deep map was done after one or two clears).
-   Each season, every deep map and Rift ring lays out new paths (deepMap seeds on the season), and three new kinds of circle
-   turn up on it:
+   Each season, every deep map and Rift ring is built anew (deep-gen.js), and three kinds of place turn up on it:
    - a waystone: an old League marker where the team picks one kind of help for the rest of the trip: a rest, the whole map, or
      luck at the next chest
-   - a sealed way: something in the way that only a Snabit of one element can clear, with a League cache behind it. The element
-     changes with the season, so a team that can't open it this season might next time
+   - a sealed way: the doorway of a dead-end room, blocked by something only a Snabit of one element can clear, with a League
+     cache inside. The element changes with the season, so a team that can't open it this season might next time
    - Rook's team: three of Rook's Snabits, one after another with his own partner last, for a big purse. About one map in two
-     has them, once the player has met Rook
+     has them, once the player has met Rook. Losing to them sends the team back to the entrance
    Needs deep.js, explore.js, explore-art.js and npcs.js. */
 
 // what blocks a sealed way, and how a Snabit of that element clears it. Every line waits on Gid's OK
@@ -25,13 +24,15 @@ const DEEP_SEAL = {
   Venom: ['A thorn bush has grown over the door.', n => `${n} wilts the thorns.`] };
 const DEEP_SEAL_ELS = Object.keys(DEEP_SEAL);
 
-/* called from deepMap: puts a waystone, a sealed way and sometimes Rook's team on the finds of a map */
-function deepExtras(reg, N, R) {
-  const finds = c => Object.values(N).filter(n => n.c === c && ['path', 'chest', 'spring', 'wild'].includes(n.k));
-  const put = (cols, k, extra) => { const L = cols.flatMap(finds); if (!L.length) return; const n = L[Math.floor(R() * L.length)]; Object.assign(n, { k, stat: null, stat2: null }, extra); };
-  put([3, 5], 'shrine');
-  put([5, 7], 'seal', { el: DEEP_SEAL_ELS[Math.floor(R() * DEEP_SEAL_ELS.length)] });
-  const rook = R() < 0.5; if (rook && PLAYER && typeof story === 'function' && story().seen.intro != null) put([7, 8], 'rival');   // only once the player has met Rook
+/* called from deepMap: a sealed way on the doorway of a dead-end room with a League cache inside, a waystone, and sometimes Rook's
+   team. The sealed way goes first, so nothing else lands behind it */
+function deepExtras(reg, M, R) {
+  const el = DEEP_SEAL_ELS[Math.floor(R() * DEEP_SEAL_ELS.length)];
+  for (const f of [1, 2, 0]) { const L = M.leaf(f); if (!L) continue; const [x, y, k] = L, F = M.floors[f], i = dgI(F, x, y);
+    F.leafUsed.push(k); F.feat[i] = { k: 'seal', el, id: `${f}:seal:${i}`, f, x, y }; F.shut.add(i);
+    const c = dgFree(F, k)[0]; if (c) { const j = dgI(F, ...c); F.feat[j] = { k: 'cache', id: `${f}:cache:${j}`, f, x: c[0], y: c[1] }; } break; }
+  M.place('shrine', {}, [0, 1], R);
+  const rook = R() < 0.5; if (rook && PLAYER && typeof story === 'function' && story().seen.intro != null) M.place('rival', {}, [1, 2], R);   // only once the player has met Rook
 }
 
 /* the map icons for the new circles (called from exIcon) */
@@ -63,7 +64,7 @@ async function deepMore(reg, n, st, g, T, leadOf, setLead, K, used, found, M) {
     const c = await deepChoice([['A rest', 'For tired legs'], ['The map', 'Every path out here'], ['Luck', 'For the next chest']]);
     used.push(n.id); spark(160, GROUND - 40, 'sparkle', 10); rsfx('sparkle'); s.pose = 'happy';
     if (c === 0) { for (const m of T) if (!m.out) m.e = Math.min(m.max, m.e + 4); K('That feels better. Let\'s keep going.'); }
-    if (c === 1) { for (const k of Object.keys(M.N)) if (!st.seen.includes(k)) st.seen.push(k); K('There. Now we can see the whole way.'); }
+    if (c === 1) { M.reveal(); K('There. Now we can see the whole way.'); }
     if (c === 2) { T.lucky = true; K('Let\'s find a chest while our luck lasts.'); }
     await rwait(1300); unprop(p); return; }
   if (n.k === 'seal') {
@@ -73,10 +74,12 @@ async function deepMore(reg, n, st, g, T, leadOf, setLead, K, used, found, M) {
     used.push(n.id);
     if (who.i !== leadOf()) { await sceneFade(true, 200); setLead(who.i); RS.props = [p]; RS.x = 70; RS.camJump = true; await sceneFade(false, 200); }
     await walkTo(140, 60, 'walk'); RS.pose = 'happy'; p.open = true; spark(170, GROUND - 30, 'sparkle', 10); rsfx('creak');
-    K(how(displayName(who.m.s))); await rwait(1500);
+    K(how(displayName(who.m.s))); await rwait(1500); unprop(p); return 'open'; }
+  if (n.k === 'cache') {   // what the sealed way kept safe
+    used.push(n.id); const c = prop({ k: 'chest', x: 150, y: GROUND, big: true }); await walkTo(126, 60, 'walk'); await rwait(300); c.open = true; rsfx('creak'); s.pose = 'happy'; spark(150, GROUND - 22, 'sparkle', 8);
     const R = rng(hashStr('seal|' + reg.n + '|' + n.id + '|' + exSeason())), item = EX_RARE[Math.floor(R() * EX_RARE.length)], bits = Math.round(G.purse), a = /^[AEIOU]/.test(item) ? 'an' : 'a';
     addItem(item); PLAYER.bits += bits; drawUI(); found.push(`${a} ${item}`, `${bits.toLocaleString()} bits`);
-    K(`There's an old League cache back here: ${a} ${item} and ${bits.toLocaleString()} bits.`); await rwait(1700); unprop(p); return; }
+    K(`There's an old League cache back here: ${a} ${item} and ${bits.toLocaleString()} bits.`); await rwait(1700); unprop(c); return; }
   if (n.k === 'rival') {
     used.push(n.id); const R = Math.random, lv = Math.round(G.lv[0] + (G.lv[1] - G.lv[0]) * 0.75);
     say("Well, look who made it out here. My team's been waiting for someone to beat.", 'rival'); await rwait(2200);
@@ -84,7 +87,7 @@ async function deepMore(reg, n, st, g, T, leadOf, setLead, K, used, found, M) {
       const foe = k === 2 && typeof rookMon === 'function' ? rookMon(g, 0.85) : gradedOpponent(g, lv, R); foe.boss = null;   // Rook's own partner goes last
       const fp = prop({ k: 'foe', x: 186, y: GROUND, fm: foe.fm }); banner(`Rook's team, ${k + 1} of 3`, '#ffb04a'); await rwait(1100); banner(''); unprop(fp);
       const won = await deepFight(T, leadOf(), foe, `Rook's ${foe.m.name}`, K);
-      if (!won) { say('Better luck next time. My team never loses out here.', 'rival'); await rwait(1800); K("Rook's team beat all three of you. We're going home."); await rwait(1400); return 'end'; }
+      if (!won) { say('Better luck next time. My team never loses out here.', 'rival'); await rwait(1800); K("Rook's team beat all three of you."); await rwait(1400); used.splice(used.indexOf(n.id), 1); return 'lost'; }
       const alive = T.findIndex(m => !m.out); if (alive >= 0 && T[leadOf()].out) setLead(alive);
     }
     const bits = Math.round(G.purse * 2.5), R2 = rng(hashStr('rival|' + reg.n + '|' + exSeason())), item = EX_RARE[Math.floor(R2() * EX_RARE.length)], a = /^[AEIOU]/.test(item) ? 'an' : 'a';

@@ -84,16 +84,20 @@ function riftRings() {
   return out.map(i => ({ n: `The Rift, ${RIFT_RING[i]}`, el: 'Void', rift: true, ring: i }));
 }
 const riftGrade = reg => ['A', 'S', 'S'][reg.ring];
-// called from deepMap for a ring: its lairs take the place of the circles they sit on
-function riftLairs(reg, N) { for (const [id, fam] of Object.entries(RIFT_LAIR[reg.ring])) if (N[id]) N[id] = { ...N[id], k: 'lair', fam, stat: null, stat2: null }; }
+// called from deepMap for a ring: the last lair takes the guardian's place at the bottom, and the others go on the lower floors,
+// the ones from the first half of the old map on the middle floor
+function riftLairs(reg, M) {
+  const E = Object.entries(RIFT_LAIR[reg.ring]).sort((a, b) => +a[0].split(':')[0] - +b[0].split(':')[0]), R = rng(hashStr('lair|' + M.seed));
+  E.forEach(([id, fam], j) => { if (j === E.length - 1) { const F = M.floors[2], i = dgI(F, ...F.down); F.feat[i] = { ...F.feat[i], k: 'lair', fam, id: 'lair:' + fam }; return; }
+    M.place('lair', { fam }, [+id.split(':')[0] <= 5 ? 1 : 2], R); });
+}
 
 /* ---------- tears on the deep maps ---------- */
 // from grade A, about one season in four, a deep map with a horror's myth to start shows a tear on one of its finds
 function horrorTear(reg, M) {
   const f = HORROR_REGION[reg.n]; if (!f || rankIdx() < 4 || myth(f)[0]) return;
   const h = hashStr('tear|' + reg.n + '|' + exSeason()); if (h % 4) return;
-  const spots = Object.values(M.N).filter(n => ['wild', 'path', 'chest', 'spring'].includes(n.k) && n.c > 1 && n.c < 10); if (!spots.length) return;
-  const n = spots[Math.floor(h / 4) % spots.length]; n.k = 'tear'; n.fam = f;
+  M.place('tear', { fam: f }, [1, 2], rng(h));
 }
 
 /* one tear or lair circle on a deep map, called from deepNode */
@@ -106,7 +110,7 @@ async function horrorNode(reg, n, g, T, leadOf, setLead, K, used, found) {
     const won = await deepFight(T, leadOf(), foe, 'A tear', K); unprop(tp);
     if (T[leadOf()].out && T.some(m => !m.out)) setLead(T.findIndex(m => !m.out));
     if (!won) { K(`The ${nm} went back through the tear. It's still open.`); await rwait(1600); return 'fail'; }
-    used.push(n.id); n.k = 'path';
+    used.push(n.id);
     if (mythFind(f, 0)) { found.push('a myth'); banner(MYTH[f][0], '#d9c8ff'); K(`The ${nm} went back through the tear and left something behind. It's the start of a story.`); await rwait(2400); banner(''); }
     else { K(`The ${nm} went back through the tear.`); await rwait(1400); }
     return; }
