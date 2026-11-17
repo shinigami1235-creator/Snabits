@@ -74,9 +74,10 @@ let DEX_FAM = 'Chomp';
 function openDex(fam) {
   dexBackfill(); if (fam) DEX_FAM = fam; const D = dex(), n = dexCount();
   if (DEX_FAM === 'Secrets') return openSecrets(n);
+  if (DEX_FAM === 'Atlas') return openAtlas(n);
   panel(`<div class="full lab-head"><b>Bestiary</b><button class="small" id="dx-back">Back</button></div>
     <div class="full lab-info">${n.seen} of ${n.total} seen and ${n.raised} raised. ${n.next || "It's complete."}${typeof roamDexLine === 'function' ? roamDexLine() : ''}${typeof famOpen === 'function' && !famOpen(DEX_FAM) ? ` The Snaboscope can't find ${DEX_FAM} yet.` : ''}</div>
-    <div class="full dex-tabs">${DEX_FAMS.map(f => { const k = DEX_ELS.filter(e => D[f + '|' + e]).length; return `<button class="small ${f === DEX_FAM ? 'on' : ''}" data-f="${f}">${f}<i>${k}/12</i></button>`; }).join('')}${dexSecretTab()}</div>
+    <div class="full dex-tabs">${DEX_FAMS.map(f => { const k = DEX_ELS.filter(e => D[f + '|' + e]).length; return `<button class="small ${f === DEX_FAM ? 'on' : ''}" data-f="${f}">${f}<i>${k}/12</i></button>`; }).join('')}${dexSecretTab()}${typeof atlasTab === 'function' ? atlasTab() : ''}</div>
     <div class="full dex-grid">${DEX_ELS.map(e => { const b = D[DEX_FAM + '|' + e] || 0;
       return `<div class="dex-t ${b ? '' : 'unk'}"><canvas data-e="${e}"></canvas><b>${b ? speciesName(DEX_FAM, e) : '???'}</b><small>${b ? (b & 14 ? ['Bit', 'Byte', 'Mega'].filter(st => b & DEX_STAGE[st]).map(() => '★').join('') : 'Seen') : e}</small></div>`; }).join('')}</div>`);
   el('dx-back').onclick = () => menu('Out');
@@ -101,11 +102,19 @@ const SECRET_PAL = { Eagle: [[46, 84, 170], [150, 40, 48], [255, 214, 90]], Vamp
   Shub: [[40, 36, 42], [132, 96, 60], [80, 160, 90]] };
 function dexSecretTab() { const S = (PLAYER && PLAYER.dexSecret) || {}, k = DEX_SECRETS.filter(([n]) => S[n]).length;
   return `<button class="small ${DEX_FAM === 'Secrets' ? 'on' : ''}" data-f="Secrets">Secrets<i>${k}/${DEX_SECRETS.length}</i></button>`; }
+// the colour atlas tab (hunts.js)
+function openAtlas(n) {
+  const D = dex();
+  panel(`<div class="full lab-head"><b>Bestiary</b><button class="small" id="dx-back">Back</button></div>
+    <div class="full dex-tabs">${DEX_FAMS.map(f => { const k = DEX_ELS.filter(e => D[f + '|' + e]).length; return `<button class="small" data-f="${f}">${f}<i>${k}/12</i></button>`; }).join('')}${dexSecretTab()}${atlasTab()}</div>` + atlasHtml());
+  el('dx-back').onclick = () => menu('Out');
+  el('r-panel').querySelectorAll('[data-f]').forEach(b => b.onclick = () => openDex(b.dataset.f));
+}
 function openSecrets(n) {
   const D = dex(), S = PLAYER.dexSecret = PLAYER.dexSecret || {};
   panel(`<div class="full lab-head"><b>Bestiary</b><button class="small" id="dx-back">Back</button></div>
     <div class="full lab-info">Secrets turn up when a photo has just the right colours. Each hint says what to look for.</div>
-    <div class="full dex-tabs">${DEX_FAMS.map(f => { const k = DEX_ELS.filter(e => D[f + '|' + e]).length; return `<button class="small" data-f="${f}">${f}<i>${k}/12</i></button>`; }).join('')}${dexSecretTab()}</div>
+    <div class="full dex-tabs">${DEX_FAMS.map(f => { const k = DEX_ELS.filter(e => D[f + '|' + e]).length; return `<button class="small" data-f="${f}">${f}<i>${k}/12</i></button>`; }).join('')}${dexSecretTab()}${typeof atlasTab === 'function' ? atlasTab() : ''}</div>
     <div class="full dex-grid">${DEX_SECRETS.map(([k, hint]) => { const b = S[k] || 0, nm = k.startsWith('c:') ? k.slice(2) + ' costume' : k;
       const shut = k.startsWith('c:') ? typeof cosOpen === 'function' && !cosOpen(k.slice(2)) : typeof stoneOpen === 'function' && !stoneOpen(k);   // a costume not opened yet keeps its hint hidden too
       return `<div class="dex-t ${b ? '' : 'unk'}"><canvas data-k="${k}"></canvas><b>${b ? nm : '???'}</b><small>${b ? (b & 14 ? 'Raised' : 'Seen') : shut ? '???' : hint}</small></div>`; }).join('')}</div>` +

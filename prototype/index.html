@@ -52,6 +52,7 @@
 <script src="explore-more.js"></script>
 <script src="deep.js"></script>
 <script src="horror.js"></script>
+<script src="deep-more.js"></script>
 <script src="tourney.js"></script>
 <script src="venue.js"></script>
 <script src="cupcal.js"></script>
@@ -71,6 +72,7 @@
 <script src="onboard.js"></script>
 <script src="team.js"></script>
 <script src="wild.js"></script>
+<script src="hunts.js"></script>
 <script src="music.js"></script>
 <script src="chibi.js"></script>
 <script src="chibi-hook.js"></script><script src="scenes.js"></script><script src="npcs.js"></script><script src="areas.js"></script><script src="story.js"></script><script src="dex.js"></script><script src="contests.js"></script><script src="moves.js"></script><script src="summon.js"></script><script src="cupshow.js"></script><script src="arena.js"></script><script src="arena-ui.js"></script><script src="arena-fx.js"></script><script src="arena-sigs.js"></script>
@@ -197,8 +199,9 @@ function render(full){
   try{
     const res=scan(still,still.width,still.height); show(res);
     if(!full) return;
-    if(typeof WILD!=="undefined"&&WILD){ wildCard(res,card); return null; }
-    const m=typeof scanBoost==="function"?scanBoost(hatch(res)):hatch(res);
+    const hl=typeof huntScan==="function"&&!window.PRACTICE?huntScan(res):[];   // today's colour, the notice board and the colour atlas (hunts.js)
+    if(typeof WILD!=="undefined"&&WILD){ wildCard(res,card); huntNote(card,hl); return null; }
+    let m=typeof scanBoost==="function"?scanBoost(hatch(res)):hatch(res); if(typeof huntBoost==="function") m=huntBoost(m,res);
     const name=m.name, kind=(m.el2?`${m.el1} / ${m.el2}`:m.el1)+" "+m.family;
     const tint=COL[res.main.g]==="#1b1b1f"?"#8888aa":COL[res.main.g];
     card.innerHTML=`<div class="sheet-head">
@@ -214,7 +217,7 @@ function render(full){
 
         <p class="why">Drag the circle to try another spot.</p>
       </div>`;
-    paintMon(document.getElementById("bit"),m,{stage:"Bit"});
+    paintMon(document.getElementById("bit"),m,{stage:"Bit"}); if(typeof huntNote==="function") huntNote(card,hl);
     if(window.PRACTICE){ const a=card.querySelector(".sheet-actions"); if(a){ a.innerHTML=`<button class="big" id="practicebtn">Practice with it</button>`; document.getElementById("practicebtn").onclick=()=>atFromScan(m); } return m; }
     lastMon=m; const fb=document.getElementById("fightbtn"); if(fb) fb.onclick=()=>openBattle(lastMon); const rb=document.getElementById("raisebtn"); if(rb) rb.onclick=()=>openRanch(lastMon);
     if(typeof obSheet==="function") obSheet(m);
@@ -310,6 +313,7 @@ function openScope(){
   aim={x:.5,y:.5}; placeRing();
   if(camOk()) setMode("live"); else startCam(camOrder.length?camAt:null);
   if(typeof obCoach==="function") obCoach();
+  if(typeof huntChip==="function") huntChip();
 }
 
 shutter.onclick=()=>{

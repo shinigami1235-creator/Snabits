@@ -137,6 +137,7 @@ function exDraw(cv, M, st, at, energy, emax, blocked, title) {
 /* the map icons reuse the scene props from explore-art.js, scaled down onto the circle */
 function exIcon(x, n, cx, cy, got, shut) {
   x.save(); const k = n.k; if (got) x.globalAlpha = 0.4;
+  if (typeof deepIcon === 'function' && deepIcon(x, k, cx, cy, n)) { x.restore(); return; }   // the team expeditions' own circles (deep-more.js)
   if (k === 'camp') { const y = cy + 7; SC.depth(x, () => { x.beginPath(); x.moveTo(cx - 10, y); x.lineTo(cx, y - 15); x.lineTo(cx + 10, y); x.closePath(); }, '#c8553d', 1.2, 0.3); x.fillStyle = '#5a2a1e'; x.beginPath(); x.moveTo(cx - 3, y); x.lineTo(cx, y - 7); x.lineTo(cx + 3, y); x.fill(); }
   else if (k === 'chest') XA.chest(x, cx, cy + 6, got, 0, n.big ? 0.55 : 0.45);
   else if (k === 'spring') XA.spring(x, cx, cy + 4, 0, 0.42);

@@ -3,6 +3,32 @@
    thick lines. Each drawer works in yard units at (x, y) on the ground and takes a scale, so the map reuses them as icons. */
 
 const XA = {
+  // an old League waystone on a team expedition: a tall grey stone with a ring cut in it that glows
+  waystone(c, x, y, t) { const p = 0.5 + 0.5 * Math.sin(t / 400); SC.depth(c, () => { c.beginPath(); c.roundRect(x - 16, y - 62, 32, 62, [16, 16, 3, 3]); }, '#a29c90', 1.4, 0.35);
+    c.fillStyle = 'rgba(0,0,0,.12)'; c.beginPath(); c.ellipse(x, y, 22, 5, 0, 0, 7); c.fill();
+    c.save(); c.shadowColor = `rgba(111,214,208,${0.4 + 0.5 * p})`; c.shadowBlur = 12; c.strokeStyle = '#6fd6d0'; c.lineWidth = 3.5; c.beginPath(); c.arc(x, y - 38, 8, 0, 7); c.stroke(); c.restore();
+    c.strokeStyle = 'rgba(70,60,50,.35)'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(x - 8, y - 18); c.lineTo(x + 8, y - 18); c.moveTo(x - 6, y - 12); c.lineTo(x + 6, y - 12); c.stroke(); },
+  // a sealed way: a stone door set in a rock face, with a mark in the colour of the element that opens it. Open, it's dark inside
+  sealdoor(c, x, y, el, open, t) { const col = typeof ELC === 'function' ? ELC(el) : '#ffd23f';
+    SC.depth(c, () => { c.beginPath(); c.moveTo(x - 34, y); c.lineTo(x - 30, y - 70); c.quadraticCurveTo(x, y - 92, x + 30, y - 70); c.lineTo(x + 34, y); c.closePath(); }, '#8a7a66', 1.4, 0.3);
+    c.fillStyle = open ? '#1e1a24' : '#5a4630'; c.beginPath(); c.moveTo(x - 16, y); c.lineTo(x - 16, y - 40); c.arc(x, y - 40, 16, Math.PI, 0); c.lineTo(x + 16, y); c.closePath(); c.fill();
+    if (open) return;
+    // what's in the way, drawn over the door
+    if (el === 'Blaze' || el === 'Wild' || el === 'Venom') { c.strokeStyle = el === 'Blaze' ? '#7a6a3a' : el === 'Wild' ? '#6a5236' : '#4f7a3a'; c.lineWidth = 3; c.lineCap = 'round';
+      for (let k = 0; k < 5; k++) { c.beginPath(); c.moveTo(x - 18 + k * 9, y - 58); for (let j = 1; j <= 6; j++) c.lineTo(x - 18 + k * 9 + Math.sin(j * 1.7 + k) * 4, y - 58 + j * 9.5); c.stroke(); }
+      if (el === 'Venom') { c.fillStyle = '#c8d07a'; for (let k = 0; k < 9; k++) { c.beginPath(); c.arc(x - 16 + (k * 13) % 32, y - 52 + (k * 17) % 48, 1.6, 0, 7); c.fill(); } } }
+    else if (el === 'Frost') { c.fillStyle = 'rgba(120,190,240,.55)'; c.fillRect(x - 20, y - 64, 40, 64); c.strokeStyle = 'rgba(255,255,255,.7)'; c.lineWidth = 1.5;
+      for (let k = 0; k < 5; k++) { const yy = (t / 6 + k * 13) % 60; c.beginPath(); c.moveTo(x - 16 + k * 8, y - 64 + yy); c.lineTo(x - 16 + k * 8, y - 56 + yy); c.stroke(); } }
+    else if (el === 'Stone') { for (const [dx, r] of [[-14, 9], [2, 11], [16, 8], [-4, 7], [9, 6]]) SC.depth(c, () => { c.beginPath(); c.arc(x + dx, y - r - (dx === -4 || dx === 9 ? 14 : 0), r, 0, 7); }, '#8f8a80', 1.2, 0.3); }
+    else if (el === 'Steel') { SC.depth(c, () => { c.beginPath(); c.roundRect(x - 22, y - 38, 44, 7, 2); }, '#9aa0a8', 1.2, 0.3); }
+    else if (el === 'Light' || el === 'Shade') { c.fillStyle = el === 'Light' ? 'rgba(10,8,16,.75)' : 'rgba(40,30,60,.55)'; c.beginPath(); c.ellipse(x, y - 30, 30, 36, 0, 0, 7); c.fill(); }
+    else if (el === 'Spark') { c.fillStyle = '#5a4a3a'; c.fillRect(x + 22, y - 44, 3, 44); c.fillStyle = 'rgba(80,70,50,.9)'; c.beginPath(); c.roundRect(x + 18, y - 54, 11, 12, 3); c.fill(); }
+    else if (el === 'Tide') { SC.depth(c, () => { c.beginPath(); c.ellipse(x, y - 4, 26, 6, 0, 0, 7); }, '#a29c90', 1.2, 0.3); }
+    else if (el === 'Charm') { SC.depth(c, () => { c.beginPath(); c.ellipse(x, y - 16, 26, 16, 0, Math.PI, 0); c.lineTo(x + 26, y); c.lineTo(x - 26, y); c.closePath(); }, '#e8a0c0', 1.2, 0.3);   // a big Snabit asleep against the door
+      c.strokeStyle = '#5a3a4a'; c.lineWidth = 1.6; c.lineCap = 'round'; for (const d of [-8, 8]) { c.beginPath(); c.arc(x + d, y - 18, 3.5, 0.2, Math.PI - 0.2); c.stroke(); }
+      c.fillStyle = '#5a3a4a'; c.font = 'bold 10px sans-serif'; c.fillText('z', x + 22, y - 34 - (t / 80) % 8); }
+    else if (el === 'Brawl') { c.fillStyle = 'rgba(150,80,40,.5)'; for (let k = 0; k < 6; k++) { c.beginPath(); c.arc(x - 10 + (k * 11) % 22, y - 50 + (k * 19) % 40, 3, 0, 7); c.fill(); } }
+    c.save(); c.shadowColor = col; c.shadowBlur = 10 + 4 * Math.sin(t / 300); c.fillStyle = col; c.beginPath(); c.arc(x, y - 72, 5, 0, 7); c.fill(); c.restore(); },
   // a tear in the air on a deep map: a jagged violet crack with a dark inside that pulses
   tear(c, x, y, t, k = 1) { const h = 54 * k, cy = y - 40 * k, p = 0.5 + 0.5 * Math.sin(t / 300), pts = [];
     for (let i = 0; i <= 8; i++) pts.push([x + (i % 2 ? 5 : -4) * k * (1 - Math.abs(i - 4) / 5), cy - h / 2 + i * h / 8]);
@@ -225,6 +251,8 @@ function exProp(c, p, t, front) {
     case 'spring': if (!front) XA.spring(c, x, y, t); return true;
     case 'page': if (front) XA.page(c, x, y, t); return true;
     case 'pstone': if (!front) XA.stone(c, x, y, p.sp, p.glow, t); return true;
+    case 'shrine': if (!front) XA.waystone(c, x, y, t); return true;
+    case 'seal': if (!front) XA.sealdoor(c, x, y, p.el, p.open, t); return true;
     case 'tear': if (!front) XA.tear(c, x, y, t, p.s || 1); return true;
   }
   return typeof exProp2 === 'function' && exProp2(c, p, t, front);
