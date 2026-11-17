@@ -1,14 +1,14 @@
 /* Onboarding: Josie, the ranch assistant, teaches a few buttons at a time and opens the rest as the player goes. Needs ranch.js and game.js. */
 const TIPS=[
-  ["welcome",()=>true,s=>`${PLAYER.onboarded?`Welcome home, ${s.m.name}.`:`I am Josie and I help run the ranch. This is ${s.m.name}.`} We train it to make it stronger and let it rest when it gets tired. It needs a meal every day and some petting and cleaning too. Whatever we do takes up the whole week.`],
-  ["drill",s=>s.tp.some(v=>v>0),()=>"After each drill, let it know how it did. Praise it when it works hard and scold it when it slacks off so it learns what you expect."],
-  ["tired",s=>s.fatigue>=50,()=>"It is getting tired. A week of rest will fix that and pushing it now could get it hurt."],
-  ["month",()=>PLAYER.week>=4,()=>"We made it through the first month so we can start heading out. Cups are how it moves up from grade E and missions bring home bits and items."],
-  ["cup",s=>s.wins+s.losses>0,()=>"It watches how you fight when you take control. On missions and in Auto fights it does what it saw you do."],
-  ["heart1",()=>hearts()>=1,()=>"It trusts you now so we can take it on skill trips. A trip is four weeks away in one region learning new moves."],
-  ["heart2",()=>hearts()>=2,()=>"It trusts you a lot more now so it is ready for heavy drills. They are hard work but they build a stat much faster."],
-  ["second",()=>PLAYER.roster.length>=2,()=>"Now we have two. The one we are not raising waits in the Freezer and does not get older there. Dr. Ines can fuse two of them in her lab."],
-  ["evo",s=>s.stage!=="Mega"&&tpTotal()>=evoTotal()-10,()=>"It is close to changing. Whatever we train next will decide how it looks."],
+  ["welcome",()=>true,s=>`${PLAYER.onboarded?`Welcome home, ${s.m.name}.`:`I am Josie and I help run the ranch. This is ${s.m.name}.`} Keep it trained, rested and fed and it will do well.`],
+  ["drill",s=>s.tp.some(v=>v>0),()=>"Let it know how it did after each drill. It learns from what you praise and scold."],
+  ["tired",s=>s.fatigue>=50,()=>"It is getting tired. Give it a rest before it gets hurt."],
+  ["month",()=>PLAYER.week>=4,()=>"We made it through the first month. It is ready for its first cup."],
+  ["cup",s=>s.wins+s.losses>0,()=>"It watches how you fight. When it fights on its own it does what you did."],
+  ["heart1",()=>hearts()>=1,()=>"It trusts you now. Walt can take it on a skill trip."],
+  ["heart2",()=>hearts()>=2,()=>"It trusts you a lot more now. It is ready for heavy drills."],
+  ["second",()=>PLAYER.roster.length>=2,()=>"Now we have two. The other one can wait in the Freezer."],
+  ["evo",s=>s.stage!=="Mega"&&tpTotal()>=evoTotal()-10,()=>"It is close to changing. What we train next will shape how it looks."],
 ];
 const tutDone=()=>!!(PLAYER&&PLAYER.tutorialDone);
 const outLocked=()=>!tutDone()&&PLAYER.week<4;

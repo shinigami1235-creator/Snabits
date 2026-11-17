@@ -159,8 +159,8 @@ function obCoachText(){
   if(!ONB||!ONB.tut) return "";
   if(mode==="aim") return "Move the circle onto the thing you want and tap Scan.";
   if(!stream) return window.DEV_GALLERY?"The Snaboscope needs your camera. Allow it when your browser asks or use a photo from your gallery.":"The Snaboscope needs your camera. Allow it when your browser asks.";
-  if(ONB.picks.length===0) return "Point it at something bright like a toy, a fruit or a shirt. Keep it inside the circle and tap the round button.";
-  return `You have scanned ${ONB.picks.length} now. Try something in a different colour since the main colour decides what kind of Snabit comes out.`;
+  if(ONB.picks.length===0) return "Point it at something bright like a toy or a shirt. Then tap the round button.";
+  return `Try something in a different colour. The colour decides what comes out.`;
 }
 function obCoach(){
   let d=document.getElementById("ob-coach");
