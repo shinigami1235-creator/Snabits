@@ -370,7 +370,8 @@ const sgTatteredCloak={C:900,D:1750,sig:true,
 const YG={ open:t=>t<450?0:t<720?eo((t-450)/270):t<930?1:t<1060?1-eio((t-930)/130):t<1650?0:t<1800?eo((t-1650)/150):t<1920?1:1-eio(Math.min(1,(t-1920)/180)),
   rise:t=>t<150?0:t<450?eo((t-150)/300):t<2050?1:Math.max(0,1-(t-2050)/180),
   thump:t=>{ for(const b of [1250,1450,1580]) if(t>=b&&t<b+140) return Math.sin((t-b)/140*Math.PI)*(b===1580?1.3:1); return 0; },
-  geo(x,t){ const tg=x.target, R=tg.r, d=atDir(x); return {gx:tg.x+d*R*0.55,gy:(t==null?tg.foot:HR.floor(sgGateOpen,t,tg))-R*0.1,h:R*3.1,w:R*1.6,R,d}; },
+  geo(x,t){ const tg=x.target, R=tg.r, d=atDir(x); if(t==null||t<600||YG.ax==null) YG.ax=tg.x+d*R*0.55;   // the gate is set where the target stood, so the hit's knockback can't push it
+    return {gx:YG.ax,gy:(t==null?tg.foot:HR.floor(sgGateOpen,t,tg))-R*0.1,h:R*3.1,w:R*1.6,R,d}; },
   draw(c,t,x){ const {gx,gy,h,w,R}=YG.geo(x,t), rise=YG.rise(t), op=YG.open(t); if(rise<=0) return; const top=gy-h*rise, fw=R*0.32; c.save(); c.beginPath(); c.rect(gx-w*2,gy-h*1.4,w*4,h*1.4); c.clip();
     c.fillStyle="#0a0614"; c.fillRect(gx-w/2,top,w,gy-top);
     if(op>0){ const v=c.createRadialGradient(gx,top+h*0.5,2,gx,top+h*0.5,h*0.75); v.addColorStop(0,"#fff2c4"); v.addColorStop(0.18,"#c79bff"); v.addColorStop(0.55,"#3a1f78"); v.addColorStop(1,"#0c0620"); c.fillStyle=v; c.fillRect(gx-w/2,top,w,gy-top);
