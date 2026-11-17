@@ -239,9 +239,9 @@ function atEvent(e,now){
     let kind;
     const sk=typeof AR_KIND!=="undefined"&&AR_KIND[m.base||m.name];
     if(sk&&ANIM[sk]&&ANIM[sk].sig) kind=sk;   // a signature always plays its own animation, buffs included
-    else if(m.buff&&sk&&/^(consume|selfrestore)$/.test(sk)) kind=sk;   // a heal that names a drink or a reset shows it (17 Nov 2026 audit)
+    else if(m.buff&&sk&&/^(consume|selfrestore|coinsave|burrow|parry)$/.test(sk)) kind=sk;   // a heal that names a drink or a reset shows it (17 Nov 2026 audit)
     else if(m.buff) kind={bunker:"bunker",phase:"phase",brace:"shield",riposte:"shield",bubble:"shield",feedback:"shield",unblink:"buff"}[m.buff]||"buff";
-    else if(m.support){ kind=sk&&/^(consume|selfrestore|drainstream)$/.test(sk)?sk:typeof supportKind==="function"?supportKind(m.name):"buff"; if(kind==="mistcast") kind="mist"; if(m.protect) S.protName=m.name; }
+    else if(m.support){ kind=sk&&/^(consume|selfrestore|drainstream|coinsave|burrow|clockstrike|static|foamheap)$/.test(sk)?sk:typeof supportKind==="function"?supportKind(m.name):"buff"; if(kind==="mistcast") kind="mist"; if(m.protect) S.protName=m.name; }
     else if(m.lower&&!m.dmg) kind="glare";
     else if(m.shove) kind="tackle";
     else kind=typeof AR_KIND!=="undefined"&&AR_KIND[m.base||m.name]&&ANIM[AR_KIND[m.base||m.name]]?AR_KIND[m.base||m.name]:typeof animFor==="function"?animFor({name:m.name,kind:m.cast?"Cast":"Strike",el:m.el},sp):"tackle";
@@ -262,10 +262,11 @@ function atEvent(e,now){
     if(e.t==="swap"){ AT.side[e.i].hop={t0:te,h:78,d:480}; AT.side[1-e.i].hop={t0:te,h:8,d:480};   // the swapper leaps over, the other ducks
     try{ sfx("whoosh"); }catch(err){} }
   if(e.t==="hit"){ const o=AT.side[1-e.i], mt=S.anim&&S.anim.tier||"light", tier=e.crit?(mt==="special"?"special":mt==="heavy"?"special":"heavy"):mt==="light"&&e.dmg>=25?"medium":mt, T=AT_TIER[tier];
-    if(e.h===0||!o.react||te-o.react.t0>120){ o.react={kind:"hit",t0:te,tier}; if(mt==="special") AT.freeze=Math.max(AT.freeze,now+T.stop); AT.trauma=Math.min(1,AT.trauma+T.trauma);
-      AT.hitJuice={i:1-e.i,t0:te,tier,col:S.anim?S.anim.col:[255,236,160]};
+    if(e.h===0||!o.react||te-o.react.t0>120){ o.react={kind:"hit",t0:te,tier,own:S.anim&&ANIM[S.anim.kind]&&(ANIM[S.anim.kind].sig||/^sg_/.test(S.anim.kind))}; if(mt==="special") AT.freeze=Math.max(AT.freeze,now+T.stop); AT.trauma=Math.min(1,AT.trauma+T.trauma);
+      const own=S.anim&&ANIM[S.anim.kind]&&(ANIM[S.anim.kind].sig||/^sg_/.test(S.anim.kind));   // a signature draws its own impact, so the stock burst stays small and the screen doesn't white out over it (17 Nov 2026 audit)
+      AT.hitJuice={i:1-e.i,t0:te,tier,col:S.anim?S.anim.col:[255,236,160],own};
       if(S.anim&&!(ANIM[S.anim.kind]&&ANIM[S.anim.kind].marks)) AT.strikes.push({t0:te,d:340,kind:/bite/.test(S.anim.kind)?"lines":/claw/.test(S.anim.kind)?"slash":"lines",i:1-e.i,col:S.anim.col,big:{light:1,medium:1.15,heavy:1.4,special:1.9}[tier],dir:S.dir,ranged:!S.anim.contact,body:sp.pal&&sp.pal.body}); AT.punch={t0:te,amt:T.punch,i:1-e.i};
-      if(T.screen) AT.flash={t0:now+T.stop*0.4,a:T.screen};
+      if(T.screen) AT.flash={t0:now+T.stop*0.4,a:own?Math.min(0.12,T.screen):T.screen};
       if(T.slow&&mt==="special") AT.slow={from:now+T.stop,until:now+T.stop+T.slow*(AT.ar.over?2.2:1),k:AT.ar.over?0.22:0.32};
       if(tier==="heavy"||tier==="special") AT.dust={i:1-e.i,t0:te,n:tier==="special"?14:8};
       AT.spark={i:1-e.i,n:T.sparks,col:S.anim?S.anim.col:[255,236,160]}; if(S.anim&&S.anim.contact) S.recoil={t0:te,amt:tier==="heavy"?10:6};
@@ -625,7 +626,7 @@ function atSideState(S,te){
   if(dg){ out.off[0]+=S.dir*dg.dx; out.off[1]+=dg.dy; out.rot+=S.dir*dg.rot; out.sx*=dg.sx; out.sy*=dg.sy; out.pose=dg.pose; if(dg.alpha!=null) out.alpha*=dg.alpha; out.doff=[S.dir*dg.dx,dg.dy]; }
   else if(R){ const dur=R.kind==="hit"?(R.tier==="heavy"?560:420):380, k=(te-R.t0)/dur;
     if(k>1) S.react=null;
-    else if(R.kind==="hit"){ const T=AT_TIER[R.tier], dt=te-R.t0; out.pose="hit"; out.flash=T.white?(dt<18?2:dt<T.flash?1:0):dt<T.flash?3:0;
+    else if(R.kind==="hit"){ const T=AT_TIER[R.tier], dt=te-R.t0; out.pose="hit"; out.flash=T.white&&!R.own?(dt<18?2:dt<T.flash?1:0):dt<(R.own?40:T.flash)?3:0;
       out.off[0]-=S.dir*({light:14,medium:20,heavy:30,special:46}[R.tier]||14)*(k<0.25?eo(k/0.25):1-eo((k-0.25)/0.75)); out.rot-=S.dir*0.12*(R.tier==="heavy"?1.6:1)*Math.sin(Math.min(1,k*1.5)*Math.PI);
       const q=Math.max(0,1-dt/180), big=R.tier==="special"?1.8:R.tier==="heavy"?1.3:1; out.sx*=1+0.16*big*q; out.sy*=1-0.13*big*q; }
     else { const s2=Math.sin(k*Math.PI); out.pose="dodge"; out.off[0]-=S.dir*22*s2; out.off[1]-=12*s2; } }
@@ -756,8 +757,8 @@ function atDraw(now,dte){
     c.restore(); atChargeFx(c,ch,cx,cy,P.foot,R,te,kk,scale/2.3,sp); c.save(); c.globalCompositeOperation="lighter";
     if(k>0.92&&k<1.08){ const f=1-Math.abs(k-1)/0.08; if(ch.sig){ c.strokeStyle=`rgba(255,255,255,${0.9*f})`; c.lineWidth=6*f+1; c.beginPath(); c.ellipse(cx,cy,R*(1.4-0.5*f),R*(1.1-0.4*f),0,0,7); c.stroke(); } else { c.fillStyle=`rgba(255,255,255,${0.6*f})`; c.beginPath(); c.arc(cx,cy,R*0.9,0,7); c.fill(); } } });
   c.restore();
-  if(AT.hitJuice&&placed[AT.hitJuice.i]){ const J=AT.hitJuice, P=placed[J.i], T=AT_TIER[J.tier], cx=P.center?P.center.x:P.x, cy=P.center?P.center.y:P.y;
-    AT.rings.push({x:cx,y:cy,t0:te,col:J.col,s:T.ring,d:J.tier==="special"?520:340}); if(J.tier==="special") AT.rings.push({x:cx,y:cy,t0:te+90,col:[255,255,255],s:T.ring*1.3,d:600});
+  if(AT.hitJuice&&placed[AT.hitJuice.i]){ const J=AT.hitJuice, P=placed[J.i], T=J.own?AT_TIER.light:AT_TIER[J.tier], cx=P.center?P.center.x:P.x, cy=P.center?P.center.y:P.y;
+    AT.rings.push({x:cx,y:cy,t0:te,col:J.col,s:T.ring,d:J.tier==="special"?520:340}); if(J.tier==="special"&&!J.own) AT.rings.push({x:cx,y:cy,t0:te+90,col:[255,255,255],s:T.ring*1.3,d:600});
     AT.stars.push({x:cx,y:cy,t0:te,s:T.ring,col:J.col,rot:te%6}); AT.hitJuice=null; }
   if(AT.dust&&placed[AT.dust.i]){ const P=placed[AT.dust.i], S=AT.side[AT.dust.i]; spawnPuff(P.x-S.dir*12,P.foot-2,AT.dust.n,S.dir>0?Math.PI:0,1.4,0.12,7*scale/2,"rgba(235,224,200,1)",420); AT.dust=null; }
   AT.rings=AT.rings.filter(r=>te-r.t0<r.d); for(const r of AT.rings){ const k=(te-r.t0)/r.d; if(k<0) continue; const e2=1-Math.pow(1-k,3);

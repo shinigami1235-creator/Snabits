@@ -612,7 +612,7 @@ Object.assign(ANIM,{
         let p, a; if(t<T1-260){ const k=(t-T0)/(T1-260-T0), orb=t/180+i*0.8; p={x:s.x+Math.cos(orb)*s.r*(0.9+0.6*k),y:s.y-s.r*(0.5+1.2*k)+Math.sin(orb)*s.r*0.35}; a=orb+Math.PI/2; }
         else if(t<T1){ const k=(t-(T1-260))/260, from={x:s.x+Math.cos((T1-260)/180+i*0.8)*s.r*1.5,y:s.y-s.r*1.7}; p=lerpP(from,{x:tg.x+(atH(i)-0.5)*R*0.8,y:tg.y+(atH(i*3)-0.5)*R*0.8},ei(k),R*0.5); a=Math.atan2(tg.y-from.y,tg.x-from.x); }
         else { const k=(t-T1)/300; p={x:tg.x+(atH(i)-0.5)*R*(0.8+2*k),y:tg.y+(atH(i*3)-0.5)*R+k*R*1.2}; a=t/100+i; c.globalAlpha=1-k; }
-        SG.crane(c,p.x,p.y,R*0.22,a,cols[i%4]); c.globalAlpha=1; if(t>=T1&&t<T1+60) atImpact(t,T1,0.2,0); } }},
+        SG.crane(c,p.x,p.y,R*0.42,a,cols[i%4]); c.globalAlpha=1; if(t>=T1&&t<T1+60) atImpact(t,T1,0.2,0); } }},
   /* Twiglet: a pair of giant garden shears opens beside the target and snips shut through it, scattering leaves and twigs */
   sg_snip:{C:760,D:1460,contact:false,sig:true,
     atk:(t,o)=>{ const d=(o&&o.dir)||1; return t<760?{rot:-d*0.15*eo(t/760),pose:"cast",sx:1+0.04*Math.sin(t/60)}:{rot:d*0.15*(1-eo((t-760)/600)),pose:t<1100?"push":"idle"}; },
@@ -792,7 +792,7 @@ Object.assign(ANIM,{
         c.beginPath(); c.moveTo(0,-z); c.lineTo(z*0.87,z*0.5); c.lineTo(-z*0.87,z*0.5); c.closePath(); c.fill(); c.stroke(); c.restore(); }
       if(t>=460&&t<1300){ const k=Math.min(1,(t-460)/150), fade=t>1150?1-(t-1150)/150:1; c.save(); c.globalCompositeOperation="lighter"; c.lineCap="round";
         c.strokeStyle=`rgba(255,255,255,${0.95*fade})`; c.lineWidth=R*0.2; c.beginPath(); c.moveTo(horn.x,horn.y); c.lineTo(horn.x+(pr.x-horn.x)*k,horn.y+(pr.y-horn.y)*k); c.stroke();
-        if(t>=610){ const k2=Math.min(1,(t-610)/150); SG.rainbow.forEach((col,i)=>{ const off=(i-3)*R*0.16, ex=pr.x+(dst.x-pr.x)*k2, ey=pr.y+(dst.y+off-pr.y)*k2; c.strokeStyle=col; c.globalAlpha=0.85*fade; c.lineWidth=R*0.16; c.beginPath(); c.moveTo(pr.x,pr.y); c.lineTo(ex,ey); c.stroke(); }); }
+        if(t>=610){ const k2=Math.min(1,(t-610)/150); c.globalCompositeOperation="source-over"; SG.rainbow.forEach((col,i)=>{ const off=(i-3)*R*0.16, ex=pr.x+(dst.x-pr.x)*k2, ey=pr.y+(dst.y+off-pr.y)*k2; c.strokeStyle=col; c.globalAlpha=0.85*fade; c.lineWidth=R*0.16; c.beginPath(); c.moveTo(pr.x,pr.y); c.lineTo(ex,ey); c.stroke(); }); }
         c.restore(); }
       if(t>=760){ atImpact(t,760,0.6,0.35); const k=(t-760)/700; c.save(); c.globalCompositeOperation="lighter"; atGlowA(c,dst.x,dst.y,R*(1+1.5*k),[255,255,255],0.8*(1-k)); for(let i=0;i<14;i++){ const a=i/14*Math.PI*2, rr=R*(0.6+1.6*eo(k)); atStar4(c,dst.x+Math.cos(a)*rr,dst.y+Math.sin(a)*rr*0.8,R*0.18*(1-k),SG.rainbow[i%7]); } c.restore(); } }},
   /* Jack: a giant carved pumpkin face looms up over the target, its grin and eyes blazing with purple fire, and it cackles until the target shrinks in terror */
