@@ -1249,3 +1249,99 @@ if(typeof KSND!=="undefined") Object.assign(KSND,{
 
 /* the moves the audit found with no fitting animation move onto the kinds above */
 Object.assign(AR_KIND,{"Acid Dart":"spear","Acorn Drop":"meteor","Ball Barrage":"volley","Bat Swarm":"swarm","Big Bell":"meteor","Big Toss":"toss","Blizzard Spin":"volley","Bolt Toss":"propthrow","Bounce Shot":"propthrow","Brew Up":"consume","Bubble Barrage":"volley","Bubble Burst":"volley","Candle Burst":"volley","Candy Storm":"volley","Cape Flick":"clothwhip","Card Fan":"volley","Card Slice":"propthrow","Card Storm":"volley","Card Throw":"volley","Cherry Bomb":"meteor","Cherry Pit":"volley","Cherry Shower":"rainshower","Cinder Dart":"spear","Cloudburst":"rainshower","Coin Shower":"rainshower","Cork Shot":"propthrow","Crumb Flick":"volley","Crumb Toss":"volley","Deep Vortex":"whirlpool","Depth Charge":"meteor","Double Slice":"propthrow","Dove Flight":"swarm","Downpour":"rainshower","Dream Drain":"drainstream","Dream Puff":"volley","Drip Flick":"rainshower","Drizzle":"rainshower","Fairy Lights":"swarm","Fairy Ring":"swarm","Feather Burst":"volley","Feather Storm":"volley","Feather Volley":"volley","Feeler Flick":"tongue","Film Lash":"clothwhip","Fin Slap":"tailswing","Firefly Swarm":"swarm","Fish Toss":"propthrow","Flame Wing":"wingslap","Fluff Storm":"volley","Fold Dart":"spear","Full Breakfast":"meteor","Gear Throw":"propthrow","Goo Barrage":"volley","Gourd Swig":"consume","Gravel Spray":"volley","Gravel Storm":"volley","Gum Volley":"volley","Gumball Barrage":"volley","Gumball Cannon":"volley","Hail Shower":"rainshower","Hail Volley":"rainshower","Hailstones":"rainshower","Hard Candy":"propthrow","Heave":"toss","Heavy Shower":"rainshower","Hip Toss":"toss","Hot Cocoa":"consume","Icicle Drop":"rainshower","Inferno Tail":"tailswing","Ink Cannon":"volley","Jackpot":"meteor","Juice Up":"consume","Leaf Cutter":"propthrow","Leaf Shot":"propthrow","Leaf Slice":"propthrow","Life Drain":"drainstream","Life Sap":"drainstream","Light Bomb":"meteor","Light Shower":"rainshower","Long Lash":"clothwhip","Loud Note":"volley","Lucky Feathers":"volley","Molten Rain":"rainshower","Nectar":"consume","Nine Tails":"tailswing","Note Toss":"propthrow","Page Cut":"propthrow","Page Flick":"volley","Paint Over":"selfrestore","Paper Bomb":"meteor","Paper Cut":"clothwhip","Paper Dart":"spear","Pearl Barrage":"volley","Pearl Shot":"propthrow","Pebble Toss":"propthrow","Peppermint Dart":"spear","Pineapple Toss":"propthrow","Pip Spit":"volley","Pixel Shot":"volley","Plague Bats":"swarm","Poltergeist":"propthrow","Pumpkin Bomb":"meteor","Razor Feather":"spear","Razor Page":"propthrow","Rewind":"selfrestore","Rewrap":"selfrestore","Rock Candy":"propthrow","Rune Drain":"drainstream","Sap Drain":"drainstream","Scrap Storm":"volley","Scrub":"selfrestore","Seed Spit":"volley","Shed Skin":"selfrestore","Sky Lantern":"meteor","Spark Flick":"volley","Spark Shower":"rainshower","Sprinkle Rain":"rainshower","Sprinkle Shot":"volley","Sprinkle Toss":"volley","Stalk Lash":"tongue","Stinging Rain":"rainshower","Straw Hat Toss":"propthrow","Sugar Shards":"spear","Sun Disc":"propthrow","Sweet Treat":"consume","Swirl Pool":"whirlpool","Tail Bop":"tailswing","Tail Crash":"tailswing","Tail Cut":"tailswing","Tail Flick":"tailswing","Tail Hammer":"tailswing","Tail Lash":"tailswing","Tail Slam":"tailswing","Tail Slap":"tailswing","Tail Slash":"tailswing","Tail Smash":"tailswing","Tail Storm":"tailswing","Tail Swat":"tailswing","Tail Sweep":"tailswing","Tail Tap":"tailswing","Tail Tease":"tailswing","Tail Tickle":"tailswing","Tail Whack":"tailswing","Tail Whips":"tailswing","Tea Party":"volley","Tea Time":"consume","Thorn Burst":"spear","Thorn Dart":"spear","Tide Blade":"waterblade","Tide Cutter":"waterblade","Tide Whirl":"whirlpool","Tongue Flick":"tongue","Tongue Rasp":"tongue","Trunk Toss":"toss","Venom Dart":"spear","Water Blade":"waterblade","Whirlpool":"whirlpool","Whisker Lash":"tailswing","Wing Bash":"wingslap","Wing Clap":"wingslap","Wing Clip":"wingslap","Wing Cut":"wingslap","Wing Flick":"wingslap","Wing Shove":"wingslap","Wing Slap":"wingslap","Wing Slice":"wingslap","Wing Smash":"wingslap","Wing Whack":"wingslap","Wish":"meteor","Word Barrage":"volley","Word Bolt":"propthrow","Word Volley":"volley","Wrapper Slash":"propthrow","Wrench Toss":"propthrow"});
+
+/* ---- 17 Nov 2026 audit, the last one-off moves that had nothing showing their name ---- */
+Object.assign(ANIM,{
+  /* Riposte and Fan Parry: it guards, the blow glances off with a ring of sparks, and it snaps a counter back */
+  parry:{C:520,D:950,
+    atk:t=>({pose:t<380?"guard":t<640?"swipedown":"idle",off:[t>=380&&t<640?6*Math.sin((t-380)/260*Math.PI):0,0]}),
+    def:t=>SG.knock(t,520,1,16,320),
+    fx(c,t,x){ const s=x.self, tg=x.target, R=s.r, d=atDir(x); if(t>=120&&t<420){ const k=(t-120)/300; c.save(); c.strokeStyle=`rgba(255,240,180,${0.9*(1-k*0.5)})`; c.lineWidth=6; c.beginPath(); c.arc(s.x+d*R*0.7,s.y-R*0.3,R*1.3,-1.1,1.1); c.stroke(); c.restore();
+        for(let i=0;i<6;i++){ const a=-1+i*0.4, v=R*(1.3+0.9*k); atStar4(c,s.x+d*(R*0.7+Math.cos(a)*v),s.y-R*0.3+Math.sin(a)*v,R*0.24*(1-k),"rgba(255,245,190,.95)"); } }
+      if(t>=440&&t<700){ const k=(t-440)/260; MV.crescent(c,tg.x-d*tg.r*0.3,tg.y-tg.r*0.2,tg.r*1.1,d,1-k); } atImpact(t,520,0.2,0.03); }},
+  /* Signal Jam and Tarnish: a burst of TV static fills the air round the target in flickering squares */
+  static:{C:560,D:1000,
+    atk:t=>({pose:t<800?"cast":"idle",off:[t<800?(atH(Math.floor(t/40))-0.5)*3:0,0]}),
+    def:t=>t>=560&&t<900?{off:[(atH(Math.floor(t/30))-0.5)*6,0],pose:"hurt",flash:Math.floor(t/50)%2?3:0}:null,
+    fx(c,t,x){ const tg=x.target, R=tg.r, tarnish=/Tarnish/.test(x.name||""), a=t<300?t/300:t<850?1:Math.max(0,1-(t-850)/150); if(t<120||a<=0) return;
+      for(let i=0;i<70;i++){ const sd=Math.floor(t/45)*97+i*13, px=tg.x+(atH(sd)-0.5)*R*2.6, py=tg.y-R*0.3+(atH(sd+7)-0.5)*R*2.2, z=R*(0.07+0.07*atH(sd+3)), v=atH(sd+5);
+        c.fillStyle=tarnish?`rgba(${70+v*60},${60+v*50},${40+v*30},${0.85*a})`:`rgba(${v*255},${v*255},${v*255},${0.85*a})`; c.fillRect(px,py,z,z); }
+      if(!tarnish){ c.save(); c.globalAlpha=0.5*a; c.strokeStyle="#ffffff"; c.lineWidth=2; for(let i=0;i<3;i++){ const y=tg.y-R*1.2+((t/4+i*40)%(R*2.2)); c.beginPath(); c.moveTo(tg.x-R*1.3,y); c.lineTo(tg.x+R*1.3,y); c.stroke(); } c.restore(); } }},
+  /* Saw in Half: a magician's box drops over the target, a big saw cuts across it, and the box opens to show it's fine but dizzy */
+  sawcut:{C:900,D:1500,
+    atk:t=>({pose:t<1300?"cast":"idle",arc:t<1300?-4*Math.sin(t/180):0}),
+    def:t=>t>=300&&t<1250?{alpha:t<1050?0.35:1,pose:"hurt"}:null,
+    fx(c,t,x){ const tg=x.target, R=tg.r; if(t<200||t>1400) return; const drop=Math.min(1,(t-200)/180), a=t<1200?1:1-(t-1200)/200, bx=tg.x, by=tg.y-R*0.3-(1-drop)*R*3, w=R*2.2, h=R*1.6;
+      c.save(); c.globalAlpha*=a; c.fillStyle="#2a1a3a"; c.fillRect(bx-w/2,by-h/2,w,h); c.strokeStyle="#e8c25a"; c.lineWidth=3; c.strokeRect(bx-w/2,by-h/2,w,h); c.beginPath(); c.moveTo(bx,by-h/2); c.lineTo(bx,by+h/2); c.stroke();
+      for(let i=0;i<5;i++){ atStar4(c,bx-w/2+w*(i+0.5)/5,by-h/2+R*0.15,R*0.08,"#e8c25a"); }
+      if(t>=480&&t<1000){ const k=(t-480)/520, sy=by-h/2-R*0.2+k*(h+R*0.4), sx=bx+Math.sin(t/35)*R*0.4; c.fillStyle="#c9d2dc"; c.fillRect(sx-R*1.4,sy-R*0.12,R*2.4,R*0.24); c.fillStyle="#8a5a30"; c.fillRect(sx+R*1.0,sy-R*0.2,R*0.5,R*0.4);
+        c.fillStyle="#6a737c"; for(let i=0;i<12;i++){ c.beginPath(); c.moveTo(sx-R*1.4+i*R*0.2,sy+R*0.12); c.lineTo(sx-R*1.3+i*R*0.2,sy+R*0.22); c.lineTo(sx-R*1.2+i*R*0.2,sy+R*0.12); c.fill(); }
+        for(let i=0;i<4;i++){ const q=((t/90)+i/4)%1; c.fillStyle=`rgba(230,200,150,${1-q})`; c.fillRect(bx+w/2+q*R*0.6,sy+q*R*0.4,3,3); } } c.restore(); atImpact(t,900,0.3,0.05); }},
+  /* Wand Tap: a wand pokes out of the hat and taps the target, a pop of stars on the tip */
+  wandtap:{C:420,D:820,
+    atk:t=>({pose:t<200?"slamup":t<560?"push":"idle"}),
+    def:t=>SG.knock(t,420,1,12,300),
+    fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, d=atDir(x); if(t<120||t>700) return; const reach=t<420?eo((t-120)/300):1-eio((t-420)/280), ox=s.x+d*s.r*0.2, oy=s.y-s.r*1.0, ex=ox+(tg.x-d*R*0.6-ox)*reach, ey=oy+(tg.y-R*0.4-oy)*reach;
+      c.lineCap="round"; c.strokeStyle="#1a1a22"; c.lineWidth=R*0.16; c.beginPath(); c.moveTo(ox,oy); c.lineTo(ex,ey); c.stroke(); c.strokeStyle="#ffffff"; c.lineWidth=R*0.17; c.beginPath(); const L=Math.hypot(ex-ox,ey-oy)||1; c.moveTo(ex-(ex-ox)/L*R*0.35,ey-(ey-oy)/L*R*0.35); c.lineTo(ex,ey); c.stroke();
+      if(t>=420&&t<640){ const k=(t-420)/220; for(let i=0;i<6;i++){ const a=i*1.05, v=R*(0.2+0.9*k); atStar4(c,ex+Math.cos(a)*v,ey+Math.sin(a)*v,R*0.18*(1-k),i%2?"rgba(255,230,120,.95)":"rgba(200,170,255,.95)"); } } atImpact(t,420,0.15,0.03); }},
+  /* Hook Pull: the umbrella's crook hooks the target and yanks it across toward Brolly */
+  hookyank:{C:440,D:1000,
+    atk:t=>({pose:t<240?"push":t<700?"slamup":"idle",rot:t>=440&&t<700?-0.1:0}),
+    def(t,x){ const d=-((x&&x.dir)||1); if(t<440||t>900) return null; const k=(t-440)/460; return {off:[d*50*Math.sin(Math.min(1,k*1.4)*Math.PI*0.5)*(1-Math.max(0,(k-0.7)/0.3)),0],rot:d*0.2*(1-k),pose:"hurt"}; },
+    fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, d=atDir(x); if(t<100||t>900) return; const reach=t<440?eo((t-100)/340):1-eio(Math.min(1,(t-440)/460)), ox=s.x+d*s.r*0.4, oy=s.y-s.r*0.2, ex=ox+(tg.x+d*R*0.5-ox)*reach, ey=oy+(tg.y-R*0.3-oy)*reach;
+      c.lineCap="round"; c.strokeStyle="#5a3a22"; c.lineWidth=R*0.13; c.beginPath(); c.moveTo(ox,oy); c.lineTo(ex,ey); c.arc(ex-d*R*0.25,ey,R*0.25,0,Math.PI,d<0); c.stroke(); c.strokeStyle="#8a6040"; c.lineWidth=R*0.05; c.beginPath(); c.moveTo(ox,oy); c.lineTo(ex,ey); c.stroke();
+      if(t>=440&&t<600) MV.lines(c,tg.x,tg.y-R*0.2,R,d,4,1-(t-440)/160); atImpact(t,440,0.2,0.03); }},
+  /* Foam Smother: foam heaps up over the target until it's buried, then pops in a shower of bubbles */
+  foamheap:{C:800,D:1350,
+    atk:t=>({pose:t<1000?"cast":"idle"}),
+    def:t=>t>=300&&t<1100?{alpha:t<800?1-0.7*Math.min(1,(t-300)/400):1,sy:0.92,pose:"hurt"}:null,
+    fx(c,t,x){ const tg=x.target, R=tg.r; if(t<200||t>1250) return; const g=t<800?eo((t-200)/600):1, pop=t<800?0:(t-800)/450;
+      if(pop<0.15){ for(let i=0;i<18;i++){ const an=i/18*Math.PI, rr=R*1.2*g, px=tg.x+Math.cos(an)*rr*(0.4+0.6*atH(i)), py=tg.foot-Math.sin(an)*rr*1.3*(0.6+0.4*atH(i*3)); SG.puff(c,px,py,R*(0.35+0.2*atH(i*5))*g,0.95,[250,252,255]); } }
+      if(pop>0) for(let i=0;i<16;i++){ const a=atH(i*3)*Math.PI*2, v=R*(0.5+1.8*eo(pop)); c.save(); c.translate(tg.x+Math.cos(a)*v,tg.y-R*0.3+Math.sin(a)*v*0.8-pop*R); c.globalAlpha=1-pop; c.scale(1.2,1.2); vbDraw(c,"bubble",i,t,x); c.restore(); }
+      atImpact(t,800,0.3,0.05); }},
+  /* Ghost Image: three see-through copies of it flicker into place round the target and strike in turn */
+  afterimage:{C:500,D:1200,
+    atk:t=>({pose:t<1000?"cast":"idle",alpha:t<1000?0.55+0.2*Math.sin(t/40):1}),
+    def:t=>{ if(t<500||t>1050) return null; const p=((t-500)%180)/180; return {off:[(1-p)*6,0],pose:"hurt"}; },
+    back(c,t,x){ const s=x.self, tg=x.target, R=tg.r, spr=x.self&&x.self.r; },
+    fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r; for(let i=0;i<3;i++){ const t0=200+i*180, k=(t-t0)/300; if(k<0||k>1) continue; const an=-Math.PI*0.5+(i-1)*1.1, px=tg.x+Math.cos(an)*R*1.4, py=tg.y-R*0.2+Math.sin(an)*R*1.1;
+        c.save(); c.globalAlpha=(k<0.3?k/0.3:1-(k-0.3)/0.7)*0.7; c.fillStyle=atRgba(x.body||[180,180,200],1); c.beginPath(); c.ellipse(px,py,s.r*0.7,s.r*0.85,0,0,7); c.fill(); c.strokeStyle="rgba(255,255,255,.9)"; c.lineWidth=2; for(let j=0;j<3;j++){ c.beginPath(); c.moveTo(px-s.r*0.7,py-s.r*0.4+j*s.r*0.4); c.lineTo(px+s.r*0.7,py-s.r*0.4+j*s.r*0.4); c.stroke(); } c.restore();
+        if(k>0.3&&k<0.6) MV.lines(c,tg.x,tg.y-R*0.2,R,px>tg.x?-1:1,4,1-(k-0.3)/0.3); }
+      for(let i=0;i<3;i++) atImpact(t,500+i*180,0.15,0); }},
+  /* Midnight: a huge clock face rises behind the target, the hands sweep to twelve and it strikes, each chime a ring of sound */
+  clockstrike:{C:900,D:1600,
+    atk:t=>({pose:t<1300?"cast":"idle"}),
+    def:t=>t>=900&&t<1400?{off:[Math.sin(t/14)*2,0],pose:"hurt"}:null,
+    back(c,t,x){ const tg=x.target, R=tg.r; if(t<150||t>1550) return; const a=t<400?(t-150)/250:t<1350?1:1-(t-1350)/200, cx=tg.x, cy=tg.y-R*1.6, rr=R*1.8; c.save(); c.globalAlpha*=a;
+      c.fillStyle="#f6efd8"; c.beginPath(); c.arc(cx,cy,rr,0,7); c.fill(); c.strokeStyle="#5a4630"; c.lineWidth=R*0.14; c.stroke(); c.fillStyle="#5a4630"; for(let i=0;i<12;i++){ const an=i/12*Math.PI*2; c.beginPath(); c.arc(cx+Math.sin(an)*rr*0.82,cy-Math.cos(an)*rr*0.82,R*(i%3?0.05:0.1),0,7); c.fill(); }
+      const k=Math.min(1,Math.max(0,(t-300)/600)), mh=-Math.PI*0.6*(1-eio(k)), hh=-Math.PI*0.3*(1-eio(k)); c.lineCap="round"; c.strokeStyle="#2a2018"; c.lineWidth=R*0.12; c.beginPath(); c.moveTo(cx,cy); c.lineTo(cx+Math.sin(hh)*rr*0.5,cy-Math.cos(hh)*rr*0.5); c.stroke();
+      c.lineWidth=R*0.07; c.beginPath(); c.moveTo(cx,cy); c.lineTo(cx+Math.sin(mh)*rr*0.75,cy-Math.cos(mh)*rr*0.75); c.stroke(); c.fillStyle="#c9a040"; c.beginPath(); c.arc(cx,cy,R*0.1,0,7); c.fill(); c.restore(); },
+    fx(c,t,x){ const tg=x.target, R=tg.r; for(let j=0;j<3;j++){ const k=(t-900-j*150)/400; if(k>=0&&k<1) SG.ring(c,tg.x,tg.y-R*1.6,R*(1.9+1.5*k),R*(1.9+1.5*k),[255,230,150],4*(1-k),1-k); } atImpact(t,900,0.4,0.05); }},
+  /* Save Up: coins drop out of the air and stack up, then slide into its coin slot one by one */
+  coinsave:{C:700,D:1200,
+    atk:t=>({pose:t<1000?atPose("cast",{eyes:"happy"}):"idle",sy:t>=700&&t<1000?1+0.04*Math.sin((t-700)/50):1}),
+    fx(c,t,x){ const s=x.self, R=s.r; for(let i=0;i<6;i++){ const t0=100+i*90, k=(t-t0)/300; if(k<0) continue; const slot={x:s.x,y:s.y-R*0.9}; let px,py;
+        if(k<1){ px=s.x+(i-2.5)*R*0.22; py=s.y-R*3.4+k*R*2.0; } else { const q=Math.min(1,(k-1)/0.5); if(q>=1) continue; px=s.x+(i-2.5)*R*0.22*(1-q); py=s.y-R*1.4+(slot.y-(s.y-R*1.4))*q; }
+        c.save(); c.translate(px,py); c.scale(1.6,1.6); vbDraw(c,"coin",i,t,x); c.restore(); }
+      if(t>=700&&t<1100){ const k=(t-700)/400; for(let i=0;i<5;i++) atStar4(c,s.x+Math.cos(i*1.26)*R*1.1,s.y-R*0.5+Math.sin(i*1.26)*R*0.6-k*R*0.4,R*0.13*(1-k),"rgba(255,230,120,.95)"); } }},
+  /* Burrow: it digs in and vanishes, a mound of dirt runs along under the floor, and it pops back up where it started */
+  burrow:{C:500,D:1200,
+    atk:t=>{ if(t<300){ const k=eo(t/300); return {sy:1-0.5*k,arc:30*k,alpha:1-k,pose:"crouch"}; } if(t<900) return {alpha:0,pose:"crouch"}; const k=eo(Math.min(1,(t-900)/250)); return {arc:30*(1-k),alpha:k,sy:0.8+0.2*k,pose:"idle"}; },
+    fx(c,t,x){ const s=x.self, R=s.r, d=atDir(x); if(t<100||t>1200) return; if(t<350) SG.dust(c,s.x,s.foot,R,(t-100)/250,8);
+      if(t>=300&&t<900){ const k=(t-300)/600, mx=s.x+d*R*1.8*Math.sin(k*Math.PI); c.fillStyle="#8a6a48"; c.beginPath(); c.ellipse(mx,s.foot,R*0.6,R*0.25,0,Math.PI,0); c.fill(); c.fillStyle="#a8865e"; for(let i=0;i<4;i++){ c.beginPath(); c.arc(mx+(i-1.5)*R*0.25,s.foot-R*0.18-Math.abs(Math.sin(t/60+i))*R*0.1,R*0.07,0,7); c.fill(); } }
+      if(t>=900&&t<1200) SG.dust(c,s.x,s.foot,R,(t-900)/300,8); }}
+});
+delete ANIM.afterimage.back;
+if(typeof KSND!=="undefined") Object.assign(KSND,{
+  parry:(d,t)=>{ sTone(d,t+0.15,'triangle',2200,1800,0.12,0.05); sTone(d,t+0.3,'triangle',2600,2000,0.1,0.04); dNoise(d,t+0.5,0.08,0.2,'highpass',2500,1.5); },
+  static:(d,t)=>{ dNoise(d,t+0.12,0.8,0.12,'highpass',2000,0.3); },
+  sawcut:(d,t)=>{ dKick(d,t+0.38,0.3); for(let i=0;i<8;i++) dNoise(d,t+0.48+i*0.065,0.05,0.12,'bandpass',2200,2); },
+  wandtap:(d,t)=>{ sTone(d,t+0.4,'sine',1600,2400,0.15,0.05); sTone(d,t+0.45,'sine',2400,3200,0.15,0.03); },
+  hookyank:(d,t)=>{ dNoise(d,t+0.15,0.25,0.08,'bandpass',900,0.8); dKick(d,t+0.44,0.35); sTone(d,t+0.44,'sawtooth',300,150,0.2,0.03); },
+  foamheap:(d,t)=>{ for(let i=0;i<8;i++) sTone(d,t+0.2+i*0.07,'sine',500+i*60,700+i*60,0.06,0.03); dNoise(d,t+0.8,0.25,0.2,'highpass',2000,1); },
+  afterimage:(d,t)=>{ for(let i=0;i<3;i++){ sTone(d,t+0.2+i*0.18,'sine',900,500,0.12,0.04); dNoise(d,t+0.5+i*0.18,0.05,0.14,'bandpass',1500,2); } },
+  clockstrike:(d,t)=>{ dNoise(d,t+0.3,0.5,0.05,'bandpass',3000,4); for(let i=0;i<3;i++) sTone(d,t+0.9+i*0.15,'sine',660,650,0.5,0.06); },
+  coinsave:(d,t)=>{ for(let i=0;i<6;i++) sTone(d,t+0.35+i*0.09,'triangle',1800+i*120,1800+i*120,0.08,0.04); },
+  burrow:(d,t)=>{ dNoise(d,t+0.05,0.35,0.15,'lowpass',500); dNoise(d,t+0.3,0.6,0.06,'lowpass',300); dNoise(d,t+0.9,0.3,0.15,'lowpass',500); }
+});
+Object.assign(AR_KIND,{"Riposte":"parry","Fan Parry":"parry","Signal Jam":"static","Tarnish":"static","Saw in Half":"sawcut","Wand Tap":"wandtap","Hook Pull":"hookyank","Foam Smother":"foamheap","Broadcast":"trumpet","Ghost Image":"afterimage","Midnight":"clockstrike","Save Up":"coinsave","Burrow":"burrow"});

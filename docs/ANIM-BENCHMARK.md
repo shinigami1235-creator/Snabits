@@ -22,3 +22,14 @@ Every move animation is graded against the ones Gid approved between 16 and 17 N
 - **Pass:** meets every rule above.
 - **Fix:** right idea with a rule broken, such as too small, too fast, flat, or the wrong colour.
 - **Wrong:** the animation shows a different action from the name, or uses a part the Snabit doesn't have.
+
+## The 17 Nov 2026 audit
+
+A check of all 1,511 ordinary moves found 1,056 that showed their name, 377 that were roughly right but generic and 78 that showed something else. The fixes:
+
+- Volleys throw what they name, in 30 shapes, where every bit used to be an acorn. Darts take their material, where every one used to be ice. Drops are the named object, where every one used to be a flaming rock.
+- 258 moves moved to an existing kind that shows their name, such as roars on trumpet rings and pecks on nibble.
+- 23 new kinds: tailswing, wingslap, propthrow, rainshower, consume, swarm, drainstream, selfrestore, whirlpool, toss, clothwhip, tongue, waterblade, parry, static, sawcut, wandtap, hookyank, foamheap, afterimage, clockstrike, coinsave and burrow.
+- The most-used shared kinds got a look pass: tackles kick up dust and leave speed lines, buffs and heals rise in a column of light, bolts are bigger, clouds are real puffs tinted by what they are, and goo takes its own colour.
+- Special volleys, darts and gusts keep their own animation instead of turning into a beam.
+- A signature's own impact is no longer covered by the stock white hit flash, Crease's cranes are twice the size, and Unicorn's rainbow no longer washes out to white.
