@@ -135,7 +135,7 @@ function blast(c, p, k, x) {
 /* ---------- bolt: charge at the source, fly with a trail, land with a blast ---------- */
 ANIM.bolt = { C: 560, D: 940,
   atk: t => ({ f: 0, pose: t < 220 ? (fromHands(t) ? 'slamup' : 'cast') : t < 640 ? 'push' : 'idle' }),
-  fx(c, t, x) { const o = x.from[0], tg = x.target, pw = x.pw || 1, sc = 0.8 + 0.45 * pw;
+  fx(c, t, x) { const o = x.from[0], tg = x.target, pw = x.pw || 1, sc = 1.25 + 0.5 * pw;   // 17 Nov 2026 audit: bigger so it reads on a phone
     if (t < 220) { const k = t / 220;                       // gathering: pieces drawn in toward the source
       for (let i = 0; i < 8; i++) { const a = i * 0.785 + t / 120, d = 34 * (1 - k) + 4; c.globalAlpha = k; ePart(c, x.el, o.x + Math.cos(a) * d, o.y + Math.sin(a) * d, 1.2, t, i, x.name); }
       c.globalAlpha = 1; orb(c, { x: o.x, y: o.y, ang: Math.atan2(tg.y - o.y, tg.x - o.x) }, x, t, sc * (0.3 + 0.7 * k)); }
@@ -388,9 +388,13 @@ function fieldFx(c, x, t, a) {
   c.restore();
 }
 const SUP = (kind, D, fx, atk) => ({ C: Math.round(D * 0.75), D, atk: atk || (t => ({ f: 0, pose: t < D - 150 ? 'cast' : 'idle' })), fx });
-ANIM.buff = SUP('buff', 900, (c, t, x) => { const a = Math.min(1, t / 150) * Math.min(1, (900 - t) / 200); psyAura(c, x.self, t, a * 0.8, 0, [255, 150, 80]); arrowsFx(c, x.self, t, true, [255, 120, 70], a); });
+const riseGlow = (c, s, t, a, col) => { const z = Math.max(1, (s.r || 30) / 30); c.save(); c.translate(s.x, s.foot); c.scale(z, z); c.translate(-s.x, -s.foot); c.globalCompositeOperation = 'lighter'; const g = c.createLinearGradient(0, s.foot, 0, s.foot - 140); g.addColorStop(0, rgbS(col, 0.45 * a)); g.addColorStop(1, rgbS(col, 0)); c.fillStyle = g; c.beginPath(); c.ellipse(s.x, s.foot - 60, 44, 80, 0, 0, 7); c.fill(); c.restore();
+  for (let i = 0; i < 3; i++) { const k = ((t / 600) + i / 3) % 1; c.save(); c.globalAlpha = a * (1 - k); c.strokeStyle = rgbS(col.map(v => v + (255 - v) * 0.4), 1); c.lineWidth = 3; c.beginPath(); c.ellipse(s.x, s.foot - 6 - k * 110, 40 - k * 10, 10 - k * 3, 0, 0, 7); c.stroke(); c.restore(); } c.restore(); };
+ANIM.buff = SUP('buff', 900, (c, t, x) => { const a = Math.min(1, t / 150) * Math.min(1, (900 - t) / 200), s = x.self, col = x.col || [255, 150, 80];
+  riseGlow(c, s, t, a, col); psyAura(c, s, t, a * 0.8, 0, col); arrowsFx(c, s, t, true, col, a); sparkleUp(c, s, t, a, col.map(v => v + (255 - v) * 0.5)); });   // 17 Nov 2026 audit: a column of light in its colour so a power-up reads at phone size
 ANIM.debuff = SUP('debuff', 900, (c, t, x) => { const a = Math.min(1, t / 150) * Math.min(1, (900 - t) / 200); arrowsFx(c, x.target, t, false, [90, 150, 255], a); });
-ANIM.heal = SUP('heal', 1000, (c, t, x) => { const a = Math.min(1, t / 150) * Math.min(1, (1000 - t) / 200); psyAura(c, x.self, t, a * 0.7, 0, [140, 240, 150]); sparkleUp(c, x.self, t, a, [170, 255, 170]); });
+ANIM.heal = SUP('heal', 1000, (c, t, x) => { const a = Math.min(1, t / 150) * Math.min(1, (1000 - t) / 200), s = x.self; riseGlow(c, s, t, a, [140, 240, 150]); psyAura(c, s, t, a * 0.7, 0, [140, 240, 150]); sparkleUp(c, s, t, a, [170, 255, 170]);
+  const z = Math.max(1, (s.r || 30) / 30); for (let i = 0; i < 5; i++) { const k = ((t / 700) + i / 5) % 1, px = s.x + Math.sin(i * 2.3) * 30 * z, py = s.foot - (20 + k * 100) * z; c.save(); c.globalAlpha = a * Math.sin(k * Math.PI); c.fillStyle = '#7fe08a'; c.strokeStyle = '#2f8a3a'; c.lineWidth = 1.5; c.translate(px, py); c.scale(z, z); c.beginPath(); c.rect(-3, -9, 6, 18); c.rect(-9, -3, 18, 6); c.fill(); c.restore(); } });   // 17 Nov 2026 audit: a rising column and plus signs so a heal reads at phone size
 ANIM.shield = SUP('shield', 950, (c, t, x) => { const n = x.name || '', st = /Frost/.test(n) ? 'ice' : /Shard|Harden/.test(n) ? 'rock' : /Iron|Polish|Bulwark/.test(n) ? 'steel' : /Mirror/.test(n) ? 'mirror' : 'bubble';
   shieldFx(c, x.self, t, Math.min(1, t / 160) * Math.min(1, (950 - t) / 220), st); }, t => ({ f: 0, pose: t < 800 ? 'guard' : 'idle' }));
 ANIM.bunker = SUP('bunker', 1000, (c, t, x) => { const a = Math.min(1, t / 160) * Math.min(1, (1000 - t) / 220); shieldFx(c, x.self, t, a, 'shell');
