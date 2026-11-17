@@ -1354,12 +1354,14 @@ MV.bat=(c,x,y,z,ph,dir=1)=>{ c.save(); c.translate(x,y); c.scale(dir*z/14,z/14);
   wing(-1); wing(1); c.fillStyle="#2e1a3a"; c.beginPath(); c.ellipse(0,0,6,7.5,0,0,7); c.fill(); for(const sd of [-1,1]){ c.beginPath(); c.moveTo(sd*2,-6); c.lineTo(sd*5.5,-12); c.lineTo(sd*5.5,-5); c.fill(); }
   c.fillStyle="rgba(120,80,140,.6)"; c.beginPath(); c.ellipse(0,1.5,3.5,4,0,0,7); c.fill(); c.fillStyle="#ff3a55"; for(const sd of [-1,1]){ c.beginPath(); c.arc(sd*2.4,-2,1.4,0,7); c.fill(); } c.fillStyle="#fff"; for(const sd of [-1,1]){ c.beginPath(); c.moveTo(sd*0.6,2.5); c.lineTo(sd*1.6,2.5); c.lineTo(sd*1.1,4.6); c.fill(); } c.restore(); };
 /* a textured storm cloud: lumps shaded light on top and dark underneath, a flat dark base, rim light and a slow drift */
-MV.cloud=(c,cx,cy,R,t,base=[120,130,150])=>{ const lumps=[[-1.05,0.12,0.5],[-0.55,-0.2,0.62],[0.05,-0.38,0.7],[0.6,-0.18,0.6],[1.05,0.1,0.48],[-0.25,0.12,0.55],[0.35,0.15,0.55]];
-  c.save(); for(const [ox,oy,r] of lumps){ const x0=cx+ox*R+Math.sin(t/700+ox*3)*R*0.04, y0=cy+oy*R, rr=r*R, g=c.createRadialGradient(x0-rr*0.3,y0-rr*0.45,rr*0.1,x0,y0,rr); g.addColorStop(0,atRgba(base.map(v=>Math.min(255,v+70)),1)); g.addColorStop(0.6,atRgba(base,1)); g.addColorStop(1,atRgba(base.map(v=>v*0.6),1));
-    c.fillStyle=g; c.beginPath(); c.arc(x0,y0,rr,0,7); c.fill(); }
-  c.fillStyle=atRgba(base.map(v=>v*0.55),1); c.beginPath(); c.ellipse(cx,cy+R*0.3,R*1.3,R*0.22,0,0,7); c.fill();
-  c.strokeStyle="rgba(255,255,255,.45)"; c.lineWidth=2; for(const [ox,oy,r] of lumps.slice(1,4)){ c.beginPath(); c.arc(cx+ox*R,cy+oy*R,r*R*0.92,3.6,5.2); c.stroke(); }
-  c.strokeStyle=atRgba(base.map(v=>v*0.45),0.5); c.lineWidth=1.2; for(let i=0;i<5;i++){ const xx=cx+(i-2)*R*0.42+Math.sin(t/300+i)*R*0.05; c.beginPath(); c.arc(xx,cy+R*0.05,R*0.18,0.2,2.6); c.stroke(); } c.restore(); };
+MV.cloud=(c,cx,cy,R,t,base=[120,130,150])=>{ const lumps=[[-1.05,0.1,0.5],[-0.55,-0.22,0.62],[0.05,-0.4,0.7],[0.6,-0.2,0.6],[1.05,0.08,0.48],[-0.6,0.22,0.42],[-0.1,0.25,0.46],[0.45,0.24,0.44]];
+  const L=lumps.map(([ox,oy,r],i)=>[cx+ox*R+Math.sin(t/700+ox*3)*R*0.04,cy+oy*R,r*R]);
+  const shape=()=>{ c.beginPath(); for(const [x0,y0,rr] of L){ c.moveTo(x0+rr,y0); c.arc(x0,y0,rr,0,7); } };
+  c.save(); const g=c.createLinearGradient(0,cy-R*1.1,0,cy+R*0.75); g.addColorStop(0,atRgba(base.map(v=>Math.min(255,v+85)),1)); g.addColorStop(0.45,atRgba(base,1)); g.addColorStop(1,atRgba(base.map(v=>v*0.62),1));
+  c.fillStyle=g; shape(); c.fill(); c.clip();
+  for(const [x0,y0,rr] of L){ const h=c.createRadialGradient(x0-rr*0.35,y0-rr*0.5,rr*0.05,x0-rr*0.2,y0-rr*0.3,rr*0.9); h.addColorStop(0,"rgba(255,255,255,.35)"); h.addColorStop(1,"rgba(255,255,255,0)"); c.fillStyle=h; c.beginPath(); c.arc(x0,y0,rr,0,7); c.fill(); }   // soft light on each lump
+  for(let i=0;i<5;i++){ const xx=cx+(i-2)*R*0.42+Math.sin(t/300+i)*R*0.05, yy=cy+R*0.1; const sh=c.createRadialGradient(xx,yy,0,xx,yy,R*0.3); sh.addColorStop(0,atRgba(base.map(v=>v*0.55),0.35)); sh.addColorStop(1,atRgba(base.map(v=>v*0.55),0)); c.fillStyle=sh; c.beginPath(); c.arc(xx,yy,R*0.3,0,7); c.fill(); }   // shadows where the lumps fold in
+  c.restore(); c.save(); c.strokeStyle="rgba(255,255,255,.4)"; c.lineWidth=2; for(const [x0,y0,rr] of L.slice(1,4)){ c.beginPath(); c.arc(x0,y0,rr*0.93,3.7,5.1); c.stroke(); } c.restore(); };
 Object.assign(ANIM,{
   /* Riposte is now a ready stance: it braces, its claw glints, and a gold ring holds round it while the stance is up. The counter itself is counterslash, played when a strike comes in */
   parry:{C:420,D:900,
@@ -1404,18 +1406,26 @@ Object.assign(ANIM,{
     atk:t=>({pose:t<200?"cast":t<760?atPose("bitewide",{open:0.8}):"idle"}),
     def:t=>t>=420&&t<800?{off:[Math.sin(t/15)*2,0],pose:"hurt"}:null,
     fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, d=atDir(x), o=s.mouth||{x:s.x+d*s.r*0.5,y:s.y-s.r*0.1}, hot=/Scald/.test(x.name||""); if(t<180||t>860) return;
-      const grow=Math.min(1,(t-180)/220), shrink=t<640?0:Math.min(1,(t-640)/200), n=28, a0=shrink, a1=grow, pts=[];
-      for(let j=0;j<=n;j++){ const u=a0+(a1-a0)*j/n, p=lerpP(o,{x:tg.x,y:tg.y-R*0.2},u,R*0.7); pts.push([p.x,p.y+Math.sin(u*14-t/30)*R*0.06*u,u]); }
-      c.save(); c.lineCap="round"; c.lineJoin="round"; for(const [w,col] of [[R*0.34,"rgba(40,110,200,.75)"],[R*0.24,hot?"rgba(170,215,250,.95)":"rgba(90,170,240,.95)"],[R*0.08,"rgba(240,252,255,.95)"]]){ c.strokeStyle=col; c.lineWidth=w; c.beginPath(); pts.forEach((p,j)=>j?c.lineTo(p[0],p[1]):c.moveTo(p[0],p[1])); c.stroke(); } c.restore();
+      const grow=Math.min(1,(t-180)/220), shrink=t<640?0:Math.min(1,(t-640)/200), n=36, a0=shrink, a1=grow, P=[], E=[], Fv=[];
+      for(let j=0;j<=n;j++){ const u=a0+(a1-a0)*j/n, p=lerpP(o,{x:tg.x,y:tg.y-R*0.2},u,R*0.7), q=lerpP(o,{x:tg.x,y:tg.y-R*0.2},Math.min(1,u+0.01),R*0.7), dx=q.x-p.x, dy=q.y-p.y, m=Math.hypot(dx,dy)||1;
+        const w=R*(0.1+0.16*u)*(1+0.22*Math.sin(u*22-t/22)+0.12*Math.sin(u*41+t/17)); P.push([p.x,p.y+Math.sin(u*14-t/30)*R*0.05*u]); Fv.push([-dy/m,dx/m,w]); }
+      const side=sg=>P.map((p,j)=>[p[0]+Fv[j][0]*Fv[j][2]*sg,p[1]+Fv[j][1]*Fv[j][2]*sg]);
+      const top=side(1), bot=side(-1); c.save(); c.beginPath(); top.forEach((p,j)=>j?c.lineTo(p[0],p[1]):c.moveTo(p[0],p[1])); for(let j=n;j>=0;j--) c.lineTo(bot[j][0],bot[j][1]); c.closePath();
+      const gr=c.createLinearGradient(o.x,o.y-R*0.3,o.x,o.y+R*0.3); gr.addColorStop(0,hot?"rgba(205,235,255,.85)":"rgba(170,225,255,.85)"); gr.addColorStop(0.5,hot?"rgba(130,195,245,.8)":"rgba(70,160,235,.8)"); gr.addColorStop(1,hot?"rgba(170,215,250,.8)":"rgba(110,190,245,.8)");
+      c.fillStyle=gr; c.fill(); c.clip();
+      c.strokeStyle="rgba(255,255,255,.75)"; c.lineCap="round"; for(let i=0;i<9;i++){ const ph=((t/180)+i/9)%1, j0=Math.floor(ph*n), j1=Math.min(n,j0+4), off=((i*37)%7-3)/3*0.5; if(j1<=j0) continue; c.lineWidth=R*0.03+R*0.02*(i%2); c.beginPath(); for(let j=j0;j<=j1;j++){ const x0=P[j][0]+Fv[j][0]*Fv[j][2]*off, y0=P[j][1]+Fv[j][1]*Fv[j][2]*off; j===j0?c.moveTo(x0,y0):c.lineTo(x0,y0); } c.stroke(); }   // streaks flowing along it
+      for(let i=0;i<8;i++){ const ph=((t/320)+i/8)%1, j=Math.floor(ph*n), off=((i*53)%9-4)/4*0.6; c.strokeStyle="rgba(255,255,255,.7)"; c.lineWidth=1.2; c.beginPath(); c.arc(P[j][0]+Fv[j][0]*Fv[j][2]*off,P[j][1]+Fv[j][1]*Fv[j][2]*off,R*0.035,0,7); c.stroke(); }   // bubbles inside
+      c.restore(); c.save(); c.strokeStyle="rgba(240,252,255,.6)"; c.lineWidth=1.5; c.beginPath(); top.forEach((p,j)=>j?c.lineTo(p[0],p[1]):c.moveTo(p[0],p[1])); c.stroke(); c.restore();   // light along the top edge
+      for(let i=0;i<14;i++){ const q=((t/220)+i/14)%1, j=Math.min(n,Math.floor(atH(i*7)*n)), sg=i%2?1:-1, e=sg>0?top[j]:bot[j]; HR_DROP(c,e[0]+Fv[j][0]*sg*q*R*0.4,e[1]+Fv[j][1]*sg*q*R*0.4+q*q*R*0.6,R*(0.035+0.025*atH(i)),[150,210,250],0.85*(1-q)); }   // spray coming off the sides
       for(let i=0;i<10;i++){ const q=((t/260)+i/10)%1, u=a0+(a1-a0)*q, p=lerpP(o,{x:tg.x,y:tg.y-R*0.2},u,R*0.7); HR_DROP(c,p.x+Math.sin(i*2.3)*R*0.25,p.y+R*0.2+q*R*0.3,R*0.06,[150,210,250],0.8*(1-q)); }
       if(hot) for(let i=0;i<4;i++){ const q=((t/500)+i/4)%1; SG.puff(c,tg.x+(i-1.5)*R*0.4,tg.y-R*0.6-q*R,R*(0.2+0.2*q),0.5*(1-q)); }
       if(grow>=1&&t<760){ const q=((t-400)/360)%1; for(let i=0;i<8;i++){ const a=-Math.PI*(0.1+0.8*atH(i*3)), v=R*(0.4+0.9*((q+i/8)%1)); HR_DROP(c,tg.x-d*R*0.3+Math.cos(a)*v*-d,tg.y-R*0.2+Math.sin(a)*v,R*0.07,[160,220,252],0.9); } SG.ring(c,tg.x,tg.foot,R*(0.5+0.6*q),R*0.15,[220,240,255],2,0.7*(1-q)); }
       atImpact(t,420,0.2,0.03); }},
   /* Signal Jam: a wall of TV static floods the target for well over a second, with rolling bars, colour tears and a dead-channel hiss */
-  static:{C:560,D:1900,tail:1300,
-    atk:t=>({pose:t<1500?"cast":"idle",off:[t<1500?(atH(Math.floor(t/40))-0.5)*3:0,0]}),
-    def:t=>t>=560&&t<1700?{off:[(atH(Math.floor(t/30))-0.5)*7,(atH(Math.floor(t/30)+3)-0.5)*3],pose:"hurt",flash:Math.floor(t/50)%3===0?3:0}:null,
-    fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, tarnish=/Tarnish/.test(x.name||""), a=t<300?t/300:t<1550?1:Math.max(0,1-(t-1550)/250); if(t<100||a<=0) return;
+  static:{C:560,D:1500,tail:900,
+    atk:t=>({pose:t<1250?"cast":"idle",off:[t<1250?(atH(Math.floor(t/40))-0.5)*3:0,0]}),
+    def:t=>t>=560&&t<1300?{off:[(atH(Math.floor(t/30))-0.5)*7,(atH(Math.floor(t/30)+3)-0.5)*3],pose:"hurt",flash:Math.floor(t/50)%3===0?3:0}:null,
+    fx(c,t,x){ const s=x.self, tg=x.target, R=tg.r, tarnish=/Tarnish/.test(x.name||""), a=t<250?t/250:t<1100?1:Math.max(0,1-(t-1100)/200); if(t<100||a<=0) return;
       if(!tarnish&&t<600){ const k=(t-100)/500; for(let i=0;i<4;i++) SG.ring(c,s.x+(tg.x-s.x)*((k+i/4)%1),s.y-s.r*0.6+(tg.y-s.y)*((k+i/4)%1),R*0.5,R*0.6,[230,230,230],2,0.6*a); }
       const W=R*3.2, H=R*2.8, x0=tg.x-W/2, y0=tg.y-R*0.3-H/2, cell=R*0.11, fr=Math.floor(t/40); c.save(); c.globalAlpha*=a*0.92; c.beginPath(); c.ellipse(tg.x,tg.y-R*0.3,W/2,H/2,0,0,7); c.clip();
       for(let yy=0;yy<H;yy+=cell) for(let xx=0;xx<W;xx+=cell){ const v=atH(fr*977+Math.floor(xx/cell)*31+Math.floor(yy/cell)*7); c.fillStyle=tarnish?`rgb(${60+v*80},${50+v*60},${30+v*40})`:`rgb(${v*255|0},${v*255|0},${v*255|0})`; c.fillRect(x0+xx,y0+yy,cell+0.5,cell+0.5); }
@@ -1471,7 +1481,7 @@ MV.prop=(base=>(c,k,i,t,x)=>{ if(k==="wrench"){ const g=c.createLinearGradient(0
 Object.assign(AR_KIND,{"Squirt":"waterjet","Splash":"waterjet","Scald":"waterjet"});
 if(typeof KSND!=="undefined") Object.assign(KSND,{
   waterjet:(d,t)=>{ dNoise(d,t+0.18,0.6,0.16,'bandpass',900,0.6); dNoise(d,t+0.42,0.35,0.12,'highpass',2500,0.8); },
-  static:(d,t)=>{ dNoise(d,t+0.1,1.6,0.2,'highpass',1800,0.25); for(let i=0;i<10;i++) dNoise(d,t+0.2+i*0.13,0.04,0.25,'bandpass',3000+i*200,2); sTone(d,t+0.12,'square',1000,1000,0.25,0.03); sTone(d,t+1.2,'sawtooth',120,90,0.4,0.03); },
+  static:(d,t)=>{ dNoise(d,t+0.1,1.2,0.2,'highpass',1800,0.25); for(let i=0;i<8;i++) dNoise(d,t+0.2+i*0.13,0.04,0.25,'bandpass',3000+i*200,2); sTone(d,t+0.12,'square',1000,1000,0.25,0.03); sTone(d,t+1.0,'sawtooth',120,90,0.3,0.03); },
   afterimage:(d,t)=>{ for(let i=0;i<3;i++){ dNoise(d,t+0.12+i*0.14,0.12,0.12,'highpass',2500,0.5); sTone(d,t+0.7+i*0.17,'sine',900,450,0.1,0.05); dKick(d,t+0.76+i*0.17,0.35); } },
   burrow:(d,t)=>{ dNoise(d,t+0.05,0.45,0.2,'lowpass',500); dNoise(d,t+0.3,0.7,0.08,'lowpass',260); dKick(d,t+0.98,0.6); dNoise(d,t+0.98,0.35,0.22,'lowpass',600); },
   parry:(d,t)=>{ sTone(d,t+0.2,'triangle',2400,2400,0.25,0.04); sTone(d,t+0.24,'sine',3600,3600,0.2,0.02); },
