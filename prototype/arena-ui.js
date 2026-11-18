@@ -266,13 +266,13 @@ function atEvent(e,now){
     try{ sfx("whoosh"); }catch(err){} }
   if(e.t==="hit"){ const o=AT.side[1-e.i], mt=S.anim&&S.anim.tier||"light", tier=e.crit?(mt==="special"?"special":mt==="heavy"?"special":"heavy"):mt==="light"&&e.dmg>=25?"medium":mt, T=AT_TIER[tier];
     if(e.h===0||!o.react||te-o.react.t0>120){ o.react={kind:"hit",t0:te,tier,own:S.anim&&ANIM[S.anim.kind]&&(ANIM[S.anim.kind].sig||/^sg_/.test(S.anim.kind))}; if(mt==="special") AT.freeze=Math.max(AT.freeze,now+T.stop); AT.trauma=Math.min(1,AT.trauma+T.trauma);
-      const own=S.anim&&ANIM[S.anim.kind]&&(ANIM[S.anim.kind].sig||/^sg_/.test(S.anim.kind));   // a signature draws its own impact, so the stock burst stays small and the screen doesn't white out over it (17 Nov 2026 audit)
+      const ownFx=typeof OWN_OWNS==="function"&&OWN_OWNS(S), own=ownFx||S.anim&&ANIM[S.anim.kind]&&(ANIM[S.anim.kind].sig||/^sg_/.test(S.anim.kind));   // a signature draws its own impact, so the stock burst stays small and the screen doesn't white out over it (17 Nov 2026 audit)
       AT.hitJuice={i:1-e.i,t0:te,tier,col:S.anim?S.anim.col:[255,236,160],own};
-      if(S.anim&&!(ANIM[S.anim.kind]&&ANIM[S.anim.kind].marks)) AT.strikes.push({t0:te,d:340,kind:/bite/.test(S.anim.kind)?"lines":/claw/.test(S.anim.kind)?"slash":"lines",i:1-e.i,col:S.anim.col,big:{light:1,medium:1.15,heavy:1.4,special:1.9}[tier],dir:S.dir,ranged:!S.anim.contact,body:sp.pal&&sp.pal.body}); AT.punch={t0:te,amt:T.punch,i:1-e.i};
+      if(S.anim&&!ownFx&&!(ANIM[S.anim.kind]&&ANIM[S.anim.kind].marks)) AT.strikes.push({t0:te,d:340,kind:/bite/.test(S.anim.kind)?"lines":/claw/.test(S.anim.kind)?"slash":"lines",i:1-e.i,col:S.anim.col,big:{light:1,medium:1.15,heavy:1.4,special:1.9}[tier],dir:S.dir,ranged:!S.anim.contact,body:sp.pal&&sp.pal.body}); AT.punch={t0:te,amt:T.punch,i:1-e.i};
       if(T.screen) AT.flash={t0:now+T.stop*0.4,a:own?Math.min(0.12,T.screen):T.screen};
       if(T.slow&&mt==="special") AT.slow={from:now+T.stop,until:now+T.stop+T.slow*(AT.ar.over?2.2:1),k:AT.ar.over?0.22:0.32};
       if(tier==="heavy"||tier==="special") AT.dust={i:1-e.i,t0:te,n:tier==="special"?14:8};
-      AT.spark={i:1-e.i,n:T.sparks,col:S.anim?S.anim.col:[255,236,160]}; if(S.anim&&S.anim.contact) S.recoil={t0:te,amt:tier==="heavy"?10:6};
+      AT.spark={i:1-e.i,n:ownFx?2:T.sparks,col:S.anim?S.anim.col:[255,236,160]}; if(S.anim&&S.anim.contact) S.recoil={t0:te,amt:tier==="heavy"?10:6};
       try{ sfx(tier==="heavy"?"heavy":tier==="medium"?"hit":"tap"); if(S.anim) elSfx(S.anim.el,"hit"); }catch(err){} }
     if(e.h===0&&(e.crit||tier==="special")&&typeof atCheer==="function") atCheer(1300);   // the crowd gets to its feet for a crit or a special
     AT.fx.push({i:1-e.i,t0:now+e.h*90,txt:String(e.dmg),crit:e.crit,size:{light:20,medium:23,heavy:28,special:36}[tier]}); if(e.crit&&e.h===0) AT.fx.push({i:1-e.i,t0:now,txt:"Critical!",crit:true,size:13,lift:30}); }
