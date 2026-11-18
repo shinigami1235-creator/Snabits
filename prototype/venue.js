@@ -128,7 +128,7 @@ function venueMatch(){
     ${c.format==="single"?"":`<div class="v-card"><h3>${c.format==="robin"?"Standings":c.format==="team5"?"Bouts":"Bracket"}</h3>${boardHtml()}</div>`}
     <div class="v-quit"><button class="btn2" id="t-forfeit">Forfeit match</button><button class="btn2" id="t-drop">Leave cup</button></div>`);
   venueSay(CUP.ann||`${roundName()}: ${displayName(s)} against ${e.name}, raised by ${e.breeder}.`); CUP.ann=null;
-  const go=mode=>arenaFight({s,foe:o,mode,title:c.name,noDraw:c.format!=="robin",record:mode==="control",learn:true,rand:CUP.R,onEnd:res=>afterMatch(opp,res)});
+  const go=mode=>arenaFight({s,foe:o,mode,title:c.name,venue:typeof atCupVenue==="function"?atCupVenue(c):null,noDraw:c.format!=="robin",record:mode==="control",learn:true,rand:CUP.R,onEnd:res=>afterMatch(opp,res)});
   el("t-fight").onclick=()=>go("control"); el("t-auto").onclick=()=>go("auto");
   if(typeof atPresetCard==="function"&&typeof CHIBI_ART!=="undefined"&&CHIBI_ART) el("t-moves").onclick=()=>atPresetCard(s); else el("t-moves").remove();
   el("t-info").onclick=()=>{ const i=el("v-info"); i.style.display=i.style.display==="none"?"block":"none"; if(i.style.display==="block") i.scrollIntoView({behavior:"smooth",block:"nearest"}); };

@@ -14,7 +14,7 @@ const EVENT_LIST = [
     run: (s, R) => { const who = pickOf(R, BREEDERS.filter(b => b !== 'Ines')); return { text: `${who} came by with a Snabit and wants a friendly match with ${nameOf(s)}.`, choices: [
       { label: 'Fight', small: 'A friendly, nothing at stake', go: () => new Promise(done => { const o = gradedOpponent(s.grade, Math.max(1, s.level + Math.floor(R() * 3) - 1), R);
         arenaFight({ s, foe: o, mode: 'control', title: 'Friendly', learn: true, onEnd: r => { const pay = r.winner === 0 ? 40 + 10 * s.level : 0; PLAYER.bits += pay; s.fatigue += 5; clampAll();
-          done(r.winner === 0 ? `${nameOf(s)} won, and ${who} paid ${pay} bits for the lesson.` : r.winner === 1 ? `${who}'s Snabit won. They shook hands and said to come by for a rematch.` : 'It was a draw, and both of them wanted another go.'); } }); }) },
+          done(r.winner === 0 ? `${nameOf(s)} won and ${who} paid ${pay} bits for the lesson.` : r.winner === 1 ? `${who}'s Snabit won. They shook hands and said to come by for a rematch.` : 'It was a draw and both of them wanted another go.'); } }); }) },
       { label: 'Maybe later', small: 'Turn it down', go: () => `${who} said the offer stands.` }] }; } },
   { id: 'stray', when: () => true,
     run: (s, R) => { const fam = pickOf(R, ['Skit', 'Squib', 'Moko', 'Chomp']); return { text: `A wild ${fam} got into the yard and won't leave ${nameOf(s)} alone.`, choices: [
@@ -22,7 +22,7 @@ const EVENT_LIST = [
       { label: 'Shoo it off', small: 'Back to the hills', go: () => { s.stress += 2; clampAll(); return `The ${fam} ran off. ${nameOf(s)} watched the gate for a while.`; } }] }; } },
   { id: 'logs', when: s => s.level >= 6,
     run: (s, R) => { const who = pickOf(R, ['Coach Rosa', 'Mister Okon', 'Tomas']), pay = 150 + 25 * s.level; return { text: `${who} needs a strong Snabit to haul logs for a day and will pay ${pay} bits.`, choices: [
-      { label: 'Send it', small: `${pay} bits, and a tiring day`, go: () => { PLAYER.bits += pay; s.fatigue += 15; s.tp[1] += 2; clampAll(); return `${nameOf(s)} hauled logs all day and came home sore. ${who} paid ${pay} bits.`; } },
+      { label: 'Send it', small: `${pay} bits and a tiring day`, go: () => { PLAYER.bits += pay; s.fatigue += 15; s.tp[1] += 2; clampAll(); return `${nameOf(s)} hauled logs all day and came home sore. ${who} paid ${pay} bits.`; } },
       { label: 'It needs its rest', small: 'Turn it down', go: () => `${who} found someone else.` }] }; } },
   { id: 'paper', when: s => (s.cups || []).length > 0,
     run: (s, R) => ({ text: `The town paper wants a photo of ${nameOf(s)} for a story on the ${(s.cups[s.cups.length - 1] || '').replace(/ \([A-SF]\)$/, '')}.`, choices: [
@@ -37,7 +37,7 @@ const EVENT_LIST = [
   { id: 'storm', when: () => true,
     run: (s, R) => ({ text: `A storm blew the barn door open last night and ${nameOf(s)} is shaking in the hay.`, choices: [
       { label: 'Sit with it', small: 'Stay until it calms down', go: () => { s.fear -= 3; s.spoil += 4; s.stress -= 6; clampAll(); return `You stayed in the barn until the rain stopped. ${nameOf(s)} fell asleep against you.`; } },
-      { label: 'Fix the door first', small: 'It\'ll be fine', go: () => { s.stress += 4; s.fear += 3; clampAll(); return `You fixed the door, but ${nameOf(s)} took a while to come out of the hay.`; } }] }) },
+      { label: 'Fix the door first', small: 'It\'ll be fine', go: () => { s.stress += 4; s.fear += 3; clampAll(); return `You fixed the door but ${nameOf(s)} took a while to come out of the hay.`; } }] }) },
 ];
 /* Walt notices a Snabit that has outgrown the ranch (Gid, 17 Nov 2026): once its stats would clear most obstacles on the
    expeditions it can reach, and some region could teach it a move, he comes by once and points it at a skill trip. */

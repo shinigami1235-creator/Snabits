@@ -57,7 +57,7 @@ function calCard() {
   const tala = el('cal-tala'), key = sel.w + '|' + c.name;
   let adv = null; if (k === 0 && !why && typeof cupAdvice === 'function') adv = CAL.adv[key] !== undefined ? CAL.adv[key] : (CAL.adv[key] = cupAdvice(c, s));
   const low = fee && PLAYER.bits < fee;
-  tala.innerHTML = low ? `<b>Josie</b>The ${c.name.replace(/ \([A-SF]\)$/, '')} costs ${fee} bits to enter, and we have ${PLAYER.bits}.` : adv ? `<b>Josie</b>${adv.t}` : '';
+  tala.innerHTML = low ? `<b>Josie</b>The ${c.name.replace(/ \([A-SF]\)$/, '')} costs ${fee} bits to enter and we have ${PLAYER.bits}.` : adv ? `<b>Josie</b>${adv.t}` : '';
   const sure = !(adv && adv.weak) || CAL.sure === key;
   go.textContent = k === 0 ? `${sure ? 'Enter' : 'Enter anyway'}${fee ? ` · ${fee} bits` : ''}` : k < 0 ? 'Done' : signedFor(sel.w, c.name) ? 'Cancel sign-up' : 'Sign up';
   go.disabled = k < 0 || !!why || (k === 0 && low);

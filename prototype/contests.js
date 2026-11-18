@@ -26,18 +26,18 @@ function styleScore(s, R) {
 
 /* Mira hosts the contests too. She calls them the way an announcer would, with a few takes for each kind (Gid, 15 Nov 2026) */
 const CONTEST_OPEN = {
-  Strength: [t => `Welcome to the ${t} Strength Contest! Let's find out who's got the muscle around here!`, t => `It's the ${t} Strength Contest, and these Snabits have been lifting all month for this!`, t => `Welcome, everyone! It's the ${t} Strength Contest, so stand back and give them some room!`],
-  Speed: [t => `Welcome to the ${t} Speed Contest! Don't blink, folks, these Snabits are quick!`, t => `It's the ${t} Speed Contest, and every Snabit here thinks it's the fastest in town!`, t => `Welcome to the ${t} Speed Contest! Somebody's going home with sore legs today!`],
+  Strength: [t => `Welcome to the ${t} Strength Contest! Let's find out who's got the muscle around here!`, t => `It's the ${t} Strength Contest and these Snabits have been lifting all month for this!`, t => `Welcome, everyone! It's the ${t} Strength Contest so stand back and give them some room!`],
+  Speed: [t => `Welcome to the ${t} Speed Contest! Don't blink, folks, these Snabits are quick!`, t => `It's the ${t} Speed Contest and every Snabit here thinks it's the fastest in town!`, t => `Welcome to the ${t} Speed Contest! Somebody's going home with sore legs today!`],
   Smarts: [t => `Welcome to the ${t} Smarts Contest! Thinking caps on, everyone!`, t => `It's the ${t} Smarts Contest, where the sharpest Snabit in town takes the prize!`, t => `Welcome to the ${t} Smarts Contest! Quiet in the stands, please, they're thinking!`],
-  Style: [t => `Welcome to the ${t} Style Contest! Let's see some looks out there!`, t => `It's the ${t} Style Contest, and our judges have seen it all, so impress them!`, t => `Welcome to the ${t} Style Contest! Strut it, Snabits!`],
+  Style: [t => `Welcome to the ${t} Style Contest! Let's see some looks out there!`, t => `It's the ${t} Style Contest and our judges have seen it all so impress them!`, t => `Welcome to the ${t} Style Contest! Strut it, Snabits!`],
 };
 const contestOpen = (K, tier) => vary(CONTEST_OPEN[K.kind], 'copen' + K.kind)(tier);
 function contestRound(nm, me, lead, r) {
   const sc = me.last.toFixed(1), k = 'cround' + r + nm, sum = me.sum.toFixed(1), a = /^8/.test(sc) ? 'an' : 'a', A = a === 'an' ? 'An' : 'A';   // "an 8.4", "a 7.2"
   const call = me.last >= 8 ? vary([`${A} ${sc} for ${nm}! The judges loved that!`, `${nm} gets ${a} ${sc}! What a round!`], k)
     : me.last >= 6.5 ? vary([`${nm} scores ${a} ${sc}. Very nice!`, `A solid ${sc} for ${nm}!`], k)
-    : me.last >= 4.5 ? vary([`${nm} gets ${a} ${sc} from the judges.`, `${A} ${sc} for ${nm}, and there's still time to climb.`], k)
-    : vary([`Only ${a} ${sc} for ${nm}. The judges weren't convinced.`, `${nm} gets ${a} ${sc}, and that round didn't go its way.`], k);
+    : me.last >= 4.5 ? vary([`${nm} gets ${a} ${sc} from the judges.`, `${A} ${sc} for ${nm} and there's still time to climb.`], k)
+    : vary([`Only ${a} ${sc} for ${nm}. The judges weren't convinced.`, `${nm} gets ${a} ${sc} and that round didn't go its way.`], k);
   const stand = lead.me ? vary([`${nm} leads on ${sum}!`, `And that puts ${nm} out in front on ${sum}!`], k + 'l') : vary([`${lead.name} is out in front on ${lead.sum.toFixed(1)}.`, `${lead.name} still leads on ${lead.sum.toFixed(1)}, with ${nm} on ${sum}.`], k + 'l');
   return `${call} ${stand}`;
 }
@@ -95,8 +95,8 @@ async function runContest(K) {
     s.stress -= 15; s.fatigue += 8; s.spoil += place === 1 ? 2 : 0; clampAll(); drawUI();
     const lines = [`${nm} finished ${['first', 'second', 'third', 'fourth', 'fifth'][place - 1]} in the ${T[0]} ${K.name} with ${me.sum.toFixed(1)} points. ${order[0].me ? `Second was ${order[1].name} with ${order[1].sum.toFixed(1)}.` : `${order[0].name} won with ${order[0].sum.toFixed(1)}.`}`];
     if (purse) lines.push(`It brings home ${purse.toLocaleString()} bits${place === 1 ? ` and ${/^[AEIOU]/.test(T[3]) ? 'an' : 'a'} ${T[3]}` : ''}.`);
-    const wonNow = place === 1 && CONTEST_WINS[story().contests]; if (wonNow) { addItem(wonNow); lines.push(`That's ${story().contests} contest win${story().contests > 1 ? 's' : ''}, and the judges sent ${/^[AEIOU]/.test(wonNow) ? 'an' : 'a'} ${wonNow} to wear.`); }
-    if (bipNow) lines.push('The judges were Bipped breeders, and they signed the League form so the ranch can register Bipped. A scan can find one now.');
+    const wonNow = place === 1 && CONTEST_WINS[story().contests]; if (wonNow) { addItem(wonNow); lines.push(`That's ${story().contests} contest win${story().contests > 1 ? 's' : ''} and the judges sent ${/^[AEIOU]/.test(wonNow) ? 'an' : 'a'} ${wonNow} to wear.`); }
+    if (bipNow) lines.push('The judges were Bipped breeders and they signed the League form so the ranch can register Bipped. A scan can find one now.');
     { const ck = { Smarts: 'Bee', Speed: 'Zebra', Style: 'Penguin' }[K.kind], cl = place === 1 && ck && typeof openCos === 'function' && openCos(ck, `The judges added a League pattern card to the prize.`); if (cl) lines.push(cl); }
     lines.push('It lost 15 stress and gained 8 fatigue.');
     if (smoothRanch()) { await sceneFade(true, 800); backHome(); s.dayHour = 21; s.x = 2 * RW - 14; s.camJump = true; await sceneFade(false, 700);   // home at night, then off to bed

@@ -28,7 +28,7 @@ window.__pump = (o = {}) => {
   if (hit('at-cont')) return 'at-cont';
   if (hit('at-fight')) return 'at-fight';
   { const sk = document.getElementById('at-shove'); if (__vis(sk) && /Skip/.test(sk.textContent) && !sk.classList.contains('on')) { sk.click(); return 'skip'; } }
-  if (o.control && typeof AT !== 'undefined' && AT && AT.ar && !AT.ar.over && !AT.auto) { const a = document.getElementById('at-auto'); if (__vis(a)) { a.click(); return 'auto-on'; } }
+  if (o.control && typeof AT !== 'undefined' && AT && AT.ar && !AT.ar.over && !AT.auto) { atSetAuto(true); return 'auto-on'; }
   if (o.control && typeof AT !== 'undefined' && AT && AT.auto && !AT.fast) AT.fast = true;   // a fight started by hand has no Skip button, so the driver speeds it up the way Skip would
   // the old turn battle (pixel art, hybrids): Skip on Auto, and a move tapped each turn when the fight is by hand
   if (hit('b-fast')) return 'b-fast';

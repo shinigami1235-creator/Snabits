@@ -20,7 +20,7 @@ function board(s){
 }
 function openBoard(){
   const s=RS;
-  panel(`<div class="full lab-head"><b>Missions</b><button class="small" id="r-bback">Back</button></div><div class="full lab-info">Walt takes it out, and you watch each stop. The weeks pass once it's home.</div>`+
+  panel(`<div class="full lab-head"><b>Missions</b><button class="small" id="r-bback">Back</button></div><div class="full lab-info">Walt takes it out and you watch each stop. The weeks pass once it's home.</div>`+
     board(s).map((b,i)=>{ const K=KINDS[b.kind], reg=REGIONS.find(x=>x.n===b.reg);
       return `<button class="rb mis" data-b="${i}"><span class="mis-t">${b.kind}<span class="elc" style="${chipStyle(ELC(reg.el))}">${reg.el}</span></span><span class="mis-r">${b.reg}</span><small>${K.stops} stops · ${K.weeks} wk · Lv ${b.level}</small></button>`; }).join(""));
   const bs=board(s);
@@ -46,13 +46,13 @@ function resolveMission(s,a){
       if(st.ok){ const e=2+o.level; exp+=e; st.text=`It beat a wild ${o.m.name} and earned ${e} exp.`; if(R()<0.3){ const fd=rollFind(R,boost); if(fd.item){ finds.push(fd.item); st.text+=` The wild one dropped ${/^[AEIOU]/.test(fd.item)?"an":"a"} ${fd.item}.`; } else { bits+=fd.bits; st.text+=` The wild one dropped ${fd.bits} bits.`; } } }
       else { fat+=10; st.text=`It lost to a wild ${o.m.name} and limped on.`; }
     } else if(task==="rest"){ fat-=6; st.text="It rested by the fire."; }
-    else if(task==="drill"){ st.ok=R()<taskChance(s,reg.st,gap); const g=st.ok?2:1; s.tp[reg.st]+=g; st.text=`It trained on its own, and its ${STATS[reg.st]} went up by ${g}.`; }
+    else if(task==="drill"){ st.ok=R()<taskChance(s,reg.st,gap); const g=st.ok?2:1; s.tp[reg.st]+=g; st.text=`It trained on its own and its ${STATS[reg.st]} went up by ${g}.`; }
     else {
       st.ok=R()<taskChance(s,TASKS[task].stat,gap);
       if(task==="forage"){ if(st.ok){ const fd=rollFind(R,boost); if(fd.item){ finds.push(fd.item); st.text=`It found ${/^[AEIOU]/.test(fd.item)?"an":"a"} ${fd.item}.`; } else { bits+=fd.bits; st.text=`It found ${fd.bits} bits.`; } } else st.text="It searched the bushes and found nothing."; }
-      if(task==="climb"){ if(st.ok){ exp+=3; s.tp[1]+=1; st.text="It climbed the ledge. Its Power went up by 1, and it earned 3 exp."; } else { fat+=8; if(R()*100<K.inj*2){ injured=true; st.text="It slipped off the ledge and got hurt."; } else st.text="It slipped off the ledge."; } }
+      if(task==="climb"){ if(st.ok){ exp+=3; s.tp[1]+=1; st.text="It climbed the ledge. Its Power went up by 1 and it earned 3 exp."; } else { fat+=8; if(R()*100<K.inj*2){ injured=true; st.text="It slipped off the ledge and got hurt."; } else st.text="It slipped off the ledge."; } }
       if(task==="river"){ if(st.ok){ fat-=3; st.text="It hopped across the stones and took a shortcut."; } else { fat+=8; st.text="It fell in and got washed back."; } }
-      if(task==="tracks"){ if(st.ok){ s.tp[reg.st]+=2; st.text=`It followed the tracks to a quiet training spot, and its ${STATS[reg.st]} went up by 2.`; } else { fat+=5; st.text="It lost the trail."; } }
+      if(task==="tracks"){ if(st.ok){ s.tp[reg.st]+=2; st.text=`It followed the tracks to a quiet training spot and its ${STATS[reg.st]} went up by 2.`; } else { fat+=5; st.text="It lost the trail."; } }
       if(task==="haul"){ if(st.ok){ const b2=Math.round(10+R()*30); bits+=b2; st.text=`It hauled a crate for a trader and earned ${b2} bits.`; } else { fat+=6; st.text="It couldn't move the crate."; } }
     }
     stops.push(st);
@@ -118,8 +118,8 @@ async function runMission(b){
     lv=giveExp(s,res.exp); drawUI();
     s.trip=true; s.x=60; s.pose=won?"happy":"tired"; s.camJump=true; await sceneFade(false,500);
     if(won){ spark(s.x,headY()-6,"sparkle",8); await hop(14,360); } await rwait(500);
-    await tripHome(won?`${nm} won! We've reached the last stop, so let's go home.`:`${nm} lost that one. We've reached the last stop, so let's go home.`,
-      `We're back at the ranch. ${nm} ${won?"worked hard":"is worn out"}, so give it a good rest.`,won?"happy":"tired");
+    await tripHome(won?`${nm} won! We've reached the last stop so let's go home.`:`${nm} lost that one. We've reached the last stop so let's go home.`,
+      `We're back at the ranch. ${nm} ${won?"worked hard":"is worn out"} so give it a good rest.`,won?"happy":"tired");
     const got=[`${res.bits} bits`].concat(res.finds.map(x=>`${/^[AEIOU]/.test(x)?"an":"a"} ${x}`));
     RS.weekAct="Mission"; await endWeek(K.weeks,`Welcome back, ${nm}! It brought home ${got.length>1?got.slice(0,-1).join(", ")+" and "+got[got.length-1]:got[0]}.`);
   });

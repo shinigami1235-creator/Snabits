@@ -71,7 +71,7 @@ function infoStatus(s) {
       <span class="k">Condition</span><span>${cond}</span>
       ${looks.length ? `<span class="k">Look</span><span>${looks.join(', ')}</span>` : ''}
     </div>
-    <div class="i-talk"><span class="who">Josie</span>${condition()}${s.stress > 45 ? ' It seems tense, so a rest would help.' : ''}</div>`;
+    <div class="i-talk"><span class="who">Josie</span>${condition()}${s.stress > 45 ? ' It seems tense so a rest would help.' : ''}</div>`;
 }
 function infoPortrait(s) {
   const cv = el('i-port'); if (!cv) return;

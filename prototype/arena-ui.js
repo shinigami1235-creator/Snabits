@@ -45,7 +45,7 @@ function atStyle(){
 #atest .ctl3{display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:56px 64px;gap:6px;padding:8px 12px calc(env(safe-area-inset-bottom,0px) + 10px);background:#14151d}
 #atest .ctl3 .btn{font-size:20px}#atest .ctl3 .walk{font-size:26px}#atest .ctl3 svg{width:24px;height:24px}#atest .ctl3 .off{opacity:.35}#atest .ctl3 .on{border-color:#ffc93c;color:#ffc93c}
 #atest .atk{grid-column:2/4;flex-direction:column;gap:1px;background:#ffc93c;color:#14151d;border-color:#ffc93c;font-size:16px}#atest .atk small{font-size:10px;font-weight:600;opacity:.8}
-#atest .ctl3 .btn:disabled{opacity:.3}
+#atest .ctl3 .btn:disabled{opacity:.3}#atest .ctl3 .dodge{position:relative;isolation:isolate}#atest .ctl3 .dodge::before{content:"";position:absolute;inset:3px;border-radius:inherit;z-index:-1;background:conic-gradient(rgba(143,211,255,.55) var(--cd,360deg),rgba(20,16,30,.45) 0)}#atest .ctl3 .dodge.cool{filter:saturate(.5)}
 #atest .atk.poor{background:#3a3d52;color:#ff8a7a;border-color:#ff8a7a}#atest .atk.wait{filter:saturate(.4) brightness(.75)}
 #atest .atk.no{animation:atno .3s}@keyframes atno{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
 #atest .res{position:absolute;left:16px;right:16px;top:30%;background:#1d1f2b;border:2px solid #ffc93c;border-radius:14px;padding:16px;text-align:center}
@@ -62,7 +62,7 @@ function openArenaTest(){
   d.style.display="flex"; window.PRACTICE=false;
   const fams=Object.keys(FAM_MOVES), pick=AT_PICK, roster=(typeof PLAYER!=="undefined"&&PLAYER&&PLAYER.roster?PLAYER.roster:[]).map(atRanchOf);
   const on=q=>JSON.stringify(q)===JSON.stringify(pick.me)?"on":"";
-  const draw=()=>{ d.innerHTML=`<div class="pick"><h2>Practice battle</h2><p>Pick who fights. Presets and scans fight at level 30 with every family move learned, and your own Snabits fight as they are now. Nothing here touches your save.</p>
+  const draw=()=>{ d.innerHTML=`<div class="pick"><h2>Practice battle</h2><p>Pick who fights. Presets and scans fight at level 30 with every family move learned and your own Snabits fight as they are now. Nothing here touches your save.</p>
     ${roster.length?`<h2 style="font-size:15px">Your Snabits</h2><div class="fams" id="at-ros">${roster.map((s,k)=>`<button class="btn ${on({kind:"ros",k})}" data-k="${k}" style="font-size:12px">${typeof displayName==="function"?displayName(s):s.m.name}<br>Lv ${s.level}</button>`).join("")}</div>`:""}
     <h2 style="font-size:15px">A new scan</h2><div class="fams"><button class="btn ${pick.me.kind==="scan"?"on":""}" id="at-scan" style="grid-column:1/5">${pick.me.kind==="scan"?`${pick.me.m.name} at level 30 · scan again`:"Scan a photo"}</button></div>
     <h2 style="font-size:15px">Presets</h2><div class="fams" id="at-me">${fams.map(f=>`<button class="btn ${on({kind:"fam",fam:f})}" data-f="${f}">${f}</button>`).join("")}</div>
@@ -93,6 +93,8 @@ function atMake(src,R,level,grade){
   if(src.kind==="scan") f.name=src.m.name;
   return {f,o,spec:typeof chibiSpec==="function"?chibiSpec(o.fm):null,level:lv};
 }
+/* the fight plays itself on the Snabit's habits: Auto fights, and the test drivers */
+function atSetAuto(on){ if(!AT||!AT.ar) return; AT.auto=!!on; AT.ar.p[0].ai=on?"smart":"human"; }
 function atStop(){ if(AT){ cancelAnimationFrame(AT.raf); AT=null; } }
 function atStart(meFam,foeFam){   // picks: see atMake
   atStop(); const R=Math.random, A=atMake(meFam,R), B=atMake(foeFam,R,A.level,A.grade);
@@ -127,12 +129,12 @@ function atBegin(A,B,opts){
         <div class="side foe"><div class="mv" id="at-mv1"></div><div class="strip">${cells(1)}</div><div class="fob"><i id="at-fo1"></i></div></div></div></div>
     <div class="ctl3"><button class="btn walk" id="at-l" aria-label="Walk left">◀</button>
       <button class="btn arr" id="at-up" aria-label="Previous move for this range">▲</button><button class="btn arr" id="at-dn" aria-label="Next move for this range">▼</button><button class="btn walk" id="at-r" aria-label="Walk right">▶</button>
-      <button class="btn ico" id="at-shove" aria-label="Shove">${AT_ICON.shove}</button><button class="btn atk" id="at-atk"><span id="at-atk-n">Attack</span><small id="at-atk-c"></small></button><button class="btn ico" id="at-auto" aria-label="Auto">${AT_ICON.auto}</button></div>`;
+      <button class="btn ico dodge" id="at-dodge" aria-label="Dodge">${AT_ICON.out}</button><button class="btn atk" id="at-atk"><span id="at-atk-n">Attack</span><small id="at-atk-c"></small></button><button class="btn ico" id="at-shove" aria-label="Shove">${AT_ICON.shove}</button></div>`;
   const hold=(id,dir)=>{ const b=document.getElementById(id), on=e=>{ e.preventDefault(); ar.p[0].wantDir=dir; b.classList.add("on"); }, off=()=>{ if(ar.p[0].wantDir===dir) ar.p[0].wantDir=0; b.classList.remove("on"); };
     b.addEventListener("pointerdown",on); b.addEventListener("pointerup",off); b.addEventListener("pointercancel",off); b.addEventListener("pointerleave",off); };
   hold("at-l",-1); hold("at-r",1);
   document.getElementById("at-shove").onclick=()=>ar.shove(ar.p[0]);
-  document.getElementById("at-auto").onclick=e=>{ AT.auto=!AT.auto; ar.p[0].ai=AT.auto?"smart":"human"; e.currentTarget.classList.toggle("on",AT.auto); };
+  document.getElementById("at-dodge").onclick=()=>{ if(!ar.dodge(ar.p[0])){ const k=document.getElementById("at-dodge"); k.classList.remove("no"); void k.offsetWidth; k.classList.add("no"); } };
   // ▲ ▼ change the move for the range you're standing in; Attack uses it
   const cyc=dirn=>{ const b=ar.band(), n=AT.lists[b].length; if(!n) return; AT.idx[b]=((AT.idx[b]+dirn)%n+n)%n; AT.rowsHtml=null; atRows(); };
   document.getElementById("at-up").onclick=()=>cyc(-1); document.getElementById("at-dn").onclick=()=>cyc(1);
@@ -140,8 +142,8 @@ function atBegin(A,B,opts){
     if(!ar.start(ar.p[0],m)){ const k=document.getElementById("at-atk"); k.classList.remove("no"); void k.offsetWidth; k.classList.add("no"); } };
   atRows(); atSize();
   // Auto plays it for you on your Snabit's habits; Skip runs it at four times the speed
-  if(auto){ AT.auto=true; const b=document.getElementById("at-auto"); b.classList.add("on"); b.disabled=true;
-    for(const id of ["at-l","at-r","at-up","at-dn","at-atk"]) document.getElementById(id).disabled=true;
+  if(auto){ atSetAuto(true);
+    for(const id of ["at-l","at-r","at-up","at-dn","at-atk","at-dodge"]) document.getElementById(id).disabled=true;
     const sk=document.getElementById("at-shove"); sk.innerHTML="Skip ▸▸"; sk.style.fontSize="14px"; sk.onclick=()=>{ AT.fast=!AT.fast; sk.classList.toggle("on",AT.fast); }; }
   AT.raf=requestAnimationFrame(atLoop);
 }
@@ -150,7 +152,7 @@ function atSize(){ const cv=document.getElementById("at-cv"), scr=cv.parentEleme
   cv.style.height=H+"px"; cv.width=W*dpr; cv.height=H*dpr; AT.W=W; AT.H=H; AT.dpr=dpr; AT.WW=Math.round(W*1.6); AT.bg=null;
   // feet a little below the middle, so the fight sits in the centre of the screen with the clock in view.
   // the arena is drawn tall enough to fill the screen when the camera pulls all the way back
-  const hb=document.getElementById("at-hbot"); AT.floorS=Math.round(Math.min(H-(hb?hb.offsetHeight:90)-22,H*0.6)); AT.zMin=W/AT.WW; AT.HH=Math.ceil(H/AT.zMin); AT.FY=Math.round(AT.floorS/AT.zMin); }
+  const hb=document.getElementById("at-hbot"); AT.floorS=Math.round(Math.min(H-(hb?hb.offsetHeight:90)-22,H*(AT.opts&&AT.opts.deep?0.6:0.7))); AT.zMin=W/AT.WW; AT.HH=Math.ceil(H/AT.zMin); AT.FY=Math.round(AT.floorS/AT.zMin); }   // feet in the lower third, so the fighters fill the stage instead of standing on a field of empty sand
 window.addEventListener("resize",()=>{ if(AT&&document.getElementById("at-cv")) atSize(); });
 /* the range cells on the fight screen: yours and the opponent's, lit where the two of you stand now */
 /* your four moves sit in a row under your feet, Close nearest the opponent, so you can see at a glance which are in reach,
@@ -214,7 +216,7 @@ function atLoop(now){
     if(!ar.turn.done&&t>=AT.turn.C) run(()=>ar.land());
     if(ar.turn&&t>=AT.turn.D){ run(()=>ar.endTurn()); AT.turn=null; } }
   while(AT.acc>=AR.DT&&!ar.over&&!ar.turn){ AT.acc-=AR.DT; ar.step(); flush(); }
-  if(ar.over) for(const i of [0,1]) if(ar.winner===1-i&&AT.side[i].ko==null){ AT.side[i].ko=AT.te; if(typeof atSfx==="function") atSfx("ko"); }
+  if(ar.over) for(const i of [0,1]) if(ar.winner===1-i&&AT.side[i].ko==null){ AT.side[i].ko=AT.te; if(typeof atCheer==="function") atCheer(2400); if(typeof atSfx==="function") atSfx("ko"); }
   atHud(); atRows(); atDraw(now,frozen?0:step*1000);
   if(ar.over&&!AT.done){ AT.done=true; setTimeout(atResult,1300); }
   AT.raf=requestAnimationFrame(atLoop);
@@ -259,19 +261,21 @@ function atEvent(e,now){
   }
   if(e.t==="step"){ S.hop={t0:te,h:16}; if(typeof atSfx==="function") atSfx("step"); }
   if(e.t==="sulk"){ S.pose={p:"droopy",until:te+900}; return; }   // it turns its nose up at the call
-    if(e.t==="swap"){ AT.side[e.i].hop={t0:te,h:78,d:480}; AT.side[1-e.i].hop={t0:te,h:8,d:480};   // the swapper leaps over, the other ducks
+    if(e.t==="dodgebtn"){ S.hop={t0:te,h:26,d:380}; try{ sfx("whoosh"); }catch(err){} }
+  if(e.t==="swap"){ AT.side[e.i].hop={t0:te,h:78,d:480}; AT.side[1-e.i].hop={t0:te,h:8,d:480};   // the swapper leaps over, the other ducks
     try{ sfx("whoosh"); }catch(err){} }
   if(e.t==="hit"){ const o=AT.side[1-e.i], mt=S.anim&&S.anim.tier||"light", tier=e.crit?(mt==="special"?"special":mt==="heavy"?"special":"heavy"):mt==="light"&&e.dmg>=25?"medium":mt, T=AT_TIER[tier];
     if(e.h===0||!o.react||te-o.react.t0>120){ o.react={kind:"hit",t0:te,tier,own:S.anim&&ANIM[S.anim.kind]&&(ANIM[S.anim.kind].sig||/^sg_/.test(S.anim.kind))}; if(mt==="special") AT.freeze=Math.max(AT.freeze,now+T.stop); AT.trauma=Math.min(1,AT.trauma+T.trauma);
-      const own=S.anim&&ANIM[S.anim.kind]&&(ANIM[S.anim.kind].sig||/^sg_/.test(S.anim.kind));   // a signature draws its own impact, so the stock burst stays small and the screen doesn't white out over it (17 Nov 2026 audit)
+      const ownFx=typeof OWN_OWNS==="function"&&OWN_OWNS(S), own=ownFx||S.anim&&ANIM[S.anim.kind]&&(ANIM[S.anim.kind].sig||/^sg_/.test(S.anim.kind));   // a signature draws its own impact, so the stock burst stays small and the screen doesn't white out over it (17 Nov 2026 audit)
       AT.hitJuice={i:1-e.i,t0:te,tier,col:S.anim?S.anim.col:[255,236,160],own};
-      if(S.anim&&!(ANIM[S.anim.kind]&&ANIM[S.anim.kind].marks)) AT.strikes.push({t0:te,d:340,kind:/bite/.test(S.anim.kind)?"lines":/claw/.test(S.anim.kind)?"slash":"lines",i:1-e.i,col:S.anim.col,big:{light:1,medium:1.15,heavy:1.4,special:1.9}[tier],dir:S.dir,ranged:!S.anim.contact,body:sp.pal&&sp.pal.body}); AT.punch={t0:te,amt:T.punch,i:1-e.i};
+      if(S.anim&&!ownFx&&!(ANIM[S.anim.kind]&&ANIM[S.anim.kind].marks)) AT.strikes.push({t0:te,d:340,kind:/bite/.test(S.anim.kind)?"lines":/claw/.test(S.anim.kind)?"slash":"lines",i:1-e.i,col:S.anim.col,big:{light:1,medium:1.15,heavy:1.4,special:1.9}[tier],dir:S.dir,ranged:!S.anim.contact,body:sp.pal&&sp.pal.body}); AT.punch={t0:te,amt:T.punch,i:1-e.i};
       if(T.screen) AT.flash={t0:now+T.stop*0.4,a:own?Math.min(0.12,T.screen):T.screen};
       if(T.slow&&mt==="special") AT.slow={from:now+T.stop,until:now+T.stop+T.slow*(AT.ar.over?2.2:1),k:AT.ar.over?0.22:0.32};
       if(tier==="heavy"||tier==="special") AT.dust={i:1-e.i,t0:te,n:tier==="special"?14:8};
-      AT.spark={i:1-e.i,n:T.sparks,col:S.anim?S.anim.col:[255,236,160]}; if(S.anim&&S.anim.contact) S.recoil={t0:te,amt:tier==="heavy"?10:6};
+      AT.spark={i:1-e.i,n:ownFx?2:T.sparks,col:S.anim?S.anim.col:[255,236,160]}; if(S.anim&&S.anim.contact) S.recoil={t0:te,amt:tier==="heavy"?10:6};
       try{ sfx(tier==="heavy"?"heavy":tier==="medium"?"hit":"tap"); if(S.anim) elSfx(S.anim.el,"hit"); }catch(err){} }
-    AT.fx.push({i:1-e.i,t0:now+e.h*90,txt:String(e.dmg),crit:e.crit,size:{light:16,medium:19,heavy:24,special:32}[tier]}); if(e.crit&&e.h===0) AT.fx.push({i:1-e.i,t0:now,txt:"Critical!",crit:true,size:13,lift:30}); }
+    if(e.h===0&&(e.crit||tier==="special")&&typeof atCheer==="function") atCheer(1300);   // the crowd gets to its feet for a crit or a special
+    AT.fx.push({i:1-e.i,t0:now+e.h*90,txt:String(e.dmg),crit:e.crit,size:{light:20,medium:23,heavy:28,special:36}[tier]}); if(e.crit&&e.h===0) AT.fx.push({i:1-e.i,t0:now,txt:"Critical!",crit:true,size:13,lift:30}); }
   if(e.t==="miss"){ const o=AT.side[1-e.i];
     if((e.why==="dodge"||e.why==="phase"||e.why==="parry")&&!o.dodgeAt&&!(o.react&&o.react.kind==="dodge")) atPlanDodge(e.i,te+150,S.anim?S.anim.kind:"bolt",e.why);
     AT.fx.push({i:1-e.i,t0:now,txt:{out:"Out of reach",block:"Blocked",parry:"Parried",dodge:"Dodged",phase:"Phased",resist:"Resisted"}[e.why]||"Miss",col:e.why==="resist"?"#c9cbd6":null}); }
@@ -661,12 +665,13 @@ function atDraw(now,dte){
     // outside a special's close-up, both Snabits always stay in the shot however the camera leans
     if(!cine||ck>=0.86){ const need=Math.max(Math.abs(a-mid),Math.abs(b-mid))+60*scale; z=Math.min(z,W/(2*need)); }
     AT.zoom=AT.zoom==null?z:AT.zoom+(z-AT.zoom)*(1-Math.exp(-dte/(fast?90:260)));
+    if(!cine||ck>=0.86){ const need=Math.max(Math.abs(a-mid),Math.abs(b-mid))+60*scale; AT.zoom=Math.max(AT.zMin||0,Math.min(AT.zoom,W/(2*need))); }   // a knockback pulls the camera out at once, so nobody is thrown off the screen
     const v=W/AT.zoom, want=Math.max(0,Math.min(WW-v,mid-v/2)); AT.cam=AT.cam==null?want:AT.cam+(want-AT.cam)*(1-Math.exp(-dte/(fast?70:140))); AT.cam=Math.max(0,Math.min(WW-v,AT.cam)); }
   const pk=AT.punch?Math.max(0,1-(te-AT.punch.t0)/260):0, z=AT.zoom*(1+(AT.punch?AT.punch.amt:0)*Math.sin(Math.min(1,pk)*Math.PI*0.5)*pk), zc=W/2;
   const tilt=cine?0.06*Math.sin(Math.min(1,ck/0.2)*Math.PI/2)*(ck<0.86?1:Math.max(0,1-(ck-0.86)/0.14)):0;
   c.setTransform(dpr,0,0,dpr,0,0); c.clearRect(0,0,W,H);
   if(tilt){ c.translate(W/2,AT.floorS); c.rotate(-tilt*(AT.side[cine.i].dir||1)); c.translate(-W/2,-AT.floorS); }
-  c.translate(sx,AT.floorS+sy); c.translate(zc,0); c.scale(z/AT.zoom,z/AT.zoom); c.translate(-zc,0); c.scale(AT.zoom,AT.zoom); c.translate(-AT.cam,-FY); c.drawImage(AT.bg,0,0,WW,HH);
+  c.translate(sx,AT.floorS+sy); c.translate(zc,0); c.scale(z/AT.zoom,z/AT.zoom); c.translate(-zc,0); c.scale(AT.zoom,AT.zoom); c.translate(-AT.cam,-FY); c.drawImage(AT.bg,0,0,WW,HH); if(typeof atCrowdDraw==="function") atCrowdDraw(c,te);
   // a special's charge dims the arena and throws speed lines out from the attacker
   if(cine){ const fade=Math.min(1,ck/0.15)*(ck<0.86?1:Math.max(0,1-(ck-0.86)/0.14)), P=AT.lastPlaced&&AT.lastPlaced[cine.i];
     c.fillStyle=`rgba(10,8,22,${0.72*fade})`; c.fillRect(0,0,WW,HH);
@@ -774,7 +779,7 @@ function atDraw(now,dte){
   atStreams(c,placed,te); drawSparks(c,dte); drawPuffs(c); atParts(c,dte);
   // damage numbers and words over the head
   AT.fx=AT.fx.filter(f=>now-f.t0<900); c.textAlign="center"; for(const f of AT.fx){ if(now<f.t0) continue; const k=(now-f.t0)/900, p=placed[f.i]; if(!p) continue;
-    const pop=1+0.7*Math.max(0,1-(now-f.t0)/170); c.font=`800 ${Math.round((f.size||(f.crit?19:15))*pop/z)}px system-ui`; c.globalAlpha=1-k*k; c.lineWidth=4; c.strokeStyle="#14151d"; c.fillStyle=f.col||(f.buff?"#8fd3ff":f.crit?"#ffc93c":"#ffffff");
+    const pop=1+0.7*Math.max(0,1-(now-f.t0)/170); c.font=`800 ${Math.round((f.size||(f.crit?21:18))*pop/z)}px system-ui`; c.globalAlpha=1-k*k; c.lineWidth=5/z; c.strokeStyle="#14151d"; c.fillStyle=f.col||(f.buff?"#8fd3ff":f.crit?"#ffc93c":"#ffffff");
     // words that pop up together stack instead of landing on each other, and all of them sit above the status chips
     if(f.stack==null) f.stack=f.side?0:AT.fx.filter(g=>g!==f&&g.i===f.i&&!g.side&&g.stack!=null&&Math.abs(g.t0-f.t0)<450).length;
     const sd=AT.side[f.i]&&AT.side[f.i].dir||1, cn=p.center||p, y=f.side?cn.y-(k*34)/z:p.top.y-(80+Math.min(f.lift||0,12)+f.stack*24+k*26)/z, fx=f.side?p.x-sd*(p.r+16):p.x+(f.dx||0)*(1+k*0.6); c.strokeText(f.txt,fx,y); c.fillText(f.txt,fx,y); c.globalAlpha=1; }
@@ -821,6 +826,7 @@ function atHud(){
   document.getElementById("at-fb0").classList.toggle("ok",ar.p[0].focus>=mc&&ar.inRange(m));
   document.getElementById("at-clock").textContent=Math.max(0,Math.ceil(AR.TIME-ar.t));
   const sh=document.getElementById("at-shove"), can=arBand(g)==="Close"&&!(ar.p[0].shoveCool>0); if(!(AT.opts&&AT.opts.mode==="auto")) sh.classList.toggle("off",!can);
+  { const dg=document.getElementById("at-dodge"), p0=ar.p[0]; if(dg){ const k=p0.dodgeCool>0?1-p0.dodgeCool/ar.dodgeWait(p0):1; dg.style.setProperty("--cd",(k*360).toFixed(1)+"deg"); dg.classList.toggle("cool",k<1); } }   // the ring fills back up as Dodge recharges
 
 }
 function atStage(c,W,H,FY,wild){
@@ -833,12 +839,16 @@ function atStage(c,W,H,FY,wild){
     const gr=c.createLinearGradient(0,FY-130,0,H); gr.addColorStop(0,"#9ad46e"); gr.addColorStop(1,"#6fae4c"); c.fillStyle=gr; c.fillRect(0,FY-130,W,H-FY+130);
     for(let k=0;k<W*(H-FY+130)/600;k++){ const x=(k*7919)%W, y=FY-130+((k*104729)%(H-FY+130)); c.fillStyle=k%3?"rgba(60,110,40,.35)":"rgba(220,250,180,.4)"; c.fillRect(x,y,2,6); }
     return; }
+  if(typeof atStageVenue==="function") return atStageVenue(c,W,H,FY,atVenueOf(AT&&AT.opts));   // the town ring, the stadiums or the Tower (arena-venues.js)
   const sand=FY-230, crowd=sand-12, ctop=Math.max(0,crowd-380);
   const sky=c.createLinearGradient(0,0,0,ctop+40); sky.addColorStop(0,"#140f26"); sky.addColorStop(1,"#2a1f4a"); c.fillStyle=sky; c.fillRect(0,0,W,ctop+40);
   for(let k=0;k<W;k+=W/7){ c.fillStyle="rgba(255,236,170,.9)"; c.beginPath(); c.arc(k+W/14,ctop-60,5,0,7); c.fill(); c.fillStyle="rgba(255,236,170,.08)"; c.beginPath(); c.arc(k+W/14,ctop-60,26,0,7); c.fill(); }
   c.fillStyle="#3a2b5e"; c.fillRect(0,ctop,W,crowd-ctop);
   const cols=["#ffb35c","#8fd3ff","#ff8a7a","#c7a6ff","#5ad18a","#ffe07a","#f4efe4"];
+  // the crowd is drawn soft and a little dim, so it reads as the stands behind the fight and the fighters stay the sharpest thing on screen
+  c.save(); c.filter="blur(1.4px)";
   for(let r=0,y=crowd-8;y>ctop+6;r++,y-=15) for(let x=0;x<W;x+=13){ c.fillStyle=cols[((x*131+r*977)>>3)%cols.length]; c.beginPath(); c.arc(x+(r%2?6:0),y,4.5,0,7); c.fill(); }
+  c.restore(); { const dim=c.createLinearGradient(0,ctop,0,crowd); dim.addColorStop(0,"rgba(20,14,38,.55)"); dim.addColorStop(1,"rgba(20,14,38,.25)"); c.fillStyle=dim; c.fillRect(0,ctop,W,crowd-ctop); }
   for(let k=0;k<6;k++){ c.fillStyle=["#e2483f","#3b6fb8","#f2c14e","#4caf6a","#c08cff","#ff8a3d"][k]; c.fillRect(6+k*(W-12)/6,crowd,(W-12)/6-5,12); }
   const fl=c.createLinearGradient(0,sand,0,H); fl.addColorStop(0,"#d9a866"); fl.addColorStop(1,"#b98245"); c.fillStyle=fl; c.fillRect(0,sand,W,H-sand);
   // sand grain, and a painted ring line in front of the fighters
@@ -852,7 +862,7 @@ function atResult(){
   const div=document.createElement("div"); div.className="res";
   const how=ar.judged?"The judges called it after 60 seconds":`It ended in a knockout at ${Math.round(ar.t)} seconds`;
   if(!o.onEnd){
-    div.innerHTML=`<h2>${w===0?"You win":w===1?"You lose":"Draw"}</h2><div>${how}, and you dealt ${ar.p[0].dealt} and took ${ar.p[1].dealt}.</div>
+    div.innerHTML=`<h2>${w===0?"You win":w===1?"You lose":"Draw"}</h2><div>${how} and you dealt ${ar.p[0].dealt} and took ${ar.p[1].dealt}.</div>
       <div class="row"><button class="btn" id="at-again">Again</button><button class="btn" id="at-pick">Pick Snabits</button></div>`;
     d.appendChild(div);
     document.getElementById("at-again").onclick=()=>atStart(AT.me,AT.foe); document.getElementById("at-pick").onclick=openArenaTest; return; }
@@ -861,7 +871,7 @@ function atResult(){
   const tz=s&&s.likeT&&typeof taste==="function"?taste("battle",null,s):null; let tl="";
   if(tz){ const first=tasteFound(tz,s); s.stress=Math.max(0,s.stress+(tz==="like"?-4:6)); s.spoil+=tz==="like"?2:-1; tl=tz==="like"?(first?"It loves a good fight.":"It enjoyed that."):(first?"It hates fighting.":"It didn't enjoy that."); }
   if(typeof musJingle==="function"&&w!==null) musJingle(w===0);
-  div.innerHTML=`<h2>${w===0?"Win":w===1?"Loss":"Draw"}</h2><div>${how}, and ${displayNameOf(ar.p[0])} dealt ${ar.p[0].dealt} and took ${ar.p[1].dealt}.</div>
+  div.innerHTML=`<h2>${w===0?"Win":w===1?"Loss":"Draw"}</h2><div>${how} and ${displayNameOf(ar.p[0])} dealt ${ar.p[0].dealt} and took ${ar.p[1].dealt}.</div>
     ${lines.map(t=>`<div style="margin-top:6px;color:#ffc93c">${t}</div>`).join("")}${tl?`<div style="margin-top:6px">${tl}</div>`:""}
     <div class="row"><button class="btn" id="at-cont" style="background:#ffc93c;color:#14151d;border-color:#ffc93c">Continue</button></div>`;
   d.appendChild(div);
@@ -870,10 +880,10 @@ function atResult(){
 }
 const displayNameOf=p=>p.f.name||"It";
 /* the game's fights on the new arena. Takes the same options the old fight screen took and hands back the same result */
-function arenaGame({s,foe,mode="control",title="",noDraw=false,record=false,learn=false,foeHabits=null,rand=Math.random,foeHp=null,deep=null,onEnd}){
+function arenaGame({s,foe,mode="control",title="",noDraw=false,record=false,learn=false,foeHabits=null,rand=Math.random,foeHp=null,deep=null,venue=null,onEnd}){
   if(record) s.fightNo=(s.fightNo||0)+1;
   if(foe&&foe.m&&typeof dexSee==="function") dexSee(foe.m);
-  const wild=/^Wild/.test(title), opts={s,mode,title,noDraw,learn,rand,onEnd,wild,foeHp,deep,mus:foe.boss?"boss":wild?"wild":"cup"};
+  const wild=/^Wild/.test(title), opts={s,mode,title,noDraw,learn,rand,onEnd,wild,foeHp,deep,venue,mus:foe.boss?"boss":wild?"wild":"cup"};
   // a ghost is a friend's Snabit: it fights with its own moves, preset and habits, the way the player's does
   const go=()=>{ const A={f:arPlayer(s),spec:chibiSpec(fightMon(s),s),level:s.level}, B=foeHabits&&foeHabits.m?{f:arPlayer(foeHabits),spec:chibiSpec(fightMon(foeHabits),foeHabits),level:foeHabits.level}:{f:arFoe(foe),spec:chibiSpec(foe.fm),level:foe.level};
     if(foeHabits&&typeof displayName==="function") B.f.name=displayName(foeHabits)+"'s ghost";

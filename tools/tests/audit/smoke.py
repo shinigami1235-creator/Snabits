@@ -9,7 +9,7 @@ async def click(pg, sel, wait=200):
     await pg.wait_for_timeout(wait); return ok
 async def fight_out(pg, max_ticks=900):
     for k in range(max_ticks):
-        st = await pg.evaluate("()=>{ if(typeof AT==='undefined'||!AT) return 'none'; if(!AT.auto){ const a=document.getElementById('at-auto'); if(a) a.click(); } AT.fast=true; return document.getElementById('at-again')?'done':'run'; }")
+        st = await pg.evaluate("()=>{ if(typeof AT==='undefined'||!AT) return 'none'; if(!AT.auto) atSetAuto(true); AT.fast=true; return document.getElementById('at-again')?'done':'run'; }")
         if st == 'done': return True
         await pg.wait_for_timeout(100)
     return False

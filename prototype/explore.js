@@ -13,11 +13,11 @@ const EX_DEEP_STONE = { 'Dream Garden': 'Kitsune', 'Hollow Moor': 'Vampire', 'Ta
 // Helena's journal, one page a region, in the order she went
 const EX_PAGES = {
   'Cinder Peak': "Found a carved stone under the ash on the north slope, painted in bands of red and orange that are still bright under the soot. Victor wants it for the Grand Ranch hall. I left it where it stood.",
-  'Saffron Dojo': "The old master says his grandfather's grandfather painted the same pattern on the dojo banner. He doesn't know why, and nobody here does. They keep painting it every spring.",
-  'Static Plains': "Every Snabit I scanned near the stone came out stronger. Celia says I'm imagining it, so I scanned forty to prove her wrong.",
+  'Saffron Dojo': "The old master says his grandfather's grandfather painted the same pattern on the dojo banner. He doesn't know why and nobody here does. They keep painting it every spring.",
+  'Static Plains': "Every Snabit I scanned near the stone came out stronger. Celia says I'm imagining it so I scanned forty to prove her wrong.",
   'Tanglewood': "Josie turned four today and I missed it again. I promised her I'd be home for the next one.",
   'Glacier Rim': "The stones all face the same way. I worked it out from the moss and the snow lines. They point past the edge of the map.",
-  'Coral Shallows': "Nobody goes past the edge of the map without a League permit. Celia got us one, and Victor signed it, so Victor gets the first look at whatever we bring back.",
+  'Coral Shallows': "Nobody goes past the edge of the map without a League permit. Celia got us one and Victor signed it so Victor gets the first look at whatever we bring back.",
   'Nightshade Marsh': "Walt doesn't like it. He says the Rift isn't a place you map. He came anyway.",
   'Dream Garden': "I've fitted a lens to my Snaboscope that reads the stones. When I point it at a painted pattern it hums.",
   'Granite Steps': "The faint signal every Snabit gives off is loudest at the stones. The stones and the Rift come from the same place.",
@@ -75,7 +75,7 @@ function stoneOpen(sp) { const L = stoneList(); return !L || L.includes(sp); }
 function openExpeditions() {
   const s = RS, season = exSeason(), regs = exRegions();
   panel(`<div class="full lab-head"><b>Expeditions</b><button class="small" id="ex-back">Back</button></div>
-    <div class="full lab-info">Walt has the League's permits. An expedition takes the week, and each region can be explored once a season.</div>` +
+    <div class="full lab-info">Walt has the League's permits. An expedition takes the week and each region can be explored once a season.</div>` +
     regs.map((r, i) => { const st = exState(r), done = st.season === season, M = exMap(r), seen = Object.keys(M.N).filter(k => st.seen.includes(k)).length;
       return `<button class="rb" data-x="${i}" ${done ? 'disabled' : ''}>${r.n}<small>${done ? 'Explored this season' : `${r.el}. ${seen} of ${Object.keys(M.N).length} places seen`}</small></button>`; }).join('') +
     (typeof riftRings === 'function' ? riftRings().map((r, i) => { const done = deepState(r).season === season; return `<button class="rb" data-r="${i}" ${done ? 'disabled' : ''}>${r.n}<small>${done ? 'Explored this season' : 'One to three Snabits, two weeks'}</small></button>`; }).join('') : '') +
@@ -187,7 +187,7 @@ async function runExpedition(reg) {
     s.bg = `area:${reg.el}:${areas[0].key}`; s.trip = true; s.night = 0; s.dusk = 0; s.props = []; s.x = 60; s.pose = 'idle'; s.camJump = true; s.tripLabel = `${reg.n} expedition`; drawUI();
     await sceneFade(false, 700); banner(reg.n, '#fff'); K(reg.rift ? "This is the edge of the Rift. The League's mapped this far and no further." : 'The trail ends here. Where to?'); await rwait(1200); banner('');
     if (wx) { s.exWx = wx; if (typeof exAmb === 'function') exAmb(wx); K(EX_WX_LINE[wx](nm)); await rwait(2000); }
-    el('r-panel').innerHTML = `<canvas id="ex-map" class="full" style="width:100%;display:block"></canvas><button class="rb full" id="ex-home">Head home<small>Keeps everything found so far</small></button>`;
+    el('r-panel').innerHTML = `<canvas id="ex-map" class="full" style="width:100%;display:block"></canvas><button class="rb full" id="ex-home">Head home<small>Ends the trip</small></button>`;
     el('ranch').classList.add('exploring');
     try {
       for (;;) {
@@ -236,7 +236,7 @@ async function exNode(reg, n, st, need, nm, K, used, found) {
     const p = prop({ k: 'pstone', x: 150, y: GROUND, glow: true, sp }); await walkTo(122, 60, 'walk'); s.pose = 'happy';
     const L0 = stoneList(), have = L0 ? L0.includes(sp) : once;   // a save that opened this circle when it held a chest still finds the stone
     if (!have) { if (!once) st.got.push(n.id); const L = stoneList(); if (L && !L.includes(sp)) L.push(sp); found.push('a Pattern Stone'); spark(150, GROUND - 40, 'sparkle', 8); banner('A Pattern Stone', '#ffe9a8');
-      K("Look at this. Someone painted a pattern on this stone, and the Snaboscope's humming at it."); await rwait(2600); banner(''); }
+      K("Look at this. Someone painted a pattern on this stone and the Snaboscope's humming at it."); await rwait(2600); banner(''); }
     else { K('The painted stone is still here.'); await rwait(1100); }
     return; }
   if (n.k === 'teach') { if (used.includes(n.id)) { await rwait(200); return; } used.push(n.id); await exTeach(reg, st, nm, K, found); return; }

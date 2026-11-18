@@ -43,7 +43,7 @@ Light and warm on the ranch, with real weight in the story. Kids play it, so not
 | The Rift Lord | Teacher at the Rift's heart, a Moko | Unknown | | `areas.js` |
 
 Voice samples:
-- Josie: "Cup prizes are the quickest way to pay him back."
+- Josie: "Cup prizes are the quickest way to get that money."
 - Rook: "This doesn't change anything at the cups. I'm still going to beat you at the Majors."
 - Walt: "So you made grade A. I've never taken anyone to the Rift, but I'll take you."
 - Dr. Ines: "Every Snabit you've scanned with the Snaboscope gives off the same faint signal."

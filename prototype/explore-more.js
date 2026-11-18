@@ -21,10 +21,10 @@ function exWeather(reg) {
   return 'Rain';
 }
 const EX_WX_LINE = {
-  Fog: () => "There's thick fog today, so we'll only see the places right next to us.",
-  Heat: nm => `It's hot out here today, so ${nm} will tire sooner.`,
-  Snow: nm => `The snow's deep today, so ${nm} will tire sooner.`,
-  Rain: () => "It's raining, so the springs will be full.",
+  Fog: () => "There's thick fog today so we'll only see the places right next to us.",
+  Heat: nm => `It's hot out here today so ${nm} will tire sooner.`,
+  Snow: nm => `The snow's deep today so ${nm} will tire sooner.`,
+  Rain: () => "It's raining so the springs will be full.",
 };
 /* drawn over the scene on the smooth layer, in screen pixels */
 function exWeatherPass(c, s, t, W, H) {
@@ -746,7 +746,7 @@ async function exSecret(reg, nm, K, found) {
   s.trip = true; s.camJump = true; s.pose = won ? 'happy' : 'tired'; fp.pose = won ? 'tired' : 'happy'; await sceneFade(false, 400);
   (async () => { await rwait(700); fp.pose = 'walk'; fp.right = true; const fx = fp.x; await exTween(1400, u => { fp.x = fx + 170 * u; }); unprop(fp); })().catch(() => {});   // it heads off down the trail
   if (won) { PLAYER.bits += prize; drawUI(); found.push(`${prize.toLocaleString()} bits`); exSfx('win'); spark(s.x, headY() - 6, 'sparkle', 10); await hop(14, 360);
-    K(`${nm} won, and the League pays ${prize.toLocaleString()} bits for a ${foe.m.name} like that.`); await rwait(2200); }
+    K(`${nm} won and the League pays ${prize.toLocaleString()} bits for a ${foe.m.name} like that.`); await rwait(2200); }
   else { s.stress += 4; clampAll(); K(`That ${foe.m.name} was too much for ${nm} this time.`); await rwait(2000); }
   s.dusk = 0;
 }
@@ -920,15 +920,15 @@ async function exStop(reg, n, nm, K, found, force) {
     if (c) { K('We left it where its scout will find it.'); await rwait(1400); return 0; }
     const pay = Math.round(G.purse * 0.5); fp.pose = 'walk'; fp.right = true; s.pose = 'walk';
     await exTween(1300, u => { s.x = 120 + u * 120; fp.x = 168 + u * 120; }); unprop(fp); s.pose = 'happy';
-    PLAYER.bits += pay; drawUI(); found.push(`${pay.toLocaleString()} bits`); K(`${nm} carried it to the scouts' camp, and the League paid ${pay.toLocaleString()} bits for bringing it back.`); await rwait(2400); return -2; }
+    PLAYER.bits += pay; drawUI(); found.push(`${pay.toLocaleString()} bits`); K(`${nm} carried it to the scouts' camp and the League paid ${pay.toLocaleString()} bits for bringing it back.`); await rwait(2400); return -2; }
   if (kind === 'shortcut') {
     const sg = prop({ k: 'sign', x: 160, y: GROUND, s: 1.3 }); await walkTo(126, 60, 'walk'); s.pose = 'idle';
     K("There's an old sign here pointing off the trail. It might be a shortcut.");
     const c = await exChoose([['Follow the sign', 'Could save time or waste it'], ['Stay on the trail', 'Keep going']]);
     if (c) { K('We stayed on the trail.'); await rwait(1100); return 0; }
     await walkTo(230, 80, 'walk');
-    if (R() < 0.6) { s.pose = 'happy'; K(`The sign was right, and the shortcut saved ${nm} a long walk.`); await rwait(2000); return 2; }
-    s.pose = 'tired'; K(`The sign led to a cliff, and ${nm} had a long walk back.`); await rwait(2200); return -2; }
+    if (R() < 0.6) { s.pose = 'happy'; K(`The sign was right and the shortcut saved ${nm} a long walk.`); await rwait(2000); return 2; }
+    s.pose = 'tired'; K(`The sign led to a cliff and ${nm} had a long walk back.`); await rwait(2200); return -2; }
   if (kind === 'camp') {
     const fire = prop({ k: 'fire', x: 160, y: GROUND }); await walkTo(122, 60, 'walk'); s.pose = 'idle';
     K("There's an old League camp here with the fire still going.");
@@ -938,12 +938,12 @@ async function exStop(reg, n, nm, K, found, force) {
     s.pose = 'effort'; await hop(6, 220); s.pose = 'happy'; spark(s.x + 10, headY(), 'sparkle', 4); K(`${nm} found ${a} ${item} under an old crate.`); await rwait(1700); return 0; }
   if (kind === 'stuck') {
     const o = gradedOpponent('E', 1, R, reg.rift ? null : reg.el), bush = prop({ k: 'xbush', x: 168, y: GROUND, col: '#5f8a3e', shake: 1 }); await walkTo(126, 60, 'walk'); s.pose = 'idle';
-    K("Something small is stuck in this bush, and it's crying.");
+    K("Something small is stuck in this bush and it's crying.");
     const c = await exChoose([['Help it out', '1 energy'], ['Leave it', 'Keep going']]);
     if (c) { bush.shake = 0; K('We kept going.'); await rwait(1000); return 0; }
     s.pose = 'effort'; await rwait(700); bush.shake = 0; const fp = prop({ k: 'foe', x: 176, y: GROUND, fm: o.fm, grid: o.fm.grid, pal: o.fm.pal, pose: 'happy', right: true });
     await hop(10, 300); s.pose = 'happy'; await exTween(900, u => { fp.x = 176 + u * 90; fp.jy = -Math.abs(Math.sin(u * 9)) * 8; }); unprop(fp);
-    s.stress -= 8; clampAll(); K(`A baby ${o.m.name} hopped out and ran off. Helping it calmed ${nm} down, and its stress went down by 8.`); await rwait(2400); return -1; }
+    s.stress -= 8; clampAll(); K(`A baby ${o.m.name} hopped out and ran off. Helping it calmed ${nm} down and its stress went down by 8.`); await rwait(2400); return -1; }
   // Rook's team is out after the same stones
   PLAYER.rookEx = exSeason();
   const mon = rookMon(s.grade), w = await walkIn('rival', { mon });
@@ -958,5 +958,5 @@ async function exStop(reg, n, nm, K, found, force) {
   if (won) { const item = EX_RARE[Math.floor(R() * EX_RARE.length)], a = /^[AEIOU]/.test(item) ? 'an' : 'a'; addItem(item); found.push(`${a} ${item}`);
     w.p.face = 'worried'; await talk('rival', `Fine, you win. Take the ${item} my team found back there.`); await walkOut(w); return 0; }
   w.p.face = 'happy'; await talk('rival', 'See you at the far end.'); await walkOut(w);
-  K(`Rook's team went on ahead, and the match left ${nm} tired.`); await rwait(2000); return -3;
+  K(`Rook's team went on ahead and the match left ${nm} tired.`); await rwait(2000); return -3;
 }
