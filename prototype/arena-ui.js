@@ -759,6 +759,7 @@ function atDraw(now,dte){
   c.save(); c.globalCompositeOperation="lighter";
   [0,1].forEach(i=>{ const S=AT.side[i], ch=S.charge, P=placed[i]; if(!ch||!P) return; const k=(te-ch.t0)/ch.d; if(k>1.15){ S.charge=null; return; }
     if(ch.tier==="light") return;
+    if(typeof OWN_OWNS==="function"&&OWN_OWNS(S)) return;   // a family with its own wind-up shows that, not a glowing orb (Gid, 18 Nov 2026)
     const cx=P.center?P.center.x:P.x, cy=P.center?P.center.y:P.y, col=ch.col, sp=ch.tier==="special", R=(ch.sig?95:sp?82:70)*scale/2.3, kk=Math.min(1,k);
     if(!ch.sig){ const g=c.createRadialGradient(cx,cy,4,cx,cy,R*(1.1+0.25*Math.sin(te/60))); g.addColorStop(0,`rgba(${col},${(ch.soft?0.32:0.5)*kk})`); g.addColorStop(1,`rgba(${col},0)`);
     c.fillStyle=g; c.beginPath(); c.arc(cx,cy,R*1.5,0,7); c.fill(); }

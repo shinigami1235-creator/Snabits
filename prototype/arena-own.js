@@ -424,7 +424,7 @@ OWN.hornFx=(c,t,x,o)=>{ const s=x.self, tg=x.target, R=tg.r||30, S=OWN.size(x), 
 })();
 
 /* a family with its own bolt draws its own landing, so the stock hit lines stay off and the burst stays small */
-function OWN_OWNS(S){ if(!(S&&S.anim&&S.spec)) return false; const k=S.anim.kind, f=S.spec.family; return !!(k==="bolt"&&OWN_BOLT2[f]||k==="steam"&&OWN_STEAM[f]||k==="trumpet"&&typeof OWN_HORN2!=="undefined"&&OWN_HORN2[f]); }
+function OWN_OWNS(S){ if(!(S&&S.anim&&S.spec)) return false; const k=S.anim.kind, f=S.spec.family; return !!(k==="bolt"&&OWN_BOLT2[f]||k==="steam"&&OWN_STEAM[f]||k==="trumpet"&&typeof OWN_HORN2!=="undefined"&&OWN_HORN2[f]||k==="propthrow"&&typeof OWN_PROP!=="undefined"&&OWN_PROP[f]); }
 
 /* ---------- bolt, second pass continued: the other 25 families ---------- */
 OWN.go=(a,b,k,arc=0,off=0)=>lerpP(a,b,k,arc,off);
@@ -1018,3 +1018,255 @@ for(const f in OWN_HORN2) if(!OWN_HORN2[f].sz) OWN_HORN2[f].sz=1.4;
 (()=>{ if(typeof ANIM==="undefined"||!ANIM.trumpet) return; const K=ANIM.trumpet, fx1=K.fx, atk1=K.atk;
   K.fx=function(c,t,x){ const o=x&&OWN_HORN2[x.fam]; if(!o) return fx1.call(this,c,t,x); try{ return o.fx(c,t,x,o); }catch(e){ if(!OWN.err){ OWN.err=1; console.error('OWN trumpet',x.fam,e&&e.message); } } };
   K.atk=function(t,pos){ const b=atk1.call(this,t,pos), o=pos&&OWN_HORN2[pos.fam], e=o&&o.atk&&o.atk(t,pos); return e?{...b,...e}:b; }; })();
+
+/* ---------- propthrow, own versions (18 Nov 2026): every family threw its prop with the same punch and arc, so each now throws
+   in its own way. The prop still comes from the move name. Wind-up to 200 ms, contact at 620, done by 1000. ---------- */
+OWN.prop=(c,x,kind,px,py,rot,sc,a=1)=>{ if(a<=0) return; c.save(); c.translate(px,py); c.rotate(rot); c.globalAlpha*=a; c.scale(sc,sc); MV.prop(c,kind,0,0,x); c.restore(); };
+OWN.pk=(x)=>typeof ptProp==="function"?ptProp(x.name||""):"ball";
+OWN.streak=(c,pts,col,w)=>{ c.lineCap="round"; for(let i=1;i<pts.length;i++){ c.strokeStyle=OWN.rgb(col,0.5*i/pts.length); c.lineWidth=w*i/pts.length; c.beginPath(); c.moveTo(pts[i-1].x,pts[i-1].y); c.lineTo(pts[i].x,pts[i].y); c.stroke(); } };
+OWN.bonk=(c,x,y,R,k,col=[255,240,190])=>{ if(k<=0||k>=1) return; for(let j=0;j<6;j++){ const a=j/6*7+0.3, v=R*(0.35+0.8*eo(k)); OWN.star(c,x+Math.cos(a)*v,y+Math.sin(a)*v*0.7,R*0.18*(1-k),OWN.rgb(col,1-k),k*3); } };
+const OWN_PROP={
+  /* Booly: a chair lifts off the ground in a ghostly glow, wobbles eerily, then hurls itself at the foe and breaks */
+  Booly:{at:[0.9,0.5],sz:1.4,atk:(t)=>t<620?{pose:"cast",arc:-3*Math.sin(t/60)}:null,
+    fx(c,t,x,o){ const P=OWN.cx(x,o), {o0,tg,d,S,R,sg,gnd}=P, k=OWN.pk(x), sc=2.6, rise={x:o0.x+d*S*1.7,y:sg-R*1.3}, wisp=[200,190,235];
+      const tendrils=(p,a)=>{ for(let i=0;i<3;i++){ const ph=t/120+i*2.1; c.strokeStyle=OWN.rgb(wisp,0.55*a); c.lineWidth=S*(0.32-i*0.07); c.lineCap="round"; c.beginPath(); c.moveTo(o0.x+d*S*0.3,o0.y-S*0.2);
+          c.bezierCurveTo(o0.x+d*S*(1.2+Math.sin(ph)*0.5),o0.y-S*(1.4+i*0.3),p.x-d*S*(1.0+Math.cos(ph)*0.4),p.y+S*(0.8+i*0.2),p.x+Math.sin(ph*1.3)*S*0.6,p.y+S*0.5*(i-1)); c.stroke(); }
+        for(let i=0;i<4;i++){ const q=((t/300)+i/4)%1; c.fillStyle=OWN.rgb([230,225,250],0.7*a*(1-q)); c.beginPath(); c.arc(p.x+Math.sin(i*2+t/80)*S,p.y-S*0.3-q*S*1.4,S*0.12,0,7); c.fill(); } };
+      if(t<200){ const q=eo(t/200), p={x:rise.x,y:sg-S*0.9+(rise.y-sg+S*0.9)*q}; c.fillStyle=OWN.rgb([60,40,70],0.25*q); c.beginPath(); c.ellipse(rise.x,sg,S*1.1*(1-q*0.4),S*0.25,0,0,7); c.fill();
+        tendrils(p,q); for(let i=0;i<5;i++){ const dq=((t/150)+i/5)%1; c.fillStyle=OWN.rgb([170,140,110],0.8*(1-dq)); c.beginPath(); c.arc(p.x+(atH(i)-0.5)*S*1.4,p.y+S*0.9+dq*S*1.2,1.6,0,7); c.fill(); }
+        OWN.prop(c,x,k,p.x+Math.sin(t/14)*2*q,p.y,Math.sin(t/35)*0.25,sc); return; }
+      if(t<620){ const q=OWN.k(t,200,620), p=q<0.3?{x:rise.x+Math.sin(t/12)*3,y:rise.y+Math.sin(t/40)*3}:OWN.go(rise,{x:tg.x,y:tg.y},ei((q-0.3)/0.7),R*0.5,0), rot=q<0.3?Math.sin(t/30)*0.35:d*(q-0.3)*14;
+        if(q<0.3) tendrils(p,1); else for(let i=1;i<4;i++){ const b=OWN.go(rise,{x:tg.x,y:tg.y},ei(Math.max(0,(q-0.3)/0.7-i*0.06)),R*0.5,0); SG.puff(c,b.x,b.y,S*(0.5-i*0.08),0.3*(1-i/4),wisp); }
+        OWN.prop(c,x,k,p.x,p.y,rot,sc); return; }
+      const q=OWN.k(t,620,1000);
+      for(let i=0;i<7;i++){ const a=-Math.PI*0.9+i/6*Math.PI*0.8, v=R*(0.5+0.9*eo(q)); c.save(); c.translate(tg.x+Math.cos(a)*v,tg.y+Math.sin(a)*v+q*q*R*1.2); c.rotate(q*7+i); c.fillStyle=OWN.rgb(i%2?[176,120,70]:[140,95,55],1-q*0.7); c.strokeStyle=OWN.rgb([74,44,20],1-q*0.7); c.lineWidth=1; c.fillRect(-S*0.45,-S*0.1,S*0.9,S*0.2); c.strokeRect(-S*0.45,-S*0.1,S*0.9,S*0.2); c.restore(); }
+      for(let i=0;i<10;i++){ const a=i/10*7, v=R*(0.3+0.7*eo(q)); c.strokeStyle=OWN.rgb([200,160,110],1-q); c.lineWidth=1.4; c.beginPath(); c.moveTo(tg.x+Math.cos(a)*v,tg.y+Math.sin(a)*v); c.lineTo(tg.x+Math.cos(a)*(v+S*0.4),tg.y+Math.sin(a)*(v+S*0.4)); c.stroke(); }
+      SG.dust(c,tg.x,gnd,R,q,8); OWN.bonk(c,tg.x,tg.y-R*0.3,R*0.8,q); } },
+  /* Fizz: the cork rockets off the top on a spray of foam and bonks the foe in a burst of bubbles */
+  Fizz:{at:[0.5,-0.2],sz:1.4,fx(c,t,x,o){ const P=OWN.cx(x,o), {o0,tg,d,S,R}=P, liq=P.parts||[150,235,170];
+      if(t<200){ const q=t/200; OWN.prop(c,x,"cork",o0.x+Math.sin(t/12)*1.5,o0.y-S*0.2*q,0,2.2); for(let i=0;i<4;i++) OWN.bubble(c,o0.x+(i-1.5)*S*0.3,o0.y-S*0.3*q-i*2,S*0.15*q,liq,false); return; }
+      if(t<620){ const q=OWN.k(t,200,620), p=OWN.go(o0,{x:tg.x,y:tg.y-R*0.3},eo(q),R*1.4,0);
+        for(let i=0;i<8;i++){ const qq=Math.max(0,eo(q)-i*0.04), b=OWN.go(o0,{x:tg.x,y:tg.y-R*0.3},qq,R*1.4,0); OWN.bubble(c,b.x+(atH(i)-0.5)*S,b.y+(atH(i*3)-0.5)*S,S*(0.12+0.15*atH(i))*(1-i/9),liq,false); }
+        if(q<0.25) for(let i=0;i<6;i++){ const a=-Math.PI/2+(i-2.5)*0.25, v=S*3*q/0.25; c.fillStyle=OWN.rgb(OWN.mix(liq,[255,255,255],0.4),1-q*4); c.beginPath(); c.arc(o0.x+Math.cos(a)*v,o0.y+Math.sin(a)*v,S*0.18,0,7); c.fill(); }
+        OWN.prop(c,x,"cork",p.x,p.y,d*q*16,2.2); return; }
+      const q=OWN.k(t,620,1000); OWN.pop(c,tg.x,tg.y-R*0.3,R*0.5,OWN.mix(liq,[255,255,255],0.3),q,10); OWN.prop(c,x,"cork",tg.x-d*R*q*1.2,tg.y-R*0.3-Math.sin(Math.PI*q)*R,-d*q*10,2.2,1-q); } },
+  /* Clank: the wrench boomerangs round in a curve, cracks the foe and spins back to Clank; a gear rolls along the ground throwing sparks */
+  Clank:{at:[1.0,0.55],sz:1.4,fx(c,t,x,o){ const P=OWN.cx(x,o), {o0,tg,d,S,R,sg,gnd}=P, k=OWN.pk(x);
+      if(k==="gear"){ const r=S*0.9;
+        if(t<200){ OWN.prop(c,x,k,o0.x+d*S*0.4,o0.y,t/30,2.4); return; }
+        const q=OWN.k(t,200,620), gx=t<620?o0.x+(tg.x-d*R*0.4-o0.x)*eo(q):tg.x-d*R*0.4, gy=t<620?o0.y+(sg-r-o0.y)*Math.min(1,q*4)+(gnd-sg)*q:gnd-r, spin=d*t/25;
+        if(t<1000){ const back=t<620?0:OWN.k(t,620,1000); OWN.prop(c,x,k,gx-d*back*R*0.8,gy-Math.sin(Math.PI*back)*R*0.5,spin,2.4,1-back*0.8);
+          if(t<620) for(let i=0;i<3;i++){ const a=-Math.PI/2-d*(0.5+atH(i+Math.floor(t/40))); c.strokeStyle=OWN.rgb([255,210,90],0.9); c.lineWidth=1.6; c.beginPath(); c.moveTo(gx-d*r,gnd); c.lineTo(gx-d*r+Math.cos(a)*S*0.8,gnd+Math.sin(a)*S*0.8); c.stroke(); } }
+        OWN.bonk(c,tg.x,tg.y,R,OWN.k(t,620,900)); return; }
+      const st={x:o0.x+d*S*0.4,y:o0.y-S*0.3}, end={x:tg.x,y:tg.y-R*0.2};
+      if(t<200){ OWN.prop(c,x,k,st.x,st.y,-d*1.2*eo(t/200),2.4); return; }
+      const out=OWN.k(t,200,620), back=OWN.k(t,620,1000), curve=(q)=>{ const p=OWN.go(st,end,q,0,0); return {x:p.x,y:p.y+Math.sin(q*Math.PI)*R*0.9}; };
+      const p=t<620?curve(eo(out)):(()=>{ const r=OWN.go(end,st,eio(back),0,0); return {x:r.x,y:r.y-Math.sin(back*Math.PI)*R*0.9}; })();
+      OWN.prop(c,x,k,p.x,p.y,d*t/35,2.4); c.strokeStyle="rgba(255,255,255,.55)"; c.lineWidth=2.5; c.beginPath(); c.arc(p.x,p.y,S*1.1,d*t/35-1.2,d*t/35); c.stroke();
+      OWN.bonk(c,end.x,end.y,R,OWN.k(t,620,900),[255,230,150]); } },
+  /* Twiglet: a leaf grows on its twig arm and gets flicked off, fluttering in a fast zigzag, and sticks in the foe */
+  Twiglet:{at:[1.0,0.45],sz:1.4,fx(c,t,x,o){ const P=OWN.cx(x,o), {o0,tg,d,S,R}=P, end={x:tg.x-d*R*0.3,y:tg.y-R*0.1};
+      if(t<200){ const q=eo(t/200); OWN.prop(c,x,"leaf",o0.x+d*S*0.3,o0.y-S*0.3,-d*0.6,2.4*q); return; }
+      if(t<620){ const q=OWN.k(t,200,620), p=OWN.go(o0,end,q,S*0.6,Math.sin(q*Math.PI*5)*S*1.2); for(let i=1;i<4;i++){ const qq=Math.max(0,q-i*0.04), b=OWN.go(o0,end,qq,S*0.6,Math.sin(qq*Math.PI*5)*S*1.2); OWN.prop(c,x,"leaf",b.x,b.y,Math.cos(qq*Math.PI*5)*0.8,2.4,0.25*(4-i)/3); } OWN.prop(c,x,"leaf",p.x,p.y,Math.cos(q*Math.PI*5)*0.8,2.4); return; }
+      const q=OWN.k(t,620,1000); OWN.prop(c,x,"leaf",end.x,end.y,d*0.3+Math.sin(t/30)*0.15*(1-q),2.4,q<0.8?1:1-(q-0.8)/0.2); for(let i=0;i<4;i++){ const a=i/4*7+0.4; c.strokeStyle=OWN.rgb([150,220,110],1-q); c.lineWidth=2; c.beginPath(); c.moveTo(end.x+Math.cos(a)*R*0.3,end.y+Math.sin(a)*R*0.3); c.lineTo(end.x+Math.cos(a)*R*(0.5+0.4*q),end.y+Math.sin(a)*R*(0.5+0.4*q)); c.stroke(); } } },
+  /* Ditty: it plucks a note out of the air and flings it like a dart, trailing sound rings, and the note rings out on the foe */
+  Ditty:{at:[0.8,0.2],sz:1.4,fx(c,t,x,o){ const P=OWN.cx(x,o), {o0,tg,d,S,R}=P, end={x:tg.x,y:tg.y-R*0.3}, col=[200,90,200];
+      if(t<200){ const q=t/200; OWN.note(c,o0.x+d*S*(1.2-0.8*q),o0.y-S*(1.4-1.0*q),S*0.7,OWN.rgb(col,0.6+0.4*q),Math.sin(t/40)*0.5,true); return; }
+      if(t<620){ const q=ei(OWN.k(t,200,620)), p=OWN.go(o0,end,q,S*0.5,0); for(let i=0;i<4;i++){ const qq=Math.max(0,q-i*0.07), b=OWN.go(o0,end,qq,S*0.5,0); c.strokeStyle=OWN.rgb([255,230,140],0.8*(1-i/4)); c.lineWidth=2; c.beginPath(); c.ellipse(b.x,b.y,S*0.25,S*(0.6+i*0.2),0,0,7); c.stroke(); }
+        OWN.note(c,p.x,p.y,S*0.75,OWN.rgb(col,1),d*0.3,true); return; }
+      const q=OWN.k(t,620,1000); for(let i=0;i<3;i++){ const qq=Math.max(0,q-i*0.15); if(qq>=1) continue; c.strokeStyle=OWN.rgb([255,230,140],1-qq); c.lineWidth=3; c.beginPath(); c.arc(end.x,end.y,R*(0.3+qq*1.0),0,7); c.stroke(); }
+      for(let i=0;i<3;i++){ const a=-Math.PI/2+(i-1)*0.8; OWN.note(c,end.x+Math.cos(a)*R*(0.5+q),end.y+Math.sin(a)*R*(0.5+q),S*0.4,OWN.rgb(i%2?[120,170,255]:[255,140,170],1-q),0,i===1); } } },
+  /* Magna: a scrap of metal drags across the ground to it, sticks, then gets flung away hard along the field lines */
+  Magna:{at:[1.0,0.95],sz:1.4,fx(c,t,x,o){ const P=OWN.cx(x,o), {o0,tg,d,S,R,sg}=P, k=OWN.pk(x), far={x:o0.x-d*R*1.2,y:sg-S*0.3}, hold={x:o0.x+d*S*0.8,y:o0.y-S*0.3}, end={x:tg.x,y:tg.y-R*0.1};
+      const field=(a)=>{ for(let i=0;i<3;i++){ c.strokeStyle=OWN.rgb(i%2?[255,90,90]:[90,150,255],a); c.lineWidth=1.6; c.beginPath(); c.ellipse(o0.x+d*S*0.6,o0.y-S*0.2,S*(1+i*0.5),S*(0.6+i*0.3),0,0,7); c.stroke(); } };
+      if(t<200){ const q=ei(t/200); field(0.6); OWN.prop(c,x,k,far.x+(hold.x-far.x)*q,far.y+(hold.y-far.y)*q,t/40,2.4); return; }
+      if(t<620){ const q=OWN.k(t,200,620); if(q<0.2){ field(0.8*(1-q*5)); OWN.prop(c,x,k,hold.x+Math.sin(t/8)*1.5,hold.y,0,2.4); return; } const qq=ei((q-0.2)/0.8), p=OWN.go(hold,end,qq,0,0);
+        for(let i=0;i<4;i++){ const b=OWN.go(hold,end,Math.max(0,qq-i*0.05),0,0); c.strokeStyle=OWN.rgb(i%2?[255,90,90]:[90,150,255],0.6*(1-i/4)); c.lineWidth=2; c.beginPath(); c.arc(b.x,b.y,S*(0.5+i*0.3),0,7); c.stroke(); } OWN.prop(c,x,k,p.x,p.y,d*t/25,2.4); return; }
+      const q=OWN.k(t,620,1000); OWN.bonk(c,end.x,end.y,R,q,[200,220,255]); for(let i=0;i<4;i++){ const a=i/4*7+Math.floor(t/50); OWN.zig(c,end.x,end.y,end.x+Math.cos(a)*R*0.9,end.y+Math.sin(a)*R*0.9,4,S*0.3,i+Math.floor(t/50),OWN.rgb(i%2?[255,90,90]:[90,150,255],1-q),1.6); } } },
+  /* Cuppy: a wrapper unfurls off it and spins across like a throwing star, leaving a slash */
+  Cuppy:{at:[0.9,0.5],sz:1.4,fx(c,t,x,o){ const P=OWN.cx(x,o), {o0,tg,d,S,R}=P, end={x:tg.x,y:tg.y-R*0.1};
+      if(t<200){ const q=eo(t/200); OWN.prop(c,x,"wrapper",o0.x+d*S*0.5*q,o0.y,q*3,2.4*(0.5+0.5*q)); return; }
+      if(t<620){ const q=OWN.k(t,200,620), p=OWN.go(o0,end,ei(q),S*0.4,0); c.strokeStyle="rgba(255,255,255,.6)"; c.lineWidth=2; for(let i=0;i<2;i++){ c.beginPath(); c.arc(p.x,p.y,S*1.1,t/20+i*Math.PI,t/20+i*Math.PI+1.4); c.stroke(); } OWN.prop(c,x,"wrapper",p.x,p.y,t/18,2.4); return; }
+      const q=OWN.k(t,620,900); if(q<1){ c.strokeStyle=OWN.rgb([255,255,255],1-q); c.lineWidth=4*(1-q)+1; c.beginPath(); c.moveTo(end.x-R*0.9,end.y-R*0.6); c.lineTo(end.x+R*0.9,end.y+R*0.6); c.stroke(); c.strokeStyle=OWN.rgb([255,150,190],1-q); c.lineWidth=2; c.stroke(); } } },
+  /* Tome: its pages riffle, one tears out and spins edge-on like a blade, then slices across the foe */
+  Tome:{at:[0.9,0.4],sz:1.4,fx(c,t,x,o){ const P=OWN.cx(x,o), {o0,tg,d,S,R}=P, end={x:tg.x,y:tg.y-R*0.15}, two=/Razor/.test(x.name||"");
+      if(t<200){ for(let i=0;i<4;i++){ const q=((t/80)+i/4)%1; c.save(); c.translate(o0.x,o0.y); c.scale(Math.cos(q*Math.PI),1); c.fillStyle="#fbf6e8"; c.fillRect(0,-S*0.5,S*0.7,S); c.strokeStyle="#c8bca0"; c.strokeRect(0,-S*0.5,S*0.7,S); c.restore(); } return; }
+      for(let n=0;n<(two?2:1);n++){ const t0=200+n*90; if(t<t0) continue;
+        if(t<t0+420){ const q=OWN.k(t,t0,t0+420), p=OWN.go(o0,{x:end.x,y:end.y+(n-0.5)*R*0.4*(two?1:0)},ei(q),S*(0.4+n*0.6),0); OWN.prop(c,x,"page",p.x,p.y,t/22+n,2.3); c.strokeStyle="rgba(255,255,255,.6)"; c.lineWidth=2; c.beginPath(); c.arc(p.x,p.y,S*1.0,t/22,t/22+1.3); c.stroke(); continue; }
+        const q=OWN.k(t,t0+420,t0+700); if(q<1){ c.strokeStyle=OWN.rgb([255,255,255],1-q); c.lineWidth=3; c.beginPath(); c.moveTo(end.x-R*0.9,end.y+(n?R*0.5:-R*0.5)); c.lineTo(end.x+R*0.9,end.y+(n?-R*0.3:R*0.3)); c.stroke(); } } } },
+  /* Gumball: the crank turns, a candy pops out of the chute, ricochets off the ground and bonks the foe on the head */
+  Gumball:{at:[0.85,0.85],sz:1.4,fx(c,t,x,o){ const P=OWN.cx(x,o), {o0,tg,d,S,R,sg,head}=P, k=OWN.pk(x), end={x:tg.x,y:head.y+S*0.2};
+      if(t<200){ if(t>100){ const q=OWN.k(t,100,200); OWN.prop(c,x,k,o0.x+d*S*0.4*q,o0.y+S*0.2*q,0,2.2*q); } return; }
+      const mid={x:(o0.x+tg.x)/2,y:sg-S*0.4};
+      if(t<620){ const q=OWN.k(t,200,620), p=q<0.45?OWN.go(o0,mid,q/0.45,0,0):OWN.go(mid,end,(q-0.45)/0.55,R*0.8,0); if(q>0.43&&q<0.5) SG.dust(c,mid.x,sg,S*0.7,(q-0.43)/0.07,4); OWN.prop(c,x,k,p.x,p.y,d*t/30,2.2); return; }
+      const q=OWN.k(t,620,1000); OWN.bonk(c,end.x,end.y,R*0.8,q); OWN.prop(c,x,k,end.x-d*R*1.2*q,end.y-R*Math.sin(Math.PI*q)+q*R*0.8,-d*t/30,2.2,1-q); } },
+  /* Pina: crown leaves spin off its head like blades (two for Double Slice), or it lobs a small pineapple that bursts in juice */
+  Pina:{at:[0.5,-0.1],sz:1.4,fx(c,t,x,o){ const P=OWN.cx(x,o), {o0,tg,d,S,R}=P, k=OWN.pk(x), end={x:tg.x,y:tg.y-R*0.15}, n=/Double/.test(x.name||"")?2:1;
+      if(k==="pineapple"){ if(t<200){ OWN.prop(c,x,k,o0.x+d*S*0.5,o0.y-S*0.8*eo(t/200),0,2.2); return; }
+        if(t<620){ const q=OWN.k(t,200,620), p=OWN.go({x:o0.x+d*S*0.5,y:o0.y-S*0.8},end,q,R*1.6,0); OWN.prop(c,x,k,p.x,p.y,d*q*6,2.2); return; }
+        const q=OWN.k(t,620,1000); OWN.splat(c,end.x,end.y,S*1.2,[255,215,80],q,61,3); for(let i=0;i<8;i++){ const a=-Math.PI+i/7*Math.PI, v=R*(0.5+0.8*eo(q)); c.fillStyle=OWN.rgb([255,225,90],1-q); c.beginPath(); c.arc(end.x+Math.cos(a)*v,end.y+Math.sin(a)*v+q*q*R,S*0.18,0,7); c.fill(); } return; }
+      for(let i=0;i<n;i++){ const t0=200+i*80, st={x:o0.x+(i-0.5)*S*0.6,y:o0.y-S*0.2}; if(t<t0){ OWN.prop(c,x,"leaf",st.x,st.y-S*0.3,-Math.PI/2+(i-0.5)*0.6,2.2); continue; }
+        if(t<t0+420){ const q=OWN.k(t,t0,t0+420), p=OWN.go(st,{x:end.x,y:end.y+(i-0.5)*R*0.5},q,S*(1+i),0); OWN.prop(c,x,"leaf",p.x,p.y,t/20*d,2.4); continue; }
+        const q=OWN.k(t,t0+420,t0+700); if(q<1){ c.strokeStyle=OWN.rgb([200,255,150],1-q); c.lineWidth=3; c.beginPath(); c.moveTo(end.x-R*0.8,end.y-R*0.5+i*R*0.5); c.lineTo(end.x+R*0.8,end.y+R*0.2+i*R*0.3); c.stroke(); } } } },
+  /* Presto: a fan of cards snaps open in its hand, one card is flicked spinning across and sticks in the foe */
+  Presto:{at:[1.0,0.5],sz:1.4,fx(c,t,x,o){ const P=OWN.cx(x,o), {o0,tg,d,S,R}=P, end={x:tg.x-d*R*0.4,y:tg.y-R*0.1};
+      if(t<260){ const q=eo(Math.min(1,t/180)); for(let i=0;i<5;i++) OWN.prop(c,x,"card",o0.x,o0.y,-d*0.6+(i-2)*0.25*q,2.1,i===4&&t>200?1-OWN.k(t,200,260):1); }
+      if(t<200) return;
+      if(t<620){ const q=OWN.k(t,200,620), p=OWN.go(o0,end,ei(q),S*0.3,0); OWN.prop(c,x,"card",p.x,p.y,d*t/16,2.2); return; }
+      const q=OWN.k(t,620,1000); OWN.prop(c,x,"card",end.x,end.y,d*0.6,2.2,q<0.8?1:1-(q-0.8)/0.2); OWN.bonk(c,end.x,end.y,R*0.7,Math.min(0.99,q*1.4)); } },
+  /* Pogo: it bounces the ball hard off the ground in springy hops that grow until the last one smacks the foe */
+  Pogo:{at:[0.9,0.6],sz:1.4,fx(c,t,x,o){ const P=OWN.cx(x,o), {o0,tg,d,S,R,sg,gnd}=P, k=OWN.pk(x), r=S*0.8;
+      if(t<200){ const q=t/200, y=o0.y+(sg-r-o0.y)*Math.abs(Math.sin(q*Math.PI*2)); OWN.prop(c,x,k,o0.x+d*S*0.4,y,0,2.2); return; }
+      const end={x:tg.x,y:tg.y-R*0.1};
+      if(t<620){ const q=OWN.k(t,200,620), seg=Math.min(2,Math.floor(q*3)), sq=q*3-seg, xs=[o0.x+d*S*0.4,o0.x+(tg.x-o0.x)*0.35,o0.x+(tg.x-o0.x)*0.7,end.x], gy=(px)=>sg+(gnd-sg)*Math.min(1,Math.abs(px-o0.x)/Math.abs(tg.x-o0.x||1))-r;
+        const x0=xs[seg], x1=xs[seg+1], px=x0+(x1-x0)*sq, h=R*(0.6+seg*0.35), last=seg===2, py=last?gy(x0)+(end.y-gy(x0))*sq-Math.sin(Math.PI*sq)*h*0.6:gy(px)-Math.sin(Math.PI*sq)*h, squash=!last&&(sq<0.08||sq>0.92);
+        if(!last&&sq>0.9) SG.dust(c,x1,gy(x1)+r,S*0.6,(sq-0.9)*10,4); c.save(); c.translate(px,py); c.scale(squash?1.25:1,squash?0.8:1); OWN.prop(c,x,k,0,0,d*t/40,2.2); c.restore(); return; }
+      const q=OWN.k(t,620,1000); OWN.bonk(c,end.x,end.y,R,q); OWN.prop(c,x,k,end.x-d*R*1.4*q,end.y-R*1.2*Math.sin(Math.PI*q)+q*q*R,0,2.2,1-q); } },
+  /* Golem: it breaks a pebble off its own body, lobs it high, and it lands with a thud and a burst of dust */
+  Golem:{at:[0.9,0.35],sz:1.4,fx(c,t,x,o){ const P=OWN.cx(x,o), {o0,tg,d,S,R,gnd,head}=P, col=OWN.mix(P.body||[150,140,130],[110,100,95],0.45), end={x:tg.x,y:head.y+S*0.2};
+      const rock=(pt,s,rot)=>{ c.save(); c.translate(pt.x,pt.y); c.rotate(rot); c.fillStyle=OWN.rgb(col,1); c.beginPath(); for(let i=0;i<7;i++){ const a=i/7*7, rr=s*(0.8+0.3*atH(i+3)); c.lineTo(Math.cos(a)*rr,Math.sin(a)*rr); } c.closePath(); c.fill(); c.fillStyle=OWN.rgb(OWN.mix(col,[255,255,255],0.3),1); c.beginPath(); c.arc(-s*0.25,-s*0.25,s*0.3,0,7); c.fill(); c.restore(); };
+      if(t<200){ const q=t/200; if(q>0.5) for(let i=0;i<4;i++){ c.fillStyle=OWN.rgb(col,1); c.beginPath(); c.arc(o0.x+Math.cos(i*1.6)*S*q,o0.y+Math.sin(i*1.6)*S*q,1.8,0,7); c.fill(); } rock({x:o0.x+d*S*0.5*q,y:o0.y-S*0.6*q},S*0.7,0); return; }
+      if(t<620){ const q=OWN.k(t,200,620), p=OWN.go({x:o0.x+d*S*0.5,y:o0.y-S*0.6},end,q,R*1.2,0); rock(p,S*0.85,d*q*8); return; }
+      const q=OWN.k(t,620,1000); SG.dust(c,tg.x,gnd,R*0.9,q,8); for(let i=0;i<5;i++){ const a=-Math.PI*0.8+i/4*Math.PI*0.6, v=R*(0.4+0.7*eo(q)); rock({x:end.x+Math.cos(a)*v,y:end.y+Math.sin(a)*v+q*q*R*1.2},S*0.28*(1-q*0.5),q*5+i); } OWN.bonk(c,end.x,end.y,R*0.8,q); } },
+  /* Tanuki: it flings its straw hat like a frisbee, it curves out wide, smacks the foe and sails back */
+  Tanuki:{at:[0.5,-0.05],sz:1.4,fx(c,t,x,o){ const P=OWN.cx(x,o), {o0,tg,d,S,R}=P, end={x:tg.x,y:tg.y-R*0.3};
+      if(t<200){ OWN.prop(c,x,"hat",o0.x-d*S*0.3*eo(t/200),o0.y,-d*0.4*eo(t/200),2.4); return; }
+      const out=OWN.k(t,200,620), back=OWN.k(t,620,1000);
+      const p=t<620?(()=>{ const r=OWN.go(o0,end,eo(out),0,0); return {x:r.x,y:r.y-Math.sin(out*Math.PI)*R*1.0}; })():(()=>{ const r=OWN.go(end,o0,eio(back),0,0); return {x:r.x,y:r.y+Math.sin(back*Math.PI)*R*0.6}; })();
+      c.save(); c.translate(p.x,p.y); c.scale(1,0.55); OWN.prop(c,x,"hat",0,0,t/25,2.4); c.restore(); c.strokeStyle="rgba(255,255,255,.5)"; c.lineWidth=2; c.beginPath(); c.ellipse(p.x,p.y,S*1.4,S*0.5,0,t/25,t/25+1.4); c.stroke();
+      OWN.bonk(c,end.x,end.y,R*0.9,OWN.k(t,620,900)); } },
+  /* Mermaid: it scoops a pearl from its tail fin and flicks it with a splash; the pearl streaks over gleaming and bursts in spray */
+  Mermaid:{at:[0.95,0.5],sz:1.4,fx(c,t,x,o){ const P=OWN.cx(x,o), {o0,tg,d,S,R}=P, end={x:tg.x,y:tg.y-R*0.15}, sea=[150,215,240];
+      if(t<200){ const q=t/200; for(let i=0;i<5;i++){ const a=-Math.PI/2+(i-2)*0.4; c.fillStyle=OWN.rgb(sea,1-q); c.beginPath(); c.arc(o0.x+Math.cos(a)*S*1.4*q,o0.y+Math.sin(a)*S*1.4*q,S*0.15,0,7); c.fill(); } OWN.prop(c,x,"pearl",o0.x,o0.y,0,2.2*eo(q)); return; }
+      if(t<620){ const q=OWN.k(t,200,620), p=OWN.go(o0,end,ei(q),S*0.4,0); for(let i=1;i<6;i++){ const b=OWN.go(o0,end,Math.max(0,ei(q)-i*0.04),S*0.4,0); c.fillStyle=OWN.rgb(sea,0.7*(1-i/6)); c.beginPath(); c.arc(b.x,b.y+Math.sin(i+t/40)*2,S*0.18,0,7); c.fill(); }
+        atGlowA(c,p.x,p.y,S*1.2,[255,250,240],0.6); OWN.prop(c,x,"pearl",p.x,p.y,0,2.2); OWN.star(c,p.x-S*0.3,p.y-S*0.3,S*0.3,"rgba(255,255,255,.95)",t/50); return; }
+      const q=OWN.k(t,620,1000); OWN.pop(c,end.x,end.y,R*0.6,sea,q,10); OWN.bonk(c,end.x,end.y,R*0.7,q,[230,250,255]); } },
+  /* Diwata: leaves whirl up round it, then fly out one after another as spinning blades and cut across the foe */
+  Diwata:{at:[1.0,0.45],sz:1.4,fx(c,t,x,o){ const P=OWN.cx(x,o), {o0,tg,d,S,R}=P, cen=P.s, end={x:tg.x,y:tg.y-R*0.15};
+      for(let i=0;i<3;i++){ const t0=200+i*80, ph=i/3*Math.PI*2;
+        if(t<t0){ const a=ph+t/70, p={x:cen.x+Math.cos(a)*R*0.9,y:cen.y-R*0.1+Math.sin(a)*R*0.45}; OWN.prop(c,x,"leaf",p.x,p.y,a,2.0*Math.min(1,t/150)); continue; }
+        const st={x:cen.x+Math.cos(ph+t0/70)*R*0.9,y:cen.y-R*0.1+Math.sin(ph+t0/70)*R*0.45};
+        if(t<t0+420){ const q=OWN.k(t,t0,t0+420), p=OWN.go(st,{x:end.x,y:end.y+(i-1)*R*0.35},ei(q),S*(0.5+i*0.5),0); OWN.prop(c,x,"leaf",p.x,p.y,t/18*d,2.2); continue; }
+        const q=OWN.k(t,t0+420,t0+700); if(q<1){ c.strokeStyle=OWN.rgb([180,255,170],1-q); c.lineWidth=3; c.beginPath(); c.moveTo(end.x-R*0.8,end.y+(i-1)*R*0.35-R*0.2); c.lineTo(end.x+R*0.8,end.y+(i-1)*R*0.35+R*0.2); c.stroke(); } } } },
+  /* Sphinx: a golden disc rises behind its head like the sun, blazing, then spins across and bursts in rays on the foe */
+  Sphinx:{at:[0.5,-0.1],sz:1.4,fx(c,t,x,o){ const P=OWN.cx(x,o), {o0,tg,d,S,R}=P, end={x:tg.x,y:tg.y-R*0.15}, sun={x:o0.x,y:o0.y-R*0.6}, gold=[255,210,90];
+      const disc=(p,rot,a)=>{ atGlowA(c,p.x,p.y,S*2,gold,0.6*a); for(let i=0;i<8;i++){ const aa=rot+i/8*Math.PI*2; c.strokeStyle=OWN.rgb([255,230,140],0.8*a); c.lineWidth=2; c.beginPath(); c.moveTo(p.x+Math.cos(aa)*S*0.9,p.y+Math.sin(aa)*S*0.9); c.lineTo(p.x+Math.cos(aa)*S*1.4,p.y+Math.sin(aa)*S*1.4); c.stroke(); } OWN.prop(c,x,"disc",p.x,p.y,rot,2.3,a); };
+      if(t<200){ const q=eo(t/200); disc({x:sun.x,y:o0.y+(sun.y-o0.y)*q},t/80,q); return; }
+      if(t<620){ const q=OWN.k(t,200,620), p=OWN.go(sun,end,ei(q),R*0.6,0); disc(p,d*t/20,1); return; }
+      const q=OWN.k(t,620,1000); if(q<1){ for(let i=0;i<12;i++){ const aa=i/12*Math.PI*2; c.strokeStyle=OWN.rgb(gold,1-q); c.lineWidth=3; c.beginPath(); c.moveTo(end.x+Math.cos(aa)*R*0.3,end.y+Math.sin(aa)*R*0.3); c.lineTo(end.x+Math.cos(aa)*R*(0.6+1.0*q),end.y+Math.sin(aa)*R*(0.6+1.0*q)); c.stroke(); } atGlowA(c,end.x,end.y,R*(0.8+0.6*q),gold,0.7*(1-q)); } } },
+  /* Sarimanok: a fish flops in its beak, it tosses it flapping end over end, and the fish slaps the foe with a splash */
+  Sarimanok:{at:[1.0,0.35],sz:1.4,fx(c,t,x,o){ const P=OWN.cx(x,o), {o0,tg,d,S,R}=P, end={x:tg.x,y:tg.y-R*0.2}, sea=[150,215,240];
+      if(t<200){ OWN.prop(c,x,"fish",o0.x+d*S*0.3,o0.y+S*0.2,Math.sin(t/25)*0.5,2.4); return; }
+      if(t<620){ const q=OWN.k(t,200,620), p=OWN.go(o0,end,q,R*1.3,0); OWN.prop(c,x,"fish",p.x,p.y,d*q*10+Math.sin(t/20)*0.4,2.4); for(let i=0;i<2;i++){ c.fillStyle=OWN.rgb(sea,0.8); c.beginPath(); c.arc(p.x-d*S*(0.8+i*0.6),p.y+S*0.3+i*3,S*0.15,0,7); c.fill(); } return; }
+      const q=OWN.k(t,620,1000); OWN.pop(c,end.x,end.y,R*0.6,sea,q,10); OWN.prop(c,x,"fish",end.x-d*R*q,end.y-Math.sin(Math.PI*q)*R+q*q*R*1.3,-d*q*6,2.4,1-q*0.8); } }
+};
+(()=>{ if(typeof ANIM==="undefined"||!ANIM.propthrow) return; const K=ANIM.propthrow, fx1=K.fx;
+  K.fx=function(c,t,x){ const o=x&&OWN_PROP[x.fam]; if(!o) return fx1.call(this,c,t,x); try{ o.fx(c,t,x,o); }catch(e){ if(!OWN.err){ OWN.err=1; console.error("OWN propthrow",x.fam,e&&e.message); } } if(typeof atImpact==="function") atImpact(t,620,0.3,0.05); };
+  const atk1=K.atk; K.atk=function(t,pos){ const b=atk1.call(this,t,pos), o=pos&&OWN_PROP[pos.fam], e=o&&o.atk&&o.atk(t,pos); return e?{...b,...e}:b; }; })();
+
+
+/* ---------- detailed props (Gid, 18 Nov 2026: the stock props were flat shapes) ---------- */
+OWN.lg=(c,x0,y0,x1,y1,stops)=>{ const g=c.createLinearGradient(x0,y0,x1,y1); stops.forEach(([o,col])=>g.addColorStop(o,col)); return g; };
+OWN.rg=(c,x,y,r0,r1,stops,ox=0,oy=0)=>{ const g=c.createRadialGradient(x+ox,y+oy,r0,x,y,r1); stops.forEach(([o,col])=>g.addColorStop(o,col)); return g; };
+OWN.rr=(c,x,y,w,h,r)=>{ c.beginPath(); c.moveTo(x+r,y); c.arcTo(x+w,y,x+w,y+h,r); c.arcTo(x+w,y+h,x,y+h,r); c.arcTo(x,y+h,x,y,r); c.arcTo(x,y,x+w,y,r); c.closePath(); };
+OWN.PROPS={
+  chair(c,s,t){ const wood=OWN.lg(c,-s,0,s,0,[[0,"#9c6a3c"],[0.5,"#c08850"],[1,"#7a4e2a"]]); c.lineJoin="round"; c.strokeStyle="#4a2c14"; c.lineWidth=Math.max(1,s*0.07);
+    for(const [x0,x1] of [[-0.75,-0.6],[0.55,0.7],[-0.45,-0.32],[0.82,0.95]]){ c.fillStyle=wood; c.beginPath(); c.rect(s*x0,s*0.1,s*(x1-x0),s*1.0); c.fill(); c.stroke(); }
+    c.fillStyle=OWN.lg(c,0,-s*0.1,0,s*0.25,[[0,"#d8a066"],[1,"#9a6234"]]); c.beginPath(); c.moveTo(-s*0.85,s*0.1); c.lineTo(s*0.75,s*0.1); c.lineTo(s*1.0,-s*0.12); c.lineTo(-s*0.55,-s*0.12); c.closePath(); c.fill(); c.stroke();
+    c.fillStyle=wood; for(const x0 of [-0.85,0.45]){ c.beginPath(); c.rect(s*x0,-s*1.25,s*0.17,s*1.37); c.fill(); c.stroke(); }
+    for(let i=0;i<3;i++){ c.fillStyle=i%2?"#b47c46":"#c48a52"; c.beginPath(); c.rect(-s*0.7,-s*(1.1-i*0.33),s*1.17,s*0.16); c.fill(); c.stroke(); }
+    c.strokeStyle="rgba(80,45,20,.45)"; c.lineWidth=0.8; for(let i=0;i<4;i++){ c.beginPath(); c.moveTo(-s*0.5+i*s*0.3,-s*0.08); c.quadraticCurveTo(-s*0.4+i*s*0.3,0,-s*0.55+i*s*0.3,s*0.06); c.stroke(); }
+    c.fillStyle="rgba(255,235,200,.35)"; c.fillRect(-s*0.83,-s*1.2,s*0.05,s*1.2); },
+  cork(c,s){ c.strokeStyle="#5a3a1c"; c.lineWidth=Math.max(1,s*0.07); c.fillStyle=OWN.lg(c,-s*0.5,0,s*0.5,0,[[0,"#a8743e"],[0.45,"#d9a66a"],[1,"#8a5a2c"]]);
+    c.beginPath(); c.moveTo(-s*0.55,-s*0.6); c.lineTo(s*0.55,-s*0.6); c.lineTo(s*0.45,s*0.7); c.lineTo(-s*0.45,s*0.7); c.closePath(); c.fill(); c.stroke();
+    c.fillStyle="#e2b67a"; c.beginPath(); c.ellipse(0,-s*0.6,s*0.55,s*0.18,0,0,7); c.fill(); c.stroke(); c.fillStyle="#9a6634"; for(let i=0;i<14;i++){ c.beginPath(); c.arc((atH(i)-0.5)*s*0.85,-s*0.4+atH(i*3)*s*1.0,s*(0.04+0.04*atH(i*7)),0,7); c.fill(); }
+    for(let i=0;i<5;i++){ c.beginPath(); c.arc((atH(i+20)-0.5)*s*0.8,-s*0.6+(atH(i*5)-0.5)*s*0.18,s*0.035,0,7); c.fill(); } c.fillStyle="rgba(255,255,255,.3)"; c.fillRect(-s*0.3,-s*0.45,s*0.1,s*1.0); },
+  leaf(c,s,t){ c.save(); c.rotate(-0.2); c.fillStyle=OWN.lg(c,0,-s*0.5,0,s*0.5,[[0,"#8ad86a"],[0.6,"#4fae46"],[1,"#2f7a34"]]); c.strokeStyle="#22582a"; c.lineWidth=Math.max(1,s*0.06);
+    c.beginPath(); c.moveTo(-s*1.1,0); c.bezierCurveTo(-s*0.5,-s*0.75,s*0.6,-s*0.65,s*1.2,0); c.bezierCurveTo(s*0.6,s*0.55,-s*0.5,s*0.7,-s*1.1,0); c.fill(); c.stroke();
+    c.strokeStyle="#2e6e30"; c.lineWidth=Math.max(1,s*0.07); c.beginPath(); c.moveTo(-s*1.35,s*0.12); c.quadraticCurveTo(0,s*0.02,s*1.1,0); c.stroke(); c.lineWidth=Math.max(0.8,s*0.04);
+    for(let i=0;i<5;i++){ const x0=-s*0.7+i*s*0.38; c.beginPath(); c.moveTo(x0,0); c.quadraticCurveTo(x0+s*0.15,-s*0.2,x0+s*0.32,-s*0.36); c.moveTo(x0,0); c.quadraticCurveTo(x0+s*0.15,s*0.18,x0+s*0.3,s*0.32); c.stroke(); }
+    c.fillStyle="rgba(255,255,255,.3)"; c.beginPath(); c.ellipse(-s*0.1,-s*0.28,s*0.5,s*0.1,-0.15,0,7); c.fill(); c.restore(); },
+  note(c,s){ c.save(); c.fillStyle=OWN.lg(c,-s*0.5,-s,s*0.6,s*0.5,[[0,"#e070e0"],[1,"#8a2aa0"]]); c.strokeStyle="#4a1258"; c.lineWidth=Math.max(1,s*0.07);
+    c.beginPath(); c.ellipse(-s*0.25,s*0.55,s*0.5,s*0.36,-0.4,0,7); c.fill(); c.stroke(); c.fillRect(s*0.14,-s*1.05,s*0.16,s*1.6); c.strokeRect(s*0.14,-s*1.05,s*0.16,s*1.6);
+    c.beginPath(); c.moveTo(s*0.3,-s*1.05); c.bezierCurveTo(s*0.9,-s*0.8,s*1.0,-s*0.35,s*0.7,-s*0.1); c.bezierCurveTo(s*0.8,-s*0.45,s*0.6,-s*0.6,s*0.3,-s*0.65); c.closePath(); c.fill(); c.stroke();
+    c.fillStyle="rgba(255,255,255,.6)"; c.beginPath(); c.ellipse(-s*0.38,s*0.42,s*0.16,s*0.08,-0.4,0,7); c.fill(); c.restore(); },
+  scrap(c,s){ c.strokeStyle="#2e3440"; c.lineWidth=Math.max(1,s*0.06); c.fillStyle=OWN.lg(c,0,-s*0.25,0,s*0.25,[[0,"#d8dde6"],[0.5,"#9aa3b2"],[1,"#5e6676"]]); c.beginPath(); c.rect(-s*0.2,-s*0.22,s*1.25,s*0.44); c.fill(); c.stroke();
+    c.strokeStyle="rgba(40,46,56,.7)"; c.lineWidth=1; for(let i=0;i<7;i++){ const xx=s*0.02+i*s*0.15; c.beginPath(); c.moveTo(xx,-s*0.22); c.lineTo(xx+s*0.08,s*0.22); c.stroke(); }
+    c.fillStyle=OWN.lg(c,-s*0.8,-s*0.5,-s*0.2,s*0.5,[[0,"#e8ecf2"],[1,"#6e7686"]]); c.strokeStyle="#2e3440"; c.lineWidth=Math.max(1,s*0.07); c.beginPath(); for(let i=0;i<6;i++){ const a=i*Math.PI/3+Math.PI/6; c.lineTo(-s*0.5+Math.cos(a)*s*0.32,Math.sin(a)*s*0.55); } c.closePath(); c.fill(); c.stroke();
+    c.fillStyle="rgba(255,255,255,.55)"; c.fillRect(-s*0.62,-s*0.38,s*0.08,s*0.5); },
+  wrapper(c,s){ const col=["#ff7ab0","#ffd2e4"]; c.strokeStyle="#a83a6a"; c.lineWidth=Math.max(1,s*0.06);
+    for(const sd of [-1,1]){ c.fillStyle=col[0]; c.beginPath(); c.moveTo(sd*s*0.5,-s*0.18); c.lineTo(sd*s*1.15,-s*0.5); c.lineTo(sd*s*1.05,-s*0.12); c.lineTo(sd*s*1.2,0); c.lineTo(sd*s*1.05,s*0.15); c.lineTo(sd*s*1.15,s*0.5); c.lineTo(sd*s*0.5,s*0.18); c.closePath(); c.fill(); c.stroke();
+      c.beginPath(); c.moveTo(sd*s*0.6,-s*0.1); c.lineTo(sd*s*1.0,-s*0.32); c.moveTo(sd*s*0.6,s*0.1); c.lineTo(sd*s*1.0,s*0.32); c.stroke(); }
+    c.fillStyle=OWN.lg(c,0,-s*0.5,0,s*0.5,[[0,"#ffa6cc"],[1,"#e0508e"]]); OWN.rr(c,-s*0.58,-s*0.42,s*1.16,s*0.84,s*0.3); c.fill(); c.stroke();
+    c.save(); OWN.rr(c,-s*0.58,-s*0.42,s*1.16,s*0.84,s*0.3); c.clip(); c.fillStyle="#fff2f8"; for(let i=-3;i<4;i++){ c.beginPath(); c.moveTo(i*s*0.3,-s*0.5); c.lineTo(i*s*0.3+s*0.12,-s*0.5); c.lineTo(i*s*0.3+s*0.42,s*0.5); c.lineTo(i*s*0.3+s*0.3,s*0.5); c.fill(); } c.restore();
+    c.fillStyle="rgba(255,255,255,.6)"; c.beginPath(); c.ellipse(-s*0.15,-s*0.25,s*0.3,s*0.07,0,0,7); c.fill(); },
+  page(c,s){ c.save(); c.fillStyle=OWN.lg(c,-s,-s,s,s,[[0,"#fffdf4"],[1,"#e8dfc6"]]); c.strokeStyle="#9a8a62"; c.lineWidth=Math.max(1,s*0.05);
+    c.beginPath(); c.moveTo(-s*0.75,-s*1.0); c.lineTo(s*0.75,-s*1.0); c.lineTo(s*0.75,s*0.75); c.quadraticCurveTo(s*0.6,s*0.95,s*0.35,s*1.0); for(let i=0;i<6;i++) c.lineTo(s*0.35-i*s*0.2,s*(1.0+(i%2?-0.06:0.04))); c.closePath(); c.fill(); c.stroke();
+    c.strokeStyle="rgba(60,60,90,.55)"; c.lineWidth=Math.max(0.8,s*0.05); for(let i=0;i<6;i++){ c.beginPath(); c.moveTo(-s*0.55,-s*0.72+i*s*0.27); c.lineTo(s*(0.55-(i===5?0.4:atH(i)*0.25)),-s*0.72+i*s*0.27); c.stroke(); }
+    c.fillStyle="#c03a3a"; c.beginPath(); c.arc(-s*0.45,-s*0.72,s*0.09,0,7); c.fill(); c.fillStyle="rgba(0,0,0,.08)"; c.beginPath(); c.moveTo(s*0.75,s*0.75); c.quadraticCurveTo(s*0.55,s*0.65,s*0.35,s*1.0); c.quadraticCurveTo(s*0.6,s*0.95,s*0.75,s*0.75); c.fill(); c.restore(); },
+  candy(c,s,t,x){ const rock=/Rock/.test(x&&x.name||""); if(rock){ c.strokeStyle="#7a5a3a"; c.lineWidth=Math.max(1.2,s*0.1); c.beginPath(); c.moveTo(0,s*0.2); c.lineTo(0,s*1.2); c.stroke();
+        const cols=["#b9e4ff","#ffc6e8","#d8c6ff"]; for(let i=0;i<7;i++){ const a=-Math.PI/2+(i-3)*0.42, L=s*(0.6+0.35*atH(i)); c.save(); c.rotate(a+Math.PI/2); c.fillStyle=cols[i%3]; c.strokeStyle="rgba(90,90,140,.6)"; c.lineWidth=1; c.beginPath(); c.moveTo(-s*0.18,0); c.lineTo(0,-L); c.lineTo(s*0.18,0); c.lineTo(0,s*0.18); c.closePath(); c.fill(); c.stroke(); c.fillStyle="rgba(255,255,255,.7)"; c.beginPath(); c.moveTo(-s*0.06,-s*0.05); c.lineTo(0,-L*0.8); c.lineTo(s*0.02,-s*0.05); c.fill(); c.restore(); } return; }
+      c.fillStyle="#fff"; c.strokeStyle="#b02a3a"; c.lineWidth=Math.max(1,s*0.06); c.beginPath(); c.arc(0,0,s*0.7,0,7); c.fill(); c.stroke(); c.save(); c.beginPath(); c.arc(0,0,s*0.66,0,7); c.clip(); c.fillStyle="#e83a4a";
+      for(let i=0;i<6;i++){ c.beginPath(); c.moveTo(0,0); c.arc(0,0,s*0.7,i/6*Math.PI*2,i/6*Math.PI*2+0.45); c.closePath(); c.fill(); } c.restore(); c.fillStyle="rgba(255,255,255,.7)"; c.beginPath(); c.ellipse(-s*0.22,-s*0.28,s*0.2,s*0.1,-0.6,0,7); c.fill(); },
+  pineapple(c,s){ c.strokeStyle="#7a4e10"; c.lineWidth=Math.max(1,s*0.06);
+    for(let i=0;i<5;i++){ const a=-Math.PI/2+(i-2)*0.35, L=s*(0.8-Math.abs(i-2)*0.12); c.fillStyle=i%2?"#4ea84a":"#6cc85a"; c.save(); c.translate(0,-s*0.6); c.rotate(a+Math.PI/2); c.beginPath(); c.moveTo(-s*0.12,0); c.quadraticCurveTo(-s*0.08,-L*0.6,0,-L); c.quadraticCurveTo(s*0.08,-L*0.6,s*0.12,0); c.fill(); c.strokeStyle="#2e6a2a"; c.stroke(); c.restore(); }
+    c.fillStyle=OWN.rg(c,0,s*0.1,s*0.1,s*0.8,[[0,"#ffd84a"],[1,"#d08a1a"]],-s*0.2,-s*0.2); c.beginPath(); c.ellipse(0,s*0.15,s*0.6,s*0.8,0,0,7); c.fill(); c.strokeStyle="#7a4e10"; c.stroke();
+    c.save(); c.beginPath(); c.ellipse(0,s*0.15,s*0.6,s*0.8,0,0,7); c.clip(); c.strokeStyle="rgba(140,90,20,.7)"; c.lineWidth=1; for(let i=-4;i<5;i++){ c.beginPath(); c.moveTo(i*s*0.3-s,-s); c.lineTo(i*s*0.3+s,s*1.2); c.stroke(); c.beginPath(); c.moveTo(i*s*0.3+s,-s); c.lineTo(i*s*0.3-s,s*1.2); c.stroke(); }
+    c.fillStyle="#8a5a10"; for(let i=-3;i<4;i++) for(let j=-3;j<4;j++){ c.beginPath(); c.arc(i*s*0.3+(j%2)*s*0.15,s*0.15+j*s*0.25,s*0.035,0,7); c.fill(); } c.restore(); },
+  card(c,s0,t,x){ const s=s0*1.3, red=atH(Math.floor((x&&x.self?x.self.x:0)/7))>0.5; c.save(); c.fillStyle="rgba(0,0,0,.18)"; OWN.rr(c,-s*0.52,-s*0.68,s*1.1,s*1.44,s*0.14); c.fill(); c.fillStyle=OWN.lg(c,-s,-s,s,s,[[0,"#ffffff"],[1,"#eceae2"]]); c.strokeStyle="#6a6a7a"; c.lineWidth=Math.max(1,s*0.05);
+    OWN.rr(c,-s*0.55,-s*0.72,s*1.1,s*1.44,s*0.14); c.fill(); c.stroke(); c.strokeStyle=red?"#e04a5a":"#2a2a3a"; c.lineWidth=Math.max(0.8,s*0.03); OWN.rr(c,-s*0.45,-s*0.62,s*0.9,s*1.24,s*0.1); c.stroke();
+    const ink=red?"#e04a5a":"#22223a"; c.fillStyle=ink; if(red){ c.beginPath(); c.moveTo(0,s*0.3); c.bezierCurveTo(-s*0.55,-s*0.1,-s*0.25,-s*0.5,0,-s*0.2); c.bezierCurveTo(s*0.25,-s*0.5,s*0.55,-s*0.1,0,s*0.3); c.fill(); }
+    else { c.beginPath(); c.moveTo(0,-s*0.38); c.bezierCurveTo(s*0.55,0,s*0.25,s*0.32,0,s*0.12); c.bezierCurveTo(-s*0.25,s*0.32,-s*0.55,0,0,-s*0.38); c.fill(); c.fillRect(-s*0.05,s*0.05,s*0.1,s*0.28); }
+    c.font="bold "+Math.max(6,s*0.32)+"px system-ui"; c.fillText("A",-s*0.42,-s*0.38); c.save(); c.rotate(Math.PI); c.fillText("A",-s*0.42,-s*0.38); c.restore(); c.restore(); },
+  ball(c,s,t){ c.save(); c.beginPath(); c.arc(0,0,s*0.75,0,7); c.clip(); const cols=["#ff5a5a","#ffffff","#4aa0ff","#ffffff","#ffd23a","#ffffff"]; for(let i=0;i<6;i++){ c.fillStyle=cols[i]; c.beginPath(); c.moveTo(0,0); c.arc(0,0,s,i/6*Math.PI*2,(i+1)/6*Math.PI*2); c.closePath(); c.fill(); }
+    c.fillStyle=OWN.rg(c,0,0,s*0.1,s*0.8,[[0,"rgba(255,255,255,0)"],[1,"rgba(0,0,0,.28)"]],-s*0.25,-s*0.25); c.fillRect(-s,-s,s*2,s*2); c.restore(); c.strokeStyle="#5a4a4a"; c.lineWidth=Math.max(1,s*0.06); c.beginPath(); c.arc(0,0,s*0.75,0,7); c.stroke();
+    c.fillStyle="#fff"; c.beginPath(); c.arc(0,0,s*0.14,0,7); c.fill(); c.fillStyle="rgba(255,255,255,.75)"; c.beginPath(); c.ellipse(-s*0.3,-s*0.35,s*0.2,s*0.1,-0.6,0,7); c.fill(); },
+  hat(c,s){ c.strokeStyle="#7a5a20"; c.lineWidth=Math.max(1,s*0.06); c.fillStyle=OWN.lg(c,0,-s*0.2,0,s*0.4,[[0,"#f0d48a"],[1,"#c09a48"]]); c.beginPath(); c.ellipse(0,s*0.2,s*1.3,s*0.42,0,0,7); c.fill(); c.stroke();
+    c.strokeStyle="rgba(140,100,40,.6)"; c.lineWidth=0.9; for(let i=1;i<4;i++){ c.beginPath(); c.ellipse(0,s*0.2,s*(0.5+i*0.25),s*(0.16+i*0.08),0,0,7); c.stroke(); }
+    c.fillStyle=OWN.lg(c,-s*0.6,0,s*0.6,0,[[0,"#d8b464"],[0.5,"#f4dc9a"],[1,"#b88e40"]]); c.strokeStyle="#7a5a20"; c.lineWidth=Math.max(1,s*0.06); c.beginPath(); c.moveTo(-s*0.6,s*0.15); c.bezierCurveTo(-s*0.6,-s*0.75,s*0.6,-s*0.75,s*0.6,s*0.15); c.closePath(); c.fill(); c.stroke();
+    c.fillStyle="#c83a3a"; c.beginPath(); c.moveTo(-s*0.6,s*0.05); c.quadraticCurveTo(0,s*0.2,s*0.6,s*0.05); c.lineTo(s*0.6,-s*0.12); c.quadraticCurveTo(0,0,-s*0.6,-s*0.12); c.closePath(); c.fill();
+    c.strokeStyle="rgba(140,100,40,.55)"; c.lineWidth=0.9; for(let i=0;i<5;i++){ c.beginPath(); c.moveTo(-s*0.45+i*s*0.22,-s*0.15); c.quadraticCurveTo(-s*0.4+i*s*0.2,-s*0.4,-s*0.3+i*s*0.15,-s*0.52); c.stroke(); } },
+  pearl(c,s,t){ c.fillStyle=OWN.rg(c,0,0,s*0.05,s*0.7,[[0,"#ffffff"],[0.4,"#f4ecf6"],[0.75,"#dcd2ec"],[1,"#b4a8cc"]],-s*0.25,-s*0.25); c.beginPath(); c.arc(0,0,s*0.68,0,7); c.fill();
+    c.save(); c.globalAlpha*=0.45; c.fillStyle=OWN.lg(c,-s*0.7,s*0.7,s*0.7,-s*0.7,[[0,"rgba(255,170,210,.9)"],[0.5,"rgba(160,230,255,.6)"],[1,"rgba(255,250,200,.0)"]]); c.beginPath(); c.arc(0,0,s*0.68,0,7); c.fill(); c.restore();
+    c.fillStyle="#fff"; c.beginPath(); c.ellipse(-s*0.25,-s*0.28,s*0.18,s*0.1,-0.7,0,7); c.fill(); OWN.star(c,s*0.3,-s*0.4,s*0.25,"rgba(255,255,255,.9)",(t||0)/200); },
+  disc(c,s,t){ c.fillStyle=OWN.rg(c,0,0,s*0.1,s*0.9,[[0,"#fff2b0"],[0.6,"#f4c040"],[1,"#b07818"]],-s*0.2,-s*0.2); c.strokeStyle="#7a5010"; c.lineWidth=Math.max(1,s*0.07); c.beginPath(); c.arc(0,0,s*0.85,0,7); c.fill(); c.stroke();
+    c.strokeStyle="rgba(140,90,20,.8)"; c.lineWidth=Math.max(1,s*0.05); c.beginPath(); c.arc(0,0,s*0.55,0,7); c.stroke(); for(let i=0;i<12;i++){ const a=i/12*Math.PI*2; c.beginPath(); c.moveTo(Math.cos(a)*s*0.58,Math.sin(a)*s*0.58); c.lineTo(Math.cos(a)*s*0.8,Math.sin(a)*s*0.8); c.stroke(); }
+    c.fillStyle=OWN.rg(c,0,0,s*0.02,s*0.3,[[0,"#7af0ff"],[1,"#1a7ab0"]],-s*0.08,-s*0.08); c.beginPath(); c.arc(0,0,s*0.25,0,7); c.fill(); c.strokeStyle="#0a4a70"; c.lineWidth=1; c.stroke(); c.fillStyle="rgba(255,255,255,.8)"; c.beginPath(); c.arc(-s*0.08,-s*0.08,s*0.07,0,7); c.fill(); },
+  fish(c,s,t){ const flop=Math.sin((t||0)/45)*0.35; c.save(); c.strokeStyle="#1e4a7a"; c.lineWidth=Math.max(1,s*0.06);
+    c.fillStyle="#5aa0e0"; c.save(); c.translate(-s*0.75,0); c.rotate(flop); c.beginPath(); c.moveTo(0,0); c.lineTo(-s*0.55,-s*0.45); c.quadraticCurveTo(-s*0.4,0,-s*0.55,s*0.45); c.closePath(); c.fill(); c.stroke(); c.strokeStyle="rgba(30,74,122,.5)"; c.lineWidth=0.8; for(let i=-1;i<=1;i++){ c.beginPath(); c.moveTo(-s*0.05,0); c.lineTo(-s*0.48,i*s*0.3); c.stroke(); } c.restore();
+    c.fillStyle="#7ab8ec"; c.strokeStyle="#1e4a7a"; c.lineWidth=Math.max(1,s*0.06); c.beginPath(); c.moveTo(-s*0.1,-s*0.35); c.quadraticCurveTo(s*0.15,-s*0.7,s*0.35,-s*0.3); c.closePath(); c.fill(); c.stroke();
+    c.fillStyle=OWN.lg(c,0,-s*0.45,0,s*0.45,[[0,"#4a86d0"],[0.55,"#9ad0f4"],[1,"#eef8ff"]]); c.beginPath(); c.ellipse(0,0,s*0.85,s*0.42,0,0,7); c.fill(); c.stroke();
+    c.save(); c.beginPath(); c.ellipse(0,0,s*0.85,s*0.42,0,0,7); c.clip(); c.strokeStyle="rgba(255,255,255,.55)"; c.lineWidth=0.9; for(let i=0;i<4;i++) for(let j=-1;j<=1;j++){ c.beginPath(); c.arc(-s*0.35+i*s*0.25,j*s*0.22,s*0.13,-1.2,1.2); c.stroke(); } c.restore();
+    c.fillStyle="#fff"; c.beginPath(); c.arc(s*0.5,-s*0.08,s*0.13,0,7); c.fill(); c.fillStyle="#1a1a2a"; c.beginPath(); c.arc(s*0.53,-s*0.08,s*0.07,0,7); c.fill(); c.strokeStyle="#1e4a7a"; c.beginPath(); c.arc(s*0.82,s*0.08,s*0.08,-1.2,1.2); c.stroke(); c.restore(); },
+  gravel(c,s){ c.fillStyle=OWN.lg(c,-s,-s,s,s,[[0,"#a8a29a"],[1,"#5e5852"]]); c.strokeStyle="#3a3632"; c.lineWidth=Math.max(1,s*0.07); c.beginPath(); for(let i=0;i<8;i++){ const a=i/8*Math.PI*2, r=s*(0.6+0.25*atH(i+5)); c.lineTo(Math.cos(a)*r,Math.sin(a)*r*0.85); } c.closePath(); c.fill(); c.stroke();
+    c.fillStyle="rgba(255,255,255,.3)"; c.beginPath(); c.moveTo(-s*0.4,-s*0.4); c.lineTo(s*0.1,-s*0.55); c.lineTo(-s*0.05,-s*0.15); c.closePath(); c.fill(); c.strokeStyle="rgba(40,36,32,.6)"; c.lineWidth=1; c.beginPath(); c.moveTo(-s*0.1,-s*0.1); c.lineTo(s*0.25,s*0.2); c.lineTo(s*0.15,s*0.45); c.stroke();
+    c.fillStyle="#6a9a4a"; for(let i=0;i<3;i++){ c.beginPath(); c.arc(-s*0.3+i*s*0.18,s*0.35,s*0.07,0,7); c.fill(); } }
+};
+OWN.drawProp=(c,x,kind,px,py,rot,s,a=1,t=0)=>{ if(a<=0) return; const f=OWN.PROPS[kind]; c.save(); c.translate(px,py); c.rotate(rot); c.globalAlpha*=a; if(f) f(c,s,t,x); else { c.scale(s/13,s/13); MV.prop(c,kind,0,t,x); } c.restore(); };
+/* swap the stock props in the propthrow families for the detailed ones: OWN.prop(c,x,kind,px,py,rot,sc,a) where sc 2.2-2.4 was the old scale */
+OWN.prop=(c,x,kind,px,py,rot,sc,a=1)=>{ const S=Math.max(9,((x.self&&x.self.r)||30)*0.6)*atBig(x)*1.4; OWN.drawProp(c,x,kind,px,py,rot,S*0.95*(sc/2.3),a,AT&&AT.te||0); };
+/* speed lines behind a prop that's moving fast, from where it was last frame */
+OWN._pl={};
+{ const P0=OWN.prop; OWN.prop=(c,x,kind,px,py,rot,sc,a=1)=>{ const key=(x&&x.fam||"")+kind, L=OWN._pl[key], te=(typeof AT!=="undefined"&&AT.te)||0, S=Math.max(9,((x.self&&x.self.r)||30)*0.6)*atBig(x)*1.4;
+    if(L&&te-L.te>0&&te-L.te<60&&a>0.5){ const dx=px-L.x, dy=py-L.y, dist=Math.hypot(dx,dy); if(dist>S*0.35){ const ux=dx/dist, uy=dy/dist; c.lineCap="round";
+      for(let i=-1;i<=1;i++){ const ox=-uy*i*S*0.35, oy=ux*i*S*0.35, len=Math.min(S*3,dist*2.2)*(i?0.7:1); const g=c.createLinearGradient(px-ux*len,py-uy*len,px,py); g.addColorStop(0,"rgba(255,255,255,0)"); g.addColorStop(1,"rgba(255,255,255,.7)"); c.strokeStyle=g; c.lineWidth=i?1.5:2.5; c.beginPath(); c.moveTo(px-ux*len+ox,py-uy*len+oy); c.lineTo(px-ux*S*0.6+ox,py-uy*S*0.6+oy); c.stroke(); } } }
+    OWN._pl[key]={x:px,y:py,te}; P0(c,x,kind,px,py,rot,sc,a); }; }
+/* each family's own wind-up and follow-through for its throw */
+Object.entries({
+  Fizz:(t)=>t<180?{sy:1-0.1*eo(t/180),sx:1+0.06*eo(t/180),off:[Math.sin(t/10)*1.2,0]}:t<280?{sy:1.12,sx:0.94}:null,
+  Twiglet:(t,p)=>t<200?{rot:-0.25*(p.dir||1)*eo(t/200)}:t<320?{rot:0.15*(p.dir||1)}:null,
+  Ditty:(t)=>t<200?{pose:"cast",arc:-3}:null,
+  Magna:(t)=>t<300?{pose:"effort",off:[Math.sin(t/8)*1.5,0]}:null,
+  Cuppy:(t,p)=>t<200?{rot:-0.3*(p.dir||1)*eo(t/200)}:t<320?{rot:0.2*(p.dir||1)}:null,
+  Tome:(t)=>t<200?{off:[Math.sin(t/15)*1.5,0],sx:1.04}:null,
+  Gumball:(t)=>t<200?{rot:Math.sin(t/20)*0.06,pose:"effort"}:null,
+  Pina:(t)=>t<200?{arc:-6*Math.sin(Math.PI*t/200)}:null,
+  Presto:(t,p)=>t<240?{pose:"cast",rot:-0.1*(p.dir||1)}:t<360?{pose:"push",rot:0.08*(p.dir||1)}:null,
+  Pogo:(t)=>t<200?{arc:-8*Math.abs(Math.sin(t/32)),sy:t%64<10?0.9:1.05}:null,
+  Golem:(t,p)=>t<150?{pose:"crouch",rot:0.08*(p.dir||1)}:t<300?{pose:"slamup",arc:-4}:null,
+  Tanuki:(t,p)=>t<200?{rot:-0.35*(p.dir||1)*eo(t/200)}:t<330?{rot:0.25*(p.dir||1)}:null,
+  Mermaid:(t,p)=>t<200?{rot:0.15*(p.dir||1)*Math.sin(t/40)}:null,
+  Diwata:(t)=>t<450?{pose:"cast",arc:-4*Math.abs(Math.sin(t/60))}:null,
+  Sphinx:(t)=>t<300?{pose:"cast",arc:-2}:null,
+  Sarimanok:(t,p)=>t<200?{rot:-0.15*(p.dir||1)*Math.sin(t/25)}:t<320?{rot:0.15*(p.dir||1)}:null
+}).forEach(([f,a])=>{ if(OWN_PROP[f]&&!OWN_PROP[f].atk) OWN_PROP[f].atk=a; });
