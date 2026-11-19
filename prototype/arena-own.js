@@ -1641,7 +1641,8 @@ const OWN_DROOL={
     fly(c,PF,k,P,x,a,h,o,t){ const e=OWN.DR.pos(a,h,k,P.R,0.5), dx=e.x-a.x, dy=e.y-a.y, L=Math.hypot(dx,dy)||1, nx=-dy/L, ny=dx/L;
       for(let j=0;j<10;j++){ const f=j/9, kk=Math.max(0,k-(1-f)*0.5), p=OWN.DR.pos(a,h,kk,P.R,0.5), wv=Math.sin(f*7-t/50)*P.S*0.25*f; PF(p.x+nx*wv,p.y+ny*wv,P.S*(0.3+0.9*f),0.75,j%3?[40,34,60]:[70,60,95]); }
       for(let i=0;i<12;i++){ const f=((t/80)+i/12)%1, s0=OWN.DR.pos(a,h,k*f,P.R,0.5), w=P.S*(0.2+0.8*f); OWN.DR.tear(c,s0.x+nx*(atH(i)-0.5)*w*2,s0.y+ny*(atH(i)-0.5)*w*2+f*P.S*0.3,P.S*(0.05+0.05*atH(i*3)),Math.atan2(dy,dx),o.col,0.95); } },
-    land(c,PF,k,P,x,a,h,o){ for(let i=0;i<6;i++) PF(h.x+(i-2.5)*P.R*0.4,h.y-P.R*0.1-k*P.R*0.7,P.S*(0.6+0.7*k),0.6*(1-k),[40,34,60]); OWN.splat(c,h.x,h.y,P.S*1.4,o.col,k,40,5); OWN.DR.drips(c,{x:h.x,y:h.y+P.R*0.2},P.R,k,o.col,5,2);
+    land(c,PF,k,P,x,a,h,o){ const al=k<0.75?1:1-(k-0.75)/0.25;   /* the ink coats the foe and the drips run out of the coat itself (Gid, 19 Nov 2026: the drips hung loose under the cloud) */
+      for(let i=0;i<6;i++) PF(h.x+(i-2.5)*P.R*0.35,h.y-P.R*0.15-k*P.R*0.2,P.S*(0.6+0.5*k),0.5*(1-k),[40,34,60]); OWN.DR.coat(c,P,k,o.col,0.92*al,true,1.5,7); OWN.splat(c,h.x,h.y-P.R*0.1,P.S*1.2,o.col,Math.min(k,0.7),40,0);
       for(let i=0;i<12;i++){ const an=i/12*7+0.4, v=P.R*(0.8+0.5*atH(i))*eo(Math.min(1,k*4)); OWN.DR.tear(c,h.x+Math.cos(an)*v,h.y+Math.sin(an)*v*0.8,P.R*0.06,an+Math.PI,o.col,1-k); } } },
   "Goo Shot":{at:[0.5,0.05],inside:true,body:true,
     wind(c,PF,t,P,x,a,o,col){ const k=Math.min(1,t/300); c.fillStyle=OWN.rgb(col); c.beginPath(); c.ellipse(a.x,a.y+P.S*0.1,P.S*0.6*eo(k),P.S*0.45*eo(k),0,Math.PI,0); c.fill(); OWN.DR.pops(c,{x:a.x,y:a.y},P.S*0.8,k,OWN.mix(col,[255,255,255],0.4),3,4); },
@@ -1776,10 +1777,14 @@ const OWN_DROOL={
     land(c,PF,k,P,x,a,h,o,t){ const R=P.R, hd={x:P.tg.x,y:P.head.y}; OWN.splat(c,h.x,h.y,P.S*1.2,o.col,k,48,3); OWN.DR.drips(c,{x:h.x,y:h.y+R*0.2},R,k,o.col,4,11); OWN.DR.lily(c,hd.x,hd.y-R*0.05,P.S*0.65,0.2*(1-k));
       const fk=Math.min(1,Math.max(0,(k-0.2)/0.5)); if(fk<1) OWN.DR.frog(c,hd.x-P.d*R*1.6*fk,hd.y-R*0.3-R*1.2*Math.sin(Math.PI*fk)+fk*(P.gnd-hd.y),P.S*0.32,t,fk>0.85?(1-fk)/0.15:1); else OWN.DR.frog(c,hd.x-P.d*R*1.6,P.gnd-P.S*0.25,P.S*0.32,t,Math.max(0,1-(k-0.7)/0.3));
       for(let i=0;i<3;i++){ const ph=k*20+i*2; c.fillStyle=`rgba(30,30,30,${0.9*(1-k)})`; c.beginPath(); c.arc(h.x+Math.cos(ph)*R*0.5,h.y-R*0.4+Math.sin(ph*1.3)*R*0.3,1.8,0,7); c.fill(); } } },
-  "Sour Spit":{col:[235,230,60],heads:[[0.2,0.12],[0.5,0.02],[0.82,0.12]],
+  "Sour Spit":{col:[235,230,60],heads:[[0.2,0.12],[0.5,0.02],[0.82,0.12]],   /* the three streams land on top of the foe's head and run down from there (Gid, 19 Nov 2026) */
     wind(c,PF,t,P,x,a,o){ for(let i=0;i<3;i++){ const k=Math.min(1,Math.max(0,(t-i*50)/250)), p=OWN.pt(x.self,x.target,o.heads[i]); OWN.DR.tear(c,p.x+P.d*P.S*0.25,p.y,P.S*0.1*(0.3+k),P.d>0?0:Math.PI,o.col); } },
-    fly(c,PF,k,P,x,a,h,o,t){ for(let i=0;i<3;i++){ const s=OWN.pt(x.self,x.target,o.heads[i]), src={x:s.x+P.d*P.S*0.25,y:s.y}, kk=Math.min(1,k*1.2-i*0.08); if(kk<=0) continue; const pts=OWN.DR.wob(OWN.DR.seg(src,{x:h.x,y:h.y+(i-1)*P.R*0.25},0.6+i*0.3,P.R,Math.max(0,kk-0.5),kk,12),P.S*0.05,t+i*40,4); OWN.DR.rib(c,pts,P.S*0.06,P.S*0.16,o.col); } },
-    land(c,PF,k,P,x,a,h,o){ for(let i=0;i<5;i++){ const q=((k*2)+i/5)%1; PF(h.x+(atH(i)-0.5)*P.R*1.3,h.y-q*P.R*1.4,P.S*(0.2+0.3*q),0.5*(1-k)*(1-q),[235,240,190]); } OWN.DR.pops(c,h,P.R,k,o.col,6,17); OWN.DR.drips(c,{x:h.x,y:h.y+P.R*0.2},P.R,k,o.col,3,12); } },
+    fly(c,PF,k,P,x,a,h,o,t){ for(let i=0;i<3;i++){ const s=OWN.pt(x.self,x.target,o.heads[i]), src={x:s.x+P.d*P.S*0.25,y:s.y}, kk=Math.min(1,k*1.2-i*0.08); if(kk<=0) continue; const dst={x:P.tg.x+(i-1)*P.R*0.3,y:P.tg.y-P.R*0.8};
+      const pts=OWN.DR.wob(OWN.DR.seg(src,dst,0.9+i*0.3,P.R,Math.max(0,kk-0.5),kk,12),P.S*0.05,t+i*40,4); OWN.DR.rib(c,pts,P.S*0.06,P.S*0.16,o.col); } },
+    land(c,PF,k,P,x,a,h,o){ const R=P.R, al=k<0.75?1:1-(k-0.75)/0.25, top={x:P.tg.x,y:P.tg.y-R*0.78};
+      for(let i=0;i<5;i++){ const q=((k*2)+i/5)%1; PF(top.x+(atH(i)-0.5)*R*1.1,top.y-q*R*1.0,P.S*(0.2+0.3*q),0.5*(1-k)*(1-q),[235,240,190]); }
+      OWN.DR.coat(c,P,k,o.col,0.8*al,true,1.3,6); c.fillStyle=OWN.rgb(o.col,0.92*al); c.beginPath(); c.ellipse(top.x,top.y+R*0.04,R*0.5*eo(Math.min(1,k*4)),R*0.14,0,0,7); c.fill();
+      c.fillStyle=`rgba(255,255,230,${0.7*al})`; c.beginPath(); c.ellipse(top.x-R*0.18,top.y,R*0.14,R*0.04,0,0,7); c.fill(); OWN.DR.pops(c,top,R,k,o.col,6,17); } },
   "Sap Spit":{mouth:true,col:[40,30,25],
     wind(c,PF,t,P,x,a,o){ const k=Math.min(1,t/300); for(let i=0;i<3;i++){ const L=P.S*(0.3+0.9*k)*(0.6+0.4*atH(i)), sw=Math.sin(t/80+i)*P.S*0.15; OWN.DR.rib(c,[{x:a.x+(i-1)*P.S*0.18,y:a.y},{x:a.x+(i-1)*P.S*0.25+sw,y:a.y+L}],P.S*0.1,P.S*0.06,o.col); } },
     fly(c,PF,k,P,x,a,h,o,t){ for(let i=0;i<4;i++){ const dst={x:h.x+(i-1.5)*P.R*0.35,y:h.y+(i%2)*P.R*0.2-P.R*0.2}, kk=Math.min(1,k*1.1-i*0.03); if(kk<=0) continue; const pts=OWN.DR.seg(a,dst,0.9+0.2*i,P.R,Math.max(0,kk-0.6),kk,14).map((p,j)=>({x:p.x,y:p.y+Math.sin(j/14*Math.PI)*P.S*0.4})); OWN.DR.rib(c,pts,P.S*0.05,P.S*0.12,o.col,1,true); } },
