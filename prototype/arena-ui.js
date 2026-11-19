@@ -115,7 +115,7 @@ function atBegin(A,B,opts){
   AT.special=[A,B].map(X=>{ const t=X.f.moves.filter(m=>m.dmg>=70).sort((a,b)=>b.dmg-a.dmg)[0]; return t?t.name:null; });
   AT.rings=[]; AT.stars=[]; AT.strikes=[]; AT.streams=[]; AT.sp=[];
   // each range has its own box; ▲ ▼ swap which of that range's moves sits in the selected box. Moves usable at any range join every box's list
-  AT.lists={}; AT.idx={}; for(const b of AR.BANDS){ AT.lists[b]=moves.filter(m=>m.range===b).concat(moves.filter(m=>m.range==="Any")); AT.idx[b]=0; }
+  AT.lists={}; AT.idx={}; const hits=m=>m.dmg&&!m.swap?0:1; for(const b of AR.BANDS){ AT.lists[b]=moves.filter(m=>m.range===b).sort((x,y)=>hits(x)-hits(y)).concat(moves.filter(m=>m.range==="Any").sort((x,y)=>(x.dmg?0:1)-(y.dmg?0:1))); AT.idx[b]=0; }   // a range shows a move that hits first; swaps, guards and steps sit after (Gid, 20 Nov 2026)
   // the opponent's strongest move at each range, so you can see where it's dangerous
   AT.foeBest={}; for(const b of AR.BANDS){ const c=B.f.moves.filter(m=>m.range===b&&m.dmg).sort((x,y)=>y.dmg*(y.hits||1)*y.acc-x.dmg*(x.hits||1)*x.acc); AT.foeBest[b]=c[0]||null; }
   const d=document.getElementById("atest");
@@ -623,7 +623,7 @@ function atSideState(S,te){
       else if(W==="gears"||W==="steam") out.rot+=Math.sin(te/40)*0.05*kk;
       else if(W==="signal"){ out.off[0]+=(atH(Math.floor(te/40))-0.5)*4*kk; out.sx*=1+0.03*Math.sin(te/25); } }
   else if(A){ const t=(te-A.t0)*A.rate, K=ANIM[A.kind]; if(t>(A.mega?Math.max(K.D,K.C+950):K.D)) S.anim=null; else Object.assign(out,K.atk(t,{foeH:60,perp:[0,-1],dir:S.dir,name:A.name,fam:S.spec&&S.spec.family,stage:S.spec&&S.spec.stage,gapU:atGapU(S),gap:S.foe&&S.foe.dx!=null&&S.dx!=null?Math.abs(S.foe.dx-S.dx):null})); }
-  const O=S.foe.anim; if(O&&!S.anim){ const t=(te-O.t0)*O.rate, K=ANIM[O.kind]; if(t<=K.D&&K.def){ const d=K.def(t,{foeH:60,perp:[0,-1],dir:S.dir,gap:S.foe&&S.foe.dx!=null&&S.dx!=null?Math.abs(S.foe.dx-S.dx):null}); if(d) Object.assign(out,d); } }
+  const O=S.foe.anim; if(O&&!S.anim){ const t=(te-O.t0)*O.rate, K=ANIM[O.kind]; if(t<=K.D&&K.def){ const d=K.def(t,{foeH:60,perp:[0,-1],dir:S.dir,name:O.name,gap:S.foe&&S.foe.dx!=null&&S.dx!=null?Math.abs(S.foe.dx-S.dx):null}); if(d) Object.assign(out,d); } }
   if(S.pose&&te<S.pose.until&&!S.anim) out.pose=S.pose.p;
   if(S.recoil){ const k=(te-S.recoil.t0)/170; if(k>1) S.recoil=null; else out.off[0]-=S.dir*S.recoil.amt*Math.sin(k*Math.PI); }
   const dg=atDodge(S,te), R=S.react;
@@ -684,7 +684,7 @@ function atDraw(now,dte){
   { const a=Math.min(AT.side[0].dx,AT.side[1].dx), b=Math.max(AT.side[0].dx,AT.side[1].dx), y=floor+16, band=arBand(ar.gap());
     c.strokeStyle=AT_RC[band]; c.lineWidth=3; c.setLineDash([6,5]); c.beginPath(); c.moveTo(a,y); c.lineTo(b,y); c.stroke(); c.setLineDash([]);
   }
-  const placed=[null,null];
+  const placed=AT.lastPlaced=[null,null];
   const lunging=i=>{ const A=AT.side[i].anim; return A&&A.contact&&te>=A.t0; };
   const behindFoe=i=>{ const A=AT.side[i].anim, K=A&&ANIM[A.kind]; return !!(K&&K.behind&&te>=A.t0&&(te-A.t0)*A.rate<K.D); };   // a move that puts the attacker behind its target draws it first
   (behindFoe(0)?[0,1]:behindFoe(1)?[1,0]:lunging(0)?[1,0]:[0,1]).forEach(i=>{ const S=AT.side[i], O=AT.side[1-i], sp=S.spec; if(!sp) return;
