@@ -446,7 +446,7 @@ OWN.hornFx=(c,t,x,o)=>{ const s=x.self, tg=x.target, R=tg.r||30, S=OWN.size(x), 
 })();
 
 /* a family with its own bolt draws its own landing, so the stock hit lines stay off and the burst stays small */
-function OWN_OWNS(S){ if(!(S&&S.anim&&S.spec)) return false; const k=S.anim.kind, f=S.spec.family; return !!(k==="bolt"&&OWN_BOLT2[f]||k==="steam"&&OWN_STEAM[f]||k==="trumpet"&&typeof OWN_HORN2!=="undefined"&&OWN_HORN2[f]||k==="propthrow"&&typeof OWN_PROP!=="undefined"&&OWN_PROP[f]||(k==="meteor"||k==="icefall")&&typeof OWN_METEOR!=="undefined"&&OWN_METEOR[S.anim.name]||k==="drool"&&typeof OWN_DROOL!=="undefined"&&OWN_DROOL[S.anim.name]||k==="gust"&&typeof OWN_GUST!=="undefined"&&OWN_GUST[S.anim.name]||k==="wave"&&typeof OWN_WAVE!=="undefined"&&OWN_WAVE[S.anim.name]||k==="sandspray"&&typeof OWN_SAND!=="undefined"&&OWN_SAND[S.anim.name]||k==="chatter"&&typeof OWN_CHAT!=="undefined"&&OWN_CHAT[S.anim.name]); }
+function OWN_OWNS(S){ if(!(S&&S.anim&&S.spec)) return false; const k=S.anim.kind, f=S.spec.family; return !!(k==="bolt"&&OWN_BOLT2[f]||k==="steam"&&OWN_STEAM[f]||k==="trumpet"&&typeof OWN_HORN2!=="undefined"&&OWN_HORN2[f]||k==="propthrow"&&typeof OWN_PROP!=="undefined"&&OWN_PROP[f]||(k==="meteor"||k==="icefall")&&typeof OWN_METEOR!=="undefined"&&OWN_METEOR[S.anim.name]||k==="drool"&&typeof OWN_DROOL!=="undefined"&&OWN_DROOL[S.anim.name]||k==="gust"&&typeof OWN_GUST!=="undefined"&&OWN_GUST[S.anim.name]||k==="wave"&&typeof OWN_WAVE!=="undefined"&&OWN_WAVE[S.anim.name]||k==="sandspray"&&typeof OWN_SAND!=="undefined"&&OWN_SAND[S.anim.name]||k==="chatter"&&typeof OWN_CHAT!=="undefined"&&OWN_CHAT[S.anim.name]||k==="wingstorm"&&typeof OWN_WING!=="undefined"&&OWN_WING[S.anim.name]); }
 
 /* ---------- bolt, second pass continued: the other 25 families ---------- */
 OWN.go=(a,b,k,arc=0,off=0)=>lerpP(a,b,k,arc,off);
@@ -2549,6 +2549,153 @@ Object.assign(OWN_BOLT2.Thunderbird,{
     if(t<560){ const k=OWN.k(t,220,560), rock=Math.sin(k*Math.PI*3), p=OWN.go(st,end,k,S*0.6,0); p.x+=rock*S*0.5*d; p.y+=Math.abs(rock)*S*0.6; feather(p,rock*0.6,S*1.6); return; }
     const k=OWN.k(t,560,860); if(k<0.4){ const a=1-k/0.4; atGlowA(c,end.x,end.y,R*1.1,el,0.75*a); OWN.zap(c,end.x,end.y-R*1.0,end.x,end.y+R*0.45,sd,el,S*0.2,S*0.7,7,true,a); OWN.zap(c,end.x-R*0.6,end.y-R*0.6,end.x+R*0.2,end.y+R*0.3,sd+9,el,S*0.12,S*0.4,5,false,a); }
     feather({x:end.x+d*S*k*2,y:end.y+k*R*1.2},k*4,S*1.5*(1-k)); } });
+
+/* ---------- wingstorm, own versions (19 Nov 2026). Gid turned down the first build since every family made the same swipe in its own
+   colour, so each one now does its own thing with its own body: Flit spins up a bat whirlwind, Lumo hovers and shines light down or
+   sends a firefly swarm, Crease launches paper cranes, Phoenix rains burning feathers, Tengu throws wind blades, Diwata whirls a petal
+   tornado, the dragon beats shockwaves, Griffin dashes through leaving gold cuts, Nightgaunt wraps the foe in its wings, Migo buzzes,
+   Hastur lashes with its rags and Cthulhu brings the night down with falling stars. The six hits still land every 105 ms from 280 ms. ---------- */
+OWN.WS={
+  T:j=>280+105*j, N:6,
+  firefly(c,x,y,r,t,al=1){ if(al<=0) return; c.save(); c.globalAlpha*=al; atGlowA(c,x,y,r*4,[220,255,120],0.7); c.fillStyle="rgba(255,255,255,.55)"; for(const sd of [-1,1]){ c.beginPath(); c.ellipse(x+sd*r*0.6,y-r*0.6,r*0.7,r*0.35,sd*0.5+Math.sin(t/12)*0.4,0,7); c.fill(); }
+    c.fillStyle=OWN.rg(c,x,y,0,r*1.2,[[0,"#ffffe0"],[0.5,"#e8ff70"],[1,"#a8d040"]]); c.beginPath(); c.arc(x,y,r,0,7); c.fill(); c.restore(); },
+  ember(c,x,y,r,al){ if(al<=0) return; c.save(); c.globalAlpha*=al; atGlowA(c,x,y,r*3,[255,150,50],0.6); c.fillStyle="#ffd36a"; c.beginPath(); c.arc(x,y,r,0,7); c.fill(); c.restore(); },
+  fade:(t,a,b)=>Math.min(1,Math.max(0,(t-a)/120))*Math.min(1,Math.max(0,(b-t)/180)),
+  crane(c,x,y,s,rot,flap,col,al=1){ if(s<1||al<=0) return; c.save(); c.translate(x,y); c.rotate(rot); c.globalAlpha*=al; const lt=OWN.mix(col,[255,255,255],0.55), dk=OWN.mix(col,[60,50,40],0.2);
+    c.fillStyle=OWN.rgb(dk); c.beginPath(); c.moveTo(-s*0.2,0); c.lineTo(s*0.1,-s*(0.9+flap*0.5)); c.lineTo(s*0.35,0); c.closePath(); c.fill();
+    c.fillStyle=OWN.rgb(col); c.beginPath(); c.moveTo(-s*0.9,-s*0.1); c.lineTo(-s*0.2,s*0.25); c.lineTo(s*0.7,-s*0.05); c.lineTo(s*1.0,-s*0.55); c.lineTo(s*0.75,s*0.05); c.lineTo(s*0.1,s*0.35); c.lineTo(-s*0.3,s*0.2); c.closePath(); c.fill();
+    c.fillStyle=OWN.rgb(lt); c.beginPath(); c.moveTo(-s*0.15,0); c.lineTo(s*0.05,-s*(0.8+flap*0.6)*0.9); c.lineTo(s*0.4,0); c.closePath(); c.fill();
+    c.strokeStyle="rgba(150,140,125,.6)"; c.lineWidth=Math.max(1,s*0.04); c.beginPath(); c.moveTo(-s*0.2,s*0.25); c.lineTo(s*0.7,-s*0.05); c.stroke(); c.restore(); },
+  blade(c,x,y,s,rot,al=1){ if(s<1||al<=0) return; c.save(); c.translate(x,y); c.rotate(rot); c.globalAlpha*=al; c.shadowColor="rgba(190,235,255,.9)"; c.shadowBlur=s*0.5;
+    const g=c.createLinearGradient(-s,0,s,0); g.addColorStop(0,"rgba(200,240,255,0)"); g.addColorStop(0.6,"rgba(225,248,255,.9)"); g.addColorStop(1,"rgba(255,255,255,1)"); c.fillStyle=g;
+    c.beginPath(); c.moveTo(s*0.9,-s*0.9); c.quadraticCurveTo(s*0.15,0,s*0.9,s*0.9); c.quadraticCurveTo(-s*0.05,0,s*0.9,-s*0.9); c.fill(); c.restore(); },
+  xcut(c,x,y,s,al,glint){ if(al<=0) return; c.save(); c.globalAlpha*=al; c.lineCap="round"; c.shadowColor="rgba(255,220,120,1)"; c.shadowBlur=s*0.4;
+    for(const [w,col] of [[s*0.16,"rgba(230,170,60,.95)"],[s*0.06,"rgba(255,250,220,1)"]]){ c.strokeStyle=col; c.lineWidth=w; c.beginPath(); c.moveTo(x-s,y-s*0.8); c.lineTo(x+s,y+s*0.8); c.moveTo(x+s,y-s*0.8); c.lineTo(x-s,y+s*0.8); c.stroke(); }
+    c.restore(); if(glint>0) OWN.star(c,x,y,s*0.9*glint,"rgba(255,255,240,.95)",glint*3); }
+};
+/* a strip of torn cloth along a path: it twists as it flutters (width swings with a fold), both edges are ragged, shaded folds run across it, and the end frays into threads */
+OWN.WS.rag=(c,pts,w,col,t,seed,al=1)=>{ const n=pts.length; if(n<3||al<=0) return; const L=[], Rr=[], dk=OWN.mix(col,[30,20,25],0.35), lt=OWN.mix(col,[255,255,255],0.3);
+  for(let i=0;i<n;i++){ const p=pts[i], q=pts[Math.min(n-1,i+1)], o=pts[Math.max(0,i-1)], dx=q.x-o.x, dy=q.y-o.y, l=Math.hypot(dx,dy)||1, nx=-dy/l, ny=dx/l, f=i/(n-1);
+    const tw=0.55+0.45*Math.cos(f*7+t/45+seed), ww=w*(1-0.35*f)*tw, tl=1+(atH(i*7+seed)-0.5)*0.55, tr=1+(atH(i*11+seed*3)-0.5)*0.55; L.push({x:p.x+nx*ww*tl,y:p.y+ny*ww*tl,tw}); Rr.push({x:p.x-nx*ww*tr,y:p.y-ny*ww*tr,tw}); }
+  const b0=pts[0], b1=pts[Math.max(1,Math.round((n-1)*0.28))], fg=c.createLinearGradient(b0.x,b0.y,b1.x,b1.y); fg.addColorStop(0,OWN.rgb(col,0)); fg.addColorStop(0.55,OWN.rgb(col,0.85)); fg.addColorStop(1,OWN.rgb(col,1));   /* the base fades in out of the body so the strip grows from the cloak (Gid, 19 Nov 2026) */
+  c.save(); c.globalAlpha*=al; c.fillStyle=fg; c.beginPath(); L.forEach((p,i)=>c[i?"lineTo":"moveTo"](p.x,p.y)); for(let i=n-1;i>=0;i--) c.lineTo(Rr[i].x,Rr[i].y); c.closePath(); c.fill();
+  for(let i=Math.round((n-1)*0.3);i<n-1;i++){ const sh=L[i].tw<0.6?0.45:L[i].tw>0.9?-0.25:0; if(!sh) continue; c.fillStyle=sh>0?OWN.rgb(dk,sh):OWN.rgb(lt,-sh); c.beginPath(); c.moveTo(L[i].x,L[i].y); c.lineTo(L[i+1].x,L[i+1].y); c.lineTo(Rr[i+1].x,Rr[i+1].y); c.lineTo(Rr[i].x,Rr[i].y); c.closePath(); c.fill(); }
+  c.strokeStyle=OWN.rgb(dk,0.5); c.lineWidth=Math.max(1,w*0.08); for(let i=Math.max(2,Math.round((n-1)*0.3));i<n-2;i+=3){ c.beginPath(); c.moveTo(L[i].x*0.8+Rr[i].x*0.2,L[i].y*0.8+Rr[i].y*0.2); c.lineTo(L[i+1].x*0.3+Rr[i+1].x*0.7,L[i+1].y*0.3+Rr[i+1].y*0.7); c.stroke(); }
+  c.fillStyle="rgba(40,25,30,.55)"; for(let h=0;h<2;h++){ const i=Math.floor((0.3+0.35*h+atH(seed+h)*0.1)*(n-1)), m={x:(L[i].x+Rr[i].x)/2,y:(L[i].y+Rr[i].y)/2}; c.beginPath(); c.ellipse(m.x,m.y,w*0.18,w*0.1,atH(seed*h+3)*3,0,7); c.fill(); }
+  const e=pts[n-1], e2=pts[n-2], ang=Math.atan2(e.y-e2.y,e.x-e2.x); c.strokeStyle=OWN.rgb(col); c.lineCap="round"; c.lineWidth=Math.max(1.2,w*0.12);
+  for(let m=0;m<5;m++){ const off=(m-2)*w*0.22, len=w*(0.8+0.8*atH(m+seed)), sw=Math.sin(t/30+m)*w*0.3; c.beginPath(); c.moveTo(e.x-Math.sin(ang)*off,e.y+Math.cos(ang)*off); c.quadraticCurveTo(e.x+Math.cos(ang)*len*0.5-Math.sin(ang)*(off+sw),e.y+Math.sin(ang)*len*0.5+Math.cos(ang)*(off+sw),e.x+Math.cos(ang)*len-Math.sin(ang)*off,e.y+Math.sin(ang)*len+Math.cos(ang)*off); c.stroke(); }
+  c.restore(); };
+const OWN_WING={
+  /* Flit spins round and round, and a whirlwind of bats circles the foe, darting in one at a time */
+  "Wing Storm":{ atk:(t)=>t>240&&t<980?{sx:Math.cos((t-240)/38),pose:"attack",off:[0,-6*Math.abs(Math.sin((t-240)/76))]}:null,
+    draw(c,PF,P,t){ const a=OWN.WS.fade(t,240,1150), col=OWN.mix(P.body||[90,60,120],[50,30,70],0.35), cx=P.tg.x, cy=P.tg.y-P.R*0.1; if(a<=0) return;
+      for(let i=0;i<4;i++){ const ph=t/120+i*1.6; c.strokeStyle=OWN.rgb(OWN.mix(col,[255,255,255],0.3),0.45*a); c.lineWidth=P.R*0.08; c.lineCap="round"; c.beginPath(); c.ellipse(cx,cy-P.R*(0.4-i*0.25),P.R*(1.15-i*0.12),P.R*0.28,0,ph,ph+2.2); c.stroke(); }
+      for(let i=0;i<5;i++){ const an=t/90+i*1.26, rr=P.R*(1.05+0.15*Math.sin(t/150+i)); OWN.GU.bat(c,cx+Math.cos(an)*rr,cy-P.R*0.3+Math.sin(an)*rr*0.35,P.S*0.38,t+i*30,col,a); }
+      for(let j=0;j<6;j++){ const k=(t-OWN.WS.T(j)+60)/220; if(k<0||k>1) continue; const sd=j%2?1:-1, p={x:cx+sd*P.R*1.2*(1-Math.min(1,k*2.5)),y:cy-P.R*0.3+(j%3-1)*P.R*0.25};
+        OWN.GU.bat(c,p.x,p.y,P.S*0.5,t,col,1-Math.max(0,k-0.5)*2); if(k>0.4){ const q=(k-0.4)/0.6; c.strokeStyle=OWN.rgb([255,255,255],1-q); c.lineWidth=2.5; for(let m=-1;m<=1;m++){ c.beginPath(); c.moveTo(cx-P.R*0.25+m*P.R*0.12,p.y-P.R*0.2); c.lineTo(cx+P.R*0.05+m*P.R*0.12,p.y+P.R*0.2); c.stroke(); } } } } },
+  /* Lumo hovers up over the foe, its wings glowing, and shines six pulses of light straight down on it */
+  "Glow Wing":{ atk:(t)=>{ const up=t<260?eo(t/260):t<960?1:1-eio(Math.min(1,(t-960)/300)); return {lift:-48*up,f:0.25*up,pose:t>200&&t<980?"cast":null}; },
+    /* the light pours from both wings (Gid, 19 Nov 2026): two wide, bright cones meet on the foe on every pulse */
+    draw(c,PF,P,t,x){ const col=[255,238,150], a=OWN.WS.fade(t,200,1150), wings=[OWN.pt(x.self,P.tg,[0.12,0.08]),OWN.pt(x.self,P.tg,[0.88,0.08])];
+      for(const w of wings){ atGlowA(c,w.x,w.y,P.S*(1.1+0.3*Math.sin(t/60)),col,0.85*a); atGlowA(c,w.x,w.y,P.S*0.5,[255,255,240],0.9*a); }
+      for(let j=0;j<6;j++){ const k=(t-OWN.WS.T(j)+50)/260; if(k<0||k>1) continue; const al=Math.sin(Math.PI*k), fx=P.tg.x+(j%3-1)*P.R*0.15, fy=P.tg.y+P.R*0.2, w=P.R*(0.75+0.25*Math.sin(Math.PI*k));
+        c.save(); c.globalCompositeOperation="lighter";
+        for(const s0 of wings){ /* see-through light (Gid, 19 Nov 2026): a faint wide haze, a softer cone inside it and thin rays, all adding up where they cross */
+          for(const [ww,a0,a1] of [[1.25,0.32,0.08],[0.8,0.45,0.14]]){ const g=c.createLinearGradient(s0.x,s0.y,fx,fy); g.addColorStop(0,`rgba(255,255,235,${a0*al})`); g.addColorStop(0.6,`rgba(255,240,170,${(a0+a1)*0.45*al})`); g.addColorStop(1,`rgba(255,228,130,${a1*al})`); c.fillStyle=g;
+            c.beginPath(); c.moveTo(s0.x,s0.y-P.S*0.15*ww); c.lineTo(fx+w*0.2*ww,fy-w*ww); c.quadraticCurveTo(fx+w*1.1*ww,fy,fx+w*0.2*ww,fy+w*ww); c.lineTo(s0.x,s0.y+P.S*0.15*ww); c.closePath(); c.fill(); }
+          c.strokeStyle=`rgba(255,255,240,${0.35*al})`; c.lineWidth=P.S*0.05; c.lineCap="round"; for(let r=-2;r<=2;r++){ const ph=Math.sin(t/70+r*1.7)*0.5+0.5; c.globalAlpha=0.4+0.6*ph; c.beginPath(); c.moveTo(s0.x,s0.y); c.lineTo(fx+r*w*0.32,fy+r*w*0.3); c.stroke(); } c.globalAlpha=1;
+          for(let i=0;i<4;i++){ const f=((t/300)+i/4+atH(i*3))%1; OWN.star(c,s0.x+(fx-s0.x)*f+(atH(i*7)-0.5)*w*f,s0.y+(fy-s0.y)*f+(atH(i*5)-0.5)*w*f,P.S*0.12*al,"rgba(255,255,230,.9)",t/40+i); } }
+        c.restore(); atGlowA(c,fx,fy,P.R*(0.9+0.4*k),[255,240,160],0.8*al);
+        OWN.CH.ring(c,fx,P.gnd-2,P.R*(0.5+0.8*k),P.R*0.07,col,al*0.8); for(let i=0;i<5;i++) OWN.star(c,fx+(atH(i+j*3)-0.5)*P.R*1.5,P.tg.y+(atH(i*5+j)-0.6)*P.R*1.1,P.S*0.3*al,"rgba(255,252,215,.95)",t/50+i); } } },
+  /* Lumo stays back and sends a river of fireflies over; they swarm round the foe and pop in flashes of light */
+  "Firefly Storm":{ atk:(t)=>t<1000?{f:0,pose:t>150?"cast":null,rot:Math.sin(t/60)*0.05}:null,
+    draw(c,PF,P,t,x){ const a=OWN.WS.fade(t,150,1180), src=x.self.center||P.o0;
+      for(let i=0;i<22;i++){ const ph=((t-150)/700+i/22); if(ph<0) continue; const f=Math.min(1,ph), sw=atH(i*5)*Math.PI*2;
+        const along={x:src.x+(P.tg.x-src.x)*eo(f),y:src.y+(P.tg.y-src.y)*eo(f)-Math.sin(Math.PI*f)*P.R*0.8}, orb=ph>1?{x:P.tg.x+Math.cos(t/200+sw)*P.R*(0.8+0.3*atH(i)),y:P.tg.y-P.R*0.1+Math.sin(t/170+sw)*P.R*0.55}:null;
+        const p=orb?orb:{x:along.x+Math.sin(t/60+i)*P.S*0.3,y:along.y+Math.cos(t/70+i)*P.S*0.3}; OWN.WS.firefly(c,p.x,p.y,P.S*0.12,t+i*17,a); }
+      for(let j=0;j<6;j++){ const k=(t-OWN.WS.T(j))/260; if(k<0||k>1) continue; const p={x:P.tg.x+(atH(j*7)-0.5)*P.R*1.1,y:P.tg.y+(atH(j*3)-0.5)*P.R*0.8};
+        atGlowA(c,p.x,p.y,P.R*(0.3+0.6*k),[230,255,140],0.9*(1-k)); OWN.star(c,p.x,p.y,P.S*(0.4+0.6*k),`rgba(250,255,200,${1-k})`,k*3); } } },
+  /* Crease stays back and folds paper cranes out of itself, launching one per hit; each crumples into scraps on the foe */
+  "Wing Barrage":{ atk:(t)=>t<980?{f:0.2,off:[0,-3*Math.abs(Math.sin(t/52))],rot:Math.sin(t/52)*0.06}:null,
+    draw(c,PF,P,t,x){ const col=OWN.mix(P.body||[240,235,220],[255,255,255],0.25), src=OWN.pt(x.self,P.tg,[0.95,0.5]);
+      for(let j=0;j<6;j++){ const t1=OWN.WS.T(j), t0=t1-280; if(t<t0) continue;
+        if(t<t1){ const k=(t-t0)/280, e=ei(k), p={x:src.x+(P.tg.x-src.x)*e,y:src.y+(P.tg.y-P.R*0.1+(j%3-1)*P.R*0.25-src.y)*e-Math.sin(Math.PI*k)*P.R*(0.5+0.2*(j%2))}; OWN.WS.crane(c,p.x,p.y,P.S*1.5,P.d>0?0:Math.PI,Math.sin(t/25),col); continue; }
+        const k=(t-t1)/380; if(k>=1) continue; const hp={x:P.tg.x,y:P.tg.y-P.R*0.1+(j%3-1)*P.R*0.25}; if(k<0.2){ c.save(); c.translate(hp.x,hp.y); c.scale(1-k*3,1-k*3); OWN.WS.crane(c,0,0,P.S*1.5,P.d>0?0:Math.PI,0,col); c.restore(); }
+        for(let i=0;i<5;i++){ const an=i/5*7+j, v=P.R*(0.2+0.9*eo(k)); OWN.GU.scrap(c,hp.x+Math.cos(an)*v,hp.y+Math.sin(an)*v*0.7+k*k*P.R*0.6,P.S*0.2,k*8+i,col,1-k); } } } },
+  /* Phoenix rises on its burning wings and rains fiery feathers down that stab into the ground round the foe and burn, ending in a flare */
+  "Feather Slash":{ atk:(t)=>{ const up=t<260?eo(t/260):t<980?1:1-eio(Math.min(1,(t-980)/280)); return {lift:-56*up,f:0.3*up,pose:t>200&&t<980?"cast":null}; },
+    draw(c,PF,P,t,x){ const src=x.self.center||P.o0;
+      for(let j=0;j<6;j++){ const t1=OWN.WS.T(j), t0=t1-150, end={x:P.tg.x+(j-2.5)*P.R*0.32,y:j%2?P.gnd-P.R*0.05:P.tg.y+(atH(j)-0.5)*P.R*0.6}, ang=Math.atan2(end.y-src.y,end.x-src.x);
+        if(t<t0) continue; if(t<t1){ const k=ei((t-t0)/150), p={x:src.x+(end.x-src.x)*k,y:src.y-P.R*0.8+(end.y-src.y+P.R*0.8)*k}; for(let m=1;m<4;m++) OWN.WS.ember(c,p.x-Math.cos(ang)*m*P.S*0.3,p.y-Math.sin(ang)*m*P.S*0.3,P.S*0.06,1-m/4); OWN.GU.feather(c,p.x,p.y,P.S*0.45,ang+Math.PI,[255,150,60]); atGlowA(c,p.x,p.y,P.S,[255,150,60],0.6); continue; }
+        const k=(t-t1)/(1250-t1); if(k>=1) continue; const al=k<0.75?1:1-(k-0.75)/0.25; OWN.GU.feather(c,end.x-Math.cos(ang)*P.S*0.25,end.y-Math.sin(ang)*P.S*0.25,P.S*0.45,ang+Math.PI,[255,150,60],al);
+        OWN.flame(c,end.x-Math.cos(ang)*P.S*0.45,end.y-Math.sin(ang)*P.S*0.45,P.S*0.25*al*(1+0.2*Math.sin(t/40+j)),-Math.PI/2,OWN.rgb([255,120,40],0.9),OWN.rgb([255,235,150],0.95),t+j*30);
+        if(k<0.15) atGlowA(c,end.x,end.y,P.R*0.5,[255,170,70],0.8*(1-k/0.15)); }
+      const fk=(t-OWN.WS.T(5))/350; if(fk>0&&fk<1){ atGlowA(c,P.tg.x,P.tg.y,P.R*(0.8+1.2*fk),[255,140,50],0.8*(1-fk)); for(let i=0;i<8;i++){ const an=i/8*7; OWN.flame(c,P.tg.x+Math.cos(an)*P.R*(0.4+0.8*fk),P.tg.y+Math.sin(an)*P.R*0.6*(0.4+0.8*fk),P.S*0.4*(1-fk),an+Math.PI,OWN.rgb([255,120,40],0.9),OWN.rgb([255,235,150],0.95),t+i*20); } } } },
+  /* Tengu stays back and swings its wings like fans, throwing crescent wind blades with leaves caught in them */
+  "Wing Flurry":{ atk:(t)=>{ if(t<180||t>960) return null; const j=Math.floor((t-130)/105), q=((t-130)%105)/105; return {f:0.15,pose:j%2?"push":"attack",rot:(j%2?1:-1)*0.14*Math.sin(Math.PI*q)}; },
+    draw(c,PF,P,t,x){ const src=OWN.pt(x.self,P.tg,[0.95,0.45]);
+      for(let j=0;j<6;j++){ const t1=OWN.WS.T(j), t0=t1-150, hy=P.tg.y+(j%3-1)*P.R*0.28, ang=Math.atan2(hy-src.y,P.tg.x-src.x);
+        if(t>=t0&&t<t1){ const k=(t-t0)/150, p={x:src.x+(P.tg.x-src.x)*k,y:src.y+(hy-src.y)*k}; for(let m=1;m<4;m++) OWN.WS.blade(c,p.x-Math.cos(ang)*m*P.S*0.6,p.y-Math.sin(ang)*m*P.S*0.6,P.S*1.1,ang+(j%2?0.3:-0.3),0.3/m);
+          OWN.WS.blade(c,p.x,p.y,P.S*1.2,ang+(j%2?0.3:-0.3)); OWN.GU.petal(c,p.x-Math.cos(ang)*P.S*0.6,p.y+P.S*0.3,P.S*0.18,t/30+j,[120,170,80]); continue; }
+        const k=(t-t1)/320; if(k<0||k>=1) continue; c.strokeStyle=`rgba(255,255,255,${1-k})`; c.lineWidth=2.5; c.lineCap="round"; c.beginPath(); c.moveTo(P.tg.x-P.R*0.6,hy-P.R*0.25*(j%2?1:-1)); c.lineTo(P.tg.x+P.R*0.6,hy+P.R*0.25*(j%2?1:-1)); c.stroke();
+        for(let i=0;i<4;i++){ const an=i/4*7+j, v=P.R*(0.3+0.9*eo(k)); OWN.GU.petal(c,P.tg.x+Math.cos(an)*v,hy+Math.sin(an)*v*0.6+k*k*P.R*0.5,P.S*0.17,k*7+i,i%2?[120,170,80]:[200,170,80],1-k); } } } },
+  /* Diwata pirouettes next to the foe and whirls up a tornado of petals that lifts round it */
+  "Wing Whirl":{ atk:(t)=>t>230&&t<960?{sx:Math.cos((t-230)/55),pose:"cast",off:[0,-4*Math.abs(Math.sin((t-230)/110))]}:null,
+    draw(c,PF,P,t){ const a=OWN.WS.fade(t,230,1160), cx=P.tg.x; if(a<=0) return; const pc=OWN.mix(P.body||[255,180,210],[255,200,225],0.5);
+      for(let b=0;b<3;b++){ const yy=P.gnd-P.R*(0.2+b*0.6); c.strokeStyle=OWN.rgb(OWN.mix(pc,[255,255,255],0.4),0.5*a); c.lineWidth=P.R*0.07; c.lineCap="round"; c.beginPath(); c.ellipse(cx,yy,P.R*(0.9+b*0.25),P.R*0.22,0,t/80+b,t/80+b+2.6); c.stroke(); }
+      for(let i=0;i<26;i++){ const f=((t/700)+i/26)%1, an=t/110+i*2.4, rr=P.R*(0.7+0.6*f), yy=P.gnd-P.R*0.1-f*P.R*2.0, front=Math.sin(an)>0;
+        OWN.GU.petal(c,cx+Math.cos(an)*rr,yy+Math.sin(an)*rr*0.22,P.S*(front?0.22:0.15),an,i%3?pc:[255,236,150],a*(front?1:0.55)*(1-f*0.6)); }
+      for(let j=0;j<6;j++){ const k=(t-OWN.WS.T(j))/220; if(k<0||k>1) continue; OWN.star(c,cx+(atH(j*5)-0.5)*P.R,P.tg.y+(atH(j*3)-0.5)*P.R*0.8,P.S*0.45*(1-k),"rgba(255,250,235,.95)",k*4); } } },
+  /* the dragon stays back and beats its wings, each beat sending a ring of air that slams the foe and throws up dust */
+  "Wing Beat":{ atk:(t)=>{ if(t<150||t>960) return null; const q=((t-150)%105)/105; return {f:0.12,pose:"push",sy:1-0.07*Math.sin(Math.PI*q*2),sx:1+0.05*Math.sin(Math.PI*q*2)}; },
+    draw(c,PF,P,t,x){ const src=OWN.pt(x.self,P.tg,[1.0,0.45]);
+      for(let j=0;j<6;j++){ const t1=OWN.WS.T(j), t0=t1-120;
+        if(t>=t0&&t<t1){ const k=(t-t0)/120, p={x:src.x+(P.tg.x-src.x)*k,y:src.y+(P.tg.y-src.y)*k}; c.save(); c.translate(p.x,p.y); c.scale(P.d,1); for(let r=0;r<2;r++){ c.strokeStyle=`rgba(255,255,255,${0.75-r*0.3})`; c.lineWidth=P.R*(0.12-r*0.04); c.lineCap="round"; c.beginPath(); c.ellipse(-r*P.R*0.25,0,P.R*(0.25+0.1*k),P.R*(0.7+0.3*k),0,-1.2,1.2); c.stroke(); } c.restore(); continue; }
+        const k=(t-t1)/380; if(k<0||k>=1) continue; for(let i=0;i<4;i++) PF(P.tg.x+(i-1.5)*P.R*0.5+P.d*k*P.R*0.4,P.gnd-P.R*0.15*(1+i%2)-k*P.R*0.3,P.R*(0.3+0.4*k),0.55*(1-k),[205,190,165]);
+        OWN.CH.ring(c,P.tg.x,P.tg.y,P.R*(0.6+0.8*k),P.R*0.08,[255,255,255],0.7*(1-k)); } } },
+  /* Griffin dashes through the foe and back, again and again, each pass leaving a glinting gold X cut that stays till the end */
+  "Razor Wing":{ atk:(t)=>{ if(t<240||t>960) return null; const q=((t-230)%105)/105, j=Math.floor((t-230)/105); return {f:0.62+(j%2?-0.28:0.28)*Math.sin(Math.PI*q),pose:"tackle",rot:(j%2?-1:1)*0.1}; },
+    draw(c,PF,P,t){ for(let j=0;j<6;j++){ const t1=OWN.WS.T(j); if(t<t1) continue; const k=(t-t1)/(1200-t1); if(k>=1) continue; const p={x:P.tg.x+(atH(j*7)-0.5)*P.R*0.9,y:P.tg.y+(atH(j*3)-0.5)*P.R*0.8}, gl=Math.max(0,1-(t-t1)/160);
+        OWN.WS.xcut(c,p.x,p.y,P.S*0.55*(t-t1<60?(t-t1)/60:1),k<0.8?1:1-(k-0.8)/0.2,gl); }
+      const fk=(t-1000)/200; if(fk>0&&fk<1) for(let j=0;j<6;j++) OWN.star(c,P.tg.x+(atH(j*7)-0.5)*P.R*0.9,P.tg.y+(atH(j*3)-0.5)*P.R*0.8,P.S*0.6*Math.sin(Math.PI*fk),"rgba(255,250,215,.95)",fk*4); } },
+  /* Nightgaunt wraps the foe in its leather wings and squeezes on every hit, with shadow puffing out of the gaps */
+  "Leather Wing":{ atk:(t)=>t>200&&t<960?{f:0.5,pose:"attack"}:null,
+    draw(c,PF,P,t){ const close=t<280?eo(Math.max(0,(t-180)/100)):t<940?1:1-eio(Math.min(1,(t-940)/200)); if(close<=0) return; const col=OWN.mix(P.body||[50,40,60],[30,22,40],0.45), cx=P.tg.x, cy=P.tg.y-P.R*0.05;
+      let sq=1; for(let j=0;j<6;j++){ const k=(t-OWN.WS.T(j))/105; if(k>=0&&k<1) sq=1-0.1*Math.sin(Math.PI*k); }
+      for(const sd of [-1,1]){ const ox=cx+sd*P.R*(1.3-0.95*close)*sq; c.save(); c.translate(ox,cy); c.scale(sd,1);
+        c.fillStyle=OWN.rg(c,0,0,P.R*0.1,P.R*1.3,[[0,OWN.rgb(OWN.mix(col,[120,90,140],0.4),0.95)],[1,OWN.rgb(col,0.95)]],-P.R*0.3,-P.R*0.3); c.beginPath(); c.moveTo(0,-P.R*1.0);
+        for(let i=0;i<=4;i++){ const yy=-P.R*1.0+i*P.R*0.5, xx=P.R*(0.55-0.12*Math.abs(i-2)); c.quadraticCurveTo(xx+P.R*0.25,yy+P.R*0.25,xx,yy+P.R*0.5); } c.lineTo(-P.R*0.25,P.R*1.05); c.quadraticCurveTo(-P.R*0.4,0,-P.R*0.2,-P.R*1.05); c.closePath(); c.fill();
+        c.strokeStyle=OWN.rgb(OWN.mix(col,[0,0,0],0.4),0.8); c.lineWidth=P.R*0.05; c.lineCap="round"; for(let i=0;i<4;i++){ c.beginPath(); c.moveTo(-P.R*0.2,-P.R*1.0); c.lineTo(P.R*(0.55-0.12*Math.abs(i+0.5-2)),-P.R*1.0+(i+0.5)*P.R*0.5); c.stroke(); } c.restore(); }
+      for(let j=0;j<6;j++){ const k=(t-OWN.WS.T(j))/300; if(k<0||k>=1) continue; for(let i=0;i<3;i++) PF(cx+(i-1)*P.R*0.6,cy-P.R*(0.9+0.5*k)+i%2*P.R*0.2,P.R*(0.2+0.3*k),0.5*(1-k),[50,38,65]); }
+      if(close>0.8) for(const sd of [-1,1]) OWN.WV.eye(c,cx+sd*P.R*0.25,cy-P.R*0.25,P.R*0.09,t,(close-0.8)*5,"#ff6a8a"); } },
+  /* Migo hovers close and buzzes so fast it blurs, sending zigzag buzz rings through the foe, which shakes and puffs pink spores */
+  "Wing Buzz":{ atk:(t)=>t>200&&t<970?{f:0.4,off:[Math.sin(t*1.7)*2.5,Math.cos(t*2.3)*2],pose:"cast"}:null,
+    draw(c,PF,P,t,x){ const a=OWN.WS.fade(t,200,1100), src=x.self.center||P.o0; if(a<=0) return; const col=OWN.mix(P.body||[220,140,200],[255,170,220],0.4);
+      for(let i=0;i<4;i++){ const q=((t/220)+i/4)%1, r=P.R*(0.4+1.6*q), mx=src.x+(P.tg.x-src.x)*q*0.8, my=src.y+(P.tg.y-src.y)*q*0.8; c.strokeStyle=OWN.rgb(OWN.mix(col,[255,255,255],0.4),0.7*a*(1-q)); c.lineWidth=2.4; c.lineJoin="round";
+        c.beginPath(); for(let m=0;m<=24;m++){ const an=-0.9+m/24*1.8, rr=r*(m%2?0.9:1); c.lineTo(mx+P.d*Math.cos(an)*rr*0.4,my+Math.sin(an)*rr*0.6); } c.stroke(); }
+      for(let j=0;j<6;j++){ const k=(t-OWN.WS.T(j))/300; if(k<0||k>=1) continue; for(let i=0;i<3;i++) OWN.SS.spore(c,P.tg.x+(atH(i+j*3)-0.5)*P.R*1.3,P.tg.y-k*P.R*0.9+(atH(i*7+j)-0.5)*P.R*0.8,P.S*0.15,t+i*40,1-k);
+        c.strokeStyle=`rgba(255,255,255,${0.8*(1-k)})`; c.lineWidth=2; for(const sd of [-1,1]){ c.beginPath(); for(let m=0;m<=6;m++) c.lineTo(P.tg.x+sd*P.R*(0.85+(m%2)*0.1),P.tg.y-P.R*0.4+m*P.R*0.13); c.stroke(); } } } },
+  /* Hastur stays back and lashes long strips of its rags at the foe, high and low, like whips that crack and draw back */
+  "Rag Storm":{ atk:(t)=>t>160&&t<980?{f:0.22,rot:Math.sin(t/70)*0.08,pose:"cast"}:null,
+    draw(c,PF,P,t,x){ const hc=P.body||[220,200,90], dk=OWN.mix(hc,[40,30,25],0.3);
+      for(let j=0;j<6;j++){ const t1=OWN.WS.T(j); const k=(t-(t1-140))/360; if(k<0||k>=1) continue; const ext=k<0.39?eo(k/0.39):1-ei((k-0.39)/0.61), src=OWN.pt(x.self,P.tg,[0.6,0.45+0.15*(j%3)]), end={x:P.tg.x+P.d*P.R*0.2,y:P.tg.y+(j%3-1)*P.R*0.3};
+        const pts=[]; for(let m=0;m<=14;m++){ const f=m/14*ext; pts.push({x:src.x+(end.x-src.x)*f,y:src.y+(end.y-src.y)*f+Math.sin(f*9-t/30+j)*P.R*0.18*f-Math.sin(Math.PI*f)*P.R*0.3}); }
+        OWN.WS.rag(c,pts,P.S*0.5,j%2?hc:OWN.mix(hc,[60,45,35],0.25),t,j*13+5);
+        if(k>0.36&&k<0.5) OWN.star(c,end.x,end.y,P.S*0.55*(1-(k-0.36)/0.14),"rgba(255,250,220,.95)",k*8); } } },
+  /* Cthulhu spreads its wings and night falls round the foe: stars come out, eyes open in the dark, and a shooting star strikes on each hit */
+  "Night Wings":{ atk:(t)=>{ const up=t<260?eo(t/260):t<980?1:1-eio(Math.min(1,(t-980)/280)); return {lift:-22*up,f:0.15*up,pose:t>180&&t<980?"cast":null}; },
+    draw(c,PF,P,t){ const a=OWN.WS.fade(t,180,1180); if(a<=0) return; const cx=P.tg.x, cy=P.tg.y-P.R*0.3;
+      c.fillStyle=OWN.rg(c,cx,cy,P.R*0.2,P.R*2.3,[[0,`rgba(15,18,45,${0.72*a})`],[0.65,`rgba(20,25,60,${0.5*a})`],[1,"rgba(20,25,60,0)"]]); c.beginPath(); c.arc(cx,cy,P.R*2.3,0,7); c.fill();
+      for(let i=0;i<16;i++){ const an=atH(i*3)*Math.PI*2, rr=P.R*(0.5+1.5*atH(i*7)); OWN.star(c,cx+Math.cos(an)*rr,cy+Math.sin(an)*rr*0.75,P.S*(0.08+0.07*atH(i*11))*(0.6+0.4*Math.sin(t/90+i)),`rgba(235,240,255,${0.9*a})`,i); }
+      for(let i=0;i<3;i++){ const an=i*2.1+0.4, rr=P.R*1.35; OWN.WV.eye(c,cx+Math.cos(an)*rr,cy+Math.sin(an)*rr*0.6,P.R*0.1,t+i*50,a*Math.min(1,Math.max(0,(t-320-i*90)/150)),"#9fe870"); }
+      for(let j=0;j<6;j++){ const t1=OWN.WS.T(j), k=(t-(t1-110))/110; if(k<0) continue; const hit={x:cx+(atH(j*5)-0.5)*P.R*0.8,y:P.tg.y+(atH(j*3)-0.5)*P.R*0.5}, from={x:hit.x-P.d*P.R*1.4,y:hit.y-P.R*2.2};
+        if(k<1){ const p={x:from.x+(hit.x-from.x)*k,y:from.y+(hit.y-from.y)*k}; const g=c.createLinearGradient(from.x,from.y,p.x,p.y); g.addColorStop(0,"rgba(200,220,255,0)"); g.addColorStop(1,"rgba(235,245,255,.95)"); c.strokeStyle=g; c.lineWidth=P.S*0.18; c.lineCap="round"; c.beginPath(); c.moveTo(from.x+(hit.x-from.x)*Math.max(0,k-0.5),from.y+(hit.y-from.y)*Math.max(0,k-0.5)); c.lineTo(p.x,p.y); c.stroke(); OWN.star(c,p.x,p.y,P.S*0.4,"rgba(255,255,255,1)",t/30); }
+        else { const q=(k-1)*110/260; if(q<1){ atGlowA(c,hit.x,hit.y,P.R*0.6,[160,190,255],0.8*(1-q)); OWN.star(c,hit.x,hit.y,P.S*(0.5+0.8*q),`rgba(230,240,255,${1-q})`,q*3); } } } } }
+};
+OWN.wingFx=(c,t,x,o)=>{ OWN.twoPass(c,x,(cc,PF)=>{ const c=cc; const P=OWN.cx(x,{at:[0.9,0.5]}); P.S*=2.0; OWN.GU.d=P.d; o.draw(c,PF,P,t,x); }); };
+(()=>{ if(typeof ANIM==="undefined"||!ANIM.wingstorm) return; const K=ANIM.wingstorm, fx1=K.fx, atk1=K.atk;
+  K.atk=function(t,pos){ const b=atk1.call(this,t,pos), o=pos&&pos.name&&OWN_WING[pos.name], e=o&&o.atk&&o.atk(t,pos); return e?{...b,...e}:b; };
+  K.fx=function(c,t,x){ const o=x&&OWN_WING[x.name]||null; if(!o) return fx1.call(this,c,t,x); try{ OWN.wingFx(c,t,x,o); }catch(e){ if(!OWN.err){ OWN.err=1; console.error("OWN wing",x.name,e&&e.message); } } }; })();
 
 /* ---------- chatter, own versions (19 Nov 2026): every family sent the same white jaw-shaped outlines, so each one now sends a thing
    of its own (wind-up teeth, cursing bubbles, winged notes, a clock chime, a sour note, a falling speaker, iron filings, a sound hawk,
