@@ -446,7 +446,7 @@ OWN.hornFx=(c,t,x,o)=>{ const s=x.self, tg=x.target, R=tg.r||30, S=OWN.size(x), 
 })();
 
 /* a family with its own bolt draws its own landing, so the stock hit lines stay off and the burst stays small */
-function OWN_OWNS(S){ if(!(S&&S.anim&&S.spec)) return false; const k=S.anim.kind, f=S.spec.family; return !!(k==="bolt"&&OWN_BOLT2[f]||k==="steam"&&OWN_STEAM[f]||k==="trumpet"&&typeof OWN_HORN2!=="undefined"&&OWN_HORN2[f]||k==="propthrow"&&typeof OWN_PROP!=="undefined"&&OWN_PROP[f]||(k==="meteor"||k==="icefall")&&typeof OWN_METEOR!=="undefined"&&OWN_METEOR[S.anim.name]||k==="drool"&&typeof OWN_DROOL!=="undefined"&&OWN_DROOL[S.anim.name]||k==="gust"&&typeof OWN_GUST!=="undefined"&&OWN_GUST[S.anim.name]||k==="wave"&&typeof OWN_WAVE!=="undefined"&&OWN_WAVE[S.anim.name]||k==="sandspray"&&typeof OWN_SAND!=="undefined"&&OWN_SAND[S.anim.name]||k==="chatter"&&typeof OWN_CHAT!=="undefined"&&OWN_CHAT[S.anim.name]||k==="wingstorm"&&typeof OWN_WING!=="undefined"&&OWN_WING[S.anim.name]); }
+function OWN_OWNS(S){ if(!(S&&S.anim&&S.spec)) return false; const k=S.anim.kind, f=S.spec.family; return !!(k==="bolt"&&OWN_BOLT2[f]||k==="steam"&&OWN_STEAM[f]||k==="trumpet"&&typeof OWN_HORN2!=="undefined"&&OWN_HORN2[f]||k==="propthrow"&&typeof OWN_PROP!=="undefined"&&OWN_PROP[f]||(k==="meteor"||k==="icefall")&&typeof OWN_METEOR!=="undefined"&&OWN_METEOR[S.anim.name]||k==="drool"&&typeof OWN_DROOL!=="undefined"&&OWN_DROOL[S.anim.name]||k==="gust"&&typeof OWN_GUST!=="undefined"&&OWN_GUST[S.anim.name]||k==="wave"&&typeof OWN_WAVE!=="undefined"&&OWN_WAVE[S.anim.name]||k==="sandspray"&&typeof OWN_SAND!=="undefined"&&OWN_SAND[S.anim.name]||k==="chatter"&&typeof OWN_CHAT!=="undefined"&&OWN_CHAT[S.anim.name]||k==="wingstorm"&&typeof OWN_WING!=="undefined"&&OWN_WING[S.anim.name]||k==="flash"&&typeof OWN_FLASH!=="undefined"&&OWN_FLASH[S.anim.name]); }
 
 /* ---------- bolt, second pass continued: the other 25 families ---------- */
 OWN.go=(a,b,k,arc=0,off=0)=>lerpP(a,b,k,arc,off);
@@ -2628,7 +2628,7 @@ const OWN_WING={
       for(let j=0;j<6;j++){ const t1=OWN.WS.T(j), t0=t1-150, end={x:P.tg.x+(j-2.5)*P.R*0.32,y:j%2?P.gnd-P.R*0.05:P.tg.y+(atH(j)-0.5)*P.R*0.6}, ang=Math.atan2(end.y-src.y,end.x-src.x);
         if(t<t0) continue; if(t<t1){ const k=ei((t-t0)/150), p={x:src.x+(end.x-src.x)*k,y:src.y-P.R*0.8+(end.y-src.y+P.R*0.8)*k}; for(let m=1;m<4;m++) OWN.WS.ember(c,p.x-Math.cos(ang)*m*P.S*0.3,p.y-Math.sin(ang)*m*P.S*0.3,P.S*0.06,1-m/4); OWN.GU.feather(c,p.x,p.y,P.S*0.45,ang+Math.PI,[255,150,60]); atGlowA(c,p.x,p.y,P.S,[255,150,60],0.6); continue; }
         const k=(t-t1)/(1250-t1); if(k>=1) continue; const al=k<0.75?1:1-(k-0.75)/0.25; OWN.GU.feather(c,end.x-Math.cos(ang)*P.S*0.25,end.y-Math.sin(ang)*P.S*0.25,P.S*0.45,ang+Math.PI,[255,150,60],al);
-        OWN.flame(c,end.x-Math.cos(ang)*P.S*0.45,end.y-Math.sin(ang)*P.S*0.45,P.S*0.25*al*(1+0.2*Math.sin(t/40+j)),-Math.PI/2,OWN.rgb([255,120,40],0.9),OWN.rgb([255,235,150],0.95),t+j*30);
+        OWN.flame(c,end.x-Math.cos(ang)*P.S*0.45,end.y-Math.sin(ang)*P.S*0.45,P.S*0.25*al*(1+0.2*Math.sin(t/40+j)),Math.PI/2,OWN.rgb([255,120,40],0.9),OWN.rgb([255,235,150],0.95),t+j*30);
         if(k<0.15) atGlowA(c,end.x,end.y,P.R*0.5,[255,170,70],0.8*(1-k/0.15)); }
       const fk=(t-OWN.WS.T(5))/350; if(fk>0&&fk<1){ atGlowA(c,P.tg.x,P.tg.y,P.R*(0.8+1.2*fk),[255,140,50],0.8*(1-fk)); for(let i=0;i<8;i++){ const an=i/8*7; OWN.flame(c,P.tg.x+Math.cos(an)*P.R*(0.4+0.8*fk),P.tg.y+Math.sin(an)*P.R*0.6*(0.4+0.8*fk),P.S*0.4*(1-fk),an+Math.PI,OWN.rgb([255,120,40],0.9),OWN.rgb([255,235,150],0.95),t+i*20); } } } },
   /* Tengu stays back and swings its wings like fans, throwing crescent wind blades with leaves caught in them */
@@ -2696,6 +2696,177 @@ OWN.wingFx=(c,t,x,o)=>{ OWN.twoPass(c,x,(cc,PF)=>{ const c=cc; const P=OWN.cx(x,
 (()=>{ if(typeof ANIM==="undefined"||!ANIM.wingstorm) return; const K=ANIM.wingstorm, fx1=K.fx, atk1=K.atk;
   K.atk=function(t,pos){ const b=atk1.call(this,t,pos), o=pos&&pos.name&&OWN_WING[pos.name], e=o&&o.atk&&o.atk(t,pos); return e?{...b,...e}:b; };
   K.fx=function(c,t,x){ const o=x&&OWN_WING[x.name]||null; if(!o) return fx1.call(this,c,t,x); try{ OWN.wingFx(c,t,x,o); }catch(e){ if(!OWN.err){ OWN.err=1; console.error("OWN wing",x.name,e&&e.message); } } }; })();
+
+/* ---------- flash, own versions (19 Nov 2026): every family glowed white and threw the same ring of rays, so each one now lights up its
+   own way from its own body: Lern's lantern casts a warm pool, Wick's flame flashes four times, Lumo glows sleepy, sweet or calls a
+   swarm, Bloop pulses rings of sea light, Shutter fires a lens flare, the unicorn twists a rainbow from its horn, the kirin calls down
+   holy light, Sarimanok fans its rainbow tail, Shoggoth opens staring eyes, and Hastur drains the light or burns its mark on.
+   The glow builds to 380 ms, the hit lands at 380 and it all clears by 900. ---------- */
+OWN.FL={ up:(t,a,b)=>Math.max(0,Math.min(1,(t-a)/(b-a))), env:(t)=>t<380?eo(t/380):1-Math.max(0,(t-650)/250),
+  ray(c,x0,y0,x1,y1,w0,w1,col,al,a0=0.7,a1=0.1){ if(al<=0) return; const dx=x1-x0, dy=y1-y0, L=Math.hypot(dx,dy)||1, nx=-dy/L, ny=dx/L, g=c.createLinearGradient(x0,y0,x1,y1);
+    g.addColorStop(0,OWN.rgb(col,a0*al)); g.addColorStop(1,OWN.rgb(col,a1*al)); c.fillStyle=g; c.beginPath(); c.moveTo(x0+nx*w0,y0+ny*w0); c.lineTo(x1+nx*w1,y1+ny*w1); c.lineTo(x1-nx*w1,y1-ny*w1); c.lineTo(x0-nx*w0,y0-ny*w0); c.closePath(); c.fill(); },
+  heart(c,x,y,s,col,al){ if(al<=0||s<1) return; c.save(); c.globalAlpha*=al; c.translate(x,y); c.shadowColor=OWN.rgb(col,1); c.shadowBlur=s; c.fillStyle=OWN.rg(c,0,0,0,s*1.2,[[0,"#fff"],[0.6,OWN.rgb(col)],[1,OWN.rgb(OWN.mix(col,[200,60,120],0.3))]],-s*0.3,-s*0.3);
+    c.beginPath(); c.moveTo(0,s*0.9); c.bezierCurveTo(-s*1.2,0,-s*0.7,-s*0.9,0,-s*0.35); c.bezierCurveTo(s*0.7,-s*0.9,s*1.2,0,0,s*0.9); c.fill(); c.restore(); },
+  eyeBlob(c,x,y,r,t,open,col,al){ if(al<=0||r<1||open<=0) return; c.save(); c.globalAlpha*=al; c.fillStyle="#fffbe8"; c.beginPath(); c.ellipse(x,y,r,r*0.75*open,0,0,7); c.fill();
+    c.fillStyle=OWN.rgb(col); c.beginPath(); c.arc(x+Math.sin(t/200)*r*0.15,y,r*0.48*Math.min(1,open*1.3),0,7); c.fill(); c.fillStyle="#120a14"; c.beginPath(); c.arc(x+Math.sin(t/200)*r*0.15,y,r*0.22*Math.min(1,open*1.3),0,7); c.fill();
+    c.fillStyle="rgba(255,255,255,.9)"; c.beginPath(); c.arc(x-r*0.18,y-r*0.2*open,r*0.12,0,7); c.fill(); c.restore(); }
+};
+const OWN_FLASH={
+  /* Lern's paper lantern glows brighter and brighter, then throws a warm pool of lantern light over the foe, with its paper ribs showing as soft bars */
+  "Glow":{ col:[255, 200, 120], atk:(t)=>({f:0,pose:t<380?"cast":t<700?"push":null,off:[0,-4*Math.sin(Math.PI*Math.min(1,t/700))]}),
+    draw(c,PF,P,t,x){ const L=x.self.center||P.o0, col=[255,190,100], e=OWN.FL.env(t); atGlowA(c,L.x,L.y,P.S*(1.2+1.4*e),col,0.75*e); atGlowA(c,L.x,L.y,P.S*0.7,[255,240,190],0.8*e);
+      if(t<380) return; const k=OWN.FL.up(t,380,520), al=1-OWN.FL.up(t,700,900), fx=P.tg.x, fy=P.tg.y;
+      c.save(); c.globalCompositeOperation="lighter"; OWN.FL.ray(c,L.x,L.y,fx,fy+P.R*0.2,P.S*0.4,P.R*1.5*k,[255,200,120],0.9*al); c.restore();
+      c.fillStyle=OWN.rg(c,fx,P.gnd-2,0,P.R*1.3,[[0,`rgba(255,220,150,${0.5*al})`],[1,"rgba(255,200,120,0)"]]); c.beginPath(); c.ellipse(fx,P.gnd-2,P.R*1.8*k,P.R*0.4*k,0,0,7); c.fill();
+      c.fillStyle=`rgba(150,90,40,${0.18*al})`; for(let i=-2;i<=2;i++){ c.beginPath(); c.ellipse(fx+i*P.R*0.45,P.gnd-2,P.R*0.08,P.R*0.25,0,0,7); c.fill(); }
+      OWN.SS.squint(c,P,al*k); } },
+  /* Wick's head flame flares up tall and throws a fireball, which explodes on the foe into a ring of flame tongues and four fire pops, with flames rising at its feet */
+  "Flash Fire":{ col:[255, 150, 70], atk:(t)=>({f:0,pose:t<380?"cast":t<760?"push":null,off:[0,t>380&&t<800?-5*Math.abs(Math.sin(Math.PI*((t-380)%110)/110)):0],lift:t<380?-6*eo(t/380):-6*(1-OWN.FL.up(t,380,700))}),
+    draw(c,PF,P,t,x){ const top=OWN.pt(x.self,P.tg,[0.5,0.0]), outer=OWN.rgb([255,110,40],0.95), inner=OWN.rgb([255,240,170],0.98), e=OWN.FL.env(t), fx=P.tg.x, fy=P.tg.y;
+      const fs=P.S*(0.25+0.5*e)*(1+0.1*Math.sin(t/30)); OWN.flame(c,top.x,top.y-fs*0.85,fs,Math.PI/2,outer,inner,t); atGlowA(c,top.x,top.y-P.S*0.6,P.S*(0.8+1.4*e),[255,160,60],0.6*e);
+      /* embers spiral into the head flame as it builds, then it throws a fireball at the foe */
+      if(t<300) for(let i=0;i<8;i++){ const q=((t/300)+i/8)%1, an=i/8*7+t/90, r=P.S*1.6*(1-q); OWN.flame(c,top.x+Math.cos(an)*r,top.y-fs*0.6+Math.sin(an)*r*0.7,P.S*0.14*q,an,outer,inner,t+i*30); }
+      if(t>=220&&t<400){ const k=eo(OWN.FL.up(t,220,380)), st={x:top.x,y:top.y-fs*0.6}, p={x:st.x+(fx-st.x)*k,y:st.y+(fy-st.y)*k-Math.sin(Math.PI*k)*P.R*0.3}; OWN.comet(c,p,P.S*(0.35+0.25*k),Math.atan2(fy-st.y,fx-st.x),t,0.3+1.3*k); }
+      if(t<380) return; const k=OWN.FL.up(t,380,860), al=1-k;
+      c.save(); c.globalCompositeOperation="lighter"; atGlowA(c,fx,fy,P.R*(1.1+1.6*eo(k)),[255,150,60],0.9*al); atGlowA(c,fx,fy,P.R*0.8,[255,240,200],0.9*(1-OWN.FL.up(t,380,560))); c.restore();
+      for(let i=0;i<12;i++){ const an=i/12*Math.PI*2+0.3, v=P.R*(0.3+1.3*eo(k)); OWN.flame(c,fx+Math.cos(an)*v,fy+Math.sin(an)*v*0.8,P.S*(0.75-0.3*k)*al+1,an+Math.PI,outer,inner,t+i*25); }
+      for(let j=0;j<4;j++){ const q=(t-380-j*110)/420; if(q<0||q>1) continue; const pp={x:fx+(atH(j*5)-0.5)*P.R*1.4,y:fy+(atH(j*3)-0.5)*P.R*1.1};
+        atGlowA(c,pp.x,pp.y,P.R*(0.5+0.8*q),[255,190,90],0.95*(1-q)); OWN.star(c,pp.x,pp.y,P.S*(0.9+1.4*q),`rgba(255,250,220,${1-q})`,q*2+j);
+        for(let i=0;i<8;i++){ const an=i/8*7+j, v=P.R*(0.2+0.9*eo(q)); OWN.flame(c,pp.x+Math.cos(an)*v,pp.y+Math.sin(an)*v,P.S*0.3*(1-q),an+Math.PI,outer,inner,t+i*20); } }
+      for(let i=0;i<6;i++){ const q=OWN.FL.up(t,400+i*30,880), h=Math.sin(Math.PI*q); OWN.flame(c,fx+(i-2.5)*P.R*0.32,P.gnd-P.S*0.5*h,P.S*(0.5+0.25*atH(i))*h,Math.PI/2,outer,inner,t+i*40); }
+      for(let i=0;i<14;i++){ const q=((t-380)/500+atH(i*7))%1; c.fillStyle=OWN.rgb(OWN.mix([255,230,140],[255,90,40],q),0.9*al); c.beginPath(); c.arc(fx+(atH(i*3)-0.5)*P.R*1.6+Math.sin(t/60+i)*P.S*0.1,fy+P.R*0.4-q*P.R*2.2,P.S*0.07*(1-q*0.5),0,7); c.fill(); } } },
+  /* Lumo's tail glows a soft lavender and slow rings of sleepy light drift to the foe, which gets swirly eyes and drifting Zs */
+  "Sleepy Glow":{ col:[200, 180, 255], atk:(t)=>({f:0,pose:t<380?"cast":null,rot:Math.sin(t/180)*0.07}),
+    draw(c,PF,P,t,x){ const tail=OWN.pt(x.self,P.tg,[0.5,0.85]), col=[200,180,255], e=OWN.FL.env(t); atGlowA(c,tail.x,tail.y,P.S*(1+1.2*e)*(1+0.1*Math.sin(t/120)),col,0.7*e);
+      for(let i=0;i<4;i++){ const q=((t/700)+i/4)%1; if(t<150) break; const p={x:tail.x+(P.tg.x-tail.x)*q,y:tail.y+(P.tg.y-tail.y)*q-Math.sin(Math.PI*q)*P.R*0.5}; OWN.CH.ring(c,p.x,p.y,P.S*(0.5+0.6*q),P.S*0.14,col,0.75*e*Math.sin(Math.PI*q)); }
+      if(t<380) return; const al=1-OWN.FL.up(t,750,900), k=OWN.FL.up(t,380,520); atGlowA(c,P.tg.x,P.tg.y,P.R*1.1,col,0.45*al);
+      c.strokeStyle=`rgba(120,90,180,${al*k})`; c.lineWidth=2.4; c.lineCap="round"; for(const sd of [-1,1]){ const ex=P.tg.x+sd*P.R*0.3, ey=P.tg.y-P.R*0.25; c.beginPath(); for(let m=0;m<=14;m++){ const a=m/14*Math.PI*3+t/80, r=P.R*0.11*m/14; c.lineTo(ex+Math.cos(a)*r,ey+Math.sin(a)*r); } c.stroke(); }
+      for(let i=0;i<3;i++){ const q=((t-380)/500+i/3)%1; c.save(); c.globalAlpha=al*(1-q); c.font=`900 ${Math.round(P.S*(0.4+0.4*q))}px ui-rounded, system-ui, sans-serif`; c.fillStyle="#b8a4ff"; c.shadowColor="rgba(255,255,255,.9)"; c.shadowBlur=6; c.fillText("z",P.tg.x+P.R*(0.3+0.4*q),P.head.y-P.R*(0.2+0.8*q)); c.restore(); } } },
+  /* Lumo glows a warm pink-gold and little hearts of light rise off its tail: some drift over and bathe the foe, the rest sink back into Lumo */
+  "Sweet Glow":{ col:[255, 180, 210], atk:(t)=>({f:0,pose:t<380?"cast":t<700?"push":null,off:[0,-5*Math.abs(Math.sin(t/110))]}),
+    draw(c,PF,P,t,x){ const tail=OWN.pt(x.self,P.tg,[0.5,0.85]), col=[255,170,200], e=OWN.FL.env(t); atGlowA(c,tail.x,tail.y,P.S*(1.1+1.2*e),[255,200,160],0.7*e);
+      for(let i=0;i<9;i++){ const q=((t/650)+i/9)%1, toFoe=i%3!==0, a=e*Math.sin(Math.PI*q);
+        const p=toFoe?{x:tail.x+(P.tg.x-tail.x)*q,y:tail.y-Math.sin(Math.PI*q)*P.R*0.9+(P.tg.y-tail.y)*q+Math.sin(t/60+i)*P.S*0.2}:{x:tail.x+Math.sin(t/90+i)*P.S*0.6,y:tail.y-P.S*1.2*Math.sin(Math.PI*q)};
+        OWN.FL.heart(c,p.x,p.y,P.S*(0.3+0.12*atH(i)),toFoe?col:[255,215,140],a); }
+      if(t<380) return; const al=1-OWN.FL.up(t,700,900); atGlowA(c,P.tg.x,P.tg.y,P.R*1.2,[255,190,200],0.5*al); for(let i=0;i<5;i++) OWN.star(c,P.tg.x+(atH(i*3)-0.5)*P.R*1.4,P.tg.y+(atH(i*7)-0.5)*P.R,P.S*0.25*al,"rgba(255,235,245,.95)",t/50+i); } },
+  /* Lumo calls a swarm of fireflies that gathers into a huge glowing ball over the foe and bursts in a blinding flash */
+  "Swarm Light":{ col:[220, 255, 140], atk:(t)=>({f:0,pose:t<420?"cast":t<720?"push":null,lift:-14*Math.sin(Math.PI*Math.min(1,t/900))}),
+    draw(c,PF,P,t,x){ const src=x.self.center||P.o0, ball={x:P.tg.x,y:P.head.y-P.R*0.9}, e=OWN.FL.env(t);
+      for(let i=0;i<28;i++){ const f=Math.min(1,Math.max(0,(t-atH(i)*160)/340)), an=t/150+i*0.9, rr=P.R*0.55*(1-0.4*Math.min(1,Math.max(0,(t-300)/80)));
+        const p=f<1?{x:src.x+(ball.x-src.x)*eo(f)+Math.sin(t/50+i)*P.S*0.3,y:src.y+(ball.y-src.y)*eo(f)-Math.sin(Math.PI*f)*P.R*0.8}:{x:ball.x+Math.cos(an)*rr,y:ball.y+Math.sin(an)*rr*0.8};
+        if(t<400) OWN.WS.firefly(c,p.x,p.y,P.S*0.11,t+i*13,1); }
+      if(t<400) { { const g=OWN.FL.up(t,200,400); atGlowA(c,ball.x,ball.y,P.R*(0.6+0.9*g),[230,255,140],0.8); c.fillStyle=OWN.rg(c,ball.x,ball.y,0,P.R*0.6*g,[[0,'rgba(255,255,235,.95)'],[0.6,'rgba(235,255,150,.7)'],[1,'rgba(200,240,100,0)']],-P.R*0.15*g,-P.R*0.15*g); c.beginPath(); c.arc(ball.x,ball.y,P.R*0.6*g,0,7); c.fill(); } return; }
+      const k=OWN.FL.up(t,380,700); c.save(); c.globalCompositeOperation="lighter"; atGlowA(c,ball.x,ball.y,P.R*(1+3*eo(k)),[240,255,170],0.95*(1-k)); atGlowA(c,P.tg.x,P.tg.y,P.R*1.6,[255,255,220],0.9*(1-k)); c.restore();
+      for(let i=0;i<14;i++){ const an=i/14*7, v=P.R*(0.4+2.0*eo(k)); OWN.WS.firefly(c,ball.x+Math.cos(an)*v,ball.y+Math.sin(an)*v*0.8,P.S*0.1,t+i*20,1-k); }
+      for(let i=0;i<10;i++){ const an=i/10*Math.PI*2; c.strokeStyle=`rgba(255,255,220,${0.8*(1-k)})`; c.lineWidth=3; c.beginPath(); c.moveTo(ball.x+Math.cos(an)*P.R*0.5*(1+k),ball.y+Math.sin(an)*P.R*0.5*(1+k)); c.lineTo(ball.x+Math.cos(an)*P.R*(1.2+2*k),ball.y+Math.sin(an)*P.R*(1.2+2*k)); c.stroke(); } } },
+  /* Bloop's bell pulses three times, sending rings of glowing sea light through the air with plankton sparkling in them; they bloom into soft glowing jelly lights on the foe */
+  "Bloom Pulse":{ col:[120, 230, 255], atk:(t)=>{ const q=(t%130)/130; return t<520?{f:0,pose:"cast",sx:1+0.08*Math.sin(Math.PI*q),sy:1-0.1*Math.sin(Math.PI*q)}:{f:0}; },
+    draw(c,PF,P,t,x){ const bell=OWN.pt(x.self,P.tg,[0.5,0.3]), cols=[[110,230,255],[255,140,220]];
+      for(let j=0;j<3;j++){ const k=(t-j*130)/420; if(k<0||k>1) continue; const p={x:bell.x+(P.tg.x-bell.x)*k,y:bell.y+(P.tg.y-bell.y)*k}; OWN.CH.ring(c,p.x,p.y,P.R*(0.5+0.9*k),P.S*0.2,cols[j%2],0.85*(1-k*0.6));
+        for(let i=0;i<6;i++){ const an=i/6*7+j; c.fillStyle=OWN.rgb([220,255,255],0.9*(1-k)); c.beginPath(); c.arc(p.x+Math.cos(an)*P.R*(0.3+0.6*k),p.y+Math.sin(an)*P.R*(0.3+0.6*k),P.S*0.05,0,7); c.fill(); } }
+      if(t<380) return; for(let i=0;i<5;i++){ const k=OWN.FL.up(t,380+i*40,820), p={x:P.tg.x+(atH(i*5)-0.5)*P.R*1.3,y:P.tg.y+(atH(i*3)-0.5)*P.R*0.9-k*P.R*0.4}, al=Math.sin(Math.PI*k), col=cols[i%2];
+        atGlowA(c,p.x,p.y,P.S*(0.6+0.8*k),col,0.8*al); c.save(); c.globalAlpha=al; c.fillStyle=OWN.rg(c,p.x,p.y,0,P.S*0.4,[[0,"#fff"],[1,OWN.rgb(col,0.6)]]); c.beginPath(); c.arc(p.x,p.y,P.S*0.35*(0.6+0.6*k),Math.PI,0); c.quadraticCurveTo(p.x,p.y+P.S*0.1,p.x-P.S*0.35*(0.6+0.6*k),p.y); c.fill();
+          c.strokeStyle=OWN.rgb(col,0.8); c.lineWidth=1.5; for(let m=-1;m<=1;m++){ c.beginPath(); c.moveTo(p.x+m*P.S*0.12,p.y); c.quadraticCurveTo(p.x+m*P.S*0.12+Math.sin(t/60+m)*P.S*0.1,p.y+P.S*0.3,p.x+m*P.S*0.14,p.y+P.S*0.55); c.stroke(); } c.restore(); } } },
+  /* Shutter's lens charges, then fires a huge camera flash with a lens-flare streak and coloured hexagons, and a photo frame snaps round the bleached-out foe */
+  "Grand Exposure":{ col:[235, 245, 255], atk:(t)=>({f:0,pose:t<380?"cast":t<640?"push":null,sx:t>360&&t<420?0.92:1}),
+    draw(c,PF,P,t,x){ const lens=OWN.pt(x.self,P.tg,[0.62,0.5]), e=OWN.FL.up(t,0,380);
+      if(t<380){ atGlowA(c,lens.x,lens.y,P.S*(0.6+0.8*e),[200,230,255],0.8*e); for(let i=0;i<6;i++){ const an=i/6*7+t/80, r=P.S*(1.6-1.2*e); c.fillStyle=`rgba(255,255,255,${0.8*e})`; c.beginPath(); c.arc(lens.x+Math.cos(an)*r,lens.y+Math.sin(an)*r,P.S*0.06,0,7); c.fill(); } return; }
+      const k=OWN.FL.up(t,380,880); c.save(); c.globalCompositeOperation="lighter"; atGlowA(c,lens.x,lens.y,P.R*(1.5+2*k),[255,255,255],0.95*(1-k)); atGlowA(c,P.tg.x,P.tg.y,P.R*1.4,[255,255,255],0.9*(1-k));
+      const dx=P.tg.x-lens.x, dy=P.tg.y-lens.y; c.strokeStyle=`rgba(255,250,240,${0.8*(1-k)})`; c.lineWidth=P.S*0.18; c.lineCap="round"; c.beginPath(); c.moveTo(lens.x-dx*0.6,lens.y-dy*0.6-P.S*0.2); c.lineTo(lens.x+dx*1.6,lens.y+dy*1.6+P.S*0.2); c.stroke();
+      [[0.35,[255,170,120]],[0.6,[150,220,255]],[0.85,[200,255,170]],[1.2,[255,150,220]]].forEach(([f,col],i)=>{ const hx=lens.x+dx*f, hy=lens.y+dy*f, r=P.S*(0.3+0.25*i); c.fillStyle=OWN.rgb(col,0.35*(1-k)); c.beginPath(); for(let m=0;m<6;m++){ const a=m/6*Math.PI*2+0.5; c[m?"lineTo":"moveTo"](hx+Math.cos(a)*r,hy+Math.sin(a)*r); } c.closePath(); c.fill(); }); c.restore();
+      const fk=OWN.FL.up(t,420,520), fa=1-OWN.FL.up(t,760,880); if(fk>0){ const w=P.R*1.25*(1.3-0.3*fk), h=P.R*1.35*(1.3-0.3*fk); c.save(); c.globalAlpha=fa*fk; c.strokeStyle="#fffdf6"; c.lineWidth=P.S*0.22; c.shadowColor="rgba(60,40,80,.35)"; c.shadowBlur=8; c.strokeRect(P.tg.x-w,P.tg.y-h,w*2,h*2); c.fillStyle="rgba(255,255,250,.25)"; c.fillRect(P.tg.x-w,P.tg.y-h,w*2,h*2); c.restore(); } } },
+  /* the unicorn's horn charges with rainbow sparkles and twists a spiral of rainbow light at the foe, which bursts in a rainbow star */
+  "Horn Glow":{ col:[255, 210, 255], atk:(t)=>({f:0,pose:t<380?"cast":t<700?"push":null,rot:t<380?-0.08*(eo(t/380)):0}),
+    draw(c,PF,P,t,x){ const horn=x.self.top?{x:x.self.top.x+P.d*P.S*0.25,y:x.self.top.y}:OWN.pt(x.self,P.tg,[0.7,-0.05]), rb=[[255,120,120],[255,200,90],[255,245,120],[130,230,140],[120,180,255],[190,140,255]], e=OWN.FL.up(t,0,380);
+      if(t<400){ atGlowA(c,horn.x,horn.y,P.S*(0.5+1.2*e),[255,240,255],0.85*e); for(let i=0;i<6;i++){ const an=i/6*7+t/60, r=P.S*(1.4-1.0*e); OWN.star(c,horn.x+Math.cos(an)*r,horn.y+Math.sin(an)*r,P.S*0.22*e,OWN.rgb(rb[i],0.95),t/40+i); } }
+      if(t<380) return; const k=OWN.FL.up(t,380,560), al=1-OWN.FL.up(t,700,900), dx=P.tg.x-horn.x, dy=P.tg.y-horn.y, L=Math.hypot(dx,dy)||1, nx=-dy/L, ny=dx/L;
+      for(let s=0;s<3;s++){ c.strokeStyle=OWN.rgb(rb[s*2],0.85*al); c.lineWidth=P.S*0.16; c.lineCap="round"; c.beginPath(); for(let m=0;m<=30;m++){ const f=m/30*k, w=Math.sin(f*Math.PI*5+s*2.1-t/40)*P.S*0.5*Math.sin(Math.PI*f); c.lineTo(horn.x+dx*f+nx*w,horn.y+dy*f+ny*w); } c.stroke(); }
+      if(k>=1){ const q=OWN.FL.up(t,560,880); for(let i=0;i<6;i++){ const an=i/6*Math.PI*2+q; c.strokeStyle=OWN.rgb(rb[i],0.9*(1-q)); c.lineWidth=P.S*0.2*(1-q); c.beginPath(); c.moveTo(P.tg.x,P.tg.y); c.lineTo(P.tg.x+Math.cos(an)*P.R*(0.5+1.2*q),P.tg.y+Math.sin(an)*P.R*(0.5+1.2*q)); c.stroke(); } OWN.star(c,P.tg.x,P.tg.y,P.S*(0.8+1.4*q),`rgba(255,255,255,${1-q})`,q*3); } } },
+  /* a halo rings over the kirin's head as it rears, and a column of holy light falls on the foe with gold motes drifting down */
+  "Holy Glow":{ col:[255, 235, 150], atk:(t)=>({f:0,pose:t<380?"cast":t<700?"push":null,rot:t<380?-0.1*eo(t/380):-0.1*(1-OWN.FL.up(t,380,700)),lift:-6*Math.sin(Math.PI*Math.min(1,t/700))}),
+    draw(c,PF,P,t,x){ const top=x.self.top||OWN.pt(x.self,P.tg,[0.5,0]), e=OWN.FL.env(t), gold=[255,225,130];
+      c.save(); c.globalAlpha=e; c.strokeStyle="rgba(255,235,150,.95)"; c.lineWidth=P.S*0.14; c.shadowColor="rgba(255,220,120,1)"; c.shadowBlur=P.S*0.6; c.beginPath(); c.ellipse(top.x,top.y-P.S*0.6,P.S*0.75,P.S*0.22,0,0,7); c.stroke(); c.restore();
+      if(t<300) return; const k=OWN.FL.up(t,300,450), al=1-OWN.FL.up(t,720,900), cx=P.tg.x, w=P.R*1.2*k, topY=P.tg.y-P.R*7;
+      c.save(); c.globalCompositeOperation="lighter"; const g=c.createLinearGradient(0,topY,0,P.gnd); g.addColorStop(0,`rgba(255,240,180,0)`); g.addColorStop(0.5,`rgba(255,235,160,${0.45*al})`); g.addColorStop(1,`rgba(255,245,200,${0.7*al})`); c.fillStyle=g;
+      c.beginPath(); c.moveTo(cx-w*0.6,topY); c.lineTo(cx+w*0.6,topY); c.lineTo(cx+w,P.gnd); c.lineTo(cx-w,P.gnd); c.closePath(); c.fill(); c.restore();
+      c.fillStyle=OWN.rg(c,cx,P.gnd-2,0,w*1.4,[[0,`rgba(255,245,200,${0.6*al})`],[1,"rgba(255,235,160,0)"]]); c.beginPath(); c.ellipse(cx,P.gnd-2,w*1.4,w*0.3,0,0,7); c.fill();
+      for(let i=0;i<10;i++){ const f=((t/600)+i/10)%1; OWN.star(c,cx+(atH(i*3)-0.5)*w*1.6,topY+(P.gnd-topY)*(0.4+0.6*f),P.S*0.18*al,OWN.rgb(gold,0.95),t/40+i); }
+      OWN.SS.squint(c,P,al*k); } },
+  /* Sarimanok puffs up and fans its rainbow tail, the light gathers on its chest, and a wide rainbow fans out from there over the whole foe (Gid, 19 Nov 2026: it read as hitting the wrong way when the rays ran from the tail) */
+  "Dazzle":{ col:[255, 215, 160], atk:(t)=>({f:0,pose:t<380?"cast":t<720?"push":null,sx:1+0.08*Math.sin(Math.PI*Math.min(1,t/720)),sy:1+0.06*Math.sin(Math.PI*Math.min(1,t/720))}),
+    draw(c,PF,P,t,x){ const tail=OWN.pt(x.self,P.tg,[0.15,0.55]), chest=OWN.pt(x.self,P.tg,[0.85,0.45]), rb=[[228,64,52],[244,150,40],[244,206,60],[80,170,80],[60,120,210],[140,90,200],[240,110,170]], e=OWN.FL.env(t);
+      /* the tail fans out behind and every feather lights up, then the light gathers into a prism glow on the chest */
+      for(let i=0;i<7;i++){ const an=-Math.PI/2-P.d*(0.4+i*0.28)+Math.sin(t/90+i)*0.05, tip={x:tail.x+Math.cos(an)*P.R*1.1*e,y:tail.y+Math.sin(an)*P.R*1.1*e};
+        atGlowA(c,tip.x,tip.y,P.S*0.6*e,rb[i],0.7*e); if(t>200&&t<760&&Math.floor(t/60+i)%3===0) OWN.star(c,tip.x,tip.y,P.S*0.45,OWN.rgb(rb[i],0.95),t/30+i);
+        if(t>150&&t<400){ const q=((t-150)/250+i/7)%1; OWN.star(c,tip.x+(chest.x-tip.x)*q,tip.y+(chest.y-tip.y)*q,P.S*0.18*(1-q*0.5),OWN.rgb(rb[i],0.9),t/40+i); } }
+      const g=OWN.FL.up(t,150,380)*(1-OWN.FL.up(t,700,900)); c.save(); c.globalCompositeOperation="lighter"; atGlowA(c,chest.x,chest.y,P.S*(0.6+1.2*g),[255,250,235],0.9*g); c.restore();
+      if(t<380) return; const k=eo(OWN.FL.up(t,380,540)), al=1-OWN.FL.up(t,720,900), d=P.d, endX=P.tg.x+d*P.R*0.9, span=P.R*2.8;
+      /* a wide rainbow fans out from the chest toward the foe, brightest where it lands, and covers it top to bottom */
+      c.save(); c.globalCompositeOperation="lighter";
+      for(let i=0;i<7;i++){ const ty=P.tg.y-span/2+span*(i+0.5)/7, x1=chest.x+(endX-chest.x)*k, y1=chest.y+(ty-chest.y)*k; OWN.FL.ray(c,chest.x,chest.y,x1,y1,P.S*0.08,span/7*0.62*k+1,rb[i],0.95*al,0.25,0.85); if(k<1) OWN.star(c,x1,y1,P.S*0.35,OWN.rgb(rb[i],0.95),t/30+i); }
+      atGlowA(c,P.tg.x,P.tg.y,P.R*(1.2+0.6*k),[255,245,230],0.7*al*k); c.restore();
+      const q=OWN.FL.up(t,500,900); for(let i=0;i<14;i++){ const an=i/14*Math.PI*2+0.2, v=P.R*(0.4+1.3*eo(q)); OWN.star(c,P.tg.x+Math.cos(an)*v,P.tg.y+Math.sin(an)*v*0.85,P.S*(0.35-0.15*q)*al,OWN.rgb(rb[i%7],0.95),t/40+i); }
+      for(let i=0;i<10;i++){ const an=i/10*7+t/200, rr=P.R*(0.5+0.4*Math.sin(t/100+i)); OWN.star(c,P.tg.x+Math.cos(an)*rr,P.tg.y-P.R*0.25+Math.sin(an)*rr*0.5,P.S*0.25*al,OWN.rgb(rb[i%7],0.95),t/40+i); }
+      OWN.SS.squint(c,P,al); } },
+  /* glowing eyes open all over Shoggoth's body and stare; thin beams of eerie light run from every eye to the foe, which shrinks into a dark shadow of dread */
+  "Staring Eyes":{ col:[150, 240, 120], atk:(t)=>({f:0,pose:t<380?"cast":null,off:t<760?[Math.sin(t*1.3)*1.5,Math.cos(t*1.7)*1]:[0,0]}),
+    draw(c,PF,P,t,x){ const eyes=[[0.25,0.3],[0.6,0.18],[0.8,0.45],[0.4,0.6],[0.7,0.72],[0.18,0.62]].map(uv=>OWN.pt(x.self,P.tg,uv)), e=OWN.FL.env(t), iris=[150,240,120];
+      eyes.forEach((p,i)=>{ const open=Math.min(1,Math.max(0,(t-i*45)/120))*(t>800?1-OWN.FL.up(t,800,900):1); OWN.FL.eyeBlob(c,p.x,p.y,P.S*(0.22+0.06*(i%3)),t+i*40,open,iris,1); atGlowA(c,p.x,p.y,P.S*0.5,iris,0.35*open);
+        if(t>=380){ const k=OWN.FL.up(t,380,480), al=1-OWN.FL.up(t,700,900); c.save(); c.globalCompositeOperation="lighter"; OWN.FL.ray(c,p.x,p.y,P.tg.x+(atH(i)-0.5)*P.R*0.5,P.tg.y-P.R*0.2,P.S*0.08,P.S*0.35,iris,0.75*al*k); c.restore(); } });
+      if(t<380) return; const al=1-OWN.FL.up(t,720,900); c.fillStyle=OWN.rg(c,P.tg.x,P.tg.y,P.R*0.2,P.R*1.4,[[0,"rgba(20,30,20,0)"],[1,`rgba(15,25,20,${0.45*al})`]]); c.beginPath(); c.arc(P.tg.x,P.tg.y,P.R*1.4,0,7); c.fill();
+      c.strokeStyle=`rgba(120,200,110,${0.8*al})`; c.lineWidth=2.2; c.lineCap="round"; for(const sd of [-1,1]) for(let j=0;j<2;j++){ const xx=P.tg.x+sd*P.R*(0.85+j*0.14)+Math.sin(t/14+j)*2; c.beginPath(); c.moveTo(xx,P.tg.y-P.R*0.25); c.quadraticCurveTo(xx+sd*P.R*0.06,P.tg.y,xx,P.tg.y+P.R*0.25); c.stroke(); } } },
+  /* the light drains out of the foe: streams of gold curl over to a pale orb above Hastur's hood, the foe's last light shrinks out, and a grey veil, smoke and ash settle on it */
+  "Fading Light":{ col:[205, 205, 215], atk:(t)=>({f:0,pose:t<380?"cast":t<720?"push":null,rot:Math.sin(t/120)*0.05,lift:-8*Math.sin(Math.PI*Math.min(1,t/800))}),
+    draw(c,PF,P,t,x){ const top=x.self.top||OWN.pt(x.self,P.tg,[0.5,0]), orb={x:top.x+P.d*P.S*0.3,y:top.y-P.R*0.45}, fx=P.tg.x, fy=P.tg.y, gold=[255,220,120], grey=[150,150,165], e=OWN.FL.env(t);
+      /* the foe glows warm at first, and streams of its light peel off and curl over to Hastur, greying as they go */
+      const lit=1-OWN.FL.up(t,250,620); c.save(); c.globalCompositeOperation="lighter"; atGlowA(c,fx,fy,P.R*(1.5+0.2*Math.sin(t/60)),[255,215,120],0.75*lit*Math.min(1,t/120)); c.restore();
+      for(let s=0;s<5;s++){ const st={x:fx+(atH(s*5)-0.5)*P.R*1.1,y:fy+(atH(s*7)-0.5)*P.R*1.1}, mid={x:(st.x+orb.x)/2,y:Math.min(st.y,orb.y)-P.R*(0.8+0.5*atH(s*3))}, a=Math.min(1,Math.max(0,(t-60-s*40)/150))*(1-OWN.FL.up(t,620,820));
+        if(a<=0) continue; const B=(q)=>({x:(1-q)*(1-q)*st.x+2*q*(1-q)*mid.x+q*q*orb.x,y:(1-q)*(1-q)*st.y+2*q*(1-q)*mid.y+q*q*orb.y});
+        c.save(); c.globalCompositeOperation="lighter"; c.lineCap="round"; const gr=c.createLinearGradient(st.x,st.y,orb.x,orb.y); gr.addColorStop(0,OWN.rgb(gold,0.55*a)); gr.addColorStop(1,OWN.rgb(grey,0.15*a)); c.strokeStyle=gr;
+          for(const [w,al2] of [[0.42,0.35],[0.16,1]]){ c.globalAlpha=al2; c.lineWidth=P.S*w; c.beginPath(); c.moveTo(st.x,st.y); c.quadraticCurveTo(mid.x,mid.y,orb.x,orb.y); c.stroke(); } c.restore();
+        for(let m=0;m<3;m++){ const q=((t/450)+m/3+s*0.13)%1, p=B(q); OWN.star(c,p.x,p.y,P.S*0.3*(1-q*0.6)*a,OWN.rgb(OWN.mix(gold,grey,q),0.95),t/40+m+s); } }
+      /* Hastur gathers the stolen light into a pale orb over its hood */
+      const og=OWN.FL.up(t,100,560)*(1-OWN.FL.up(t,700,900)); if(og>0){ atGlowA(c,orb.x,orb.y,P.S*(0.6+1.4*og),[230,220,170],0.7*og); c.save(); c.globalAlpha=og; c.fillStyle=OWN.rg(c,orb.x,orb.y,0,P.S*0.6*og+1,[[0,"#fffbea"],[0.6,"rgba(225,215,170,.9)"],[1,"rgba(170,165,150,0)"]],-P.S*0.15,-P.S*0.15); c.beginPath(); c.arc(orb.x,orb.y,P.S*0.6*og+1,0,7); c.fill(); c.restore(); }
+      if(t<380) return; const k=OWN.FL.up(t,380,620), al=1-OWN.FL.up(t,780,900);
+      /* the last of the foe's light snuffs out in a shrinking ring, a grey veil drops over it and smoke curls up as from a blown-out candle */
+      const sn=OWN.FL.up(t,380,560); if(sn<1){ c.strokeStyle=OWN.rgb([255,230,160],0.9*(1-sn)); c.lineWidth=P.S*0.2*(1-sn)+1; c.beginPath(); c.arc(fx,fy,P.R*(1.6-1.4*eo(sn)),0,7); c.stroke(); }
+      c.fillStyle=OWN.rg(c,fx,fy,P.R*0.2,P.R*1.4,[[0,`rgba(95,95,110,${0.42*k*al})`],[1,"rgba(80,80,95,0)"]]); c.beginPath(); c.ellipse(fx,fy,P.R*1.4,P.R*1.45,0,0,7); c.fill();
+      for(let i=0;i<6;i++){ const q=((t-380)/520+i/6)%1; PF(fx+(atH(i*3)-0.5)*P.R*1.2+Math.sin(t/120+i)*P.S*0.4,fy-P.R*0.2-q*P.R*1.8,P.S*(0.35+0.6*q),0.45*al*Math.sin(Math.PI*q),grey); }
+      for(let i=0;i<12;i++){ const q=((t-380)/600+atH(i*5))%1; c.fillStyle=OWN.rgb([175,175,185],0.8*al*(1-q)); c.beginPath(); c.arc(fx+(atH(i*3)-0.5)*P.R*1.8+Math.sin(t/90+i)*P.S*0.2,fy-P.R*0.8+q*P.R*1.6,P.S*0.06,0,7); c.fill(); }
+      for(let i=0;i<3;i++){ const q=((t-380)/400+i/3)%1; c.strokeStyle=OWN.rgb([130,130,145],0.6*al*(1-q)); c.lineWidth=2.5; c.beginPath(); c.arc(fx,fy,P.R*(1.4-0.7*q),0,7); c.stroke(); }
+      OWN.SS.squint(c,P,al*k); } },
+  /* Hastur raises its sigil in burning yellow inside a ring of runes and stamps it on the foe on the hit; the mark flares with rays, shock rings and flames, then smoulders on the foe's body */
+  "Yellow Mark":{ col:[255, 220, 60], atk:(t)=>({f:0,pose:t<380?"cast":t<640?"push":null,lift:-10*Math.sin(Math.PI*Math.min(1,t/640))}),
+    draw(c,PF,P,t,x){ const top=x.self.top||OWN.pt(x.self,P.tg,[0.5,0]), yel=[255,220,60], outer=OWN.rgb([255,190,40],0.95), inner=OWN.rgb([255,250,200],0.98), home={x:top.x,y:top.y-P.R*0.8}, fx=P.tg.x, fy=P.tg.y-P.R*0.05;
+      /* a ring of runes turns round the sigil while it burns into being over Hastur, with yellow sparks spiralling in */
+      const runes=(x0,y0,r,al,rot)=>{ if(al<=0) return; c.save(); c.globalAlpha*=al; c.translate(x0,y0); c.rotate(rot); c.strokeStyle=OWN.rgb(yel,0.85); c.lineWidth=P.S*0.06; c.lineCap="round"; c.shadowColor=OWN.rgb(yel,1); c.shadowBlur=P.S*0.3;
+        c.beginPath(); c.arc(0,0,r,0,7); c.stroke(); c.beginPath(); c.arc(0,0,r*1.18,0,7); c.stroke();
+        for(let i=0;i<12;i++){ const a=i/12*Math.PI*2, m=r*1.09; c.save(); c.rotate(a); c.translate(m,0); c.beginPath(); if(i%3===0){ c.moveTo(-r*0.05,-r*0.05); c.lineTo(r*0.05,r*0.05); c.moveTo(r*0.05,-r*0.05); c.lineTo(-r*0.05,r*0.05); } else if(i%3===1){ c.arc(0,0,r*0.04,0,7); } else { c.moveTo(0,-r*0.06); c.lineTo(0,r*0.06); } c.stroke(); c.restore(); } c.restore(); };
+      if(t<300){ const e=eo(t/300); atGlowA(c,home.x,home.y,P.R*(0.6+0.9*e),[255,210,80],0.6*e); runes(home.x,home.y,P.R*0.75*e,e,t/300); OWN.CH.sigil(c,home.x,home.y,P.R*0.55*e,yel,e,t);
+        for(let i=0;i<10;i++){ const q=((t/260)+i/10)%1, an=i/10*7+t/120, r=P.R*1.6*(1-q); OWN.star(c,home.x+Math.cos(an)*r,home.y+Math.sin(an)*r,P.S*0.2*q,OWN.rgb(yel,0.95),t/40+i); } return; }
+      const k=OWN.FL.up(t,300,380), ek=eo(k), p={x:home.x+(fx-home.x)*ek,y:home.y+(fy-home.y)*ek};
+      if(k<1){ for(let g=3;g>=1;g--){ const kq=Math.max(0,ek-g*0.12); OWN.CH.sigil(c,home.x+(fx-home.x)*kq,home.y+(fy-home.y)*kq,P.R*(0.55+0.3*kq),yel,0.25,t); } runes(p.x,p.y,P.R*(0.75+0.3*k),1,t/300); OWN.CH.sigil(c,p.x,p.y,P.R*(0.55+0.3*k),yel,1,t); return; }
+      const q=OWN.FL.up(t,380,900), b=OWN.FL.up(t,380,480), al=1-OWN.FL.up(t,800,900);
+      /* the stamp lands: a flash, rays and two shock rings, yellow flames lick round the mark, and it shrinks into a brand that smoulders on the foe */
+      c.save(); c.globalCompositeOperation="lighter"; atGlowA(c,fx,fy,P.R*(1+1.2*(1-q)),[255,210,80],0.9*(1-q*0.7)); atGlowA(c,fx,fy,P.R*0.7,[255,250,220],0.9*(1-b));
+      for(let i=0;i<12;i++){ const an=i/12*Math.PI*2+0.1; OWN.FL.ray(c,fx,fy,fx+Math.cos(an)*P.R*(1+1.4*b),fy+Math.sin(an)*P.R*(1+1.4*b),P.S*0.12,P.S*0.02,[255,225,90],1-b); } c.restore();
+      for(let j=0;j<2;j++){ const r=OWN.FL.up(t,380+j*70,700+j*70); if(r>0&&r<1) OWN.CH.ring(c,fx,fy,P.R*(0.7+1.6*eo(r)),P.S*0.14*(1-r)+1,yel,0.85*(1-r)); }
+      for(let i=0;i<9;i++){ const an=i/9*Math.PI*2, h=(0.6+0.4*Math.sin(t/50+i*2))*(1-q*0.7)*al, rr=P.R*(0.85-0.3*q); OWN.flame(c,fx+Math.cos(an)*rr,fy+Math.sin(an)*rr*0.9,P.S*0.38*h+1,an+Math.PI,outer,inner,t+i*30); }
+      const sr=P.R*(0.85-0.35*eo(q)); runes(fx,fy,sr*1.25,(1-q)*al,-t/250); OWN.CH.sigil(c,fx,fy,sr,yel,al*(0.75+0.25*Math.sin(t/45)),t);
+      for(let i=0;i<10;i++){ const f=((t-380)/450+atH(i*5))%1; c.fillStyle=OWN.rgb(OWN.mix([255,240,150],[255,150,40],f),0.9*al*(1-f)); c.beginPath(); c.arc(fx+(atH(i*3)-0.5)*P.R*1.2+Math.sin(t/70+i)*P.S*0.1,fy-f*P.R*1.6,P.S*0.07,0,7); c.fill(); }
+      for(let i=0;i<5;i++){ const f=((t/500)+i/5)%1; PF(fx+(atH(i*3)-0.5)*P.R*0.8,fy-P.R*(0.3+1.1*f),P.S*(0.25+0.4*f),0.35*(1-f)*al,[130,120,110]); } } }
+};
+OWN.flashFx=(c,t,x,o)=>{ OWN.twoPass(c,x,(cc,PF)=>{ const c=cc; const P=OWN.cx(x,{at:[0.9,0.5]}); P.S*=2.8; OWN.GU.d=P.d; const col=o.col||[255,240,180], src=x.self.center||P.o0;
+    /* every flash builds a soft aura of its own colour round the Snabit with motes rising, and lands with a bloom, a burst of sparkles and a soft ring (Gid, 19 Nov 2026: bigger, more effects) */
+    if(t<430){ const k=Math.min(1,t/380), fade=t>380?1-(t-380)/50:1; for(let i=0;i<7;i++){ const an=i/7*7+t/220; PF(src.x+Math.cos(an)*P.R*(0.6+0.5*k),src.y+Math.sin(an)*P.R*(0.5+0.4*k),P.R*(0.22+0.12*k),0.22*k*fade,col); }
+      for(let i=0;i<7;i++){ const q=((t/420)+i/7)%1; OWN.star(c,src.x+(atH(i*3)-0.5)*P.R*1.6,src.y+P.R*0.7-q*P.R*1.9,P.S*0.07*(1-q)*k,OWN.rgb(OWN.mix(col,[255,255,255],0.5),0.95*fade),t/50+i); } }
+    if(t>=380){ const k=OWN.FL.up(t,380,860), al=1-k; for(let i=0;i<8;i++){ const an=i/8*7; PF(P.tg.x+Math.cos(an)*P.R*(0.2+0.6*k),P.tg.y+Math.sin(an)*P.R*0.5*(0.2+0.6*k),P.R*(0.4+0.4*k),0.5*al,col); }
+      for(let i=0;i<12;i++){ const an=i/12*Math.PI*2+0.2, v=P.R*(0.4+1.6*eo(k)); OWN.star(c,P.tg.x+Math.cos(an)*v,P.tg.y+Math.sin(an)*v*0.8,P.S*(0.12+0.06*(i%2))*al,OWN.rgb(OWN.mix(col,[255,255,255],0.45),0.95),k*4+i); }
+      OWN.CH.ring(c,P.tg.x,P.tg.y,P.R*(0.6+1.3*eo(k)),P.S*0.12*al+1,col,0.8*al); }
+    o.draw(c,PF,P,t,x); }); };
+(()=>{ if(typeof ANIM==="undefined"||!ANIM.flash) return; const K=ANIM.flash, fx1=K.fx, atk1=K.atk;
+  K.atk=function(t,pos){ const b=atk1.call(this,t,pos), o=pos&&pos.name&&OWN_FLASH[pos.name], e=o&&o.atk&&o.atk(t,pos); return e?{...b,...e}:b; };
+  K.fx=function(c,t,x){ const o=x&&OWN_FLASH[x.name]||null; if(!o) return fx1.call(this,c,t,x); try{ OWN.flashFx(c,t,x,o); }catch(e){ if(!OWN.err){ OWN.err=1; console.error("OWN flash",x.name,e&&e.message); } } }; })();
 
 /* ---------- chatter, own versions (19 Nov 2026): every family sent the same white jaw-shaped outlines, so each one now sends a thing
    of its own (wind-up teeth, cursing bubbles, winged notes, a clock chime, a sour note, a falling speaker, iron filings, a sound hawk,
