@@ -446,7 +446,7 @@ OWN.hornFx=(c,t,x,o)=>{ const s=x.self, tg=x.target, R=tg.r||30, S=OWN.size(x), 
 })();
 
 /* a family with its own bolt draws its own landing, so the stock hit lines stay off and the burst stays small */
-function OWN_OWNS(S){ if(!(S&&S.anim&&S.spec)) return false; const k=S.anim.kind, f=S.spec.family; return !!(k==="bolt"&&OWN_BOLT2[f]||k==="steam"&&OWN_STEAM[f]||k==="trumpet"&&typeof OWN_HORN2!=="undefined"&&OWN_HORN2[f]||k==="propthrow"&&typeof OWN_PROP!=="undefined"&&OWN_PROP[f]||(k==="meteor"||k==="icefall")&&typeof OWN_METEOR!=="undefined"&&OWN_METEOR[S.anim.name]||k==="drool"&&typeof OWN_DROOL!=="undefined"&&OWN_DROOL[S.anim.name]||k==="gust"&&typeof OWN_GUST!=="undefined"&&OWN_GUST[S.anim.name]||k==="wave"&&typeof OWN_WAVE!=="undefined"&&OWN_WAVE[S.anim.name]||k==="sandspray"&&typeof OWN_SAND!=="undefined"&&OWN_SAND[S.anim.name]||k==="chatter"&&typeof OWN_CHAT!=="undefined"&&OWN_CHAT[S.anim.name]||k==="wingstorm"&&typeof OWN_WING!=="undefined"&&OWN_WING[S.anim.name]||k==="flash"&&typeof OWN_FLASH!=="undefined"&&OWN_FLASH[S.anim.name]||k==="beam"&&typeof OWN_BEAM!=="undefined"&&OWN_BEAM[S.anim.name]); }
+function OWN_OWNS(S){ if(!(S&&S.anim&&S.spec)) return false; const k=S.anim.kind, f=S.spec.family; return !!(k==="bolt"&&OWN_BOLT2[f]||k==="steam"&&OWN_STEAM[f]||k==="trumpet"&&typeof OWN_HORN2!=="undefined"&&OWN_HORN2[f]||k==="propthrow"&&typeof OWN_PROP!=="undefined"&&OWN_PROP[f]||(k==="meteor"||k==="icefall")&&typeof OWN_METEOR!=="undefined"&&OWN_METEOR[S.anim.name]||k==="drool"&&typeof OWN_DROOL!=="undefined"&&OWN_DROOL[S.anim.name]||k==="gust"&&typeof OWN_GUST!=="undefined"&&OWN_GUST[S.anim.name]||k==="wave"&&typeof OWN_WAVE!=="undefined"&&OWN_WAVE[S.anim.name]||k==="sandspray"&&typeof OWN_SAND!=="undefined"&&OWN_SAND[S.anim.name]||k==="chatter"&&typeof OWN_CHAT!=="undefined"&&OWN_CHAT[S.anim.name]||k==="wingstorm"&&typeof OWN_WING!=="undefined"&&OWN_WING[S.anim.name]||k==="flash"&&typeof OWN_FLASH!=="undefined"&&OWN_FLASH[S.anim.name]||k==="beam"&&typeof OWN_BEAM!=="undefined"&&OWN_BEAM[S.anim.name]||k==="volley"&&typeof OWN_VOL!=="undefined"&&OWN_VOL[S.anim.name]); }
 
 /* ---------- bolt, second pass continued: the other 25 families ---------- */
 OWN.go=(a,b,k,arc=0,off=0)=>lerpP(a,b,k,arc,off);
@@ -3375,6 +3375,343 @@ OWN.beamFx=(c,t,x,o)=>{ OWN.twoPass(c,x,(cc,PF)=>{ const c=cc; const P=OWN.cx(x,
 (()=>{ if(typeof ANIM==="undefined"||!ANIM.beam) return; const K=ANIM.beam, fx1=K.fx, atk1=K.atk;
   K.atk=function(t,pos){ const b=atk1.call(this,t,pos), o=pos&&pos.name&&OWN_BEAM[pos.name], e=o&&o.atk&&o.atk(t,pos); return e?{...b,...e}:b; };
   K.fx=function(c,t,x){ const o=x&&OWN_BEAM[x.name]||null; if(!o) return fx1.call(this,c,t,x); try{ OWN.beamFx(c,t,x,o); }catch(e){ if(!OWN.err){ OWN.err=1; console.error("OWN beam",x.name,e&&e.message); } } }; })();
+
+/* ---------- volley, own versions (19 Nov 2026): every family threw the same row of coloured dots, so each one now fires its own stuff from
+   its own body part along its own path: bubbles from Pinch's mouth, pixels from Antik's screen, ink balls from under Squib, potion from
+   Fizz's neck, a tea party from Teep's spout, goo from Glop's top, fire and sparks from Wick's flame, dreams, feathers and fluff from
+   Snooze, gravel kicked and whirled by Cobble, leaves, paper stars, snow, notes, toast, scrap, sweets, soap, sprinkles, pages and words,
+   gumballs, cards, bouncing balls, feathers, starlight, pumpkin pips, pearls, seeds, spores, brine and Yog's rings and planets.
+   Every piece is down by contact (560 ms) and the move clears by 980. ---------- */
+OWN.VY={ up:(t,a,b)=>Math.max(0,Math.min(1,(t-a)/(b-a))), A:(t)=>1-Math.max(0,Math.min(1,(t-860)/120)),
+  /* fires o.n pieces from o.src(i) to o.dst(i), launched evenly between o.a and o.b, each flying o.tr ms on an arc of height o.arc(i)
+     with an optional sideways wave; o.item draws a piece in flight, o.land draws its landing for o.ld ms */
+  run(c,P,t,o){ const n=o.n, tr=o.tr||200, ld=o.ld||320;
+    for(let i=0;i<n;i++){ const li=o.a+(o.b-o.a)*(n>1?i/(n-1):0), q=(t-li)/tr, s0=o.src(i,t), d0=o.dst(i);
+      const at=(qq)=>{ const h=o.arc?o.arc(i):0, w=o.wob?o.wob(i):0, dx=d0.x-s0.x, dy=d0.y-s0.y, L=Math.hypot(dx,dy)||1, ww=w*Math.sin(qq*Math.PI*(o.wf||2)+i);
+        if(o.hop){ const nb=o.hop, hh=o.hopH?o.hopH(i):P.R*0.8, ph=(qq*nb)%1, dec=1-Math.floor(qq*nb)/nb*0.5; return {x:s0.x+dx*qq,y:s0.y+(d0.y-s0.y)*qq-Math.sin(Math.PI*ph)*hh*dec}; }
+        return {x:s0.x+dx*qq-dy/L*ww,y:s0.y+dy*qq+dx/L*ww-h*4*qq*(1-qq)}; };
+      if(q>0&&q<=1){ const qe=o.ease?o.ease(q):q, p=at(qe), p2=at(Math.max(0,qe-0.04)), ang=Math.atan2(p.y-p2.y,p.x-p2.x); if(o.trail) o.trail(c,p,p2,i,q,at,qe); o.item(c,p,i,q,ang); }
+      else if(q>1&&o.land){ const k=(t-li-tr)/ld; if(k<1) o.land(c,at(1),i,k); } } },
+  pix(c,x,y,s,col,al=1){ if(al<=0) return; c.save(); c.globalAlpha*=al; c.fillStyle=OWN.rgb(col); c.fillRect(x-s/2,y-s/2,s,s); c.fillStyle="rgba(255,255,255,.55)"; c.fillRect(x-s/2,y-s/2,s,s*0.25); c.fillRect(x-s/2,y-s/2,s*0.25,s); c.fillStyle="rgba(0,0,0,.18)"; c.fillRect(x-s/2,y+s*0.25,s,s*0.25); c.restore(); },
+  cup(c,x,y,s,rot,col,al=1){ if(al<=0) return; c.save(); c.globalAlpha*=al; c.translate(x,y); c.rotate(rot); c.fillStyle=OWN.lg(c,-s,0,s,0,[[0,"#ffffff"],[0.6,"#f4eef6"],[1,"#d8d0e0"]]); c.beginPath(); c.moveTo(-s*0.8,-s*0.5); c.lineTo(s*0.8,-s*0.5); c.quadraticCurveTo(s*0.75,s*0.6,0,s*0.6); c.quadraticCurveTo(-s*0.75,s*0.6,-s*0.8,-s*0.5); c.fill();
+    c.strokeStyle="#e8e0ee"; c.lineWidth=s*0.16; c.beginPath(); c.arc(s*0.85,0,s*0.28,-1.4,1.4); c.stroke(); c.fillStyle=OWN.rgb(col); c.beginPath(); c.ellipse(0,-s*0.48,s*0.72,s*0.16,0,0,7); c.fill(); c.fillStyle="#ff8fb8"; c.beginPath(); c.arc(-s*0.3,s*0.05,s*0.12,0,7); c.arc(s*0.25,s*0.12,s*0.1,0,7); c.fill();
+    c.fillStyle="#f2e6c8"; c.beginPath(); c.ellipse(0,s*0.62,s*0.95,s*0.14,0,0,7); c.fill(); c.restore(); },
+  cube(c,x,y,s,rot,al=1){ if(al<=0) return; c.save(); c.globalAlpha*=al; c.translate(x,y); c.rotate(rot); c.fillStyle=OWN.lg(c,-s,-s,s,s,[[0,"#ffffff"],[1,"#e2e6ee"]]); OWN.rr(c,-s/2,-s/2,s,s,s*0.15); c.fill(); c.fillStyle="rgba(180,190,210,.5)"; for(let i=0;i<5;i++) c.fillRect(-s*0.35+atH(i)*s*0.6,-s*0.35+atH(i*3)*s*0.6,s*0.08,s*0.08); c.restore(); },
+  shuriken(c,x,y,s,rot,col,al=1){ if(al<=0) return; c.save(); c.globalAlpha*=al; c.translate(x,y); c.rotate(rot); for(let i=0;i<4;i++){ c.rotate(Math.PI/2); c.fillStyle=i%2?OWN.rgb(col):OWN.rgb(OWN.mix(col,[255,255,255],0.45)); c.beginPath(); c.moveTo(0,0); c.lineTo(s*0.25,-s*0.25); c.lineTo(s,0); c.closePath(); c.fill(); c.fillStyle="rgba(0,0,0,.1)"; c.beginPath(); c.moveTo(0,0); c.lineTo(s,0); c.lineTo(s*0.25,s*0.12); c.closePath(); c.fill(); } c.fillStyle="#fff"; c.beginPath(); c.arc(0,0,s*0.12,0,7); c.fill(); c.restore(); },
+  toast(c,x,y,s,rot,al=1,bite=false){ if(al<=0) return; c.save(); c.globalAlpha*=al; c.translate(x,y); c.rotate(rot); c.fillStyle="#b4783a"; c.beginPath(); c.moveTo(-s*0.8,s*0.8); c.lineTo(-s*0.8,-s*0.3); c.arc(-s*0.35,-s*0.35,s*0.45,Math.PI,Math.PI*1.75); c.arc(s*0.35,-s*0.35,s*0.45,Math.PI*1.25,0); c.lineTo(s*0.8,s*0.8); c.closePath(); c.fill();
+    c.fillStyle=OWN.lg(c,0,-s,0,s,[[0,"#f6d9a0"],[1,"#e4b46e"]]); c.beginPath(); c.moveTo(-s*0.65,s*0.68); c.lineTo(-s*0.65,-s*0.28); c.arc(-s*0.32,-s*0.32,s*0.33,Math.PI,Math.PI*1.75); c.arc(s*0.32,-s*0.32,s*0.33,Math.PI*1.25,0); c.lineTo(s*0.65,s*0.68); c.closePath(); c.fill(); c.fillStyle="#ffe680"; OWN.rr(c,-s*0.25,-s*0.1,s*0.5,s*0.38,s*0.08); c.fill(); c.restore(); },
+  crumb(c,x,y,s,rot,col,al=1){ if(al<=0) return; c.save(); c.globalAlpha*=al; c.translate(x,y); c.rotate(rot); c.fillStyle=OWN.rgb(col); c.beginPath(); for(let i=0;i<6;i++){ const a=i/6*Math.PI*2, r=s*(0.7+0.3*atH(i+Math.round(s)));
+      c.lineTo(Math.cos(a)*r,Math.sin(a)*r); } c.closePath(); c.fill(); c.fillStyle="rgba(255,255,255,.35)"; c.beginPath(); c.arc(-s*0.25,-s*0.25,s*0.25,0,7); c.fill(); c.restore(); },
+  nut(c,x,y,s,rot,al=1){ if(al<=0) return; c.save(); c.globalAlpha*=al; c.translate(x,y); c.rotate(rot); c.fillStyle=OWN.lg(c,-s,-s,s,s,[[0,"#e8edf2"],[0.5,"#a9b3bd"],[1,"#6c7680"]]); c.beginPath(); for(let i=0;i<6;i++){ const a=i/6*Math.PI*2; c.lineTo(Math.cos(a)*s,Math.sin(a)*s); } c.closePath(); c.fill(); c.fillStyle="#5a626c"; c.beginPath(); c.arc(0,0,s*0.42,0,7); c.fill(); c.restore(); },
+  bolt(c,x,y,s,rot,al=1){ if(al<=0) return; c.save(); c.globalAlpha*=al; c.translate(x,y); c.rotate(rot); c.fillStyle=OWN.lg(c,0,-s*0.2,0,s*0.2,[[0,"#e6ebf0"],[1,"#7f8a95"]]); c.fillRect(-s*0.2,-s*0.15,s*1.1,s*0.3); c.strokeStyle="rgba(90,100,110,.6)"; c.lineWidth=1; for(let i=0;i<5;i++){ c.beginPath(); c.moveTo(s*(0.05+i*0.17),-s*0.15); c.lineTo(s*(0.12+i*0.17),s*0.15); c.stroke(); }
+    c.fillStyle=OWN.lg(c,-s,-s,-s*0.2,s,[[0,"#f0f4f8"],[1,"#8a949e"]]); c.fillRect(-s*0.55,-s*0.38,s*0.36,s*0.76); c.restore(); },
+  sprinkle(c,x,y,s,rot,col,al=1){ if(al<=0) return; c.save(); c.globalAlpha*=al; c.translate(x,y); c.rotate(rot); c.fillStyle=OWN.rgb(col); OWN.rr(c,-s,-s*0.32,s*2,s*0.64,s*0.32); c.fill(); c.fillStyle="rgba(255,255,255,.55)"; OWN.rr(c,-s*0.8,-s*0.25,s*1.4,s*0.18,s*0.09); c.fill(); c.restore(); },
+  word(c,x,y,s,rot,txt,col,al=1){ if(al<=0) return; c.save(); c.globalAlpha*=al; c.translate(x,y); c.rotate(rot); c.font=`900 ${Math.round(s)}px Georgia, serif`; c.textAlign="center"; c.textBaseline="middle"; c.shadowColor=OWN.rgb(col,1); c.shadowBlur=s*0.5; c.lineJoin="round"; c.lineWidth=s*0.18; c.strokeStyle="#fffaf0"; c.strokeText(txt,0,0);
+    c.shadowBlur=0; c.fillStyle=OWN.lg(c,0,-s*0.5,0,s*0.5,[[0,OWN.rgb(OWN.mix(col,[255,255,255],0.3))],[1,OWN.rgb(OWN.mix(col,[40,20,60],0.3))]]); c.fillText(txt,0,0); c.restore(); },
+  seed(c,x,y,s,rot,col,al=1){ if(al<=0) return; c.save(); c.globalAlpha*=al; c.translate(x,y); c.rotate(rot); c.fillStyle=OWN.rg(c,0,0,0,s,[[0,OWN.rgb(OWN.mix(col,[255,255,255],0.4))],[1,OWN.rgb(col)]],-s*0.3,-s*0.2); c.beginPath(); c.ellipse(0,0,s,s*0.55,0,0,7); c.fill(); c.fillStyle="rgba(255,255,255,.5)"; c.beginPath(); c.ellipse(-s*0.3,-s*0.18,s*0.35,s*0.12,-0.2,0,7); c.fill(); c.restore(); },
+  sprout(c,x,y,s,k,al=1){ if(al<=0||k<=0) return; c.save(); c.globalAlpha*=al; c.strokeStyle="#5aa84a"; c.lineWidth=Math.max(1.5,s*0.15); c.lineCap="round"; c.beginPath(); c.moveTo(x,y); c.quadraticCurveTo(x+s*0.2,y-s*0.6*k,x,y-s*1.1*k); c.stroke();
+    c.fillStyle="#7ccc5c"; for(const sd of [-1,1]){ c.beginPath(); c.ellipse(x+sd*s*0.4*k,y-s*1.1*k,s*0.45*k,s*0.22*k,sd*0.5,0,7); c.fill(); } c.restore(); },
+  planet(c,x,y,s,rot,col,al=1){ if(al<=0) return; c.save(); c.globalAlpha*=al; atGlowA(c,x,y,s*2,col,0.45); c.fillStyle=OWN.rg(c,x,y,0,s,[[0,OWN.rgb(OWN.mix(col,[255,255,255],0.55))],[1,OWN.rgb(col)]],-s*0.35,-s*0.35); c.beginPath(); c.arc(x,y,s,0,7); c.fill();
+    c.strokeStyle=OWN.rgb(OWN.mix(col,[255,255,255],0.6),0.9); c.lineWidth=s*0.18; c.beginPath(); c.ellipse(x,y,s*1.7,s*0.45,rot,0.1,Math.PI-0.1); c.stroke(); OWN.CH.shine(c,x-s*0.4,y-s*0.45,s*0.3,s*0.13,0.8,-0.5); c.restore(); },
+  halo(c,x,y,s,rot,col,al=1){ if(al<=0) return; c.save(); c.globalAlpha*=al; c.translate(x,y); c.rotate(rot); c.shadowColor=OWN.rgb(col,1); c.shadowBlur=s*0.6; c.strokeStyle=OWN.rgb(col,0.95); c.lineWidth=s*0.28; c.beginPath(); c.ellipse(0,0,s,s*0.4,0,0,7); c.stroke(); c.shadowBlur=0; c.strokeStyle="rgba(255,255,255,.9)"; c.lineWidth=s*0.09; c.beginPath(); c.ellipse(0,0,s,s*0.4,0,Math.PI,Math.PI*1.8); c.stroke(); c.restore(); },
+  hitPop(c,p,s,col,k){ if(k>=1) return; OWN.pop(c,p.x,p.y,s,col,k,7); },
+  stick(c,P,i,k,draw){ const a=atH(i*7)*Math.PI*2, r=P.R*(0.2+0.55*atH(i*3)), x0=P.tg.x+Math.cos(a)*r, y0=P.tg.y+Math.sin(a)*r*0.9, f=k<0.75?1:1-(k-0.75)/0.25; draw(x0,y0+ (k>0.75?(k-0.75)*P.R*1.2:0),f); }
+};
+const VYD=(P,i,sp=0.7)=>({x:P.tg.x+(atH(i*5)-0.5)*P.R*sp,y:P.tg.y+(atH(i*9)-0.5)*P.R*sp});
+const OWN_VOL={
+  /* Pinch clacks its claws and blows a stream of froth bubbles from its mouth that wobble over and pop on the foe in little splashes */
+  "Bubble Burst":{ col:[170,225,255], atk:(t)=>({f:0,pose:t<700?"push":null,sx:t<700?1+0.05*Math.sin(t/35):1}),
+    draw(c,PF,P,t,x){ const V=OWN.VY, m=x.self.mouth||P.o0, al=V.A(t); for(const h of (x.self.hands||[])){ const k=Math.abs(Math.sin(t/60)); c.strokeStyle=OWN.rgb([255,255,255],0.6*al*(t<700?1:0)); c.lineWidth=2; c.beginPath(); c.arc(h.x,h.y,P.S*(0.3+0.2*k),-1,1); c.stroke(); }
+      V.run(c,P,t,{n:14,a:110,b:360,tr:200,src:()=>m,dst:i=>VYD(P,i,1.0),arc:i=>P.R*(0.2+0.4*atH(i)),wob:()=>P.S*0.4,wf:3,item:(c,p,i)=>OWN.bubble(c,p.x,p.y,P.S*(0.07+0.07*atH(i*3)),[190,230,255],i%2===0),
+        land:(c,p,i,k)=>{ OWN.pop(c,p.x,p.y,P.S*0.2,[220,245,255],k,8); for(let j=0;j<4;j++){ const a=j/4*Math.PI*2+i; OWN.drop(c,p.x+Math.cos(a)*P.S*0.6*k,p.y+Math.sin(a)*P.S*0.6*k,P.S*0.08*(1-k),a,[150,210,255]); } }}); } },
+  /* Antik's screen fills with pixels, and coloured pixel blocks shoot out in stepped lines, then shatter into smaller pixels on the foe with a glitch */
+  "Pixel Shot":{ col:[120,255,170], atk:(t)=>({f:0,pose:t<700?"push":null}),
+    draw(c,PF,P,t,x){ const V=OWN.VY, scr=x.self.center||P.o0, al=V.A(t), cols=[[255,90,110],[90,220,140],[90,160,255],[255,220,80],[200,120,255]];
+      if(t<500) for(let i=0;i<9;i++) if(Math.floor(t/60+i*1.7)%3) V.pix(c,scr.x+((i%3)-1)*P.S*0.22,scr.y+(Math.floor(i/3)-1)*P.S*0.22,P.S*0.18,cols[(i+Math.floor(t/90))%5],0.8*al);
+      V.run(c,P,t,{n:10,a:120,b:360,tr:190,src:()=>scr,dst:i=>VYD(P,i,1.0),ease:q=>Math.floor(q*8)/8+(q*8%1)*0.3/8,
+        trail:(c,p,p2,i,q,at,qe)=>{ for(let j=1;j<4;j++){ const pp=at(Math.max(0,qe-j*0.07)); V.pix(c,pp.x,pp.y,P.S*(0.3-j*0.06),cols[i%5],0.5*(1-j/4)); } },
+        item:(c,p,i)=>V.pix(c,p.x,p.y,P.S*0.34,cols[i%5]),
+        land:(c,p,i,k)=>{ for(let j=0;j<6;j++){ const a=j/6*Math.PI*2+i; V.pix(c,p.x+Math.cos(a)*P.S*0.9*k,p.y+Math.sin(a)*P.S*0.9*k+k*k*P.S*0.6,P.S*0.14*(1-k*0.6),cols[(i+j)%5],1-k); } }});
+      if(t>380&&t<860){ const g=Math.floor(t/45)%4; if(g<2){ c.save(); c.globalAlpha=0.4*al; for(let j=0;j<4;j++){ c.fillStyle=OWN.rgb(cols[(j+g)%5]); c.fillRect(P.tg.x-P.R+atH(j*3+g)*P.R*1.4,P.tg.y-P.R*0.8+atH(j*5+g)*P.R*1.5,P.R*(0.3+0.4*atH(j)),P.S*0.12); } c.restore(); } } } },
+  /* Squib squeezes and fires glossy ink balls from under its body in high arcs; each lands as an ink blot that drips */
+  "Ink Cannon":{ col:[60,40,90], atk:(t)=>{ const q=(t%110)/110; return t<620?{f:0,pose:"push",sy:1-0.1*Math.sin(Math.PI*q),sx:1+0.08*Math.sin(Math.PI*q)}:{f:0}; },
+    draw(c,PF,P,t,x){ const V=OWN.VY, und=OWN.pt(x.self,P.tg,[0.6,0.85]), al=V.A(t);
+      V.run(c,P,t,{n:6,a:100,b:340,tr:220,src:()=>und,dst:i=>VYD(P,i,1.1),arc:i=>P.R*(1.2+0.4*atH(i)),item:(c,p,i,q,ang)=>{ OWN.glob(c,p.x,p.y,P.S*0.22,t+i*30,[50,35,80],ang,0.3,i); PF(p.x-Math.cos(ang)*P.S*0.3,p.y-Math.sin(ang)*P.S*0.3,P.S*0.17,0.35,[60,50,90]); },
+        ld:520,land:(c,p,i,k)=>OWN.splat(c,p.x,p.y,P.S*0.38,[45,30,75],Math.min(1,k*4),i,3)}); } },
+  /* Fizz pops its cork and flings blobs of bright potion in arcs; each splashes into a coloured puff with bubbles on the foe */
+  "Beaker Splash":{ col:[150,255,170], atk:(t)=>({f:0,pose:t<700?"push":null,rot:Math.sin(t/50)*0.06}),
+    draw(c,PF,P,t,x){ const V=OWN.VY, top=x.self.top||P.o0, al=V.A(t), cols=[[120,240,140],[255,120,200],[140,180,255],[255,210,90]];
+      if(t<240){ const k=V.up(t,0,120); OWN.drawProp(c,x,"cork",top.x-P.d*P.S*0.6*k,top.y-P.S*1.6*Math.sin(Math.PI*Math.min(1,t/240)),t/30,P.S*0.35,1); }
+      V.run(c,P,t,{n:8,a:110,b:350,tr:220,src:()=>top,dst:i=>VYD(P,i,1.0),arc:i=>P.R*(0.8+0.6*atH(i)),item:(c,p,i,q,ang)=>OWN.glob(c,p.x,p.y,P.S*0.25,t+i*20,cols[i%4],ang,0.5,i),
+        ld:400,land:(c,p,i,k)=>{ PF(p.x,p.y,P.S*(0.15+0.25*k),0.5*(1-k),cols[i%4]); for(let j=0;j<3;j++) OWN.bubble(c,p.x+(j-1)*P.S*0.35,p.y-k*P.S*1.2-j*P.S*0.2,P.S*0.1*(1-k*0.5),cols[i%4],false); }}); } },
+  /* Teep's lid hops and a tea party flies out of its spout: little teacups full of tea and sugar cubes loop over and land on the foe with a splash of tea */
+  "Tea Party":{ col:[200,140,80], atk:(t)=>({f:0,pose:t<700?"push":null,rot:t<700?0.12*Math.sin(Math.min(1,t/150)*Math.PI/2):0}),
+    draw(c,PF,P,t,x){ const V=OWN.VY, sp=OWN.pt(x.self,P.tg,[0.95,0.45]), top=x.self.top||P.o0, al=V.A(t); PF(top.x,top.y-P.S*0.3-((t/6)%(P.S*1.4)),P.S*0.35,0.4*al,[245,245,250]);
+      V.run(c,P,t,{n:7,a:120,b:350,tr:230,src:()=>sp,dst:i=>VYD(P,i,1.0),arc:i=>P.R*(0.9+0.5*atH(i)),wob:()=>P.S*0.3,item:(c,p,i,q)=>i%3===2?V.cube(c,p.x,p.y,P.S*0.32,q*8+i):V.cup(c,p.x,p.y,P.S*0.32,Math.sin(q*6+i)*0.4,[180,110,60]),
+        ld:360,land:(c,p,i,k)=>{ if(i%3===2){ for(let j=0;j<5;j++){ const a=j/5*Math.PI*2; V.cube(c,p.x+Math.cos(a)*P.S*0.5*k,p.y+Math.sin(a)*P.S*0.5*k,P.S*0.1*(1-k),a,1); } } else { for(let j=0;j<6;j++){ const a=-Math.PI+j/5*Math.PI; OWN.drop(c,p.x+Math.cos(a)*P.S*0.8*k,p.y+Math.sin(a)*P.S*0.8*k+k*k*P.S*0.8,P.S*0.12*(1-k),a,[180,110,60]); } } }});
+      if(t>420) for(let i=0;i<3;i++){ const q=((t-420)/500+i/3)%1; PF(P.tg.x+(i-1)*P.R*0.5,P.head.y-q*P.R*1.2,P.S*0.35,0.4*al*(1-q),[245,245,250]); } } },
+  /* lumps bulge up out of Glop's top and pop off one after another, wobbling through the air and splatting on the foe */
+  "Goo Barrage":{ col:[150,240,120], atk:(t)=>{ const q=(t%90)/90; return t<620?{f:0,pose:"push",sy:1+0.08*Math.sin(Math.PI*q),sx:1-0.06*Math.sin(Math.PI*q)}:{f:0}; },
+    draw(c,PF,P,t,x){ const V=OWN.VY, top=x.self.top||P.o0, al=V.A(t), col=x.body||[150,240,120];
+      for(let i=0;i<3;i++){ const q=((t/90)+i/3)%1; if(t<560) OWN.glob(c,top.x+(i-1)*P.S*0.3,top.y-P.S*0.3*q,P.S*0.2*q,t+i*40,col); }
+      V.run(c,P,t,{n:9,a:100,b:360,tr:210,src:()=>top,dst:i=>VYD(P,i,1.1),arc:i=>P.R*(0.6+0.7*atH(i)),item:(c,p,i,q,ang)=>OWN.glob(c,p.x,p.y,P.S*(0.16+0.07*atH(i)),t+i*20,col,ang,0.45,i),
+        ld:500,land:(c,p,i,k)=>OWN.splat(c,p.x,p.y,P.S*0.3,col,Math.min(1,k*4),i,2)}); } },
+  /* Wick's flame flares and it flicks out a handful of little lit birthday candles; they stick in the foe like candles on a cake,
+     flicker for a moment, then each one bursts in a pop of flame and a puff of smoke (Gid, 20 Nov 2026: no fireballs) */
+  "Candle Burst":{ col:[255,170,70], atk:(t)=>{ const k=Math.floor(Math.max(0,t-100)/70); return t<480?{f:0,pose:k%2?"swipeup":"swipedown",rot:Math.sin(t/30)*0.06}:{f:0}; },
+    draw(c,PF,P,t,x){ const V=OWN.VY, top=x.self.top||P.o0, al=V.A(t), outer=OWN.rgb([255,120,40],0.95), inner=OWN.rgb([255,240,170],0.98), src={x:top.x,y:top.y-P.S*0.3}, cols=[[255,140,180],[130,200,255],[255,215,90],[150,225,140],[200,150,255]];
+      const candle=(cx,cy,s,rot,i,lit,a2,lean=0)=>{ if(a2<=0) return; c.save(); c.globalAlpha*=a2; c.translate(cx,cy); c.rotate(rot); const w=s*0.32, h=s*1.3, cc=cols[i%5];
+        c.fillStyle=OWN.lg(c,-w,0,w,0,[[0,OWN.rgb(OWN.mix(cc,[255,255,255],0.15))],[0.45,OWN.rgb(OWN.mix(cc,[255,255,255],0.55))],[1,OWN.rgb(OWN.mix(cc,[60,40,80],0.2))]]); OWN.rr(c,-w/2,-h,w,h,w*0.35); c.fill();
+        c.strokeStyle="rgba(255,255,255,.75)"; c.lineWidth=Math.max(1,w*0.22); c.save(); c.beginPath(); OWN.rr(c,-w/2,-h,w,h,w*0.35); c.clip(); for(let j=0;j<4;j++){ c.beginPath(); c.moveTo(-w,-h*0.15-j*h*0.25); c.lineTo(w,-h*0.3-j*h*0.25); c.stroke(); } c.restore();
+        c.fillStyle="rgba(255,250,235,.9)"; c.beginPath(); c.ellipse(-w*0.1,-h+w*0.1,w*0.32,w*0.16,0,0,7); c.fill(); c.strokeStyle="#4a3a30"; c.lineWidth=Math.max(1,s*0.05); c.beginPath(); c.moveTo(0,-h); c.lineTo(0,-h-s*0.12); c.stroke();
+        if(lit>0){ const fs=s*0.42*lit*(1+0.12*Math.sin(t/25+i)); OWN.flame(c,0,-h-s*0.12-fs*0.8,fs,Math.PI/2+lean,outer,inner,t+i*40); c.save(); c.globalCompositeOperation="lighter"; atGlowA(c,0,-h-s*0.2-fs*0.6,s*0.7*lit,[255,170,70],0.7); c.restore(); }
+        c.restore(); };
+      c.save(); c.globalCompositeOperation="lighter"; atGlowA(c,src.x,src.y,P.S*(0.6+0.3*Math.sin(t/40)),[255,160,60],0.7*al*(t<480?1:0)); c.restore();
+      V.run(c,P,t,{n:6,a:110,b:330,tr:220,src:()=>src,dst:i=>({x:P.tg.x+(i-2.5)*P.R*0.32,y:P.head.y+P.R*(0.15+0.25*atH(i*7))}),arc:i=>P.R*(0.9+0.4*atH(i)),
+        item:(c,p,i,q,ang)=>candle(p.x,p.y,P.S*0.6,q*Math.PI*2*P.d,i,1,1,-P.d*0.6),
+        ld:430,land:(c,p,i,k)=>{ const rot=(i-2.5)*0.12*P.d; if(k<0.62){ candle(p.x,p.y+P.S*0.3,P.S*0.6,rot,i,1,1); if(k<0.12) OWN.star(c,p.x,p.y,P.S*0.3*(1-k/0.12),"rgba(255,250,220,.95)",i); }
+          else { const b=(k-0.62)/0.38, fy=p.y-P.S*0.3; c.save(); c.globalCompositeOperation="lighter"; atGlowA(c,p.x,fy,P.S*(0.4+0.9*b),[255,150,60],0.9*(1-b)); c.restore();
+            for(let j=0;j<6;j++){ const a=j/6*Math.PI*2+i; OWN.flame(c,p.x+Math.cos(a)*P.S*0.55*b,fy+Math.sin(a)*P.S*0.45*b,P.S*0.2*(1-b),a+Math.PI,outer,inner,t+j*30); } PF(p.x,fy-b*P.S*0.6,P.S*(0.2+0.35*b),0.5*(1-b),[150,140,140]);
+            for(let j=0;j<3;j++){ const a=-Math.PI/2+(j-1)*0.8; OWN.drop(c,p.x+Math.cos(a)*P.S*0.5*b,fy+Math.sin(a)*P.S*0.4*b+b*b*P.S*0.8,P.S*0.08*(1-b),a,cols[i%5]); } } }}); } },
+  /* Wick flicks quick zigzag sparks off its wick, crackling across and popping on the foe in bright little stars */
+  "Spark Flick":{ col:[255,230,120], atk:(t)=>({f:0,pose:t<700?"push":null,rot:t<600?Math.sin(t/30)*0.08:0}),
+    draw(c,PF,P,t,x){ const V=OWN.VY, top=x.self.top||P.o0, src={x:top.x,y:top.y-P.S*0.4};
+      V.run(c,P,t,{n:12,a:100,b:370,tr:150,src:()=>src,dst:i=>VYD(P,i,1.2),arc:i=>P.R*0.3*atH(i),
+        trail:(c,p,p2,i,q,at,qe)=>{ c.strokeStyle="rgba(255,220,120,.9)"; c.lineWidth=P.S*0.06; c.lineCap="round"; c.beginPath(); for(let j=0;j<6;j++){ const pp=at(Math.max(0,qe-j*0.04)); c.lineTo(pp.x+(j%2?1:-1)*P.S*0.12,pp.y+(j%2?-1:1)*P.S*0.1); } c.stroke(); },
+        item:(c,p,i)=>{ c.save(); c.globalCompositeOperation="lighter"; atGlowA(c,p.x,p.y,P.S*0.45,[255,200,80],0.8); c.restore(); OWN.star(c,p.x,p.y,P.S*0.25,"rgba(255,250,220,1)",t/20+i); },
+        land:(c,p,i,k)=>{ OWN.star(c,p.x,p.y,P.S*(0.3+0.5*k),`rgba(255,240,170,${1-k})`,k*3+i); for(let j=0;j<4;j++){ const a=j*1.6+i; OWN.zap(c,p.x,p.y,p.x+Math.cos(a)*P.S*0.7*k,p.y+Math.sin(a)*P.S*0.7*k,j+i,[255,230,120],P.S*0.03,P.S*0.08,3,false,1-k); } }}); } },
+  /* Snooze puffs up and little pastel dream clouds with stars and moons inside float slowly over and pop into sparkles and Zs */
+  "Dream Puff":{ col:[220,190,255], atk:(t)=>({f:0,pose:t<700?"cast":null,sy:1+0.06*Math.sin(t/120),sx:1+0.06*Math.sin(t/120)}),
+    draw(c,PF,P,t,x){ const V=OWN.VY, top=x.self.top||P.o0, cols=[[230,200,255],[200,225,255],[255,210,235]];
+      V.run(c,P,t,{n:6,a:80,b:320,tr:240,src:()=>top,dst:i=>VYD(P,i,1.0),arc:i=>P.R*(0.3+0.3*atH(i)),wob:()=>P.S*0.5,wf:2,ease:q=>q*q*(3-2*q),
+        item:(c,p,i)=>{ OWN.cloud(c,p.x,p.y,P.S*0.42,cols[i%3],0.95); if(i%2) OWN.star(c,p.x,p.y,P.S*0.18,"rgba(255,240,150,1)",t/80); else B_moonMini(c,p.x,p.y,P.S*0.15); },
+        ld:420,land:(c,p,i,k)=>{ for(let j=0;j<6;j++){ const a=j/6*Math.PI*2+i; OWN.star(c,p.x+Math.cos(a)*P.S*0.8*k,p.y+Math.sin(a)*P.S*0.8*k,P.S*0.14*(1-k),"rgba(255,245,200,.95)",k*4+j); } if(i%2===0) OWN.zee(c,p.x+P.S*0.3,p.y-P.S*0.6*k,P.S*0.3*(1-k*0.3),`rgba(120,100,190,${1-k})`); }}); } },
+  /* a seam on Snooze pops and white down feathers burst out and drift over, settling on the foe and fluttering down */
+  "Feather Burst":{ col:[250,250,255], atk:(t)=>({f:0,pose:t<700?"push":null,sx:t<200?1+0.1*Math.sin(Math.PI*t/200):1,sy:t<200?1-0.08*Math.sin(Math.PI*t/200):1}),
+    draw(c,PF,P,t,x){ const V=OWN.VY, ctr=x.self.center||P.o0; OWN.GU.d=P.d; if(t>100&&t<400){ const k=V.up(t,100,400); PF(ctr.x,ctr.y,P.S*(0.5+0.8*k),0.5*(1-k),[250,250,255]); }
+      V.run(c,P,t,{n:14,a:100,b:330,tr:230,src:i=>({x:ctr.x+(atH(i)-0.5)*P.S*0.6,y:ctr.y+(atH(i*3)-0.5)*P.S*0.6}),dst:i=>VYD(P,i,1.3),arc:i=>P.R*(0.4+0.6*atH(i*7)),wob:()=>P.S*0.35,wf:3,
+        item:(c,p,i,q)=>OWN.GU.feather(c,p.x,p.y,P.S*0.28,Math.sin(q*8+i)*0.8+i,[250,250,255],1),
+        ld:500,land:(c,p,i,k)=>OWN.GU.feather(c,p.x+Math.sin(k*8+i)*P.S*0.3,p.y+k*P.R*1.2,P.S*0.26,Math.sin(k*6+i)*0.9,[250,250,255],1-k)}); } },
+  /* Snooze spins and a whirling stream of cotton fluff spirals out round and round toward the foe, piling fluff on its head */
+  "Fluff Storm":{ col:[245,245,250], atk:(t)=>({f:0,pose:t<700?"cast":null,sx:t<600?Math.cos(t/60):1}),
+    draw(c,PF,P,t,x){ const V=OWN.VY, ctr=x.self.center||P.o0, al=V.A(t);
+      V.run(c,P,t,{n:18,a:100,b:370,tr:230,src:()=>ctr,dst:i=>VYD(P,i,1.0),
+        trail:()=>{},item:(c,p,i,q)=>{ const a=q*Math.PI*4+i, r=P.S*0.7*Math.sin(Math.PI*q), x2=p.x+Math.cos(a)*r, y2=p.y+Math.sin(a)*r*0.6; PF(x2,y2,P.S*0.2,0.85,i%3?[250,250,255]:[235,225,245]); },
+        ld:400,land:(c,p,i,k)=>PF(P.head.x+(atH(i)-0.5)*P.R*1.2,P.head.y+P.S*0.05-atH(i*3)*P.S*0.15,P.S*0.22*Math.min(1,k*3),0.85*al,[250,250,255])});
+      if(t>560){ for(let i=0;i<5;i++) PF(P.head.x+(i-2)*P.R*0.32,P.head.y-P.S*0.05,P.S*0.24,0.85*al,[250,250,255]); } } },
+  /* Cobble stamps and kicks a low spray of gravel that skips along the ground into the foe, throwing dust */
+  "Gravel Spray":{ col:[150,140,130], atk:(t)=>({f:0,pose:t<120?"slamup":t<700?"push":null,lift:t<140?-10*Math.sin(Math.PI*t/140):0}),
+    draw(c,PF,P,t,x){ const V=OWN.VY, ft={x:P.o0.x+P.d*P.S*0.6,y:P.gnd}, al=V.A(t); if(t>120&&t<500){ const k=V.up(t,120,500); OWN.SS.dust?0:0; PF(ft.x,ft.y-P.S*0.2,P.S*(0.4+0.8*k),0.5*(1-k),[200,180,150]); }
+      V.run(c,P,t,{n:12,a:130,b:330,tr:200,src:i=>({x:ft.x,y:ft.y-P.S*0.2}),dst:i=>({x:P.tg.x+(atH(i)-0.6)*P.R,y:P.gnd-P.S*0.3-atH(i*3)*P.R*0.9}),hop:2,hopH:i=>P.R*(0.3+0.4*atH(i)),
+        item:(c,p,i,q)=>OWN.drawProp(c,x,"gravel",p.x,p.y,q*10+i,P.S*(0.13+0.07*atH(i)),1,t),
+        ld:380,land:(c,p,i,k)=>{ OWN.drawProp(c,x,"gravel",p.x+P.d*P.S*0.6*k,p.y+k*k*P.R*0.8,k*6+i,P.S*0.18,1-k,t); if(i%3===0) PF(p.x,p.y,P.S*(0.3+0.5*k),0.4*(1-k),[200,180,150]); }}); } },
+  /* pebbles lift off the ground and orbit Cobble, faster and faster, then it flings the whole storm of them at the foe in a cloud of dust */
+  "Gravel Storm":{ col:[150,140,130], atk:(t)=>({f:0,pose:t<300?"cast":t<700?"push":null,rot:t<300?Math.sin(t/40)*0.05:0}),
+    draw(c,PF,P,t,x){ const V=OWN.VY, ctr=x.self.center||P.o0, al=V.A(t), N=16;
+      V.run(c,P,t,{n:N,a:260,b:380,tr:180,src:(i,tt)=>{ const a=i/N*Math.PI*2+tt/(120-Math.min(60,tt/6)); return {x:ctr.x+Math.cos(a)*P.S*1.3,y:ctr.y+Math.sin(a)*P.S*0.6}; },dst:i=>VYD(P,i,1.3),arc:i=>P.R*0.3*atH(i),
+        item:(c,p,i,q)=>OWN.drawProp(c,x,"gravel",p.x,p.y,q*10+i,P.S*(0.18+0.12*atH(i)),1,t),ld:420,land:(c,p,i,k)=>{ OWN.drawProp(c,x,"gravel",p.x,p.y+k*k*P.R,k*6+i,P.S*0.17,1-k,t); }});
+      for(let i=0;i<N;i++){ const li=260+120*i/(N-1); if(t>=li) continue; const k=V.up(t,0,180), a=i/N*Math.PI*2+t/(120-Math.min(60,t/6)), p={x:ctr.x+Math.cos(a)*P.S*1.3,y:ctr.y+Math.sin(a)*P.S*0.6+(1-k)*P.S*1.2}; OWN.drawProp(c,x,"gravel",p.x,p.y,t/50+i,P.S*(0.18+0.12*atH(i)),k,t); }
+      if(t>400){ const k=V.up(t,400,900); OWN.SS.cloud(c,PF,P.tg.x,P.tg.y+P.R*0.3,P.R*1.2,k,[[200,180,150],[180,160,135]],8,0.5*al,0.2); } } },
+  /* Oaklet shakes its head and its leaves swirl off in a spiralling ribbon that wraps round the foe and whirls about it */
+  "Leaf Storm":{ col:[120,200,90], atk:(t)=>({f:0,pose:t<700?"cast":null,rot:t<500?Math.sin(t/35)*0.1:0}),
+    draw(c,PF,P,t,x){ const V=OWN.VY, top=x.self.top||P.o0, al=V.A(t);
+      V.run(c,P,t,{n:16,a:100,b:360,tr:220,src:()=>top,dst:i=>VYD(P,i,0.4),wob:i=>P.S*0.55,wf:3,item:(c,p,i,q)=>OWN.drawProp(c,x,"leaf",p.x,p.y,q*10+i,P.S*0.3,1,t),
+        ld:520,land:(c,p,i,k)=>{ const a=k*Math.PI*3+i*0.7, r=P.R*(0.9+0.2*Math.sin(i)); OWN.drawProp(c,x,"leaf",P.tg.x+Math.cos(a)*r,P.tg.y+Math.sin(a)*r*0.5-k*P.R*0.4,a,P.S*0.28,1-k*k,t); }}); } },
+  /* Crease folds paper stars out of itself and throws them spinning like shuriken; they stick in the foe and fall out */
+  "Star Throw":{ col:[255,220,90], atk:(t)=>{ const k=Math.floor(Math.max(0,t-100)/60); return t<520?{f:0,pose:k%2?"swipeup":"swipedown"}:{f:0}; },
+    draw(c,PF,P,t,x){ const V=OWN.VY, src=x.self.center||P.o0, cols=[[255,220,90],[255,150,180],[130,200,255],[170,240,150]];
+      V.run(c,P,t,{n:7,a:120,b:380,tr:160,src:()=>src,dst:i=>VYD(P,i,1.1),arc:i=>P.R*0.2*atH(i),item:(c,p,i,q)=>{ OWN.streak?0:0; V.shuriken(c,p.x,p.y,P.S*0.45,q*20,cols[i%4]); },
+        ld:440,land:(c,p,i,k)=>{ const f=k<0.7?1:1-(k-0.7)/0.3; V.shuriken(c,p.x,p.y+(k>0.7?(k-0.7)*P.R*1.5:0),P.S*0.38,0.5+i,cols[i%4],f); if(k<0.25) OWN.star(c,p.x,p.y,P.S*0.4*(1-k*4),"rgba(255,255,255,.9)",i); }}); } },
+  /* the snow in Swirl's globe whirls up and spins out of its top as a spiral of snowflakes and ice chunks that burst in frost on the foe */
+  "Blizzard Spin":{ col:[200,235,255], atk:(t)=>({f:0,pose:t<700?"cast":null,rot:t<600?Math.sin(t/25)*0.08:0}),
+    draw(c,PF,P,t,x){ const V=OWN.VY, top=x.self.top||P.o0, ctr=x.self.center||P.o0, al=V.A(t); for(let i=0;i<8;i++){ const a=t/60+i*0.8; OWN.GU.flake(c,ctr.x+Math.cos(a)*P.S*0.45,ctr.y+Math.sin(a)*P.S*0.3,P.S*0.08,a,al*(t<620?1:0)); }
+      V.run(c,P,t,{n:16,a:110,b:370,tr:220,src:()=>top,dst:i=>VYD(P,i,1.0),wob:()=>P.S*0.7,wf:4,arc:i=>P.R*0.4,item:(c,p,i,q)=>i%3===0?OWN.GU.shard?OWN.GU.shard(c,p.x,p.y,P.S*0.22,q*8+i,1):OWN.GU.flake(c,p.x,p.y,P.S*0.22,q*8+i,1):OWN.GU.flake(c,p.x,p.y,P.S*0.2,q*8+i,1),
+        ld:400,land:(c,p,i,k)=>{ PF(p.x,p.y,P.S*(0.3+0.6*k),0.55*(1-k),[230,245,255]); OWN.star(c,p.x,p.y,P.S*0.25*(1-k),"rgba(255,255,255,.95)",k*3); }});
+      if(t>420){ c.fillStyle=OWN.rg(c,P.tg.x,P.tg.y,0,P.R*1.2,[[0,"rgba(230,248,255,0)"],[1,`rgba(200,235,255,${0.4*al})`]]); c.beginPath(); c.arc(P.tg.x,P.tg.y,P.R*1.15,0,7); c.fill(); } } },
+  /* Ditty's speakers pump and big glossy notes blast out on rings of sound, bouncing off the foe with a jolt */
+  "Loud Note":{ col:[120,220,140], atk:(t)=>{ const q=(t%120)/120; return t<640?{f:0,pose:"push",sx:1+0.07*Math.sin(Math.PI*q),sy:1+0.07*Math.sin(Math.PI*q)}:{f:0}; },
+    draw(c,PF,P,t,x){ const V=OWN.VY, ctr=x.self.center||P.o0, al=V.A(t), cols=[[120,220,140],[255,170,90],[150,170,255],[255,130,190]];
+      for(let i=0;i<3;i++){ const q=((t/240)+i/3)%1; if(t<640) OWN.CH.ring(c,ctr.x+P.d*P.S*0.5,ctr.y,P.S*(0.5+1.4*q),P.S*0.08,[255,255,255],0.6*(1-q)); }
+      V.run(c,P,t,{n:6,a:120,b:360,tr:200,src:()=>ctr,dst:i=>VYD(P,i,0.9),arc:i=>P.R*(0.3+0.5*atH(i)),item:(c,p,i,q)=>OWN.note(c,p.x,p.y,P.S*(0.32+0.08*(i%2)),OWN.rgb(cols[i%4]),Math.sin(q*6)*0.3,i%2===1),
+        ld:400,land:(c,p,i,k)=>{ OWN.note(c,p.x-P.d*P.R*0.8*k,p.y-Math.sin(Math.PI*k)*P.R*0.8,P.S*0.3,OWN.rgb(cols[i%4],1-k),-P.d*k*3,i%2===1); if(k<0.4) OWN.CH.ring(c,p.x,p.y,P.S*(0.4+1.2*k),P.S*0.08,cols[i%4],0.8*(1-k/0.4)); }});
+      if(t>560&&t<900) OWN.tremble(c,P.tg,P.R,t,[90,70,120],0.7*al); } },
+  /* toast pops out of Sizzle's slots and it flicks slices and crumbs at the foe; the toast bonks it and crumbs scatter */
+  "Crumb Toss":{ col:[230,180,110], atk:(t)=>({f:0,pose:t<700?"push":null,sy:t<140?1-0.08*Math.sin(Math.PI*t/140):1}),
+    draw(c,PF,P,t,x){ const V=OWN.VY, top=x.self.top||P.o0;
+      V.run(c,P,t,{n:10,a:110,b:360,tr:220,src:()=>({x:top.x,y:top.y-P.S*0.2}),dst:i=>VYD(P,i,1.1),arc:i=>P.R*(0.7+0.8*atH(i)),item:(c,p,i,q)=>i%3===0?V.toast(c,p.x,p.y,P.S*0.38,q*10*P.d+i,1):V.crumb(c,p.x,p.y,P.S*0.13,q*8+i,[220,170,100],1),
+        ld:420,land:(c,p,i,k)=>{ if(i%3===0){ V.toast(c,p.x-P.d*P.R*0.9*k,p.y-Math.sin(Math.PI*k)*P.R*0.7+k*P.R*0.5,P.S*0.38,-P.d*k*8,1-k); if(k<0.3) OWN.star(c,p.x,p.y,P.S*0.5*(1-k/0.3),"rgba(255,250,220,.95)",k*3); } else for(let j=0;j<3;j++){ const a=j*2.1+i; V.crumb(c,p.x+Math.cos(a)*P.S*0.5*k,p.y+Math.sin(a)*P.S*0.3*k+k*k*P.R,P.S*0.08,a,[220,170,100],1-k); } }}); } },
+  /* Magna's field drags nuts, bolts and gears up off the ground to circle it, then hurls them clanging into the foe with sparks */
+  "Scrap Storm":{ col:[170,180,190], atk:(t)=>({f:0,pose:t<260?"cast":t<700?"push":null}),
+    draw(c,PF,P,t,x){ const V=OWN.VY, ctr=x.self.center||P.o0, al=V.A(t), N=12, piece=(c,px,py,i,rot,s,a)=>i%3===0?OWN.drawProp(c,x,"gear",px,py,rot,s*1.1,a,t):i%3===1?V.nut(c,px,py,s*0.6,rot,a):V.bolt(c,px,py,s*0.7,rot,a);
+      for(let i=0;i<3;i++){ const q=((t/200)+i/3)%1; if(t<400){ c.strokeStyle=OWN.rgb(i%2?[255,90,90]:[90,150,255],0.6*(1-q)*al); c.lineWidth=2; c.beginPath(); c.arc(ctr.x,ctr.y,P.S*(0.6+1.2*q),Math.PI*0.2,Math.PI*0.8); c.stroke(); } }
+      V.run(c,P,t,{n:N,a:240,b:380,tr:170,src:(i,tt)=>{ const a=i/N*Math.PI*2+tt/80; return {x:ctr.x+Math.cos(a)*P.S*1.4,y:ctr.y+Math.sin(a)*P.S*0.7-P.S*0.3}; },dst:i=>VYD(P,i,1.1),arc:i=>P.R*0.2*atH(i),
+        item:(c,p,i,q)=>piece(c,p.x,p.y,i,q*14+i,P.S*0.4,1),ld:420,land:(c,p,i,k)=>{ piece(c,p.x+(atH(i)-0.5)*P.R*k,p.y+k*k*P.R*1.1,i,k*8+i,P.S*0.4,1-k); if(k<0.3) for(let j=0;j<4;j++){ const a=j*1.6+i; c.strokeStyle=`rgba(255,230,140,${1-k/0.3})`; c.lineWidth=2; c.beginPath(); c.moveTo(p.x,p.y); c.lineTo(p.x+Math.cos(a)*P.S*0.6,p.y+Math.sin(a)*P.S*0.6); c.stroke(); } }});
+      for(let i=0;i<N;i++){ const li=240+140*i/(N-1); if(t>=li) continue; const k=V.up(t,0,200), a=i/N*Math.PI*2+t/80, p={x:ctr.x+Math.cos(a)*P.S*1.4,y:ctr.y+Math.sin(a)*P.S*0.7-P.S*0.3+(1-k)*(P.gnd-ctr.y)}; piece(c,p.x,p.y,i,t/60+i,P.S*0.4,k); } } },
+  /* Cuppy shakes its frosting and tosses a fan of rainbow sprinkles that stick all over the foe */
+  "Sprinkle Toss":{ col:[255,150,200], atk:(t)=>({f:0,pose:t<700?"push":null,rot:t<500?Math.sin(t/30)*0.07:0}),
+    draw(c,PF,P,t,x){ const V=OWN.VY, top=x.self.top||P.o0, cols=[[255,110,150],[255,210,80],[110,200,255],[150,230,120],[200,140,255]];
+      V.run(c,P,t,{n:22,a:120,b:340,tr:200,src:()=>top,dst:i=>VYD(P,i,1.4),arc:i=>P.R*(0.4+0.9*atH(i*3)),item:(c,p,i,q)=>V.sprinkle(c,p.x,p.y,P.S*0.13,q*12+i,cols[i%5]),
+        ld:540,land:(c,p,i,k)=>V.sprinkle(c,p.x,p.y+(k>0.7?(k-0.7)*P.R*1.3:0),P.S*0.12,i,cols[i%5],k<0.7?1:1-(k-0.7)/0.3)}); } },
+  /* Cuppy flicks chunks of chocolate cake off its wrapper, one after another, and they bonk the foe and crumble */
+  "Crumb Flick":{ col:[140,90,60], atk:(t)=>{ const k=Math.floor(Math.max(0,t-100)/70); return t<520?{f:0,pose:k%2?"swipeup":"swipedown"}:{f:0}; },
+    draw(c,PF,P,t,x){ const V=OWN.VY, side=OWN.pt(x.self,P.tg,[0.85,0.7]);
+      V.run(c,P,t,{n:7,a:110,b:380,tr:170,src:()=>side,dst:i=>VYD(P,i,0.9),arc:i=>P.R*(0.2+0.3*atH(i)),item:(c,p,i,q)=>V.crumb(c,p.x,p.y,P.S*0.22,q*10+i,[120,75,50],1),
+        ld:380,land:(c,p,i,k)=>{ for(let j=0;j<4;j++){ const a=-Math.PI/2+(j-1.5)*0.7; V.crumb(c,p.x+Math.cos(a)*P.S*0.6*k,p.y+Math.sin(a)*P.S*0.4*k+k*k*P.R,P.S*0.1,a+k*4,[120,75,50],1-k); } if(k<0.3) OWN.star(c,p.x,p.y,P.S*0.35*(1-k/0.3),"rgba(255,250,220,.95)",i); }}); } },
+  /* the cherry on Cuppy's top spits a rapid stream of cherry pits that ping off the foe, each leaving a pop of red juice */
+  "Cherry Pit":{ col:[220,40,60], atk:(t)=>({f:0,pose:t<700?"push":null,off:t>120&&t<500?[Math.sin(t/12)*1.2,0]:[0,0]}),
+    draw(c,PF,P,t,x){ const V=OWN.VY, top=x.self.top||P.o0, ch={x:top.x,y:top.y-P.S*0.15}; c.fillStyle=OWN.rg(c,ch.x,ch.y,0,P.S*0.3,[[0,"#ff7a8a"],[1,"#b0102a"]],-P.S*0.1,-P.S*0.1); c.beginPath(); c.arc(ch.x,ch.y,P.S*(0.26+0.03*Math.sin(t/20)),0,7); c.fill();
+      V.run(c,P,t,{n:12,a:110,b:380,tr:150,src:()=>ch,dst:i=>VYD(P,i,1.0),arc:()=>P.R*0.15,item:(c,p,i,q)=>V.seed(c,p.x,p.y,P.S*0.2,q*10,[200,170,130]),
+        ld:340,land:(c,p,i,k)=>{ V.seed(c,p.x-P.d*P.R*0.6*k,p.y-Math.sin(Math.PI*k)*P.R*0.5+k*P.R*0.4,P.S*0.1,k*8,[200,170,130],1-k); OWN.pop(c,p.x,p.y,P.S*0.35,[230,40,70],k,6); }}); } },
+  /* Cuppy throws a handful of wrapped sweets high in the air and they rain down all over the foe, bouncing off its head */
+  "Candy Storm":{ col:[255,130,180], atk:(t)=>({f:0,pose:t<200?"slamup":t<700?"cast":null}),
+    draw(c,PF,P,t,x){ const V=OWN.VY, top=x.self.top||P.o0;
+      V.run(c,P,t,{n:16,a:120,b:340,tr:240,src:()=>top,dst:i=>({x:P.tg.x+(atH(i*5)-0.5)*P.R*1.8,y:P.head.y-P.S*0.1+atH(i*9)*P.R*0.8}),arc:i=>P.R*(2.4+0.8*atH(i)),item:(c,p,i,q)=>OWN.drawProp(c,x,"wrapper",p.x,p.y,q*10+i,P.S*0.32,1,t),
+        ld:420,land:(c,p,i,k)=>{ OWN.drawProp(c,x,"wrapper",p.x+(atH(i)-0.5)*P.R*1.2*k,p.y-Math.sin(Math.PI*k)*P.R*0.5+k*P.R*0.6,k*8+i,P.S*0.3,1-k,t); if(k<0.2) OWN.star(c,p.x,p.y,P.S*0.3,"rgba(255,250,220,.9)",i); }}); } },
+  /* bubbles on Suds' head swell and fire in quick straight lines, each shimmering with a rainbow sheen and bursting into foam */
+  "Bubble Barrage":{ col:[200,230,255], atk:(t)=>({f:0,pose:t<700?"push":null}),
+    draw(c,PF,P,t,x){ const V=OWN.VY, top=x.self.top||P.o0;
+      V.run(c,P,t,{n:12,a:110,b:370,tr:170,src:i=>({x:top.x+(i%3-1)*P.S*0.3,y:top.y}),dst:i=>VYD(P,i,1.0),item:(c,p,i,q)=>{ const r=P.S*(0.22+0.08*atH(i)); OWN.bubble(c,p.x,p.y,r,[200,230,255],true); c.strokeStyle=`hsla(${(t/3+i*40)%360},90%,70%,.7)`; c.lineWidth=2; c.beginPath(); c.arc(p.x,p.y,r*0.8,-2.4,-0.8); c.stroke(); },
+        ld:400,land:(c,p,i,k)=>{ OWN.pop(c,p.x,p.y,P.S*0.5,[230,245,255],k,8); PF(p.x,p.y+k*P.S*0.4,P.S*0.3*(1-k*0.5),0.7*(1-k),[255,255,255]); }}); } },
+  /* Scoop fires sprinkles and chocolate chips in a fast straight stream off its scoop, with a chill of sparkles, peppering the foe */
+  "Sprinkle Shot":{ col:[255,190,220], atk:(t)=>({f:0,pose:t<700?"push":null,off:t>120&&t<520?[-Math.abs(Math.sin(t/30))*3*1,0]:[0,0]}),
+    draw(c,PF,P,t,x){ const V=OWN.VY, top=x.self.top||P.o0, cols=[[255,110,150],[255,210,80],[110,200,255],[150,230,120]];
+      V.run(c,P,t,{n:24,a:110,b:380,tr:130,src:()=>top,dst:i=>({x:P.tg.x+(atH(i)-0.5)*P.R*0.6,y:P.tg.y-P.R*0.2+(atH(i*3)-0.5)*P.R*0.6}),item:(c,p,i,q,ang)=>{ if(i%4===0) V.crumb(c,p.x,p.y,P.S*0.18,ang,[90,55,35],1); else V.sprinkle(c,p.x,p.y,P.S*0.2,ang,cols[i%4]); if(i%3===0) OWN.star(c,p.x-Math.cos(ang)*P.S*0.4,p.y-Math.sin(ang)*P.S*0.4,P.S*0.1,"rgba(240,250,255,.9)",i); },
+        ld:300,land:(c,p,i,k)=>V.sprinkle(c,p.x+Math.cos(i)*P.S*0.5*k,p.y+k*k*P.R*0.8,P.S*0.12,k*6+i,cols[i%4],1-k)}); } },
+  /* Tome's pages tear free and fly spinning flat like discs, slicing across the foe and leaving paper cuts */
+  "Page Flick":{ col:[250,245,232], atk:(t)=>({f:0,pose:t<700?"push":null}),
+    draw(c,PF,P,t,x){ const V=OWN.VY, pg=x.self.center||P.o0;
+      V.run(c,P,t,{n:6,a:110,b:370,tr:190,src:()=>pg,dst:i=>VYD(P,i,0.9),arc:i=>P.R*(0.2+0.4*atH(i)),wob:()=>P.S*0.2,item:(c,p,i,q)=>{ c.save(); c.translate(p.x,p.y); c.scale(1,0.45); OWN.drawProp(c,x,"page",0,0,q*25+i,P.S*0.42,1,t); c.restore(); },
+        ld:400,land:(c,p,i,k)=>{ if(k<0.35){ const a=-0.7+atH(i)*1.4; c.strokeStyle=`rgba(255,255,255,${1-k/0.35})`; c.lineWidth=P.S*0.08; c.lineCap="round"; c.beginPath(); c.moveTo(p.x-Math.cos(a)*P.S*0.8,p.y-Math.sin(a)*P.S*0.8); c.lineTo(p.x+Math.cos(a)*P.S*0.8,p.y+Math.sin(a)*P.S*0.8); c.stroke(); }
+          OWN.drawProp(c,x,"page",p.x+P.d*P.R*0.8*k,p.y+k*k*P.R,k*5+i,P.S*0.36,1-k,t); }}); } },
+  /* Tome reads aloud and glowing words lift off the page and fly at the foe, bonking it one after another */
+  "Word Volley":{ col:[150,120,255], atk:(t)=>({f:0,pose:t<700?"push":null}),
+    draw(c,PF,P,t,x){ const V=OWN.VY, pg=x.self.center||P.o0, W=["ink","verse","prose","rhyme","fable"], cols=[[150,120,255],[255,150,90],[90,190,255],[255,110,160],[120,210,130]];
+      V.run(c,P,t,{n:5,a:110,b:360,tr:220,src:()=>({x:pg.x,y:pg.y-P.S*0.3}),dst:i=>VYD(P,i,0.8),arc:i=>P.R*(0.5+0.4*atH(i)),item:(c,p,i,q)=>V.word(c,p.x,p.y,P.S*0.36,Math.sin(q*5+i)*0.25,W[i],cols[i]),
+        ld:420,land:(c,p,i,k)=>{ V.word(c,p.x,p.y-k*P.R*0.8,P.S*0.36*(1+0.4*k),0,W[i],cols[i],1-k); if(k<0.3) OWN.star(c,p.x,p.y,P.S*0.5*(1-k/0.3),"rgba(255,250,220,.95)",i); }}); } },
+  /* a stream of big glowing letters pours off Tome's pages, curving round and hammering the foe one after another with ink splats */
+  "Word Barrage":{ col:[255,200,100], atk:(t)=>({f:0,pose:t<700?"push":null,off:t>120&&t<520?[Math.sin(t/14)*1.2,0]:[0,0]}),
+    draw(c,PF,P,t,x){ const V=OWN.VY, pg=x.self.center||P.o0, L="ABCDEFGHKMRSWZ";
+      V.run(c,P,t,{n:14,a:100,b:380,tr:180,src:()=>({x:pg.x,y:pg.y-P.S*0.3}),dst:i=>VYD(P,i,1.0),arc:i=>P.R*0.5,wob:()=>P.S*0.6,wf:1,item:(c,p,i,q,ang)=>V.word(c,p.x,p.y,P.S*0.4,ang*0.2,L[i%L.length],[255,200,100]),
+        ld:480,land:(c,p,i,k)=>OWN.splat(c,p.x,p.y,P.S*0.25,[50,35,70],Math.min(1,k*4),i,2)}); } },
+  /* gumballs drop out of the chute and bounce along the ground in a line, hopping into the foe */
+  "Gum Volley":{ col:[255,120,150], atk:(t)=>({f:0,pose:t<700?"push":null,rot:t<500?Math.sin(t/25)*0.05:0}),
+    draw(c,PF,P,t,x){ const V=OWN.VY, chute=OWN.pt(x.self,P.tg,[0.62,0.8]), cols=[[255,90,120],[90,180,255],[255,210,70],[130,220,120],[200,130,255]];
+      V.run(c,P,t,{n:6,a:110,b:360,tr:220,src:()=>chute,dst:i=>({x:P.tg.x-P.d*P.R*0.4,y:P.tg.y+(atH(i)-0.3)*P.R*0.6}),hop:3,hopH:i=>P.R*(0.5+0.3*atH(i)),item:(c,p,i,q)=>OWN.gum(c,p.x,p.y,P.S*0.24,cols[i%5],q*12),
+        ld:400,land:(c,p,i,k)=>OWN.gum(c,p.x-P.d*P.R*0.8*k,p.y-Math.sin(Math.PI*k)*P.R*0.6+k*P.R*0.5,P.S*0.24*(1-k*0.3),cols[i%5],k*10)}); } },
+  /* the machine rattles and gumballs spurt out of the glass dome in a fountain that arcs high and rains on the foe */
+  "Gumball Barrage":{ col:[255,120,150], atk:(t)=>({f:0,pose:t<700?"cast":null,off:t<600?[Math.sin(t/10)*1.5,0]:[0,0]}),
+    draw(c,PF,P,t,x){ const V=OWN.VY, top=x.self.top||P.o0, cols=[[255,90,120],[90,180,255],[255,210,70],[130,220,120],[200,130,255]];
+      V.run(c,P,t,{n:14,a:100,b:340,tr:240,src:()=>top,dst:i=>({x:P.tg.x+(atH(i*5)-0.5)*P.R*1.6,y:P.tg.y+(atH(i*9)-0.7)*P.R}),arc:i=>P.R*(1.8+0.8*atH(i)),item:(c,p,i,q)=>OWN.gum(c,p.x,p.y,P.S*0.2,cols[i%5],q*12),
+        ld:420,land:(c,p,i,k)=>OWN.gum(c,p.x+(atH(i)-0.5)*P.R*1.4*k,p.y-Math.sin(Math.PI*k)*P.R*0.6+k*P.R*0.6,P.S*0.2,cols[i%5],k*10)}); } },
+  /* Gumball cranks hard and fires gumballs like cannonballs from the chute with puffs of smoke, the last one huge */
+  "Gumball Cannon":{ col:[255,120,150], atk:(t)=>{ const q=(t%100)/100; return t<560?{f:0,pose:"push",off:[-Math.sin(Math.PI*q)*4,0]}:{f:0}; },
+    draw(c,PF,P,t,x){ const V=OWN.VY, chute=OWN.pt(x.self,P.tg,[0.7,0.75]), cols=[[255,90,120],[90,180,255],[255,210,70],[130,220,120],[200,130,255]], N=5;
+      V.run(c,P,t,{n:N,a:130,b:370,tr:150,src:()=>chute,dst:i=>({x:P.tg.x,y:P.tg.y+(i-2)*P.R*0.2}),item:(c,p,i,q,ang)=>{ const r=P.S*(i===N-1?0.5:0.26); for(let j=1;j<4;j++){ c.fillStyle=OWN.rgb([255,255,255],0.25*(1-j/4)); c.beginPath(); c.arc(p.x-Math.cos(ang)*r*j*0.9,p.y-Math.sin(ang)*r*j*0.9,r*(1-j*0.15),0,7); c.fill(); } OWN.gum(c,p.x,p.y,r,cols[i%5],q*10); },
+        ld:380,land:(c,p,i,k)=>{ OWN.pop(c,p.x,p.y,P.S*(i===N-1?1.0:0.5),cols[i%5],k,10); OWN.gum(c,p.x-P.d*P.R*0.9*k,p.y-Math.sin(Math.PI*k)*P.R*0.5+k*P.R*0.6,P.S*(i===N-1?0.45:0.24),cols[i%5],k*10); }});
+      for(let j=0;j<N;j++){ const li=130+240*j/(N-1), q=(t-li)/300; if(q>0&&q<1) PF(chute.x+P.d*P.S*(0.3+0.6*q),chute.y-q*P.S*0.6,P.S*(0.3+0.5*q),0.5*(1-q),[230,230,235]); } } },
+  /* Presto flicks cards one at a time, spinning flat and fast, and they stab into the foe in a row */
+  "Card Throw":{ col:[255,255,255], atk:(t)=>{ const k=Math.floor(Math.max(0,t-100)/80); return t<520?{f:0,pose:k%2?"swipeup":"swipedown"}:{f:0}; },
+    draw(c,PF,P,t,x){ const V=OWN.VY, hd=(x.self.hands&&x.self.hands[0])||P.o0;
+      V.run(c,P,t,{n:5,a:120,b:380,tr:150,src:()=>hd,dst:i=>({x:P.tg.x-P.d*P.R*0.2,y:P.tg.y+(i-2)*P.R*0.28}),trail:(c,p,p2)=>{ c.strokeStyle="rgba(255,255,255,.6)"; c.lineWidth=2; c.beginPath(); c.moveTo(p.x,p.y); c.lineTo(p.x-(p.x-p2.x)*4,p.y-(p.y-p2.y)*4); c.stroke(); },item:(c,p,i,q)=>OWN.drawProp(c,x,"card",p.x,p.y,q*30,P.S*0.32,1,t),
+        ld:440,land:(c,p,i,k)=>OWN.drawProp(c,x,"card",p.x,p.y+(k>0.7?(k-0.7)*P.R*1.4:0),-P.d*0.9+(i-2)*0.15,P.S*0.32,k<0.7?1:1-(k-0.7)/0.3,t)}); } },
+  /* Presto spreads a fan of cards in a half circle, holds it a beat, then every card flies at once and they fan out round the foe */
+  "Card Fan":{ col:[255,255,255], atk:(t)=>({f:0,pose:t<300?"cast":t<700?"push":null}),
+    draw(c,PF,P,t,x){ const V=OWN.VY, ctr=x.self.center||P.o0, N=8, fan=i=>{ const a=-Math.PI/2+(i/(N-1)-0.5)*2.4; return {x:ctr.x+Math.cos(a)*P.S*1.2+P.d*P.S*0.3,y:ctr.y-P.S*0.3+Math.sin(a)*P.S*1.2,a}; };
+      if(t<330) for(let i=0;i<N;i++){ const k=V.up(t,40+i*20,160+i*20), f=fan(i); OWN.drawProp(c,x,"card",ctr.x+(f.x-ctr.x)*k,ctr.y+(f.y-ctr.y)*k,f.a+Math.PI/2,P.S*0.32,k,t); }
+      V.run(c,P,t,{n:N,a:330,b:360,tr:190,src:i=>fan(i),dst:i=>{ const a=(i/(N-1)-0.5)*2.4; return {x:P.tg.x+Math.cos(a)*P.R*0.5*-P.d,y:P.tg.y+Math.sin(a)*P.R*0.8}; },item:(c,p,i,q)=>OWN.drawProp(c,x,"card",p.x,p.y,q*20+i,P.S*0.32,1,t),
+        ld:460,land:(c,p,i,k)=>OWN.drawProp(c,x,"card",p.x,p.y+(k>0.7?(k-0.7)*P.R*1.4:0),(i/(N-1)-0.5)*2,P.S*0.32,k<0.7?1:1-(k-0.7)/0.3,t)}); } },
+  /* cards whirl round Presto in a tornado and stream off it in a spiral that wraps round the foe, slicing as they pass */
+  "Card Storm":{ col:[255,255,255], atk:(t)=>({f:0,pose:t<700?"cast":null,sx:t<300?Math.cos(t/50):1}),
+    draw(c,PF,P,t,x){ const V=OWN.VY, ctr=x.self.center||P.o0, N=14, al=V.A(t);
+      V.run(c,P,t,{n:N,a:200,b:380,tr:180,src:(i,tt)=>{ const a=i/N*Math.PI*2+tt/60; return {x:ctr.x+Math.cos(a)*P.S*1.1,y:ctr.y+P.S*(0.6-1.2*(i/N))}; },dst:i=>VYD(P,i,0.5),wob:()=>P.S*0.6,wf:2,item:(c,p,i,q)=>OWN.drawProp(c,x,"card",p.x,p.y,q*25+i,P.S*0.28,1,t),
+        ld:520,land:(c,p,i,k)=>{ const a=k*Math.PI*4+i*0.45, r=P.R*(0.9+0.15*Math.sin(i)); OWN.drawProp(c,x,"card",P.tg.x+Math.cos(a)*r,P.tg.y+Math.sin(a)*r*0.45+(i/N-0.5)*P.R,a*2,P.S*0.26,1-k*k,t); }});
+      for(let i=0;i<N;i++){ const li=200+180*i/(N-1); if(t>=li) continue; const a=i/N*Math.PI*2+t/60; OWN.drawProp(c,x,"card",ctr.x+Math.cos(a)*P.S*1.1,ctr.y+P.S*(0.6-1.2*(i/N)),a,P.S*0.28,V.up(t,0,150),t); } } },
+  /* Pogo bounces on its spring and every bounce launches a jelly ball that boings across the ground into the foe */
+  "Ball Barrage":{ col:[200,120,255], atk:(t)=>{ const q=(t%120)/120; return t<600?{f:0,pose:"push",lift:-18*Math.sin(Math.PI*q)}:{f:0}; },
+    draw(c,PF,P,t,x){ const V=OWN.VY, top=x.self.top||P.o0, cols=[[200,120,255],[255,120,170],[110,200,255],[255,200,80]];
+      V.run(c,P,t,{n:5,a:120,b:360,tr:240,src:()=>({x:top.x+P.d*P.S*0.3,y:top.y}),dst:i=>({x:P.tg.x,y:P.tg.y+(atH(i)-0.5)*P.R*0.5}),hop:3,hopH:()=>P.R*0.9,item:(c,p,i,q)=>{ const sq=1-0.2*Math.abs(Math.cos(q*3*Math.PI)); c.save(); c.translate(p.x,p.y); c.scale(2-sq,sq); OWN.drawProp(c,x,"ball",0,0,0,P.S*0.55,1,t); c.restore(); },
+        ld:420,land:(c,p,i,k)=>{ OWN.drawProp(c,x,"ball",p.x-P.d*P.R*1.0*k,p.y-Math.sin(Math.PI*k)*P.R*0.8+k*P.R*0.5,k*6,P.S*0.55,1-k,t); if(k<0.3) OWN.star(c,p.x,p.y,P.S*0.45*(1-k/0.3),"rgba(255,250,220,.95)",i); }}); } },
+  /* Eagle spreads its wings and looses a volley of sharp flight feathers that fly straight like arrows and stick in the foe */
+  "Feather Volley":{ col:[200,60,50], atk:(t)=>({f:0,pose:t<200?"slamup":t<700?"push":null}),
+    draw(c,PF,P,t,x){ const V=OWN.VY, ws=[OWN.pt(x.self,P.tg,[0.15,0.45]),OWN.pt(x.self,P.tg,[0.85,0.45])]; OWN.GU.d=P.d;
+      V.run(c,P,t,{n:9,a:150,b:360,tr:150,src:i=>ws[i%2],dst:i=>VYD(P,i,1.0),arc:i=>P.R*0.15,trail:(c,p,p2)=>{ c.strokeStyle="rgba(255,255,255,.55)"; c.lineWidth=1.5; c.beginPath(); c.moveTo(p.x,p.y); c.lineTo(p.x-(p.x-p2.x)*5,p.y-(p.y-p2.y)*5); c.stroke(); },
+        item:(c,p,i,q,ang)=>OWN.GU.feather(c,p.x,p.y,P.S*0.38,ang,x.body||[200,60,50],1),
+        ld:460,land:(c,p,i,k)=>OWN.GU.feather(c,p.x,p.y+(k>0.7?(k-0.7)*P.R*1.4:0),P.S*0.38,(P.d>0?0:Math.PI)+(atH(i)-0.5)*0.4,x.body||[200,60,50],k<0.7?1:1-(k-0.7)/0.3)}); } },
+  /* Unicorn's horn glows and shoots a sparkling arc of little stars that shower down on the foe and twinkle */
+  "Starlight":{ col:[255,230,140], atk:(t)=>({f:0,pose:t<700?"cast":null}),
+    draw(c,PF,P,t,x){ const V=OWN.VY, horn=x.self.top||P.o0, al=V.A(t), cols=[[255,230,120],[255,170,220],[170,220,255],[200,255,190]];
+      c.save(); c.globalCompositeOperation="lighter"; atGlowA(c,horn.x,horn.y,P.S*(0.7+0.4*Math.sin(t/40)),[255,240,200],0.8*al*(t<640?1:0)); c.restore();
+      V.run(c,P,t,{n:14,a:100,b:360,tr:220,src:()=>horn,dst:i=>({x:P.tg.x+(atH(i*5)-0.5)*P.R*1.4,y:P.tg.y+(atH(i*9)-0.6)*P.R*1.2}),arc:i=>P.R*(1.2+0.6*atH(i)),
+        trail:(c,p,p2,i)=>{ for(let j=1;j<4;j++) OWN.star(c,p.x-(p.x-p2.x)*j*1.5,p.y-(p.y-p2.y)*j*1.5,P.S*0.08,OWN.rgb(cols[i%4],0.6*(1-j/4)),j); },
+        item:(c,p,i,q)=>{ c.save(); c.globalCompositeOperation="lighter"; atGlowA(c,p.x,p.y,P.S*0.4,cols[i%4],0.7); c.restore(); OWN.star(c,p.x,p.y,P.S*0.24,OWN.rgb(OWN.mix(cols[i%4],[255,255,255],0.4),1),q*6+i); },
+        ld:480,land:(c,p,i,k)=>OWN.star(c,p.x,p.y+k*P.R*0.4,P.S*0.22*(1-k)*(0.6+0.4*Math.sin(t/30+i)),OWN.rgb(cols[i%4],0.95),k*4+i)}); } },
+  /* Jack's carved mouth spits a rapid stream of pumpkin seeds that ping off the foe */
+  "Pip Spit":{ col:[240,220,170], atk:(t)=>({f:0,pose:t<700?"push":null,off:t>120&&t<520?[Math.sin(t/11)*1.2,0]:[0,0]}),
+    draw(c,PF,P,t,x){ const V=OWN.VY, m=x.self.mouth||P.o0, al=V.A(t); c.save(); c.globalCompositeOperation="lighter"; atGlowA(c,m.x,m.y,P.S*0.7,[255,170,60],0.6*al*(t<600?1:0)); c.restore();
+      V.run(c,P,t,{n:14,a:100,b:380,tr:140,src:()=>m,dst:i=>VYD(P,i,0.9),arc:()=>P.R*0.1,item:(c,p,i,q,ang)=>V.seed(c,p.x,p.y,P.S*0.2,ang,[245,230,190]),
+        ld:340,land:(c,p,i,k)=>{ V.seed(c,p.x-P.d*P.R*0.6*k+(atH(i)-0.5)*P.R*0.5*k,p.y-Math.sin(Math.PI*k)*P.R*0.4+k*P.R*0.5,P.S*0.12,k*10,[245,230,190],1-k); if(k<0.25) OWN.star(c,p.x,p.y,P.S*0.25,"rgba(255,240,200,.9)",i); }}); } },
+  /* Tanuki pulls leaves off its head and tosses them; each one turns into a puff of smoke with a pop when it reaches the foe */
+  "Leaf Toss":{ col:[120,190,90], atk:(t)=>{ const k=Math.floor(Math.max(0,t-100)/90); return t<520?{f:0,pose:k%2?"swipeup":"swipedown"}:{f:0}; },
+    draw(c,PF,P,t,x){ const V=OWN.VY, top=x.self.top||P.o0;
+      V.run(c,P,t,{n:5,a:120,b:370,tr:200,src:()=>top,dst:i=>VYD(P,i,0.9),arc:i=>P.R*(0.6+0.4*atH(i)),wob:()=>P.S*0.3,item:(c,p,i,q)=>OWN.drawProp(c,x,"leaf",p.x,p.y,q*12+i,P.S*0.38,1,t),
+        ld:460,land:(c,p,i,k)=>{ for(let j=0;j<5;j++){ const a=j/5*Math.PI*2+i; PF(p.x+Math.cos(a)*P.S*0.4*k,p.y+Math.sin(a)*P.S*0.4*k-k*P.S*0.5,P.S*(0.3+0.4*k),0.7*(1-k),[235,230,225]); } if(k<0.25) OWN.star(c,p.x,p.y,P.S*0.5*(1-k*4),"rgba(255,250,220,.95)",i); }}); } },
+  /* Tanuki waves its tail and a gust of leaves blows across in a long flurry, swirling over and past the foe */
+  "Leaf Flurry":{ col:[150,200,90], atk:(t)=>({f:0,pose:t<700?"push":null,rot:t<600?Math.sin(t/40)*0.08:0}),
+    draw(c,PF,P,t,x){ const V=OWN.VY, tail=OWN.pt(x.self,P.tg,[0.05,0.7]), al=V.A(t), cols=[[130,200,90],[230,180,70],[200,110,60]];
+      for(let i=0;i<3;i++){ const q=((t/200)+i/3)%1; if(t<640){ c.strokeStyle=OWN.rgb([255,255,255],0.5*(1-q)); c.lineWidth=2; c.beginPath(); c.arc(tail.x,tail.y,P.S*(0.5+0.8*q),-0.5,1.2); c.stroke(); } }
+      V.run(c,P,t,{n:20,a:100,b:360,tr:240,src:()=>tail,dst:i=>({x:P.tg.x+P.d*P.R*(0.8+0.8*atH(i)),y:P.tg.y+(atH(i*3)-0.5)*P.R*1.6}),wob:()=>P.S*0.6,wf:3,arc:i=>P.R*0.4*atH(i),item:(c,p,i,q)=>OWN.GU.petal?OWN.drawProp(c,x,"leaf",p.x,p.y,q*14+i,P.S*0.24,1,t):0}); } },
+  /* Mermaid opens a shell and fires pearls one after another in a wave; each glints and bounces off the foe with a sparkle */
+  "Pearl Barrage":{ col:[245,240,255], atk:(t)=>({f:0,pose:t<700?"push":null}),
+    draw(c,PF,P,t,x){ const V=OWN.VY, hd=(x.self.hands&&x.self.hands[x.self.hands.length-1])||P.o0;
+      V.run(c,P,t,{n:9,a:110,b:380,tr:180,src:()=>hd,dst:i=>VYD(P,i,0.9),wob:()=>P.S*0.5,wf:2,item:(c,p,i,q)=>{ OWN.drawProp(c,x,"pearl",p.x,p.y,0,P.S*0.42,1,t); if(Math.floor(t/50+i)%3===0) OWN.star(c,p.x-P.S*0.08,p.y-P.S*0.1,P.S*0.18,"rgba(255,255,255,.95)",t/30); },
+        ld:400,land:(c,p,i,k)=>{ OWN.drawProp(c,x,"pearl",p.x-P.d*P.R*0.8*k,p.y-Math.sin(Math.PI*k)*P.R*0.6+k*P.R*0.5,0,P.S*0.4,1-k,t); if(k<0.3) OWN.star(c,p.x,p.y,P.S*0.45*(1-k/0.3),"rgba(255,250,255,.95)",i); }}); } },
+  /* Diwata spits seeds from its flower; they lodge on the foe and sprout little green shoots */
+  "Seed Spit":{ col:[150,110,60], atk:(t)=>({f:0,pose:t<700?"push":null}),
+    draw(c,PF,P,t,x){ const V=OWN.VY, m=x.self.mouth||P.o0;
+      V.run(c,P,t,{n:8,a:110,b:380,tr:170,src:()=>m,dst:i=>VYD(P,i,1.0),arc:i=>P.R*0.3,item:(c,p,i,q,ang)=>V.seed(c,p.x,p.y,P.S*0.25,ang,[140,95,55]),
+        ld:560,land:(c,p,i,k)=>{ V.seed(c,p.x,p.y,P.S*0.22,0.5,[140,95,55],1-Math.max(0,k-0.8)*5); V.sprout(c,p.x,p.y-P.S*0.05,P.S*0.45,Math.min(1,k*2.5),1-Math.max(0,k-0.8)*5); }}); } },
+  /* Garuda beats its wings and golden feathers whirl out in a swirling gust, spiralling round the foe */
+  "Feather Storm":{ col:[255,210,90], atk:(t)=>{ const q=(t%140)/140; return t<640?{f:0,pose:q<0.5?"slamup":"push"}:{f:0}; },
+    draw(c,PF,P,t,x){ const V=OWN.VY, ws=[OWN.pt(x.self,P.tg,[0.12,0.4]),OWN.pt(x.self,P.tg,[0.88,0.4])], al=V.A(t); OWN.GU.d=P.d;
+      V.run(c,P,t,{n:18,a:100,b:370,tr:220,src:i=>ws[i%2],dst:i=>VYD(P,i,0.5),wob:()=>P.S*0.9,wf:3,item:(c,p,i,q)=>{ c.save(); c.globalCompositeOperation="lighter"; atGlowA(c,p.x,p.y,P.S*0.35,[255,200,80],0.5); c.restore(); OWN.GU.feather(c,p.x,p.y,P.S*0.3,q*10+i,[255,205,80],1); },
+        ld:520,land:(c,p,i,k)=>{ const a=k*Math.PI*3+i*0.6, r=P.R*(0.95+0.15*Math.sin(i)); OWN.GU.feather(c,P.tg.x+Math.cos(a)*r,P.tg.y+Math.sin(a)*r*0.5-k*P.R*0.3,P.S*0.28,a,[255,205,80],1-k*k); }}); } },
+  /* Sarimanok fans its rainbow tail and flicks out lucky feathers in every colour, trailing sparkles and little four-leaf clovers, which glitter on the foe */
+  "Lucky Feathers":{ col:[255,200,120], atk:(t)=>({f:0,pose:t<700?"cast":null}),
+    draw(c,PF,P,t,x){ const V=OWN.VY, tail=OWN.pt(x.self,P.tg,[0.15,0.5]), rb=[[228,64,52],[244,150,40],[244,206,60],[80,170,80],[60,120,210],[140,90,200]]; OWN.GU.d=P.d;
+      const clover=(c,cx,cy,s,a2)=>{ c.save(); c.globalAlpha*=a2; c.fillStyle="#4cb84c"; for(let j=0;j<4;j++){ const a=j*Math.PI/2+t/200; c.beginPath(); c.arc(cx+Math.cos(a)*s*0.45,cy+Math.sin(a)*s*0.45,s*0.42,0,7); c.fill(); } c.restore(); };
+      V.run(c,P,t,{n:12,a:110,b:360,tr:220,src:()=>tail,dst:i=>VYD(P,i,1.2),arc:i=>P.R*(0.8+0.5*atH(i)),trail:(c,p,p2,i)=>OWN.star(c,p2.x,p2.y,P.S*0.12,OWN.rgb(rb[i%6],0.8),t/40+i),
+        item:(c,p,i,q)=>{ OWN.GU.feather(c,p.x,p.y,P.S*0.32,Math.sin(q*6+i)*0.6+i,rb[i%6],1); if(i%4===0) clover(c,p.x+P.S*0.3,p.y-P.S*0.3,P.S*0.14,1); },
+        ld:500,land:(c,p,i,k)=>{ OWN.GU.feather(c,p.x,p.y+k*P.R*0.6,P.S*0.3,i+k*3,rb[i%6],1-k); OWN.star(c,p.x,p.y,P.S*0.25*(1-k)*(0.6+0.4*Math.sin(t/30+i)),"rgba(255,250,220,.95)",k*4+i); if(i%4===0) clover(c,p.x,p.y-k*P.R,P.S*0.16,1-k); }}); } },
+  /* Migo's wings buzz and a swirling storm of pink spores pours out and engulfs the foe in a pink haze */
+  "Pink Storm":{ col:[255,150,210], atk:(t)=>({f:0,pose:t<700?"cast":null,off:t<600?[Math.sin(t/8)*1.2,0]:[0,0]}),
+    draw(c,PF,P,t,x){ const V=OWN.VY, ctr=x.self.center||P.o0, al=V.A(t);
+      V.run(c,P,t,{n:24,a:100,b:380,tr:240,src:()=>ctr,dst:i=>VYD(P,i,1.4),wob:()=>P.S*0.8,wf:3,item:(c,p,i,q)=>{ PF(p.x,p.y,P.S*0.17,0.5,[255,170,220]); c.fillStyle=OWN.rg(c,p.x,p.y,0,P.S*0.1,[[0,"#fff0f8"],[1,"#ff8fd0"]]); c.beginPath(); c.arc(p.x,p.y,P.S*0.09,0,7); c.fill(); },
+        ld:400,land:(c,p,i,k)=>PF(p.x+(atH(i)-0.5)*P.S*k,p.y-k*P.S*0.4,P.S*(0.17+0.2*k),0.5*(1-k),[255,170,220])});
+      if(t>420) OWN.SS.cloud(c,PF,P.tg.x,P.tg.y,P.R*1.2,V.up(t,420,960),[[255,170,220],[240,150,210]],8,0.45*al,0.2); } },
+  /* Dagon puffs its cheeks and spits balls of brine with salt crystals glinting in them; they splash on the foe and leave it crusted with salt */
+  "Brine Shot":{ col:[100,190,190], atk:(t)=>({f:0,pose:t<700?"push":null,sx:t<150?1+0.08*Math.sin(Math.PI*t/150):1}),
+    draw(c,PF,P,t,x){ const V=OWN.VY, m=x.self.mouth||P.o0, al=V.A(t);
+      V.run(c,P,t,{n:7,a:120,b:370,tr:190,src:()=>m,dst:i=>VYD(P,i,1.0),arc:i=>P.R*0.4,item:(c,p,i,q,ang)=>{ OWN.glob(c,p.x,p.y,P.S*0.26,t+i*20,[100,190,195],ang,0.4,i); for(let j=0;j<2;j++) V.pix(c,p.x+(j?1:-1)*P.S*0.1,p.y-P.S*0.05*j,P.S*0.08,[255,255,255],0.9); },
+        ld:420,land:(c,p,i,k)=>{ for(let j=0;j<6;j++){ const a=-Math.PI+j/5*Math.PI; OWN.drop(c,p.x+Math.cos(a)*P.S*0.7*k,p.y+Math.sin(a)*P.S*0.6*k+k*k*P.R*0.5,P.S*0.12*(1-k),a,[110,200,205]); } }});
+      if(t>420) for(let i=0;i<9;i++) V.pix(c,P.tg.x+(atH(i*3)-0.5)*P.R*1.4,P.tg.y+(atH(i*5)-0.5)*P.R*1.3,P.S*0.1,[255,255,255],0.85*al*V.up(t,420+i*20,500+i*20)); } },
+  /* glowing rings slip off Yog's orbs, spin out and drop over the foe one after another, tightening round it like hoops */
+  "Ring Around":{ col:[220,170,255], atk:(t)=>({f:0,pose:t<700?"cast":null}),
+    draw(c,PF,P,t,x){ const V=OWN.VY, ctr=x.self.center||P.o0, cols=[[220,170,255],[255,200,120],[150,230,200],[255,150,200]], N=5;
+      V.run(c,P,t,{n:N,a:110,b:370,tr:200,src:i=>({x:ctr.x+(i-2)*P.S*0.3,y:ctr.y-P.S*0.6}),dst:i=>({x:P.tg.x,y:P.head.y-P.R*0.3}),arc:i=>P.R*(0.8+0.2*i),item:(c,p,i,q)=>V.halo(c,p.x,p.y,P.S*0.3,q*8,cols[i%4]),
+        ld:600,land:(c,p,i,k)=>{ const yy=P.head.y+(P.R*(0.3+0.25*i))*Math.min(1,k*3), r=P.R*(1.1-0.25*Math.min(1,k*2)); V.halo(c,P.tg.x,yy,r,0,cols[i%4],k<0.8?1:1-(k-0.8)/0.2); }}); } },
+  /* little ringed planets orbit Yog, then break orbit one by one and fly at the foe on curving paths, bursting in coloured light */
+  "Orbit Barrage":{ col:[180,200,255], atk:(t)=>({f:0,pose:t<300?"cast":t<700?"push":null}),
+    draw(c,PF,P,t,x){ const V=OWN.VY, ctr=x.self.center||P.o0, cols=[[255,160,120],[140,200,255],[200,150,255],[150,230,160],[255,210,110],[255,140,190]], N=6;
+      V.run(c,P,t,{n:N,a:200,b:380,tr:180,src:(i,tt)=>{ const a=i/N*Math.PI*2+tt/120; return {x:ctr.x+Math.cos(a)*P.S*1.3,y:ctr.y+Math.sin(a)*P.S*0.6}; },dst:i=>VYD(P,i,1.0),wob:i=>P.S*0.8*(i%2?1:-1),wf:1,item:(c,p,i,q)=>V.planet(c,p.x,p.y,P.S*0.24,0.3,cols[i]),
+        ld:420,land:(c,p,i,k)=>{ c.save(); c.globalCompositeOperation="lighter"; atGlowA(c,p.x,p.y,P.S*(0.5+1.2*k),cols[i],0.9*(1-k)); c.restore(); OWN.CH.ring(c,p.x,p.y,P.S*(0.3+1.0*k),P.S*0.08,cols[i],0.8*(1-k)); }});
+      for(let i=0;i<N;i++){ const li=200+180*i/(N-1); if(t>=li) continue; const a=i/N*Math.PI*2+t/120; V.planet(c,ctr.x+Math.cos(a)*P.S*1.3,ctr.y+Math.sin(a)*P.S*0.6,P.S*0.24,0.3,cols[i],V.up(t,0,150)); } } }
+};
+const B_moonMini=(c,x,y,r)=>{ c.save(); c.fillStyle="#fff2b0"; c.beginPath(); c.arc(x,y,r,0,7); c.arc(x+r*0.45,y-r*0.2,r*0.8,0,7,true); c.fill("evenodd"); c.restore(); };
+OWN.volFx=(c,t,x,o)=>{ OWN.twoPass(c,x,(cc,PF)=>{ const c=cc; const P=OWN.cx(x,{at:[0.9,0.5]}); P.S*=3.2; OWN.GU.d=P.d; o.draw(c,PF,P,t,x);
+    if(t>=560&&t<860) OWN.SS.squint(c,P,1-OWN.VY.up(t,760,860)); }); };
+(()=>{ if(typeof ANIM==="undefined"||!ANIM.volley) return; const K=ANIM.volley, fx1=K.fx, atk1=K.atk;
+  K.atk=function(t,pos){ const b=atk1.call(this,t,pos), o=pos&&pos.name&&OWN_VOL[pos.name], e=o&&o.atk&&o.atk(t,pos); return e?{...b,...e}:b; };
+  K.fx=function(c,t,x){ const o=x&&OWN_VOL[x.name]||null; if(!o) return fx1.call(this,c,t,x); try{ OWN.volFx(c,t,x,o); }catch(e){ if(!OWN.err){ OWN.err=1; console.error("OWN volley",x.name,e&&e.message); } } }; })();
 
 /* ---------- chatter, own versions (19 Nov 2026): every family sent the same white jaw-shaped outlines, so each one now sends a thing
    of its own (wind-up teeth, cursing bubbles, winged notes, a clock chime, a sour note, a falling speaker, iron filings, a sound hawk,
