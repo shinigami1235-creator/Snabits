@@ -622,7 +622,7 @@ function atSideState(S,te){
       else if(W==="shadow") out.alpha=0.78+0.22*Math.sin(te/60);
       else if(W==="gears"||W==="steam") out.rot+=Math.sin(te/40)*0.05*kk;
       else if(W==="signal"){ out.off[0]+=(atH(Math.floor(te/40))-0.5)*4*kk; out.sx*=1+0.03*Math.sin(te/25); } }
-  else if(A){ const t=(te-A.t0)*A.rate, K=ANIM[A.kind]; if(t>(A.mega?Math.max(K.D,K.C+950):K.D)) S.anim=null; else Object.assign(out,K.atk(t,{foeH:60,perp:[0,-1],dir:S.dir,fam:S.spec&&S.spec.family,stage:S.spec&&S.spec.stage,gapU:atGapU(S),gap:S.foe&&S.foe.dx!=null&&S.dx!=null?Math.abs(S.foe.dx-S.dx):null})); }
+  else if(A){ const t=(te-A.t0)*A.rate, K=ANIM[A.kind]; if(t>(A.mega?Math.max(K.D,K.C+950):K.D)) S.anim=null; else Object.assign(out,K.atk(t,{foeH:60,perp:[0,-1],dir:S.dir,name:A.name,fam:S.spec&&S.spec.family,stage:S.spec&&S.spec.stage,gapU:atGapU(S),gap:S.foe&&S.foe.dx!=null&&S.dx!=null?Math.abs(S.foe.dx-S.dx):null})); }
   const O=S.foe.anim; if(O&&!S.anim){ const t=(te-O.t0)*O.rate, K=ANIM[O.kind]; if(t<=K.D&&K.def){ const d=K.def(t,{foeH:60,perp:[0,-1],dir:S.dir,gap:S.foe&&S.foe.dx!=null&&S.dx!=null?Math.abs(S.foe.dx-S.dx):null}); if(d) Object.assign(out,d); } }
   if(S.pose&&te<S.pose.until&&!S.anim) out.pose=S.pose.p;
   if(S.recoil){ const k=(te-S.recoil.t0)/170; if(k>1) S.recoil=null; else out.off[0]-=S.dir*S.recoil.amt*Math.sin(k*Math.PI); }
@@ -728,7 +728,7 @@ function atDraw(now,dte){
     if(fp.buff.phase&&!(S.anim&&S.anim.kind==="burrow"&&te-S.anim.t0<1000)) for(const o of [-1,1]){ c.save(); c.globalAlpha=0.2; c.translate(x+o*16*Math.sin(te/170+o),y); c.rotate(st.rot); c.scale(mir*u*st.sx,u*st.sy); c.translate(-100,-188); CHIBI.draw(c,sp,P,te,[0.6*S.dir*mir,0]); c.restore(); }
     c.save(); c.globalAlpha=st.alpha;
     c.translate(x,y); c.rotate(st.rot); c.scale(mir*u*st.sx,u*st.sy); c.translate(-100,-188);
-    atBody(c,i,{...sp,capture:(S.cap={})},P,dte2,[0.6*S.dir*mir,0],st.flash); c.restore();
+    atBody(c,i,{...sp,capture:(S.cap={})},P,dte2,st.look||[0.6*S.dir*mir,0],st.flash); c.restore();
     const cp=S.cap||{}, d=q=>q?toWorld.transformPoint(q):null;
     placed[i]={x,y:y-h*u*0.45,foot:y,lift:st.lift,back:false,r:CHIBI.width(sp.stage,sp.family)*u*0.55,eyes:cp.eyes&&cp.eyes.map(d),mouth:d(cp.mouth),hands:(cp.hands||[]).map(d),top:d(cp.top)||{x,y:y-50},center:d(cp.center),box:cp.box&&cp.box.map(d),doff:st.doff};
   });

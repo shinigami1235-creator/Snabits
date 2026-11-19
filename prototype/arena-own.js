@@ -1134,55 +1134,27 @@ const OWN_PROP={
         if(t<t0+420){ const q=OWN.k(t,t0,t0+420), p=OWN.go(st,{x:end.x,y:end.y+(i-0.5)*R*0.5},q,S*(1+i),0); OWN.prop(c,x,"leaf",p.x,p.y,t/20*d,2.4); continue; }
         const q=OWN.k(t,t0+420,t0+700); if(q<1){ c.strokeStyle=OWN.rgb([200,255,150],1-q); c.lineWidth=3; c.beginPath(); c.moveTo(end.x-R*0.8,end.y-R*0.5+i*R*0.5); c.lineTo(end.x+R*0.8,end.y+R*0.2+i*R*0.3); c.stroke(); } } } },
   /* Presto: a fan of cards snaps open in its hand, one card is flicked spinning across and sticks in the foe */
-  Presto:{at:[1.0,0.5],sz:1.4,fx(c,t,x,o){ const P=OWN.cx(x,o), {o0,tg,d,S,R}=P, end={x:tg.x-d*R*0.4,y:tg.y-R*0.1};
-      if(t<260){ const q=eo(Math.min(1,t/180)); for(let i=0;i<5;i++) OWN.prop(c,x,"card",o0.x,o0.y,-d*0.6+(i-2)*0.25*q,2.1,i===4&&t>200?1-OWN.k(t,200,260):1); }
-      if(t<200) return;
-      if(t<620){ const q=OWN.k(t,200,620), p=OWN.go(o0,end,ei(q),S*0.3,0); OWN.prop(c,x,"card",p.x,p.y,d*t/16,2.2); return; }
-      const q=OWN.k(t,620,1000); OWN.prop(c,x,"card",end.x,end.y,d*0.6,2.2,q<0.8?1:1-(q-0.8)/0.2); OWN.bonk(c,end.x,end.y,R*0.7,Math.min(0.99,q*1.4)); } },
-  /* Pogo: it bounces the ball hard off the ground in springy hops that grow until the last one smacks the foe */
-  Pogo:{at:[0.9,0.6],sz:1.4,fx(c,t,x,o){ const P=OWN.cx(x,o), {o0,tg,d,S,R,sg,gnd}=P, k=OWN.pk(x), r=S*0.8;
-      if(t<200){ const q=t/200, y=o0.y+(sg-r-o0.y)*Math.abs(Math.sin(q*Math.PI*2)); OWN.prop(c,x,k,o0.x+d*S*0.4,y,0,2.2); return; }
-      const end={x:tg.x,y:tg.y-R*0.1};
-      if(t<620){ const q=OWN.k(t,200,620), seg=Math.min(2,Math.floor(q*3)), sq=q*3-seg, xs=[o0.x+d*S*0.4,o0.x+(tg.x-o0.x)*0.35,o0.x+(tg.x-o0.x)*0.7,end.x], gy=(px)=>sg+(gnd-sg)*Math.min(1,Math.abs(px-o0.x)/Math.abs(tg.x-o0.x||1))-r;
-        const x0=xs[seg], x1=xs[seg+1], px=x0+(x1-x0)*sq, h=R*(0.6+seg*0.35), last=seg===2, py=last?gy(x0)+(end.y-gy(x0))*sq-Math.sin(Math.PI*sq)*h*0.6:gy(px)-Math.sin(Math.PI*sq)*h, squash=!last&&(sq<0.08||sq>0.92);
-        if(!last&&sq>0.9) SG.dust(c,x1,gy(x1)+r,S*0.6,(sq-0.9)*10,4); c.save(); c.translate(px,py); c.scale(squash?1.25:1,squash?0.8:1); OWN.prop(c,x,k,0,0,d*t/40,2.2); c.restore(); return; }
-      const q=OWN.k(t,620,1000); OWN.bonk(c,end.x,end.y,R,q); OWN.prop(c,x,k,end.x-d*R*1.4*q,end.y-R*1.2*Math.sin(Math.PI*q)+q*q*R,0,2.2,1-q); } },
-  /* Golem: it breaks a pebble off its own body, lobs it high, and it lands with a thud and a burst of dust */
-  Golem:{at:[0.9,0.35],sz:1.4,fx(c,t,x,o){ const P=OWN.cx(x,o), {o0,tg,d,S,R,gnd,head}=P, col=OWN.mix(P.body||[150,140,130],[110,100,95],0.45), end={x:tg.x,y:head.y+S*0.2};
-      const rock=(pt,s,rot)=>{ c.save(); c.translate(pt.x,pt.y); c.rotate(rot); c.fillStyle=OWN.rgb(col,1); c.beginPath(); for(let i=0;i<7;i++){ const a=i/7*7, rr=s*(0.8+0.3*atH(i+3)); c.lineTo(Math.cos(a)*rr,Math.sin(a)*rr); } c.closePath(); c.fill(); c.fillStyle=OWN.rgb(OWN.mix(col,[255,255,255],0.3),1); c.beginPath(); c.arc(-s*0.25,-s*0.25,s*0.3,0,7); c.fill(); c.restore(); };
-      if(t<200){ const q=t/200; if(q>0.5) for(let i=0;i<4;i++){ c.fillStyle=OWN.rgb(col,1); c.beginPath(); c.arc(o0.x+Math.cos(i*1.6)*S*q,o0.y+Math.sin(i*1.6)*S*q,1.8,0,7); c.fill(); } rock({x:o0.x+d*S*0.5*q,y:o0.y-S*0.6*q},S*0.7,0); return; }
-      if(t<620){ const q=OWN.k(t,200,620), p=OWN.go({x:o0.x+d*S*0.5,y:o0.y-S*0.6},end,q,R*1.2,0); rock(p,S*0.85,d*q*8); return; }
-      const q=OWN.k(t,620,1000); SG.dust(c,tg.x,gnd,R*0.9,q,8); for(let i=0;i<5;i++){ const a=-Math.PI*0.8+i/4*Math.PI*0.6, v=R*(0.4+0.7*eo(q)); rock({x:end.x+Math.cos(a)*v,y:end.y+Math.sin(a)*v+q*q*R*1.2},S*0.28*(1-q*0.5),q*5+i); } OWN.bonk(c,end.x,end.y,R*0.8,q); } },
-  /* Tanuki: it flings its straw hat like a frisbee, it curves out wide, smacks the foe and sails back */
-  Tanuki:{at:[0.5,-0.05],sz:1.4,fx(c,t,x,o){ const P=OWN.cx(x,o), {o0,tg,d,S,R}=P, end={x:tg.x,y:tg.y-R*0.3};
-      if(t<200){ OWN.prop(c,x,"hat",o0.x-d*S*0.3*eo(t/200),o0.y,-d*0.4*eo(t/200),2.4); return; }
-      const out=OWN.k(t,200,620), back=OWN.k(t,620,1000);
-      const p=t<620?(()=>{ const r=OWN.go(o0,end,eo(out),0,0); return {x:r.x,y:r.y-Math.sin(out*Math.PI)*R*1.0}; })():(()=>{ const r=OWN.go(end,o0,eio(back),0,0); return {x:r.x,y:r.y+Math.sin(back*Math.PI)*R*0.6}; })();
-      c.save(); c.translate(p.x,p.y); c.scale(1,0.55); OWN.prop(c,x,"hat",0,0,t/25,2.4); c.restore(); c.strokeStyle="rgba(255,255,255,.5)"; c.lineWidth=2; c.beginPath(); c.ellipse(p.x,p.y,S*1.4,S*0.5,0,t/25,t/25+1.4); c.stroke();
-      OWN.bonk(c,end.x,end.y,R*0.9,OWN.k(t,620,900)); } },
-  /* Mermaid: it scoops a pearl from its tail fin and flicks it with a splash; the pearl streaks over gleaming and bursts in spray */
-  Mermaid:{at:[0.95,0.5],sz:1.4,fx(c,t,x,o){ const P=OWN.cx(x,o), {o0,tg,d,S,R}=P, end={x:tg.x,y:tg.y-R*0.15}, sea=[150,215,240];
-      if(t<200){ const q=t/200; for(let i=0;i<5;i++){ const a=-Math.PI/2+(i-2)*0.4; c.fillStyle=OWN.rgb(sea,1-q); c.beginPath(); c.arc(o0.x+Math.cos(a)*S*1.4*q,o0.y+Math.sin(a)*S*1.4*q,S*0.15,0,7); c.fill(); } OWN.prop(c,x,"pearl",o0.x,o0.y,0,2.2*eo(q)); return; }
-      if(t<620){ const q=OWN.k(t,200,620), p=OWN.go(o0,end,ei(q),S*0.4,0); for(let i=1;i<6;i++){ const b=OWN.go(o0,end,Math.max(0,ei(q)-i*0.04),S*0.4,0); c.fillStyle=OWN.rgb(sea,0.7*(1-i/6)); c.beginPath(); c.arc(b.x,b.y+Math.sin(i+t/40)*2,S*0.18,0,7); c.fill(); }
-        atGlowA(c,p.x,p.y,S*1.2,[255,250,240],0.6); OWN.prop(c,x,"pearl",p.x,p.y,0,2.2); OWN.star(c,p.x-S*0.3,p.y-S*0.3,S*0.3,"rgba(255,255,255,.95)",t/50); return; }
-      const q=OWN.k(t,620,1000); OWN.pop(c,end.x,end.y,R*0.6,sea,q,10); OWN.bonk(c,end.x,end.y,R*0.7,q,[230,250,255]); } },
-  /* Diwata: leaves whirl up round it, then fly out one after another as spinning blades and cut across the foe */
-  Diwata:{at:[1.0,0.45],sz:1.4,fx(c,t,x,o){ const P=OWN.cx(x,o), {o0,tg,d,S,R}=P, cen=P.s, end={x:tg.x,y:tg.y-R*0.15};
-      for(let i=0;i<3;i++){ const t0=200+i*80, ph=i/3*Math.PI*2;
-        if(t<t0){ const a=ph+t/70, p={x:cen.x+Math.cos(a)*R*0.9,y:cen.y-R*0.1+Math.sin(a)*R*0.45}; OWN.prop(c,x,"leaf",p.x,p.y,a,2.0*Math.min(1,t/150)); continue; }
-        const st={x:cen.x+Math.cos(ph+t0/70)*R*0.9,y:cen.y-R*0.1+Math.sin(ph+t0/70)*R*0.45};
-        if(t<t0+420){ const q=OWN.k(t,t0,t0+420), p=OWN.go(st,{x:end.x,y:end.y+(i-1)*R*0.35},ei(q),S*(0.5+i*0.5),0); OWN.prop(c,x,"leaf",p.x,p.y,t/18*d,2.2); continue; }
-        const q=OWN.k(t,t0+420,t0+700); if(q<1){ c.strokeStyle=OWN.rgb([180,255,170],1-q); c.lineWidth=3; c.beginPath(); c.moveTo(end.x-R*0.8,end.y+(i-1)*R*0.35-R*0.2); c.lineTo(end.x+R*0.8,end.y+(i-1)*R*0.35+R*0.2); c.stroke(); } } } },
-  /* Sphinx: a golden disc rises behind its head like the sun, blazing, then spins across and bursts in rays on the foe */
-  Sphinx:{at:[0.5,-0.1],sz:1.4,fx(c,t,x,o){ const P=OWN.cx(x,o), {o0,tg,d,S,R}=P, end={x:tg.x,y:tg.y-R*0.15}, sun={x:o0.x,y:o0.y-R*0.6}, gold=[255,210,90];
-      const disc=(p,rot,a)=>{ atGlowA(c,p.x,p.y,S*2,gold,0.6*a); for(let i=0;i<8;i++){ const aa=rot+i/8*Math.PI*2; c.strokeStyle=OWN.rgb([255,230,140],0.8*a); c.lineWidth=2; c.beginPath(); c.moveTo(p.x+Math.cos(aa)*S*0.9,p.y+Math.sin(aa)*S*0.9); c.lineTo(p.x+Math.cos(aa)*S*1.4,p.y+Math.sin(aa)*S*1.4); c.stroke(); } OWN.prop(c,x,"disc",p.x,p.y,rot,2.3,a); };
-      if(t<200){ const q=eo(t/200); disc({x:sun.x,y:o0.y+(sun.y-o0.y)*q},t/80,q); return; }
-      if(t<620){ const q=OWN.k(t,200,620), p=OWN.go(sun,end,ei(q),R*0.6,0); disc(p,d*t/20,1); return; }
-      const q=OWN.k(t,620,1000); if(q<1){ for(let i=0;i<12;i++){ const aa=i/12*Math.PI*2; c.strokeStyle=OWN.rgb(gold,1-q); c.lineWidth=3; c.beginPath(); c.moveTo(end.x+Math.cos(aa)*R*0.3,end.y+Math.sin(aa)*R*0.3); c.lineTo(end.x+Math.cos(aa)*R*(0.6+1.0*q),end.y+Math.sin(aa)*R*(0.6+1.0*q)); c.stroke(); } atGlowA(c,end.x,end.y,R*(0.8+0.6*q),gold,0.7*(1-q)); } } },
+  Presto:{at:[1.0,0.5],sz:1.4,fx(c,t,x,o){ const P=OWN.cx(x,o), {o0,tg,d,S,R}=P, n=7;   /* seven cards (Gid, 19 Nov 2026: more cards): the fan snaps open and the cards are flicked out one after another, spinning, and stick in the foe in a spread */
+      const endOf=i=>({x:tg.x-d*R*(0.35+0.15*atH(i*3))+(atH(i*7)-0.5)*R*0.5,y:tg.y-R*0.55+i/(n-1)*R*0.9}), t0=i=>200+i*35;
+      if(t<200){ const q=eo(Math.min(1,t/180)); for(let i=0;i<n;i++) OWN.prop(c,x,"card",o0.x,o0.y,-d*0.6+(i-(n-1)/2)*0.2*q,2.1); return; }
+      for(let i=0;i<n;i++){ const ts=t0(i), e=endOf(i);
+        if(t<ts){ OWN.prop(c,x,"card",o0.x,o0.y,-d*0.6+(i-(n-1)/2)*0.2,2.1); continue; }
+        if(t<ts+260){ const q=OWN.k(t,ts,ts+260), p=OWN.go(o0,e,ei(q),S*0.25*(i%2?1:-1),0); for(let j=1;j<3;j++){ const pq=OWN.go(o0,e,ei(Math.max(0,q-j*0.08)),S*0.25*(i%2?1:-1),0); OWN.prop(c,x,"card",pq.x,pq.y,d*(t-j*20)/16,2.0,0.25/j); } OWN.prop(c,x,"card",p.x,p.y,d*t/16,2.1); continue; }
+        const q=OWN.k(t,ts+260,1000); OWN.prop(c,x,"card",e.x,e.y,d*(0.5+(atH(i)-0.5)*0.8),2.0,q<0.75?1:1-(q-0.75)/0.25); if(q<0.3) OWN.star(c,e.x,e.y,S*0.5*(1-q/0.3),"rgba(255,255,255,.9)",q*4); }
+      if(t>620) OWN.bonk(c,tg.x,tg.y-R*0.3,R*0.7,Math.min(0.99,OWN.k(t,620,1000)*1.4)); } },
   /* Sarimanok: a fish flops in its beak, it tosses it flapping end over end, and the fish slaps the foe with a splash */
-  Sarimanok:{at:[1.0,0.35],sz:1.4,fx(c,t,x,o){ const P=OWN.cx(x,o), {o0,tg,d,S,R}=P, end={x:tg.x,y:tg.y-R*0.2}, sea=[150,215,240];
-      if(t<200){ OWN.prop(c,x,"fish",o0.x+d*S*0.3,o0.y+S*0.2,Math.sin(t/25)*0.5,2.4); return; }
-      if(t<620){ const q=OWN.k(t,200,620), p=OWN.go(o0,end,q,R*1.3,0); OWN.prop(c,x,"fish",p.x,p.y,d*q*10+Math.sin(t/20)*0.4,2.4); for(let i=0;i<2;i++){ c.fillStyle=OWN.rgb(sea,0.8); c.beginPath(); c.arc(p.x-d*S*(0.8+i*0.6),p.y+S*0.3+i*3,S*0.15,0,7); c.fill(); } return; }
+  Sarimanok:{at:[1.0,0.35],sz:1.4,   /* the fish it throws is the one in its beak (Gid, 19 Nov 2026): it flings it, turns away while the fish flies and turns back with a new one */
+    /* after the toss it turns its head right round, away off the screen, and turns back with a new fish, so the new fish has somewhere to come from */
+    atk:(t,pos)=>{ const dir=pos.dir||1;
+      if(t<200) return {rot:-0.14*dir*eo(t/200)}; if(t<300) return {rot:0.12*dir*(1-OWN.k(t,200,300)),pose:"push"};
+      if(t<380){ const k=OWN.k(t,300,380); return {look:[-0.6+1.5*k,-0.1*k],sx:1-0.35*Math.sin(Math.PI*k),rot:0.06*dir*k}; }
+      if(t<540) return {sx:1,rot:0.06*dir,off:[-dir*2*Math.sin(t/35),-2*Math.abs(Math.sin(t/45))]};
+      if(t<620){ const k=OWN.k(t,540,620); return {look:[0.9-1.5*k,-0.1*(1-k)],sx:1-0.35*Math.sin(Math.PI*k),rot:0.06*dir*(1-k)}; } return null; },
+    fx(c,t,x,o){ const P=OWN.cx(x,o), {o0,tg,d,S,R}=P, end={x:tg.x,y:tg.y-R*0.2}, sea=[150,215,240], st={x:o0.x+d*S*0.3,y:o0.y+S*0.2};
+      if(typeof AT!=="undefined"&&AT.side) for(const sd of AT.side){ if(sd&&sd.spec&&sd.spec.family==="Sarimanok"&&sd.anim&&sd.anim.kind==="propthrow") sd.spec.noFishTe=t>=200&&t<580?AT.te:-1e9; sd.spec.backTe=t>=340&&t<580?AT.te:-1e9; }
+      if(t<200) return;
+      if(t>=580&&t<700){ const q=OWN.k(t,580,700); for(let i=0;i<5;i++){ const aa=i/5*7; OWN.star(c,st.x+Math.cos(aa)*S*(0.4+0.6*q),st.y+Math.sin(aa)*S*(0.4+0.6*q),S*0.22*(1-q),"rgba(255,250,210,.95)",q*4); } }
+      if(t<620){ const q=OWN.k(t,200,620), p=OWN.go(st,end,q,R*1.3,0); OWN.prop(c,x,"fish",p.x,p.y,d*q*10+Math.sin(t/20)*0.4,2.4); for(let i=0;i<2;i++){ c.fillStyle=OWN.rgb(sea,0.8); c.beginPath(); c.arc(p.x-d*S*(0.8+i*0.6),p.y+S*0.3+i*3,S*0.15,0,7); c.fill(); } return; }
       const q=OWN.k(t,620,1000); OWN.pop(c,end.x,end.y,R*0.6,sea,q,10); OWN.prop(c,x,"fish",end.x-d*R*q,end.y-Math.sin(Math.PI*q)*R+q*q*R*1.3,-d*q*6,2.4,1-q*0.8); } }
 };
 (()=>{ if(typeof ANIM==="undefined"||!ANIM.propthrow) return; const K=ANIM.propthrow, fx1=K.fx;
@@ -1480,9 +1452,17 @@ const OWN_METEOR={
   "Pumpkin Bomb":{at:[0.7,0.5],item:"pumpkinb",trail:"spark",spin:0.5,
     impact(c,PF,k,P){ OWN.MT.boom(c,PF,P.hit,P.R,k,[[255,240,180],[255,140,40],[200,80,20]]); OWN.MT.debris(c,P.hit,P.R,k,[255,138,42],9,0.18,15); OWN.MT.scorch(c,P,k,0.9);
       for(let i=0;i<10;i++){ const a=-Math.PI+i/9*Math.PI, v=P.R*(0.6+atH(i)); c.fillStyle=OWN.rgb([250,240,200],1-k); c.beginPath(); c.ellipse(P.hit.x+Math.cos(a)*v*eo(k),P.hit.y+Math.sin(a)*v*eo(k)+k*k*P.R*1.5,P.S*0.12,P.S*0.07,a+k*6,0,7); c.fill(); } } },
-  "Dragon Fury":{at:[0.95,0.4],item:"fireball",n:3,sz:1.2,orient:true,trail:"fire",stagger:60,land:"boom",spread:1.4,
-    launch(c,PF,t,P){ const g=t<260?1-Math.abs(t-130)/130:0; atGlowA(c,P.o0.x,P.o0.y,P.S*1.8,[255,150,60],0.8*g); },
-    impact(c,PF,k,P){ OWN.MT.scorch(c,P,k,1.3); } },
+  "Dragon Fury":{at:[0.95,0.4],   /* the dragon flies up and spits three fireballs down at the foe, which blast one after another (Gid, 19 Nov 2026) */
+    atk:(t,pos)=>{ const up=t<260?eo(t/260):t<760?1:1-eio(OWN.k(t,760,1000)); const spit=[240,320,400].some(t0=>t>=t0-30&&t<t0+60); return {lift:-62*up+Math.sin(t/90)*4*up,pose:t>=760?null:spit?"bitewide":"determined",rot:-0.06*(pos.dir||1)*up}; },
+    fx(c,PF,t,x,o){ const P=OWN.cx(x,{at:o.at,sz:1.2}), {tg,d,S,R}=P, s=x.self, m=s.mouth?{x:s.mouth.x,y:s.mouth.y}:P.o0, hit={x:tg.x-d*R*0.1,y:tg.y-R*0.15};
+      const outer=OWN.rgb([255,110,40],0.95), inner=OWN.rgb([255,235,150],0.98);
+      if(t<260){ const k=t/260, f={x:m.x+d*S*0.1,y:m.y}; atGlowA(c,f.x,f.y,S*(0.6+0.9*k),[255,150,60],0.55*k); for(let i=0;i<3;i++){ const a=t/45+i*2.1; OWN.flame(c,f.x+Math.cos(a)*S*0.2*k,f.y+Math.sin(a)*S*0.15*k,S*0.22*k,a,outer,inner,t); } }
+      for(let i=0;i<3;i++){ const t0=240+i*80, t1=t0+160, e={x:hit.x+(i-1)*R*0.5,y:hit.y+(i===1?-R*0.25:R*0.2)}, ang=Math.atan2(e.y-m.y,e.x-m.x);
+        if(t>=t0&&t<t1){ const k=ei((t-t0)/160), p={x:m.x+(e.x-m.x)*k,y:m.y+(e.y-m.y)*k}; if(k<0.35) atGlowA(c,m.x+d*S*0.1,m.y,S*1.0,[255,170,80],0.6*(1-k/0.35));
+          for(let j=1;j<5;j++){ const q=Math.max(0,k-j*0.07); PF(m.x+(e.x-m.x)*q,m.y+(e.y-m.y)*q-j,S*(0.25+j*0.08),0.3*(1-j/5),[120,105,100]); }
+          const g=Math.min(1,k/0.3); OWN.comet(c,{x:p.x+Math.cos(ang)*S*0.15*g,y:p.y+Math.sin(ang)*S*0.15*g},S*(0.25+0.55*g),ang,t+i*50,0.15+1.45*g); }
+        else if(t>=t1){ const k=OWN.k(t,t1,t1+440); if(k<1){ OWN.MT.boom(c,PF,e,R*0.6,k); if(k<0.4) for(let j=0;j<6;j++){ const aa=j/6*7, dd=R*(0.2+0.7*eo(k/0.4)); OWN.flame(c,e.x+Math.cos(aa)*dd,e.y+Math.sin(aa)*dd*0.8,S*0.35*(1-k/0.4),aa+Math.PI,outer,inner,t+j*20); } } } }
+      if(t>400) OWN.MT.scorch(c,P,OWN.k(t,400,1000),1.3); } },
   "Magma Bomb":{at:[1.02,0.45],item:"magma",trail:"fire",
     impact(c,PF,k,P){ OWN.MT.boom(c,PF,P.hit,P.R*0.9,k); OWN.splat(c,P.hit.x,P.hit.y,P.S*1.1,[255,100,40],k,95,4); c.fillStyle=OWN.rgb([200,60,20],0.8*(1-k*0.5)); c.beginPath(); c.ellipse(P.tg.x,P.gnd,P.R*(0.5+0.6*eo(k)),P.R*0.18,0,0,7); c.fill();
       for(let i=0;i<6;i++){ const q=((k*1.5)+i/6)%1; PF(P.tg.x+(atH(i)-0.5)*P.R*1.2,P.gnd-q*P.R*1.4,P.S*(0.3+0.3*q),0.4*(1-k)*(1-q),[110,100,100]); } } }
@@ -1503,7 +1483,8 @@ OWN.meteorFx=(c,t,x,o)=>{ const m=c.getTransform?c.getTransform():null, top=m&&m
       if(o.land==="boom") OWN.MT.boom(c,PF,f.end,P.R*0.5,k); else if(o.land==="dust"||n>1){ OWN.MT.puff(c,PF,f.end,f.s,k); OWN.MT.debris(c,f.end,f.s*1.5,k,[120,110,100],5,0.1,i*3); } }
     if(t>=560&&o.impact) o.impact(c,PF,Math.min(1,(t-560)/440),P,x); }); };
 (()=>{ if(typeof ANIM==="undefined"||!ANIM.meteor) return; const K=ANIM.meteor, fx1=K.fx;
-  K.fx=function(c,t,x){ const o=x&&OWN_METEOR[x.name]||null; if(!o) return fx1.call(this,c,t,x); try{ OWN.meteorFx(c,t,x,o); }catch(e){ if(!OWN.err){ OWN.err=1; console.error("OWN meteor",x.name,e&&e.message); } } }; })();
+  const atk1=K.atk; K.atk=function(t,pos){ const b=atk1.call(this,t,pos), o=pos&&pos.name&&OWN_METEOR[pos.name], e=o&&o.atk&&o.atk(t,pos); return e?{...b,...e}:b; };
+  K.fx=function(c,t,x){ const o=x&&OWN_METEOR[x.name]||null; if(!o) return fx1.call(this,c,t,x); try{ if(o.fx) OWN.twoPass(c,x,(cc,PF)=>o.fx(cc,PF,t,x,o)); else OWN.meteorFx(c,t,x,o); }catch(e){ if(!OWN.err){ OWN.err=1; console.error("OWN meteor",x.name,e&&e.message); } } }; })();
 
 /* ---------- drool, own versions (18 Nov 2026): every family lobbed the same purple glob, so each move now forms out of its own body
    part, flies as its own stuff (silk, ink, mud, wax, syrup, paint, ice cream, juice, lava, slime with eyes) and lands its own way.
@@ -2519,11 +2500,8 @@ Object.assign(OWN_BOLT2.Vampire,{
       mass(p,S*1.35); return; }
     const k=OWN.k(t,560,880); if(k<0.3) mass(end,S*1.1*(1+k*1.5),1-k/0.3);
     for(let i=0;i<10;i++){ const aa=i/10*7, dd=R*(0.2+1.0*eo(k)); SG.puff(c,end.x+Math.cos(aa)*dd,end.y+Math.sin(aa)*dd*0.7-k*R*0.3,S*(0.55+0.7*k),0.7*(1-k),i%3?[70,30,95]:[150,60,180]); } } });
-Object.assign(OWN_BOLT2.Kitsune,{ col:[255,140,60],   /* a real ball of fire (Gid, 19 Nov 2026): wisps of flame gather in front of Kitsune into a fireball that shoots straight at the foe,
-                                                       stretched like a comet with its flames trailing, and bursts */
-  fx(c,t,x,o){ const P=OWN.cx(x,o), {o0,tg,d,S,R}=P, outer=OWN.rgb([255,110,40],0.95), inner=OWN.rgb([255,235,150],0.98), end={x:tg.x-d*R*0.15,y:tg.y-R*0.1}, glow=[255,150,60], fp=OWN.pt(P.s,tg,[1.0,0.5]), front={x:fp.x+d*S*1.4,y:fp.y};
-    const ang0=Math.atan2(end.y-front.y,end.x-front.x);
-    const fball=(p,s,ang,str=1,a=1)=>{ if(s<1||a<=0) return; c.save(); c.globalAlpha*=a; atGlowA(c,p.x,p.y,s*3.4,glow,0.6); c.translate(p.x,p.y); c.rotate(ang);
+/* a comet of fire: a round head with flame tongues streaming back, deep red to yellow, and a white-hot core */
+OWN.comet=(c,p,s,ang,t,str=1,a=1)=>{ if(s<1||a<=0) return; const glow=[255,150,60]; c.save(); c.globalAlpha*=a; atGlowA(c,p.x,p.y,s*3.4,glow,0.6); c.translate(p.x,p.y); c.rotate(ang);
       /* a round head with long flame tongues streaming back, in three layers from deep red to yellow, then a hot white core */
       const layer=(sc,lenK,n,seed,c0,c1,c2)=>{ const r=s*sc, ys=[]; for(let i=0;i<n;i++) ys.push((-1+2*(i+0.5)/n)*r*0.95);
         c.beginPath(); c.moveTo(0,-r); c.arc(0,0,r,-Math.PI/2,Math.PI/2); let py=r;
@@ -2537,6 +2515,11 @@ Object.assign(OWN_BOLT2.Kitsune,{ col:[255,140,60],   /* a real ball of fire (Gi
       layer(0.55,1.6,4,13,"rgba(255,220,100,0)","rgba(255,215,95,.95)","#fff0a8");
       c.fillStyle=OWN.rg(c,s*0.25,0,0,s*0.55,[[0,"rgba(255,255,245,1)"],[0.6,"rgba(255,248,200,.85)"],[1,"rgba(255,230,140,0)"]]); c.beginPath(); c.ellipse(s*0.2,0,s*0.6,s*0.45,0,0,7); c.fill();
       OWN.CH.shine(c,s*0.25,-s*0.5,s*0.28,s*0.1,0.55,0); c.restore(); };
+Object.assign(OWN_BOLT2.Kitsune,{ col:[255,140,60],   /* a real ball of fire (Gid, 19 Nov 2026): wisps of flame gather in front of Kitsune into a fireball that shoots straight at the foe,
+                                                       stretched like a comet with its flames trailing, and bursts */
+  fx(c,t,x,o){ const P=OWN.cx(x,o), {o0,tg,d,S,R}=P, outer=OWN.rgb([255,110,40],0.95), inner=OWN.rgb([255,235,150],0.98), end={x:tg.x-d*R*0.15,y:tg.y-R*0.1}, glow=[255,150,60], fp=OWN.pt(P.s,tg,[1.0,0.5]), front={x:fp.x+d*S*1.4,y:fp.y};
+    const ang0=Math.atan2(end.y-front.y,end.x-front.x);
+    const fball=(p,s,ang,str=1,a=1)=>OWN.comet(c,p,s,ang,t,str,a);
     if(t<240){ const k=Math.min(1,t/240);
       for(let i=0;i<6;i++){ const ph=(t/240*1.2+i/6)%1, aa=i/6*Math.PI*2+t/120, rr=S*(1.9-1.6*ph), p={x:front.x+Math.cos(aa)*rr,y:front.y+Math.sin(aa)*rr*0.7}; atGlowA(c,p.x,p.y,S*0.9,glow,0.45*(1-ph)); OWN.flame(c,p.x,p.y,S*0.35*(1-ph*0.6),aa,outer,inner,t+i*40); }
       fball(front,S*0.95*eo(k),d>0?0:Math.PI,0.6,Math.min(1,k*2)); return; }

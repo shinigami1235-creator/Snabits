@@ -3307,7 +3307,7 @@ x.feet.push([g.cx, 182, 10]); },
       face(c, g, x, look) { const S = g.stage, fi = faceTwo(c, g, x, look, { ey: 0.36, ex: 0.2, my: 0.62, s: by(S, 0.74, 0.82, 0.9) }), s = fi.s, y0 = g.top + g.bh * 0.46;
         if (x.back) return fi;
         if (S !== 'Bit') { c.fillStyle = rgb(x.parts); c.beginPath(); c.ellipse(g.cx - 4 * s, y0 + 14 * s, 3.5 * s, 6 * s, 0.3, 0, 7); c.fill(); }   // the wattle
-        const fish = S !== 'Bit', gape = fish ? 4 * s : 0;
+        const fish = S !== 'Bit' && !(x.m.noFishTe != null && Math.abs(x.t - x.m.noFishTe) < 60), gape = S !== 'Bit' ? 4 * s : 0;   // the fish is gone from the beak while Fish Toss has it in the air
         c.fillStyle = '#d9921c'; c.beginPath(); c.moveTo(g.cx - 7 * s, y0 + 4 * s); c.lineTo(g.cx + 9 * s, y0 + 6 * s + gape); c.lineTo(g.cx - 7 * s, y0 + 10 * s); c.closePath(); c.fill();   // the lower beak, dropped open when it holds a fish
         if (fish) { const fl = by(S, 0, 26, 32) * s, sw = Math.sin(x.t / 150) * 0.1;   // the fish: its head between the jaws, its body and tail hanging out and flapping
           c.save(); c.translate(g.cx + 1 * s, y0 + 5 * s); c.rotate(0.28 + sw); c.fillStyle = '#5e88ad'; c.beginPath(); c.ellipse(fl * 0.5, 1, fl * 0.55, fl * 0.24, 0, 0, 7); c.fill(); c.fillStyle = '#86b0d2'; c.beginPath(); c.ellipse(fl * 0.5, 0, fl * 0.55, fl * 0.22, 0, 0, 7); c.fill();
@@ -3979,7 +3979,7 @@ x.feet.push([g.cx, 182, 10]); },
     const fl = F.float ? Math.sin(t / 420) * 4 - 2 : 0, bob = P.walk ? -Math.abs(walk) * 4 : Math.sin(t / 600) * 1.2;
     const lift = (P.lift || 0) + bob + fl, open = Math.max(0, Math.min(1, (P.open || 0) + chew * 0.5 - (P.chew ? 0.25 : 0)));
     const bot = F.bottom(stage), g = { cx: 100, bw, bh, bot, top: bot - bh, left: 100 - bw / 2, stage };
-    const x = { P, t, walk, body, parts, acc, L, stage, open, m, feet: [], back: !!m.back }, W = m.worn || {}, bootsOn = W.feet === 'Boots' && !(F.slots && F.slots.feet === false);
+    const x = { P, t, walk, body, parts, acc, L, stage, open, m, feet: [], back: !!m.back || (m.backTe != null && Math.abs(t - m.backTe) < 60) }, W = m.worn || {}, bootsOn = W.feet === 'Boots' && !(F.slots && F.slots.feet === false);
     c.fillStyle = rgba(INK, F.float ? 0.08 : 0.14);
     c.beginPath(); c.ellipse(100 + (P.lean || 0) * 0.5, 186.5, Math.max(bw * 0.44, 24) * (F.float ? 0.75 : 1) * (1 + lift * 0.008), 6, 0, 0, 7); c.fill();
     c.save();
